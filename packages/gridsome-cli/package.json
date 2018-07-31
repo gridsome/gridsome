@@ -1,0 +1,25 @@
+{
+  "private": true,
+  "name": "@gridsome/cli",
+  "version": "0.0.1",
+  "main": "bin/gridsome.js",
+  "contributors": [
+    {
+      "name": "Tommy Vedvik (@tomtev)"
+    },
+    {
+      "name": "Hans-Jørgen Vedvik (@hjvedvik)"
+    }
+  ],
+  "bin": {
+    "gridsome": "./bin/gridsome.js"
+  },
+  "dependencies": {
+    "chalk": "^2.4.1",
+    "commander": "^2.15.1",
+    "find-up": "^2.1.0"
+  },
+  "engines": {
+    "node": ">=8"
+  }
+}
