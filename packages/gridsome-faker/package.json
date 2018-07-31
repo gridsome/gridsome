@@ -1,0 +1,10 @@
+{
+  "private": true,
+  "name": "@gridsome/faker",
+  "version": "0.0.1",
+  "description": "Source with fake data for Gridsome",
+  "main": "index.js",
+  "dependencies": {
+    "faker": "^4.1.0"
+  }
+}
