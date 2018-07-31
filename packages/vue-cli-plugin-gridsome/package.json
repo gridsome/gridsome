@@ -1,0 +1,9 @@
+{
+  "private": true,
+  "name": "vue-cli-plugin-gridsome",
+  "version": "0.0.1",
+  "main": "index.js",
+  "dependencies": {
+    "@gridsome/core": "^0.0.1"
+  }
+}
