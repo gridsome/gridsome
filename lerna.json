@@ -1,0 +1,11 @@
+{
+  "lerna": "2.9.0",
+  "npmClient": "yarn",
+  "useWorkspaces": true,
+  "version": "0.0.1",
+  "command": {
+    "build": {
+      "concurrency": 1
+    }
+  }
+}

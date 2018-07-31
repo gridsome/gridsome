@@ -1,0 +1,14 @@
+{
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "projects/*"
+  ],
+  "scripts": {},
+  "devDependencies": {
+    "lerna": "^2.9.0"
+  },
+  "engines": {
+    "yarn": "^1.5.1"
+  }
+}
