@@ -150,9 +150,12 @@ module.exports = pages => {
     allPage: {
       type: new GraphQLList(pageType),
       args: {
-        type: { type: GraphQLString }
+        type: {
+          type: GraphQLString,
+          defaultValue: 'page'
+        }
       },
-      resolve (_, { type = 'page' }) {
+      resolve (_, { type }) {
         const query = { type }
 
         if (type === '*') delete query.type

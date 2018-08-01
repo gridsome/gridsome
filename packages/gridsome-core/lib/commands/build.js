@@ -9,7 +9,7 @@ module.exports = async function (api) {
   // 2. render archive pages
   // 3. render single pages
 
-  api.registerCommand('build', async (args, rawArgv) => {
+  api.registerCommand('gridsome:build', async (args, rawArgv) => {
     const service = new Service(api)
 
     await service.bootstrap()

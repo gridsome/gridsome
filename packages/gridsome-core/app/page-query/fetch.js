@@ -1,25 +1,25 @@
 import cache from './cache'
-import { hashCode } from '../utils/hash'
 
 export default (query, route) => {
-  const variables = { ...route.params, path: route.path }
-  route.meta.hash = hashCode(JSON.stringify(variables))
-
-  let url = `${route.path}/data-${route.meta.hash}.json`
-  let options = { headers: { 'Content-Type': 'application/json' } }
-
   if (process.env.NODE_ENV === 'development') {
-    url = GRAPHQL_ENDPOINT
-    options.method = 'POST'
-    options.body = JSON.stringify({ query, variables })
+    const variables = { ...route.params, path: route.path }
+    const cacheKey = global.btoa(route.fullPath).replace(/\=+/, '')
+    
+    route.meta.cacheKey = cacheKey
+
+    return new Promise(resolve => {
+      fetch(GRAPHQL_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query, variables })
+      })
+        .then(res => res.json())
+        .then(res => {
+          cache.set(cacheKey, res.data)
+          resolve(res)
+        })
+    })
   }
 
-  return new Promise(resolve => {
-    fetch(url, options)
-      .then(res => res.json())
-      .then(res => {
-        cache.set(route.meta.hash, res.data)
-        resolve(res)
-      })
-  })
+  // TODO: import json with hashcode from ssr
 }

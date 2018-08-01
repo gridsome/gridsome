@@ -2,10 +2,6 @@ const fs = require('fs')
 const path = require('path')
 const Service = require('@vue/cli-service')
 
-function plugin (id) {
-  return { id, apply: require(id) }
-}
-
 module.exports = ({ context, program }) => {
   program
     .command('develop')
@@ -39,4 +35,8 @@ function createService (context) {
       plugin('@gridsome/core')
     ]
   })
+}
+
+function plugin (id) {
+  return { id, apply: require(id) }
 }

@@ -13,7 +13,7 @@ export default ({ options }, query = true) => {
   options.__pageQuery = query
 
   options.computed = merge.computed({
-    $page () { return cache.get(this.$route.meta.hash) }
+    $page () { return cache.get(this.$route.meta.cacheKey) }
   }, options.computed)
 
   createRouteGuard(options, 'beforeRouteEnter')

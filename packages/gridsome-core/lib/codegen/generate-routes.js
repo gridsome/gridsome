@@ -39,10 +39,7 @@ module.exports = async service => {
         routes.push({
           path: contentType.route,
           component: templates[nodeType],
-          name: camelCase(nodeType),
-          meta: process.env.NODE_ENV === 'development'
-            ? { gqlFieldName: camelCase(nodeType) }
-            : {}
+          name: camelCase(nodeType)
         })
       }
     }
