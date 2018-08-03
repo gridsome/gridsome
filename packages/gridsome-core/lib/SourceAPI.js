@@ -23,7 +23,7 @@ const updateNodeData = async (transformers, store, node) => {
     : null
 
   const query = { _id: node._id }
-  const update = { $set: { data: JSON.stringify(data) } }
+  const update = { $set: { data: JSON.stringify(data) }}
 
   return new Promise((resolve, reject) => {
     store.update(query, update, {}, err => err ? reject(err) : resolve())
@@ -90,7 +90,7 @@ module.exports = class SourceAPI {
         ...options.fields,
         title: options.title,
         created: new Date(options.created),
-        updated: new Date(options.updated),
+        updated: new Date(options.updated)
       },
       refs: options.refs || {},
       internal: this.createInternals({
@@ -129,7 +129,7 @@ module.exports = class SourceAPI {
       created: options.created,
       updated: options.updated,
       data: options.data,
-      graphql: options.graphql || {},
+      graphql: options.graphql || {},
       parent: options.parent ? String(options.parent) : null,
       component: options.component,
       internal: this.createInternals({})
@@ -244,7 +244,7 @@ module.exports = class SourceAPI {
     return camelCase(`${this.namespace} ${name}`, { pascalCase: true })
   }
 
-  makePath ({ created, slug, internal: { type } }) {
+  makePath ({ created, slug, internal: { type }}) {
     const year = created ? dateFormat(created, 'yyyy') : null
     const month = created ? dateFormat(created, 'mm') : null
     const day = created ? dateFormat(created, 'dd') : null

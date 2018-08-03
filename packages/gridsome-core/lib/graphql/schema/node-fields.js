@@ -27,14 +27,14 @@ module.exports = {
   created: {
     type: GraphQLString,
     description: 'Created date',
-    args: { format: { type: GraphQLString, description: 'Date format' } },
+    args: { format: { type: GraphQLString, description: 'Date format' }},
     resolve: (node, { format }) => dateFormat(node.created, format)
   },
 
   updated: {
     type: GraphQLString,
     description: 'Updated date',
-    args: { format: { type: GraphQLString, description: 'Date format' } },
+    args: { format: { type: GraphQLString, description: 'Date format' }},
     resolve: (node, { format }) => dateFormat(node.updated, format)
   }
 }

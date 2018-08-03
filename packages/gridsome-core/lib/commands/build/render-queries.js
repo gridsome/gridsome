@@ -18,7 +18,7 @@ module.exports = async (service, data) => {
       if (page.query) {
         const variables = { ...page.route.params, path: page.path }
         const results = await service.graphql(page.query, variables)
-        
+
         fs.outputFileSync(`${page.output}/data.json`, JSON.stringify(results))
       }
     }

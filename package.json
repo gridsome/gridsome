@@ -5,12 +5,12 @@
     "projects/*"
   ],
   "scripts": {
-    "lint": "eslint --fix packages/**/*.js packages/**/bin/*"
+    "lint": "eslint --fix \"packages/**/*.js\""
   },
   "devDependencies": {
-    "eslint": "^4.16.0",
-    "eslint-plugin-node": "^6.0.1",
-    "eslint-plugin-vue-libs": "^2.1.0",
+    "eslint": "^5.2.0",
+    "eslint-plugin-node": "^7.0.1",
+    "eslint-plugin-vue-libs": "^3.0.0",
     "lerna": "^2.9.0"
   },
   "engines": {

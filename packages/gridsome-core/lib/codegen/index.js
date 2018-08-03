@@ -4,7 +4,7 @@ const genRoutes = require('./generate-routes')
 module.exports = async service => {
   const files = [
     { name: 'hot.js', content: '' },
-    { name: 'routes.js', content: await genRoutes(service) },
+    { name: 'routes.js', content: await genRoutes(service) }
   ]
 
   // TODO: let plugins generate files

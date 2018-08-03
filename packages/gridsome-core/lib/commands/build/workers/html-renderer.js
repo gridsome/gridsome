@@ -23,7 +23,7 @@ exports.render = async function ({ pages, context }) {
       title: 'Gridsome',
       hash: page.hash,
       lang: 'en',
-      state: {},
+      state: {}
     }
 
     if (page.query) {

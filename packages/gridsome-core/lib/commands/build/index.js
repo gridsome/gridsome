@@ -1,17 +1,14 @@
-const path = require('path')
 const cpu = require('./cpu')
 const fs = require('fs-extra')
 const hirestime = require('hirestime')
 const Service = require('../../Service')
-const cpuCount = require('physical-cpu-count')
-const { done, info } = require('@vue/cli-shared-utils')
+const { info } = require('@vue/cli-shared-utils')
 
 const createRoutes = require('../../codegen/create-routes')
 const prepareRenderData = require('./prepare-render-data')
 
 module.exports = api => {
   api.registerCommand('gridsome:build', async (args, rawArgv) => {
-    
     info(`Building for production - ${cpu.physical} physical CPUs`)
 
     const buildTime = hirestime()
@@ -32,7 +29,7 @@ module.exports = api => {
 
     await require('./render-queries')(service, data)
     await require('./render-html')(data, outDir)
-    
+
     await fs.remove(`${outDir}/manifest`)
 
     console.log(`\n       Done in ${buildTime(hirestime.S)}s 🎉\n`)
@@ -54,8 +51,3 @@ function compile (config) {
     })
   })
 }
-
-
-
-
-

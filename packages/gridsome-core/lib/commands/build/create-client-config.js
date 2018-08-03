@@ -46,6 +46,6 @@ module.exports = api => {
       'process.client': true,
       'process.server': false
     })])
-  
+
   return api.service.resolveWebpackConfig(config)
 }

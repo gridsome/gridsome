@@ -9,7 +9,7 @@ module.exports = async service => {
   const allPages = await findAll(service.pages)
   const pages = allPages.filter(page => page.type === 'page')
   const notFoundPage = allPages.find(page => page.type === '404')
-  
+
   const notFoundComponent = notFoundPage
     ? notFoundPage.component
     : '#app/pages/404.vue'

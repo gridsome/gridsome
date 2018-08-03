@@ -11,7 +11,7 @@ const {
   GraphQLString,
   GraphQLUnionType,
   GraphQLObjectType,
-  GraphQLInterfaceType,
+  GraphQLInterfaceType
 } = graphql
 
 const fieldsInterface = new GraphQLInterfaceType({
@@ -46,15 +46,15 @@ module.exports = ({ contentType, nodeTypes, source }) => {
         created: {
           type: GraphQLString,
           description: 'Created date',
-          args: { format: { type: GraphQLString, description: 'Date format' } },
+          args: { format: { type: GraphQLString, description: 'Date format' }},
           resolve: (fields, { format }) => dateFormat(fields.created, format)
         },
         updated: {
           type: GraphQLString,
           description: 'Updated date',
-          args: { format: { type: GraphQLString, description: 'Date format' } },
+          args: { format: { type: GraphQLString, description: 'Date format' }},
           resolve: (fields, { format }) => dateFormat(fields.updated, format)
-        },
+        }
       }
 
       const nodeRefs = []
@@ -102,7 +102,7 @@ module.exports = ({ contentType, nodeTypes, source }) => {
                 description,
                 type: new GraphQLList(type),
                 resolve: obj => new Promise((resolve, reject) => {
-                  source.nodes.find({ _id: { $in: obj[name] } }, (err, nodes) => {
+                  source.nodes.find({ _id: { $in: obj[name] }}, (err, nodes) => {
                     if (err) reject(err)
                     else resolve(nodes)
                   })
@@ -125,7 +125,7 @@ module.exports = ({ contentType, nodeTypes, source }) => {
         nodeFields.belongsTo = {
           type: new GraphQLList(belongsToType),
           resolve: obj => new Promise((resolve, reject) => {
-            const q = { [`refs.${belongsTo.key}`]: { $in: [obj._id] } }
+            const q = { [`refs.${belongsTo.key}`]: { $in: [obj._id] }}
             source.nodes.find(q, (err, nodes) => {
               if (err) reject(err)
               else resolve(nodes)
@@ -138,31 +138,31 @@ module.exports = ({ contentType, nodeTypes, source }) => {
         nodeFields.parent = {
           type: nodeType,
           resolve (node) {
-            return new Promise((resolve, reject) => {
-              nodes.findOne({ _id: node.parent }, (err, node) => {
-                if (err) reject(err)
-                else resolve(node)
-              })
-            })
+            // return new Promise((resolve, reject) => {
+            //   nodes.findOne({ _id: node.parent }, (err, node) => {
+            //     if (err) reject(err)
+            //     else resolve(node)
+            //   })
+            // })
           }
         }
 
         nodeFields.children = {
           type: new GraphQLList(nodeType),
           resolve (node) {
-            return new Promise((resolve, reject) => {
-              nodes.find({ parent: node._id }, (err, nodes) => {
-                if (err) reject(err)
-                else resolve(nodes)
-              })
-            })
+            // return new Promise((resolve, reject) => {
+            //   nodes.find({ parent: node._id }, (err, nodes) => {
+            //     if (err) reject(err)
+            //     else resolve(nodes)
+            //   })
+            // })
           }
         }
 
         nodeFields.depth = {
           type: GraphQLInt,
           resolve (node) {
-            return getDepth(node)
+            // return getDepth(node)
           }
         }
       }

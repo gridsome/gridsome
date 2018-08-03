@@ -8,7 +8,7 @@ const SourceAPI = require('./SourceAPI')
 const generateFiles = require('./codegen')
 const createSchema = require('./graphql/create-schema')
 const { execute, graphql } = require('./graphql/graphql')
-const { info, done, warn, error } = require('@vue/cli-shared-utils')
+const { info, warn, error } = require('@vue/cli-shared-utils')
 
 const {
   BOOTSTRAP_CONFIG,
@@ -48,7 +48,7 @@ module.exports = class Service {
 
   async bootstrap (phase = BOOTSTRAP_CODEGEN) {
     const bootstrapTime = hirestime()
-    
+
     switch (phase) {
       case BOOTSTRAP_CONFIG : await this.bootstrapConfig(); break
       case BOOTSTRAP_PLUGINS : await this.bootstrapPlugins(); break
@@ -121,7 +121,7 @@ module.exports = class Service {
 
   async resolvePlugins () {
     const normalizePlugin = plugin => typeof plugin === 'string'
-      ? { use: plugin, client: true, options: {} }
+      ? { use: plugin, client: true, options: {}}
       : { client: true, options: {}, ...plugin }
 
     const plugins = Array.isArray(this.config.plugins)

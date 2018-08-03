@@ -1,4 +1,3 @@
-const camelCase = require('camelcase')
 const createRoutes = require('./create-routes')
 
 module.exports = async service => {

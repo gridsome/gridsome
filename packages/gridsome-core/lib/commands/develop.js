@@ -1,5 +1,4 @@
 const Service = require('../Service')
-const history = require('connect-history-api-fallback')
 const createGraphQLServer = require('../graphql/create-server')
 
 module.exports = api => {

@@ -5,7 +5,7 @@ module.exports = () => {
 
   return {
     queries: {
-      ...slugify.queries,
+      ...slugify.queries
     }
   }
 }

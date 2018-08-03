@@ -18,7 +18,7 @@ function createAddMutation ({ plugin, source, nodeType }) {
     type: nodeType,
     args: {
       ...nodeArgs,
-      type: { type: new GraphQLNonNull(GraphQLString) },
+      type: { type: new GraphQLNonNull(GraphQLString) }
     },
     async resolve (_, args) {
       args.content = source.stringify(args.data)

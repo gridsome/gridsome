@@ -1,12 +1,9 @@
-
 const { warn } = require('@vue/cli-shared-utils')
-
 const { unslash } = require('../../../utils')
 const baseNodeFields = require('../node-fields')
 const { nodeInterface } = require('../interfaces')
 
 const {
-  pubsub,
   GraphQLInt,
   GraphQLJSON,
   GraphQLList,
@@ -134,13 +131,10 @@ module.exports = pages => {
         data: { type: GraphQLString }
       },
       async resolve (_, args) {
-        args.updated = new Date().toISOString()
-
-        const page = await plugin.api.updatePage(args, source)
-
-        pubsub.publish('updatedPage', { updatePage: node })
-
-        return page
+        // args.updated = new Date().toISOString()
+        // const page = await plugin.api.updatePage(args, source)
+        // pubsub.publish('updatedPage', { updatePage: node })
+        // return page
       }
     }
   }
@@ -169,7 +163,6 @@ module.exports = pages => {
       }
     }
   }
-
 
   return {
     queries,

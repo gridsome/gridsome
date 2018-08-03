@@ -23,7 +23,7 @@ module.exports = service => {
         ...internalSchema.queries,
         ...internalSchema.connections
       }
-    }),
+    })
 
     // mutation: new GraphQLObjectType({
     //   name: 'RootMutation',

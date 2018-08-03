@@ -10,12 +10,8 @@ module.exports = {
   },
   rules: {
     "indent": ["error", 2, {
-      "MemberExpression": "off"
-    }],
-    "node/no-extraneous-require": ["error", {
-      "allowModules": [
-        "@vue/cli-test-utils"
-      ]
+      "MemberExpression": "off",
+      "SwitchCase": 1
     }]
   },
   overrides: [

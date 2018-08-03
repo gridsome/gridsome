@@ -19,7 +19,7 @@ const internalInterface = new GraphQLInterfaceType({
 const nodeInterface = new GraphQLInterfaceType({
   name: 'NodeInterface',
   fields: () => ({
-    _id: {  type: new GraphQLNonNull(GraphQLID) },
+    _id: { type: new GraphQLNonNull(GraphQLID) },
     type: { type: new GraphQLNonNull(GraphQLString) },
     internal: { type: new GraphQLNonNull(internalInterface) },
     title: { type: GraphQLString },

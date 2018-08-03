@@ -5,8 +5,7 @@ module.exports = (items, options, taskHandler) => {
     taskHandler = options
     options = {}
   }
-  
-  let done = 0
+
   const total = items.length
   const queue = new Queue(taskHandler, {
     concurrent: options.concurrent || 10
@@ -16,12 +15,14 @@ module.exports = (items, options, taskHandler) => {
     queue.push({ id: `data[${i}]`, data: items[i] })
   }
 
-  printProgress(done, total)
+  printProgress(0)
 
   return new Promise((resolve, reject) => {
+    let done = 0
+
     queue.on('task_finish', (id, result, stats) => {
       resetConsoleLine()
-      printProgress(done++, total)
+      printProgress(done++)
     })
 
     queue.on('task_failed', (id, err) => {
@@ -36,7 +37,7 @@ module.exports = (items, options, taskHandler) => {
     })
   })
 
-  function printProgress (done, total) {
+  function printProgress (done) {
     const progress = Math.ceil((done / total) * 100)
     process.stdout.write(` ${progress}% ${options.label}`)
   }

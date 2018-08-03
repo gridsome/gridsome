@@ -8,8 +8,6 @@ const { info } = require('@vue/cli-shared-utils')
 module.exports = async (data, outDir) => {
   const timer = hirestime()
   const chunks = chunk(data, 500)
-  const total = chunks.length
-  let done = 0
 
   const worker = new Worker(require.resolve('./workers/html-renderer'), {
     numWorkers: cpu.physical

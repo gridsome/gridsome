@@ -1,11 +1,13 @@
+/* global GRAPHQL_ENDPOINT, GRIDSOME_HASH */
+
 import cache from './cache'
 
 export default (options, route) => {
   const query = options.__pageQuery
   const cacheKey = route.fullPath
-  
+
   route.meta.cacheKey = cacheKey
-  
+
   if (process.env.NODE_ENV === 'development') {
     const variables = { ...route.params, path: route.path }
 
@@ -29,7 +31,7 @@ export default (options, route) => {
     }
 
     fetch(`${route.path.replace(/\/$/, '')}/data.json?${GRIDSOME_HASH}`, {
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json' }
     })
       .then(res => res.json())
       .then(res => {

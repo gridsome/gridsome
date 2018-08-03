@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import Meta from 'vue-meta'
 import Router from 'vue-router'
-import initRoutes, { NotFound } from '@temp/routes.js'
+import initRoutes from '@temp/routes.js'
 
 Vue.use(Meta)
 Vue.use(Router)

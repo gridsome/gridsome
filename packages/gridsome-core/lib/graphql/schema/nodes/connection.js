@@ -96,7 +96,7 @@ module.exports = ({ contentType, nodeType, source }) => {
           currentPage,
           totalPages,
           isFirst,
-          isLast,
+          isLast
         }
       }
     }
