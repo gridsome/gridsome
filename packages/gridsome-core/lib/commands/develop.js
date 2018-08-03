@@ -2,7 +2,7 @@ const Service = require('../Service')
 const history = require('connect-history-api-fallback')
 const createGraphQLServer = require('../graphql/create-server')
 
-module.exports = function (api) {
+module.exports = api => {
   api.registerCommand('gridsome:develop', async (args, rawArgv) => {
     const service = new Service(api)
 

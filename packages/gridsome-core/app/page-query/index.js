@@ -15,7 +15,7 @@ export default ({ options }, query = true) => {
   options.computed = merge.computed({
     $page () {
       return process.server
-        ? this.$ssrContext.pageQuery.data
+        ? this.$ssrContext.queryResults.data
         : cache.get(this.$route.meta.cacheKey)
     }
   }, options.computed)

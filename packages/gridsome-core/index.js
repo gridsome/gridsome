@@ -2,13 +2,15 @@ const path = require('path')
 const appPath = path.resolve('./app')
 
 module.exports = (api, options) => {
-  require('./lib/commands/build')(api)
-  require('./lib/commands/develop')(api)
-  require('./lib/commands/explore')(api)
-
+  options._buildTime = new Date().getTime().toString()
+  
   options.transpileDependencies.push(
     path.resolve('./app')
   )
+
+  require('./lib/commands/build')(api, options)
+  require('./lib/commands/develop')(api, options)
+  require('./lib/commands/explore')(api, options)
 
   api.chainWebpack((config) => {
     config
@@ -33,6 +35,12 @@ module.exports = (api, options) => {
         .loader(
           require.resolve('./lib/graphql/loaders/static-query')
         )
+
+    config
+      .plugin('define')
+        .tap((args) => [Object.assign({}, ...args, {
+          'GRIDSOME_HASH': JSON.stringify(options._buildTime)
+        })])
   })
 }
 

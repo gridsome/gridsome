@@ -8,7 +8,7 @@ const { done, info } = require('@vue/cli-shared-utils')
 const createRoutes = require('../../codegen/create-routes')
 const prepareRenderData = require('./prepare-render-data')
 
-module.exports = async function (api) {
+module.exports = api => {
   api.registerCommand('gridsome:build', async (args, rawArgv) => {
     info(`Building for production - ${cpuCount} physical CPUs`)
 
@@ -19,6 +19,10 @@ module.exports = async function (api) {
     await fs.remove(outDir)
     await service.bootstrap()
 
+    const { routes } = await createRoutes(service)
+    const data = await prepareRenderData(routes, outDir)
+    await require('./render-queries')(service, data)
+
     info('Compiling assets...')
     const compileTime = hirestime()
     const clientConfig = require('./create-client-config')(api)
@@ -26,11 +30,6 @@ module.exports = async function (api) {
     await compile([clientConfig, serverConfig])
     info(`Compiled assets - ${compileTime(hirestime.S)}s`)
 
-    const dataTime = hirestime()
-    const { routes } = await createRoutes(service)
-    const data = await prepareRenderData(routes, outDir)
-
-    await require('./render-queries')(service, data)
     await require('./render-html')(data, outDir, cpuCount)
     
     await fs.remove(`${outDir}/manifest`)

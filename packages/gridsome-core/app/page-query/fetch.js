@@ -28,7 +28,7 @@ export default (options, route) => {
       return resolve(cache.get(cacheKey))
     }
 
-    fetch(`${route.path.replace(/\/$/, '')}/data.json`, {
+    fetch(`${route.path.replace(/\/$/, '')}/data.json?${GRIDSOME_HASH}`, {
       headers: { 'Content-Type': 'application/json' },
     })
       .then(res => res.json())

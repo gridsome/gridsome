@@ -1,5 +1,4 @@
 const { chunk } = require('lodash')
-const Queue = require('better-queue')
 const hirestime = require('hirestime')
 const Worker = require('jest-worker').default
 const createQueue = require('./create-queue')
@@ -11,7 +10,7 @@ module.exports = async (data, outDir, cpuCount) => {
   const total = chunks.length
   let done = 0
   
-  const worker = new Worker(require.resolve('./render-worker'), {
+  const worker = new Worker(require.resolve('./workers/html-renderer'), {
     numWorkers: cpuCount
   })
 
