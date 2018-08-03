@@ -4,19 +4,20 @@ const Worker = require('jest-worker').default
 const createQueue = require('./create-queue')
 const { info } = require('@vue/cli-shared-utils')
 
-module.exports = async (data, outDir, cpuCount) => {
+module.exports = async (data, outDir) => {
   const timer = hirestime()
-  const chunks = chunk(data, cpuCount * 150)
+  const cpu = require('../../utils/cpu')
+  const chunks = chunk(data, cpu.physical * 100)
   const total = chunks.length
   let done = 0
-  
+
   const worker = new Worker(require.resolve('./workers/html-renderer'), {
-    numWorkers: cpuCount
+    numWorkers: cpu.physical
   })
 
   printProgress(0)
 
-  await createQueue(chunks, { cpuCount }, async (task, callback) => {
+  await createQueue(chunks, async (task, callback) => {
     worker
       .render({ pages: task.data, context: outDir })
       .then(() => {

@@ -1,6 +1,7 @@
 const path = require('path')
 const fs = require('fs-extra')
 const hirestime = require('hirestime')
+const cpu = require('../../utils/cpu')
 const Service = require('../../Service')
 const cpuCount = require('physical-cpu-count')
 const { done, info } = require('@vue/cli-shared-utils')
@@ -10,7 +11,8 @@ const prepareRenderData = require('./prepare-render-data')
 
 module.exports = api => {
   api.registerCommand('gridsome:build', async (args, rawArgv) => {
-    info(`Building for production - ${cpuCount} physical CPUs`)
+    
+    info(`Building for production - ${cpu.physical} physical CPUs`)
 
     const buildTime = hirestime()
     const service = new Service(api)
@@ -23,14 +25,13 @@ module.exports = api => {
     const data = await prepareRenderData(routes, outDir)
     await require('./render-queries')(service, data)
 
-    info('Compiling assets...')
     const compileTime = hirestime()
     const clientConfig = require('./create-client-config')(api)
     const serverConfig = require('./create-server-config')(api)
     await compile([clientConfig, serverConfig])
-    info(`Compiled assets - ${compileTime(hirestime.S)}s`)
+    info(`Build production assets - ${compileTime(hirestime.S)}s`)
 
-    await require('./render-html')(data, outDir, cpuCount)
+    await require('./render-html')(data, outDir)
     
     await fs.remove(`${outDir}/manifest`)
 
@@ -39,18 +40,17 @@ module.exports = api => {
 }
 
 function compile (config) {
+  const webpack = require('webpack')
+
   return new Promise((resolve, reject) => {
-    require('webpack')(config, (err, stats) => {
+    webpack(config).run((err, stats) => {
       if (err) return reject(err)
 
       if (stats.hasErrors()) {
-        stats.toJson().errors.forEach((err) => {
-          console.error(err)
-        })
-        return reject(new Error('Failed to compile with errors.'))
+        return reject(stats.toJson().errors)
       }
 
-      resolve(stats.toJson({ modules: false }))
+      resolve()
     })
   })
 }

@@ -6,10 +6,8 @@ module.exports = (items, options, taskHandler) => {
     options = {}
   }
 
-  options = Object.assign({ cpuCount: 1 }, options)
-
   const queue = new Queue(taskHandler, {
-    concurrent: options.concurrent || (options.cpuCount * 2)
+    concurrent: options.concurrent || 10
   })
 
   for (let i = 0, l = items.length; i < l; i++) {
