@@ -4,9 +4,9 @@ const express = require('express')
 const { createServer } = require('http')
 const portfinder = require('portfinder')
 const bodyParser = require('body-parser')
+const graphqlHTTP = require('express-graphql')
 const { info, chalk } = require('@vue/cli-shared-utils')
 const { execute, subscribe } = require('graphql')
-const { graphqlExpress } = require('apollo-server-express')
 const { SubscriptionServer } = require('subscriptions-transport-ws')
 const { default: expressPlayground } = require('graphql-playground-middleware-express')
 
@@ -31,7 +31,7 @@ module.exports = ({ schema, clients }, ui = true) => new Promise(async resolve =
     })
   })
 
-  app.use(GRAPHQL_ENDPOINT, cors(), bodyParser.json(), graphqlExpress({ schema }))
+  app.use(GRAPHQL_ENDPOINT, cors(), bodyParser.json(), graphqlHTTP({ schema }))
 
   if (ui) {
     app.get(EXPLORE_ENDPOINT, expressPlayground({
