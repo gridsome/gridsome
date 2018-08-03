@@ -7,7 +7,7 @@ const { info } = require('@vue/cli-shared-utils')
 
 module.exports = async (data, outDir) => {
   const timer = hirestime()
-  const chunks = chunk(data, cpu.physical * 100)
+  const chunks = chunk(data, 500)
   const total = chunks.length
   let done = 0
 
@@ -15,35 +15,17 @@ module.exports = async (data, outDir) => {
     numWorkers: cpu.physical
   })
 
-  printProgress(0)
-
-  await createQueue(chunks, async (task, callback) => {
+  await createQueue(chunks, {
+    label: 'Rendering HTML',
+    concurrent: 100
+  }, (task, callback) => {
     worker
       .render({ pages: task.data, context: outDir })
-      .then(() => {
-        done++
-
-        printProgress(Math.ceil((done / total) * 100))
-        callback()
-      })
-      .catch(err => {
-        resetConsoleLine()
-        callback(err)
-      })
+      .then(() => callback())
+      .catch(err => callback(err))
   })
 
-  resetConsoleLine()
   worker.end()
 
   info(`Render HTML - ${timer(hirestime.S)}s`)
-}
-
-function printProgress (progress) {
-  if (progress) resetConsoleLine()
-  process.stdout.write(`Rendering HTML - ${progress}%`)
-}
-
-function resetConsoleLine () {
-  process.stdout.clearLine()
-  process.stdout.cursorTo(0)
 }

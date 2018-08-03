@@ -56,7 +56,7 @@ module.exports = class Service {
       case BOOTSTRAP_CODEGEN : await this.bootstrapCodegen(); break
     }
 
-    info(`Bootstrap finished in ${bootstrapTime(hirestime.S)}s`)
+    info(`Bootstrap finish - ${bootstrapTime(hirestime.S)}s`)
   }
 
   bootstrapConfig () {
