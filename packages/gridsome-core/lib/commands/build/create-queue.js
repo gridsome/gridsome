@@ -36,8 +36,8 @@ module.exports = (items, options, taskHandler) => {
   })
 
   function printProgress (done, total) {
+    if (done > 1) resetConsoleLine()
     const progress = Math.ceil((done / total) * 100) || 0
-    if (progress) resetConsoleLine()
     process.stdout.write(` ${progress}% ${options.label}`)
   }
 
