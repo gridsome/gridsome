@@ -7,6 +7,7 @@ module.exports = api => {
   config.stats('normal')
   config.plugins.delete('progress')
   config.plugins.delete('extract-css')
+  config.plugins.delete('friendly-errors')
 
   config
     .entry('app')

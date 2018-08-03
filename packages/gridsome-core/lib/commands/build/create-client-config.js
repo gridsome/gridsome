@@ -6,6 +6,7 @@ module.exports = api => {
 
   config.stats('normal')
   config.plugins.delete('progress')
+  config.plugins.delete('friendly-errors')
 
   config.node
     .merge({
