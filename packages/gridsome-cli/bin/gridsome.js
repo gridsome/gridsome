@@ -7,6 +7,10 @@ const pkgPath = require('find-up').sync('package.json')
 const context = pkgPath ? path.dirname(pkgPath) : process.cwd()
 
 program
+  .version(require('../package').version)
+  .usage('<command> [options]')
+
+program
   .command('create <name>')
   .description('create a new website powered by Gridsome')
   .action((...args) => {
