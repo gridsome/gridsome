@@ -27,29 +27,32 @@ module.exports = api => {
 
   api.initSource = async ({ addPage, updateQuery }) => {
     const pages = await glob(paths, { cwd })
-    const watcher = chokidar.watch(paths, { cwd, ignoreInitial: true })
 
-    watcher.on('add', file => {
-      api.info(`Added ${file}`)
-      // TODO: add page and regenerate routes...
-    })
+    if (process.env.NODE_ENV === 'development') {
+      const watcher = chokidar.watch(paths, { cwd, ignoreInitial: true })
 
-    watcher.on('unlink', file => {
-      api.info(`Deleted ${file}`)
-      // TODO: remove page and regenerate routes...
-    })
+      watcher.on('add', file => {
+        api.info(`Added ${file}`)
+        // TODO: add page and regenerate routes...
+      })
 
-    watcher.on('change', async file => {
-      const id = api.resolve(file)
-      const componentPath = api.resolve(path.join(cwd, file))
-      const { graphql } = await compiler.parse(componentPath)
+      watcher.on('unlink', file => {
+        api.info(`Deleted ${file}`)
+        // TODO: remove page and regenerate routes...
+      })
 
-      try {
-        await updateQuery(id, graphql)
-      } catch (err) {
-        api.error(err)
-      }
-    })
+      watcher.on('change', async file => {
+        const id = api.resolve(file)
+        const componentPath = api.resolve(path.join(cwd, file))
+        const { graphql } = await compiler.parse(componentPath)
+
+        try {
+          await updateQuery(id, graphql)
+        } catch (err) {
+          api.error(err)
+        }
+      })
+    }
 
     await Promise.all(pages.map(async file => {
       const componentPath = api.resolve(path.join(cwd, file))
