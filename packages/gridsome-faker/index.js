@@ -1,9 +1,11 @@
 const faker = require('faker')
 
-module.exports = api => {
+module.exports = (api, {
+  numNodes = 500
+}) => {
   api.client(false)
 
-  api.initSource = ({ setNamespace, addType, addNode, graphql }) => {
+  api.initSource = ({ setNamespace, addType, addNode, graphql, slugify }) => {
     const { GraphQLString } = graphql
 
     setNamespace('Faker')
@@ -11,6 +13,7 @@ module.exports = api => {
     addType({
       type: 'node',
       name: 'Node',
+      route: '/:year/:month/:day/:slug',
       fields: () => ({
         author: { type: GraphQLString },
         published: { type: GraphQLString },
@@ -22,12 +25,15 @@ module.exports = api => {
       })
     })
 
-    for (let i = 0; i < 100; i++) {
+    for (let i = 0; i < numNodes; i++) {
+      const random = faker.random.number({ min: 3, max: 6 })
+      const title = faker.lorem.sentence(random).slice(0, -1)
+      
       addNode({
+        title,
         type: 'node',
         id: faker.random.uuid(),
-        title: faker.lorem.sentence().slice(0, -1),
-        slug: faker.lorem.slug(),
+        slug: slugify(title),
         created: faker.date.recent(100),
         updated: faker.date.recent(10),
         fields: {
