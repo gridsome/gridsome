@@ -6,6 +6,9 @@
   ],
   "scripts": {},
   "devDependencies": {
+    "eslint": "^4.16.0",
+    "eslint-plugin-node": "^6.0.1",
+    "eslint-plugin-vue-libs": "^2.1.0",
     "lerna": "^2.9.0"
   },
   "engines": {
