@@ -28,7 +28,6 @@ export default function createApp () {
 
   const app = new Vue({
     router,
-    pageData: null,
     data: {
       error: null
     },

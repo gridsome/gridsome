@@ -2,12 +2,13 @@ const path = require('path')
 const fs = require('fs-extra')
 const uuid = require('uuid/v1')
 const Datastore = require('nedb')
+const hirestime = require('hirestime')
 const PluginAPI = require('./PluginAPI')
 const SourceAPI = require('./SourceAPI')
 const generateFiles = require('./codegen')
-const { graphql } = require('./graphql/graphql')
 const createSchema = require('./graphql/create-schema')
-const { info, warn, error } = require('@vue/cli-shared-utils')
+const { execute, graphql } = require('./graphql/graphql')
+const { info, done, warn, error } = require('@vue/cli-shared-utils')
 
 const {
   BOOTSTRAP_CONFIG,
@@ -46,12 +47,16 @@ module.exports = class Service {
   }
 
   async bootstrap (phase = BOOTSTRAP_CODEGEN) {
+    const bootstrapTime = hirestime()
+    
     switch (phase) {
-      case BOOTSTRAP_CONFIG : return this.bootstrapConfig()
-      case BOOTSTRAP_PLUGINS : return this.bootstrapPlugins()
-      case BOOTSTRAP_SOURCES : return this.bootstrapSources()
-      case BOOTSTRAP_CODEGEN : return this.bootstrapCodegen()
+      case BOOTSTRAP_CONFIG : await this.bootstrapConfig(); break
+      case BOOTSTRAP_PLUGINS : await this.bootstrapPlugins(); break
+      case BOOTSTRAP_SOURCES : await this.bootstrapSources(); break
+      case BOOTSTRAP_CODEGEN : await this.bootstrapCodegen(); break
     }
+
+    info(`Bootstrap finished in ${bootstrapTime(hirestime.S)}s`)
   }
 
   bootstrapConfig () {
@@ -72,8 +77,8 @@ module.exports = class Service {
     info('Loading sources...')
     await this.loadSources()
 
-    info('Transforming sources...')
-    await this.transformSources()
+    // info('Transforming sources...')
+    // await this.transformSources()
 
     info('Creating GraphQL schema...')
     await this.createGraphQLSchema()

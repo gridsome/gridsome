@@ -13,8 +13,14 @@ export default ({ options }, query = true) => {
   options.__pageQuery = query
 
   options.computed = merge.computed({
-    $page () { return cache.get(this.$route.meta.cacheKey) }
+    $page () {
+      return process.server
+        ? this.$ssrContext.pageQuery.data
+        : cache.get(this.$route.meta.cacheKey)
+    }
   }, options.computed)
+
+  if (process.server) return
 
   createRouteGuard(options, 'beforeRouteEnter')
   createRouteGuard(options, 'beforeRouteUpdate')
@@ -26,6 +32,6 @@ function createRouteGuard (options, hook) {
 
 function createGuardFunc (options) {
   return (to, from, next) => {
-    fetch(options.__pageQuery, to).then(next)
+    fetch(options, to).then(next)
   }
 }

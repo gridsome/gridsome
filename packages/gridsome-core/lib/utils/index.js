@@ -14,3 +14,7 @@ exports.slugify = string => {
     .replace(/^-+/, '')       // trim start
     .replace(/-+$/, '');      // trim end
 }
+
+exports.findAll = store => new Promise((resolve, reject) => {
+  store.find({}, (err, results) => err ? reject(err) : resolve(results))
+})

@@ -2,6 +2,7 @@ const path = require('path')
 const appPath = path.resolve('./app')
 
 module.exports = (api, options) => {
+  require('./lib/commands/build')(api)
   require('./lib/commands/develop')(api)
   require('./lib/commands/explore')(api)
 
@@ -36,7 +37,7 @@ module.exports = (api, options) => {
 }
 
 module.exports.defaultModes = {
+  'gridsome:build': 'production',
   'gridsome:develop': 'development',
-  'gridsome:generate': 'production',
   'gridsome:explore': 'development'
 }

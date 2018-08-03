@@ -1,11 +1,13 @@
 import cache from './cache'
 
-export default (query, route) => {
+export default (options, route) => {
+  const query = options.__pageQuery
+  const cacheKey = route.fullPath
+  
+  route.meta.cacheKey = cacheKey
+  
   if (process.env.NODE_ENV === 'development') {
     const variables = { ...route.params, path: route.path }
-    const cacheKey = global.btoa(route.fullPath).replace(/\=+/, '')
-    
-    route.meta.cacheKey = cacheKey
 
     return new Promise(resolve => {
       fetch(GRAPHQL_ENDPOINT, {
@@ -21,5 +23,18 @@ export default (query, route) => {
     })
   }
 
-  // TODO: import json with hashcode from ssr
+  return new Promise(resolve => {
+    if (cache.has(cacheKey)) {
+      return resolve(cache.get(cacheKey))
+    }
+
+    fetch(`${route.path.replace(/\/$/, '')}/data.json`, {
+      headers: { 'Content-Type': 'application/json' },
+    })
+      .then(res => res.json())
+      .then(res => {
+        cache.set(cacheKey, res.data)
+        resolve(res)
+      })
+  })
 }

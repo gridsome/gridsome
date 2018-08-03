@@ -3,6 +3,9 @@
   "name": "gridsome",
   "version": "0.0.1",
   "main": "index.js",
+  "bin": {
+    "gridsome": "./bin/gridsome.js"
+  },
   "contributors": [
     {
       "name": "Hans-Jørgen Vedvik (@hjvedvik)"

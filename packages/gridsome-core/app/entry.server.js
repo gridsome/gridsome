@@ -1,18 +1,18 @@
 import createApp from './app'
 
-const { app, router } = createApp()
+const { app } = createApp()
 
 export default context => new Promise((resolve, reject) => {
-  const { fullPath } = router.resolve(context.url).route
+  const { fullPath } = context.route
 
-  if (fullPath !== url) {
+  if (fullPath !== context.url) {
     return reject({ url: fullPath })
   }
 
-  router.push(context.url)
+  app.$router.push(context.url)
   context.meta = app.$meta()
 
-  router.onReady(() => {
+  app.$router.onReady(() => {
     resolve(app)
   }, reject)
 })
