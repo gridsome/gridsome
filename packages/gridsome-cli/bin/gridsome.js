@@ -14,8 +14,9 @@ program
   })
 
 try {
+  // eslint-disable-next-line
   require('gridsome')({ context, program })
-} catch {}
+} catch (err) {}
 
 // show a warning if the command does not exist
 program.arguments('<command>').action((command) => {

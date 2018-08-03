@@ -22,14 +22,14 @@ module.exports = (api, {
         email: { type: GraphQLString },
         avatar: { type: GraphQLString },
         excerpt: { type: GraphQLString },
-        content: { type: GraphQLString },
+        content: { type: GraphQLString }
       })
     })
 
     for (let i = 0; i < numNodes; i++) {
       const random = faker.random.number({ min: 3, max: 6 })
       const title = faker.lorem.sentence(random).slice(0, -1)
-      
+
       addNode({
         title,
         type: 'node',

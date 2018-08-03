@@ -4,7 +4,9 @@
     "packages/*",
     "projects/*"
   ],
-  "scripts": {},
+  "scripts": {
+    "lint": "eslint --fix packages/**/*.js packages/**/bin/*"
+  },
   "devDependencies": {
     "eslint": "^4.16.0",
     "eslint-plugin-node": "^6.0.1",

@@ -6,7 +6,7 @@ module.exports = (api, options, rootOptions) => {
       'explore': 'vue-cli-service gridsome:explore'
     },
     dependencies: {
-      'vue-server-renderer': '^2.5.16',
+      'vue-server-renderer': '^2.5.16'
     }
   })
 }

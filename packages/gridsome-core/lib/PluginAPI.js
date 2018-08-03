@@ -11,7 +11,7 @@ module.exports = class PluginAPI {
     this.error = message => error(message, plugin.id)
   }
 
-  client(isClient) {
+  client (isClient) {
     this.plugin.client = isClient
   }
 

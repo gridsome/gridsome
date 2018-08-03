@@ -1,9 +1,8 @@
 const path = require('path')
-const appPath = path.resolve('./app')
 
 module.exports = (api, options) => {
   options._buildTime = new Date().getTime().toString()
-  
+
   options.transpileDependencies.push(
     path.resolve('./app')
   )

@@ -12,7 +12,7 @@ exports.slugify = string => {
     .replace(/[^\w\-]+/g, '') // remove all non-word chars
     .replace(/\-\-+/g, '-')   // replace multiple - with single
     .replace(/^-+/, '')       // trim start
-    .replace(/-+$/, '');      // trim end
+    .replace(/-+$/, '')       // trim end
 }
 
 exports.findAll = store => new Promise((resolve, reject) => {

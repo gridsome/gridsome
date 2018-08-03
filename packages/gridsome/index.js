@@ -1,5 +1,3 @@
-const fs = require('fs')
-const path = require('path')
 const Service = require('@vue/cli-service')
 
 module.exports = ({ context, program }) => {
