@@ -1,14 +1,15 @@
 const faker = require('faker')
 
 module.exports = (api, {
-  numNodes = 500
+  numNodes = 500,
+  namespace = 'Faker'
 }) => {
   api.client(false)
 
   api.initSource = ({ setNamespace, addType, addNode, graphql, slugify }) => {
     const { GraphQLString } = graphql
 
-    setNamespace('Faker')
+    setNamespace(namespace)
 
     addType({
       type: 'node',

@@ -16,10 +16,11 @@ module.exports = (items, options, taskHandler) => {
     queue.push({ id: `data[${i}]`, data: items[i] })
   }
 
-  printProgress(0)
+  printProgress(done, total)
 
   return new Promise((resolve, reject) => {
     queue.on('task_finish', (id, result, stats) => {
+      resetConsoleLine()
       printProgress(done++, total)
     })
 
@@ -36,8 +37,7 @@ module.exports = (items, options, taskHandler) => {
   })
 
   function printProgress (done, total) {
-    if (done > 1) resetConsoleLine()
-    const progress = Math.ceil((done / total) * 100) || 0
+    const progress = Math.ceil((done / total) * 100)
     process.stdout.write(` ${progress}% ${options.label}`)
   }
 
