@@ -1,27 +1,30 @@
 const fs = require('fs-extra')
+const { chunk } = require('lodash')
 const hirestime = require('hirestime')
+const createQueue = require('./create-queue')
 const { info } = require('@vue/cli-shared-utils')
 
 module.exports = async (service, data) => {
   const timer = hirestime()
-  const total = data.length
+  const chunks = chunk(data, 50)
 
-  for (let i = 0; i < total; i++) {
-    const progress = Math.ceil((i / total) * 100)
-    process.stdout.write(`Running page queries - ${progress}%`)
-    
-    const page = data[i]
+  await createQueue(chunks, {
+    label: 'Running GraphQL queries',
+    concurrent: 10
+  }, async (task, callback) => {
+    for (let i = 0, l = task.data.length; i < l; i++) {
+      const page = task.data[i]
 
-    if (page.query) {
-      const variables = { ...page.route.params, path: page.path }
-      const results = await service.graphql(page.query, variables)
-      
-      fs.outputFileSync(`${page.output}/data.json`, JSON.stringify(results))
+      if (page.query) {
+        const variables = { ...page.route.params, path: page.path }
+        const results = await service.graphql(page.query, variables)
+        
+        fs.outputFileSync(`${page.output}/data.json`, JSON.stringify(results))
+      }
     }
 
-    process.stdout.clearLine()
-    process.stdout.cursorTo(0)
-  }
+    callback()
+  })
 
-  info(`Run page queries - ${timer(hirestime.S)}s`)
+  info(`Run GraphQL queries - ${timer(hirestime.S)}s`)
 }
