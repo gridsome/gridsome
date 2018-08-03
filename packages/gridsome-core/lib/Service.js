@@ -90,8 +90,9 @@ module.exports = class Service {
     return path.resolve(this.context, p)
   }
 
-  graphql (query, variables = {}) {
-    return graphql(this.schema, query, variables)
+  graphql (docOrQuery, variables = {}) {
+    const func = typeof docOrQuery === 'object' ? execute : graphql
+    return func(this.schema, docOrQuery, null, null, variables)
   }
 
   loadConfig () {

@@ -1,4 +1,5 @@
 const path = require('path')
+const { parse } = require('../graphql')
 const validateQuery = require('../utils/validate-query')
 const appPath = path.resolve(__dirname, '../../../app')
 
@@ -13,7 +14,8 @@ module.exports = async function (source, map) {
     return callback(errors, source, map)
   }
 
-  const { data } = await service.graphql(source)
+  const document = parse(source)
+  const { data } = await service.graphql(document)
 
   callback(null, `
     import initStaticQuery from '${appPath}/static-query'

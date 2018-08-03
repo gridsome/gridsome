@@ -2,6 +2,7 @@ const Datastore = require('nedb')
 const uuidv3 = require('uuid/v3')
 const autoBind = require('auto-bind')
 const camelCase = require('camelcase')
+const { slugify } = require('./utils')
 const dateFormat = require('dateformat')
 const graphql = require('./graphql/graphql')
 const pathToRegexp = require('path-to-regexp')
@@ -34,6 +35,7 @@ module.exports = class SourceAPI {
     this.service = service
     this.plugin = plugin
     this.graphql = graphql
+    this.slugify = slugify
     this.namespace = null
     this.mediaType = null
 
