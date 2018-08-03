@@ -1,11 +1,10 @@
-const VueSSRClientPlugin = require('vue-server-renderer/client-plugin')
+const VueSSRClientPlugin = require('./plugins/VueSSRClientPlugin')
 const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin')
 
 module.exports = api => {
   const config = api.resolveChainableWebpackConfig()
 
-  config.stats('normal')
-  config.plugins.delete('progress')
+  config.stats('none')
   config.plugins.delete('friendly-errors')
 
   config.node
@@ -22,27 +21,31 @@ module.exports = api => {
 
   config
     .plugin('ssr-client')
-      .use(VueSSRClientPlugin, [{
-        filename: 'manifest/client.json'
-      }])
+    .use(VueSSRClientPlugin, [{
+      filename: 'manifest/client.json'
+    }])
+
+  config
+    .plugin('progress')
+    .use(require('webpack/lib/ProgressPlugin'))
 
   config
     .plugin('optimize-css')
-      .use(OptimizeCssAssetsPlugin, [{
-        canPrint: false,
-        cssProcessorOptions: {
-          safe: true,
-          autoprefixer: { disable: true },
-          mergeLonghand: false
-        }
-      }])
+    .use(OptimizeCssAssetsPlugin, [{
+      canPrint: false,
+      cssProcessorOptions: {
+        safe: true,
+        autoprefixer: { disable: true },
+        mergeLonghand: false
+      }
+    }])
 
   config
     .plugin('define')
-      .tap((args) => [Object.assign({}, ...args, {
-        'process.client': true,
-        'process.server': false
-      })])
+    .tap((args) => [Object.assign({}, ...args, {
+      'process.client': true,
+      'process.server': false
+    })])
   
   return api.service.resolveWebpackConfig(config)
 }

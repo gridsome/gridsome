@@ -1,3 +1,4 @@
+const cpu = require('./cpu')
 const { chunk } = require('lodash')
 const hirestime = require('hirestime')
 const Worker = require('jest-worker').default
@@ -6,7 +7,6 @@ const { info } = require('@vue/cli-shared-utils')
 
 module.exports = async (data, outDir) => {
   const timer = hirestime()
-  const cpu = require('../../utils/cpu')
   const chunks = chunk(data, cpu.physical * 100)
   const total = chunks.length
   let done = 0

@@ -1,7 +1,7 @@
 const path = require('path')
+const cpu = require('./cpu')
 const fs = require('fs-extra')
 const hirestime = require('hirestime')
-const cpu = require('../../utils/cpu')
 const Service = require('../../Service')
 const cpuCount = require('physical-cpu-count')
 const { done, info } = require('@vue/cli-shared-utils')
@@ -23,7 +23,6 @@ module.exports = api => {
 
     const { routes } = await createRoutes(service)
     const data = await prepareRenderData(routes, outDir)
-    await require('./render-queries')(service, data)
 
     const compileTime = hirestime()
     const clientConfig = require('./create-client-config')(api)
@@ -31,11 +30,12 @@ module.exports = api => {
     await compile([clientConfig, serverConfig])
     info(`Build production assets - ${compileTime(hirestime.S)}s`)
 
+    await require('./render-queries')(service, data)
     await require('./render-html')(data, outDir)
     
     await fs.remove(`${outDir}/manifest`)
 
-    console.log(`\n    🎉 Build completed - ${buildTime(hirestime.S)}s\n`)
+    console.log(`\n       Done in ${buildTime(hirestime.S)}s 🎉\n`)
   })
 }
 
