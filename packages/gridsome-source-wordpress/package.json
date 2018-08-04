@@ -1,0 +1,17 @@
+{
+  "private": true,
+  "version": "1.0.0",
+  "name": "@gridsome/source-wordpress",
+  "description": "WordPress source for Gridsome",
+  "main": "index.js",
+  "scripts": {
+    "build": "gridsome-utils roll"
+  },
+  "devDependencies": {
+    "gridsome-utils": "^1.0.0"
+  },
+  "dependencies": {
+    "axios": "^0.18.0",
+    "better-queue": "^3.8.7"
+  }
+}

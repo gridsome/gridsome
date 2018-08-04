@@ -1,4 +1,3 @@
-const path = require('path')
 const fs = require('fs-extra')
 const uuid = require('uuid/v1')
 const Datastore = require('nedb')
@@ -68,7 +67,7 @@ module.exports = class Service {
     this.bootstrapConfig()
 
     info('Initializing plugins...')
-    await this.resolvePlugins()
+    await this.initPlugins()
   }
 
   async bootstrapSources () {
@@ -92,7 +91,7 @@ module.exports = class Service {
   }
 
   resolve (p) {
-    return path.resolve(this.context, p)
+    return this.api.resolve(p)
   }
 
   graphql (docOrQuery, variables = {}) {
@@ -119,7 +118,7 @@ module.exports = class Service {
     this.config = projectConfig
   }
 
-  async resolvePlugins () {
+  async initPlugins () {
     const normalizePlugin = plugin => typeof plugin === 'string'
       ? { use: plugin, client: true, options: {}}
       : { client: true, options: {}, ...plugin }
