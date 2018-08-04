@@ -1,53 +1,32 @@
-const cpu = require('./cpu')
 const fs = require('fs-extra')
+const cpu = require('./utils/cpu')
 const hirestime = require('hirestime')
 const Service = require('../../Service')
 const { info } = require('@vue/cli-shared-utils')
-
-const createRoutes = require('../../codegen/createRoutes')
 const prepareRenderData = require('./prepareRenderData')
 
-module.exports = api => {
+module.exports = (api, options) => {
   api.registerCommand('gridsome:build', async (args, rawArgv) => {
     info(`Building for production - ${cpu.physical} physical CPUs`)
+
+    options.outputDir = 'dist/_assets'
 
     const buildTime = hirestime()
     const service = new Service(api)
     const outDir = api.resolve('dist')
+    const outputDir = api.resolve(options.outputDir)
 
     await fs.remove(outDir)
-    await service.bootstrap()
 
-    const { routes } = await createRoutes(service)
-    const data = await prepareRenderData(routes, outDir)
+    const { routerData, graphql } = await service.bootstrap()
+    const { pages } = await prepareRenderData(routerData, outDir)
 
-    const compileTime = hirestime()
-    const clientConfig = require('./webpack/createClientConfig')(api)
-    const serverConfig = require('./webpack/createServerConfig')(api)
-    await compile([clientConfig, serverConfig])
-    info(`Compile assets - ${compileTime(hirestime.S)}s`)
+    await require('./compileAssets')(api)
+    await require('./renderQueries')(pages, graphql)
+    await require('./renderHtml')(pages, outputDir)
 
-    await require('./renderQueries')(service, data)
-    await require('./renderHtml')(data, outDir)
-
-    await fs.remove(`${outDir}/manifest`)
+    await fs.remove(`${outputDir}/manifest`)
 
     console.log(`\n       Done in ${buildTime(hirestime.S)}s 🎉\n`)
-  })
-}
-
-function compile (config) {
-  const webpack = require('webpack')
-
-  return new Promise((resolve, reject) => {
-    webpack(config).run((err, stats) => {
-      if (err) return reject(err)
-
-      if (stats.hasErrors()) {
-        return reject(stats.toJson().errors)
-      }
-
-      resolve()
-    })
   })
 }

@@ -1,25 +1,19 @@
 const fs = require('fs-extra')
-const generateRoutes = require('./generateRoutes')
+const genRoutes = require('./genRoutes')
 
-module.exports = async service => {
+module.exports = async ({ config, routerData }) => {
+  const { tmpDir } = config
+
   const files = [
-    { name: 'hot.js', content: '' },
-    { name: 'routes.js', content: await generateRoutes(service) }
+    {
+      path: `${tmpDir}/routes.js`,
+      content: await genRoutes(routerData)
+    }
   ]
 
-  // TODO: let plugins generate files
-
-  const { tmpDir } = service.config
-
-  // write out temporary modules
-  for (const { name, content } of files) {
-    await fs.outputFile(`${tmpDir}/${name}`, content)
+  for (const { path, content } of files) {
+    await fs.outputFile(path, content)
   }
 
-  // add webpack aliases for temporary modules
-  service.api.chainWebpack((config) => {
-    files.forEach(({ name }) => {
-      config.resolve.alias.set(`@temp/${name}$`, `${tmpDir}/${name}`)
-    })
-  })
+  return files
 }

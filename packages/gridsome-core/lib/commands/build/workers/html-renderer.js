@@ -1,11 +1,15 @@
 const fs = require('fs-extra')
 const { createBundleRenderer } = require('vue-server-renderer')
 
-exports.render = async function ({ pages, outDir }) {
-  const clientManifest = require(`${outDir}/manifest/client.json`)
-  const serverBundle = require(`${outDir}/manifest/server.json`)
-  const templatePath = require.resolve('../../../../app/index.server.html')
+exports.render = async function ({
+  pages,
+  templatePath,
+  clientManifestPath,
+  serverBundlePath
+}) {
   const template = fs.readFileSync(templatePath, 'utf-8')
+  const clientManifest = require(clientManifestPath)
+  const serverBundle = require(serverBundlePath)
 
   const renderer = createBundleRenderer(serverBundle, {
     inject: false,

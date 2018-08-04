@@ -1,8 +1,4 @@
-const createRoutes = require('./createRoutes')
-
-module.exports = async service => {
-  const { routes, notFoundComponent } = await createRoutes(service)
-
+module.exports = async ({ routes, notFoundComponent }) => {
   let res = `import NotFound from ${JSON.stringify(notFoundComponent)}\n\n`
 
   res += `export const routes = [${routes.map(route => {

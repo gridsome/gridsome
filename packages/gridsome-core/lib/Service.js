@@ -1,13 +1,15 @@
 const fs = require('fs-extra')
 const uuid = require('uuid/v1')
 const Datastore = require('nedb')
+const codegen = require('./codegen')
+const autoBind = require('auto-bind')
 const hirestime = require('hirestime')
 const PluginAPI = require('./PluginAPI')
 const SourceAPI = require('./SourceAPI')
-const generateFiles = require('./codegen')
 const { defaultsDeep } = require('lodash')
 const createSchema = require('./graphql/createSchema')
 const { execute, graphql } = require('./graphql/graphql')
+const createRouterData = require('./utils/createRouterData')
 const { info, warn, error } = require('@vue/cli-shared-utils')
 
 const {
@@ -23,27 +25,14 @@ module.exports = class Service {
 
     this.api = api
     this.context = api.service.context
+    this.pages = new Datastore()
     this.clients = {}
 
-    this.pages = new Datastore()
+    autoBind(this)
 
-    this.config = {}
-    this.plugins = []
-    this.sources = []
-
-    this.schema = {}
-    this.transformers = {}
-
-    // provide log helpers from Vue CLI
     this.info = info
     this.warn = warn
     this.error = error
-  }
-
-  broadcast (message) {
-    for (const client in this.clients) {
-      this.clients[client].write(JSON.stringify(message))
-    }
   }
 
   async bootstrap (phase = BOOTSTRAP_CODEGEN) {
@@ -57,66 +46,59 @@ module.exports = class Service {
     }
 
     info(`Bootstrap finish - ${bootstrapTime(hirestime.S)}s`)
+
+    return this
   }
 
   bootstrapConfig () {
     info('Loading configuration...')
-    this.loadConfig()
+    this.config = this.loadConfig()
   }
 
   async bootstrapPlugins () {
     this.bootstrapConfig()
 
     info('Initializing plugins...')
-    await this.initPlugins()
+    this.plugins = await this.initPlugins()
   }
 
   async bootstrapSources () {
     await this.bootstrapPlugins()
 
     info('Loading sources...')
-    await this.loadSources()
-
-    // info('Transforming sources...')
-    // await this.transformSources()
+    this.sources = await this.loadSources()
 
     info('Creating GraphQL schema...')
-    await this.createGraphQLSchema()
+    this.schema = await createSchema(this)
   }
 
   async bootstrapCodegen () {
     await this.bootstrapSources()
 
-    info('Genrating temporary files...')
-    await generateFiles(this)
-  }
+    info('Preparing router...')
+    this.routerData = await createRouterData(this)
 
-  resolve (p) {
-    return this.api.resolve(p)
-  }
-
-  graphql (docOrQuery, variables = {}) {
-    const func = typeof docOrQuery === 'object' ? execute : graphql
-    return func(this.schema, docOrQuery, null, null, variables)
+    info('Generating temporary files...')
+    this.tempFiles = await codegen(this)
   }
 
   loadConfig () {
     const configPath = this.resolve('gridsome.config.js')
     const hasConfig = fs.existsSync(configPath)
-    const projectConfig = Object.assign({
+    const config = Object.assign({
       tmpDir: this.resolve('src/.temp'),
       publicDir: this.resolve('public'),
       plugins: []
     }, hasConfig ? require(configPath) : {})
 
     // insert internal plugins
-    projectConfig.plugins.splice(0, 0, ...[
+    config.plugins.splice(0, 0, ...[
       './plugins/source-vue',
       './plugins/transformer-json',
       './plugins/transformer-yaml'
     ])
 
-    this.config = projectConfig
+    return config
   }
 
   async initPlugins () {
@@ -139,27 +121,40 @@ module.exports = class Service {
       } catch {}
     }
 
-    this.plugins = plugins
+    return plugins
   }
 
   async loadSources () {
+    const sources = []
+
     for (const plugin of this.plugins) {
       if (typeof plugin.api.initSource === 'function') {
         const source = new SourceAPI(this, plugin)
         await plugin.api.initSource(source)
 
-        this.sources.push({ plugin, source })
+        sources.push({ plugin, source })
       }
     }
+
+    return sources
   }
 
-  async transformSources () {
-    for (const { source } of this.sources) {
-      await source.transformAll()
+  //
+  // helpers
+  //
+
+  resolve (p) {
+    return this.api.resolve(p)
+  }
+
+  graphql (docOrQuery, variables = {}) {
+    const func = typeof docOrQuery === 'object' ? execute : graphql
+    return func(this.schema, docOrQuery, null, null, variables)
+  }
+
+  broadcast (message) {
+    for (const client in this.clients) {
+      this.clients[client].write(JSON.stringify(message))
     }
-  }
-
-  async createGraphQLSchema () {
-    this.schema = await createSchema(this)
   }
 }

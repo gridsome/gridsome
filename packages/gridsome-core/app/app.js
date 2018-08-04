@@ -3,7 +3,7 @@ import Meta from 'vue-meta'
 import Router from 'vue-router'
 import Link from './components/Link'
 import Image from './components/Image'
-import initRoutes from '@temp/routes.js'
+import initRoutes from '#temp/routes.js'
 
 Vue.use(Meta)
 Vue.use(Router)

@@ -2,7 +2,6 @@ const path = require('path')
 
 module.exports = (api, options) => {
   options._buildTime = new Date().getTime().toString()
-
   options.transpileDependencies.push(
     path.resolve('./app')
   )
@@ -18,6 +17,7 @@ module.exports = (api, options) => {
 
     config.resolve.alias
       .set('#app', path.resolve(__dirname, 'app'))
+      .set('#temp', api.resolve('src/.temp'))
 
     config.module
       .rule('graphql')

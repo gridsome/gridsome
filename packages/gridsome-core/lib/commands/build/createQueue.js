@@ -1,18 +1,19 @@
+const { chunk } = require('lodash')
 const Queue = require('better-queue')
 
 module.exports = (items, options, taskHandler) => {
-  if (typeof options === 'function') {
-    taskHandler = options
-    options = {}
-  }
-
-  const total = items.length
   const queue = new Queue(taskHandler, {
     concurrent: options.concurrent || 10
   })
 
-  for (let i = 0, l = total; i < l; i++) {
-    queue.push({ id: `data[${i}]`, data: items[i] })
+  const chunks = options.chunkSize
+    ? chunk(items, options.chunkSize)
+    : items
+
+  const total = chunks.length
+
+  for (let i = 0; i < total; i++) {
+    queue.push({ id: `data[${i}]`, data: chunks[i] })
   }
 
   printProgress(0)
