@@ -25,7 +25,7 @@ module.exports = api => {
     const clientConfig = require('./create-client-config')(api)
     const serverConfig = require('./create-server-config')(api)
     await compile([clientConfig, serverConfig])
-    info(`Build production assets - ${compileTime(hirestime.S)}s`)
+    info(`Compile assets - ${compileTime(hirestime.S)}s`)
 
     await require('./render-queries')(service, data)
     await require('./render-html')(data, outDir)

@@ -13,8 +13,7 @@ module.exports = async (pages, outDir) => {
           path: page.path,
           query: page.query,
           route: router.resolve(page.path).route,
-          output: path.resolve(outDir, page.path.replace(/^\/+/, '')),
-          results: null
+          output: path.resolve(outDir, page.path.replace(/^\/+/, ''))
         })
         break
       case 'template':
@@ -24,8 +23,7 @@ module.exports = async (pages, outDir) => {
             path: node.path,
             query: page.query,
             route: router.resolve(node.path).route,
-            output: path.resolve(outDir, node.path.replace(/^\/+/, '')),
-            results: null
+            output: path.resolve(outDir, node.path.replace(/^\/+/, ''))
           })
         }
         break

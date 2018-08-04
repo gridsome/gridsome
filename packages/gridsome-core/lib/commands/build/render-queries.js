@@ -1,4 +1,5 @@
 const fs = require('fs-extra')
+const cpu = require('./cpu')
 const { chunk } = require('lodash')
 const hirestime = require('hirestime')
 const createQueue = require('./create-queue')
@@ -10,7 +11,7 @@ module.exports = async (service, data) => {
 
   await createQueue(chunks, {
     label: 'Running GraphQL queries',
-    concurrent: 10
+    concurrent: cpu.logical
   }, async (task, callback) => {
     for (let i = 0, l = task.data.length; i < l; i++) {
       const page = task.data[i]

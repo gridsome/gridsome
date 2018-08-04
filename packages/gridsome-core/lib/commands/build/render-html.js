@@ -10,15 +10,22 @@ module.exports = async (data, outDir) => {
   const chunks = chunk(data, 500)
 
   const worker = new Worker(require.resolve('./workers/html-renderer'), {
-    numWorkers: cpu.physical
+    numWorkers: cpu.logical
   })
 
   await createQueue(chunks, {
     label: 'Rendering HTML',
-    concurrent: 100
+    concurrent: cpu.logical
   }, (task, callback) => {
+    // reduce amount of data sent to worker
+    const pages = task.data.map(page => ({
+      path: page.path,
+      output: page.output,
+      query: !!page.query
+    }))
+
     worker
-      .render({ pages: task.data, context: outDir })
+      .render({ pages, outDir })
       .then(() => callback())
       .catch(err => callback(err))
   })
