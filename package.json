@@ -5,12 +5,22 @@
     "projects/*"
   ],
   "scripts": {
+    "test": "node scripts/test.js",
     "lint": "eslint --fix \"packages/**/*.js\""
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testPathIgnorePatterns": [
+      "/projects/",
+      "/scripts/"
+    ]
   },
   "devDependencies": {
     "eslint": "^5.2.0",
     "eslint-plugin-node": "^7.0.1",
     "eslint-plugin-vue-libs": "^3.0.0",
+    "execa": "^0.10.0",
+    "jest": "^23.1.0",
     "lerna": "^2.9.0"
   },
   "engines": {
