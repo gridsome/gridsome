@@ -11,10 +11,10 @@ program
   .usage('<command> [options]')
 
 program
-  .command('create <name>')
+  .command('create <name> [starter]')
   .description('create a new website powered by Gridsome')
   .action((...args) => {
-    require('../lib/commands/create')(...args)
+    return require('../lib/commands/create')(...args)
   })
 
 try {

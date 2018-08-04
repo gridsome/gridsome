@@ -15,9 +15,11 @@
     "gridsome": "./bin/gridsome.js"
   },
   "dependencies": {
+    "@vue/cli-shared-utils": "^3.0.0-rc.10",
     "chalk": "^2.4.1",
     "commander": "^2.15.1",
-    "find-up": "^2.1.0"
+    "find-up": "^2.1.0",
+    "fs-extra": "^6.0.1"
   },
   "engines": {
     "node": ">=8"
