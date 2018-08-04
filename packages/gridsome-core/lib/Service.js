@@ -5,6 +5,7 @@ const hirestime = require('hirestime')
 const PluginAPI = require('./PluginAPI')
 const SourceAPI = require('./SourceAPI')
 const generateFiles = require('./codegen')
+const { defaultsDeep } = require('lodash')
 const createSchema = require('./graphql/createSchema')
 const { execute, graphql } = require('./graphql/graphql')
 const { info, warn, error } = require('@vue/cli-shared-utils')
@@ -133,7 +134,8 @@ module.exports = class Service {
 
       try {
         const func = require(plugin.use)
-        await func(plugin.api, plugin.options)
+        const options = defaultsDeep(plugin.options, func.defaultOptions)
+        await func(plugin.api, options)
       } catch {}
     }
 

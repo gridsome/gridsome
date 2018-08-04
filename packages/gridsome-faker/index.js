@@ -1,8 +1,8 @@
 const faker = require('faker')
 
 module.exports = (api, {
-  numNodes = 500,
-  namespace = 'Faker'
+  numNodes,
+  namespace
 }) => {
   api.client(false)
 
@@ -49,4 +49,9 @@ module.exports = (api, {
       })
     }
   }
+}
+
+module.exports.defaultOptions = {
+  numNodes: 500,
+  namespace: 'Faker'
 }

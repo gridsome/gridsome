@@ -4,9 +4,9 @@ const resolveType = require('./lib/resolve-type')
 module.exports = (api, {
   space,
   accessToken,
-  environment = 'master',
-  host = 'cdn.contentful.com',
-  namespace = 'Contentful'
+  environment,
+  host,
+  namespace
 }) => {
   api.initSource = async ({
     setNamespace,
@@ -111,4 +111,10 @@ module.exports = (api, {
       })
     }
   }
+}
+
+module.exports.defaultOptions = {
+  environment: 'master',
+  host: 'cdn.contentful.com',
+  namespace: 'Contentful'
 }

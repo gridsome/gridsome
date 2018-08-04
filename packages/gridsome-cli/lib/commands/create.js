@@ -39,9 +39,9 @@ module.exports = async (name, starter = 'default') => {
   }
 
   console.log()
-  console.log(`    - Enter directory ${chalk.cyan(`cd ${name}`)}`)
-  console.log(`    - Run ${chalk.cyan(developCommand)} to start local development`)
-  console.log(`    - Run ${chalk.cyan(buildCommand)} to build for production`)
+  console.log(`  - Enter directory ${chalk.cyan(`cd ${name}`)}`)
+  console.log(`  - Run ${chalk.cyan(developCommand)} to start local development`)
+  console.log(`  - Run ${chalk.cyan(buildCommand)} to build for production`)
   console.log()
 }
 

@@ -4,10 +4,10 @@ const querystring = require('querystring')
 
 module.exports = (api, {
   baseUrl,
-  perPage = 100,
-  concurrent = 10,
-  namespace = 'WordPress',
-  routes = {}
+  perPage,
+  concurrent,
+  namespace,
+  routes
 }) => {
   const { info } = api.service
 
@@ -188,4 +188,11 @@ function fetchPaged (url, options = {}) {
       resolve(data)
     })
   })
+}
+
+module.exports.defaultOptions = {
+  perPage: 100,
+  concurrent: 10,
+  namespace: 'WordPress',
+  routes: {}
 }
