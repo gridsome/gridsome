@@ -1,17 +1,16 @@
 const nodeExternals = require('webpack-node-externals')
 const VueSSRServerPlugin = require('./plugins/VueSSRServerPlugin')
+const createBaseConfig = require('./createBaseConfig')
 
 module.exports = api => {
-  const config = api.resolveChainableWebpackConfig()
+  const config = createBaseConfig(api, { isServer: true })
 
-  config.stats('none')
   config.plugins.delete('extract-css')
-  config.plugins.delete('friendly-errors')
 
   config
     .entry('app')
-    .delete(require.resolve('../../../app/entry.client.js'))
-    .add(require.resolve('../../../app/entry.server.js'))
+    .delete(require.resolve('../../../../app/entry.client.js'))
+    .add(require.resolve('../../../../app/entry.server.js'))
 
   config
     .target('node')
@@ -32,17 +31,6 @@ module.exports = api => {
     .use(VueSSRServerPlugin, [{
       filename: 'manifest/server.json'
     }])
-
-  config
-    .plugin('progress')
-    .use(require('webpack/lib/ProgressPlugin'))
-
-  config
-    .plugin('define')
-    .tap((args) => [Object.assign({}, ...args, {
-      'process.client': false,
-      'process.server': true
-    })])
 
   const resolved = api.service.resolveWebpackConfig(config)
 

@@ -22,8 +22,8 @@ module.exports = api => {
     const data = await prepareRenderData(routes, outDir)
 
     const compileTime = hirestime()
-    const clientConfig = require('./createClientConfig')(api)
-    const serverConfig = require('./createServerConfig')(api)
+    const clientConfig = require('./webpack/createClientConfig')(api)
+    const serverConfig = require('./webpack/createServerConfig')(api)
     await compile([clientConfig, serverConfig])
     info(`Compile assets - ${compileTime(hirestime.S)}s`)
 

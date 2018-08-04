@@ -1,11 +1,9 @@
-const VueSSRClientPlugin = require('./plugins/VueSSRClientPlugin')
 const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin')
+const VueSSRClientPlugin = require('./plugins/VueSSRClientPlugin')
+const createBaseConfig = require('./createBaseConfig')
 
 module.exports = api => {
-  const config = api.resolveChainableWebpackConfig()
-
-  config.stats('none')
-  config.plugins.delete('friendly-errors')
+  const config = createBaseConfig(api, { isClient: true })
 
   config.node
     .merge({
@@ -26,10 +24,6 @@ module.exports = api => {
     }])
 
   config
-    .plugin('progress')
-    .use(require('webpack/lib/ProgressPlugin'))
-
-  config
     .plugin('optimize-css')
     .use(OptimizeCssAssetsPlugin, [{
       canPrint: false,
@@ -39,13 +33,6 @@ module.exports = api => {
         mergeLonghand: false
       }
     }])
-
-  config
-    .plugin('define')
-    .tap((args) => [Object.assign({}, ...args, {
-      'process.client': true,
-      'process.server': false
-    })])
 
   return api.service.resolveWebpackConfig(config)
 }
