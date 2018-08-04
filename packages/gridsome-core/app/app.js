@@ -1,10 +1,15 @@
 import Vue from 'vue'
 import Meta from 'vue-meta'
 import Router from 'vue-router'
+import Link from './components/Link'
+import Image from './components/Image'
 import initRoutes from '@temp/routes.js'
 
 Vue.use(Meta)
 Vue.use(Router)
+
+Vue.component('GridsomeLink', Link)
+Vue.component('GridsomeImage', Image)
 
 export default function createApp () {
   const router = new Router({
