@@ -1,0 +1,10 @@
+{
+  "private": true,
+  "version": "1.0.0",
+  "name": "@gridsome/source-contentful",
+  "description": "Contentful source for Gridsome",
+  "main": "index.js",
+  "dependencies": {
+    "contentful": "^6.1.1"
+  }
+}
