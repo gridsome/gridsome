@@ -1,5 +1,5 @@
 const Service = require('../Service')
-const createGraphQLServer = require('../graphql/create-server')
+const createGraphQLServer = require('../graphql/createServer')
 
 module.exports = api => {
   api.registerCommand('gridsome:develop', async (args, rawArgv) => {

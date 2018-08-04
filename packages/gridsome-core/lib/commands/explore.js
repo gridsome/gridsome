@@ -1,5 +1,5 @@
 const Service = require('../Service')
-const createGraphQlServer = require('../graphql/create-server')
+const createGraphQlServer = require('../graphql/createServer')
 const { BOOTSTRAP_SOURCES } = require('../utils/const/bootstrap')
 
 module.exports = api => {

@@ -1,4 +1,4 @@
-const createRoutes = require('./create-routes')
+const createRoutes = require('./createRoutes')
 
 module.exports = async service => {
   const { routes, notFoundComponent } = await createRoutes(service)

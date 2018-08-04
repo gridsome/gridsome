@@ -1,5 +1,5 @@
 const path = require('path')
-const validateQuery = require('../utils/validate-query')
+const validateQuery = require('../utils/validateQuery')
 const appPath = path.resolve(__dirname, '../../../app')
 
 module.exports = function (source, map) {

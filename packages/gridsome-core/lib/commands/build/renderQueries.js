@@ -2,7 +2,7 @@ const fs = require('fs-extra')
 const cpu = require('./cpu')
 const { chunk } = require('lodash')
 const hirestime = require('hirestime')
-const createQueue = require('./create-queue')
+const createQueue = require('./createQueue')
 const { info } = require('@vue/cli-shared-utils')
 
 module.exports = async (service, data) => {

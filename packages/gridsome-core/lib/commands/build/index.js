@@ -4,8 +4,8 @@ const hirestime = require('hirestime')
 const Service = require('../../Service')
 const { info } = require('@vue/cli-shared-utils')
 
-const createRoutes = require('../../codegen/create-routes')
-const prepareRenderData = require('./prepare-render-data')
+const createRoutes = require('../../codegen/createRoutes')
+const prepareRenderData = require('./prepareRenderData')
 
 module.exports = api => {
   api.registerCommand('gridsome:build', async (args, rawArgv) => {
@@ -22,13 +22,13 @@ module.exports = api => {
     const data = await prepareRenderData(routes, outDir)
 
     const compileTime = hirestime()
-    const clientConfig = require('./create-client-config')(api)
-    const serverConfig = require('./create-server-config')(api)
+    const clientConfig = require('./createClientConfig')(api)
+    const serverConfig = require('./createServerConfig')(api)
     await compile([clientConfig, serverConfig])
     info(`Compile assets - ${compileTime(hirestime.S)}s`)
 
-    await require('./render-queries')(service, data)
-    await require('./render-html')(data, outDir)
+    await require('./renderQueries')(service, data)
+    await require('./renderHtml')(data, outDir)
 
     await fs.remove(`${outDir}/manifest`)
 

@@ -6,7 +6,7 @@ const { slugify } = require('./utils')
 const dateFormat = require('dateformat')
 const graphql = require('./graphql/graphql')
 const pathToRegexp = require('path-to-regexp')
-const validateQuery = require('./graphql/utils/validate-query')
+const validateQuery = require('./graphql/utils/validateQuery')
 
 const loadOwnPages = async (store, owner) => new Promise((resolve, reject) => {
   store.find({ 'internal.owner': owner }, (err, pages) => err ? reject(err) : resolve(pages))

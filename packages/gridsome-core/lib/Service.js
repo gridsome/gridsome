@@ -6,7 +6,7 @@ const hirestime = require('hirestime')
 const PluginAPI = require('./PluginAPI')
 const SourceAPI = require('./SourceAPI')
 const generateFiles = require('./codegen')
-const createSchema = require('./graphql/create-schema')
+const createSchema = require('./graphql/createSchema')
 const { execute, graphql } = require('./graphql/graphql')
 const { info, warn, error } = require('@vue/cli-shared-utils')
 

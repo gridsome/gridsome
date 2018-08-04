@@ -1,10 +1,10 @@
 const fs = require('fs-extra')
-const genRoutes = require('./generate-routes')
+const generateRoutes = require('./generateRoutes')
 
 module.exports = async service => {
   const files = [
     { name: 'hot.js', content: '' },
-    { name: 'routes.js', content: await genRoutes(service) }
+    { name: 'routes.js', content: await generateRoutes(service) }
   ]
 
   // TODO: let plugins generate files

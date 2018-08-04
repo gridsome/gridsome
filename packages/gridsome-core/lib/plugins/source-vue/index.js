@@ -1,7 +1,7 @@
 const path = require('path')
 const glob = require('globby')
 const chokidar = require('chokidar')
-const createCompiler = require('./lib/create-compiler')
+const createCompiler = require('./lib/createCompiler')
 
 /**
  * index.vue -> /
