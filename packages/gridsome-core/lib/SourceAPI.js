@@ -132,6 +132,7 @@ module.exports = class SourceAPI {
       graphql: options.graphql || {},
       parent: options.parent ? String(options.parent) : null,
       component: options.component,
+      file: options.file,
       internal: this.createInternals({})
     }
 
@@ -193,7 +194,7 @@ module.exports = class SourceAPI {
 
         this.service.broadcast({
           query: graphql.query,
-          component: page.component
+          file: page.file
         })
 
         resolve(page)

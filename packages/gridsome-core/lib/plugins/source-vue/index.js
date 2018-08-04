@@ -1,29 +1,15 @@
 const path = require('path')
 const glob = require('globby')
+const crypto = require('crypto')
 const chokidar = require('chokidar')
 const createCompiler = require('./lib/createCompiler')
-
-/**
- * index.vue -> /
- * features.vue -> /features
- * blog/index.vue -> /blog
- */
-function filePathToRoute (file) {
-  const route = file.toLowerCase()
-    .replace(/^pages\//, '')   // remove pages folder
-    .replace(/\.vue$/, '')     // removes .vue extension
-    .replace(/\/?index$/, '/') // replaces /index with a /
-    .replace(/(^\/|\/$)/g, '') // remove slahes
-
-  return `/${route}`
-}
 
 module.exports = api => {
   api.client(false)
 
-  const cwd = api.resolve('src')
+  const cwd = api.service.context
   const compiler = createCompiler()
-  const paths = ['pages/**/*.vue', 'templates/*.vue']
+  const paths = ['src/pages/**/*.vue', 'src/templates/*.vue']
 
   api.initSource = async ({ addPage, updateQuery }) => {
     const pages = await glob(paths, { cwd })
@@ -42,7 +28,7 @@ module.exports = api => {
       })
 
       watcher.on('change', async file => {
-        const id = api.resolve(file)
+        const id = makeId(file)
         const componentPath = api.resolve(path.join(cwd, file))
         const { graphql } = await compiler.parse(componentPath)
 
@@ -55,21 +41,25 @@ module.exports = api => {
     }
 
     await Promise.all(pages.map(async file => {
-      const componentPath = api.resolve(path.join(cwd, file))
-      const { graphql } = await compiler.parse(componentPath)
+      const absPath = api.resolve(path.join(cwd, file))
+      const { graphql } = await compiler.parse(absPath)
+      const component = file.replace('src', '@')
+      const slug = makeRoute(file)
+      const _id = makeId(file)
 
       const options = {
-        _id: api.resolve(file),
-        component: componentPath,
-        slug: filePathToRoute(file),
-        graphql
+        _id,
+        component,
+        graphql,
+        slug,
+        file
       }
 
-      if (/^pages\/404\.vue$/.test(file)) {
+      if (/^src\/pages\/404\.vue$/.test(file)) {
         options.type = '404'
       }
 
-      if (/^templates\//.test(file)) {
+      if (/^src\/templates\//.test(file)) {
         options.type = 'template'
         options.graphql.type = path.parse(file).name
       }
@@ -77,4 +67,24 @@ module.exports = api => {
       await addPage(options)
     }))
   }
+}
+
+/**
+ * index.vue -> /
+ * features.vue -> /features
+ * blog/index.vue -> /blog
+ */
+function makeRoute (file) {
+  const route = file.toLowerCase()
+    .replace(/^src\//, '')     // remove src dirname
+    .replace(/^pages\//, '')   // remove pages dirname
+    .replace(/\.vue$/, '')     // removes .vue extension
+    .replace(/\/?index$/, '/') // replaces /index with a /
+    .replace(/(^\/|\/$)/g, '') // remove slahes
+
+  return route
+}
+
+function makeId (str) {
+  return crypto.createHash('md5').update(str).digest('hex')
 }

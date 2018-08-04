@@ -5,11 +5,18 @@ module.exports = async service => {
 
   let res = `import NotFound from ${JSON.stringify(notFoundComponent)}\n\n`
 
-  res += `export const routes = [${routes.map(route => `{
-      path: ${JSON.stringify(route.path)},
-      name: ${route.name ? JSON.stringify(route.name) : 'null'},
-      component: () => import(/* webpackChunkName: ${JSON.stringify(route.name)} */ ${JSON.stringify(route.component)})
-    }`).join(',')}]\n\n`
+  res += `export const routes = [${routes.map(route => {
+    const path = JSON.stringify(route.path)
+    const name = JSON.stringify(route.name)
+    const chunkName = JSON.stringify(`${route.type}-${route.name}`)
+    const component = JSON.stringify(route.component)
+
+    return `{
+      path: ${path},
+      name: ${name},
+      component: () => import(/* webpackChunkName: ${chunkName} */ ${component})
+    }`
+  }).join(',')}]\n\n`
 
   res += `export { NotFound }\n\n`
 

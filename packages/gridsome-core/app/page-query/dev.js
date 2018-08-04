@@ -5,15 +5,20 @@ import fetch from './fetch'
 const merge = Vue.config.optionMergeStrategies
 
 export default ({ options }) => {
+  if (options.__pageQueryDev) return
+
   options.mounted = merge.mounted([function () {
     sock.onmessage = message => {
-      const { query } = JSON.parse(message.data)
+      const { query, file } = JSON.parse(message.data)
+      if (file !== this.$options.__file) return
       options.__pageQuery = query
-      fetch(options.__pageQuery, this.$route)
+      fetch(options, this.$route)
     }
   }], options.mounted)
 
   options.beforeDestroy = merge.beforeDestroy([function () {
     sock.onmessage = null
   }], options.beforeDestroy)
+
+  options.__pageQueryDev = true
 }
