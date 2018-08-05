@@ -16,7 +16,7 @@ const {
   BOOTSTRAP_CONFIG,
   BOOTSTRAP_PLUGINS,
   BOOTSTRAP_SOURCES,
-  BOOTSTRAP_CODEGEN
+  BOOTSTRAP_FULL
 } = require('./utils/const/bootstrap')
 
 module.exports = class Service {
@@ -35,14 +35,20 @@ module.exports = class Service {
     this.error = error
   }
 
-  async bootstrap (phase = BOOTSTRAP_CODEGEN) {
+  async bootstrap (phase = BOOTSTRAP_FULL) {
     const bootstrapTime = hirestime()
 
-    switch (phase) {
-      case BOOTSTRAP_CONFIG : await this.bootstrapConfig(); break
-      case BOOTSTRAP_PLUGINS : await this.bootstrapPlugins(); break
-      case BOOTSTRAP_SOURCES : await this.bootstrapSources(); break
-      case BOOTSTRAP_CODEGEN : await this.bootstrapCodegen(); break
+    const phases = [
+      this.bootstrapConfig,
+      this.bootstrapPlugins,
+      this.bootstrapSources,
+      this.bootstrapFull
+    ]
+
+    for (const cb of phases) {
+      if (phases.indexOf(cb) <= phase) {
+        await cb.call(this)
+      }
     }
 
     info(`Bootstrap finish - ${bootstrapTime(hirestime.S)}s`)
@@ -56,15 +62,11 @@ module.exports = class Service {
   }
 
   async bootstrapPlugins () {
-    this.bootstrapConfig()
-
     info('Initializing plugins...')
     this.plugins = await this.initPlugins()
   }
 
   async bootstrapSources () {
-    await this.bootstrapPlugins()
-
     info('Loading sources...')
     this.sources = await this.loadSources()
 
@@ -72,9 +74,7 @@ module.exports = class Service {
     this.schema = await createSchema(this)
   }
 
-  async bootstrapCodegen () {
-    await this.bootstrapSources()
-
+  async bootstrapFull () {
     info('Preparing router...')
     this.routerData = await createRouterData(this)
 
