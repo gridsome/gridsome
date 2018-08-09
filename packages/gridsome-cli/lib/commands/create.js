@@ -1,13 +1,15 @@
-const ora = require('ora')
 const path = require('path')
 const fs = require('fs-extra')
 const execa = require('execa')
 const chalk = require('chalk')
+const Tasks = require('@hjvedvik/tasks')
 const { error } = require('@vue/cli-shared-utils')
+const sortPackageJson = require('sort-package-json')
 
 module.exports = async (name, starter = 'default') => {
   const dir = path.resolve(process.cwd(), name)
   const starters = ['default', 'wordpress']
+  const hasYarn = useYarn()
 
   if (fs.existsSync(dir)) {
     return error(`Directory «${name}» already exists.`)
@@ -18,30 +20,57 @@ module.exports = async (name, starter = 'default') => {
   }
 
   const url = `https://github.com/${starter}.git`
-  const spinner = ora(`Downloading starter from ${url}`).start()
 
-  await exec('git', ['clone', url, dir, '--single-branch'])
-  await fs.remove(path.resolve(dir, '.git'))
+  const tasks = new Tasks([
+    {
+      title: `Clone ${url}`,
+      task: async () => {
+        try {
+          await exec('git', ['clone', url, dir, '--single-branch'])
+          await fs.remove(`${dir}/.git`)
+        } catch {
+          throw new Error('Failed to clone repository')
+        }
+      }
+    },
+    {
+      title: 'Update project package.json',
+      task: async (_, task) => {
+        try {
+          await updatePkg(`${dir}/package.json`, { name, private: true })
+        } catch (err) {
+          task.skip('Failed to update package.json')
+        }
+      }
+    },
+    {
+      title: `Install dependencies`,
+      task: async (_, task) => {
+        try {
+          if (hasYarn) await exec('yarnpkg')
+          else await exec('npm', ['install'])
+          task.setSummary(`Installed successfully with ${hasYarn ? 'Yarn' : 'npm'}`)
+        } catch (err) {
+          task.skip('Failed to install dependencies')
+        }
+      }
+    }
+  ])
 
-  const hasYarn = useYarn()
+  try {
+    await tasks.run()
+  } catch (err) {
+    console.log()
+    return error(err.message)
+  }
+
   const developCommand = 'gridsome develop'
   const buildCommand = 'gridsome build'
 
-  spinner.text = 'Installing dependencies...'
-
-  try {
-    if (hasYarn) await exec('yarnpkg')
-    else await exec('npm', ['install'])
-
-    spinner.succeed('Project created successfully!')
-  } catch (e) {
-    spinner.fail('Failed to install dependencies')
-  }
-
   console.log()
-  console.log(`  - Enter directory ${chalk.cyan(`cd ${name}`)}`)
-  console.log(`  - Run ${chalk.cyan(developCommand)} to start local development`)
-  console.log(`  - Run ${chalk.cyan(buildCommand)} to build for production`)
+  console.log(`  - Enter directory ${chalk.green(`cd ${name}`)}`)
+  console.log(`  - Run ${chalk.green(developCommand)} to start local development`)
+  console.log(`  - Run ${chalk.green(buildCommand)} to build for production`)
   console.log()
 }
 
@@ -52,6 +81,13 @@ function useYarn () {
   } catch (e) {
     return false
   }
+}
+
+async function updatePkg (pkgPath, obj) {
+  const pkg = JSON.parse(await fs.readFile(pkgPath, 'utf-8'))
+  const newPkg = sortPackageJson(Object.assign(pkg, obj))
+
+  await fs.outputFile(pkgPath, JSON.stringify(newPkg, null, 2))
 }
 
 function exec (cmd, args = [], options = { stdio: 'ignore' }) {
