@@ -12,9 +12,9 @@ module.exports = (api, options) => {
     options.outputDir = 'dist/_assets'
 
     const buildTime = hirestime()
-    const service = new Service(api)
     const outDir = api.resolve('dist')
     const outputDir = api.resolve(options.outputDir)
+    const service = new Service(api.service.context)
 
     await fs.remove(outDir)
 

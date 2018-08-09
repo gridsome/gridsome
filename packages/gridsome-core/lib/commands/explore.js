@@ -4,7 +4,7 @@ const { BOOTSTRAP_SOURCES } = require('../utils/const/bootstrap')
 
 module.exports = api => {
   api.registerCommand('gridsome:explore', async (args, rawArgv) => {
-    const service = new Service(api)
+    const service = new Service(api.service.context)
 
     await service.bootstrap(BOOTSTRAP_SOURCES)
 

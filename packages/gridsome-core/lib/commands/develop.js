@@ -3,7 +3,7 @@ const createGraphQLServer = require('../graphql/createServer')
 
 module.exports = api => {
   api.registerCommand('gridsome:develop', async (args, rawArgv) => {
-    const service = new Service(api)
+    const service = new Service(api.service.context)
 
     await service.bootstrap()
 

@@ -1,3 +1,4 @@
+const path = require('path')
 const fs = require('fs-extra')
 const uuid = require('uuid/v1')
 const Datastore = require('nedb')
@@ -12,19 +13,13 @@ const { execute, graphql } = require('./graphql/graphql')
 const createRouterData = require('./utils/createRouterData')
 const { info, warn, error } = require('@vue/cli-shared-utils')
 
-const {
-  BOOTSTRAP_CONFIG,
-  BOOTSTRAP_PLUGINS,
-  BOOTSTRAP_SOURCES,
-  BOOTSTRAP_FULL
-} = require('./utils/const/bootstrap')
+const { BOOTSTRAP_FULL } = require('./utils/const/bootstrap')
 
 module.exports = class Service {
-  constructor (api) {
+  constructor (context) {
     process.GRIDSOME_SERVICE = this
 
-    this.api = api
-    this.context = api.service.context
+    this.context = context
     this.pages = new Datastore()
     this.clients = {}
 
@@ -118,7 +113,7 @@ module.exports = class Service {
         const func = require(plugin.use)
         const options = defaultsDeep(plugin.options, func.defaultOptions)
         await func(plugin.api, options)
-      } catch {}
+      } catch (err) {}
     }
 
     return plugins
@@ -144,7 +139,7 @@ module.exports = class Service {
   //
 
   resolve (p) {
-    return this.api.resolve(p)
+    return path.resolve(this.context, p)
   }
 
   graphql (docOrQuery, variables = {}) {

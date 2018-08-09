@@ -40,14 +40,14 @@ module.exports = class PluginAPI {
   //
 
   chainWebpack (fn) {
-    this.service.api.chainWebpack(fn)
+    // TODO: this.service.chainWebpack(fn)
   }
 
   configureWebpack (fn) {
-    this.service.api.configureWebpack(fn)
+    // TODO: this.service.configureWebpack(fn)
   }
 
   configureDevServer (fn) {
-    this.service.api.configureDevServer(fn)
+    // TODO: this.service.configureDevServer(fn)
   }
 }

@@ -29,7 +29,7 @@ function createService (context) {
       lintOnSave: true
     },
     plugins: [
-      plugin('gridsome/lib/plugins/babel'),
+      plugin('./lib/plugins/babel'),
       plugin('@gridsome/core')
     ]
   })
