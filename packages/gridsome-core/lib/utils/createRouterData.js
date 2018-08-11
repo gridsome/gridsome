@@ -1,5 +1,7 @@
 const camelCase = require('camelcase')
 const { parse } = require('../graphql/graphql')
+const { findAll } = require('../utils')
+const { pagingFromAst } = require('../graphql/schema/directives/paginate')
 
 /**
  * Creates route data for router and the build command
@@ -13,17 +15,24 @@ module.exports = service => {
     ? notFoundPage.component
     : '#app/pages/404.vue'
 
-  const routes = pages.map(page => {
+  const routes = await Promise.all(pages.map(async page => {
+    const query = await parseQuery(page.graphql, service)
+    const name = camelCase(page.path.replace('/', ' ')) || 'home'
+
+    // add page suffix if this page wants pagination
+    const route = query.paginate
+      ? `${page.path}/:page(\\d+)?`
+      : page.path
+
     return {
+      name,
       type: page.type,
       path: page.path,
-      name: camelCase(page.path.replace('/', ' ')) || 'home',
       component: page.component,
-      query: page.graphql.query
-        ? parse(page.graphql.query)
-        : null
+      route,
+      ...query
     }
-  })
+  }))
 
   // create an object with GraphQL type names and path to Vue component
   const templates = allPages.reduce((templates, page) => {
@@ -40,18 +49,17 @@ module.exports = service => {
 
       if (templates.hasOwnProperty(nodeType)) {
         const page = templates[nodeType]
-        const query = page.graphql.query
-          ? parse(page.graphql.query)
-          : null
+        const query = await parseQuery(page.graphql, service)
 
         routes.push({
           type: 'template',
           path: contentType.route,
+          route: contentType.route,
           component: page.component,
           name: camelCase(nodeType),
           nodeType,
           source,
-          query
+          ...query
         })
       }
     }
@@ -62,5 +70,17 @@ module.exports = service => {
   return {
     notFoundComponent,
     routes
+  }
+}
+
+async function parseQuery (options, service) {
+  if (!options.query) return {}
+
+  const ast = parse(options.query)
+  const paginate = pagingFromAst(ast)
+
+  return {
+    query: ast,
+    paginate
   }
 }

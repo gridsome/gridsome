@@ -3,15 +3,32 @@ export default {
   functional: true,
 
   props: {
-    to: { type: String }
+    to: { type: [Object, String] },
+    page: { type: Number }
   },
 
-  render: (h, ctx) => h('router-link', {
-    ...ctx.data,
-    attrs: {
-      to: ctx.props.to,
-      activeClass: 'active',
-      exactActiveClass: 'active--exact'
+  render: (h, { data, props, children, ...res }) => {
+    const to = normalize(props.to)
+
+    if (props.page) {
+      to.params.page = props.page > 1 ? props.page : null
+      data.attrs.exact = true
     }
-  }, ctx.children)
+
+    return h('router-link', {
+      ...data,
+      attrs: {
+        to,
+        activeClass: 'active',
+        exactActiveClass: 'active--exact',
+        ...data.attrs
+      }
+    }, children)
+  }
+}
+
+function normalize (to) {
+  return typeof to === 'string'
+    ? { path: to, params: {}}
+    : { params: {}, ...to }
 }

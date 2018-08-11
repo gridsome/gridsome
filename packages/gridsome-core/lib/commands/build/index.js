@@ -18,7 +18,7 @@ module.exports = (api, options) => {
 
     await fs.remove(outDir)
     const { routerData, graphql } = await service.bootstrap()
-    const { pages } = prepareRenderData(routerData, outDir)
+    const { pages } = await prepareRenderData(routerData, outDir, graphql)
 
     await require('./compileAssets')(api)
     await require('./renderQueries')(pages, graphql)

@@ -3,13 +3,14 @@ const {
   GraphQLObjectType
 } = require('./graphql')
 
-const createPagesSchema = require('./schema/pages')
-const createNodesSchema = require('./schema/nodes')
-const createInternalSchema = require('./schema/internal')
+module.exports = ({ pages, sources }) => {
+  const createPagesSchema = require('./schema/pages')
+  const createNodesSchema = require('./schema/nodes')
+  const createInternalSchema = require('./schema/internal')
+  const directives = require('./schema/directives')
 
-module.exports = service => {
-  const pagesSchema = createPagesSchema(service.pages)
-  const nodesSchema = createNodesSchema(service.sources)
+  const pagesSchema = createPagesSchema(pages)
+  const nodesSchema = createNodesSchema(sources)
   const internalSchema = createInternalSchema()
 
   return new GraphQLSchema({
@@ -23,24 +24,9 @@ module.exports = service => {
         ...internalSchema.queries,
         ...internalSchema.connections
       }
-    })
-
-    // mutation: new GraphQLObjectType({
-    //   name: 'RootMutation',
-    //   fields: {
-    //     ...pagesSchema.mutations,
-    //     ...nodesSchema.mutations,
-    //     ...internalSchema.mutations
-    //   }
-    // }),
-
-    // subscription: new GraphQLObjectType({
-    //   name: 'RootSubscription',
-    //   fields: {
-    //     ...pagesSchema.subscriptions,
-    //     ...nodesSchema.subscriptions,
-    //     ...internalSchema.subscriptions
-    //   }
-    // })
+    }),
+    directives: [
+      ...directives
+    ]
   })
 }

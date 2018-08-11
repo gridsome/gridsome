@@ -3,7 +3,7 @@ exports.ucfirst = string => {
 }
 
 exports.unslash = (string) => {
-  return string.replace(/^\/+/g, '')
+  return string.replace(/^\/+|\/$/g, '')
 }
 
 exports.slugify = string => {

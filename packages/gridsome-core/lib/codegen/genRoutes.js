@@ -2,7 +2,7 @@ module.exports = async ({ routes, notFoundComponent }) => {
   let res = `import NotFound from ${JSON.stringify(notFoundComponent)}\n\n`
 
   res += `export const routes = [${routes.map(route => {
-    const path = JSON.stringify(route.path)
+    const path = JSON.stringify(route.route)
     const name = JSON.stringify(route.name)
     const chunkName = JSON.stringify(`${route.type}-${route.name}`)
     const component = JSON.stringify(route.component)
