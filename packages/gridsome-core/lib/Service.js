@@ -1,12 +1,12 @@
 const path = require('path')
 const fs = require('fs-extra')
 const uuid = require('uuid/v1')
-const Datastore = require('nedb')
 const codegen = require('./codegen')
 const autoBind = require('auto-bind')
 const hirestime = require('hirestime')
 const PluginAPI = require('./PluginAPI')
 const SourceAPI = require('./SourceAPI')
+const { Collection } = require('lokijs')
 const { defaultsDeep } = require('lodash')
 const createSchema = require('./graphql/createSchema')
 const { execute, graphql } = require('./graphql/graphql')
@@ -20,7 +20,10 @@ module.exports = class Service {
     process.GRIDSOME_SERVICE = this
 
     this.context = context
-    this.pages = new Datastore()
+    this.pages = new Collection('pages', {
+      indices: ['type'],
+      unique: ['path']
+    })
     this.clients = {}
 
     autoBind(this)

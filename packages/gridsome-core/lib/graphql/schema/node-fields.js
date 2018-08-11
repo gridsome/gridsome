@@ -9,13 +9,17 @@ const {
 } = require('../graphql')
 
 module.exports = {
-  _id: { type: new GraphQLNonNull(GraphQLID) },
   type: { type: new GraphQLNonNull(GraphQLString) },
   internal: { type: new GraphQLNonNull(internalType) },
   title: { type: GraphQLString },
   slug: { type: GraphQLString },
   path: { type: GraphQLString },
   status: { type: GraphQLString },
+
+  _id: {
+    type: new GraphQLNonNull(GraphQLID),
+    resolve: node => node.$loki
+  },
 
   data: {
     type: GraphQLJSON,

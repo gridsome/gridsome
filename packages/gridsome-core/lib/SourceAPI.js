@@ -1,9 +1,9 @@
-const Datastore = require('nedb')
 const uuidv3 = require('uuid/v3')
 const autoBind = require('auto-bind')
 const camelCase = require('camelcase')
 const { slugify } = require('./utils')
 const dateFormat = require('dateformat')
+const { Collection } = require('lokijs')
 const graphql = require('./graphql/graphql')
 const pathToRegexp = require('path-to-regexp')
 const validateQuery = require('./graphql/utils/validateQuery')
@@ -40,9 +40,10 @@ module.exports = class SourceAPI {
     this.mediaType = null
 
     this.types = {}
-    this.nodes = new Datastore()
-    this.nodes.ensureIndex({ fieldName: 'type' })
-    this.nodes.ensureIndex({ fieldName: 'path', unique: true })
+    this.nodes = new Collection('nodes', {
+      indices: ['type', 'created'],
+      unique: ['_id', 'path']
+    })
 
     autoBind(this)
   }
@@ -100,23 +101,11 @@ module.exports = class SourceAPI {
 
     node.path = this.makePath(node)
 
-    return new Promise((resolve, reject) => {
-      this.nodes.insert(node, (err, node) => {
-        if (err) reject(err)
-        else resolve(node)
-      })
-    })
+    return this.nodes.insert(node)
   }
 
-  updateNode ({ _id, ...$set }) {
-    const options = { returnUpdatedDocs: true }
-
-    return new Promise((resolve, reject) => {
-      this.nodes.update({ _id }, { $set }, options, (err, count, node) => {
-        if (err) reject(err)
-        else resolve(node)
-      })
-    })
+  updateNode (node) {
+    return this.nodes.update(node)
   }
 
   addPage (options) {
@@ -144,25 +133,11 @@ module.exports = class SourceAPI {
       page.path = `/${page.slug}`
     }
 
-    return new Promise((resolve, reject) => {
-      this.service.pages.insert(page, (err, page) => {
-        if (err) reject(err)
-        else resolve(page)
-      })
-    })
+    return this.service.pages.insert(page)
   }
 
-  updatePage ({ _id, ...$set }) {
-    const q = { _id }
-    const update = { $set }
-    const options = { returnUpdatedDocs: true }
-
-    return new Promise((resolve, reject) => {
-      this.service.pages.update(q, update, options, (err, count, page) => {
-        if (err) reject(err)
-        else resolve(page)
-      })
-    })
+  updatePage (page) {
+    return this.service.pages.update(page)
   }
 
   // graphql

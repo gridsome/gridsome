@@ -12,38 +12,6 @@ const {
   GraphQLObjectType
 } = require('../../graphql')
 
-const findOne = (store, _id) => new Promise((resolve, reject) => {
-  store.findOne({ _id }, (err, page) => {
-    if (err) reject(err)
-    else resolve(page)
-  })
-})
-
-const findSiblings = (store, node) => new Promise((resolve, reject) => {
-  store.find({ parent: node.parent }, (err, pages) => {
-    if (err) reject(err)
-    else resolve(pages)
-  })
-})
-
-const traverse = async (store, node, results = [node]) => {
-  const parent = await findOne(store, node.parent)
-  if (!parent) return results
-  results.push(parent)
-  return traverse(store, parent, results)
-}
-
-// const findAvailableRoute = async (input = '/', num = 1) => {
-//   const route = input !== '/' ? `${input}-${num}` : `/___conflict-${num}`
-
-//   return new Promise((resolve) => {
-//     pages.findOne({ route }, (err, page) => {
-//       if (page) findAvailableRoute(route, num += 1)
-//       else resolve(route)
-//     })
-//   })
-// }
-
 const pageQuery = new GraphQLObjectType({
   name: 'PageQuery',
   fields: () => ({
@@ -61,44 +29,7 @@ module.exports = pages => {
       ...baseNodeFields,
 
       component: { type: GraphQLString },
-      graphql: { type: pageQuery },
-
-      parent: {
-        type: pageType,
-        resolve (node) {
-          return findOne(pages, node.parent)
-        }
-      },
-
-      layout: {
-        type: pageType,
-        resolve (node) {
-          return findOne(pages, node.layout)
-        }
-      },
-
-      depth: {
-        type: GraphQLInt,
-        async resolve (node) {
-          const results = await traverse(pages, node)
-          return results.length
-        }
-      },
-
-      path: {
-        type: GraphQLString,
-        async resolve (node) {
-          const results = await traverse(pages, node)
-          const siblings = await findSiblings(pages, node)
-          const path = results.reverse().map(node => node.slug).join('/')
-
-          if (siblings.filter(n => n.slug === node.slug).length > 1) {
-            warn(`Found duplicate path: ${path}`)
-          }
-
-          return '/' + unslash(path)
-        }
-      }
+      graphql: { type: pageQuery }
     })
   })
 
@@ -109,12 +40,7 @@ module.exports = pages => {
         _id: { type: new GraphQLNonNull(GraphQLString) }
       },
       resolve (_, { _id }) {
-        return new Promise((resolve, reject) => {
-          pages.findOne({ _id }, (err, page) => {
-            if (err) reject(err)
-            else resolve(page)
-          })
-        })
+        return pages.find({ _id })
       }
     }
   }
@@ -154,12 +80,7 @@ module.exports = pages => {
 
         if (type === '*') delete query.type
 
-        return new Promise((resolve, reject) => {
-          pages.find(query, (err, pages) => {
-            if (err) reject(err)
-            else resolve(pages)
-          })
-        })
+        return pages.find(query)
       }
     }
   }

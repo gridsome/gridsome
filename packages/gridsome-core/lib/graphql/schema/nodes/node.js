@@ -101,12 +101,9 @@ module.exports = ({ contentType, nodeTypes, source }) => {
               refs[name] = {
                 description,
                 type: new GraphQLList(type),
-                resolve: obj => new Promise((resolve, reject) => {
-                  source.nodes.find({ _id: { $in: obj[name] }}, (err, nodes) => {
-                    if (err) reject(err)
-                    else resolve(nodes)
-                  })
-                })
+                resolve: obj => {
+                  return source.nodes.find({ _id: { $in: obj[name] }})
+                }
               }
 
               return refs
@@ -124,13 +121,10 @@ module.exports = ({ contentType, nodeTypes, source }) => {
 
         nodeFields.belongsTo = {
           type: new GraphQLList(belongsToType),
-          resolve: obj => new Promise((resolve, reject) => {
+          resolve: obj => {
             const q = { [`refs.${belongsTo.key}`]: { $in: [obj._id] }}
-            source.nodes.find(q, (err, nodes) => {
-              if (err) reject(err)
-              else resolve(nodes)
-            })
-          })
+            return source.nodes.find(q)
+          }
         }
       }
 

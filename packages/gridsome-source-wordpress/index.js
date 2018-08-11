@@ -51,7 +51,7 @@ module.exports = (api, {
 
       restBases.posts[typeName] = options.rest_base
 
-      await addType({
+      addType({
         type: typeName,
         name: options.name,
         route: routes[typeName],
@@ -73,7 +73,7 @@ module.exports = (api, {
       const options = taxonomies[typeName]
       restBases.taxonomies[typeName] = options.rest_base
 
-      await addType({
+      addType({
         type: typeName,
         name: options.name,
         route: routes[typeName],
@@ -108,7 +108,7 @@ module.exports = (api, {
           }
         }
 
-        await addNode({
+        addNode({
           _id: makePostId(post.id),
           type: post.type,
           title: post.title ? post.title.rendered : '',
@@ -132,7 +132,7 @@ module.exports = (api, {
       info(`Taxonomy type ${taxonomies[typeName].name} (${terms.length})`, namespace)
 
       for (const term of terms) {
-        await addNode({
+        addNode({
           _id: makeTermId(term.id),
           type: term.taxonomy,
           slug: term.slug,

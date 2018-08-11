@@ -1,12 +1,11 @@
 const camelCase = require('camelcase')
-const { findAll } = require('../utils')
 const { parse } = require('../graphql/graphql')
 
 /**
  * Creates route data for router and the build command
  */
-module.exports = async service => {
-  const allPages = await findAll(service.pages)
+module.exports = service => {
+  const allPages = service.pages.find()
   const pages = allPages.filter(page => page.type === 'page')
   const notFoundPage = allPages.find(page => page.type === '404')
 

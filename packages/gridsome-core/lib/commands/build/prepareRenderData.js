@@ -1,8 +1,7 @@
 const path = require('path')
 const Router = require('vue-router')
-const { findAll } = require('../../utils')
 
-module.exports = async ({ routes }, outDir) => {
+module.exports = ({ routes }, outDir) => {
   const router = new Router({
     base: '/',
     mode: 'history',
@@ -25,7 +24,7 @@ module.exports = async ({ routes }, outDir) => {
         })
         break
       case 'template':
-        const nodes = await findAll(page.source.nodes)
+        const nodes = page.source.nodes.find()
         for (const node of nodes) {
           pages.push({
             path: node.path,

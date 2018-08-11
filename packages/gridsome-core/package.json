@@ -28,7 +28,7 @@
     "js-yaml": "^3.11.0",
     "lodash": "^4.17.10",
     "lodash.uniq": "^4.5.0",
-    "nedb": "^1.8.0",
+    "lokijs": "^1.5.5",
     "optimize-css-assets-webpack-plugin": "^4.0.1",
     "p-map": "^1.2.0",
     "path-to-regexp": "^2.2.1",

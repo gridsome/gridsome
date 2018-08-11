@@ -50,7 +50,7 @@ module.exports = (api, {
         refs
       }
 
-      await addType({
+      addType({
         type: contentType.name,
         name: contentType.name,
         fields: () => fields.reduce((fields, field) => {
@@ -85,7 +85,7 @@ module.exports = (api, {
 
       // TODO: let user choose which field contains the slug
 
-      await addNode({
+      addNode({
         _id: makeUid(item.sys.id),
         type: contentType.name,
         title: item.fields[contentType.displayField],

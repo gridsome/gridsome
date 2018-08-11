@@ -17,26 +17,19 @@ module.exports = ({ nodeType, source }) => {
       }
     },
     resolve (object, { _id, path, nullable }) {
-      const query = {}
+      const node = _id
+        ? source.nodes.get(_id)
+        : source.nodes.findOne({ path })
 
-      if (_id) query._id = _id
-      if (path) query.path = path
+      if (!node && !nullable) {
+        const message = path
+          ? `${path} was not found`
+          : `A ${nodeType.name} with id ${_id} was not found`
 
-      return new Promise((resolve, reject) => {
-        source.nodes.findOne(query, (err, node) => {
-          if (err) return reject(err)
+        throw new GraphQLError(message)
+      }
 
-          if (!node && !nullable) {
-            const message = path
-              ? `${path} was not found`
-              : `A ${nodeType.name} with id ${_id} was not found`
-
-            return resolve(new GraphQLError(message))
-          }
-
-          resolve(node)
-        })
-      })
+      return node
     }
   }
 }

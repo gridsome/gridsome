@@ -8,28 +8,7 @@ const {
 
 const { pageInfoType, sortOrderType } = require('../types')
 
-const count = (nodes, type) => new Promise((resolve, reject) => {
-  nodes.count({ type }, (err, count) => {
-    if (err) reject(err)
-    else resolve(count)
-  })
-})
-
-const exec = (query) => new Promise((resolve, reject) => {
-  query.exec((err, nodes) => {
-    if (err) return reject(err)
-
-    resolve(
-      nodes.map((node, index) => {
-        return {
-          node,
-          next: nodes[index + 1],
-          previous: nodes[index - 1]
-        }
-      })
-    )
-  })
-})
+const count = (nodes, type) => nodes.find({ type }).length
 
 module.exports = ({ contentType, nodeType, source }) => {
   const edgeType = new GraphQLObjectType({
@@ -67,18 +46,18 @@ module.exports = ({ contentType, nodeType, source }) => {
       skip = 0,
       page = 1
     }) {
-      const query = source.nodes.find({
-        type: contentType.type
-      })
-
       page = Math.max(page, 1) // ensure page higher than 0
+      perPage = Math.max(perPage, 1) // ensure page higher than 1
 
-      query.sort({ [sortBy]: order })
-      query.skip(((page - 1) * perPage) + skip)
-      query.limit(perPage)
+      const query = source.nodes
+        .chain()
+        .find({ type: contentType.type })
+        .simplesort(sortBy, order === -1)
+        .offset(((page - 1) * perPage) + skip)
+        .limit(perPage)
 
-      const edges = await exec(query)
-      const totalStoreNodes = await count(source.nodes, contentType.type)
+      const nodes = query.data()
+      const totalStoreNodes = count(source.nodes, contentType.type)
 
       // total items in result
       const totalCount = Math.max(totalStoreNodes - skip, 0)
@@ -90,8 +69,12 @@ module.exports = ({ contentType, nodeType, source }) => {
       const isFirst = page <= 1
 
       return {
-        edges,
         totalCount,
+        edges: nodes.map((node, index) => ({
+          node,
+          next: nodes[index + 1],
+          previous: nodes[index - 1]
+        })),
         pageInfo: {
           currentPage,
           totalPages,
