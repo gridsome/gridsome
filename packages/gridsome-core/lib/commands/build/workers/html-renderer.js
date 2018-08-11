@@ -28,7 +28,7 @@ exports.render = async function ({
       state: {}
     }
 
-    if (page.query) {
+    if (page.hasData) {
       context.queryResults = require(`${page.output}/data.json`)
     }
 

@@ -1,13 +1,14 @@
 const path = require('path')
 const cpu = require('./utils/cpu')
+const { chunk } = require('lodash')
 const hirestime = require('hirestime')
 const Worker = require('jest-worker').default
-const createQueue = require('./createQueue')
 const { info } = require('@vue/cli-shared-utils')
 
 module.exports = async (pages, outputDir) => {
   const timer = hirestime()
   const totalPages = pages.length
+  const chunks = chunk(pages, 1000)
 
   const workerPath = require.resolve('./workers/html-renderer')
   const templatePath = path.resolve(__dirname, '../../../app/index.server.html')
@@ -18,28 +19,23 @@ module.exports = async (pages, outputDir) => {
     numWorkers: cpu.logical
   })
 
-  await createQueue(pages, {
-    label: 'Rendering HTML',
-    concurrent: cpu.logical,
-    chunkSize: 500
-  }, (task, callback) => {
+  await Promise.all(chunks.map(chunk => {
     // reduce amount of data sent to worker
-    const pages = task.data.map(page => ({
+    const pages = chunk.map(page => ({
       path: page.path,
       output: page.output,
-      query: !!page.query
+      hasData: !!page.query
     }))
 
-    worker
-      .render({
-        pages,
-        templatePath,
-        clientManifestPath,
-        serverBundlePath
-      })
-      .then(() => callback())
-      .catch(err => callback(err))
-  })
+    return worker.render({
+      pages,
+      templatePath,
+      clientManifestPath,
+      serverBundlePath
+    }).catch(err => {
+      throw err
+    })
+  }))
 
   worker.end()
 
