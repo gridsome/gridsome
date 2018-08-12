@@ -1,6 +1,6 @@
 const path = require('path')
 const Router = require('vue-router')
-const { unslash } = require('../../utils')
+const { trim } = require('lodash')
 
 module.exports = async ({ routes }, outDir, graphql) => {
   const router = new Router({
@@ -15,11 +15,11 @@ module.exports = async ({ routes }, outDir, graphql) => {
   const makePage = (data, page = 1) => {
     const fullPath = page > 1 ? `${data.path}/${page}` : data.path
     const route = router.resolve(fullPath).route
-    const output = path.resolve(outDir, unslash(route.path))
+    const output = path.resolve(outDir, trim(route.path, '/'))
 
     return {
       path: fullPath,
-      query: data.query,
+      query: data.pageQuery.query,
       output,
       route
     }
@@ -27,11 +27,11 @@ module.exports = async ({ routes }, outDir, graphql) => {
 
   const makeTemplate = (node, data) => {
     const route = router.resolve(node.path).route
-    const output = path.resolve(outDir, unslash(route.path))
+    const output = path.resolve(outDir, trim(route.path, '/'))
 
     return {
       path: node.path,
-      query: data.query,
+      query: data.pageQuery.query,
       output,
       route
     }
@@ -44,8 +44,8 @@ module.exports = async ({ routes }, outDir, graphql) => {
       case 'page':
         pages.push(makePage(page))
 
-        if (page.paginate) {
-          const { collection, perPage } = page.paginate
+        if (page.pageQuery.paginate.collection) {
+          const { collection, perPage } = page.pageQuery.paginate
 
           // get page info for this connection to figure
           // out how many pages that shuld be rendered

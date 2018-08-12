@@ -1,10 +1,7 @@
-const { warn } = require('@vue/cli-shared-utils')
-const { unslash } = require('../../../utils')
 const baseNodeFields = require('../node-fields')
 const { nodeInterface } = require('../interfaces')
 
 const {
-  GraphQLInt,
   GraphQLJSON,
   GraphQLList,
   GraphQLString,
@@ -15,8 +12,8 @@ const {
 const pageQuery = new GraphQLObjectType({
   name: 'PageQuery',
   fields: () => ({
-    nodeType: { type: GraphQLString },
-    query: { type: GraphQLString },
+    type: { type: GraphQLString },
+    content: { type: GraphQLString },
     options: { type: GraphQLJSON }
   })
 })
@@ -27,9 +24,8 @@ module.exports = pages => {
     interfaces: [nodeInterface],
     fields: () => ({
       ...baseNodeFields,
-
       component: { type: GraphQLString },
-      graphql: { type: pageQuery }
+      pageQuery: { type: pageQuery }
     })
   })
 

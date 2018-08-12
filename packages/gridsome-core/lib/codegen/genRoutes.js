@@ -1,4 +1,4 @@
-module.exports = async ({ routes, notFoundComponent }) => {
+module.exports = ({ routes, notFoundComponent }) => {
   let res = `import NotFound from ${JSON.stringify(notFoundComponent)}\n\n`
 
   res += `export const routes = [${routes.map(route => {

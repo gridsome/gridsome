@@ -1,48 +1,31 @@
-const uuidv3 = require('uuid/v3')
+const EventEmitter = require('events')
+const crypto = require('crypto')
 const autoBind = require('auto-bind')
 const camelCase = require('camelcase')
-const { slugify } = require('./utils')
 const dateFormat = require('dateformat')
 const { Collection } = require('lokijs')
 const graphql = require('./graphql/graphql')
 const pathToRegexp = require('path-to-regexp')
-const validateQuery = require('./graphql/utils/validateQuery')
+const { cloneDeep, kebabCase } = require('lodash')
+const parsePageQuery = require('./graphql/parsePageQuery')
+// const validateQuery = require('./graphql/utils/validateQuery')
 
-const loadOwnPages = async (store, owner) => new Promise((resolve, reject) => {
-  store.find({ 'internal.owner': owner }, (err, pages) => err ? reject(err) : resolve(pages))
-})
-
-const loadAll = async store => new Promise((resolve, reject) => {
-  store.find({}, (err, nodes) => err ? reject(err) : resolve(nodes))
-})
-
-const updateNodeData = async (transformers, store, node) => {
-  const { mediaType } = node.internal
-  const data = mediaType && node.content
-    ? transformers[mediaType].parse(node.content)
-    : null
-
-  const query = { _id: node._id }
-  const update = { $set: { data: JSON.stringify(data) }}
-
-  return new Promise((resolve, reject) => {
-    store.update(query, update, {}, err => err ? reject(err) : resolve())
-  })
-}
-
-module.exports = class SourceAPI {
+class SourceAPI extends EventEmitter {
   constructor (service, plugin) {
+    super()
+
     this.service = service
     this.plugin = plugin
     this.graphql = graphql
-    this.slugify = slugify
+    this.slugify = kebabCase
     this.namespace = null
     this.mediaType = null
 
     this.types = {}
     this.nodes = new Collection('nodes', {
       indices: ['type', 'created'],
-      unique: ['_id', 'path']
+      unique: ['_id', 'path'],
+      autoupdate: true
     })
 
     autoBind(this)
@@ -115,92 +98,45 @@ module.exports = class SourceAPI {
       title: options.title,
       slug: options.slug.replace(/^\/|\/$/g, ''),
       path: null,
-      created: options.created,
-      updated: options.updated,
+      created: options.created ? new Date(options.created) : new Date(),
+      updated: options.updated ? new Date(options.updated) : new Date(),
       data: options.data,
-      graphql: options.graphql || {},
       parent: options.parent ? String(options.parent) : null,
       component: options.component,
       file: options.file,
+      pageQuery: parsePageQuery(options.pageQuery),
       internal: this.createInternals({})
-    }
-
-    if (page.graphql.type) {
-      page.graphql.connection = camelCase(`all ${page.graphql.type}`)
     }
 
     if (page.type === 'page') {
       page.path = `/${page.slug}`
     }
 
-    return this.service.pages.insert(page)
+    this.service.pages.insert(page)
+    this.emit('addPage', page)
   }
 
-  updatePage (page) {
-    return this.service.pages.update(page)
+  updatePage (options) {
+    const page = this.getPage(options._id)
+    const pageQuery = parsePageQuery(options.pageQuery)
+    const oldPage = cloneDeep(page)
+
+    page.title = options.title
+    page.pageQuery = pageQuery
+
+    this.emit('updatePage', page, oldPage)
   }
 
-  // graphql
+  removePage (_id) {
+    this.service.pages.findAndRemove({ _id })
+    this.emit('removePage', _id)
+  }
 
-  updateQuery (_id, graphql) {
-    return new Promise((resolve, reject) => {
-      const options = { returnUpdatedDocs: true }
-
-      const update = {
-        $set: {
-          'graphql.query': null,
-          'graphql.options': null
-        }
-      }
-
-      if (graphql.query) {
-        const err = validateQuery(this.service.schema, graphql.query)
-
-        if (err && err.length) {
-          return reject(err)
-        }
-
-        update.$set['graphql.query'] = graphql.query
-        update.$set['graphql.options'] = graphql.options
-      }
-
-      this.service.pages.update({ _id }, update, options, (err, count, page) => {
-        if (err) return reject(err)
-
-        this.service.broadcast({
-          query: graphql.query,
-          file: page.file
-        })
-
-        resolve(page)
-      })
-    })
+  getPage (_id) {
+    return this.service.pages.findOne({ _id })
   }
 
   // helpers
-
-  async transformAll () {
-    const nodes = await loadAll(this.nodes)
-    const pages = await loadOwnPages(this.service.pages, this.plugin.uid)
-
-    for (const node of nodes) await this.transformNode(node)
-    for (const page of pages) await this.transformPage(page)
-  }
-
-  transformNode (node) {
-    const { transformers } = this.service
-    return updateNodeData(transformers, this.nodes, node)
-  }
-
-  transformPage (page) {
-    const { transformers, pages } = this.service
-    return updateNodeData(transformers, pages, page)
-  }
-
-  stringify (data) {
-    const { transformers } = this.service
-    return transformers[this.mediaType].stringify(data)
-  }
 
   createInternals (options) {
     return {
@@ -212,8 +148,7 @@ module.exports = class SourceAPI {
   }
 
   makeUid (orgId) {
-    // TODO: improve id generation
-    return uuidv3(this.namespace + orgId, uuidv3.DNS)
+    return crypto.createHash('md5').update(this.namespace + orgId).digest('hex')
   }
 
   makeTypeName (name) {
@@ -238,3 +173,5 @@ module.exports = class SourceAPI {
     return camelCase(string, { pascalCase: true })
   }
 }
+
+module.exports = SourceAPI

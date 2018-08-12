@@ -40,6 +40,7 @@ module.exports = class Service {
       this.bootstrapConfig,
       this.bootstrapPlugins,
       this.bootstrapSources,
+      this.bootstrapRouter,
       this.bootstrapFull
     ]
 
@@ -72,10 +73,12 @@ module.exports = class Service {
     this.schema = await createSchema(this)
   }
 
-  async bootstrapFull () {
-    info('Preparing router...')
+  async bootstrapRouter () {
+    info('Create router data...')
     this.routerData = await createRouterData(this)
+  }
 
+  async bootstrapFull () {
     info('Generating temporary files...')
     this.tempFiles = await codegen(this)
   }
@@ -130,6 +133,11 @@ module.exports = class Service {
         const source = new SourceAPI(this, plugin)
         await plugin.api.initSource(source)
 
+        source.on('updateRouter', async () => {
+          await this.bootstrapRouter()
+          await this.generate('routes.js')
+        })
+
         sources.push({ plugin, source })
       }
     }
@@ -143,6 +151,10 @@ module.exports = class Service {
 
   resolve (p) {
     return path.resolve(this.context, p)
+  }
+
+  generate (name) {
+    return codegen(this, name)
   }
 
   graphql (docOrQuery, variables = {}) {

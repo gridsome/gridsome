@@ -9,7 +9,8 @@ module.exports = (api, options) => {
   api.registerCommand('gridsome:build', async (args, rawArgv) => {
     info(`Building for production - ${cpu.physical} physical CPUs`)
 
-    options.outputDir = 'dist/_assets'
+    // TODO: change webpack output dir
+    // options.outputDir = 'dist/_assets'
 
     const buildTime = hirestime()
     const outDir = api.resolve('dist')

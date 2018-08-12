@@ -19,10 +19,10 @@ export default {
     ariaLabel: { type: String, default: 'Pagination Navigation' },
     ariaLinkLabel: { type: String, default: 'Go to page %n' },
     ariaFirstLabel: { type: String, default: 'Go to first page' },
-    ariaCurrentLabel: { type: String, default: 'Current page, Page %n' },
-    ariaPrevLabel: { type: String, default: 'Go to previous page, Page %n' },
-    ariaNextLabel: { type: String, default: 'Go to next page, Page %n' },
-    ariaLastLabel: { type: String, default: 'Go to last page, Page %n' }
+    ariaCurrentLabel: { type: String, default: 'Current page. Page %n' },
+    ariaPrevLabel: { type: String, default: 'Go to previous page. Page %n' },
+    ariaNextLabel: { type: String, default: 'Go to next page. Page %n' },
+    ariaLastLabel: { type: String, default: 'Go to last page. Page %n' }
   },
 
   render: (h, { props, data }) => {

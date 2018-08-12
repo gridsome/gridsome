@@ -16,12 +16,11 @@ exports.PaginateDirective = new GraphQLDirective({
 
 exports.pagingFromAst = ast => {
   const result = {
-    paginate: false,
     collection: undefined,
     perPage: undefined
   }
 
-  visit(ast, {
+  ast && visit(ast, {
     Field (fieldNode) {
       visit(fieldNode, {
         Argument ({ name, value }) {
@@ -31,7 +30,6 @@ exports.pagingFromAst = ast => {
         },
         Directive ({ name }) {
           if (name.value === 'paginate') {
-            result.paginate = true
             result.collection = fieldNode.name.value
 
             return BREAK
@@ -43,5 +41,5 @@ exports.pagingFromAst = ast => {
     }
   })
 
-  return result.paginate ? result : null
+  return result
 }

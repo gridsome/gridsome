@@ -5,24 +5,20 @@ const { parse } = require('@vue/component-compiler-utils')
 
 module.exports = () => {
   return {
-    async parse (file) {
+    parse (file) {
       const filename = path.parse(file).name
-      const source = await fs.readFile(file, 'utf-8')
+      const source = fs.readFileSync(file, 'utf-8')
       const { customBlocks } = parse({ filename, source, compiler })
-      const gqlBlock = customBlocks.filter(block => block.type === 'graphql').shift()
+      const block = customBlocks.filter(block => block.type === 'graphql').shift()
 
       const res = {
-        graphql: {}
+        pageQuery: { content: null }
       }
 
-      if (gqlBlock) {
-        res.graphql = {
-          query: gqlBlock.content,
-          options: gqlBlock.attrs
-        }
-
-        if (filename.charAt(0) === '_') {
-          res.graphql.nodeType = filename.substring(1)
+      if (block) {
+        res.pageQuery = {
+          content: block.content,
+          options: block.attrs
         }
       }
 
