@@ -1,5 +1,5 @@
+const { kebabCase } = require('lodash')
 const { GraphQLString, GraphQLNonNull } = require('../../graphql')
-const { slugify } = require('../../../utils')
 
 module.exports = () => {
   return {
@@ -11,7 +11,7 @@ module.exports = () => {
         },
         resolve (_, { string }) {
           // TODO: check existing slugs
-          return '/' + slugify(string)
+          return kebabCase(string)
         }
       }
     }
