@@ -29,14 +29,16 @@ module.exports = (api, {
     for (let i = 0; i < numNodes; i++) {
       const random = faker.random.number({ min: 3, max: 6 })
       const title = faker.lorem.sentence(random).slice(0, -1)
+      const created = faker.date.past(10)
+      const updated = faker.date.between(created, new Date())
 
       addNode({
         title,
         type: 'node',
         id: faker.random.uuid(),
         slug: slugify(title),
-        created: faker.date.recent(100),
-        updated: faker.date.recent(10),
+        created: created,
+        updated: updated,
         fields: {
           author: faker.name.findName(),
           published: faker.date.recent(),
