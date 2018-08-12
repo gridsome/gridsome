@@ -11,9 +11,7 @@ module.exports = async service => {
 
   for (let i = 0, l = service.plugins.length; i < l; i++) {
     const plugin = service.plugins[i]
-    const use = plugin.use.match(internalRE)
-      ? plugin.use.replace(internalRE, '../')
-      : plugin.use
+    const use = plugin.use.replace(internalRE, '../')
 
     plugin.uid = uid(use, i)
     plugin.api = new PluginAPI(service, plugin)

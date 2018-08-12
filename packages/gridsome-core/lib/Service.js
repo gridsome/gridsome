@@ -73,7 +73,7 @@ module.exports = class Service {
 
   graphql (docOrQuery, variables = {}) {
     const func = typeof docOrQuery === 'object' ? execute : graphql
-    return func(this.schema, docOrQuery, null, null, variables)
+    return func(this.schema, docOrQuery, undefined, undefined, variables)
   }
 
   broadcast (message) {

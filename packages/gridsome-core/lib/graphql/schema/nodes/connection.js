@@ -33,19 +33,13 @@ module.exports = ({ contentType, nodeType, source }) => {
     type: connectionType,
     description: `Connection to all ${contentType.type} nodes`,
     args: {
-      sortBy: { type: GraphQLString },
-      order: { type: sortOrderType },
-      perPage: { type: GraphQLInt },
-      skip: { type: GraphQLInt },
-      page: { type: GraphQLInt }
+      sortBy: { type: GraphQLString, defaultValue: 'created' },
+      order: { type: sortOrderType, defaultValue: -1 },
+      perPage: { type: GraphQLInt, defaultValue: 25 },
+      skip: { type: GraphQLInt, defaultValue: 0 },
+      page: { type: GraphQLInt, defaultValue: 1 }
     },
-    async resolve (_, {
-      sortBy = 'created',
-      order = -1,
-      perPage = 25,
-      skip = 0,
-      page = 1
-    }) {
+    async resolve (_, { sortBy, order, perPage, skip, page }) {
       page = Math.max(page, 1) // ensure page higher than 0
       perPage = Math.max(perPage, 1) // ensure page higher than 1
 
