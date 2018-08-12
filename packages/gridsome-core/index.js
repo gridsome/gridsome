@@ -16,8 +16,9 @@ module.exports = (api, options) => {
       .add(require.resolve('./app/entry.client.js'))
 
     config.resolve.alias
-      .set('#app', path.resolve(__dirname, 'app'))
-      .set('#temp', api.resolve('src/.temp'))
+      .set('@gridsome/temp', api.resolve('src/.temp'))
+      .set('@gridsome/app', path.resolve(__dirname, 'app'))
+      .set('@gridsome/components', path.resolve(__dirname, 'app/components/index.js'))
 
     config.module
       .rule('graphql')

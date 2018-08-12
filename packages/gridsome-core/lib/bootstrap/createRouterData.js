@@ -7,7 +7,7 @@ module.exports = service => {
 
   const notFoundComponent = notFoundPage
     ? notFoundPage.component
-    : '#app/pages/404.vue'
+    : '@gridsome/app/pages/404.vue'
 
   const routes = pages.map(page => {
     const name = camelCase(page.path.replace('/', ' ')) || 'home'

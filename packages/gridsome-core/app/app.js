@@ -1,17 +1,10 @@
 import Vue from 'vue'
 import Meta from 'vue-meta'
 import Router from 'vue-router'
-import Link from './components/Link'
-import Image from './components/Image'
-import Pager from './components/Pager'
-import initRoutes from '#temp/routes.js'
+import initRoutes from '@gridsome/temp/routes.js'
 
 Vue.use(Meta)
 Vue.use(Router)
-
-Vue.component('GridsomeLink', Link)
-Vue.component('GridsomeImage', Image)
-Vue.component('GridsomePager', Pager)
 
 export default function createApp () {
   const router = new Router({
