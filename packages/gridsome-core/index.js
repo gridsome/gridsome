@@ -46,5 +46,5 @@ module.exports = (api, options) => {
 module.exports.defaultModes = {
   'gridsome:build': 'production',
   'gridsome:develop': 'development',
-  'gridsome:explore': 'development'
+  'gridsome:explore': 'production'
 }
