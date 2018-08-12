@@ -1,6 +1,8 @@
 # Gridsome
 
-> Build blazing fast and incredible secure websites powered by Vue.js
+## Gridsome is a framework for building blazing fast, offline-ready, mobile first PWA frontends for any CMS or APIs with Vue.js & GraphQL
+
+---
 
 Using latest development tools for automatic optimizations, code-splitting and
 lazy-loading. Pull data from WordPress, Contentful or any other APIs and access
