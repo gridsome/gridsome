@@ -33,7 +33,9 @@ module.exports = service => {
     return templates
   }, {})
 
-  for (const { source } of service.sources) {
+  const sourcePlugins = service.config.plugins.filter(p => p.isSource)
+
+  for (const { instance: source } of sourcePlugins) {
     for (const typeName in source.types) {
       const contentType = source.types[typeName]
       const nodeType = contentType.type

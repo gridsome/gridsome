@@ -1,34 +1,29 @@
 const contentful = require('contentful')
 const resolveType = require('./lib/resolve-type')
 
-module.exports = (api, {
-  space,
-  accessToken,
-  environment,
-  host,
-  namespace
-}) => {
-  api.initSource = async ({
-    setNamespace,
-    addType,
-    getType,
-    addNode,
-    makeUid,
-    graphql
-  }) => {
-    setNamespace(namespace)
+const { Source } = require('@gridsome/core')
+
+class ContentfulSource extends Source {
+  static defaultOptions () {
+    return {
+      space: undefined,
+      environment: 'master',
+      host: 'cdn.contentful.com',
+      typeNamePrefix: 'Contentful'
+    }
+  }
+
+  async apply () {
+    const { space, accessToken, environment, host } = this.options
 
     const client = contentful.createClient({
-      space,
-      accessToken,
-      environment,
-      host
+      space, accessToken, environment, host
     })
 
     const cache = { contentTypes: {}}
     const { items: contentTypes } = await client.getContentTypes()
 
-    api.service.info(`Content types (${contentTypes.length})`, namespace)
+    // api.service.info(`Content types (${contentTypes.length})`, namespace)
 
     for (const contentType of contentTypes) {
       // filter out fields which are not references
@@ -50,13 +45,12 @@ module.exports = (api, {
         refs
       }
 
-      addType({
-        type: contentType.name,
+      this.addType(contentType.name, {
         name: contentType.name,
         fields: () => fields.reduce((fields, field) => {
           fields[field.id] = {
             description: field.name,
-            type: resolveType(field, graphql)
+            type: resolveType(field, this.graphql)
           }
 
           return fields
@@ -66,7 +60,7 @@ module.exports = (api, {
           description: field.name,
           types: field.items.validations.reduce((types, { linkContentType }) => {
             linkContentType.forEach(id => {
-              const { type } = getType(cache.contentTypes[id].contentType.name)
+              const { type } = this.getType(cache.contentTypes[id].contentType.name)
               types.push(nodeTypes[type])
             })
             return types
@@ -77,7 +71,7 @@ module.exports = (api, {
 
     const { items: entries } = await client.getEntries()
 
-    api.service.info(`Entries (${entries.length})`, namespace)
+    // api.service.info(`Entries (${entries.length})`, namespace)
 
     for (const item of entries) {
       const id = item.sys.contentType.sys.id
@@ -85,9 +79,8 @@ module.exports = (api, {
 
       // TODO: let user choose which field contains the slug
 
-      addNode({
-        _id: makeUid(item.sys.id),
-        type: contentType.name,
+      this.addNode(contentType.name, {
+        _id: this.makeUid(item.sys.id),
         title: item.fields[contentType.displayField],
         slug: item.fields.slug || '',
         created: new Date(item.sys.createdAt),
@@ -103,7 +96,7 @@ module.exports = (api, {
           if (!item.fields[id]) return refs
 
           refs[id] = item.fields[id].map(item => {
-            return makeUid(item.sys.id)
+            return this.makeUid(item.sys.id)
           })
 
           return refs
@@ -113,8 +106,4 @@ module.exports = (api, {
   }
 }
 
-module.exports.defaultOptions = {
-  environment: 'master',
-  host: 'cdn.contentful.com',
-  namespace: 'Contentful'
-}
+module.exports = ContentfulSource

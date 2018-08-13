@@ -1,18 +1,19 @@
 const faker = require('faker')
 
-module.exports = (api, {
-  numNodes,
-  namespace
-}) => {
-  api.client(false)
+const { Source } = require('@gridsome/core')
 
-  api.initSource = ({ setNamespace, addType, addNode, graphql, slugify }) => {
-    const { GraphQLString } = graphql
+class FakerSource extends Source {
+  static defaultOptions () {
+    return {
+      numNodes: 500,
+      typeNamePrefix: 'Faker'
+    }
+  }
 
-    setNamespace(namespace)
+  apply () {
+    const { GraphQLString } = this.graphql
 
-    addType({
-      type: 'node',
+    this.addType('node', {
       name: 'Node',
       route: '/:year/:month/:day/:slug',
       fields: () => ({
@@ -26,17 +27,16 @@ module.exports = (api, {
       })
     })
 
-    for (let i = 0; i < numNodes; i++) {
+    for (let i = 0; i < this.options.numNodes; i++) {
       const random = faker.random.number({ min: 3, max: 6 })
       const title = faker.lorem.sentence(random).slice(0, -1)
       const created = faker.date.past(10)
       const updated = faker.date.between(created, new Date())
 
-      addNode({
+      this.addNode('node', {
         title,
-        type: 'node',
         id: faker.random.uuid(),
-        slug: slugify(title),
+        slug: this.slugify(title),
         created: created,
         updated: updated,
         fields: {
@@ -53,7 +53,4 @@ module.exports = (api, {
   }
 }
 
-module.exports.defaultOptions = {
-  numNodes: 500,
-  namespace: 'Faker'
-}
+module.exports = FakerSource

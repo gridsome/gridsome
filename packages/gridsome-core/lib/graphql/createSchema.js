@@ -9,17 +9,19 @@ module.exports = service => {
   const createInternalSchema = require('./schema/internal')
   const directives = require('./schema/directives')
 
-  const pagesSchema = createPagesSchema(service.pages)
-  const nodesSchema = createNodesSchema(service.sources)
   const internalSchema = createInternalSchema()
+  const pagesSchema = createPagesSchema(service.pages)
+  const nodesSchema = createNodesSchema(
+    service.config.plugins.filter(p => p.isSource)
+  )
 
   service.schema = new GraphQLSchema({
     query: new GraphQLObjectType({
       name: 'RootQuery',
       fields: {
+        ...nodesSchema.queries,
         ...pagesSchema.queries,
         ...pagesSchema.connections,
-        ...nodesSchema.queries,
         ...nodesSchema.connections,
         ...internalSchema.queries,
         ...internalSchema.connections

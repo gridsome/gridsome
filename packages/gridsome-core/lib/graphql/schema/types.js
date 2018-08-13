@@ -32,9 +32,7 @@ const internalType = new GraphQLObjectType({
   interfaces: [internalInterface],
   fields: () => ({
     type: { type: GraphQLString },
-    owner: { type: GraphQLString },
-    mediaType: { type: GraphQLString },
-    namespace: { type: GraphQLString }
+    owner: { type: GraphQLString }
   })
 })
 

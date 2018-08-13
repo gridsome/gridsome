@@ -15,6 +15,8 @@ module.exports = {
   slug: { type: GraphQLString },
   path: { type: GraphQLString },
   status: { type: GraphQLString },
+  content: { type: GraphQLString },
+  excerpt: { type: GraphQLString },
 
   _id: {
     type: new GraphQLNonNull(GraphQLID),

@@ -43,6 +43,8 @@ module.exports = ({ contentType, nodeType, source }) => {
       page = Math.max(page, 1) // ensure page higher than 0
       perPage = Math.max(perPage, 1) // ensure page higher than 1
 
+      // source.nodes.find({'Name': { '$regex' : /din/ }})
+
       const query = source.nodes
         .chain()
         .find({ type: contentType.type })

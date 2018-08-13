@@ -1,50 +1,43 @@
-const EventEmitter = require('events')
+const Base = require('./Base')
 const crypto = require('crypto')
+const mime = require('mime-types')
 const autoBind = require('auto-bind')
 const camelCase = require('camelcase')
 const dateFormat = require('dateformat')
 const { Collection } = require('lokijs')
 const graphql = require('./graphql/graphql')
 const pathToRegexp = require('path-to-regexp')
-const { cloneDeep, kebabCase } = require('lodash')
+const { cloneDeep, kebabCase, trim } = require('lodash')
 const parsePageQuery = require('./graphql/parsePageQuery')
-// const validateQuery = require('./graphql/utils/validateQuery')
 
-class SourceAPI extends EventEmitter {
-  constructor (service, plugin) {
-    super()
+class Source extends Base {
+  constructor (service, options, plugin) {
+    super(service, options, plugin)
 
-    this.service = service
-    this.plugin = plugin
+    this.transformers = service.transformers
     this.graphql = graphql
-    this.slugify = kebabCase
+    this.mime = mime
     this.namespace = null
     this.mediaType = null
-
     this.types = {}
+
+    autoBind(this)
+
     this.nodes = new Collection('nodes', {
       indices: ['type', 'created'],
       unique: ['_id', 'path'],
       autoupdate: true
     })
-
-    autoBind(this)
   }
 
-  setNamespace (namespace) {
-    this.namespace = namespace
-  }
+  // nodes
 
-  setMediaType (mediaType) {
-    this.mediaType = mediaType
-  }
-
-  addType (options) {
-    const route = options.route || `/${options.type}/:slug`
+  addType (type, options) {
+    const route = options.route || `/${type}/:slug`
     const makePath = pathToRegexp.compile(route)
 
-    this.types[options.type] = {
-      type: this.makeTypeName(options.type),
+    this.types[type] = {
+      type: this.makeTypeName(type),
       name: options.name,
       belongsTo: options.belongsTo,
       fields: options.fields,
@@ -56,19 +49,20 @@ class SourceAPI extends EventEmitter {
   }
 
   getType (type) {
-    return this.types[this.makeTypeName(type)]
+    return this.types[type]
   }
 
-  addNode (options) {
+  addNode (type, options) {
     const node = {
       _id: options._id,
-      type: this.makeTypeName(options.type),
+      type: this.makeTypeName(type),
       title: options.title,
-      slug: options.slug.replace(/^\/|\/$/g, ''),
+      slug: trim(options.path || options.slug, '/'),
       created: options.created ? new Date(options.created) : new Date(),
       updated: options.updated ? new Date(options.updated) : new Date(),
       data: options.data,
       content: options.content || '',
+      excerpt: options.excerpt || '',
       link: null,
       fields: {
         ...options.fields,
@@ -78,23 +72,25 @@ class SourceAPI extends EventEmitter {
       },
       refs: options.refs || {},
       internal: this.createInternals({
-        type: options.type
+        type: type
       })
     }
 
-    node.path = this.makePath(node)
+    node.path = node.path || this.makePath(node)
 
     return this.nodes.insert(node)
   }
 
-  updateNode (node) {
-    return this.nodes.update(node)
-  }
+  updateNode (_id, options) {}
 
-  addPage (options) {
+  removeNode (_id) {}
+
+  // pages
+
+  addPage (type, options) {
     const page = {
       _id: options._id,
-      type: options.type || 'page',
+      type: type || 'page',
       title: options.title,
       slug: options.slug.replace(/^\/|\/$/g, ''),
       path: null,
@@ -116,8 +112,8 @@ class SourceAPI extends EventEmitter {
     this.emit('addPage', page)
   }
 
-  updatePage (options) {
-    const page = this.getPage(options._id)
+  updatePage (id, options) {
+    const page = this.getPage(id)
     const pageQuery = parsePageQuery(options.pageQuery)
     const oldPage = cloneDeep(page)
 
@@ -136,23 +132,13 @@ class SourceAPI extends EventEmitter {
     return this.service.pages.findOne({ _id })
   }
 
-  // helpers
+  // misc
 
   createInternals (options) {
     return {
-      ...options,
-      mediaType: this.mediaType,
-      namespace: this.namespace,
+      type: options.type,
       owner: this.plugin.uid
     }
-  }
-
-  makeUid (orgId) {
-    return crypto.createHash('md5').update(this.namespace + orgId).digest('hex')
-  }
-
-  makeTypeName (name) {
-    return camelCase(`${this.namespace} ${name}`, { pascalCase: true })
   }
 
   makePath ({ created, slug, internal: { type }}) {
@@ -165,6 +151,28 @@ class SourceAPI extends EventEmitter {
     return this.types[type].makePath({ year, month, day, type, slug })
   }
 
+  transform (string, mimeType, options, file) {
+    const transformer = this.transformers[mimeType]
+
+    if (!transformer) {
+      throw new Error(`No transformer for ${mimeType} is installed.`)
+    }
+
+    return transformer.parse(string, options, file)
+  }
+
+  makeUid (orgId) {
+    return crypto.createHash('md5').update(this.namespace + orgId).digest('hex')
+  }
+
+  makeTypeName (name) {
+    return this.pascalCase(`${this.options.typeNamePrefix} ${name}`)
+  }
+
+  slugify (string) {
+    return kebabCase(string)
+  }
+
   camelCase (string) {
     return camelCase(string)
   }
@@ -174,4 +182,4 @@ class SourceAPI extends EventEmitter {
   }
 }
 
-module.exports = SourceAPI
+module.exports = Source

@@ -2,28 +2,23 @@ const axios = require('axios')
 const Queue = require('better-queue')
 const querystring = require('querystring')
 
-module.exports = (api, {
-  baseUrl,
-  perPage,
-  concurrent,
-  namespace,
-  routes
-}) => {
-  const { info } = api.service
+const { Source } = require('@gridsome/core')
 
-  api.client(false)
+class WordPressSource extends Source {
+  static defaultOptions () {
+    return {
+      perPage: 100,
+      concurrent: 10,
+      routes: {},
+      typeNamePrefix: 'WordPress'
+    }
+  }
 
-  api.initSource = async ({
-    setNamespace,
-    addType,
-    addNode,
-    makeUid,
-    makeTypeName,
-    graphql
-  }) => {
-    setNamespace(namespace)
+  async apply () {
+    const { baseUrl, perPage, concurrent } = this.options
+    const { GraphQLString } = this.graphql
+    let { routes } = this.options
 
-    const { GraphQLString } = graphql
     const restUrl = `${baseUrl}/wp-json/wp/v2`
     const restBases = { posts: {}, taxonomies: {}}
 
@@ -35,14 +30,14 @@ module.exports = (api, {
 
     // add prefix to post and term id's since
     // they will share the same node store
-    const makePostId = id => makeUid(`post-${id}`)
-    const makeTermId = id => makeUid(`term-${id}`)
+    const makePostId = id => this.makeUid(`post-${id}`)
+    const makeTermId = id => this.makeUid(`term-${id}`)
 
     const { data: types } = await axios.get(`${restUrl}/types`)
-    info(`Post types (${Object.keys(types).length})`, namespace)
+    // info(`Post types (${Object.keys(types).length})`, namespace)
 
     const { data: taxonomies } = await axios.get(`${restUrl}/taxonomies`)
-    info(`Taxonomy types (${Object.keys(taxonomies).length})`, namespace)
+    // info(`Taxonomy types (${Object.keys(taxonomies).length})`, namespace)
 
     for (const typeName in types) {
       const options = types[typeName]
@@ -51,8 +46,7 @@ module.exports = (api, {
 
       restBases.posts[typeName] = options.rest_base
 
-      addType({
-        type: typeName,
+      this.addType(typeName, {
         name: options.name,
         route: routes[typeName],
         fields: () => ({
@@ -63,7 +57,7 @@ module.exports = (api, {
         refs: ({ addReference, nodeTypes }) => options.taxonomies.forEach(tax => {
           addReference({
             name: tax,
-            type: nodeTypes[makeTypeName(tax)]
+            type: nodeTypes[this.makeTypeName(tax)]
           })
         })
       })
@@ -73,7 +67,7 @@ module.exports = (api, {
       const options = taxonomies[typeName]
       restBases.taxonomies[typeName] = options.rest_base
 
-      addType({
+      this.addType({
         type: typeName,
         name: options.name,
         route: routes[typeName],
@@ -82,7 +76,7 @@ module.exports = (api, {
         }),
         belongsTo: ({ nodeTypes }) => ({
           key: options.slug,
-          types: options.types.map(type => nodeTypes[makeTypeName(type)])
+          types: options.types.map(type => nodeTypes[this.makeTypeName(type)])
         })
       })
     }
@@ -92,7 +86,7 @@ module.exports = (api, {
       const endpoint = `${baseUrl}/wp-json/wp/v2/${restBase}`
       const posts = await fetchPaged(endpoint, { perPage, concurrent })
 
-      info(`Post type ${types[typeName].name} (${posts.length})`, namespace)
+      // info(`Post type ${types[typeName].name} (${posts.length})`, namespace)
 
       for (const post of posts) {
         const refs = {}
@@ -108,9 +102,8 @@ module.exports = (api, {
           }
         }
 
-        addNode({
+        this.addNode(post.type, {
           _id: makePostId(post.id),
-          type: post.type,
           title: post.title ? post.title.rendered : '',
           created: new Date(post.date),
           updated: new Date(post.modified),
@@ -129,12 +122,11 @@ module.exports = (api, {
       const endpoint = `${baseUrl}/wp-json/wp/v2/${restBase}`
       const terms = await fetchPaged(endpoint, { perPage, concurrent })
 
-      info(`Taxonomy type ${taxonomies[typeName].name} (${terms.length})`, namespace)
+      // info(`Taxonomy type ${taxonomies[typeName].name} (${terms.length})`, namespace)
 
       for (const term of terms) {
-        addNode({
+        this.addNode(term.taxonomy, {
           _id: makeTermId(term.id),
-          type: term.taxonomy,
           slug: term.slug,
           title: term.name,
           fields: {
@@ -190,9 +182,4 @@ function fetchPaged (url, options = {}) {
   })
 }
 
-module.exports.defaultOptions = {
-  perPage: 100,
-  concurrent: 10,
-  namespace: 'WordPress',
-  routes: {}
-}
+module.exports = WordPressSource

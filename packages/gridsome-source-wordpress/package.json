@@ -9,6 +9,6 @@
     "better-queue": "^3.8.7"
   },
   "peerDependencies": {
-    "gridsome": "^0.0.1"
+    "@gridsome/core": "^0.0.1"
   }
 }

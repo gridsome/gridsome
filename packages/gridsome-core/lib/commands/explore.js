@@ -1,6 +1,6 @@
 const Service = require('../Service')
 const createGraphQlServer = require('../graphql/createServer')
-const { BOOTSTRAP_GRAPHQL } = require('../bootstrap/phases')
+const { BOOTSTRAP_GRAPHQL } = require('../bootstrap')
 
 module.exports = api => {
   api.registerCommand('gridsome:explore', async (args, rawArgv) => {

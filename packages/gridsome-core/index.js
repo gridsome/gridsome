@@ -44,6 +44,10 @@ module.exports = (api, options) => {
   })
 }
 
+module.exports.Plugin = require('./lib/Plugin')
+module.exports.Source = require('./lib/Source')
+module.exports.Transformer = require('./lib/Transformer')
+
 module.exports.defaultModes = {
   'gridsome:build': 'production',
   'gridsome:develop': 'development',

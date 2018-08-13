@@ -10,9 +10,7 @@ const internalInterface = new GraphQLInterfaceType({
   name: 'InternalInterface',
   fields: () => ({
     type: { type: GraphQLString },
-    owner: { type: GraphQLString },
-    mediaType: { type: GraphQLString },
-    namespace: { type: GraphQLString }
+    owner: { type: GraphQLString }
   })
 })
 
@@ -28,6 +26,8 @@ const nodeInterface = new GraphQLInterfaceType({
     status: { type: GraphQLString },
     created: { type: GraphQLString },
     updated: { type: GraphQLString },
+    content: { type: GraphQLString },
+    excerpt: { type: GraphQLString },
     data: { type: GraphQLJSON }
   })
 })

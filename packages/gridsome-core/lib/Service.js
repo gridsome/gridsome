@@ -7,18 +7,23 @@ const createSchema = require('./graphql/createSchema')
 const { execute, graphql } = require('./graphql/graphql')
 const { info, warn, error } = require('@vue/cli-shared-utils')
 
-const { BOOTSTRAP_FULL } = require('./bootstrap/phases')
-const loadConfig = require('./bootstrap/loadConfig')
-const initPlugins = require('./bootstrap/initPlugins')
-const loadSources = require('./bootstrap/loadSources')
+const { BOOTSTRAP_FULL } = require('./bootstrap')
+const resolvePackageJson = require('./bootstrap/resolvePackageJson')
+const resolveProjectConfig = require('./bootstrap/resolveProjectConfig')
+const resolveTransformers = require('./bootstrap/resolveTransformers')
+const runPlugins = require('./bootstrap/runPlugins')
 const createRouterData = require('./bootstrap/createRouterData')
 
-module.exports = class Service {
-  constructor (context) {
+class Service {
+  constructor (context, options = {}) {
     process.GRIDSOME_SERVICE = this
 
     this.context = context
     this.clients = {}
+
+    this.pkg = options.pkg || resolvePackageJson(context)
+    this.config = resolveProjectConfig(context, options)
+    this.transformers = resolveTransformers(this, options)
 
     this.pages = new Collection('pages', {
       indices: ['type'],
@@ -37,13 +42,13 @@ module.exports = class Service {
     const bootstrapTime = hirestime()
 
     const phases = [
-      { title: 'Load configuration', run: loadConfig },
-      { title: 'Initialize plugins', run: initPlugins },
-      { title: 'Load sources', run: loadSources },
+      { title: 'Run plugins', run: runPlugins },
       { title: 'Create GraphQL schema', run: createSchema },
       { title: 'Create router data', run: createRouterData },
       { title: 'Generate temporary files', run: codegen }
     ]
+
+    info('Bootstrapping...')
 
     for (const current of phases) {
       if (phases.indexOf(current) <= phase) {
@@ -82,3 +87,5 @@ module.exports = class Service {
     }
   }
 }
+
+module.exports = Service
