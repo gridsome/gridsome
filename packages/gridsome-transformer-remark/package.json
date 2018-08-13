@@ -1,0 +1,16 @@
+{
+  "private": true,
+  "version": "1.0.0",
+  "name": "@gridsome/transformer-remark",
+  "description": "Remark transformer for Gridsome",
+  "main": "index.js",
+  "dependencies": {
+    "gray-matter": "^4.0.1",
+    "lodash": "^4.17.10",
+    "remark": "^9.0.0",
+    "remark-html": "^8.0.0"
+  },
+  "peerDependencies": {
+    "@gridsome/core": "^0.0.1"
+  }
+}

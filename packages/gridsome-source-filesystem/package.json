@@ -1,0 +1,15 @@
+{
+  "private": true,
+  "version": "1.0.0",
+  "name": "@gridsome/source-filesystem",
+  "description": "Filesystem source for Gridsome",
+  "main": "index.js",
+  "dependencies": {
+    "chokidar": "^2.0.4",
+    "fs-extra": "^7.0.0",
+    "globby": "^8.0.1"
+  },
+  "peerDependencies": {
+    "@gridsome/core": "^0.0.1"
+  }
+}
