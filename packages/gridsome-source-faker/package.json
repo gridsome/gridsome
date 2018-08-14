@@ -1,6 +1,6 @@
 {
   "private": true,
-  "name": "@gridsome/faker",
+  "name": "@gridsome/source-faker",
   "version": "0.0.1",
   "description": "Source with fake data for Gridsome",
   "main": "index.js",
