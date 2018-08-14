@@ -16,7 +16,9 @@ module.exports = service => {
     plugin.isSource = plugin.instance instanceof Source
     plugin.isPlugin = plugin.instance instanceof Plugin
 
+    plugin.instance.onBefore()
     await plugin.instance.apply()
+    plugin.instance.onAfter()
 
     if (process.env.NODE_ENV === 'development' && plugin.isSource) {
       plugin.instance.on('addPage', page => generateRoutes(service))

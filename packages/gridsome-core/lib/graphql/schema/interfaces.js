@@ -1,6 +1,5 @@
 const {
   GraphQLID,
-  GraphQLJSON,
   GraphQLString,
   GraphQLNonNull,
   GraphQLInterfaceType
@@ -23,12 +22,7 @@ const nodeInterface = new GraphQLInterfaceType({
     title: { type: GraphQLString },
     slug: { type: GraphQLString },
     path: { type: GraphQLString },
-    status: { type: GraphQLString },
-    created: { type: GraphQLString },
-    updated: { type: GraphQLString },
-    content: { type: GraphQLString },
-    excerpt: { type: GraphQLString },
-    data: { type: GraphQLJSON }
+    content: { type: GraphQLString }
   })
 })
 

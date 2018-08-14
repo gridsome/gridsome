@@ -1,7 +1,8 @@
-const baseNodeFields = require('../node-fields')
 const { nodeInterface } = require('../interfaces')
+const { internalType } = require('../types')
 
 const {
+  GraphQLID,
   GraphQLJSON,
   GraphQLList,
   GraphQLString,
@@ -23,9 +24,19 @@ module.exports = pages => {
     name: 'Page',
     interfaces: [nodeInterface],
     fields: () => ({
-      ...baseNodeFields,
+      type: { type: new GraphQLNonNull(GraphQLString) },
+      internal: { type: new GraphQLNonNull(internalType) },
+      title: { type: GraphQLString },
+      slug: { type: GraphQLString },
+      path: { type: GraphQLString },
       component: { type: GraphQLString },
-      pageQuery: { type: pageQuery }
+      pageQuery: { type: pageQuery },
+      content: { type: GraphQLString },
+
+      _id: {
+        type: new GraphQLNonNull(GraphQLID),
+        resolve: node => node.$loki
+      },
     })
   })
 

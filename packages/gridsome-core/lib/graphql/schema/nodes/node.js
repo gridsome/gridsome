@@ -1,14 +1,16 @@
 const camelCase = require('camelcase')
-const dateFormat = require('dateformat')
 const graphql = require('../../graphql')
+const { mapValues, isEmpty } = require('lodash')
 
+const { internalType } = require('../types')
 const { nodeInterface } = require('../interfaces')
-const baseNodeFields = require('../node-fields')
+const { inferTypes } = require('../infer-types')
 
 const {
-  GraphQLInt,
+  GraphQLID,
   GraphQLList,
   GraphQLString,
+  GraphQLNonNull,
   GraphQLUnionType,
   GraphQLObjectType,
   GraphQLInterfaceType
@@ -17,153 +19,122 @@ const {
 const fieldsInterface = new GraphQLInterfaceType({
   name: 'FieldsInterface',
   fields: () => ({
-    title: { type: GraphQLString },
-    created: { type: GraphQLString },
-    updated: { type: GraphQLString }
+    title: { type: GraphQLString }
   })
 })
 
 module.exports = ({ contentType, nodeTypes, source }) => {
-  const nodeType = new GraphQLObjectType({
+  return new GraphQLObjectType({
     name: contentType.type,
-    description: contentType.name,
+    description: contentType.description,
     interfaces: [nodeInterface],
-    isTypeOf: node => {
-      return node.type === contentType.type
-    },
-    fields: () => {
-      const customFields = typeof contentType.fields === 'function'
-        ? contentType.fields()
-        : {}
+    isTypeOf: node => node.type === contentType.type,
+    fields: () => ({
+      type: { type: new GraphQLNonNull(GraphQLString) },
+      internal: { type: new GraphQLNonNull(internalType) },
+      title: { type: GraphQLString },
+      slug: { type: GraphQLString },
+      path: { type: GraphQLString },
+      content: { type: GraphQLString },
 
-      const fields = {
-        ...customFields,
+      _id: {
+        type: new GraphQLNonNull(GraphQLID),
+        resolve: node => node.$loki
+      },
 
-        title: {
-          type: GraphQLString,
-          description: 'Title'
-        },
-        created: {
-          type: GraphQLString,
-          description: 'Created date',
-          args: { format: { type: GraphQLString, description: 'Date format' }},
-          resolve: (fields, { format }) => dateFormat(fields.created, format)
-        },
-        updated: {
-          type: GraphQLString,
-          description: 'Updated date',
-          args: { format: { type: GraphQLString, description: 'Date format' }},
-          resolve: (fields, { format }) => dateFormat(fields.updated, format)
-        }
-      }
-
-      const nodeRefs = []
-      const belongsTo = {}
-
-      const addReference = (options) => nodeRefs.push(options)
-
-      if (typeof contentType.refs === 'function') {
-        contentType.refs({ addReference, nodeTypes })
-      }
-
-      if (typeof contentType.belongsTo === 'function') {
-        Object.assign(belongsTo, contentType.belongsTo({ nodeTypes }))
-      }
-
-      const nodeFields = {
-        ...baseNodeFields,
-        fields: {
-          type: new GraphQLObjectType({
-            name: `${contentType.type}Fields`,
-            interfaces: [fieldsInterface],
-            fields
-          })
-        }
-      }
-
-      if (nodeRefs.length) {
-        nodeFields.refs = {
-          type: new GraphQLObjectType({
-            name: `${contentType.type}References`,
-            fields: () => nodeRefs.reduce((refs, { name, type, types, description }) => {
-              const fieldTypeName = camelCase(name, { pascalCase: true })
-
-              // create a union type if reference
-              // accepts multiple content types
-              if (Array.isArray(types)) {
-                type = new GraphQLUnionType({
-                  name: `${contentType.type}${fieldTypeName}Nodes`,
-                  interfaces: [nodeInterface],
-                  types
-                })
-              }
-
-              refs[name] = {
-                description,
-                type: new GraphQLList(type),
-                resolve: obj => {
-                  return source.nodes.find({ _id: { $in: obj[name] }})
-                }
-              }
-
-              return refs
-            }, {})
-          })
-        }
-      }
-
-      if (Object.keys(belongsTo).length) {
-        const belongsToType = new GraphQLUnionType({
-          name: `${contentType.type}BelongsTo`,
-          interfaces: [nodeInterface],
-          types: belongsTo.types
-        })
-
-        nodeFields.belongsTo = {
-          type: new GraphQLList(belongsToType),
-          resolve: obj => {
-            const q = { [`refs.${belongsTo.key}`]: { $in: [obj._id] }}
-            return source.nodes.find(q)
-          }
-        }
-      }
-
-      if (contentType.isHierichal) {
-        nodeFields.parent = {
-          type: nodeType,
-          resolve (node) {
-            // return new Promise((resolve, reject) => {
-            //   nodes.findOne({ _id: node.parent }, (err, node) => {
-            //     if (err) reject(err)
-            //     else resolve(node)
-            //   })
-            // })
-          }
-        }
-
-        nodeFields.children = {
-          type: new GraphQLList(nodeType),
-          resolve (node) {
-            // return new Promise((resolve, reject) => {
-            //   nodes.find({ parent: node._id }, (err, nodes) => {
-            //     if (err) reject(err)
-            //     else resolve(nodes)
-            //   })
-            // })
-          }
-        }
-
-        nodeFields.depth = {
-          type: GraphQLInt,
-          resolve (node) {
-            // return getDepth(node)
-          }
-        }
-      }
-
-      return nodeFields
-    }
+      ...createFields(contentType, nodeTypes, source),
+      ...createRefs(contentType, nodeTypes, source),
+      ...createForeignRefs(contentType, nodeTypes, source)
+    })
   })
+}
 
-  return nodeType
+function createFields (contentType, nodeTypes, source) {
+  const nodes = source.nodes.find({ type: contentType.type })
+  const customFields = inferTypes(nodes, contentType.type)
+
+  const fields = {
+    type: new GraphQLObjectType({
+      name: `${contentType.type}Fields`,
+      interfaces: [fieldsInterface],
+      fields: {
+        title: { type: GraphQLString },
+        ...customFields
+      }
+    })
+  }
+
+  return { fields }
+}
+
+function createRefs (contentType, nodeTypes, source) {
+  if (isEmpty(contentType.refs)) return null
+
+  const refs = {
+    resolve: obj => obj,
+    type: new GraphQLObjectType({
+      name: `${contentType.type}References`,
+      fields: () => mapValues(contentType.refs, (ref, key) => {
+        const { schemaType, description } = ref
+        let refType = nodeTypes[schemaType]
+
+        if (Array.isArray(schemaType)) {
+          const fieldTypeName = camelCase(key, { pascalCase: true })
+          refType = new GraphQLUnionType({
+            name: `${contentType.type}${fieldTypeName}Union`,
+            interfaces: [nodeInterface],
+            types: schemaType.map(schemaType => nodeTypes[schemaType])
+          })
+        }
+
+        return {
+          description,
+          type: new GraphQLList(refType),
+          resolve: obj => {
+            const $in = obj.fields[key] || []
+            const query = { type: schemaType, [ref.key]: { $in }}
+
+            return source.nodes.find(query)
+          }
+        }
+      })
+    })
+  }
+
+  return { refs }
+}
+
+function createForeignRefs (contentType, nodeTypes, source) {
+  if (isEmpty(contentType.belongsTo)) return null
+
+  const belongsTo = {
+    resolve: obj => obj,
+    type: new GraphQLObjectType({
+      name: `${contentType.type}BelongsTo`,
+      fields: () => mapValues(contentType.belongsTo, ref => {
+        const { foreignSchemaType, description } = ref
+        const nodeType = nodeTypes[foreignSchemaType]
+
+        return {
+          description,
+          type: new GraphQLList(nodeType),
+          resolve: obj => {
+            const query = { type: foreignSchemaType }
+            const value = obj[ref.localKey]
+            const key = ref.foreignKey
+
+            return source.nodes.find(query).filter(node => {
+              const field = node.fields[key]
+
+              return Array.isArray(field)
+                ? field.includes(value)
+                : false
+            })
+          }
+        }
+      })
+    })
+  }
+
+  return { belongsTo }
 }

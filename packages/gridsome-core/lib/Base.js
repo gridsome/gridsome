@@ -15,6 +15,9 @@ class Base extends EventEmitter {
     this.plugin = plugin
   }
 
+  onBefore () {}
+  onAfter () {}
+
   apply () {}
 }
 
