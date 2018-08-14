@@ -5,6 +5,7 @@
     "projects/*"
   ],
   "scripts": {
+    "bootstrap": "lerna bootstrap",
     "test": "node scripts/test.js",
     "lint": "eslint --fix \"packages/**/*.js\""
   },
