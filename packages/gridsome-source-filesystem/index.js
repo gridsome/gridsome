@@ -107,13 +107,17 @@ class FilesystemSource extends Source {
   }
 
   normalizePath (file) {
+    // dont generate path for dynamic routes
     if (this.options.route) return
 
     const { dir, name } = path.parse(file)
-    const first = dir.split(path.sep).map(s => kebabCase(s)).join('/')
-    const slug = kebabCase(name)
+    const segments = dir.split(path.sep).map(s => kebabCase(s))
 
-    return `/${first}/${slug}`
+    if (!this.options.index.includes(name)) {
+      segments.push(kebabCase(name))
+    }
+
+    return `/${segments.join('/')}`
   }
 
   normalizeRefs (refs) {
