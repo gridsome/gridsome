@@ -2,27 +2,30 @@ module.exports = ({ routes, notFoundComponent }) => {
   let res = `import NotFound from ${JSON.stringify(notFoundComponent)}\n\n`
 
   res += `export const routes = [${routes.map(route => {
-    const path = JSON.stringify(route.route)
-    const name = JSON.stringify(route.name)
-    const chunkName = JSON.stringify(`${route.type}-${route.name}`)
     const component = JSON.stringify(route.component)
+    const chunkName = JSON.stringify(route.name || route.chunkName)
 
-    return `{
-      path: ${path},
-      name: ${name},
-      component: () => import(/* webpackChunkName: ${chunkName} */ ${component})
-    }`
-  }).join(',')}]\n\n`
+    const options = [
+      `    path: ${JSON.stringify(route.route || route.path)}`,
+      `    component: () => import(/* webpackChunkName: ${chunkName} */ ${component})`
+    ]
+
+    if (route.name) {
+      options.unshift(`    name: ${JSON.stringify(route.name)}`)
+    }
+
+    return `\n  {\n${options.join(',\n')}\n  }`
+  }).join(',')}\n]\n\n`
 
   res += `export { NotFound }\n\n`
 
   res += `export default router => {
-    router.addRoutes([...routes, {
-      path: '*',
-      name: '404',
-      component: NotFound
-    }])
-  }\n`
+  router.addRoutes([...routes, {
+    path: '*',
+    name: '404',
+    component: NotFound
+  }])
+}\n`
 
   return res
 }

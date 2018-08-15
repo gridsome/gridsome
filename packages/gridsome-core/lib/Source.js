@@ -33,8 +33,9 @@ class Source extends Base {
   // nodes
 
   addType (type, options) {
-    const route = options.route || `/${type}/:slug`
-    const makePath = pathToRegexp.compile(route)
+    const makePath = options.route
+      ? pathToRegexp.compile(options.route)
+      : () => null
 
     const refs = _.mapValues(options.refs, ref => ({
       type: ref.type,
@@ -48,11 +49,11 @@ class Source extends Base {
     this.types[type] = {
       type: this.makeTypeName(type),
       name: options.name,
+      route: options.route,
       fields: options.fields,
       belongsTo: {},
       makePath,
-      refs,
-      route
+      refs
     }
   }
 
@@ -79,7 +80,7 @@ class Source extends Base {
       })
     }
 
-    node.path = node.path || this.makePath(node)
+    node.path = options.path || this.makePath(node)
 
     return this.nodes.insert(node)
   }
@@ -188,9 +189,8 @@ class Source extends Base {
   }
 
   onAfter () {
+    // create foreign references
     _.forEach(this.types, (options, type) => {
-
-      // create foreign references
       _.forEach(options.refs, (ref, key) => {
         this.types[ref.type].belongsTo[type] = {
           description: `Reference to ${type}`,

@@ -2,7 +2,7 @@ const path = require('path')
 const fs = require('fs-extra')
 const glob = require('globby')
 const chokidar = require('chokidar')
-const { mapValues } = require('lodash')
+const { mapValues, kebabCase } = require('lodash')
 
 const { Source } = require('@gridsome/core')
 
@@ -10,9 +10,10 @@ class FilesystemSource extends Source {
   static defaultOptions () {
     return {
       path: undefined,
-      route: '/:type/:slug',
+      route: undefined,
       type: 'node',
       refs: {},
+      index: ['index'],
       typeNamePrefix: 'Filesystem'
     }
   }
@@ -20,7 +21,7 @@ class FilesystemSource extends Source {
   async apply () {
     const { options } = this
 
-    const refs = normalizeRefs(options.refs)
+    const refs = this.normalizeRefs(options.refs)
     const files = await glob(options.path, { cwd: this.context })
 
     this._nodesCache = {}
@@ -44,16 +45,17 @@ class FilesystemSource extends Source {
       const mimeType = this.mime.lookup(file)
       const content = fs.readFileSync(absPath, 'utf-8')
       const results = this.transform(content, mimeType, options, file)
-      let filename = path.parse(file).name
+      let { name } = path.parse(file)
 
-      if (filename === 'index') {
-        filename = path.basename(path.dirname(file))
+      if (options.index.includes(name)) {
+        name = path.basename(path.dirname(file))
       }
 
       const node = {
         _id: this.makeUid(file),
         title: results.title,
-        slug: results.fields.slug || filename,
+        slug: results.fields.slug || kebabCase(name),
+        path: this.normalizePath(file),
         created: results.fields.date || null,
         content: results.content,
         excerpt: results.excerpt,
@@ -93,6 +95,8 @@ class FilesystemSource extends Source {
     }
   }
 
+  // helpers
+
   createRefNode (type, fieldName, value) {
     const cacheKey = `${type}-${fieldName}-${value}`
 
@@ -101,14 +105,24 @@ class FilesystemSource extends Source {
       this._nodesCache[cacheKey] = true
     }
   }
-}
 
-function normalizeRefs (refs) {
-  return mapValues(refs, (ref, key) => ({
-    type: ref.type || key,
-    key: ref.key || 'slug',
-    route: ref.route || `/${ref.type || key}/:slug`
-  }))
+  normalizePath (file) {
+    if (this.options.route) return
+
+    const { dir, name } = path.parse(file)
+    const first = dir.split(path.sep).map(s => kebabCase(s)).join('/')
+    const slug = kebabCase(name)
+
+    return `/${first}/${slug}`
+  }
+
+  normalizeRefs (refs) {
+    return mapValues(refs, (ref, key) => ({
+      type: ref.type || key,
+      key: ref.key || 'slug',
+      route: ref.route || `/${ref.type || key}/:slug`
+    }))
+  }
 }
 
 module.exports = FilesystemSource

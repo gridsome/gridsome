@@ -1,4 +1,12 @@
 const camelCase = require('camelcase')
+const { orderBy } = require('lodash')
+
+const {
+  PAGED_ROUTE,
+  STATIC_ROUTE,
+  STATIC_TEMPLATE_ROUTE,
+  DYNAMIC_TEMPLATE_ROUTE
+} = require('../utils/enums')
 
 module.exports = service => {
   const allPages = service.pages.find()
@@ -11,14 +19,18 @@ module.exports = service => {
 
   const routes = pages.map(page => {
     const name = camelCase(page.path.replace('/', ' ')) || 'home'
-    const route = page.pageQuery.paginate.collection
-      ? `${page.path}/:page(\\d+)?`
-      : page.path
+    let type = STATIC_ROUTE
+    let route = page.path
+
+    if (page.pageQuery.paginate.collection) {
+      route = `${page.path}/:page(\\d+)?`
+      type = PAGED_ROUTE
+    }
 
     return {
       name,
+      type,
       route,
-      type: page.type,
       path: page.path,
       component: page.component,
       pageQuery: page.pageQuery
@@ -41,26 +53,50 @@ module.exports = service => {
       const nodeType = contentType.type
 
       if (templates.hasOwnProperty(nodeType)) {
-        const page = templates[nodeType]
+        const { component, pageQuery } = templates[nodeType]
 
-        routes.push({
-          type: 'template',
-          path: contentType.route,
-          route: contentType.route,
-          component: page.component,
-          name: camelCase(nodeType),
-          pageQuery: page.pageQuery,
-          nodeType,
-          source
-        })
+        // Add a dynamic route for this template if a route is
+        // specified. Or we'll create a route for each node. The only
+        // difference here is that dynamic routes has route and name
+        // while static routes has path and chunkName.
+
+        if (contentType.route) {
+          routes.push({
+            type: DYNAMIC_TEMPLATE_ROUTE,
+            route: contentType.route,
+            name: camelCase(nodeType),
+            component,
+            pageQuery,
+            nodeType,
+            source
+          })
+        } else {
+          const nodes = source.nodes.find({ type: nodeType })
+
+          for (const node of nodes) {
+            routes.push({
+              type: STATIC_TEMPLATE_ROUTE,
+              path: node.path,
+              chunkName: camelCase(nodeType),
+              component,
+              pageQuery,
+              nodeType,
+              source
+            })
+          }
+        }
       }
     }
   }
 
-  routes.sort((a, b) => a.path.split('/').length > b.path.split('/').length)
-
   service.routerData = {
     notFoundComponent,
-    routes
+    routes: orderBy(routes, [
+      route => route.name === 'home',
+      route => route.type === STATIC_ROUTE,
+      route => route.type === PAGED_ROUTE,
+      route => route.type === STATIC_TEMPLATE_ROUTE,
+      route => route.type === DYNAMIC_TEMPLATE_ROUTE
+    ], ['desc', 'desc', 'desc', 'desc', 'desc'])
   }
 }

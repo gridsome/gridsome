@@ -2,13 +2,20 @@ const path = require('path')
 const Router = require('vue-router')
 const { trim } = require('lodash')
 
+const {
+  PAGED_ROUTE,
+  STATIC_ROUTE,
+  STATIC_TEMPLATE_ROUTE,
+  DYNAMIC_TEMPLATE_ROUTE
+} = require('../../utils/enums')
+
 module.exports = async ({ routes }, outDir, graphql) => {
   const router = new Router({
     base: '/',
     mode: 'history',
     fallback: false,
     routes: routes.map(page => ({
-      path: page.route
+      path: page.route || page.path
     }))
   })
 
@@ -41,41 +48,45 @@ module.exports = async ({ routes }, outDir, graphql) => {
 
   for (const page of routes) {
     switch (page.type) {
-      case 'page':
+      case STATIC_ROUTE:
+      case STATIC_TEMPLATE_ROUTE:
         pages.push(makePage(page))
 
-        if (page.pageQuery.paginate.collection) {
-          const { collection, perPage } = page.pageQuery.paginate
+        break
 
-          // get page info for this connection to figure
-          // out how many pages that shuld be rendered
-          const { data, errors } = await graphql(`
-            query PageInfo ($perPage: Int) {
-              ${collection} (perPage: $perPage) {
-                pageInfo {
-                  totalPages
-                }
-              }
-            }
-          `, { perPage })
-
-          if (errors && errors.length) {
-            throw new Error(errors)
-          }
-
-          const { totalPages } = data[collection].pageInfo
-
-          for (let i = 2; i <= totalPages; i++) {
-            pages.push(makePage(page, i))
-          }
-        }
+      case DYNAMIC_TEMPLATE_ROUTE:
+        page.source.nodes
+          .find({ type: page.nodeType })
+          .forEach(node => {
+            pages.push(makeTemplate(node, page))
+          })
 
         break
-      case 'template':
-        const nodes = page.source.nodes.find()
-        for (const node of nodes) {
-          pages.push(makeTemplate(node, page))
+
+      case PAGED_ROUTE:
+        pages.push(makePage(page))
+
+        const { collection, perPage } = page.pageQuery.paginate
+        const { data, errors } = await graphql(`
+          query PageInfo ($perPage: Int) {
+            ${collection} (perPage: $perPage) {
+              pageInfo {
+                totalPages
+              }
+            }
+          }
+        `, { perPage })
+
+        if (errors && errors.length) {
+          throw new Error(errors)
         }
+
+        const { totalPages } = data[collection].pageInfo
+
+        for (let i = 2; i <= totalPages; i++) {
+          pages.push(makePage(page, i))
+        }
+
         break
     }
   }
