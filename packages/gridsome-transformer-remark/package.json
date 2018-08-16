@@ -1,6 +1,6 @@
 {
   "private": true,
-  "version": "1.0.0",
+  "version": "0.0.1",
   "name": "@gridsome/transformer-remark",
   "description": "Remark transformer for Gridsome",
   "main": "index.js",
