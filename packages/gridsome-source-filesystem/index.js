@@ -2,7 +2,7 @@ const path = require('path')
 const fs = require('fs-extra')
 const glob = require('globby')
 const chokidar = require('chokidar')
-const { mapValues, kebabCase } = require('lodash')
+const { mapValues } = require('lodash')
 
 const { Source } = require('@gridsome/core')
 
@@ -54,7 +54,7 @@ class FilesystemSource extends Source {
       const node = {
         _id: this.makeUid(file),
         title: results.title,
-        slug: results.fields.slug || kebabCase(name),
+        slug: results.fields.slug || this.slugify(name),
         path: this.normalizePath(file),
         created: results.fields.date || null,
         content: results.content,

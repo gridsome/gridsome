@@ -5,7 +5,8 @@ const {
   PAGED_ROUTE,
   STATIC_ROUTE,
   STATIC_TEMPLATE_ROUTE,
-  DYNAMIC_TEMPLATE_ROUTE
+  DYNAMIC_TEMPLATE_ROUTE,
+  SOURCE_PLUGIN
 } = require('../utils/enums')
 
 module.exports = service => {
@@ -45,7 +46,7 @@ module.exports = service => {
     return templates
   }, {})
 
-  const sourcePlugins = service.config.plugins.filter(p => p.isSource)
+  const sourcePlugins = service.config.plugins.filter(p => p.type === SOURCE_PLUGIN)
 
   for (const { instance: source } of sourcePlugins) {
     for (const typeName in source.types) {

@@ -5,4 +5,4 @@ exports.BOOTSTRAP_GRAPHQL = 4
 exports.BOOTSTRAP_FULL = Number.MAX_SAFE_INTEGER
 
 exports.internalRE = /^internal\:\/\//
-exports.pluginRE = /^(@gridsome\/|gridsome-|@[\w-]+\/gridsome-)transformer-([\w-]+)/
+exports.transformerRE = /(?:^@?gridsome[/-]|\/)transformer-([\w-]+)/

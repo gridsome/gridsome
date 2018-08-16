@@ -1,8 +1,7 @@
 const path = require('path')
 const crypto = require('crypto')
 const { defaultsDeep } = require('lodash')
-
-const internalRE = /^internal\:\/\//
+const { internalRE } = require('./index')
 
 const builtInPlugins = [
   'internal://plugins/source-vue'
@@ -45,13 +44,18 @@ function normalizePlugins (plugins) {
       plugin = { options: {}, use: plugin }
     }
 
+    const re = /(?:^@?gridsome[/-]|\/)(\w+)-([\w-]+)/
+    const [, type, name] = plugin.use.match(re)
+
+    // TODO: validate plugin
+
     return defaultsDeep({
       use: plugin.use.replace(internalRE, '../'),
       uid: crypto.createHash('md5').update(`${plugin.use}-${index}`).digest('hex'),
       instance: undefined,
-      isSource: undefined,
-      isPlugin: undefined,
-      options: {}
+      options: {},
+      name,
+      type
     }, plugin)
   })
 }

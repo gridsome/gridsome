@@ -3,6 +3,8 @@ const {
   GraphQLObjectType
 } = require('./graphql')
 
+const { SOURCE_PLUGIN } = require('../utils/enums')
+
 module.exports = service => {
   const createPagesSchema = require('./schema/pages')
   const createNodesSchema = require('./schema/nodes')
@@ -12,7 +14,7 @@ module.exports = service => {
   const internalSchema = createInternalSchema()
   const pagesSchema = createPagesSchema(service.pages)
   const nodesSchema = createNodesSchema(
-    service.config.plugins.filter(p => p.isSource)
+    service.config.plugins.filter(p => p.type === SOURCE_PLUGIN)
   )
 
   service.schema = new GraphQLSchema({

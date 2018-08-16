@@ -1,6 +1,6 @@
 const { camelCase } = require('lodash')
 const Transformer = require('../Transformer')
-const { internalRE, pluginRE } = require('./index')
+const { internalRE, transformerRE } = require('./index')
 
 module.exports = (service, { transformers = {}}) => {
   const { dependencies = {}, devDependencies = {}} = service.pkg
@@ -13,7 +13,7 @@ module.exports = (service, { transformers = {}}) => {
   const result = {}
 
   for (let id of deps) {
-    let matches = id.match(pluginRE)
+    let matches = id.match(transformerRE)
 
     if (internalRE.test(id)) {
       id = id.replace(internalRE, '../')

@@ -1,9 +1,8 @@
 const pMap = require('p-map')
-const Plugin = require('../Plugin')
-const Source = require('../Source')
 const { internalRE } = require('./index')
 const { defaultsDeep } = require('lodash')
 const createRouterData = require('./createRouterData')
+const { SOURCE_PLUGIN } = require('../utils/enums')
 
 module.exports = service => {
   return pMap(service.config.plugins, async plugin => {
@@ -13,14 +12,12 @@ module.exports = service => {
     const options = defaultsDeep(plugin.options, defaults)
 
     plugin.instance = new Constructor(service, options, plugin)
-    plugin.isSource = plugin.instance instanceof Source
-    plugin.isPlugin = plugin.instance instanceof Plugin
 
     plugin.instance.onBefore()
     await plugin.instance.apply()
     plugin.instance.onAfter()
 
-    if (process.env.NODE_ENV === 'development' && plugin.isSource) {
+    if (process.env.NODE_ENV === 'development' && plugin.type === SOURCE_PLUGIN) {
       plugin.instance.on('addPage', page => generateRoutes(service))
       plugin.instance.on('removePage', () => generateRoutes(service))
 
