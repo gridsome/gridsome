@@ -106,9 +106,9 @@ function createRoutePath (file) {
     .replace(/^pages\//, '')      // remove pages dirname
     .replace(/\.vue$/, '')        // removes .vue extension
     .replace(/\/?[iI]ndex$/, '/') // replaces /index with a /
-    .replace(/(^\/+|\/+$)/g, '')    // remove slahes
+    .replace(/(^\/+|\/+$)/g, '')  // remove slahes
 
-  return route.split('/').map(kebabCase).join('')
+  return route.split('/').map(s => kebabCase(s)).join('/')
 }
 
 function createId (string) {

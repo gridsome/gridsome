@@ -42,7 +42,7 @@ class Source extends Base {
       key: ref.key || '_id',
       description: `Reference to ${ref.type}`,
       schemaType: Array.isArray(ref.type)
-        ? ref.type.map(this.makeTypeName)
+        ? ref.type.map(type => this.makeTypeName(type))
         : this.makeTypeName(ref.type)
     }))
 

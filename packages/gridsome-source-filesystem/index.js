@@ -72,9 +72,9 @@ class FilesystemSource extends Source {
           node.refs[fieldName] = value
 
           if (Array.isArray(value)) {
-            value.forEach(v => this.createRefNode(type, fieldName, v))
+            value.forEach(v => this.addRefNode(type, fieldName, v))
           } else {
-            this.createRefNode(type, fieldName, value)
+            this.addRefNode(type, fieldName, value)
           }
         }
       }
@@ -97,7 +97,7 @@ class FilesystemSource extends Source {
 
   // helpers
 
-  createRefNode (type, fieldName, value) {
+  addRefNode (type, fieldName, value) {
     const cacheKey = `${type}-${fieldName}-${value}`
 
     if (!this._nodesCache[cacheKey] && value) {
@@ -111,10 +111,10 @@ class FilesystemSource extends Source {
     if (this.options.route) return
 
     const { dir, name } = path.parse(file)
-    const segments = dir.split(path.sep).map(s => kebabCase(s))
+    const segments = dir.split(path.sep).map(s => this.slugify(s))
 
     if (!this.options.index.includes(name)) {
-      segments.push(kebabCase(name))
+      segments.push(this.slugify(name))
     }
 
     return `/${segments.join('/')}`

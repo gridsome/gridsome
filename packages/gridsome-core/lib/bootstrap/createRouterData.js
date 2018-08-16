@@ -18,7 +18,7 @@ module.exports = service => {
     : '@gridsome/app/pages/404.vue'
 
   const routes = pages.map(page => {
-    const name = camelCase(page.path.replace('/', ' ')) || 'home'
+    const name = camelCase(page.path.replace(/\//g, ' ')) || 'home'
     let type = STATIC_ROUTE
     let route = page.path
 
