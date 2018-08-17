@@ -33,7 +33,7 @@ class FakerSource extends Source {
       const created = faker.date.past(10)
       const updated = faker.date.between(created, new Date())
 
-      this.addNode('node', {
+      const options = {
         title,
         id: faker.random.uuid(),
         slug: this.slugify(title),
@@ -48,7 +48,13 @@ class FakerSource extends Source {
           excerpt: faker.lorem.sentences(2),
           content: faker.lorem.paragraphs(10)
         }
-      })
+      }
+
+      try {
+        this.addNode('node', options)
+      } catch (err) {
+        this.logger.warn(err.message)
+      }
     }
   }
 }

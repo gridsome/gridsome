@@ -10,11 +10,12 @@ const parsePageQuery = require('./graphql/parsePageQuery')
 const _ = require('lodash')
 
 class Source extends Base {
-  constructor (store, transformers, context, options) {
+  constructor (context, options, store, transformers = {}, logger = console) {
     super(context, options)
 
     this.store = store
     this.transformers = transformers
+    this.logger = logger
     this.graphql = graphql
     this.mime = mime
     this.namespace = null

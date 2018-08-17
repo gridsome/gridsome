@@ -2,9 +2,9 @@ const path = require('path')
 const autoBind = require('auto-bind')
 const hirestime = require('hirestime')
 const Datastore = require('./Datastore')
+const cliUtils = require('@vue/cli-shared-utils')
 const createSchema = require('./graphql/createSchema')
 const { execute, graphql } = require('./graphql/graphql')
-const { info, warn, error } = require('@vue/cli-shared-utils')
 
 const { BOOTSTRAP_FULL } = require('./bootstrap')
 const resolvePackageJson = require('./bootstrap/resolvePackageJson')
@@ -20,13 +20,10 @@ class Service {
 
     this.context = context
     this.options = options
+    this.logger = options.logger || cliUtils
     this.clients = {}
 
     autoBind(this)
-
-    this.info = info
-    this.warn = warn
-    this.error = error
   }
 
   async bootstrap (phase = BOOTSTRAP_FULL) {
@@ -39,18 +36,18 @@ class Service {
       { title: 'Generate temporary files', run: this.generateRoutes }
     ]
 
-    info('Bootstrapping...')
+    this.logger.info('Bootstrapping...')
 
     for (const current of phases) {
       if (phases.indexOf(current) <= phase) {
         const timer = hirestime()
         await current.run(this)
 
-        info(`${current.title} - ${timer(hirestime.S)}s`)
+        this.logger.info(`${current.title} - ${timer(hirestime.S)}s`)
       }
     }
 
-    info(`Bootstrap finish - ${bootstrapTime(hirestime.S)}s`)
+    this.logger.info(`Bootstrap finish - ${bootstrapTime(hirestime.S)}s`)
 
     return this
   }

@@ -9,17 +9,15 @@ module.exports = service => {
     const PluginClass = require(use)
     const defaults = PluginClass.defaultOptions()
     const options = defaultsDeep(plugin.options, defaults)
+    const { context, store, transformers, logger } = service
 
     switch (plugin.type) {
       case NORMAL_PLUGIN:
-        plugin.instance = new PluginClass(service.context, options)
+        plugin.instance = new PluginClass(context, options)
         break
       case SOURCE_PLUGIN:
         plugin.instance = new PluginClass(
-          service.store,
-          service.transformers,
-          service.context,
-          options
+          context, options, store, transformers, logger
         )
         break
     }
