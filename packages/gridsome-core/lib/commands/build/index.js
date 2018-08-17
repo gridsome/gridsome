@@ -3,7 +3,7 @@ const cpu = require('./utils/cpu')
 const hirestime = require('hirestime')
 const Service = require('../../Service')
 const { info } = require('@vue/cli-shared-utils')
-const prepareRenderData = require('./prepareRenderData')
+const createRenderQueue = require('./createRenderQueue')
 
 module.exports = (api, options) => {
   api.registerCommand('gridsome:build', async (args, rawArgv) => {
@@ -19,11 +19,11 @@ module.exports = (api, options) => {
 
     await fs.remove(outDir)
     const { routerData, graphql } = await service.bootstrap()
-    const pages = await prepareRenderData(routerData, outDir, graphql)
+    const queue = await createRenderQueue(routerData, outDir, graphql)
 
     await require('./compileAssets')(api)
-    await require('./renderQueries')(pages, graphql)
-    await require('./renderHtml')(pages, outputDir)
+    await require('./renderQueries')(queue, graphql)
+    await require('./renderHtml')(queue, outputDir)
 
     await fs.remove(`${outputDir}/manifest`)
 

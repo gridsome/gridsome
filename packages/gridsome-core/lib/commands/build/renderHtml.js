@@ -5,10 +5,10 @@ const hirestime = require('hirestime')
 const Worker = require('jest-worker').default
 const { info } = require('@vue/cli-shared-utils')
 
-module.exports = async (pages, outputDir) => {
+module.exports = async (queue, outputDir) => {
   const timer = hirestime()
-  const totalPages = pages.length
-  const chunks = chunk(pages, 1000)
+  const totalPages = queue.length
+  const chunks = chunk(queue, 1000)
 
   const workerPath = require.resolve('./workers/html-renderer')
   const templatePath = path.resolve(__dirname, '../../../app/index.server.html')

@@ -1,6 +1,6 @@
 const path = require('path')
-const Router = require('vue-router')
 const { trim } = require('lodash')
+const Router = require('vue-router')
 
 const {
   PAGED_ROUTE,
@@ -19,7 +19,7 @@ module.exports = async ({ pages }, outDir, graphql) => {
     }))
   })
 
-  const makePage = (page, currentPage = 1) => {
+  const createPage = (page, currentPage = 1) => {
     const fullPath = currentPage > 1 ? `${page.path}/${currentPage}` : page.path
     const route = router.resolve(fullPath).route
     const output = path.resolve(outDir, trim(route.path, '/'))
@@ -32,7 +32,7 @@ module.exports = async ({ pages }, outDir, graphql) => {
     }
   }
 
-  const makeTemplate = (node, page) => {
+  const createTemplate = (node, page) => {
     const route = router.resolve(node.path).route
     const output = path.resolve(outDir, trim(route.path, '/'))
 
@@ -44,25 +44,25 @@ module.exports = async ({ pages }, outDir, graphql) => {
     }
   }
 
-  const renderPages = []
+  const queue = []
 
   for (const page of pages) {
     switch (page.type) {
       case STATIC_ROUTE:
       case STATIC_TEMPLATE_ROUTE:
-        renderPages.push(makePage(page))
+        queue.push(createPage(page))
 
         break
 
       case DYNAMIC_TEMPLATE_ROUTE:
         page.collection.find().forEach(node => {
-          renderPages.push(makeTemplate(node, page))
+          queue.push(createTemplate(node, page))
         })
 
         break
 
       case PAGED_ROUTE:
-        renderPages.push(makePage(page))
+        queue.push(createPage(page))
 
         const { collection, perPage } = page.pageQuery.paginate
         const { data, errors } = await graphql(`
@@ -82,12 +82,12 @@ module.exports = async ({ pages }, outDir, graphql) => {
         const { totalPages } = data[collection].pageInfo
 
         for (let i = 2; i <= totalPages; i++) {
-          renderPages.push(makePage(page, i))
+          queue.push(createPage(page, i))
         }
 
         break
     }
   }
 
-  return renderPages
+  return queue
 }

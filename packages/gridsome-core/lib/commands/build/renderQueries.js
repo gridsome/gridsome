@@ -4,10 +4,10 @@ const cpu = require('./utils/cpu')
 const hirestime = require('hirestime')
 const { info } = require('@vue/cli-shared-utils')
 
-module.exports = async (pages, graphql) => {
+module.exports = async (queue, graphql) => {
   const timer = hirestime()
   const concurrency = cpu.logical
-  const queries = pages.filter(page => !!page.query)
+  const queries = queue.filter(page => !!page.query)
 
   await pMap(queries, async page => {
     const variables = { ...page.route.params, path: page.path }
