@@ -20,7 +20,7 @@ class Datastore {
     this.types[type] = options
     this.collections[type] = this.data.addCollection(type, {
       unique: ['_id', 'path'],
-      indices: ['type'],
+      indices: ['date'],
       autoupdate: true
     })
   }

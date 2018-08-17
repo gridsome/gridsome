@@ -105,8 +105,7 @@ class WordPressSource extends Source {
         this.addNode(post.type, {
           _id: makePostId(post.id),
           title: post.title ? post.title.rendered : '',
-          created: new Date(post.date),
-          updated: new Date(post.modified),
+          date: new Date(post.date),
           slug: post.slug,
           fields: {
             content: post.content ? post.content.rendered : '',

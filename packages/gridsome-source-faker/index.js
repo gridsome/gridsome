@@ -18,7 +18,7 @@ class FakerSource extends Source {
       route: '/:year/:month/:day/:slug',
       fields: () => ({
         author: { type: GraphQLString },
-        published: { type: GraphQLString },
+        date: { type: GraphQLString },
         thumbnail: { type: GraphQLString },
         email: { type: GraphQLString },
         avatar: { type: GraphQLString },
@@ -41,7 +41,7 @@ class FakerSource extends Source {
         updated: updated,
         fields: {
           author: faker.name.findName(),
-          published: faker.date.recent(),
+          date: faker.date.recent(),
           thumbnail: faker.image.people(),
           email: faker.internet.exampleEmail(),
           avatar: faker.image.avatar(),

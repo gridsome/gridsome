@@ -1,4 +1,5 @@
 const camelCase = require('camelcase')
+const { dateType } = require('../types/date')
 const { mapValues, isEmpty } = require('lodash')
 
 const { internalType } = require('../types')
@@ -34,6 +35,7 @@ module.exports = ({ contentType, nodeTypes, fields }) => {
       slug: { type: GraphQLString },
       path: { type: GraphQLString },
       content: { type: GraphQLString },
+      date: dateType,
 
       _id: {
         type: new GraphQLNonNull(GraphQLID),

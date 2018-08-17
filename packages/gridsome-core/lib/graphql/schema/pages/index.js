@@ -1,5 +1,5 @@
-const { nodeInterface } = require('../interfaces')
 const { internalType } = require('../types')
+const { dateType } = require('../types/date')
 
 const {
   GraphQLID,
@@ -22,7 +22,6 @@ const pageQuery = new GraphQLObjectType({
 module.exports = () => {
   const pageType = new GraphQLObjectType({
     name: 'Page',
-    interfaces: [nodeInterface],
     fields: () => ({
       type: { type: new GraphQLNonNull(GraphQLString) },
       internal: { type: new GraphQLNonNull(internalType) },
@@ -32,6 +31,7 @@ module.exports = () => {
       component: { type: GraphQLString },
       pageQuery: { type: pageQuery },
       content: { type: GraphQLString },
+      date: dateType,
 
       _id: {
         type: new GraphQLNonNull(GraphQLID),

@@ -61,16 +61,17 @@ class Source extends Base {
   addNode (type, options) {
     const typeName = this.makeTypeName(type)
 
+    // all field names must be camelCased in order to work in GraphQL
+    const fields = _.mapKeys(options.fields, (v, key) => this.slugify(key))
+
     const node = {
       type,
+      fields,
       typeName,
       _id: options._id,
       title: options.title,
       slug: _.trim(options.path || options.slug, '/'),
-      created: options.created ? new Date(options.created) : new Date(),
-      updated: options.updated ? new Date(options.updated) : new Date(),
-      fields: _.mapKeys(options.fields, (v, key) => this.camelCase(key)),
-      data: options.data,
+      date: options.date || fields.date || new Date().toISOString(),
       content: options.content || '',
       excerpt: options.excerpt || '',
       link: null,
@@ -96,9 +97,6 @@ class Source extends Base {
       title: options.title,
       slug: options.slug.replace(/^\/|\/$/g, ''),
       path: null,
-      created: options.created ? new Date(options.created) : new Date(),
-      updated: options.updated ? new Date(options.updated) : new Date(),
-      data: options.data,
       parent: options.parent ? String(options.parent) : null,
       component: options.component,
       file: options.file,
@@ -146,10 +144,10 @@ class Source extends Base {
     }
   }
 
-  makePath ({ typeName, type, created, slug }) {
-    const year = created ? dateFormat(created, 'yyyy') : null
-    const month = created ? dateFormat(created, 'mm') : null
-    const day = created ? dateFormat(created, 'dd') : null
+  makePath ({ typeName, type, date, slug }) {
+    const year = date ? dateFormat(date, 'yyyy') : null
+    const month = date ? dateFormat(date, 'mm') : null
+    const day = date ? dateFormat(date, 'dd') : null
     const params = { year, month, day, type, slug }
 
     // TODO: make custom fields available as route params

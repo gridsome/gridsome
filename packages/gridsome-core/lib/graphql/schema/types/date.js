@@ -3,7 +3,7 @@ const { GraphQLString, GraphQLScalarType, Kind } = require('../../graphql')
 
 // TODO: improve this
 
-const GraphQLDate = new GraphQLScalarType({
+exports.GraphQLDate = new GraphQLScalarType({
   name: 'Date',
   serialize: String,
   parseValue: String,
@@ -17,7 +17,7 @@ exports.isDate = value => {
 }
 
 exports.dateType = {
-  type: GraphQLDate,
+  type: exports.GraphQLDate,
   args: {
     format: { type: GraphQLString, description: 'Date format' },
     locale: { type: GraphQLString, description: 'Locale', defaultValue: 'en' }

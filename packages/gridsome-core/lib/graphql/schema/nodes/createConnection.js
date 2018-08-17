@@ -31,7 +31,7 @@ module.exports = nodeType => {
     type: connectionType,
     description: `Connection to all ${nodeType.name} nodes`,
     args: {
-      sortBy: { type: GraphQLString, defaultValue: 'created' },
+      sortBy: { type: GraphQLString, defaultValue: 'date' },
       order: { type: sortOrderType, defaultValue: -1 },
       perPage: { type: GraphQLInt, defaultValue: 25 },
       skip: { type: GraphQLInt, defaultValue: 0 },

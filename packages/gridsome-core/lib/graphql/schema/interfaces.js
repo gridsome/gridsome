@@ -5,6 +5,8 @@ const {
   GraphQLInterfaceType
 } = require('../graphql')
 
+const { GraphQLDate } = require('./types/date')
+
 const internalInterface = new GraphQLInterfaceType({
   name: 'InternalInterface',
   fields: () => ({
@@ -22,6 +24,7 @@ const nodeInterface = new GraphQLInterfaceType({
     title: { type: GraphQLString },
     slug: { type: GraphQLString },
     path: { type: GraphQLString },
+    date: { type: GraphQLDate },
     content: { type: GraphQLString }
   })
 })
