@@ -23,7 +23,7 @@ module.exports = (app, schema, store) => {
 
   return ({ url }) => {
     const exploreUrl = `${trim(url, '/')}${endpoints.explore}`
-    console.log(`  Explore your data at: ${chalk.cyan(exploreUrl)}`)
+    console.log(`  Explore GraphQL data at: ${chalk.cyan(exploreUrl)}`)
   }
 }
 

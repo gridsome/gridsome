@@ -1,5 +1,5 @@
-const sockjs = require('sockjs')
 const http = require('http')
+const sockjs = require('sockjs')
 const portfinder = require('portfinder')
 
 module.exports = clients => new Promise(async resolve => {
@@ -20,7 +20,7 @@ module.exports = clients => new Promise(async resolve => {
 
   echo.installHandlers(server, { prefix })
 
-  server.listen(port, '0.0.0.0', () => {
+  server.listen(port, () => {
     resolve(`http://localhost:${port}${prefix}`)
   })
 })

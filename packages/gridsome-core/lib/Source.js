@@ -63,7 +63,7 @@ class Source extends Base {
     const typeName = this.makeTypeName(type)
 
     // all field names must be camelCased in order to work in GraphQL
-    const fields = _.mapKeys(options.fields, (v, key) => this.slugify(key))
+    const fields = _.mapKeys(options.fields, (v, key) => this.camelCase(key))
 
     const node = {
       type,

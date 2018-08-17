@@ -4,6 +4,17 @@ const { defaultsDeep } = require('lodash')
 const { NORMAL_PLUGIN, SOURCE_PLUGIN } = require('../utils/enums')
 
 module.exports = service => {
+  let regenerateTimeout = null
+
+  // use timeout as a workaround for when files are renamed,
+  // which triggers both add and unlink events...
+  const regenerateRoutes = () => {
+    clearTimeout(regenerateTimeout)
+    regenerateTimeout = setTimeout(() => {
+      service.generateRoutes()
+    }, 20)
+  }
+
   return pMap(service.config.plugins, async plugin => {
     const use = plugin.use.replace(internalRE, '../')
     const PluginClass = require(use)
@@ -14,11 +25,14 @@ module.exports = service => {
     switch (plugin.type) {
       case NORMAL_PLUGIN:
         plugin.instance = new PluginClass(context, options)
+
         break
+
       case SOURCE_PLUGIN:
         plugin.instance = new PluginClass(
           context, options, store, transformers, logger
         )
+
         break
     }
 
@@ -27,8 +41,8 @@ module.exports = service => {
     plugin.instance.onAfter()
 
     if (process.env.NODE_ENV === 'development' && plugin.type === SOURCE_PLUGIN) {
-      plugin.instance.on('addPage', page => service.generateRoutes())
-      plugin.instance.on('removePage', () => service.generateRoutes())
+      plugin.instance.on('removePage', regenerateRoutes)
+      plugin.instance.on('addPage', regenerateRoutes)
 
       plugin.instance.on('updatePage', async (page, oldPage) => {
         const { pageQuery: { paginate: oldPaginate }} = oldPage
