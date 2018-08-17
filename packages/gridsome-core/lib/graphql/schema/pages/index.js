@@ -19,7 +19,7 @@ const pageQuery = new GraphQLObjectType({
   })
 })
 
-module.exports = pages => {
+module.exports = () => {
   const pageType = new GraphQLObjectType({
     name: 'Page',
     interfaces: [nodeInterface],
@@ -36,7 +36,7 @@ module.exports = pages => {
       _id: {
         type: new GraphQLNonNull(GraphQLID),
         resolve: node => node.$loki
-      },
+      }
     })
   })
 
@@ -46,33 +46,12 @@ module.exports = pages => {
       args: {
         _id: { type: new GraphQLNonNull(GraphQLString) }
       },
-      resolve (_, { _id }) {
-        return pages.find({ _id })
+      resolve (_, { _id }, { store }) {
+        return store.pages.find({ _id })
       }
     }
   }
 
-  const mutations = {
-    updatePage: {
-      type: pageType,
-      args: {
-        _id: { type: new GraphQLNonNull(GraphQLString) },
-        title: { type: new GraphQLNonNull(GraphQLString) },
-        slug: { type: new GraphQLNonNull(GraphQLString) },
-        parent: { type: new GraphQLNonNull(GraphQLString) },
-        layout: { type: new GraphQLNonNull(GraphQLString) },
-        data: { type: GraphQLString }
-      },
-      async resolve (_, args) {
-        // args.updated = new Date().toISOString()
-        // const page = await plugin.api.updatePage(args, source)
-        // pubsub.publish('updatedPage', { updatePage: node })
-        // return page
-      }
-    }
-  }
-
-  const subscriptions = {}
   const connections = {
     allPage: {
       type: new GraphQLList(pageType),
@@ -82,20 +61,18 @@ module.exports = pages => {
           defaultValue: 'page'
         }
       },
-      resolve (_, { type }) {
+      resolve (_, { type }, { store }) {
         const query = { type }
 
         if (type === '*') delete query.type
 
-        return pages.find(query)
+        return store.pages.find(query)
       }
     }
   }
 
   return {
     queries,
-    mutations,
-    connections,
-    subscriptions
+    connections
   }
 }

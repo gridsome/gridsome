@@ -4,7 +4,7 @@ const {
   GraphQLError
 } = require('../../graphql')
 
-module.exports = ({ nodeType, source }) => {
+module.exports = nodeType => {
   return {
     type: nodeType,
     args: {
@@ -16,10 +16,9 @@ module.exports = ({ nodeType, source }) => {
         description: 'Will return an error if not nullable.'
       }
     },
-    resolve (object, { _id, path, nullable }) {
-      const node = _id
-        ? source.nodes.get(_id)
-        : source.nodes.findOne({ path })
+    resolve (object, { _id, path, nullable }, { store }) {
+      const collection = store.collections[nodeType.name]
+      const node = _id ? collection.get(_id) : collection.findOne({ path })
 
       if (!node && !nullable) {
         const message = path

@@ -1,3 +1,4 @@
+const path = require('path')
 const EventEmitter = require('events')
 
 class Base extends EventEmitter {
@@ -5,14 +6,15 @@ class Base extends EventEmitter {
     return {}
   }
 
-  constructor (service, options, plugin) {
+  constructor (context, options) {
     super()
 
-    this.service = service
-    this.context = service.context
-    this.resolve = service.resolve
+    this.context = context
     this.options = options
-    this.plugin = plugin
+  }
+
+  resolve (p) {
+    return path.resolve(this.context, p)
   }
 
   onBefore () {}

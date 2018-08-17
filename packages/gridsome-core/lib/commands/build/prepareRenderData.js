@@ -9,62 +9,60 @@ const {
   DYNAMIC_TEMPLATE_ROUTE
 } = require('../../utils/enums')
 
-module.exports = async ({ routes }, outDir, graphql) => {
+module.exports = async ({ pages }, outDir, graphql) => {
   const router = new Router({
     base: '/',
     mode: 'history',
     fallback: false,
-    routes: routes.map(page => ({
+    routes: pages.map(page => ({
       path: page.route || page.path
     }))
   })
 
-  const makePage = (data, page = 1) => {
-    const fullPath = page > 1 ? `${data.path}/${page}` : data.path
+  const makePage = (page, currentPage = 1) => {
+    const fullPath = currentPage > 1 ? `${page.path}/${currentPage}` : page.path
     const route = router.resolve(fullPath).route
     const output = path.resolve(outDir, trim(route.path, '/'))
 
     return {
       path: fullPath,
-      query: data.pageQuery.query,
+      query: page.pageQuery.query,
       output,
       route
     }
   }
 
-  const makeTemplate = (node, data) => {
+  const makeTemplate = (node, page) => {
     const route = router.resolve(node.path).route
     const output = path.resolve(outDir, trim(route.path, '/'))
 
     return {
       path: node.path,
-      query: data.pageQuery.query,
+      query: page.pageQuery.query,
       output,
       route
     }
   }
 
-  const pages = []
+  const renderPages = []
 
-  for (const page of routes) {
+  for (const page of pages) {
     switch (page.type) {
       case STATIC_ROUTE:
       case STATIC_TEMPLATE_ROUTE:
-        pages.push(makePage(page))
+        renderPages.push(makePage(page))
 
         break
 
       case DYNAMIC_TEMPLATE_ROUTE:
-        page.source.nodes
-          .find({ type: page.nodeType })
-          .forEach(node => {
-            pages.push(makeTemplate(node, page))
-          })
+        page.collection.find().forEach(node => {
+          renderPages.push(makeTemplate(node, page))
+        })
 
         break
 
       case PAGED_ROUTE:
-        pages.push(makePage(page))
+        renderPages.push(makePage(page))
 
         const { collection, perPage } = page.pageQuery.paginate
         const { data, errors } = await graphql(`
@@ -84,15 +82,12 @@ module.exports = async ({ routes }, outDir, graphql) => {
         const { totalPages } = data[collection].pageInfo
 
         for (let i = 2; i <= totalPages; i++) {
-          pages.push(makePage(page, i))
+          renderPages.push(makePage(page, i))
         }
 
         break
     }
   }
 
-  return {
-    router,
-    pages
-  }
+  return renderPages
 }

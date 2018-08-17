@@ -20,7 +20,7 @@ class VueSource extends Source {
   async apply () {
     const files = await glob(this.options.path, { cwd: this.context })
 
-    files.map(file => this.addPage(file))
+    files.forEach(file => this.addPage(file))
 
     if (process.env.NODE_ENV === 'development') {
       const watcher = chokidar.watch(this.options.path, {

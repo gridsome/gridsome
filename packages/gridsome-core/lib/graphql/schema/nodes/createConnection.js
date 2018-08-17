@@ -8,11 +8,9 @@ const {
 
 const { pageInfoType, sortOrderType } = require('../types')
 
-const count = (nodes, type) => nodes.find({ type }).length
-
-module.exports = ({ contentType, nodeType, source }) => {
+module.exports = nodeType => {
   const edgeType = new GraphQLObjectType({
-    name: `${contentType.type}Edge`,
+    name: `${nodeType.name}Edge`,
     fields: () => ({
       node: { type: nodeType },
       next: { type: nodeType },
@@ -21,7 +19,7 @@ module.exports = ({ contentType, nodeType, source }) => {
   })
 
   const connectionType = new GraphQLObjectType({
-    name: `${contentType.type}Connection`,
+    name: `${nodeType.name}Connection`,
     fields: () => ({
       totalCount: { type: GraphQLInt },
       pageInfo: { type: new GraphQLNonNull(pageInfoType) },
@@ -31,7 +29,7 @@ module.exports = ({ contentType, nodeType, source }) => {
 
   return {
     type: connectionType,
-    description: `Connection to all ${contentType.type} nodes`,
+    description: `Connection to all ${nodeType.name} nodes`,
     args: {
       sortBy: { type: GraphQLString, defaultValue: 'created' },
       order: { type: sortOrderType, defaultValue: -1 },
@@ -39,24 +37,25 @@ module.exports = ({ contentType, nodeType, source }) => {
       skip: { type: GraphQLInt, defaultValue: 0 },
       page: { type: GraphQLInt, defaultValue: 1 }
     },
-    async resolve (_, { sortBy, order, perPage, skip, page }) {
+    async resolve (_, { sortBy, order, perPage, skip, page }, { store }) {
       page = Math.max(page, 1) // ensure page higher than 0
       perPage = Math.max(perPage, 1) // ensure page higher than 1
 
-      // source.nodes.find({'Name': { '$regex' : /din/ }})
+      const collection = store.collections[nodeType.name]
+      // collection.find({'Name': { '$regex' : /din/ }})
 
-      const query = source.nodes
+      const query = collection
         .chain()
-        .find({ type: contentType.type })
+        .find({})
         .simplesort(sortBy, order === -1)
         .offset(((page - 1) * perPage) + skip)
         .limit(perPage)
 
       const nodes = query.data()
-      const totalStoreNodes = count(source.nodes, contentType.type)
+      const totalNodes = collection.find({}).length
 
       // total items in result
-      const totalCount = Math.max(totalStoreNodes - skip, 0)
+      const totalCount = Math.max(totalNodes - skip, 0)
 
       // page info
       const currentPage = page

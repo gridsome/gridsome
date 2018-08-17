@@ -1,33 +1,28 @@
-const createQuery = require('./query')
-const createNodeType = require('./node')
-const createConnection = require('./connection')
 const camelCase = require('camelcase')
+const createType = require('./createType')
+const createQuery = require('./createQuery')
+const createConnection = require('./createConnection')
+const { inferTypes } = require('../infer-types')
 
-module.exports = plugins => {
+module.exports = store => {
   const queries = {}
-  const mutations = {}
   const connections = {}
-  const subscriptions = {}
   const nodeTypes = {}
 
-  for (const plugin of plugins) {
-    const source = plugin.instance
+  for (const typeName in store.types) {
+    const collection = store.collections[typeName]
+    const nodeType = nodeTypes[typeName] = createType({
+      fields: inferTypes(collection.find(), typeName),
+      contentType: store.types[typeName],
+      nodeTypes
+    })
 
-    for (const key in source.types) {
-      const contentType = source.types[key]
-      const typeName = contentType.type
-      const options = { contentType, nodeTypes, source }
-      const nodeType = nodeTypes[typeName] = createNodeType(options)
-
-      queries[camelCase(typeName)] = createQuery({ nodeType, ...options })
-      connections[`all${typeName}`] = createConnection({ nodeType, ...options })
-    }
+    queries[camelCase(typeName)] = createQuery(nodeType)
+    connections[`all${typeName}`] = createConnection(nodeType)
   }
 
   return {
     queries,
-    mutations,
-    connections,
-    subscriptions
+    connections
   }
 }

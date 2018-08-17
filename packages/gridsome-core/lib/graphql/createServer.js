@@ -15,12 +15,10 @@ const EXPLORE_ENDPOINT = '/___explore'
 const SUBSCRIPTIONS_PATH = '/___graphql'
 const SOCKJS_ENDPOINT = '/echo'
 
-module.exports = ({ schema, clients }, ui = true) => new Promise(async resolve => {
+module.exports = ({ schema, clients, store }, ui = true) => new Promise(async resolve => {
   portfinder.basePort = 5000
 
   const port = await portfinder.getPortPromise()
-
-  const app = express()
   const echo = sockjs.createServer({ log: () => null })
 
   echo.on('connection', conn => {
@@ -31,7 +29,14 @@ module.exports = ({ schema, clients }, ui = true) => new Promise(async resolve =
     })
   })
 
-  app.use(GRAPHQL_ENDPOINT, cors(), bodyParser.json(), graphqlHTTP({ schema }))
+  const app = express()
+
+  app.use(
+    GRAPHQL_ENDPOINT,
+    cors(),
+    bodyParser.json(),
+    graphqlHTTP({ schema, context: { store }})
+  )
 
   if (ui) {
     app.get(EXPLORE_ENDPOINT, expressPlayground({

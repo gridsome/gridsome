@@ -1,11 +1,5 @@
 const Base = require('./Base')
 
-class Plugin extends Base {
-  constructor (service, options, plugin) {
-    super(service, options)
-
-    this.plugin = plugin
-  }
-}
+class Plugin extends Base {}
 
 module.exports = Plugin

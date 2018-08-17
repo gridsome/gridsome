@@ -1,17 +1,17 @@
-module.exports = ({ routes, notFoundComponent }) => {
+module.exports = ({ pages, notFoundComponent }) => {
   let res = `import NotFound from ${JSON.stringify(notFoundComponent)}\n\n`
 
-  res += `export const routes = [${routes.map(route => {
-    const component = JSON.stringify(route.component)
-    const chunkName = JSON.stringify(route.name || route.chunkName)
+  res += `export const routes = [${pages.map(page => {
+    const component = JSON.stringify(page.component)
+    const chunkName = JSON.stringify(page.name || page.chunkName)
 
     const options = [
-      `    path: ${JSON.stringify(route.route || route.path)}`,
+      `    path: ${JSON.stringify(page.route || page.path)}`,
       `    component: () => import(/* webpackChunkName: ${chunkName} */ ${component})`
     ]
 
-    if (route.name) {
-      options.unshift(`    name: ${JSON.stringify(route.name)}`)
+    if (page.name) {
+      options.unshift(`    name: ${JSON.stringify(page.name)}`)
     }
 
     return `\n  {\n${options.join(',\n')}\n  }`

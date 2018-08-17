@@ -4,57 +4,54 @@ const mime = require('mime-types')
 const autoBind = require('auto-bind')
 const camelCase = require('camelcase')
 const dateFormat = require('dateformat')
-const { Collection } = require('lokijs')
 const graphql = require('./graphql/graphql')
 const pathToRegexp = require('path-to-regexp')
 const parsePageQuery = require('./graphql/parsePageQuery')
 const _ = require('lodash')
 
 class Source extends Base {
-  constructor (service, options, plugin) {
-    super(service, options, plugin)
+  constructor (store, transformers, context, options) {
+    super(context, options)
 
-    this.transformers = service.transformers
+    this.store = store
+    this.transformers = transformers
     this.graphql = graphql
     this.mime = mime
     this.namespace = null
-    this.mediaType = null
-    this.types = {}
 
     autoBind(this)
-
-    this.nodes = new Collection('nodes', {
-      indices: ['type', 'created'],
-      unique: ['_id', 'path'],
-      autoupdate: true
-    })
   }
 
   // nodes
 
   addType (type, options) {
+    const typeName = this.makeTypeName(type)
+
+    // function for generating paths from routes for this type
     const makePath = options.route
       ? pathToRegexp.compile(options.route)
       : () => null
 
+    // normalize references
     const refs = _.mapValues(options.refs, ref => ({
       type: ref.type,
       key: ref.key || '_id',
       description: `Reference to ${ref.type}`,
+      typeName: this.makeTypeName(ref.type),
       schemaType: Array.isArray(ref.type)
         ? ref.type.map(type => this.makeTypeName(type))
         : this.makeTypeName(ref.type)
     }))
 
-    this.types[type] = {
-      type: this.makeTypeName(type),
-      name: options.name,
+    this.store.addType(typeName, {
+      name: typeName,
       route: options.route,
       fields: options.fields,
       belongsTo: {},
       makePath,
+      type,
       refs
-    }
+    })
   }
 
   getType (type) {
@@ -62,9 +59,12 @@ class Source extends Base {
   }
 
   addNode (type, options) {
+    const typeName = this.makeTypeName(type)
+
     const node = {
+      type,
+      typeName,
       _id: options._id,
-      type: this.makeTypeName(type),
       title: options.title,
       slug: _.trim(options.path || options.slug, '/'),
       created: options.created ? new Date(options.created) : new Date(),
@@ -75,14 +75,12 @@ class Source extends Base {
       excerpt: options.excerpt || '',
       link: null,
       refs: options.refs || {},
-      internal: this.createInternals({
-        type: type
-      })
+      internal: this.createInternals({ type })
     }
 
     node.path = options.path || this.makePath(node)
 
-    return this.nodes.insert(node)
+    return this.store.addNode(typeName, node)
   }
 
   updateNode (_id, options) {}
@@ -105,7 +103,7 @@ class Source extends Base {
       component: options.component,
       file: options.file,
       pageQuery: parsePageQuery(options.pageQuery),
-      internal: this.createInternals({})
+      internal: this.createInternals({ type })
     }
 
     if (page.type === 'page') {
@@ -114,7 +112,7 @@ class Source extends Base {
 
     this.emit('addPage', page)
 
-    return this.service.pages.insert(page)
+    return this.store.addPage(page)
   }
 
   updatePage (id, options) {
@@ -131,12 +129,12 @@ class Source extends Base {
   }
 
   removePage (_id) {
-    this.service.pages.findAndRemove({ _id })
+    this.store.removePage(_id)
     this.emit('removePage', _id)
   }
 
   getPage (_id) {
-    return this.service.pages.findOne({ _id })
+    return this.store.getPage(_id)
   }
 
   // misc
@@ -144,18 +142,19 @@ class Source extends Base {
   createInternals (options) {
     return {
       type: options.type,
-      owner: this.plugin.uid
+      owner: '' // this.plugin.uid
     }
   }
 
-  makePath ({ created, slug, internal: { type }}) {
+  makePath ({ typeName, type, created, slug }) {
     const year = created ? dateFormat(created, 'yyyy') : null
     const month = created ? dateFormat(created, 'mm') : null
     const day = created ? dateFormat(created, 'dd') : null
+    const params = { year, month, day, type, slug }
 
     // TODO: make custom fields available as route params
 
-    return this.types[type].makePath({ year, month, day, type, slug })
+    return this.store.types[typeName].makePath(params)
   }
 
   transform (string, mimeType, options, file) {
@@ -190,14 +189,14 @@ class Source extends Base {
 
   onAfter () {
     // create foreign references
-    _.forEach(this.types, (options, type) => {
+    _.forEach(this.store.types, (options, typeName) => {
       _.forEach(options.refs, (ref, key) => {
-        this.types[ref.type].belongsTo[type] = {
-          description: `Reference to ${type}`,
+        this.store.types[ref.typeName].belongsTo[options.type] = {
+          description: `Reference to ${typeName}`,
           localKey: ref.key,
-          foreignType: type,
+          foreignType: options.type,
           foreignKey: key,
-          foreignSchemaType: options.type
+          foreignSchemaType: typeName
         }
       })
     })

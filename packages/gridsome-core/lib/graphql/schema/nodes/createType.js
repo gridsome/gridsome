@@ -1,10 +1,8 @@
 const camelCase = require('camelcase')
-const graphql = require('../../graphql')
 const { mapValues, isEmpty } = require('lodash')
 
 const { internalType } = require('../types')
 const { nodeInterface } = require('../interfaces')
-const { inferTypes } = require('../infer-types')
 
 const {
   GraphQLID,
@@ -14,7 +12,7 @@ const {
   GraphQLUnionType,
   GraphQLObjectType,
   GraphQLInterfaceType
-} = graphql
+} = require('../../graphql')
 
 const fieldsInterface = new GraphQLInterfaceType({
   name: 'FieldsInterface',
@@ -23,12 +21,12 @@ const fieldsInterface = new GraphQLInterfaceType({
   })
 })
 
-module.exports = ({ contentType, nodeTypes, source }) => {
+module.exports = ({ contentType, nodeTypes, fields }) => {
   return new GraphQLObjectType({
-    name: contentType.type,
+    name: contentType.name,
     description: contentType.description,
     interfaces: [nodeInterface],
-    isTypeOf: node => node.type === contentType.type,
+    isTypeOf: node => node.typeName === contentType.name,
     fields: () => ({
       type: { type: new GraphQLNonNull(GraphQLString) },
       internal: { type: new GraphQLNonNull(internalType) },
@@ -42,20 +40,17 @@ module.exports = ({ contentType, nodeTypes, source }) => {
         resolve: node => node.$loki
       },
 
-      ...createFields(contentType, nodeTypes, source),
-      ...createRefs(contentType, nodeTypes, source),
-      ...createForeignRefs(contentType, nodeTypes, source)
+      ...createFields(contentType, fields),
+      ...createRefs(contentType, nodeTypes),
+      ...createForeignRefs(contentType, nodeTypes)
     })
   })
 }
 
-function createFields (contentType, nodeTypes, source) {
-  const nodes = source.nodes.find({ type: contentType.type })
-  const customFields = inferTypes(nodes, contentType.type)
-
+function createFields (contentType, customFields) {
   const fields = {
     type: new GraphQLObjectType({
-      name: `${contentType.type}Fields`,
+      name: `${contentType.name}Fields`,
       interfaces: [fieldsInterface],
       fields: {
         title: { type: GraphQLString },
@@ -67,21 +62,22 @@ function createFields (contentType, nodeTypes, source) {
   return { fields }
 }
 
-function createRefs (contentType, nodeTypes, source) {
+function createRefs (contentType, nodeTypes) {
   if (isEmpty(contentType.refs)) return null
 
   const refs = {
     resolve: obj => obj,
     type: new GraphQLObjectType({
-      name: `${contentType.type}References`,
+      name: `${contentType.name}References`,
       fields: () => mapValues(contentType.refs, (ref, key) => {
         const { schemaType, description } = ref
         let refType = nodeTypes[schemaType]
 
         if (Array.isArray(schemaType)) {
+          // TODO: create union collection
           const fieldTypeName = camelCase(key, { pascalCase: true })
           refType = new GraphQLUnionType({
-            name: `${contentType.type}${fieldTypeName}Union`,
+            name: `${contentType.name}${fieldTypeName}Union`,
             interfaces: [nodeInterface],
             types: schemaType.map(schemaType => nodeTypes[schemaType])
           })
@@ -90,11 +86,11 @@ function createRefs (contentType, nodeTypes, source) {
         return {
           description,
           type: new GraphQLList(refType),
-          resolve: obj => {
+          resolve: (obj, args, { store }) => {
             const $in = obj.fields[key] || []
-            const query = { type: schemaType, [ref.key]: { $in }}
+            const query = { [ref.key]: { $in }}
 
-            return source.nodes.find(query)
+            return store.collections[schemaType].find(query)
           }
         }
       })
@@ -104,13 +100,13 @@ function createRefs (contentType, nodeTypes, source) {
   return { refs }
 }
 
-function createForeignRefs (contentType, nodeTypes, source) {
+function createForeignRefs (contentType, nodeTypes) {
   if (isEmpty(contentType.belongsTo)) return null
 
   const belongsTo = {
     resolve: obj => obj,
     type: new GraphQLObjectType({
-      name: `${contentType.type}BelongsTo`,
+      name: `${contentType.name}BelongsTo`,
       fields: () => mapValues(contentType.belongsTo, ref => {
         const { foreignSchemaType, description } = ref
         const nodeType = nodeTypes[foreignSchemaType]
@@ -118,12 +114,12 @@ function createForeignRefs (contentType, nodeTypes, source) {
         return {
           description,
           type: new GraphQLList(nodeType),
-          resolve: obj => {
-            const query = { type: foreignSchemaType }
+          resolve: (obj, args, { store }) => {
+            const collection = store.collections[foreignSchemaType]
             const value = obj[ref.localKey]
             const key = ref.foreignKey
 
-            return source.nodes.find(query).filter(node => {
+            return collection.find().filter(node => {
               const field = node.fields[key]
 
               return Array.isArray(field)

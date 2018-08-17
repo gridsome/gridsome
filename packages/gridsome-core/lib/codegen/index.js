@@ -1,9 +1,9 @@
 const fs = require('fs-extra')
-const genRoutes = require('./genRoutes')
+const generateRoutes = require('./generateRoutes')
 
 module.exports = async (service, filename = null) => {
   const files = {
-    'routes.js': () => genRoutes(service.routerData),
+    'routes.js': () => generateRoutes(service.routerData),
     'now.js': () => `export default ${Date.now()}`
   }
 

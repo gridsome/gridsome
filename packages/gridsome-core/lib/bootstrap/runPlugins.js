@@ -1,25 +1,36 @@
 const pMap = require('p-map')
 const { internalRE } = require('./index')
 const { defaultsDeep } = require('lodash')
-const createRouterData = require('./createRouterData')
-const { SOURCE_PLUGIN } = require('../utils/enums')
+const { NORMAL_PLUGIN, SOURCE_PLUGIN } = require('../utils/enums')
 
 module.exports = service => {
   return pMap(service.config.plugins, async plugin => {
     const use = plugin.use.replace(internalRE, '../')
-    const Constructor = require(use)
-    const defaults = Constructor.defaultOptions()
+    const PluginClass = require(use)
+    const defaults = PluginClass.defaultOptions()
     const options = defaultsDeep(plugin.options, defaults)
 
-    plugin.instance = new Constructor(service, options, plugin)
+    switch (plugin.type) {
+      case NORMAL_PLUGIN:
+        plugin.instance = new PluginClass(service.context, options)
+        break
+      case SOURCE_PLUGIN:
+        plugin.instance = new PluginClass(
+          service.store,
+          service.transformers,
+          service.context,
+          options
+        )
+        break
+    }
 
     plugin.instance.onBefore()
     await plugin.instance.apply()
     plugin.instance.onAfter()
 
     if (process.env.NODE_ENV === 'development' && plugin.type === SOURCE_PLUGIN) {
-      plugin.instance.on('addPage', page => generateRoutes(service))
-      plugin.instance.on('removePage', () => generateRoutes(service))
+      plugin.instance.on('addPage', page => service.generateRoutes())
+      plugin.instance.on('removePage', () => service.generateRoutes())
 
       plugin.instance.on('updatePage', async (page, oldPage) => {
         const { pageQuery: { paginate: oldPaginate }} = oldPage
@@ -27,7 +38,7 @@ module.exports = service => {
 
         // regenerate route.js whenever paging options changes
         if (paginate.collection !== oldPaginate.collection) {
-          await generateRoutes(service)
+          await service.generateRoutes()
         }
 
         // send query to front-end for re-fetch
@@ -38,10 +49,4 @@ module.exports = service => {
       })
     }
   }, { concurrency: 3 })
-}
-
-async function generateRoutes (service) {
-  createRouterData(service)
-  await service.generate('routes.js')
-  await service.generate('now.js')
 }
