@@ -1,4 +1,4 @@
-module.exports = async (context, options) => {
+module.exports = async (context, args) => {
   process.env.NODE_ENV = 'production'
 
   const path = require('path')
@@ -7,18 +7,18 @@ module.exports = async (context, options) => {
   const Service = require('../../Service')
 
   const buildTime = hirestime()
-  const outDir = path.resolve(context, 'dist')
-  const service = new Service(context)
+  const service = new Service(context, { args })
+  const { config, graphql, logger } = await service.bootstrap()
 
-  await fs.remove(outDir)
-  const { routerData, graphql, logger } = await service.bootstrap()
-  const queue = await require('./createRenderQueue')(routerData, outDir, graphql)
+  await fs.remove(config.outDir)
 
-  await require('./compileAssets')(context, options, logger)
+  const queue = await require('./createRenderQueue')(service)
+
+  await require('./compileAssets')(context, config, logger)
   await require('./renderQueries')(queue, graphql, logger)
-  await require('./renderHtml')(queue, outDir, logger)
+  await require('./renderHtml')(queue, config.outDir, logger)
 
-  await fs.remove(`${outDir}/manifest`)
+  await fs.remove(`${config.outDir}/manifest`)
 
   console.log()
   console.log(`  Done in ${buildTime(hirestime.S)}s`)

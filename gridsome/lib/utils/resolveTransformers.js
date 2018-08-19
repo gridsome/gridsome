@@ -2,7 +2,8 @@ const { camelCase } = require('lodash')
 const Transformer = require('../Transformer')
 const { internalRE, transformerRE } = require('./index')
 
-module.exports = (service, { transformers = {}}) => {
+module.exports = service => {
+  const { transformers = {}} = service.options
   const { dependencies = {}, devDependencies = {}} = service.pkg
   const deps = Object.keys({
     ...dependencies,

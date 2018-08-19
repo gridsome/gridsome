@@ -1,4 +1,4 @@
-module.exports = async (context, options) => {
+module.exports = async (context, args) => {
   process.env.NODE_ENV = 'development'
 
   const chalk = require('chalk')
@@ -9,10 +9,10 @@ module.exports = async (context, options) => {
   const createSockJsServer = require('./utils/createSockJsServer')
   const createClientConfig = require('../webpack/createClientConfig')
 
-  const service = new Service(context)
-  const { clients, schema, store } = await service.bootstrap()
-  const port = await resolvePort(options.port)
-  const host = options.host || 'localhost'
+  const service = new Service(context, { args })
+  const { config, clients, schema, store } = await service.bootstrap()
+  const port = await resolvePort(config.port)
+  const host = config.host || 'localhost'
   const { endpoints } = createServer
 
   const sockjsEndpoint = await createSockJsServer(host, clients)
@@ -20,7 +20,7 @@ module.exports = async (context, options) => {
   const gqlEndpoint = fullUrl + endpoints.graphql
   const exploreEndpoint = fullUrl + endpoints.explore
   const wsEndpoint = `ws://${host}:${port}${endpoints.graphql}`
-  const configChain = createClientConfig(context, options)
+  const configChain = createClientConfig(context, config)
 
   configChain
     .plugin('dev-endpoints')
@@ -36,8 +36,8 @@ module.exports = async (context, options) => {
       .prepend('webpack/hot/dev-server')
   })
 
-  const config = configChain.toConfig()
-  const compiler = webpack(config)
+  const webpackConfig = configChain.toConfig()
+  const compiler = webpack(webpackConfig)
   const app = createServer({ host, schema, store })
 
   app.use(require('connect-history-api-fallback')())
@@ -47,7 +47,7 @@ module.exports = async (context, options) => {
   }))
 
   const devMiddleware = require('webpack-dev-middleware')(compiler, {
-    publicPath: config.output.publicPath,
+    publicPath: webpackConfig.output.publicPath,
     logLevel: 'error',
     noInfo: true
   })

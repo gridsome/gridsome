@@ -5,7 +5,7 @@ const {
   STATIC_ROUTE,
   STATIC_TEMPLATE_ROUTE,
   DYNAMIC_TEMPLATE_ROUTE
-} = require('../utils/enums')
+} = require('./index')
 
 module.exports = store => {
   const pages = store.pages.find({ type: 'page' })

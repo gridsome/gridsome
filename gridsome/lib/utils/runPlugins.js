@@ -1,7 +1,6 @@
 const pMap = require('p-map')
-const { internalRE } = require('./index')
 const { defaultsDeep } = require('lodash')
-const { NORMAL_PLUGIN, SOURCE_PLUGIN } = require('../utils/enums')
+const { NORMAL_PLUGIN, SOURCE_PLUGIN, internalRE } = require('./index')
 
 module.exports = service => {
   let regenerateTimeout = null

@@ -7,9 +7,11 @@ const resolve = (p, c) => path.resolve(c || __dirname, p)
 
 module.exports = (context, options, { isProd, isServer }) => {
   const { cacheDirectory, cacheIdentifier } = createCacheOptions()
-  const assetsDir = options.assetsDir || '_assets'
-  const outDir = options.outDir || 'dist'
+  const assetsDir = options.assetsDir
+  const outDir = options.outDir
   const config = new Config()
+
+  const filename = `${assetsDir}/js/[name]${isProd ? '.[chunkhash:8]' : ''}.js`
   const inlineLimit = 10000
 
   config.mode(isProd ? 'production' : 'development')
@@ -18,8 +20,8 @@ module.exports = (context, options, { isProd, isServer }) => {
   
   config.output
     .path(resolve(outDir, context))
-    .publicPath(isProd ? options.publicPath : '/')
-    .filename(`${assetsDir}/js/[name]${isProd ? '.[chunkhash:8]' : ''}.js`)
+    .publicPath(isProd ? options.publicPath || '/' : '/')
+    .filename(filename)
 
   config.resolve
     .set('symlinks', true)
@@ -65,7 +67,7 @@ module.exports = (context, options, { isProd, isServer }) => {
       .loader('vue-loader')
       .options({
         compilerOptions: {
-          preserveWhitespace: true
+          preserveWhitespace: false
         },
         cacheDirectory,
         cacheIdentifier
@@ -138,6 +140,12 @@ module.exports = (context, options, { isProd, isServer }) => {
 
   config.plugin('vue-loader')
     .use(VueLoaderPlugin)
+
+  config.plugin('case-sensitive-paths')
+    .use(require('case-sensitive-paths-webpack-plugin'))
+
+  // config.plugin('friendly-errors')
+  //   .use(require('friendly-errors-webpack-plugin'))
 
   config.plugin('html')
     .use(require('html-webpack-plugin'), [{

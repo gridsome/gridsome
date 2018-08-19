@@ -1,17 +1,16 @@
 const path = require('path')
+const fs = require('fs-extra')
 const autoBind = require('auto-bind')
 const hirestime = require('hirestime')
 const Datastore = require('./Datastore')
-const createSchema = require('./graphql/createSchema')
-const { execute, graphql } = require('./graphql/graphql')
-
-const { BOOTSTRAP_FULL } = require('./bootstrap')
-const resolvePackageJson = require('./bootstrap/resolvePackageJson')
-const resolveProjectConfig = require('./bootstrap/resolveProjectConfig')
-const resolveTransformers = require('./bootstrap/resolveTransformers')
-const prepareRoutes = require('./bootstrap/prepareRoutes')
-const runPlugins = require('./bootstrap/runPlugins')
 const generateFiles = require('./codegen')
+const { BOOTSTRAP_FULL } = require('./utils')
+const runPlugins = require('./utils/runPlugins')
+const createSchema = require('./graphql/createSchema')
+const resolveConfig = require('./utils/resolveConfig')
+const prepareRoutes = require('./utils/prepareRoutes')
+const { execute, graphql } = require('./graphql/graphql')
+const resolveTransformers = require('./utils/resolveTransformers')
 
 class Service {
   constructor (context, options = {}) {
@@ -20,6 +19,8 @@ class Service {
     this.context = context
     this.options = options
     this.logger = global.console
+    this.pkg = options.pkg || this.resolvePkg()
+    this.config = this.resolveConfig()
     this.clients = {}
 
     autoBind(this)
@@ -56,11 +57,7 @@ class Service {
   //
 
   init () {
-    const { context, options } = this
-
-    this.pkg = options.pkg || resolvePackageJson(context)
-    this.config = resolveProjectConfig(context, options)
-    this.transformers = resolveTransformers(this, options)
+    this.transformers = resolveTransformers(this)
     this.store = new Datastore()
   }
 
@@ -79,6 +76,21 @@ class Service {
 
   resolve (p) {
     return path.resolve(this.context, p)
+  }
+
+  resolvePkg () {
+    const pkgPath = this.resolve('package.json')
+
+    try {
+      const content = fs.readFileSync(pkgPath, 'utf-8')
+      return JSON.parse(content)
+    } catch (err) {}
+
+    return {}
+  }
+
+  resolveConfig () {
+    return resolveConfig(this.context, this.options)
   }
 
   graphql (docOrQuery, variables = {}) {

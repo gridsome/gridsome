@@ -7,14 +7,14 @@ const {
   STATIC_ROUTE,
   STATIC_TEMPLATE_ROUTE,
   DYNAMIC_TEMPLATE_ROUTE
-} = require('../../utils/enums')
+} = require('../../utils')
 
-module.exports = async ({ pages }, outDir, graphql) => {
+module.exports = async ({ routerData, config, graphql }) => {
   const router = new Router({
     base: '/',
     mode: 'history',
     fallback: false,
-    routes: pages.map(page => ({
+    routes: routerData.pages.map(page => ({
       path: page.route || page.path
     }))
   })
@@ -22,7 +22,7 @@ module.exports = async ({ pages }, outDir, graphql) => {
   const createPage = (page, currentPage = 1) => {
     const fullPath = currentPage > 1 ? `${page.path}/${currentPage}` : page.path
     const route = router.resolve(fullPath).route
-    const output = path.resolve(outDir, trim(route.path, '/'))
+    const output = path.resolve(config.outDir, trim(route.path, '/'))
 
     return {
       path: fullPath,
@@ -34,7 +34,7 @@ module.exports = async ({ pages }, outDir, graphql) => {
 
   const createTemplate = (node, page) => {
     const route = router.resolve(node.path).route
-    const output = path.resolve(outDir, trim(route.path, '/'))
+    const output = path.resolve(config.outDir, trim(route.path, '/'))
 
     return {
       path: node.path,
@@ -46,7 +46,7 @@ module.exports = async ({ pages }, outDir, graphql) => {
 
   const queue = []
 
-  for (const page of pages) {
+  for (const page of routerData.pages) {
     switch (page.type) {
       case STATIC_ROUTE:
       case STATIC_TEMPLATE_ROUTE:
