@@ -2,9 +2,8 @@ const pMap = require('p-map')
 const fs = require('fs-extra')
 const cpu = require('./utils/cpu')
 const hirestime = require('hirestime')
-const { info } = require('@vue/cli-shared-utils')
 
-module.exports = async (queue, graphql) => {
+module.exports = async (queue, graphql, logger = global.console) => {
   const timer = hirestime()
   const concurrency = cpu.logical
   const queries = queue.filter(page => !!page.query)
@@ -16,5 +15,5 @@ module.exports = async (queue, graphql) => {
     fs.outputFileSync(`${page.output}/data.json`, JSON.stringify(results))
   }, { concurrency })
 
-  info(`Run GraphQL (${queries.length} queries) - ${timer(hirestime.S)}s`)
+  logger.info(`Run GraphQL (${queries.length} queries) - ${timer(hirestime.S)}s`)
 }

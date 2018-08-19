@@ -1,6 +1,6 @@
 {
   "private": true,
-  "version": "1.0.0",
+  "version": "0.0.1",
   "name": "@gridsome/source-contentful",
   "description": "Contentful source for Gridsome",
   "main": "index.js",

@@ -2,7 +2,6 @@ const path = require('path')
 const autoBind = require('auto-bind')
 const hirestime = require('hirestime')
 const Datastore = require('./Datastore')
-const cliUtils = require('@vue/cli-shared-utils')
 const createSchema = require('./graphql/createSchema')
 const { execute, graphql } = require('./graphql/graphql')
 
@@ -20,7 +19,7 @@ class Service {
 
     this.context = context
     this.options = options
-    this.logger = options.logger || cliUtils
+    this.logger = global.console
     this.clients = {}
 
     autoBind(this)

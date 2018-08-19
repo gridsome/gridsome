@@ -1,55 +1,43 @@
 const path = require('path')
+const chalk = require('chalk')
+const { develop, build, explore } = require('./lib')
 
-module.exports = (api, options) => {
-  options._buildTime = new Date().getTime().toString()
-  options.transpileDependencies.push(
-    path.resolve('./app')
-  )
+module.exports = ({ context, program }) => {
+  program
+    .command('develop')
+    .description('start development server')
+    .option('-p, --port <port>', 'use specified port (default: 8080)')
+    .option('-h, --host <host>', 'use specified host (default: 0.0.0.0)')
+    .action(({ host, port }) => {
+      wrapCommand(develop)(context, { host, port })
+    })
 
-  require('./lib/commands/build')(api, options)
-  require('./lib/commands/develop')(api, options)
-  require('./lib/commands/explore')(api, options)
+  program
+    .command('build')
+    .description('build site for production')
+    .action(() => {
+      wrapCommand(build)(context, {})
+    })
 
-  api.chainWebpack((config) => {
-    config
-      .entry('app')
-      .add(require.resolve('./app/entry.client.js'))
-
-    config.resolve.alias
-      .set('@gridsome/temp', api.resolve('src/.temp'))
-      .set('@gridsome/app', path.resolve(__dirname, 'app'))
-      .set('@gridsome/components', path.resolve(__dirname, 'app/components/index.js'))
-
-    config.module
-      .rule('graphql')
-      .resourceQuery(/blockType=graphql/)
-      .use('page-query')
-        .loader(
-          require.resolve('./lib/graphql/loaders/page-query')
-        )
-
-    config.module
-      .rule('static-graphql')
-      .resourceQuery(/blockType=static-query/)
-      .use('static-query')
-        .loader(
-          require.resolve('./lib/graphql/loaders/static-query')
-        )
-
-    config
-      .plugin('define')
-        .tap((args) => [Object.assign({}, ...args, {
-          'GRIDSOME_HASH': JSON.stringify(options._buildTime)
-        })])
-  })
+  program
+    .command('explore')
+    .description('explore GraphQL data')
+    .option('-p, --port <port>', 'use specified port (default: 8080)')
+    .option('-h, --host <host>', 'use specified host (default: 0.0.0.0)')
+    .action(({ host, port }) => {
+      wrapCommand(explore)(context, { host, port })
+    })
 }
 
 module.exports.Plugin = require('./lib/Plugin')
 module.exports.Source = require('./lib/Source')
 module.exports.Transformer = require('./lib/Transformer')
 
-module.exports.defaultModes = {
-  'gridsome:build': 'production',
-  'gridsome:develop': 'development',
-  'gridsome:explore': 'production'
+function wrapCommand (fn) {
+  return (...args) => {
+    return fn(...args).catch(err => {
+      console.error(chalk.red(err.stack))
+      process.exitCode = 1
+    })
+  }
 }

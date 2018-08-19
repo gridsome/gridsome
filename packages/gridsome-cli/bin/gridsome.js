@@ -12,14 +12,14 @@ program
 
 program
   .command('create <name> [starter]')
-  .description('create a new website powered by Gridsome')
+  .description('create a new website')
   .action((...args) => {
     return require('../lib/commands/create')(...args)
   })
 
 try {
   // eslint-disable-next-line
-  require('gridsome')({ context, program })
+  require('@gridsome/core')({ context, program })
 } catch (err) {}
 
 // show a warning if the command does not exist

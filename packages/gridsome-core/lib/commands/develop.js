@@ -1,43 +1,67 @@
-const Service = require('../Service')
-const portfinder = require('portfinder')
-const configureDevServer = require('./utils/configureDevServer')
-const createSockJsServer = require('./utils/createSockJsServer')
+module.exports = async (context, options) => {
+  process.env.NODE_ENV = 'development'
 
-module.exports = api => {
-  api.registerCommand('gridsome:develop', async (args, rawArgv) => {
-    portfinder.basePort = args.port || process.env.PORT || 8080
+  const chalk = require('chalk')
+  const webpack = require('webpack')
+  const Service = require('../Service')
+  const resolvePort = require('./utils/resolvePort')
+  const createServer = require('./utils/createServer')
+  const createSockJsServer = require('./utils/createSockJsServer')
+  const createClientConfig = require('../webpack/createClientConfig')
 
-    const port = await portfinder.getPortPromise()
-    const service = new Service(api.service.context)
-    const { endpoints } = configureDevServer
+  const service = new Service(context)
+  const { clients, schema, store } = await service.bootstrap()
+  const port = await resolvePort(options.port)
+  const host = options.host || 'localhost'
+  const { endpoints } = createServer
 
-    const { clients, schema, store } = await service.bootstrap()
+  const sockjsEndpoint = await createSockJsServer(host, clients)
+  const fullUrl = `http://${host}:${port}`
+  const gqlEndpoint = fullUrl + endpoints.graphql
+  const exploreEndpoint = fullUrl + endpoints.explore
+  const wsEndpoint = `ws://${host}:${port}${endpoints.graphql}`
+  const configChain = createClientConfig(context, options)
 
-    const sockjsEndpoint = await createSockJsServer(clients)
-    const gqlEndpoint = `http://localhost:${port}${endpoints.graphql}`
-    const wsEndpoint = `ws://localhost:${port}${endpoints.graphql}`
+  configChain
+    .plugin('dev-endpoints')
+      .use(require('webpack/lib/DefinePlugin'), [{
+        'SOCKJS_ENDPOINT': JSON.stringify(sockjsEndpoint),
+        'GRAPHQL_ENDPOINT': JSON.stringify(gqlEndpoint),
+        'GRAPHQL_WS_ENDPOINT': JSON.stringify(wsEndpoint)
+      }])
 
-    api.chainWebpack(config => {
-      config
-        .plugin('define')
-          .tap((args) => [Object.assign({}, ...args, {
-            'SOCKJS_ENDPOINT': JSON.stringify(sockjsEndpoint),
-            'GRAPHQL_ENDPOINT': JSON.stringify(gqlEndpoint),
-            'GRAPHQL_WS_ENDPOINT': JSON.stringify(wsEndpoint)
-          })])
-    })
+  configChain.entryPoints.store.forEach((entry, name) => {
+    configChain.entry(name)
+      .prepend(`webpack-hot-middleware/client?name=${name}&reload=true`)
+      .prepend('webpack/hot/dev-server')
+  })
 
-    let serverCallback
+  const config = configChain.toConfig()
+  const compiler = webpack(config)
+  const app = createServer({ host, schema, store })
 
-    api.configureDevServer(app => {
-      serverCallback = configureDevServer(app, schema, store)
-    })
+  app.use(require('connect-history-api-fallback')())
+  app.use(require('webpack-hot-middleware')(compiler, {
+    quiet: true,
+    log: false
+  }))
 
-    api.service
-      .run('serve', { ...args, port, open: true }, rawArgv)
-      .then(({ url }) => {
-        serverCallback({ url })
-        console.log()
-      })
+  const devMiddleware = require('webpack-dev-middleware')(compiler, {
+    publicPath: config.output.publicPath,
+    logLevel: 'error',
+    noInfo: true
+  })
+
+  devMiddleware.waitUntilValid(() => {
+    console.log()
+    console.log(`  Site running at:          ${chalk.cyan(fullUrl)}`)
+    console.log(`  Explore GraphQL data at:  ${chalk.cyan(exploreEndpoint)}`)
+    console.log()
+  })
+
+  app.use(devMiddleware)
+
+  app.listen(port, host, err => {
+    if (err) throw err
   })
 }

@@ -2,7 +2,7 @@ const http = require('http')
 const sockjs = require('sockjs')
 const portfinder = require('portfinder')
 
-module.exports = clients => new Promise(async resolve => {
+module.exports = (host, clients) => new Promise(async resolve => {
   portfinder.basePort = 9000
 
   const port = await portfinder.getPortPromise()
@@ -20,7 +20,7 @@ module.exports = clients => new Promise(async resolve => {
 
   echo.installHandlers(server, { prefix })
 
-  server.listen(port, () => {
-    resolve(`http://localhost:${port}${prefix}`)
+  server.listen(port, host, () => {
+    resolve(`http://${host}:${port}${prefix}`)
   })
 })

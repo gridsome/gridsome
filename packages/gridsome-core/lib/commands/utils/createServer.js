@@ -1,16 +1,16 @@
+const express = require('express')
 const bodyParser = require('body-parser')
 const graphqlHTTP = require('express-graphql')
-const { chalk } = require('@vue/cli-shared-utils')
 const { default: playground } = require('graphql-playground-middleware-express')
-const { trim } = require('lodash')
 
 const endpoints = {
   graphql: '/___graphql',
-  explore: '/___explore',
-  sockjs: '/echo'
+  explore: '/___explore'
 }
 
-module.exports = (app, schema, store) => {
+module.exports = ({ schema, store }) => {
+  const app = express()
+
   app.use(
     endpoints.graphql,
     bodyParser.json(),
@@ -21,10 +21,7 @@ module.exports = (app, schema, store) => {
     endpoint: endpoints.graphql
   }))
 
-  return ({ url }) => {
-    const exploreUrl = `${trim(url, '/')}${endpoints.explore}`
-    console.log(`  Explore GraphQL data at: ${chalk.cyan(exploreUrl)}`)
-  }
+  return app
 }
 
 module.exports.endpoints = endpoints

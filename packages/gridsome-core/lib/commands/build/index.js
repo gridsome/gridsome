@@ -1,32 +1,26 @@
-const fs = require('fs-extra')
-const cpu = require('./utils/cpu')
-const hirestime = require('hirestime')
-const Service = require('../../Service')
-const { info } = require('@vue/cli-shared-utils')
-const createRenderQueue = require('./createRenderQueue')
+module.exports = async (context, options) => {
+  process.env.NODE_ENV = 'production'
 
-module.exports = (api, options) => {
-  api.registerCommand('gridsome:build', async (args, rawArgv) => {
-    info(`Building for production - ${cpu.physical} physical CPUs`)
+  const path = require('path')
+  const fs = require('fs-extra')
+  const hirestime = require('hirestime')
+  const Service = require('../../Service')
 
-    // TODO: change webpack output dir
-    // options.outputDir = 'dist/_assets'
+  const buildTime = hirestime()
+  const outDir = path.resolve(context, 'dist')
+  const service = new Service(context)
 
-    const buildTime = hirestime()
-    const outDir = api.resolve('dist')
-    const outputDir = api.resolve(options.outputDir)
-    const service = new Service(api.service.context)
+  await fs.remove(outDir)
+  const { routerData, graphql, logger } = await service.bootstrap()
+  const queue = await require('./createRenderQueue')(routerData, outDir, graphql)
 
-    await fs.remove(outDir)
-    const { routerData, graphql } = await service.bootstrap()
-    const queue = await createRenderQueue(routerData, outDir, graphql)
+  await require('./compileAssets')(context, options, logger)
+  await require('./renderQueries')(queue, graphql, logger)
+  await require('./renderHtml')(queue, outDir, logger)
 
-    await require('./compileAssets')(api)
-    await require('./renderQueries')(queue, graphql)
-    await require('./renderHtml')(queue, outputDir)
+  await fs.remove(`${outDir}/manifest`)
 
-    await fs.remove(`${outputDir}/manifest`)
-
-    console.log(`\n       Done in ${buildTime(hirestime.S)}s 🎉\n`)
-  })
+  console.log()
+  console.log(`  Done in ${buildTime(hirestime.S)}s`)
+  console.log()
 }

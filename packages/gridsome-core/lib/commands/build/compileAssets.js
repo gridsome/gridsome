@@ -1,14 +1,16 @@
 const hirestime = require('hirestime')
-const { info } = require('@vue/cli-shared-utils')
+const createClientConfig = require('../../webpack/createClientConfig')
+const createServerConfig = require('../../webpack/createServerConfig')
 
-module.exports = async api => {
+module.exports = async (context, options, logger = global.console) => {
   const compileTime = hirestime()
-  const clientConfig = require('./webpack/createClientConfig')(api)
-  const serverConfig = require('./webpack/createServerConfig')(api)
 
-  await compile([clientConfig, serverConfig])
+  await compile([
+    createClientConfig(context, options).toConfig(),
+    createServerConfig(context, options).toConfig()
+  ])
 
-  info(`Compile assets - ${compileTime(hirestime.S)}s`)
+  logger.info(`Compile assets - ${compileTime(hirestime.S)}s`)
 }
 
 function compile (config) {

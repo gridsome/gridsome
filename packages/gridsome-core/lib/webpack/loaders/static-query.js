@@ -1,6 +1,6 @@
 const path = require('path')
-const { parse } = require('../graphql')
-const validateQuery = require('../utils/validateQuery')
+const { parse } = require('../../graphql/graphql')
+const validateQuery = require('../../graphql/utils/validateQuery')
 const appPath = path.resolve(__dirname, '../../../app')
 
 module.exports = async function (source, map) {

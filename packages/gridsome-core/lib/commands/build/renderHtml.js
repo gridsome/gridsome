@@ -3,9 +3,8 @@ const cpu = require('./utils/cpu')
 const { chunk } = require('lodash')
 const hirestime = require('hirestime')
 const Worker = require('jest-worker').default
-const { info } = require('@vue/cli-shared-utils')
 
-module.exports = async (queue, outputDir) => {
+module.exports = async (queue, outputDir, logger = global.console) => {
   const timer = hirestime()
   const totalPages = queue.length
   const chunks = chunk(queue, 1000)
@@ -39,5 +38,5 @@ module.exports = async (queue, outputDir) => {
 
   worker.end()
 
-  info(`Render HTML (${totalPages} pages) - ${timer(hirestime.S)}s`)
+  logger.info(`Render HTML (${totalPages} pages) - ${timer(hirestime.S)}s`)
 }
