@@ -1,14 +1,13 @@
 const path = require('path')
 const { parse } = require('../../graphql/graphql')
 const validateQuery = require('../../graphql/utils/validateQuery')
-const appPath = path.resolve(__dirname, '../../../app')
 
 module.exports = async function (source, map) {
   const { config, schema, graphql } = process.GRIDSOME_SERVICE
   const errors = validateQuery(schema, source)
   const callback = this.async()
 
-  this.dependency(`${appPath}/static-query/index.js`)
+  this.dependency(`${config.appPath}/static-query/index.js`)
 
   // add dependency to now.js to re-run
   // this loader when store has changed
@@ -24,7 +23,7 @@ module.exports = async function (source, map) {
   const { data } = await graphql(doc)
 
   callback(null, `
-    import initStaticQuery from '${appPath}/static-query'
+    import initStaticQuery from '${config.appPath}/static-query'
 
     const data = ${JSON.stringify(data)}
 

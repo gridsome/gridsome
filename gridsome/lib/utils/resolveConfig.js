@@ -38,7 +38,14 @@ module.exports = (context, options = {}) => {
   config.outDir = resolve(localConfig.outDir || 'dist')
   config.assetsDir = localConfig.assetsDir || '_assets'
   config.publicPath = localConfig.publicPath || '/'
+  config.appPath = path.resolve(__dirname, '../../app')
   config.tmpDir = resolve('src/.temp')
+
+  config.scss = {}
+  config.sass = {}
+  config.less = {}
+  config.stylus = {}
+  config.postcss = {}
 
   return config
 }

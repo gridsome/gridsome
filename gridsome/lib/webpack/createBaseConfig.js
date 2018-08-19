@@ -73,6 +73,45 @@ module.exports = (context, options, { isProd, isServer }) => {
         cacheIdentifier
       })
 
+  // js
+
+  config.module.rule('js')
+    .test(/\.jsx?$/)
+    .exclude
+      .add(filepath => {
+        if (/\.vue\.jsx?$/.test(filepath)) {
+          return false
+        }
+        if (filepath.startsWith(options.appPath)) {
+          return false
+        }
+        return /node_modules/.test(filepath)
+      })
+      .end()
+    .use('cache-loader')
+      .loader('cache-loader')
+      .options({
+        cacheDirectory,
+        cacheIdentifier
+      })
+      .end()
+    .use('babel-loader')
+      .loader('babel-loader')
+      .options({
+        presets: [require.resolve('./babel-preset')]
+      })
+
+  // css
+
+  createCSSRule(config, 'css', /\.css$/)
+  createCSSRule(config, 'postcss', /\.p(ost)?css$/)
+  createCSSRule(config, 'scss', /\.scss$/, 'sass-loader', options.scss)
+  createCSSRule(config, 'sass', /\.sass$/, 'sass-loader', Object.assign({ indentedSyntax: true }, options.sass))
+  createCSSRule(config, 'less', /\.less$/, 'less-loader', options.less)
+  createCSSRule(config, 'stylus', /\.styl(us)?$/, 'stylus-loader', Object.assign({
+    preferPathResolver: 'webpack'
+  }, options.stylus))
+
   // assets
 
   config.module.rule('images')
@@ -110,16 +149,6 @@ module.exports = (context, options, { isProd, isServer }) => {
         name: `${assetsDir}/fonts/[name].[hash:8].[ext]`
       })
 
-  // css
-
-  createCSSRule(config, 'css', /\.css$/)
-  createCSSRule(config, 'postcss', /\.p(ost)?css$/)
-  createCSSRule(config, 'scss', /\.scss$/, 'sass-loader', options.scss)
-  createCSSRule(config, 'sass', /\.sass$/, 'sass-loader', Object.assign({ indentedSyntax: true }, options.sass))
-  createCSSRule(config, 'less', /\.less$/, 'less-loader', options.less)
-  createCSSRule(config, 'stylus', /\.styl(us)?$/, 'stylus-loader', Object.assign({
-    preferPathResolver: 'webpack'
-  }, options.stylus))
 
   // graphql
 
