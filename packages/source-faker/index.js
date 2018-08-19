@@ -1,6 +1,6 @@
 const faker = require('faker')
 
-const { Source } = require('@gridsome/core')
+const { Source } = require('gridsome')
 
 class FakerSource extends Source {
   static defaultOptions () {

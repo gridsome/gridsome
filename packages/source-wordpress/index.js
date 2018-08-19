@@ -2,7 +2,7 @@ const axios = require('axios')
 const Queue = require('better-queue')
 const querystring = require('querystring')
 
-const { Source } = require('@gridsome/core')
+const { Source } = require('gridsome')
 
 class WordPressSource extends Source {
   static defaultOptions () {

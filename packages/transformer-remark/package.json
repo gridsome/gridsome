@@ -11,6 +11,6 @@
     "remark-html": "^8.0.0"
   },
   "peerDependencies": {
-    "@gridsome/core": "^0.0.1"
+    "gridsome": "^0.0.1"
   }
 }

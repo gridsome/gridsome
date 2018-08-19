@@ -10,6 +10,6 @@
     "globby": "^8.0.1"
   },
   "peerDependencies": {
-    "@gridsome/core": "^0.0.1"
+    "gridsome": "^0.0.1"
   }
 }

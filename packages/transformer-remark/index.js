@@ -3,7 +3,7 @@ const html = require('remark-html')
 const parse = require('gray-matter')
 const { mapValues, isDate } = require('lodash')
 
-const { Transformer } = require('@gridsome/core')
+const { Transformer } = require('gridsome')
 
 class RemarkTransformer extends Transformer {
   static mimeTypes () {

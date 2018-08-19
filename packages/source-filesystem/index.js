@@ -4,7 +4,7 @@ const glob = require('globby')
 const chokidar = require('chokidar')
 const { mapValues } = require('lodash')
 
-const { Source } = require('@gridsome/core')
+const { Source } = require('gridsome')
 
 class FilesystemSource extends Source {
   static defaultOptions () {

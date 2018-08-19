@@ -19,7 +19,7 @@ program
 
 try {
   // eslint-disable-next-line
-  require('@gridsome/core')({ context, program })
+  require('gridsome')({ context, program })
 } catch (err) {}
 
 // show a warning if the command does not exist

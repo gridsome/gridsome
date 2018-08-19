@@ -8,6 +8,6 @@
     "faker": "^4.1.0"
   },
   "peerDependencies": {
-    "@gridsome/core": "^0.0.1"
+    "gridsome": "^0.0.1"
   }
 }

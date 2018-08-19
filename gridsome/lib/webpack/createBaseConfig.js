@@ -34,14 +34,14 @@ module.exports = (context, options, { isProd, isServer }) => {
       .end()
     .modules
       .add(resolve('../../node_modules'))
-      .add(resolve('../../../'))
+      .add(resolve('../../../packages'))
       .add('node_modules')
 
   config.resolveLoader
     .set('symlinks', true)
     .modules
       .add(resolve('../../node_modules'))
-      .add(resolve('../../../'))
+      .add(resolve('../../../packages'))
       .add('node_modules')
 
   config.module.noParse(/^(vue|vue-router)$/)

@@ -8,6 +8,6 @@
     "contentful": "^6.1.1"
   },
   "peerDependencies": {
-    "@gridsome/core": "^0.0.1"
+    "gridsome": "^0.0.1"
   }
 }

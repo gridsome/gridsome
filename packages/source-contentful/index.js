@@ -1,7 +1,7 @@
 const contentful = require('contentful')
 const resolveType = require('./lib/resolve-type')
 
-const { Source } = require('@gridsome/core')
+const { Source } = require('gridsome')
 
 class ContentfulSource extends Source {
   static defaultOptions () {
