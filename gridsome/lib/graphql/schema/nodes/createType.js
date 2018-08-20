@@ -23,7 +23,7 @@ const fieldsInterface = new GraphQLInterfaceType({
 })
 
 module.exports = ({ contentType, nodeTypes, fields }) => {
-  return new GraphQLObjectType({
+  const nodeType = new GraphQLObjectType({
     name: contentType.name,
     description: contentType.description,
     interfaces: [nodeInterface],
@@ -42,11 +42,30 @@ module.exports = ({ contentType, nodeTypes, fields }) => {
         resolve: node => node.$loki
       },
 
+      ...extendNodeType(contentType, nodeType),
       ...createFields(contentType, fields),
       ...createRefs(contentType, nodeTypes),
-      ...createForeignRefs(contentType, nodeTypes)
+      ...createBelongsToRefs(contentType, nodeTypes)
     })
   })
+
+  return nodeType
+}
+
+function extendNodeType (contentType, nodeType) {
+  const fields = {}
+
+  for (const mimeType in contentType.mimeTypes) {
+    const transformer = contentType.mimeTypes[mimeType]
+    if (typeof transformer.extendNodeType === 'function') {
+      Object.assign(fields, transformer.extendNodeType({
+        contentType,
+        nodeType
+      }))
+    }
+  }
+
+  return fields
 }
 
 function createFields (contentType, customFields) {
@@ -102,7 +121,7 @@ function createRefs (contentType, nodeTypes) {
   return { refs }
 }
 
-function createForeignRefs (contentType, nodeTypes) {
+function createBelongsToRefs (contentType, nodeTypes) {
   if (isEmpty(contentType.belongsTo)) return null
 
   const belongsTo = {
