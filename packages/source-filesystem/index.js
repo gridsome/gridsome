@@ -4,9 +4,7 @@ const glob = require('globby')
 const chokidar = require('chokidar')
 const { mapValues } = require('lodash')
 
-const { Source } = require('gridsome')
-
-class FilesystemSource extends Source {
+class FilesystemSource {
   static defaultOptions () {
     return {
       path: undefined,
@@ -14,8 +12,16 @@ class FilesystemSource extends Source {
       type: 'node',
       refs: {},
       index: ['index'],
-      typeNamePrefix: 'Filesystem'
+      typeName: 'Filesystem'
     }
+  }
+
+  constructor (options, source, { context }) {
+    this.options = options
+    this.source = source
+    this.context = context
+
+    this.nodesCache = {}
   }
 
   async apply () {
@@ -24,9 +30,7 @@ class FilesystemSource extends Source {
     const refs = this.normalizeRefs(options.refs)
     const files = await glob(options.path, { cwd: this.context })
 
-    this._nodesCache = {}
-
-    this.addType(options.type, {
+    this.source.addType(options.type, {
       route: options.route,
       refs: mapValues(refs, ref => ({
         key: ref.key,
@@ -35,38 +39,32 @@ class FilesystemSource extends Source {
     })
 
     mapValues(refs, ref => {
-      this.addType(ref.type, {
+      this.source.addType(ref.type, {
         route: ref.route
       })
     })
 
     files.map(file => {
-      const absPath = this.resolve(file)
-      const mimeType = this.mime.lookup(file)
-      const content = fs.readFileSync(absPath, 'utf-8')
-      const results = this.transform(content, mimeType, options, file)
-      let { name } = path.parse(file)
-
-      if (options.index.includes(name)) {
-        name = path.basename(path.dirname(file))
-      }
+      const filePath = this.source.resolve(file)
+      const mimeType = this.source.mime.lookup(file)
+      const content = fs.readFileSync(filePath, 'utf-8')
+      const result = this.source.transform(mimeType, content, options)
 
       const node = {
-        _id: this.makeUid(file),
-        title: results.title,
-        slug: results.fields.slug || this.slugify(name),
+        _id: this.source.makeUid(file),
         path: this.normalizePath(file),
-        created: results.fields.date || null,
-        content: results.content,
-        excerpt: results.excerpt,
-        fields: results.fields,
-        refs: {}
+        fields: result.fields,
+        refs: {},
+        internal: {
+          mimeType,
+          content: result.content
+        }
       }
 
       // create simple references
-      for (const fieldName in results.fields) {
+      for (const fieldName in result.fields) {
         if (options.refs.hasOwnProperty(fieldName)) {
-          const value = results.fields[fieldName]
+          const value = result.fields[fieldName]
           const type = options.refs[fieldName].type
 
           node.refs[fieldName] = value
@@ -79,7 +77,7 @@ class FilesystemSource extends Source {
         }
       }
 
-      this.addNode(options.type, node)
+      this.source.addNode(options.type, node)
     })
 
     if (process.env.NODE_ENV === 'development' && this.options.watch) {
@@ -100,9 +98,9 @@ class FilesystemSource extends Source {
   addRefNode (type, fieldName, value) {
     const cacheKey = `${type}-${fieldName}-${value}`
 
-    if (!this._nodesCache[cacheKey] && value) {
-      this.addNode(type, { title: value, slug: value })
-      this._nodesCache[cacheKey] = true
+    if (!this.nodesCache[cacheKey] && value) {
+      this.source.addNode(type, { title: value, slug: value })
+      this.nodesCache[cacheKey] = true
     }
   }
 
@@ -111,10 +109,10 @@ class FilesystemSource extends Source {
     if (this.options.route) return
 
     const { dir, name } = path.parse(file)
-    const segments = dir.split(path.sep).map(s => this.slugify(s))
+    const segments = dir.split(path.sep).map(s => this.source.slugify(s))
 
     if (!this.options.index.includes(name)) {
-      segments.push(this.slugify(name))
+      segments.push(this.source.slugify(name))
     }
 
     return `/${segments.join('/')}`

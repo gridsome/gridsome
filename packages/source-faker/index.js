@@ -1,19 +1,21 @@
 const faker = require('faker')
+const { GraphQLString } = require('gridsome/graphql')
 
-const { Source } = require('gridsome')
-
-class FakerSource extends Source {
+class FakerSource {
   static defaultOptions () {
     return {
       numNodes: 500,
-      typeNamePrefix: 'Faker'
+      typeName: 'Faker'
     }
   }
 
-  apply () {
-    const { GraphQLString } = this.graphql
+  constructor (options, source) {
+    this.options = options
+    this.source = source
+  }
 
-    this.addType('node', {
+  apply () {
+    this.source.addType('node', {
       name: 'Node',
       route: '/:year/:month/:day/:slug',
       fields: () => ({
@@ -36,7 +38,7 @@ class FakerSource extends Source {
       const options = {
         title,
         id: faker.random.uuid(),
-        slug: this.slugify(title),
+        slug: this.source.slugify(title),
         created: created,
         updated: updated,
         fields: {
@@ -51,7 +53,7 @@ class FakerSource extends Source {
       }
 
       try {
-        this.addNode('node', options)
+        this.source.addNode('node', options)
       } catch (err) {
         this.logger.warn(err.message)
       }
