@@ -1,43 +1,102 @@
 const Remark = require('remark')
-const html = require('remark-html')
+// const html = require('remark-html')
 const parse = require('gray-matter')
-const { mapValues, isDate } = require('lodash')
+// const format = require('rehype-format')
+const visit = require('unist-util-visit')
+const toHAST = require('mdast-util-to-hast')
+const hastToHTML = require('hast-util-to-html')
+// const markdown = require('remark-parse')
+// const stringify = require('rehype-stringify')
+// const { mapValues, isDate } = require('lodash')
+const { HeadingType, HeadingLevels } = require('./lib/types/HeadingType')
 
-const { Transformer } = require('gridsome')
+const {
+  GraphQLList,
+  GraphQLString
+} = require('gridsome/graphql')
 
-class RemarkTransformer extends Transformer {
+class RemarkTransformer {
   static mimeTypes () {
     return ['text/markdown', 'text/x-markdown']
   }
 
+  constructor (options, { nodeCache }) {
+    this.options = options
+    this.nodeCache = nodeCache
+  }
+
   parse (source) {
     const file = parse(source, this.options.frontmatter || {})
-    const plugins = [html, ...this.options.use || []]
-
-    let remark = new Remark().data('settings', {
-      commonmark: true,
-      footnotes: true,
-      pedantic: true
-    })
-
-    for (const plugin of plugins) {
-      remark = remark.use(plugin)
-    }
-
-    const content = remark.processSync(file.content)
-    const excerpt = remark.processSync(file.excerpt)
-
-    // const ast = remark.parse(file.content)
-    file.data = mapValues(file.data, value => {
-      return isDate(value) ? value.toJSON() : value
-    })
 
     return {
-      title: file.data.title,
-      content: content.contents,
-      excerpt: excerpt.contents,
-      fields: file.data
+      fields: file.data,
+      content: file.content,
+      excerpt: file.excerpt
     }
+  }
+
+  extendNodeType () {
+    return {
+      content: {
+        type: GraphQLString,
+        resolve: node => this.toHTML(node)
+      },
+      headings: {
+        type: new GraphQLList(HeadingType),
+        args: {
+          depth: { type: HeadingLevels }
+        },
+        resolve: (node, { depth }) => {
+          return this.findHeadings(node, depth).filter(heading => {
+            if (typeof depth === 'number') {
+              return heading.depth === depth
+            }
+            return true
+          })
+        }
+      }
+    }
+  }
+
+  toAST (node) {
+    return this.nodeCache(node, 'ast', () => {
+      const remark = new Remark().data('settings', {
+        commonmark: true,
+        footnotes: true,
+        pedantic: true
+      })
+
+      return remark.parse(node.internal.content)
+    })
+  }
+
+  toHAST (node) {
+    return this.nodeCache(node, 'hast', () => {
+      const ast = this.toAST(node)
+      return toHAST(ast, { allowDangerousHTML: true })
+    })
+  }
+
+  toHTML (node) {
+    return this.nodeCache(node, 'html', () => {
+      const htmlAst = this.toHAST(node)
+      return hastToHTML(htmlAst, { allowDangerousHTML: true })
+    })
+  }
+
+  findHeadings (node) {
+    return this.nodeCache(node, 'headings', () => {
+      const ast = this.toAST(node)
+      const headings = []
+
+      visit(ast, 'heading', ({ depth, children }) => {
+        if (children.length && children[0].type === 'text') {
+          headings.push({ depth, value: children[0].value })
+        }
+      })
+
+      return headings
+    })
   }
 }
 

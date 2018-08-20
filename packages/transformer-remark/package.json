@@ -6,9 +6,17 @@
   "main": "index.js",
   "dependencies": {
     "gray-matter": "^4.0.1",
+    "hast-util-to-html": "^4.0.1",
     "lodash": "^4.17.10",
+    "mdast-util-to-hast": "^3.0.2",
+    "rehype-format": "^2.3.0",
+    "rehype-raw": "^3.0.0",
+    "rehype-stringify": "^4.0.0",
     "remark": "^9.0.0",
-    "remark-html": "^8.0.0"
+    "remark-html": "^8.0.0",
+    "remark-parse": "^5.0.0",
+    "unified": "^7.0.0",
+    "unist-util-visit": "^1.4.0"
   },
   "peerDependencies": {
     "gridsome": "^0.0.1"
