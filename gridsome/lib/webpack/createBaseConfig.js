@@ -17,7 +17,7 @@ module.exports = (context, options, { isProd, isServer }) => {
   config.mode(isProd ? 'production' : 'development')
 
   config.entry('app').add(resolve('src/main.js', context))
-  
+
   config.output
     .path(resolve(outDir, context))
     .publicPath(isProd ? options.publicPath || '/' : '/')
@@ -149,7 +149,6 @@ module.exports = (context, options, { isProd, isServer }) => {
         name: `${assetsDir}/fonts/[name].[hash:8].[ext]`
       })
 
-
   // graphql
 
   config.module.rule('graphql')
@@ -163,7 +162,7 @@ module.exports = (context, options, { isProd, isServer }) => {
       .loader(require.resolve('./loaders/static-query'))
 
   // plugins
-  
+
   config.plugin('progress')
     .use(require('webpack/lib/ProgressPlugin'))
 

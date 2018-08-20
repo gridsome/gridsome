@@ -8,7 +8,7 @@ module.exports = (context, options) => {
   const config = createBaseConfig(context, options, { isProd, isServer: false })
 
   config.entry('app').add(resolve('../../app/entry.client.js'))
-  
+
   config.node.merge({
     setImmediate: false
   })
@@ -16,7 +16,7 @@ module.exports = (context, options) => {
   if (!isProd) {
     config.plugin('hmr')
       .use(require('webpack/lib/HotModuleReplacementPlugin'))
-    
+
     config.plugin('no-emit-on-errors')
       .use(require('webpack/lib/NoEmitOnErrorsPlugin'))
   }

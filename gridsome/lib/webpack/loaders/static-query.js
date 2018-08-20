@@ -1,4 +1,3 @@
-const path = require('path')
 const { parse } = require('../../graphql/graphql')
 const validateQuery = require('../../graphql/utils/validateQuery')
 

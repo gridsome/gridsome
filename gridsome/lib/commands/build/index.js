@@ -1,7 +1,6 @@
 module.exports = async (context, args) => {
   process.env.NODE_ENV = 'production'
 
-  const path = require('path')
   const fs = require('fs-extra')
   const hirestime = require('hirestime')
   const Service = require('../../Service')

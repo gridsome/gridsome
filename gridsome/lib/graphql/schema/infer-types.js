@@ -1,6 +1,6 @@
 const camelCase = require('camelcase')
-const { mapValues } = require('lodash')
-const { isDate, dateType } = require('./types/date')
+const { mapValues, isEmpty } = require('lodash')
+// const { isDate, dateType } = require('./types/date')
 
 const {
   GraphQLInt,
@@ -44,9 +44,9 @@ function inferType (value, key, nodeType) {
 
   const type = typeof value
 
-  if (isDate(value)) {
-    return dateType
-  }
+  // if (isDate(value)) {
+  //   return dateType
+  // }
 
   switch (type) {
     case 'string':
@@ -65,11 +65,11 @@ function inferType (value, key, nodeType) {
 function createObjectType (obj, key, nodeType) {
   const name = createTypeName(nodeType, key)
   const fields = mapValues(obj, (value, key) => inferType(value, key, name))
-  const resolve = obj => obj
 
-  return {
-    type: new GraphQLObjectType({ name, fields, resolve })
-  }
+  return !isEmpty(fields) ? {
+    type: new GraphQLObjectType({ name, fields }),
+    resolve: obj => obj
+  } : null
 }
 
 function createTypeName (nodeType, key) {

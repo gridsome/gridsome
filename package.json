@@ -8,7 +8,7 @@
   "scripts": {
     "bootstrap": "lerna bootstrap",
     "test": "node scripts/test.js",
-    "lint": "eslint --fix \"packages/**/*.js\""
+    "lint": "eslint --fix \"gridsome/**/*.js\" \"packages/**/*.js\""
   },
   "jest": {
     "testEnvironment": "node",

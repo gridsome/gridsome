@@ -1,4 +1,3 @@
-const path = require('path')
 const validateQuery = require('../../graphql/utils/validateQuery')
 
 module.exports = function (source, map) {

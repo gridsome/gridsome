@@ -1,4 +1,3 @@
-const path = require('path')
 const chalk = require('chalk')
 const { develop, build, explore } = require('./lib')
 
@@ -28,10 +27,6 @@ module.exports = ({ context, program }) => {
       wrapCommand(explore)(context, { host, port })
     })
 }
-
-module.exports.Plugin = require('./lib/Plugin')
-module.exports.Source = require('./lib/Source')
-module.exports.Transformer = require('./lib/Transformer')
 
 function wrapCommand (fn) {
   return (...args) => {

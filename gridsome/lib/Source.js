@@ -1,26 +1,23 @@
-const Base = require('./Base')
+const path = require('path')
 const crypto = require('crypto')
 const mime = require('mime-types')
-const autoBind = require('auto-bind')
+const EventEmitter = require('events')
 const camelCase = require('camelcase')
 const dateFormat = require('dateformat')
-const graphql = require('./graphql/graphql')
 const pathToRegexp = require('path-to-regexp')
 const parsePageQuery = require('./graphql/parsePageQuery')
 const _ = require('lodash')
 
-class Source extends Base {
-  constructor (context, options, store, transformers = {}, logger = console) {
-    super(context, options)
+class Source extends EventEmitter {
+  constructor (context, store, typeName, transformers = {}) {
+    super()
 
+    this.context = context
     this.store = store
+    this.typeName = typeName
     this.transformers = transformers
-    this.logger = logger
-    this.graphql = graphql
     this.mime = mime
-    this.namespace = null
-
-    autoBind(this)
+    this.typeNames = []
   }
 
   // nodes
@@ -44,10 +41,13 @@ class Source extends Base {
         : this.makeTypeName(ref.type)
     }))
 
+    this.typeNames.push(typeName)
+
     this.store.addType(typeName, {
       name: typeName,
       route: options.route,
       fields: options.fields,
+      mimeTypes: [],
       belongsTo: {},
       makePath,
       type,
@@ -63,24 +63,29 @@ class Source extends Base {
     const typeName = this.makeTypeName(type)
 
     // all field names must be camelCased in order to work in GraphQL
-    const fields = _.mapKeys(options.fields, (v, key) => this.camelCase(key))
+    const fields = _.mapKeys(options.fields, (v, key) => camelCase(key))
 
     const node = {
       type,
       fields,
       typeName,
       _id: options._id,
-      title: options.title,
-      slug: _.trim(options.path || options.slug, '/'),
-      date: options.date || fields.date || new Date().toISOString(),
-      content: options.content || '',
-      excerpt: options.excerpt || '',
-      link: null,
       refs: options.refs || {},
-      internal: this.createInternals({ type })
+      internal: this.createInternals(options.internal)
     }
 
+    node.title = options.title || fields.title || options._id
+    node.date = options.date || fields.date || new Date().toISOString()
+    node.slug = options.slug || fields.slug || this.slugify(node.title)
     node.path = options.path || this.makePath(node)
+
+    // add transformer to content type to let it
+    // extend the node type when creating schema
+    const { mimeType } = node.internal
+    const mimeTypes = this.store.types[typeName].mimeTypes
+    if (mimeType && !mimeTypes.hasOwnProperty(mimeType)) {
+      mimeTypes[mimeType] = this.transformers[mimeType]
+    }
 
     return this.store.addNode(typeName, node)
   }
@@ -138,10 +143,11 @@ class Source extends Base {
 
   // misc
 
-  createInternals (options) {
+  createInternals (options = {}) {
     return {
-      type: options.type,
-      owner: '' // this.plugin.uid
+      mimeType: options.mimeType,
+      content: options.content,
+      timestamp: Date.now()
     }
   }
 
@@ -156,39 +162,36 @@ class Source extends Base {
     return this.store.types[typeName].makePath(params)
   }
 
-  transform (string, mimeType, options, file) {
+  transform (mimeType, content, options) {
     const transformer = this.transformers[mimeType]
 
     if (!transformer) {
       throw new Error(`No transformer for ${mimeType} is installed.`)
     }
 
-    return transformer.parse(string, options, file)
+    return transformer.parse(content, options)
   }
 
   makeUid (orgId) {
-    return crypto.createHash('md5').update(this.namespace + orgId).digest('hex')
+    return crypto.createHash('md5').update(orgId).digest('hex')
   }
 
-  makeTypeName (name) {
-    return this.pascalCase(`${this.options.typeNamePrefix} ${name}`)
+  makeTypeName (name = '') {
+    return camelCase(`${this.typeName} ${name}`, { pascalCase: true })
   }
 
   slugify (string) {
     return _.kebabCase(string)
   }
 
-  camelCase (string) {
-    return camelCase(string)
+  resolve (p) {
+    return path.resolve(this.context, p)
   }
 
-  pascalCase (string) {
-    return camelCase(string, { pascalCase: true })
-  }
+  setupReversedReferences () {
+    _.forEach(this.typeNames, typeName => {
+      const options = this.store.types[typeName]
 
-  onAfter () {
-    // create foreign references
-    _.forEach(this.store.types, (options, typeName) => {
       _.forEach(options.refs, (ref, key) => {
         this.store.types[ref.typeName].belongsTo[options.type] = {
           description: `Reference to ${typeName}`,

@@ -14,7 +14,7 @@ module.exports = (context, options = {}) => {
   const args = options.args || {}
   const plugins = []
   const config = {}
-  
+
   const localConfig = fs.existsSync(configPath)
     ? require(configPath)
     : {}

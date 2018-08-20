@@ -1,5 +1,5 @@
 const { camelCase } = require('lodash')
-const Transformer = require('../Transformer')
+const { cache, nodeCache } = require('./cache')
 const { internalRE, transformerRE } = require('./index')
 
 module.exports = service => {
@@ -26,18 +26,14 @@ module.exports = service => {
     // TODO: transformers looks for base config in gridsome.config.js
     // - @gridsome/transformer-remark -> config.transformers.remark
     // - @foo/gridsome-transformer-remark -> config.transformers.remark
-    // - gridsome-transformer-remark -> config.transformers.remark
+    // - gridsome-transformer-foo-bar -> config.transformers.fooBar
 
     const [,, suffix] = matches
-    const TransformerPlugin = require(id)
-    const config = service.config.transformers[camelCase(suffix)] || {}
-    const transformer = new TransformerPlugin(service, config)
+    const TransformerClass = require(id)
+    const options = service.config.transformers[camelCase(suffix)] || {}
+    const transformer = new TransformerClass(options, { cache, nodeCache })
 
-    if (!(transformer instanceof Transformer)) {
-      throw new Error(`${id} is not a valid transformer.`)
-    }
-
-    for (const mimeType of TransformerPlugin.mimeTypes()) {
+    for (const mimeType of TransformerClass.mimeTypes()) {
       result[mimeType] = transformer
     }
   }

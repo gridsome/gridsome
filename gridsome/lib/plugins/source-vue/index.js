@@ -7,14 +7,18 @@ const { kebabCase } = require('lodash')
 const compiler = require('vue-template-compiler')
 const { parse } = require('@vue/component-compiler-utils')
 
-const Source = require('../../Source')
-
-class VueSource extends Source {
+class VueSource {
   static defaultOptions () {
     return {
       typeName: 'Vue',
       path: ['src/pages/**/*.vue', 'src/templates/*.vue']
     }
+  }
+
+  constructor (options, source, { context }) {
+    this.options = options
+    this.source = source
+    this.context = context
   }
 
   async apply () {
@@ -36,18 +40,18 @@ class VueSource extends Source {
 
   addPage (file) {
     const { type, options } = createPage(this, file)
-    return super.addPage(type, options)
+    return this.source.addPage(type, options)
   }
 
   updatePage (file) {
     const id = createId(file)
     const { options } = createPage(this, file)
-    return super.updatePage(id, options)
+    return this.source.updatePage(id, options)
   }
 }
 
 function createPage (source, file) {
-  const absPath = source.resolve(file)
+  const absPath = source.source.resolve(file)
   const { pageQuery } = parseComponent(absPath)
   const component = file.replace('src', '@')
   const slug = createRoutePath(file)

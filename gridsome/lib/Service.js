@@ -31,7 +31,7 @@ class Service {
 
     const phases = [
       { title: 'Initialize', run: this.init },
-      { title: 'Run plugins', run: runPlugins },
+      { title: 'Run plugins', run: this.runPlugins },
       { title: 'Create GraphQL schema', run: this.createSchema },
       { title: 'Generate temporary files', run: this.generateRoutes }
     ]
@@ -59,6 +59,10 @@ class Service {
   init () {
     this.transformers = resolveTransformers(this)
     this.store = new Datastore()
+  }
+
+  async runPlugins () {
+    this.plugins = await runPlugins(this)
   }
 
   createSchema () {
