@@ -3,7 +3,7 @@ const createBaseConfig = require('./createBaseConfig')
 
 const resolve = p => path.resolve(__dirname, p)
 
-module.exports = (context, options) => {
+module.exports = (context, options, plugins) => {
   const isProd = process.env.NODE_ENV === 'production'
   const config = createBaseConfig(context, options, { isProd, isServer: false })
 
@@ -37,6 +37,8 @@ module.exports = (context, options) => {
         }
       }])
   }
+
+  plugins.callHookSync('chainWebpack', { config, isProd, isServer: false })
 
   return config
 }

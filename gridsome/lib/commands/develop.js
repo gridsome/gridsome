@@ -10,7 +10,7 @@ module.exports = async (context, args) => {
   const createClientConfig = require('../webpack/createClientConfig')
 
   const service = new Service(context, { args })
-  const { config, clients, schema, store } = await service.bootstrap()
+  const { config, clients, schema, store, plugins } = await service.bootstrap()
   const port = await resolvePort(config.port)
   const host = config.host || 'localhost'
   const { endpoints } = createServer
@@ -20,9 +20,9 @@ module.exports = async (context, args) => {
   const gqlEndpoint = fullUrl + endpoints.graphql
   const exploreEndpoint = fullUrl + endpoints.explore
   const wsEndpoint = `ws://${host}:${port}${endpoints.graphql}`
-  const configChain = createClientConfig(context, config)
+  const clientConfig = createClientConfig(context, config, plugins)
 
-  configChain
+  clientConfig
     .plugin('dev-endpoints')
       .use(require('webpack/lib/DefinePlugin'), [{
         'SOCKJS_ENDPOINT': JSON.stringify(sockjsEndpoint),
@@ -30,13 +30,13 @@ module.exports = async (context, args) => {
         'GRAPHQL_WS_ENDPOINT': JSON.stringify(wsEndpoint)
       }])
 
-  configChain.entryPoints.store.forEach((entry, name) => {
-    configChain.entry(name)
+  clientConfig.entryPoints.store.forEach((entry, name) => {
+    clientConfig.entry(name)
       .prepend(`webpack-hot-middleware/client?name=${name}&reload=true`)
       .prepend('webpack/hot/dev-server')
   })
 
-  const webpackConfig = configChain.toConfig()
+  const webpackConfig = clientConfig.toConfig()
   const compiler = webpack(webpackConfig)
   const app = createServer({ host, schema, store })
 

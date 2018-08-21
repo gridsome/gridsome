@@ -48,10 +48,9 @@ class RemarkTransformer {
         },
         resolve: (node, { depth }) => {
           return this.findHeadings(node, depth).filter(heading => {
-            if (typeof depth === 'number') {
-              return heading.depth === depth
-            }
-            return true
+            return typeof depth === 'number'
+              ? heading.depth === depth
+              : true
           })
         }
       }

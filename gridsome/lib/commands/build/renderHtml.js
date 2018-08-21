@@ -4,15 +4,15 @@ const { chunk } = require('lodash')
 const hirestime = require('hirestime')
 const Worker = require('jest-worker').default
 
-module.exports = async (queue, outputDir, logger = global.console) => {
+module.exports = async (queue, { appPath, outDir }) => {
   const timer = hirestime()
   const totalPages = queue.length
   const chunks = chunk(queue, 1000)
 
   const workerPath = require.resolve('./workers/html-renderer')
-  const templatePath = path.resolve(__dirname, '../../../app/index.server.html')
-  const clientManifestPath = `${outputDir}/manifest/client.json`
-  const serverBundlePath = `${outputDir}/manifest/server.json`
+  const templatePath = path.resolve(appPath, 'index.server.html')
+  const clientManifestPath = `${outDir}/manifest/client.json`
+  const serverBundlePath = `${outDir}/manifest/server.json`
 
   const worker = new Worker(workerPath, {
     numWorkers: cpu.logical
@@ -38,5 +38,5 @@ module.exports = async (queue, outputDir, logger = global.console) => {
 
   worker.end()
 
-  logger.info(`Render HTML (${totalPages} pages) - ${timer(hirestime.S)}s`)
+  console.info(`Render HTML (${totalPages} pages) - ${timer(hirestime.S)}s`)
 }

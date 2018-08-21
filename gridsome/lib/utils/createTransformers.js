@@ -31,7 +31,7 @@ module.exports = service => {
     const [,, suffix] = matches
     const TransformerClass = require(id)
     const options = service.config.transformers[camelCase(suffix)] || {}
-    const transformer = new TransformerClass(options, { cache, nodeCache })
+    const transformer = new TransformerClass(options, { cache, nodeCache, service })
 
     for (const mimeType of TransformerClass.mimeTypes()) {
       result[mimeType] = transformer

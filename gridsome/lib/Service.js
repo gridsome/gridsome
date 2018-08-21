@@ -2,15 +2,15 @@ const path = require('path')
 const fs = require('fs-extra')
 const autoBind = require('auto-bind')
 const hirestime = require('hirestime')
-const Datastore = require('./Datastore')
+const Store = require('./utils/Store')
+const Plugins = require('./utils/Plugins')
 const generateFiles = require('./codegen')
 const { BOOTSTRAP_FULL } = require('./utils')
-const runPlugins = require('./utils/runPlugins')
 const createSchema = require('./graphql/createSchema')
 const resolveConfig = require('./utils/resolveConfig')
 const prepareRoutes = require('./utils/prepareRoutes')
 const { execute, graphql } = require('./graphql/graphql')
-const resolveTransformers = require('./utils/resolveTransformers')
+const createTransformers = require('./utils/createTransformers')
 
 class Service {
   constructor (context, options = {}) {
@@ -18,7 +18,6 @@ class Service {
 
     this.context = context
     this.options = options
-    this.logger = global.console
     this.pkg = options.pkg || this.resolvePkg()
     this.config = this.resolveConfig()
     this.clients = {}
@@ -36,18 +35,20 @@ class Service {
       { title: 'Generate temporary files', run: this.generateRoutes }
     ]
 
-    this.logger.info('Bootstrapping...')
+    console.info('Bootstrapping...')
 
     for (const current of phases) {
       if (phases.indexOf(current) <= phase) {
         const timer = hirestime()
         await current.run(this)
 
-        this.logger.info(`${current.title} - ${timer(hirestime.S)}s`)
+        console.info(`${current.title} - ${timer(hirestime.S)}s`)
       }
     }
 
-    this.logger.info(`Bootstrap finish - ${bootstrapTime(hirestime.S)}s`)
+    await this.plugins.callHook('afterBootstrap')
+
+    console.info(`Bootstrap finish - ${bootstrapTime(hirestime.S)}s`)
 
     return this
   }
@@ -57,16 +58,33 @@ class Service {
   //
 
   init () {
-    this.transformers = resolveTransformers(this)
-    this.store = new Datastore()
+    this.transformers = createTransformers(this)
+    this.store = new Store(this)
+    this.plugins = new Plugins(this)
+
+    this.plugins.on('broadcast', message => {
+      this.broadcast(message)
+    })
+
+    this.plugins.on('generateRoutes', () => {
+      this.generateRoutes()
+    })
+
+    return this.plugins.callHook('init')
   }
 
-  async runPlugins () {
-    this.plugins = await runPlugins(this)
+  runPlugins () {
+    return this.plugins.run()
   }
 
-  createSchema () {
-    this.schema = createSchema(this.store)
+  async createSchema () {
+    const queries = await this.plugins.callHook('createSchemaQueries', {
+      store: this.store
+    })
+
+    this.schema = createSchema(this.store, {
+      queries: queries.length ? Object.assign(...queries) : {}
+    })
   }
 
   generateRoutes () {

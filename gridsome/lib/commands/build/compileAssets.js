@@ -1,16 +1,14 @@
 const hirestime = require('hirestime')
-const createClientConfig = require('../../webpack/createClientConfig')
-const createServerConfig = require('../../webpack/createServerConfig')
 
-module.exports = async (context, options, logger = global.console) => {
+module.exports = async (context, { clientConfig, serverConfig }) => {
   const compileTime = hirestime()
 
   await compile([
-    createClientConfig(context, options).toConfig(),
-    createServerConfig(context, options).toConfig()
+    clientConfig.toConfig(),
+    serverConfig.toConfig()
   ])
 
-  logger.info(`Compile assets - ${compileTime(hirestime.S)}s`)
+  console.info(`Compile assets - ${compileTime(hirestime.S)}s`)
 }
 
 function compile (config) {

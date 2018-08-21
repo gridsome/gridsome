@@ -3,7 +3,7 @@ const {
   GraphQLObjectType
 } = require('./graphql')
 
-module.exports = store => {
+module.exports = (store, options = {}) => {
   const directives = require('./schema/directives')
   const pagesSchema = require('./schema/pages')()
   const nodesSchema = require('./schema/nodes')(store)
@@ -13,6 +13,7 @@ module.exports = store => {
     query: new GraphQLObjectType({
       name: 'RootQuery',
       fields: {
+        ...options.queries,
         ...pagesSchema.queries,
         ...nodesSchema.queries,
         ...pagesSchema.connections,
@@ -21,8 +22,6 @@ module.exports = store => {
         ...internalSchema.connections
       }
     }),
-    directives: [
-      ...directives
-    ]
+    directives
   })
 }
