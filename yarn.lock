@@ -7095,6 +7095,12 @@ remark-external-links@^3.0.0:
     space-separated-tokens "^1.1.2"
     unist-util-visit "^1.4.0"
 
+remark-fix-guillemets@^1.0.15:
+  version "1.0.15"
+  resolved "https://registry.yarnpkg.com/remark-fix-guillemets/-/remark-fix-guillemets-1.0.15.tgz#2b9f9b559c3a41af85fd6e13ff5eb179640b5272"
+  dependencies:
+    unist-util-visit "^1.3.1"
+
 remark-parse@^5.0.0:
   version "5.0.0"
   resolved "https://registry.yarnpkg.com/remark-parse/-/remark-parse-5.0.0.tgz#4c077f9e499044d1d5c13f80d7a98cf7b9285d95"
@@ -8387,7 +8393,7 @@ unist-util-visit-parents@^2.0.0:
   dependencies:
     unist-util-is "^2.1.2"
 
-unist-util-visit@^1.0.0, unist-util-visit@^1.0.1, unist-util-visit@^1.1.0, unist-util-visit@^1.4.0:
+unist-util-visit@^1.0.0, unist-util-visit@^1.0.1, unist-util-visit@^1.1.0, unist-util-visit@^1.3.1, unist-util-visit@^1.4.0:
   version "1.4.0"
   resolved "https://registry.yarnpkg.com/unist-util-visit/-/unist-util-visit-1.4.0.tgz#1cb763647186dc26f5e1df5db6bd1e48b3cc2fb1"
   dependencies:

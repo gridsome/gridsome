@@ -11,6 +11,7 @@
     "remark": "^9.0.0",
     "remark-autolink-headings": "^5.0.0",
     "remark-external-links": "^3.0.0",
+    "remark-fix-guillemets": "^1.0.15",
     "remark-slug": "^4.2.3",
     "remark-squeeze-paragraphs": "^3.0.2",
     "unist-util-visit": "^1.4.0"

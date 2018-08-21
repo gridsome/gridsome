@@ -22,6 +22,7 @@ class RemarkTransformer {
     this.remarkPlugins = this.normalizePlugins([
       // built-in plugins
       'remark-slug',
+      'remark-fix-guillemets',
       'remark-squeeze-paragraphs',
       ['remark-external-links', {
         target: options.externalLinksTarget,
