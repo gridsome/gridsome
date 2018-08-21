@@ -1,10 +1,13 @@
 import Vue from 'vue'
 import Meta from 'vue-meta'
 import Router from 'vue-router'
+import ClientOnly from './components/ClientOnly'
 import initRoutes from '@gridsome/temp/routes.js'
 
 Vue.use(Meta)
 Vue.use(Router)
+
+Vue.component('ClientOnly', ClientOnly)
 
 export default function createApp () {
   const router = new Router({

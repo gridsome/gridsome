@@ -2,7 +2,6 @@ import Link from './Link'
 
 // @vue/component
 export default {
-  name: 'GridsomePager',
   functional: true,
 
   props: {
