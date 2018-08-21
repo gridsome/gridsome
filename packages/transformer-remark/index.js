@@ -10,12 +10,6 @@ const {
   GraphQLString
 } = require('gridsome/graphql')
 
-// built-in plugins
-const remarkPlugins = [
-  require('remark-slug'),
-  require('remark-autolink-headings')
-]
-
 class RemarkTransformer {
   static mimeTypes () {
     return ['text/markdown', 'text/x-markdown']
@@ -24,6 +18,20 @@ class RemarkTransformer {
   constructor (options, { nodeCache }) {
     this.options = options
     this.nodeCache = nodeCache
+
+    // built-in plugins
+    this.remarkPlugins = [
+      [require('remark-slug')],
+      [require('remark-autolink-headings'), {
+        content: {
+          type: 'element',
+          tagName: 'span',
+          properties: {
+            className: options.anchorClassName || ['icon icon-link']
+          },
+        }
+      }]
+    ]
   }
 
   parse (source, options) {
@@ -62,9 +70,9 @@ class RemarkTransformer {
     return this.nodeCache(node, 'ast', () => {
       const ast = remark().parse(node.internal.content)
 
-      // apply transforms to ast
-      for (const plugin of remarkPlugins) {
-        plugin()(ast)
+      // apply remark transforms to ast
+      for (const [plugin, options] of this.remarkPlugins) {
+        plugin(options)(ast)
       }
 
       return ast
@@ -90,13 +98,11 @@ class RemarkTransformer {
       const ast = this.toAST(node)
       const headings = []
 
-      visit(ast, 'heading', ({ depth, children }) => {
-        const heading = { depth, value: '', anchor: '' }
+      visit(ast, 'heading', node => {
+        const heading = { depth: node.depth, value: '', anchor: '' }
 
-        children.forEach(node => {
-          if (node.type === 'link') heading.anchor = node.url
-          if (node.type === 'text') heading.value = node.value
-        })
+        visit(node, 'link', link => heading.anchor = link.url)
+        visit(node, 'text', text => heading.value = text.value)
 
         headings.push(heading)
       })

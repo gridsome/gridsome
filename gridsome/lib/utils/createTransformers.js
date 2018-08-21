@@ -28,7 +28,7 @@ module.exports = service => {
     // - @foo/gridsome-transformer-remark -> config.transformers.remark
     // - gridsome-transformer-foo-bar -> config.transformers.fooBar
 
-    const [,, suffix] = matches
+    const [, suffix] = matches
     const TransformerClass = require(id)
     const options = service.config.transformers[camelCase(suffix)] || {}
     const transformer = new TransformerClass(options, { cache, nodeCache, service })
