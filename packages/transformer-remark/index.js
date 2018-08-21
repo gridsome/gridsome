@@ -1,19 +1,20 @@
-const Remark = require('remark')
-// const html = require('remark-html')
+const remark = require('remark')
 const parse = require('gray-matter')
-// const format = require('rehype-format')
 const visit = require('unist-util-visit')
 const toHAST = require('mdast-util-to-hast')
 const hastToHTML = require('hast-util-to-html')
-// const markdown = require('remark-parse')
-// const stringify = require('rehype-stringify')
-// const { mapValues, isDate } = require('lodash')
 const { HeadingType, HeadingLevels } = require('./lib/types/HeadingType')
 
 const {
   GraphQLList,
   GraphQLString
 } = require('gridsome/graphql')
+
+// built-in plugins
+const remarkPlugins = [
+  require('remark-slug'),
+  require('remark-autolink-headings')
+]
 
 class RemarkTransformer {
   static mimeTypes () {
@@ -25,7 +26,7 @@ class RemarkTransformer {
     this.nodeCache = nodeCache
   }
 
-  parse (source) {
+  parse (source, options) {
     const file = parse(source, this.options.frontmatter || {})
 
     return {
@@ -59,27 +60,28 @@ class RemarkTransformer {
 
   toAST (node) {
     return this.nodeCache(node, 'ast', () => {
-      const remark = new Remark().data('settings', {
-        commonmark: true,
-        footnotes: true,
-        pedantic: true
-      })
+      const ast = remark().parse(node.internal.content)
 
-      return remark.parse(node.internal.content)
+      // apply transforms to ast
+      for (const plugin of remarkPlugins) {
+        plugin()(ast)
+      }
+
+      return ast
     })
   }
 
   toHAST (node) {
     return this.nodeCache(node, 'hast', () => {
-      const ast = this.toAST(node)
-      return toHAST(ast, { allowDangerousHTML: true })
+      const mdast = this.toAST(node)
+      return toHAST(mdast, { allowDangerousHTML: true })
     })
   }
 
   toHTML (node) {
     return this.nodeCache(node, 'html', () => {
-      const htmlAst = this.toHAST(node)
-      return hastToHTML(htmlAst, { allowDangerousHTML: true })
+      const hast = this.toHAST(node)
+      return hastToHTML(hast, { allowDangerousHTML: true })
     })
   }
 
@@ -89,9 +91,14 @@ class RemarkTransformer {
       const headings = []
 
       visit(ast, 'heading', ({ depth, children }) => {
-        if (children.length && children[0].type === 'text') {
-          headings.push({ depth, value: children[0].value })
-        }
+        const heading = { depth, value: '', anchor: '' }
+
+        children.forEach(node => {
+          if (node.type === 'link') heading.anchor = node.url
+          if (node.type === 'text') heading.value = node.value
+        })
+
+        headings.push(heading)
       })
 
       return headings

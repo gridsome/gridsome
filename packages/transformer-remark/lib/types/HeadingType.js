@@ -8,18 +8,9 @@ const {
 const HeadingType = new GraphQLObjectType({
   name: 'MarkdownHeading',
   fields: {
-    value: {
-      type: GraphQLString,
-      resolve (heading) {
-        return heading.value
-      }
-    },
-    depth: {
-      type: GraphQLInt,
-      resolve (heading) {
-        return heading.depth
-      }
-    }
+    value: { type: GraphQLString },
+    depth: { type: GraphQLInt },
+    anchor: { type: GraphQLString }
   }
 })
 
