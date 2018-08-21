@@ -23,6 +23,11 @@ class RemarkTransformer {
     this.remarkPlugins = [
       [require('remark-slug')],
       [require('remark-autolink-headings'), {
+      'remark-squeeze-paragraphs',
+      ['remark-external-links', {
+        target: options.externalLinksTarget,
+        rel: options.externalLinksRel
+      }],
         content: {
           type: 'element',
           tagName: 'span',
