@@ -19,24 +19,26 @@ class RemarkTransformer {
     this.options = options
     this.nodeCache = nodeCache
 
-    // built-in plugins
-    this.remarkPlugins = [
-      [require('remark-slug')],
-      [require('remark-autolink-headings'), {
+    this.remarkPlugins = this.normalizePlugins([
+      // built-in plugins
+      'remark-slug',
       'remark-squeeze-paragraphs',
       ['remark-external-links', {
         target: options.externalLinksTarget,
         rel: options.externalLinksRel
       }],
+      ['remark-autolink-headings', {
         content: {
           type: 'element',
           tagName: 'span',
           properties: {
-            className: options.anchorClassName || ['icon icon-link']
+            className: options.anchorClassName || 'icon icon-link'
           },
         }
-      }]
-    ]
+      }],
+      // user plugins
+      ...options.plugins || []
+    ])
   }
 
   parse (source, options) {
@@ -71,13 +73,21 @@ class RemarkTransformer {
     }
   }
 
+  normalizePlugins (arr = []) {
+    return arr.map(entry => {
+      return Array.isArray(entry)
+        ? [require(entry[0]), entry[1] || {}]
+        : [require(entry), {}]
+    })
+  }
+
   toAST (node) {
     return this.nodeCache(node, 'ast', () => {
       const ast = remark().parse(node.internal.content)
 
       // apply remark transforms to ast
-      for (const [plugin, options] of this.remarkPlugins) {
-        plugin(options)(ast)
+      for (const [attacher, options] of this.remarkPlugins) {
+        attacher(options)(ast)
       }
 
       return ast
@@ -87,14 +97,18 @@ class RemarkTransformer {
   toHAST (node) {
     return this.nodeCache(node, 'hast', () => {
       const mdast = this.toAST(node)
-      return toHAST(mdast, { allowDangerousHTML: true })
+      const options = { allowDangerousHTML: true }
+      
+      return toHAST(mdast, options)
     })
   }
 
   toHTML (node) {
     return this.nodeCache(node, 'html', () => {
       const hast = this.toHAST(node)
-      return hastToHTML(hast, { allowDangerousHTML: true })
+      const options = { allowDangerousHTML: true }
+
+      return hastToHTML(hast, options)
     })
   }
 
