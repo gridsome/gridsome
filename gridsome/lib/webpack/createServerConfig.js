@@ -21,7 +21,11 @@ module.exports = (context, options, plugins) => {
       filename: 'manifest/server.json'
     }])
 
-  plugins.callHookSync('chainWebpack', { config, isProd, isServer: true })
+  plugins.callHookSync('chainWebpack', config, { context, isProd, isServer: true })
+
+  if (typeof options.chainWebpack === 'function') {
+    options.chainWebpack(config, { context, isProd, isServer: true })
+  }
 
   return config
 }

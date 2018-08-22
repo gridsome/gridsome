@@ -50,9 +50,9 @@ class Plugins extends EventEmitter {
   }
 
   async callHook (name, ...args) {
-    const results = await pMap(this.plugins, ({ plugin }) => {
+    const results = await Promise.all(this.plugins.map(({ plugin }) => {
       return this.callMethod(plugin, name, args)
-    })
+    }))
 
     return results.filter(value => !!value)
   }

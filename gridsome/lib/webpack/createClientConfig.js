@@ -38,7 +38,11 @@ module.exports = (context, options, plugins) => {
       }])
   }
 
-  plugins.callHookSync('chainWebpack', { config, isProd, isServer: false })
+  plugins.callHookSync('chainWebpack', config, { context, isProd, isServer: false })
+
+  if (typeof options.chainWebpack === 'function') {
+    options.chainWebpack(config, { context, isProd, isServer: false })
+  }
 
   return config
 }

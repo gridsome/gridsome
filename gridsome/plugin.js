@@ -24,10 +24,12 @@ class Plugin {
 
   /**
    * Chain webpack config.
+   * @param  {ChainedMap} config
    * @param  {String}     options.context
-   * @param  {ChainedMap} options.config
+   * @param  {Boolean}    options.isProd
+   * @param  {Boolean}    options.isServer
    */
-  chainWebpack ({ context, config }) {}
+  chainWebpack (config, { context, isProd, isServer }) {}
 
   /**
    * Called before query data is rendered.

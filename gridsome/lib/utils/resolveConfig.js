@@ -34,6 +34,7 @@ module.exports = (context, options = {}) => {
   config.host = args.host || 'localhost'
   config.port = parseInt(args.port) || 8080
   config.plugins = normalizePlugins(plugins)
+  config.chainWebpack = localConfig.chainWebpack
   config.transformers = localConfig.transformers || {}
   config.outDir = resolve(localConfig.outDir || 'dist')
   config.assetsDir = localConfig.assetsDir || '_assets'
