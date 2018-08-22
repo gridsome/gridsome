@@ -35,23 +35,28 @@ module.exports = nodeType => {
       order: { type: sortOrderType, defaultValue: -1 },
       perPage: { type: GraphQLInt, defaultValue: 25 },
       skip: { type: GraphQLInt, defaultValue: 0 },
-      page: { type: GraphQLInt, defaultValue: 1 }
+      page: { type: GraphQLInt, defaultValue: 1 },
+      regex: { type: GraphQLString }
     },
-    async resolve (_, { sortBy, order, perPage, skip, page }, { store }) {
+    async resolve (_, { sortBy, order, perPage, skip, page, regex }, { store }, info) {
       page = Math.max(page, 1) // ensure page higher than 0
       perPage = Math.max(perPage, 1) // ensure page higher than 1
 
       const collection = store.collections[nodeType.name]
-      // collection.find({'Name': { '$regex' : /din/ }})
+      const query = {}
 
-      const query = collection
+      if (regex) {
+        query.path = { $regex : new RegExp(regex) }
+      }
+
+      const results = collection
         .chain()
-        .find({})
+        .find(query)
         .simplesort(sortBy, order === -1)
         .offset(((page - 1) * perPage) + skip)
         .limit(perPage)
 
-      const nodes = query.data()
+      const nodes = results.data()
       const totalNodes = collection.find({}).length
 
       // total items in result

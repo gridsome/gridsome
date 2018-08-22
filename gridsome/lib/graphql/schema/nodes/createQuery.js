@@ -16,14 +16,14 @@ module.exports = nodeType => {
         description: 'Will return an error if not nullable.'
       }
     },
-    resolve (object, { _id, path, nullable }, { store }) {
-      const collection = store.collections[nodeType.name]
+    resolve (object, { _id, path, nullable }, { store }, { returnType }) {
+      const collection = store.collections[returnType]
       const node = _id ? collection.get(_id) : collection.findOne({ path })
 
       if (!node && !nullable) {
         const message = path
           ? `${path} was not found`
-          : `A ${nodeType.name} with id ${_id} was not found`
+          : `A ${returnType} with id ${_id} was not found`
 
         throw new GraphQLError(message)
       }
