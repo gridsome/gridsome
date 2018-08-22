@@ -15,8 +15,9 @@ class RemarkTransformer {
     return ['text/markdown', 'text/x-markdown']
   }
 
-  constructor (options, { nodeCache }) {
+  constructor (options, { localOptions, nodeCache }) {
     this.options = options
+    this.localOptions = this.localOptions
     this.nodeCache = nodeCache
 
     this.remarkPlugins = this.normalizePlugins([
@@ -34,11 +35,12 @@ class RemarkTransformer {
           tagName: 'span',
           properties: {
             className: options.anchorClassName || 'icon icon-link'
-          },
+          }
         }
       }],
       // user plugins
-      ...options.plugins || []
+      ...options.plugins || [],
+      ...localOptions.plugins || []
     ])
   }
 
@@ -99,7 +101,7 @@ class RemarkTransformer {
     return this.nodeCache(node, 'hast', () => {
       const mdast = this.toAST(node)
       const options = { allowDangerousHTML: true }
-      
+
       return toHAST(mdast, options)
     })
   }
@@ -121,8 +123,8 @@ class RemarkTransformer {
       visit(ast, 'heading', node => {
         const heading = { depth: node.depth, value: '', anchor: '' }
 
-        visit(node, 'link', link => heading.anchor = link.url)
-        visit(node, 'text', text => heading.value = text.value)
+        visit(node, 'link', link => (heading.anchor = link.url))
+        visit(node, 'text', text => (heading.value = text.value))
 
         headings.push(heading)
       })

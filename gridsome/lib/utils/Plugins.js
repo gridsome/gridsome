@@ -1,56 +1,91 @@
 const pMap = require('p-map')
-const Source = require('../Source')
+const Source = require('./Source')
 const EventEmitter = require('events')
-const { defaultsDeep } = require('lodash')
-const { NORMAL_PLUGIN, SOURCE_PLUGIN, internalRE } = require('./index')
+const { internalRE } = require('./index')
+const { cache, nodeCache } = require('./cache')
+const { defaultsDeep, mapValues, forEach } = require('lodash')
 
 class Plugins extends EventEmitter {
   constructor (service) {
     super()
+
+    this.service = service
 
     this.plugins = service.config.plugins.map(entry => {
       const use = entry.use.replace(internalRE, '../')
       const PluginClass = require(use)
       const defaults = PluginClass.defaultOptions()
       const options = defaultsDeep(entry.options, defaults)
-      const { context, store, transformers } = service
+      const { context, config, store } = service
 
-      const args = {
-        context: service.context,
-        store: service.store,
-        events: service.events
-      }
+      const transformers = mapValues(service.config.transformers, entry => {
+        return new entry.TransformerClass(entry.options, {
+          cache, nodeCache, localOptions: options[entry.name] || {}
+        })
+      })
 
-      switch (entry.type) {
-        case NORMAL_PLUGIN:
-          return { entry, plugin: new PluginClass(options, args) }
+      const source = new Source(options, { context, store, transformers })
+      const instance = new PluginClass(options, { context, config, source })
 
-        case SOURCE_PLUGIN:
-          if (!options.typeName) {
-            throw new Error(`${use} is missing the typeName option.`)
-          }
-
-          const source = new Source(context, store, options.typeName, transformers)
-
-          return { entry, source, plugin: new PluginClass(options, source, args) }
-      }
+      return { source, instance }
     })
   }
 
   run () {
-    return pMap(this.plugins, async ({ entry, plugin, source }) => {
-      switch (entry.type) {
-        case NORMAL_PLUGIN:
-          return plugin.apply()
+    return pMap(this.plugins, async ({ instance, source }) => {
+      await instance.apply()
 
-        case SOURCE_PLUGIN:
-          return this.runSourcePlugin(plugin, source)
+      // setup reversed references
+      forEach(source.ownTypeNames, typeName => {
+        const options = this.service.store.types[typeName]
+
+        forEach(options.refs, (ref, key) => {
+          this.service.store.types[ref.typeName].belongsTo[options.type] = {
+            description: `Reference to ${typeName}`,
+            localKey: ref.key,
+            foreignType: options.type,
+            foreignKey: key,
+            foreignSchemaType: typeName
+          }
+        })
+      })
+
+      if (process.env.NODE_ENV === 'development') {
+        let regenerateTimeout = null
+
+        // use timeout as a workaround for when files are renamed,
+        // which triggers both addPage and removePage events...
+        const regenerateRoutes = () => {
+          clearTimeout(regenerateTimeout)
+          regenerateTimeout = setTimeout(() => {
+            this.emit('generateRoutes')
+          }, 20)
+        }
+
+        source.on('removePage', regenerateRoutes)
+        source.on('addPage', regenerateRoutes)
+
+        source.on('updatePage', async (page, oldPage) => {
+          const { pageQuery: { paginate: oldPaginate }} = oldPage
+          const { pageQuery: { paginate }} = page
+
+          // regenerate route.js whenever paging options changes
+          if (paginate.collection !== oldPaginate.collection) {
+            return regenerateRoutes()
+          }
+
+          // send query to front-end for re-fetch
+          this.emit('broadcast', {
+            query: page.pageQuery.content,
+            file: page.file
+          })
+        })
       }
-    }, { concurrency: 3 })
+    })
   }
 
   async callHook (name, ...args) {
-    const results = await Promise.all(this.plugins.map(({ plugin }) => {
+    const results = await Promise.all(this.plugins.map(plugin => {
       return this.callMethod(plugin, name, args)
     }))
 
@@ -58,7 +93,7 @@ class Plugins extends EventEmitter {
   }
 
   callHookSync (name, ...args) {
-    const results = this.plugins.map(({ plugin }) => {
+    const results = this.plugins.map(plugin => {
       return this.callMethod(plugin, name, args)
     })
 
@@ -66,47 +101,9 @@ class Plugins extends EventEmitter {
   }
 
   callMethod (plugin, name, args) {
-    return typeof plugin[name] === 'function'
-      ? plugin[name](...args)
+    return typeof plugin.instance[name] === 'function'
+      ? plugin.instance[name](...args)
       : null
-  }
-
-  async runSourcePlugin (plugin, source) {
-    await plugin.apply()
-
-    source.setupReversedReferences()
-
-    if (process.env.NODE_ENV === 'development') {
-      let regenerateTimeout = null
-
-      // use timeout as a workaround for when files are renamed,
-      // which triggers both addPage and removePage events...
-      const regenerateRoutes = () => {
-        clearTimeout(regenerateTimeout)
-        regenerateTimeout = setTimeout(() => {
-          this.emit('generateRoutes')
-        }, 20)
-      }
-
-      source.on('removePage', regenerateRoutes)
-      source.on('addPage', regenerateRoutes)
-
-      source.on('updatePage', async (page, oldPage) => {
-        const { pageQuery: { paginate: oldPaginate }} = oldPage
-        const { pageQuery: { paginate }} = page
-
-        // regenerate route.js whenever paging options changes
-        if (paginate.collection !== oldPaginate.collection) {
-          return regenerateRoutes()
-        }
-
-        // send query to front-end for re-fetch
-        this.emit('broadcast', {
-          query: page.pageQuery.content,
-          file: page.file
-        })
-      })
-    }
   }
 }
 

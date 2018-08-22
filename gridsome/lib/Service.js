@@ -1,5 +1,4 @@
 const path = require('path')
-const fs = require('fs-extra')
 const autoBind = require('auto-bind')
 const hirestime = require('hirestime')
 const Store = require('./utils/Store')
@@ -10,17 +9,14 @@ const createSchema = require('./graphql/createSchema')
 const resolveConfig = require('./utils/resolveConfig')
 const prepareRoutes = require('./utils/prepareRoutes')
 const { execute, graphql } = require('./graphql/graphql')
-const createTransformers = require('./utils/createTransformers')
 
 class Service {
   constructor (context, options = {}) {
     process.GRIDSOME_SERVICE = this
 
-    this.context = context
-    this.options = options
-    this.pkg = options.pkg || this.resolvePkg()
-    this.config = this.resolveConfig()
     this.clients = {}
+    this.context = context
+    this.config = resolveConfig(context, options)
 
     autoBind(this)
   }
@@ -58,7 +54,6 @@ class Service {
   //
 
   init () {
-    this.transformers = createTransformers(this)
     this.store = new Store(this)
     this.plugins = new Plugins(this)
 
@@ -98,21 +93,6 @@ class Service {
 
   resolve (p) {
     return path.resolve(this.context, p)
-  }
-
-  resolvePkg () {
-    const pkgPath = this.resolve('package.json')
-
-    try {
-      const content = fs.readFileSync(pkgPath, 'utf-8')
-      return JSON.parse(content)
-    } catch (err) {}
-
-    return {}
-  }
-
-  resolveConfig () {
-    return resolveConfig(this.context, this.options)
   }
 
   graphql (docOrQuery, variables = {}) {

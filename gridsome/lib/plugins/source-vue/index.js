@@ -15,10 +15,10 @@ class VueSource {
     }
   }
 
-  constructor (options, source, { context }) {
+  constructor (options, { context, source }) {
     this.options = options
-    this.source = source
     this.context = context
+    this.source = source
   }
 
   async apply () {

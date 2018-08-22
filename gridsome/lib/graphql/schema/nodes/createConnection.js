@@ -46,7 +46,7 @@ module.exports = nodeType => {
       const query = {}
 
       if (regex) {
-        query.path = { $regex : new RegExp(regex) }
+        query.path = { $regex: new RegExp(regex) }
       }
 
       const results = collection

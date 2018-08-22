@@ -5,19 +5,19 @@ const EventEmitter = require('events')
 const camelCase = require('camelcase')
 const dateFormat = require('dateformat')
 const pathToRegexp = require('path-to-regexp')
-const parsePageQuery = require('./graphql/parsePageQuery')
-const _ = require('lodash')
+const parsePageQuery = require('../graphql/parsePageQuery')
+const { mapValues, mapKeys, cloneDeep, kebabCase } = require('lodash')
 
 class Source extends EventEmitter {
-  constructor (context, store, typeName, transformers = {}) {
+  constructor (options, { context, store, transformers }) {
     super()
 
+    this.typeName = options.typeName
     this.context = context
     this.store = store
-    this.typeName = typeName
     this.transformers = transformers
+    this.ownTypeNames = []
     this.mime = mime
-    this.typeNames = []
   }
 
   // nodes
@@ -31,7 +31,7 @@ class Source extends EventEmitter {
       : () => null
 
     // normalize references
-    const refs = _.mapValues(options.refs, ref => ({
+    const refs = mapValues(options.refs, ref => ({
       type: ref.type,
       key: ref.key || '_id',
       description: `Reference to ${ref.type}`,
@@ -41,7 +41,7 @@ class Source extends EventEmitter {
         : this.makeTypeName(ref.type)
     }))
 
-    this.typeNames.push(typeName)
+    this.ownTypeNames.push(typeName)
 
     this.store.addType(typeName, {
       name: typeName,
@@ -61,17 +61,17 @@ class Source extends EventEmitter {
 
   addNode (type, options) {
     const typeName = this.makeTypeName(type)
-
+    const internal = this.createInternals(options.internal)
     // all field names must be camelCased in order to work in GraphQL
-    const fields = _.mapKeys(options.fields, (v, key) => camelCase(key))
+    const fields = mapKeys(options.fields, (v, key) => camelCase(key))
 
     const node = {
       type,
       fields,
       typeName,
+      internal,
       _id: options._id,
-      refs: options.refs || {},
-      internal: this.createInternals(options.internal)
+      refs: options.refs || {}
     }
 
     node.title = options.title || fields.title || options._id
@@ -81,7 +81,7 @@ class Source extends EventEmitter {
 
     // add transformer to content type to let it
     // extend the node type when creating schema
-    const { mimeType } = node.internal
+    const { mimeType } = internal
     const mimeTypes = this.store.types[typeName].mimeTypes
     if (mimeType && !mimeTypes.hasOwnProperty(mimeType)) {
       mimeTypes[mimeType] = this.transformers[mimeType]
@@ -122,7 +122,7 @@ class Source extends EventEmitter {
   updatePage (id, options) {
     const page = this.getPage(id)
     const pageQuery = parsePageQuery(options.pageQuery)
-    const oldPage = _.cloneDeep(page)
+    const oldPage = cloneDeep(page)
 
     page.title = options.title
     page.pageQuery = pageQuery
@@ -177,31 +177,19 @@ class Source extends EventEmitter {
   }
 
   makeTypeName (name = '') {
+    if (!this.typeName) {
+      throw new Error(`Missing typeName option.`)
+    }
+
     return camelCase(`${this.typeName} ${name}`, { pascalCase: true })
   }
 
   slugify (string) {
-    return _.kebabCase(string)
+    return kebabCase(string)
   }
 
   resolve (p) {
     return path.resolve(this.context, p)
-  }
-
-  setupReversedReferences () {
-    _.forEach(this.typeNames, typeName => {
-      const options = this.store.types[typeName]
-
-      _.forEach(options.refs, (ref, key) => {
-        this.store.types[ref.typeName].belongsTo[options.type] = {
-          description: `Reference to ${typeName}`,
-          localKey: ref.key,
-          foreignType: options.type,
-          foreignKey: key,
-          foreignSchemaType: typeName
-        }
-      })
-    })
   }
 }
 
