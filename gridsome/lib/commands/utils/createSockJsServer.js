@@ -1,11 +1,9 @@
 const http = require('http')
 const sockjs = require('sockjs')
-const portfinder = require('portfinder')
+const resolvePort = require('./resolvePort')
 
 module.exports = (host, clients) => new Promise(async resolve => {
-  portfinder.basePort = 9000
-
-  const port = await portfinder.getPortPromise()
+  const port = await resolvePort(9000)
   const echo = sockjs.createServer({ log: () => null })
   const server = http.createServer()
   const prefix = '/echo'

@@ -6,25 +6,34 @@ const imageminPngquant = require('imagemin-pngquant')
 const { createBundleRenderer } = require('vue-server-renderer')
 const Calipers = require('calipers')('png', 'jpeg')
 
-exports.processImage = async function ({ filePath, destPath, minWidth = 500 }) {
+exports.processImage = async function ({
+  filePath,
+  destPath,
+  minWidth = 500,
+  resizeImage = false
+}) {
   const supportedExtensions = ['.png', '.jpeg', '.jpg']
   const { ext } = path.parse(filePath)
   let buffer = fs.readFileSync(filePath)
 
   if (supportedExtensions.includes(ext)) {
     const size = await measure(filePath)
-    const ratio = size.height / size.width
-    const width = minWidth
-    const height = Math.round(width * ratio)
+    let resize
 
-    if (size.width >= width) {
-      buffer = await imagemin.buffer(buffer, {
-        plugins: [
-          imageminWebp({ quality: 75, resize: { width, height }}),
-          imageminPngquant({ quality: 75 })
-        ]
-      })
+    if (resizeImage && size.width >= minWidth) {
+      const ratio = size.height / size.width
+      const width = minWidth
+      const height = Math.round(width * ratio)
+
+      resize = { width, height }
     }
+
+    buffer = await imagemin.buffer(buffer, {
+      plugins: [
+        imageminWebp({ quality: 75, resize }),
+        imageminPngquant({ quality: 75 })
+      ]
+    })
   }
 
   try {
