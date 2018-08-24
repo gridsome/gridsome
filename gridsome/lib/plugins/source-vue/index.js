@@ -33,7 +33,7 @@ class VueSource {
       })
 
       watcher.on('add', file => this.addPage(file))
-      watcher.on('unlink', file => this.removePage(createId(file)))
+      watcher.on('unlink', file => this.source.removePage(createId(file)))
       watcher.on('change', file => this.updatePage(file))
     }
   }

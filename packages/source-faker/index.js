@@ -9,7 +9,7 @@ class FakerSource {
     }
   }
 
-  constructor (options, source) {
+  constructor (options, { source }) {
     this.options = options
     this.source = source
   }
