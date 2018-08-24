@@ -6,15 +6,13 @@ class CriticalPlugin {
     return {
       paths: ['index.html'],
       ignore: undefined,
-      inline: true,
       width: 1300,
       height: 900
     }
   }
 
-  constructor (options, { context, config }) {
+  constructor (options, { config }) {
     this.options = options
-    this.context = context
     this.config = config
   }
 
@@ -31,9 +29,9 @@ class CriticalPlugin {
     await Promise.all(files.map(file => {
       return critical.generate({
         minify: true,
+        inline: true,
         src: file,
         dest: file,
-        inline: true,
         base,
         width,
         height,
