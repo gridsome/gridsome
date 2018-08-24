@@ -19,23 +19,21 @@ class CriticalPlugin {
   apply () {}
 
   async afterBuild () {
-    const { outDir: base } = this.config
-    const { paths, width, height, ignore } = this.options
+    const { outDir } = this.config
+    const { paths, ...options } = this.options
 
-    const files = await glob(paths, { cwd: base })
+    const files = await glob(paths, { cwd: outDir })
 
     console.log(`Extract critical CSS (${files.length} pages)`)
 
     await Promise.all(files.map(file => {
       return critical.generate({
+        ...options,
         minify: true,
         inline: true,
+        base: outDir,
         src: file,
-        dest: file,
-        base,
-        width,
-        height,
-        ignore
+        dest: file
       })
     }))
   }

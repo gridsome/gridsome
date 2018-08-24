@@ -1,4 +1,4 @@
-# Extracts & inlines critical-path (above-the-fold) CSS for Gridsome sites
+# Extracts & inlines critical-path (above-the-fold) CSS
 
 ## Usage
 
@@ -8,7 +8,7 @@ module.exports = {
     {
       use: '@gridsome/plugin-critical',
       options: {
-        paths: ['index.html'],
+        paths: ['index.html'], // ['**/*.html'] for all pages
         width: 1300,
         height: 900
       }

@@ -3,11 +3,13 @@ const isUrl = require('is-url')
 const remark = require('remark')
 const parse = require('gray-matter')
 const visit = require('unist-util-visit')
+const htmlToText = require('html-to-text')
 const toHAST = require('mdast-util-to-hast')
 const hastToHTML = require('hast-util-to-html')
 const { HeadingType, HeadingLevels } = require('./lib/types/HeadingType')
 
 const {
+  GraphQLInt,
   GraphQLList,
   GraphQLString
 } = require('gridsome/graphql')
@@ -74,6 +76,23 @@ class RemarkTransformer {
               ? heading.depth === depth
               : true
           })
+        }
+      },
+      timeToRead: {
+        type: GraphQLInt,
+        args: {
+          speed: {
+            type: GraphQLInt,
+            description: 'Words per minute',
+            defaultValue: 230
+          }
+        },
+        resolve: (node, { speed }) => {
+          const html = this.toHTML(node)
+          const text = htmlToText.fromString(html)
+          const words = text.split(/\s|\\n/).filter(s => s.length > 1)
+
+          return Math.ceil(words.length / speed)
         }
       }
     }
