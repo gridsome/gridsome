@@ -16,11 +16,11 @@ class Plugins extends EventEmitter {
       const PluginClass = require(use)
       const defaults = PluginClass.defaultOptions()
       const options = defaultsDeep(entry.options, defaults)
-      const { context, config, store } = service
+      const { context, config, store, queue } = service
 
       const transformers = mapValues(service.config.transformers, entry => {
         return new entry.TransformerClass(entry.options, {
-          cache, nodeCache, localOptions: options[entry.name] || {}
+          queue, cache, nodeCache, localOptions: options[entry.name] || {}
         })
       })
 

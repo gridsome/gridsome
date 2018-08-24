@@ -48,7 +48,7 @@ class FilesystemSource {
       const filePath = this.source.resolve(file)
       const mimeType = this.source.mime.lookup(file)
       const content = fs.readFileSync(filePath, 'utf-8')
-      const result = this.source.transform(mimeType, content, options)
+      const result = this.source.transform(mimeType, content)
 
       const node = {
         _id: this.source.makeUid(file),
@@ -57,6 +57,7 @@ class FilesystemSource {
         refs: {},
         internal: {
           mimeType,
+          origin: filePath,
           content: result.content
         }
       }

@@ -1,3 +1,5 @@
+const path = require('path')
+const fs = require('fs-extra')
 const express = require('express')
 const bodyParser = require('body-parser')
 const graphqlHTTP = require('express-graphql')
@@ -20,6 +22,15 @@ module.exports = ({ schema, store }) => {
   app.get(endpoints.explore, playground({
     endpoint: endpoints.graphql
   }))
+
+  app.get('/___asset', (req, res) => {
+    const filePath = decodeURIComponent(req.query.path)
+    const data = fs.readFileSync(filePath)
+    const { ext } = path.parse(filePath)
+
+    res.contentType(ext)
+    res.end(data, 'binary')
+  })
 
   return app
 }

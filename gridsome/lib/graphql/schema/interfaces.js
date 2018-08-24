@@ -1,5 +1,6 @@
 const {
   GraphQLID,
+  GraphQLInt,
   GraphQLString,
   GraphQLNonNull,
   GraphQLInterfaceType
@@ -10,8 +11,10 @@ const { GraphQLDate } = require('./types/date')
 const internalInterface = new GraphQLInterfaceType({
   name: 'InternalInterface',
   fields: () => ({
-    type: { type: GraphQLString },
-    owner: { type: GraphQLString }
+    origin: { type: GraphQLString },
+    mimeType: { type: GraphQLString },
+    content: { type: GraphQLString },
+    timestamp: { type: GraphQLInt }
   })
 })
 

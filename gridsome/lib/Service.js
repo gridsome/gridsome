@@ -5,6 +5,7 @@ const Store = require('./utils/Store')
 const Plugins = require('./utils/Plugins')
 const generateFiles = require('./codegen')
 const { BOOTSTRAP_FULL } = require('./utils')
+const ProcessQueue = require('./utils/ProcessQueue')
 const createSchema = require('./graphql/createSchema')
 const resolveConfig = require('./utils/resolveConfig')
 const prepareRoutes = require('./utils/prepareRoutes')
@@ -54,6 +55,7 @@ class Service {
   //
 
   init () {
+    this.queue = new ProcessQueue(this)
     this.store = new Store(this)
     this.plugins = new Plugins(this)
 

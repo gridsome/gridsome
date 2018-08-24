@@ -1,3 +1,5 @@
+const path = require('path')
+const isUrl = require('is-url')
 const remark = require('remark')
 const parse = require('gray-matter')
 const visit = require('unist-util-visit')
@@ -15,10 +17,11 @@ class RemarkTransformer {
     return ['text/markdown', 'text/x-markdown']
   }
 
-  constructor (options, { localOptions, nodeCache }) {
+  constructor (options, { localOptions, nodeCache, queue }) {
     this.options = options
     this.localOptions = this.localOptions
     this.nodeCache = nodeCache
+    this.queue = queue
 
     this.remarkPlugins = this.normalizePlugins([
       // built-in plugins
@@ -44,8 +47,8 @@ class RemarkTransformer {
     ])
   }
 
-  parse (source, options) {
-    const file = parse(source, this.options.frontmatter || {})
+  parse (source) {
+    const file = parse(source)
 
     return {
       fields: file.data,
@@ -101,6 +104,20 @@ class RemarkTransformer {
     return this.nodeCache(node, 'hast', () => {
       const mdast = this.toAST(node)
       const options = { allowDangerousHTML: true }
+
+      if (path.isAbsolute(node.internal.origin)) {
+        const dirname = path.dirname(node.internal.origin)
+
+        // - serve images with an express endpoint in dev
+        // - add images to a process queue and return an url in build
+        visit(mdast, 'image', node => {
+          if (!isUrl(node.url)) {
+            node.url = this.queue.add(
+              path.resolve(dirname, node.url)
+            )
+          }
+        })
+      }
 
       return toHAST(mdast, options)
     })

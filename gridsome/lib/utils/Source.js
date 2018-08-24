@@ -145,6 +145,7 @@ class Source extends EventEmitter {
 
   createInternals (options = {}) {
     return {
+      origin: options.origin,
       mimeType: options.mimeType,
       content: options.content,
       timestamp: Date.now()
