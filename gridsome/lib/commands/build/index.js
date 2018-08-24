@@ -29,7 +29,11 @@ module.exports = async (context, args) => {
   await plugins.callHook('beforeRenderHTML', { context, config, queue })
   await require('./renderHtml')(queue, config)
 
-  // 4. clean up
+  // 4. process queued images
+  await plugins.callHook('beforeProcessImages', { context, config, queue: service.queue })
+  await require('./processImages')(service.queue, config)
+
+  // 5. clean up
   await plugins.callHook('afterBuild', { context, config })
   await fs.remove(`${config.outDir}/manifest`)
 

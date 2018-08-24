@@ -26,14 +26,16 @@ module.exports = async (queue, { appPath, outDir }) => {
       hasData: !!page.query
     }))
 
-    return worker.render({
-      pages,
-      templatePath,
-      clientManifestPath,
-      serverBundlePath
-    }).catch(err => {
-      throw err
-    })
+    return worker
+      .render({
+        pages,
+        templatePath,
+        clientManifestPath,
+        serverBundlePath
+      })
+      .catch(err => {
+        throw err
+      })
   }))
 
   worker.end()

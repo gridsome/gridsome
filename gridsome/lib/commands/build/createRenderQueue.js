@@ -62,8 +62,6 @@ module.exports = async ({ routerData, config, graphql }) => {
         break
 
       case PAGED_ROUTE:
-        queue.push(createPage(page))
-
         const { collection, perPage } = page.pageQuery.paginate
         const { data, errors } = await graphql(`
           query PageInfo ($perPage: Int) {
@@ -81,7 +79,7 @@ module.exports = async ({ routerData, config, graphql }) => {
 
         const { totalPages } = data[collection].pageInfo
 
-        for (let i = 2; i <= totalPages; i++) {
+        for (let i = 1; i <= totalPages; i++) {
           queue.push(createPage(page, i))
         }
 
