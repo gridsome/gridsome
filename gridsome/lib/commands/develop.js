@@ -1,10 +1,12 @@
 module.exports = async (context, args) => {
   process.env.NODE_ENV = 'development'
 
+  const fs = require('fs-extra')
   const chalk = require('chalk')
   const webpack = require('webpack')
   const Service = require('../Service')
   const resolvePort = require('./utils/resolvePort')
+  const createWorker = require('./utils/createWorker')
   const createServer = require('./utils/createServer')
   const createSockJsServer = require('./utils/createSockJsServer')
   const createClientConfig = require('../webpack/createClientConfig')
@@ -36,9 +38,12 @@ module.exports = async (context, args) => {
       .prepend('webpack/hot/dev-server')
   })
 
+  await fs.remove(config.cacheDir)
+
   const webpackConfig = clientConfig.toConfig()
   const compiler = webpack(webpackConfig)
-  const app = createServer({ host, schema, store })
+  const worker = createWorker(config)
+  const app = createServer({ host, schema, store, config, worker })
 
   app.use(require('connect-history-api-fallback')())
   app.use(require('webpack-hot-middleware')(compiler, {

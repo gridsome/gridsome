@@ -42,6 +42,8 @@ module.exports = (context, options = {}, pkg = {}) => {
   config.publicPath = localConfig.publicPath || '/'
   config.appPath = path.resolve(__dirname, '../../app')
   config.tmpDir = resolve('src/.temp')
+  config.cacheDir = resolve('.cache')
+  config.minProcessImageWidth = 500 // TODO: find a better name for this
 
   config.scss = {}
   config.sass = {}

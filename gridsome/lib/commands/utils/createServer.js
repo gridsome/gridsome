@@ -1,5 +1,6 @@
 const path = require('path')
 const fs = require('fs-extra')
+const crypto = require('crypto')
 const express = require('express')
 const bodyParser = require('body-parser')
 const graphqlHTTP = require('express-graphql')
@@ -10,7 +11,7 @@ const endpoints = {
   explore: '/___explore'
 }
 
-module.exports = ({ schema, store }) => {
+module.exports = ({ schema, store, config, worker }) => {
   const app = express()
 
   app.use(
@@ -23,13 +24,30 @@ module.exports = ({ schema, store }) => {
     endpoint: endpoints.graphql
   }))
 
-  app.get('/___asset', (req, res) => {
+  app.get('/___asset', async (req, res, next) => {
     const filePath = decodeURIComponent(req.query.path)
-    const data = fs.readFileSync(filePath)
+    const hash = crypto.createHash('md5').update(filePath).digest('hex')
     const { ext } = path.parse(filePath)
+    const destPath = path.resolve(config.cacheDir, hash + ext)
+    const minWidth = config.minProcessImageWidth
 
-    res.contentType(ext)
-    res.end(data, 'binary')
+    const serveFile = file => {
+      const buffer = fs.readFileSync(file)
+
+      res.contentType(ext)
+      res.end(buffer, 'binary')
+    }
+
+    if (fs.existsSync(destPath)) {
+      return serveFile(destPath)
+    }
+
+    try {
+      await worker.processImage({ filePath, destPath, minWidth })
+      serveFile(destPath)
+    } catch (err) {
+      next(err)
+    }
   })
 
   return app

@@ -1,6 +1,6 @@
 const pMap = require('p-map')
 const fs = require('fs-extra')
-const cpu = require('./utils/cpu')
+const cpu = require('../utils/cpu')
 const hirestime = require('hirestime')
 
 module.exports = async (queue, graphql) => {

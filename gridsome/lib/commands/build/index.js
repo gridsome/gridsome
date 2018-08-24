@@ -4,12 +4,14 @@ module.exports = async (context, args) => {
   const fs = require('fs-extra')
   const hirestime = require('hirestime')
   const Service = require('../../Service')
+  const createWorker = require('../utils/createWorker')
   const createClientConfig = require('../../webpack/createClientConfig')
   const createServerConfig = require('../../webpack/createServerConfig')
 
   const buildTime = hirestime()
   const service = new Service(context, { args })
   const { config, graphql, plugins } = await service.bootstrap()
+  const worker = createWorker(config)
 
   await plugins.callHook('beforeBuild', { context, config })
   await fs.remove(config.outDir)
@@ -27,15 +29,17 @@ module.exports = async (context, args) => {
 
   // 3. render a static index.html file for each possible route
   await plugins.callHook('beforeRenderHTML', { context, config, queue })
-  await require('./renderHtml')(queue, config)
+  await require('./renderHtml')(queue, worker, config)
 
   // 4. process queued images
   await plugins.callHook('beforeProcessImages', { context, config, queue: service.queue })
-  await require('./processImages')(service.queue, config)
+  await require('./processImages')(service.queue, worker, config)
 
   // 5. clean up
   await plugins.callHook('afterBuild', { context, config })
   await fs.remove(`${config.outDir}/manifest`)
+
+  worker.end()
 
   console.log()
   console.log(`  Done in ${buildTime(hirestime.S)}s`)
