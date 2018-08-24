@@ -1,0 +1,13 @@
+{
+  "private": true,
+  "name": "@gridsome/plugin-critical",
+  "version": "0.0.1",
+  "description": "Extracts & inlines critical-path (above-the-fold) CSS",
+  "main": "index.js",
+  "dependencies": {
+    "critical": "^1.3.4"
+  },
+  "peerDependencies": {
+    "gridsome": "^0.0.1"
+  }
+}
