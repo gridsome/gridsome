@@ -40,6 +40,7 @@
     "imagemin-pngquant": "^6.0.0",
     "imagemin-webp": "^4.1.0",
     "jest-worker": "^23.2.0",
+    "loader-utils": "^1.1.0",
     "lodash": "^4.17.10",
     "lodash.uniq": "^4.5.0",
     "lokijs": "^1.5.5",

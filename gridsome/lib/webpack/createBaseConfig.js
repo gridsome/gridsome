@@ -67,7 +67,10 @@ module.exports = (context, options, { isProd, isServer }) => {
       .loader('vue-loader')
       .options({
         compilerOptions: {
-          preserveWhitespace: false
+          preserveWhitespace: false,
+          modules: [
+            require('./modules/image')()
+          ]
         },
         cacheDirectory,
         cacheIdentifier
