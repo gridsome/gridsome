@@ -12,7 +12,7 @@ module.exports = async (context, args) => {
   const createClientConfig = require('../webpack/createClientConfig')
 
   const service = new Service(context, { args })
-  const { config, clients, schema, store, plugins } = await service.bootstrap()
+  const { config, clients, plugins } = await service.bootstrap()
   const port = await resolvePort(config.port)
   const host = config.host || 'localhost'
   const { endpoints } = createServer
@@ -43,7 +43,7 @@ module.exports = async (context, args) => {
   const webpackConfig = clientConfig.toConfig()
   const compiler = webpack(webpackConfig)
   const worker = createWorker(config)
-  const app = createServer({ host, schema, store, config, worker })
+  const app = createServer(service, worker)
 
   app.use(require('connect-history-api-fallback')())
   app.use(require('webpack-hot-middleware')(compiler, {

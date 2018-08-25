@@ -1,6 +1,5 @@
 const path = require('path')
 const fs = require('fs-extra')
-const crypto = require('crypto')
 const express = require('express')
 const bodyParser = require('body-parser')
 const graphqlHTTP = require('express-graphql')
@@ -11,7 +10,7 @@ const endpoints = {
   explore: '/___explore'
 }
 
-module.exports = ({ schema, store, config, worker }) => {
+module.exports = ({ schema, store, config, queue }, worker) => {
   const app = express()
 
   app.use(
@@ -25,11 +24,16 @@ module.exports = ({ schema, store, config, worker }) => {
   }))
 
   app.get('/___asset', async (req, res, next) => {
-    const filePath = decodeURIComponent(req.query.path)
-    const hash = crypto.createHash('md5').update(filePath).digest('hex')
-    const { ext } = path.parse(filePath)
-    const destPath = path.resolve(config.cacheDir, hash + ext)
+    const { path: absPath, ...options } = req.query
+    const filePath = decodeURIComponent(absPath)
     const minWidth = config.minProcessImageWidth
+    const { cacheKey, ext } = queue.preProcess(filePath, options)
+    const destPath = path.resolve(config.cacheDir, cacheKey + ext)
+    const args = { filePath, destPath, minWidth, options }
+
+    if (options.width) {
+      args.resizeImage = true
+    }
 
     const serveFile = file => {
       const buffer = fs.readFileSync(file)
@@ -43,7 +47,7 @@ module.exports = ({ schema, store, config, worker }) => {
     }
 
     try {
-      await worker.processImage({ filePath, destPath, minWidth })
+      await worker.processImage(args)
       serveFile(destPath)
     } catch (err) {
       next(err)

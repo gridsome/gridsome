@@ -9,6 +9,7 @@ const Calipers = require('calipers')('png', 'jpeg')
 exports.processImage = async function ({
   filePath,
   destPath,
+  options = {},
   minWidth = 500,
   resizeImage = false
 }) {
@@ -18,11 +19,16 @@ exports.processImage = async function ({
 
   if (supportedExtensions.includes(ext)) {
     const size = await measure(filePath)
+    const resizeWidth = parseInt(options.width) || minWidth
     let resize
 
-    if (resizeImage && size.width >= minWidth) {
+    if (options.width) {
+      resizeImage = true
+    }
+
+    if (resizeImage && size.width >= resizeWidth) {
       const ratio = size.height / size.width
-      const width = minWidth
+      const width = resizeWidth
       const height = Math.round(width * ratio)
 
       resize = { width, height }
@@ -30,8 +36,8 @@ exports.processImage = async function ({
 
     buffer = await imagemin.buffer(buffer, {
       plugins: [
-        imageminWebp({ quality: 75, resize }),
-        imageminPngquant({ quality: 75 })
+        imageminWebp({ quality: 80, resize }),
+        imageminPngquant({ quality: 80 })
       ]
     })
   }
@@ -44,9 +50,9 @@ exports.processImage = async function ({
 }
 
 exports.processImages = async function ({ queue, outDir, minWidth }) {
-  return Promise.all(queue.map(({ filePath, destination }) => {
+  return Promise.all(queue.map(({ filePath, destination, options }) => {
     const destPath = path.resolve(outDir, destination)
-    return exports.processImage({ filePath, destPath, minWidth })
+    return exports.processImage({ filePath, destPath, minWidth, options })
   }))
 }
 
