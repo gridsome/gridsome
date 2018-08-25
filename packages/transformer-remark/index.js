@@ -2,6 +2,7 @@ const path = require('path')
 const isUrl = require('is-url')
 const remark = require('remark')
 const parse = require('gray-matter')
+const words = require('lodash.words')
 const visit = require('unist-util-visit')
 const htmlToText = require('html-to-text')
 const toHAST = require('mdast-util-to-hast')
@@ -90,9 +91,9 @@ class RemarkTransformer {
         resolve: (node, { speed }) => {
           const html = this.toHTML(node)
           const text = htmlToText.fromString(html)
-          const words = text.split(/\s|\\n/).filter(s => s.length > 1)
+          const count = words(text).length
 
-          return Math.ceil(words.length / speed)
+          return Math.round(count / speed) || 1
         }
       }
     }
