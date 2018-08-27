@@ -4,11 +4,13 @@ const imagemin = require('imagemin')
 const imageminWebp = require('imagemin-webp')
 const imageminPngquant = require('imagemin-pngquant')
 const { createBundleRenderer } = require('vue-server-renderer')
-const Calipers = require('calipers')('png', 'jpeg')
+
+// sharp.simd(true)
 
 exports.processImage = async function ({
   filePath,
   destPath,
+  size,
   options = {},
   minWidth = 500,
   resizeImage = false
@@ -18,7 +20,6 @@ exports.processImage = async function ({
   let buffer = fs.readFileSync(filePath)
 
   if (supportedExtensions.includes(ext)) {
-    const size = await measure(filePath)
     const resizeWidth = parseInt(options.width) || minWidth
     let resize
 
@@ -26,7 +27,7 @@ exports.processImage = async function ({
       resizeImage = true
     }
 
-    if (resizeImage && size.width >= resizeWidth) {
+    if (resizeImage && size.width > resizeWidth) {
       const ratio = size.height / size.width
       const width = resizeWidth
       const height = Math.round(width * ratio)
@@ -50,9 +51,9 @@ exports.processImage = async function ({
 }
 
 exports.processImages = async function ({ queue, outDir, minWidth }) {
-  return Promise.all(queue.map(({ filePath, destination, options }) => {
-    const destPath = path.resolve(outDir, destination)
-    return exports.processImage({ filePath, destPath, minWidth, options })
+  return Promise.all(queue.map(data => {
+    const destPath = path.resolve(outDir, data.destination)
+    return exports.processImage({ destPath, minWidth, ...data })
   }))
 }
 
@@ -95,13 +96,3 @@ exports.renderHtml = async function ({
     }
   }
 }
-
-function measure (filePath) {
-  return new Promise((resolve, reject) => {
-    Calipers.measure(filePath, (err, result) => {
-      if (err) reject(err)
-      else resolve(result.pages[0])
-    })
-  })
-}
-

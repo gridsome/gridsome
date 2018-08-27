@@ -44,6 +44,7 @@ module.exports = (context, options = {}, pkg = {}) => {
   config.tmpDir = resolve('src/.temp')
   config.cacheDir = resolve('.cache')
   config.minProcessImageWidth = 500 // TODO: find a better name for this
+  config.maxImageWidth = 1920
 
   config.scss = {}
   config.sass = {}

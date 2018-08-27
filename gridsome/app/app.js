@@ -2,9 +2,9 @@ import Vue from 'vue'
 import Meta from 'vue-meta'
 import Router from 'vue-router'
 import Link from './components/Link'
-import Image from './components/Image'
 import ClientOnly from './components/ClientOnly'
 import initRoutes from '@gridsome/temp/routes.js'
+import Image, { initIntersectionObserver } from './components/Image'
 
 Vue.use(Meta)
 Vue.use(Router)
@@ -31,6 +31,7 @@ export default function createApp () {
     }
   })
 
+  initIntersectionObserver(router)
   initRoutes(router)
 
   const app = new Vue({
@@ -42,6 +43,15 @@ export default function createApp () {
       setError (error) {
         this.error = error
       }
+    },
+    mounted () {
+      // let the Vue router handle all internal urls
+      // document.addEventListener('click', (event) => {
+      //   const $link = event.target.closest('a')
+      //   if (!$link || !$link.pathname) return
+      //   this.$router.push({ path: $link.pathname })
+      //   event.preventDefault()
+      // }, false)
     },
     render (h) {
       // if (this.error && this.error.type === 404) {

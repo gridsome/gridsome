@@ -132,9 +132,19 @@ class RemarkTransformer {
         // - add images to a process queue and return an url in build
         visit(mdast, 'image', node => {
           if (!isUrl(node.url)) {
-            node.url = this.queue.add(
+            const data = node.data || (node.data = {})
+            const props = data.hProperties || (data.hProperties = {})
+
+            const { src, srcset, sizes, size, dataUri } = this.queue.add(
               path.resolve(dirname, node.url)
             )
+
+            props['data-srcset'] = srcset.join(', ')
+            props['data-sizes'] = sizes
+            props['data-src'] = src
+            props.className = 'g-image'
+            props.width = size.width
+            node.url = dataUri
           }
         })
       }

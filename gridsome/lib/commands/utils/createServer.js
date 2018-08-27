@@ -1,6 +1,7 @@
 const path = require('path')
 const fs = require('fs-extra')
 const express = require('express')
+const { mapValues } = require('lodash')
 const bodyParser = require('body-parser')
 const graphqlHTTP = require('express-graphql')
 const { default: playground } = require('graphql-playground-middleware-express')
@@ -24,16 +25,16 @@ module.exports = ({ schema, store, config, queue }, worker) => {
   }))
 
   app.get('/___asset', async (req, res, next) => {
-    const { path: absPath, ...options } = req.query
-    const filePath = decodeURIComponent(absPath)
-    const minWidth = config.minProcessImageWidth
-    const { cacheKey, ext } = queue.preProcess(filePath, options)
-    const destPath = path.resolve(config.cacheDir, cacheKey + ext)
-    const args = { filePath, destPath, minWidth, options }
+    const query = mapValues(req.query, value => {
+      return decodeURIComponent(value)
+    })
 
-    if (options.width) {
-      args.resizeImage = true
-    }
+    const { path: filePath, ...options } = query
+    const minWidth = config.minProcessImageWidth
+    const { ext } = path.parse(filePath)
+    const { cacheKey, size } = queue.preProcess(filePath, options)
+    const destPath = path.resolve(config.cacheDir, cacheKey + ext)
+    const args = { filePath, destPath, minWidth, options, size }
 
     const serveFile = file => {
       const buffer = fs.readFileSync(file)
