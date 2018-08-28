@@ -60,6 +60,38 @@ class Source extends EventEmitter {
   }
 
   addNode (type, options) {
+    const node = this.createNode(type, options)
+
+    // add transformer to content type to let it
+    // extend the node type when creating schema
+    const { mimeType } = node.internal
+    const mimeTypes = this.store.types[node.typeName].mimeTypes
+    if (mimeType && !mimeTypes.hasOwnProperty(mimeType)) {
+      mimeTypes[mimeType] = this.transformers[mimeType]
+    }
+
+    this.store.addNode(node.typeName, node)
+    this.emit('change', node)
+  }
+
+  updateNode (type, id, options) {
+    const node = this.createNode(type, options)
+    const oldNode = this.store.getNode(node.typeName, id)
+
+    Object.assign(oldNode, node)
+
+    this.emit('change', node, oldNode)
+  }
+
+  removeNode (type, id) {
+    const typeName = this.makeTypeName(type)
+    const oldNode = this.store.getNode(typeName, id)
+
+    this.store.removeNode(typeName, id)
+    this.emit('change', undefined, oldNode)
+  }
+
+  createNode (type, options) {
     const typeName = this.makeTypeName(type)
     const internal = this.createInternals(options.internal)
     // all field names must be camelCased in order to work in GraphQL
@@ -71,7 +103,8 @@ class Source extends EventEmitter {
       typeName,
       internal,
       _id: options._id,
-      refs: options.refs || {}
+      refs: options.refs || {},
+      withPath: !!options.path
     }
 
     node.title = options.title || fields.title || options._id
@@ -79,20 +112,8 @@ class Source extends EventEmitter {
     node.slug = options.slug || fields.slug || this.slugify(node.title)
     node.path = options.path || this.makePath(node)
 
-    // add transformer to content type to let it
-    // extend the node type when creating schema
-    const { mimeType } = internal
-    const mimeTypes = this.store.types[typeName].mimeTypes
-    if (mimeType && !mimeTypes.hasOwnProperty(mimeType)) {
-      mimeTypes[mimeType] = this.transformers[mimeType]
-    }
-
-    return this.store.addNode(typeName, node)
+    return node
   }
-
-  updateNode (_id, options) {}
-
-  removeNode (_id) {}
 
   // pages
 

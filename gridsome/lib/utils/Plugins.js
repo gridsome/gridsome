@@ -25,7 +25,7 @@ class Plugins extends EventEmitter {
       })
 
       const source = new Source(options, { context, store, transformers })
-      const instance = new PluginClass(options, { context, config, source })
+      const instance = new PluginClass(options, { context, config, source, queue })
 
       return { source, instance }
     })
@@ -65,6 +65,19 @@ class Plugins extends EventEmitter {
         source.on('removePage', regenerateRoutes)
         source.on('addPage', regenerateRoutes)
 
+        source.on('change', (node, oldNode = node) => {
+          if (
+            (node && node.withPath && node.path !== oldNode.path) ||
+            (!node && oldNode.withPath)
+          ) {
+            return regenerateRoutes()
+          }
+
+          this.emit('broadcast', {
+            type: 'updateAllQueries'
+          })
+        })
+
         source.on('updatePage', async (page, oldPage) => {
           const { pageQuery: { paginate: oldPaginate }} = oldPage
           const { pageQuery: { paginate }} = page
@@ -76,6 +89,7 @@ class Plugins extends EventEmitter {
 
           // send query to front-end for re-fetch
           this.emit('broadcast', {
+            type: 'updateQuery',
             query: page.pageQuery.content,
             file: page.file
           })

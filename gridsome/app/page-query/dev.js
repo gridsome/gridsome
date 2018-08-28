@@ -5,10 +5,15 @@ import fetch from './fetch'
 const active = {}
 
 sock.onmessage = message => {
-  const { query, file } = JSON.parse(message.data)
+  const data = JSON.parse(message.data)
 
-  if (active.hasOwnProperty(file)) {
-    active[file].options.__pageQuery = query
+  switch (data.type) {
+    case 'updateQuery':
+      if (active.hasOwnProperty(data.file)) {
+        active[data.file].options.__pageQuery = data.query
+      }
+
+      break
   }
 
   for (const file in active) {

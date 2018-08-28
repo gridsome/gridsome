@@ -104,10 +104,12 @@ class Service {
     return func(this.schema, docOrQuery, undefined, context, variables)
   }
 
-  broadcast (message) {
+  broadcast (message, hotReload = true) {
     for (const client in this.clients) {
       this.clients[client].write(JSON.stringify(message))
     }
+
+    return hotReload ? generateFiles(this, 'now.js') : undefined
   }
 }
 

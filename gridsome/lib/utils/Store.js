@@ -33,6 +33,14 @@ class Store {
     return this.collections[type].insert(options)
   }
 
+  getNode (type, _id) {
+    return this.collections[type].findOne({ _id })
+  }
+
+  removeNode (type, _id) {
+    return this.collections[type].findAndRemove({ _id })
+  }
+
   // taxonomies
 
   addTaxonomy (type, options) {

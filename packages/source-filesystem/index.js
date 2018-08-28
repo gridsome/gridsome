@@ -45,27 +45,12 @@ class FilesystemSource {
     })
 
     files.map(file => {
-      const filePath = this.source.resolve(file)
-      const mimeType = this.source.mime.lookup(file)
-      const content = fs.readFileSync(filePath, 'utf-8')
-      const result = this.source.transform(mimeType, content)
-
-      const node = {
-        _id: this.source.makeUid(file),
-        path: this.normalizePath(file),
-        fields: result.fields,
-        refs: {},
-        internal: {
-          mimeType,
-          origin: filePath,
-          content: result.content
-        }
-      }
+      const node = this.createNode(file)
 
       // create simple references
-      for (const fieldName in result.fields) {
+      for (const fieldName in node.fields) {
         if (options.refs.hasOwnProperty(fieldName)) {
-          const value = result.fields[fieldName]
+          const value = node.fields[fieldName]
           const type = options.refs[fieldName].type
 
           node.refs[fieldName] = value
@@ -81,20 +66,52 @@ class FilesystemSource {
       this.source.addNode(options.type, node)
     })
 
-    if (process.env.NODE_ENV === 'development' && this.options.watch) {
+    if (process.env.NODE_ENV === 'development') {
       const watcher = chokidar.watch(this.options.path, {
         cwd: this.context,
         ignoreInitial: true
       })
 
       // TODO: update nodes when changed
-      watcher.on('add', file => console.log('add', file))
-      watcher.on('unlink', file => console.log('unlink', file))
-      watcher.on('change', file => console.log('change', file))
+      watcher.on('add', file => {
+        const node = this.createNode(file)
+        this.source.addNode(options.type, node)
+      })
+
+      watcher.on('unlink', file => {
+        const id = this.source.makeUid(file)
+        this.source.removeNode(options.type, id)
+      })
+
+      watcher.on('change', file => {
+        const node = this.createNode(file)
+        this.source.updateNode(options.type, node._id, node)
+      })
     }
   }
 
   // helpers
+
+  createNode (file) {
+    const filePath = this.source.resolve(file)
+    const mimeType = this.source.mime.lookup(file)
+    const content = fs.readFileSync(filePath, 'utf-8')
+    const result = this.source.transform(mimeType, content)
+
+    const node = {
+      _id: this.source.makeUid(file),
+      path: this.normalizePath(file),
+      fields: result.fields,
+      refs: {},
+      internal: {
+        mimeType,
+        origin: filePath,
+        content: result.content
+      }
+    }
+
+    return node
+  }
 
   addRefNode (type, fieldName, value) {
     const cacheKey = `${type}-${fieldName}-${value}`
