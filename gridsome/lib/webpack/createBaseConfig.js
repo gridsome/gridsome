@@ -11,7 +11,7 @@ module.exports = (context, options, { isProd, isServer }) => {
   const outDir = options.outDir
   const config = new Config()
 
-  const filename = `${assetsDir}/js/[name]${isProd ? '.[chunkhash:8]' : ''}.js`
+  const filename = `${assetsDir}/js/[name]${isProd ? '.[contenthash]' : ''}.js`
   const inlineLimit = 10000
 
   config.mode(isProd ? 'production' : 'development')
@@ -21,6 +21,7 @@ module.exports = (context, options, { isProd, isServer }) => {
   config.output
     .path(resolve(outDir, context))
     .publicPath(isProd ? options.publicPath || '/' : '/')
+    .chunkFilename(filename)
     .filename(filename)
 
   config.resolve

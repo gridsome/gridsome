@@ -46,6 +46,10 @@ module.exports = (context, options = {}, pkg = {}) => {
   config.minProcessImageWidth = 500 // TODO: find a better name for this
   config.maxImageWidth = 1920
 
+  config.manifestsDir = `${config.assetsDir}/manifest`
+  config.clientManifestPath = `${config.manifestsDir}/client.json`
+  config.serverBundlePath = `${config.manifestsDir}/server.json`
+
   config.scss = {}
   config.sass = {}
   config.less = {}

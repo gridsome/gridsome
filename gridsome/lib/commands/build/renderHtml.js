@@ -2,14 +2,15 @@ const path = require('path')
 const { chunk } = require('lodash')
 const hirestime = require('hirestime')
 
-module.exports = async (queue, worker, { appPath, outDir }) => {
+module.exports = async (queue, worker, config) => {
   const timer = hirestime()
   const totalPages = queue.length
   const chunks = chunk(queue, 1000)
+  const resolve = p => path.resolve(config.outDir, p)
 
-  const templatePath = path.resolve(appPath, 'index.server.html')
-  const clientManifestPath = `${outDir}/manifest/client.json`
-  const serverBundlePath = `${outDir}/manifest/server.json`
+  const templatePath = path.resolve(config.appPath, 'index.server.html')
+  const clientManifestPath = resolve(config.clientManifestPath)
+  const serverBundlePath = resolve(config.serverBundlePath)
 
   await Promise.all(chunks.map(chunk => {
     // reduce amount of data sent to worker

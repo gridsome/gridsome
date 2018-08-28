@@ -18,7 +18,7 @@ module.exports = (context, options, plugins) => {
 
   config.plugin('ssr-server')
     .use(require('./plugins/VueSSRServerPlugin'), [{
-      filename: 'manifest/server.json'
+      filename: options.serverBundlePath
     }])
 
   plugins.callHookSync('chainWebpack', config, { context, isProd, isServer: true })

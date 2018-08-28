@@ -1,6 +1,7 @@
 module.exports = async (context, args) => {
   process.env.NODE_ENV = 'production'
 
+  const path = require('path')
   const fs = require('fs-extra')
   const hirestime = require('hirestime')
   const Service = require('../../Service')
@@ -37,7 +38,7 @@ module.exports = async (context, args) => {
 
   // 5. clean up
   await plugins.callHook('afterBuild', { context, config })
-  await fs.remove(`${config.outDir}/manifest`)
+  await fs.remove(path.resolve(config.outDir, config.manifestsDir))
 
   worker.end()
 

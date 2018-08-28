@@ -26,6 +26,8 @@ export default {
 
     if (isLazy) classNames.push('g-image--lazy')
 
+    // TODO: noscript tag
+
     return h('img', {
       ...data,
       class: classNames,

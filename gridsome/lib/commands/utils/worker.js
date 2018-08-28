@@ -81,7 +81,9 @@ exports.renderHtml = async function ({
       url: page.path,
       title: 'Gridsome',
       lang: 'en',
-      state: {}
+      queryResults: {
+        data: {}
+      }
     }
 
     if (page.hasData) {

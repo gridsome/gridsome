@@ -24,7 +24,7 @@ module.exports = (context, options, plugins) => {
   if (isProd) {
     config.plugin('ssr-client')
       .use(require('./plugins/VueSSRClientPlugin'), [{
-        filename: 'manifest/client.json'
+        filename: options.clientManifestPath
       }])
 
     config.plugin('optimize-css')
