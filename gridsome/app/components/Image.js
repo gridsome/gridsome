@@ -54,9 +54,11 @@ export function initIntersectionObserver (router) {
     ? createObserver()
     : null
 
+  const selector = '[data-src]'
+
   if (observer) {
     router.beforeEach((to, from, next) => {
-      document.querySelectorAll('[data-src]').forEach(el => {
+      document.querySelectorAll(selector).forEach(el => {
         observer.unobserve(el)
       })
       next()
@@ -65,7 +67,7 @@ export function initIntersectionObserver (router) {
 
   router.afterEach((to, from) => {
     Vue.nextTick(() => {
-      const images = document.querySelectorAll('[data-src]')
+      const images = document.querySelectorAll(selector)
 
       if (observer) {
         images.forEach(el => observer.observe(el))

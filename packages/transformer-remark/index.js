@@ -121,41 +121,41 @@ class RemarkTransformer {
   }
 
   toHAST (node) {
-    return this.nodeCache(node, 'hast', () => {
-      const mdast = this.toAST(node)
+    return this.nodeCache(node, 'hast', async () => {
+      const ast = await this.toAST(node)
       const options = { allowDangerousHTML: true }
+      const dirname = path.dirname(node.internal.origin)
+      const images = []
 
       if (path.isAbsolute(node.internal.origin)) {
-        const dirname = path.dirname(node.internal.origin)
-
-        // - serve images with an express endpoint in dev
-        // - add images to a process queue and return an url in build
-        visit(mdast, 'image', node => {
-          if (!isUrl(node.url)) {
-            const data = node.data || (node.data = {})
-            const props = data.hProperties || (data.hProperties = {})
-
-            const { src, srcset, sizes, size, dataUri } = this.queue.add(
-              path.resolve(dirname, node.url)
-            )
-
-            props['data-srcset'] = srcset.join(', ')
-            props['data-sizes'] = sizes
-            props['data-src'] = src
-            props.className = 'g-image'
-            props.width = size.width
-            node.url = dataUri
-          }
+        visit(ast, 'image', node => {
+          if (!isUrl(node.url)) images.push(node)
         })
       }
 
-      return toHAST(mdast, options)
+      for (const node of images) {
+        const data = node.data || (node.data = {})
+        const props = data.hProperties || (data.hProperties = {})
+
+        const res = await this.queue.add(
+          path.resolve(dirname, node.url)
+        )
+
+        props['data-srcset'] = res.srcset.join(', ')
+        props['data-sizes'] = res.sizes
+        props['data-src'] = res.src
+        props.className = 'g-image'
+        props.width = res.size.width
+        node.url = res.dataUri
+      }
+
+      return toHAST(ast, options)
     })
   }
 
   toHTML (node) {
-    return this.nodeCache(node, 'html', () => {
-      const hast = this.toHAST(node)
+    return this.nodeCache(node, 'html', async () => {
+      const hast = await this.toHAST(node)
       const options = { allowDangerousHTML: true }
 
       return hastToHTML(hast, options)
@@ -163,8 +163,8 @@ class RemarkTransformer {
   }
 
   findHeadings (node) {
-    return this.nodeCache(node, 'headings', () => {
-      const ast = this.toAST(node)
+    return this.nodeCache(node, 'headings', async () => {
+      const ast = await this.toAST(node)
       const headings = []
 
       visit(ast, 'heading', node => {

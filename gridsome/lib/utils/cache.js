@@ -9,7 +9,7 @@ exports.cache = (cacheKey, fallback) => {
     cache.set(cacheKey, (result = fallback()))
   }
 
-  return result
+  return Promise.resolve(result)
 }
 
 exports.nodeCache = (node, key, fallback) => {
@@ -23,5 +23,5 @@ exports.nodeCache = (node, key, fallback) => {
     cache.set(cacheKey, (result = fallback()))
   }
 
-  return result
+  return Promise.resolve(result)
 }

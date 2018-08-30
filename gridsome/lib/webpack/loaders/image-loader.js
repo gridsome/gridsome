@@ -1,9 +1,11 @@
 const utils = require('loader-utils')
 
-module.exports = function (source, map) {
+module.exports = async function (source, map) {
+  const callback = this.async()
+
   const { queue } = process.GRIDSOME_SERVICE
   const options = utils.parseQuery(this.query || '?')
-  const data = queue.add(this.resourcePath, options)
+  const res = await queue.add(this.resourcePath, options)
 
-  return `module.exports = ${JSON.stringify(data)}`
+  callback(null, `module.exports = ${JSON.stringify(res)}`)
 }

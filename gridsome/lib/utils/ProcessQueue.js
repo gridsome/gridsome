@@ -16,8 +16,8 @@ class ProcessQueue {
     return Array.from(this._queue.values())
   }
 
-  add (filePath, options = {}) {
-    const data = this.preProcess(filePath, options)
+  async add (filePath, options = {}) {
+    const data = await this.preProcess(filePath, options)
 
     if (process.env.NODE_ENV === 'development') {
       return data
@@ -38,11 +38,11 @@ class ProcessQueue {
     return data
   }
 
-  preProcess (filePath, options) {
+  async preProcess (filePath, options) {
     const hash = crypto.createHash('md5')
     const buffer = fs.readFileSync(filePath)
     const string = filePath + JSON.stringify(options)
-    const { width, height } = imageSize.sync(buffer)
+    const { type, width, height } = imageSize.sync(buffer)
     const { assetsDir, maxImageWidth } = this.config
     const imageSizes = [480, 1024, 1920, 2560].filter(size => size < width)
 
@@ -70,13 +70,14 @@ class ProcessQueue {
     }
 
     const sets = imageSizes.map(width => ({ src: createSrcPath(width), width }))
+    const dataUri = await createDataUri(buffer, type, width, height)
 
     const result = {
       src: sets[0].src,
-      dataUri: createDataUri(width, height),
       cacheKey: hash.update(string).digest('hex'),
       sizes: options.sizes || `(max-width: ${width}px) 100vw, ${width}px`,
       size: { width, height },
+      dataUri,
       sets
     }
 
@@ -92,10 +93,24 @@ function createOptionsQuery (options) {
   }, []).join('&')
 }
 
-function createDataUri (width, height) {
+function createDataUri (buffer, type, width, height) {
   return svgDataUri(
     `<svg fill="none" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg"/>`
   )
+
+  // TODO: traced svg fallback
+  // if (!/(jpe?g|png|bmp)/.test(type)) {
+  //   return svgDataUri(
+  //     `<svg fill="none" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg"/>`
+  //   )
+  // }
+
+  // return new Promise((resolve, reject) => {
+  //   potrace.trace(buffer, (err, svg) => {
+  //     if (err) reject(err)
+  //     else resolve(svgDataUri(svg))
+  //   })
+  // })
 }
 
 module.exports = ProcessQueue

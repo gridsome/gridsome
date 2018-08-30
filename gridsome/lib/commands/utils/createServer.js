@@ -32,7 +32,7 @@ module.exports = ({ schema, store, config, queue }, worker) => {
     const { path: filePath, ...options } = query
     const minWidth = config.minProcessImageWidth
     const { ext } = path.parse(filePath)
-    const { cacheKey, size } = queue.preProcess(filePath, options)
+    const { cacheKey, size } = await queue.preProcess(filePath, options)
     const destPath = path.resolve(config.cacheDir, cacheKey + ext)
     const args = { filePath, destPath, minWidth, options, size }
 
