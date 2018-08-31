@@ -47,7 +47,7 @@ export default {
         h('img', {
           ...data,
           class: noscriptClass,
-          attrs: { src }
+          attrs: { src, alt: props.alt }
         })
       ]))
     }
