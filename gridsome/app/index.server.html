@@ -1,9 +1,8 @@
 <!DOCTYPE html>
-<html lang="{{ lang }}">
+<html data-vue-meta-server-rendered ${htmlAttrs.text()}>
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <title>{{ title }}</title>
+    {{{ meta.inject().title.text() }}}
+    {{{ meta.inject().meta.text() }}}
     {{{ renderResourceHints() }}}
     {{{ renderStyles() }}}
   </head>

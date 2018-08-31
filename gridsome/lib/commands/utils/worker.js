@@ -79,8 +79,6 @@ exports.renderHtml = async function ({
 
     const context = {
       url: page.path,
-      title: 'Gridsome',
-      lang: 'en',
       queryResults: {
         data: {}
       }

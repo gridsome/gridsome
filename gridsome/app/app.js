@@ -2,6 +2,7 @@ import Vue from 'vue'
 import Meta from 'vue-meta'
 import Router from 'vue-router'
 import Link from './components/Link'
+import config from '@gridsome/temp/config.js'
 import ClientOnly from './components/ClientOnly'
 import initRoutes from '@gridsome/temp/routes.js'
 import Image, { initIntersectionObserver } from './components/Image'
@@ -38,6 +39,23 @@ export default function createApp () {
     router,
     data: {
       error: null
+    },
+    metaInfo () {
+      return {
+        title: config.siteName,
+        titleTemplate: this.$route.name === 'home' ? '%s' : config.titleTemplate,
+        htmlAttrs: {
+          lang: 'en'
+        },
+        meta: [
+          { charset: 'utf-8' },
+          { name: 'generator', content: `Gridsome ${config.version}` },
+          { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' }
+        ],
+        link: [
+          // { rel: 'favicon', href: 'favicon.ico' }
+        ]
+      }
     },
     methods: {
       setError (error) {
