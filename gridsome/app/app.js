@@ -49,7 +49,7 @@ export default function createApp () {
         },
         meta: [
           { charset: 'utf-8' },
-          { name: 'generator', content: `Gridsome ${config.version}` },
+          { name: 'generator', content: `Gridsome v${config.version}` },
           { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' }
         ],
         link: [
