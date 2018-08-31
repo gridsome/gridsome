@@ -1,12 +1,23 @@
-<h1 align="center">
-   Gridsome
-</h1>
-
-<h3 align="center">
-A JAMstack framework for building blazing fast, offline-ready, PWA frontends for any CMS
-</h3>
-
-<hr>
+<div align="center">
+  <br>
+  <img src="assets/logo.png" width="220">
+  <br>
+  <br>
+  <p>A JAMstack framework for building blazing fast websites with <a href="https://vuejs.org">Vue.js</a></p>
+  <br>
+  <a title="Downloads" href="https://github.com/gridsome/gridsome/releases/latest">
+    <img src="https://img.shields.io/github/downloads/gridsome/gridsome/total.svg">
+  </a>
+  <a title="MIT License" href="LICENSE">
+    <img src="https://img.shields.io/github/license/gridsome/gridsome.svg">
+  </a>
+  <a href="Follow on Twitter" href="https://twitter.com/gridsome">
+    <img src="https://img.shields.io/twitter/follow/gridsome.svg?style=social&label=Follow">
+  </a>
+  <br>
+  <br>
+  <br>
+</div>
 
 #### Enjoy modern dev stack
 Build websites using latest web tech tools that developers love - Vue.js, GraphQL and Webpack. Get hot-reloading and all the power of Node.js. Gridsome makes building websites fun again.
@@ -26,9 +37,7 @@ Gridsome sites can be entirely hosted on a CDN and can handle thousands to milli
 #### A headless frontend
 Design and build websites that are decoupled from the CMS. This means you can easily change the CMS later or test a complete redesign without breaking your site.
 
-
-
-#" Getting started
+## Get started
 
 ```sh
 $ npm install -g @gridsome/cli
@@ -37,4 +46,4 @@ $ cd awesome-site
 $ gridsome develop
 ```
 
-Your browser will now open your site at `http://localhost:8080`.
+Your browser will now open your site at `http://localhost:8080`. Happy coding!
