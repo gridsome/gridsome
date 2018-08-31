@@ -23,12 +23,10 @@ export default {
     const { src, srcset, sizes, size, dataUri } = props.src
     const isLazy = typeof props.immediate === 'undefined'
     const classNames = (data.class || []).concat(['g-image'])
+    const nodescriptClassNames = classNames.slice()
+    const vnodes = []
 
-    if (isLazy) classNames.push('g-image--lazy')
-
-    // TODO: noscript tag
-
-    return h('img', {
+    vnodes.push(h('img', {
       ...data,
       class: classNames,
       attrs: {
@@ -39,7 +37,22 @@ export default {
         [`${isLazy ? 'data-' : ''}sizes`]: sizes,
         [`${isLazy ? 'data-' : ''}src`]: src
       }
-    })
+    }))
+
+    if (isLazy) {
+      classNames.push('g-image--lazy')
+      nodescriptClassNames.push('g-image--loaded')
+
+      vnodes.push(h('noscript', null, [
+        h('img', {
+          staticClass: data.staticClass,
+          class: nodescriptClassNames,
+          attrs: { src }
+        })
+      ]))
+    }
+
+    return vnodes
   }
 }
 
