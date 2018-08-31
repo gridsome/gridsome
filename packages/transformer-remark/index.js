@@ -71,8 +71,9 @@ class RemarkTransformer {
         args: {
           depth: { type: HeadingLevels }
         },
-        resolve: (node, { depth }) => {
-          return this.findHeadings(node, depth).filter(heading => {
+        resolve: async (node, { depth }) => {
+          const headings = await this.findHeadings(node, depth)
+          return headings.filter(heading => {
             return typeof depth === 'number'
               ? heading.depth === depth
               : true
