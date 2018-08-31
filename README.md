@@ -11,7 +11,7 @@
   <a title="MIT License" href="LICENSE">
     <img src="https://img.shields.io/github/license/gridsome/gridsome.svg">
   </a>
-  <a href="Follow on Twitter" href="https://twitter.com/gridsome">
+  <a title="Follow on Twitter" href="https://twitter.com/gridsome">
     <img src="https://img.shields.io/twitter/follow/gridsome.svg?style=social&label=Follow">
   </a>
   <br>
