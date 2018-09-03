@@ -4,6 +4,7 @@ const generateRoutes = require('./generateRoutes')
 module.exports = async (service, filename = null) => {
   const files = {
     'routes.js': () => generateRoutes(service.routerData),
+    'plugins.js': () => 'export default []',
     'config.js': () => generateConfig(service),
     'now.js': () => `export default ${Date.now()}`
   }
@@ -33,5 +34,5 @@ function generateConfig ({ config }) {
     siteName,
     titleTemplate,
     version
-  })}`
+  }, null, 2)}`
 }

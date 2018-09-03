@@ -1,8 +1,8 @@
 import createApp from './app'
 
-const { app, router } = createApp()
+const { app } = createApp()
 
-router.onReady(() => {
+app.$router.onReady(() => {
   app.$mount('#app')
 
   // todo: register service worker

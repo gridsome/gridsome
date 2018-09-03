@@ -2,9 +2,13 @@
 
 const path = require('path')
 const chalk = require('chalk')
+const fs = require('fs-extra')
 const program = require('commander')
 const pkgPath = require('find-up').sync('package.json')
 const context = pkgPath ? path.dirname(pkgPath) : process.cwd()
+
+// to know whether we are in the core repo or not
+process.env.GRIDSOME_DEV = fs.existsSync('../../lerna.json')
 
 program
   .version(require('../package').version)

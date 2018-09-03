@@ -43,6 +43,7 @@ module.exports = (context, options, { isProd, isServer }) => {
   config.resolveLoader
     .set('symlinks', true)
     .modules
+      .add(resolve('./loaders'))
       .add(resolve('../../node_modules'))
       .add(resolve('../../../packages'))
       .add('node_modules')

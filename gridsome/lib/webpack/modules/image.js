@@ -1,5 +1,3 @@
-const path = require('path')
-
 module.exports = () => ({
   postTransformNode (node) {
     if (node.tag === 'g-image') {
@@ -9,9 +7,8 @@ module.exports = () => ({
 
           const value = extractValue(attr.value)
           const query = createOptionsQuery(node.attrs)
-          const loader = path.resolve(__dirname, '../loaders/image-loader.js')
 
-          attr.value = `require("!!${loader}?${query}!${value}")`
+          attr.value = `require("!!image-loader?${query}!${value}")`
 
           return
         }

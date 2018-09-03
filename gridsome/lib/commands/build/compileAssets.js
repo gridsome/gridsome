@@ -19,7 +19,8 @@ function compile (config) {
       if (err) return reject(err)
 
       if (stats.hasErrors()) {
-        return reject(stats.toJson().errors)
+        stats.toJson().errors.forEach(err => console.error(err))
+        return reject(new Error('Failed to compile.'))
       }
 
       resolve()

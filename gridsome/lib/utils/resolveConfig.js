@@ -81,19 +81,38 @@ function normalizePlugins (plugins) {
     }
 
     const re = /(?:^@?gridsome[/-]|\/)(source|plugin)-([\w-]+)/
+    const use = plugin.use.replace(internalRE, '../')
+    const uid = crypto.createHash('md5').update(`${use}-${index}`).digest('hex')
+    const { isBrowser, isServer, isApp } = resolvePluginType(use)
     const [, type, name] = plugin.use.match(re)
 
-    // TODO: validate plugin
-
     return defaultsDeep({
-      use: plugin.use.replace(internalRE, '../'),
-      uid: crypto.createHash('md5').update(`${plugin.use}-${index}`).digest('hex'),
       instance: undefined,
       options: {},
+      isBrowser,
+      isServer,
+      isApp,
       name,
+      use,
+      uid,
       type
     }, plugin)
   })
+}
+
+function resolvePluginType (id) {
+  const exists = entry => {
+    const pluginPath = path.parse(require.resolve(id)).dir
+    return /^@gridsome\//.test(id) && process.env.GRIDSOME_DEV
+      ? fs.existsSync(`${pluginPath}/src/${entry}`)
+      : fs.existsSync(`${pluginPath}/${entry}`)
+  }
+
+  const isBrowser = exists('browser.js')
+  const isServer = exists('server.js')
+  const isApp = exists('app.js')
+
+  return { isBrowser, isServer, isApp }
 }
 
 function resolveTransformers (pkg, config) {

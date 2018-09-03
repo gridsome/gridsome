@@ -2,6 +2,7 @@ import Vue from 'vue'
 import Meta from 'vue-meta'
 import Router from 'vue-router'
 import Link from './components/Link'
+import Plugins from './utils/Plugins.js'
 import config from '@gridsome/temp/config.js'
 import ClientOnly from './components/ClientOnly'
 import initRoutes from '@gridsome/temp/routes.js'
@@ -15,6 +16,8 @@ Vue.component('g-image', Image)
 Vue.component('ClientOnly', ClientOnly)
 
 export default function createApp () {
+  const plugins = new Plugins()
+
   const router = new Router({
     base: '/',
     mode: 'history',
@@ -35,13 +38,15 @@ export default function createApp () {
   initIntersectionObserver(router)
   initRoutes(router)
 
-  const app = new Vue({
+  plugins.callHook('router', router)
+
+  const options = {
     router,
     data: {
       error: null
     },
     metaInfo () {
-      return {
+      const head = {
         title: config.siteName,
         titleTemplate: this.$route.name === 'home' ? '%s' : config.titleTemplate,
         htmlAttrs: {
@@ -52,10 +57,13 @@ export default function createApp () {
           { name: 'generator', content: `Gridsome v${config.version}` },
           { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' }
         ],
-        link: [
-          // { rel: 'favicon', href: 'favicon.ico' }
-        ]
+        style: [],
+        link: []
       }
+
+      plugins.callHookSync('appendHead', head)
+
+      return head
     },
     methods: {
       setError (error) {
@@ -85,7 +93,9 @@ export default function createApp () {
         attrs: { id: 'app' }
       })
     }
-  })
+  }
 
-  return { app, router }
+  plugins.callHook('rootOptions', options)
+
+  return { app: new Vue(options), router }
 }
