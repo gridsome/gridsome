@@ -1,0 +1,21 @@
+{
+  "private": true,
+  "name": "@gridsome/plugin-typography",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "babel src --out-dir ."
+  },
+  "peerDependencies": {
+    "gridsome": "^0.0.1",
+    "typography": "^0.16.17"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.0.0",
+    "@babel/core": "^7.0.0"
+  },
+  "dependencies": {
+    "@babel/runtime": "^7.0.0"
+  }
+}
