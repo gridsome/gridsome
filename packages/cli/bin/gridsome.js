@@ -4,6 +4,7 @@ const path = require('path')
 const chalk = require('chalk')
 const fs = require('fs-extra')
 const program = require('commander')
+const create = require('../lib/commands/create')
 const pkgPath = require('find-up').sync('package.json')
 const context = pkgPath ? path.dirname(pkgPath) : process.cwd()
 
@@ -18,7 +19,7 @@ program
   .command('create <name> [starter]')
   .description('create a new website')
   .action((...args) => {
-    return require('../lib/commands/create')(...args)
+    return wrapCommand(create)(...args)
   })
 
 try {
@@ -43,4 +44,13 @@ program.parse(process.argv)
 
 if (!process.argv.slice(2).length) {
   program.outputHelp()
+}
+
+function wrapCommand (fn) {
+  return (...args) => {
+    return fn(...args).catch(err => {
+      console.error(chalk.red(err.stack))
+      process.exitCode = 1
+    })
+  }
 }

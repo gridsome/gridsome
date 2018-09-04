@@ -9,7 +9,7 @@ const sortPackageJson = require('sort-package-json')
 module.exports = async (name, starter = 'default') => {
   const dir = path.resolve(process.cwd(), name)
   const starters = ['default', 'wordpress']
-  const hasYarn = useYarn()
+  const hasYarn = await useYarn()
 
   if (fs.existsSync(dir)) {
     return error(`Directory «${name}» already exists.`)
@@ -28,7 +28,7 @@ module.exports = async (name, starter = 'default') => {
         try {
           await exec('git', ['clone', url, dir, '--single-branch'])
           await fs.remove(`${dir}/.git`)
-        } catch {
+        } catch (err) {
           throw new Error('Failed to clone repository')
         }
       }
@@ -74,9 +74,9 @@ module.exports = async (name, starter = 'default') => {
   console.log()
 }
 
-function useYarn () {
+async function useYarn () {
   try {
-    shellSync('yarnpkg', ['--version'])
+    await exec('yarnpkg', ['--version'])
     return true
   } catch (e) {
     return false
@@ -92,8 +92,4 @@ async function updatePkg (pkgPath, obj) {
 
 function exec (cmd, args = [], options = { stdio: 'ignore' }) {
   return execa(cmd, args, options)
-}
-
-function shellSync (cmd, args = [], options = { stdio: 'ignore' }) {
-  return execa.shellSync(cmd, args, options)
 }
