@@ -9,7 +9,7 @@ const parsePageQuery = require('../graphql/parsePageQuery')
 const { mapValues, mapKeys, cloneDeep, kebabCase } = require('lodash')
 
 class Source extends EventEmitter {
-  constructor (options, { context, store, transformers }) {
+  constructor (options, { context, store, transformers = {}}) {
     super()
 
     this.typeName = options.typeName
@@ -22,7 +22,7 @@ class Source extends EventEmitter {
 
   // nodes
 
-  addType (type, options) {
+  addType (type, options = {}) {
     const typeName = this.makeTypeName(type)
 
     // function for generating paths from routes for this type
@@ -46,17 +46,19 @@ class Source extends EventEmitter {
     this.store.addType(typeName, {
       name: typeName,
       route: options.route,
-      fields: options.fields,
+      fields: options.fields || {},
       mimeTypes: [],
       belongsTo: {},
       makePath,
       type,
       refs
     })
+
+    return this.store.types[typeName]
   }
 
   getType (type) {
-    return this.types[type]
+    return this.store.getType(type)
   }
 
   addNode (type, options) {
@@ -72,15 +74,30 @@ class Source extends EventEmitter {
 
     this.store.addNode(node.typeName, node)
     this.emit('change', node)
+
+    return node
+  }
+
+  getNode (type, id) {
+    const typeName = this.makeTypeName(type)
+    return this.store.getNode(typeName, id)
   }
 
   updateNode (type, id, options) {
-    const node = this.createNode(type, options)
-    const oldNode = this.store.getNode(node.typeName, id)
+    const node = this.getNode(type, id)
+    const oldNode = cloneDeep(node)
+    const fields = mapKeys(options.fields, (v, key) => camelCase(key))
 
-    Object.assign(oldNode, node)
+    node.title = options.title || fields.title || node.title
+    node.date = options.date || fields.date || node.date
+    node.slug = options.slug || fields.slug || this.slugify(node.title)
+    node.fields = Object.assign({}, node.fields, fields)
+    node.refs = Object.assign({}, node.refs, options.refs || {})
+    node.path = options.path || this.makePath(node)
 
     this.emit('change', node, oldNode)
+
+    return node
   }
 
   removeNode (type, id) {
@@ -96,13 +113,14 @@ class Source extends EventEmitter {
     const internal = this.createInternals(options.internal)
     // all field names must be camelCased in order to work in GraphQL
     const fields = mapKeys(options.fields, (v, key) => camelCase(key))
+    const _id = options._id || this.makeUid(JSON.stringify(options))
 
     const node = {
+      _id,
       type,
       fields,
       typeName,
       internal,
-      _id: options._id,
       refs: options.refs || {},
       withPath: !!options.path
     }
@@ -121,19 +139,14 @@ class Source extends EventEmitter {
     const page = {
       _id: options._id,
       type: type || 'page',
-      title: options.title,
-      slug: options.slug.replace(/^\/|\/$/g, ''),
-      path: null,
-      parent: options.parent ? String(options.parent) : null,
       component: options.component,
-      file: options.file,
-      pageQuery: parsePageQuery(options.pageQuery),
+      pageQuery: parsePageQuery(options.pageQuery || {}),
       internal: this.createInternals({ type })
     }
 
-    if (page.type === 'page') {
-      page.path = `/${page.slug}`
-    }
+    page.title = options.title || page._id
+    page.slug = options.slug || this.slugify(page.title)
+    page.path = options.path || `/${page.slug}`
 
     this.emit('addPage', page)
 
@@ -142,11 +155,14 @@ class Source extends EventEmitter {
 
   updatePage (id, options) {
     const page = this.getPage(id)
-    const pageQuery = parsePageQuery(options.pageQuery)
     const oldPage = cloneDeep(page)
 
-    page.title = options.title
-    page.pageQuery = pageQuery
+    page.title = options.title || page.title
+    page.slug = options.slug || page.slug
+    page.path = options.path || `/${page.slug}`
+    page.pageQuery = options.pageQuery
+      ? parsePageQuery(options.pageQuery)
+      : page.pageQuery
 
     this.emit('updatePage', page, oldPage)
 

@@ -29,6 +29,7 @@ module.exports = ({ contentType, nodeTypes, fields }) => {
     interfaces: [nodeInterface],
     isTypeOf: node => node.typeName === contentType.name,
     fields: () => ({
+      _id: { type: new GraphQLNonNull(GraphQLID) },
       type: { type: new GraphQLNonNull(GraphQLString) },
       internal: { type: new GraphQLNonNull(internalType) },
       title: { type: GraphQLString },
@@ -36,11 +37,6 @@ module.exports = ({ contentType, nodeTypes, fields }) => {
       path: { type: GraphQLString },
       content: { type: GraphQLString },
       date: dateType,
-
-      _id: {
-        type: new GraphQLNonNull(GraphQLID),
-        resolve: node => node.$loki
-      },
 
       ...extendNodeType(contentType, nodeType),
       ...createFields(contentType, fields),
@@ -111,7 +107,7 @@ function createRefs (contentType, nodeTypes) {
             const $in = obj.fields[key] || []
             const query = { [ref.key]: { $in }}
 
-            return store.collections[schemaType].find(query)
+            return store.getType(schemaType).find(query)
           }
         }
       })
@@ -136,7 +132,7 @@ function createBelongsToRefs (contentType, nodeTypes) {
           description,
           type: new GraphQLList(nodeType),
           resolve: (obj, args, { store }) => {
-            const collection = store.collections[foreignSchemaType]
+            const collection = store.getType(foreignSchemaType)
             const value = obj[ref.localKey]
             const key = ref.foreignKey
 

@@ -51,10 +51,10 @@ class VueSource {
 }
 
 function createPage (source, file) {
+  const { name } = path.parse(file)
   const absPath = source.source.resolve(file)
   const { pageQuery } = parseComponent(absPath)
   const component = file.replace('src', '@')
-  const slug = createRoutePath(file)
   const _id = createId(file)
   let type = 'page'
 
@@ -62,7 +62,8 @@ function createPage (source, file) {
     _id,
     component,
     pageQuery,
-    slug,
+    slug: source.source.slugify(name),
+    path: createPagePath(file),
     file
   }
 
@@ -104,7 +105,7 @@ function parseComponent (file) {
  * blog/Index.vue -> /blog
  * AboutUs.vue -> /about-us
  */
-function createRoutePath (file) {
+function createPagePath (file) {
   const route = file
     .replace(/^src\//, '')        // remove src dirname
     .replace(/^pages\//, '')      // remove pages dirname
@@ -112,7 +113,7 @@ function createRoutePath (file) {
     .replace(/\/?[iI]ndex$/, '/') // replaces /index with a /
     .replace(/(^\/+|\/+$)/g, '')  // remove slahes
 
-  return route.split('/').map(s => kebabCase(s)).join('/')
+  return '/' + route.split('/').map(s => kebabCase(s)).join('/')
 }
 
 function createId (string) {

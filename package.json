@@ -12,6 +12,9 @@
   },
   "jest": {
     "testEnvironment": "node",
+    "collectCoverageFrom": [
+      "gridsome/lib/**/*.js"
+    ],
     "testPathIgnorePatterns": [
       "/projects/",
       "/scripts/"
@@ -27,7 +30,8 @@
     "eslint-plugin-vue-libs": "^3.0.0",
     "execa": "^0.10.0",
     "jest": "^23.1.0",
-    "lerna": "^2.9.0"
+    "lerna": "^2.9.0",
+    "memfs": "^2.9.4"
   },
   "engines": {
     "yarn": "^1.5.1"

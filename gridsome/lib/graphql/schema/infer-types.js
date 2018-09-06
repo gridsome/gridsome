@@ -29,11 +29,12 @@ function inferTypes (nodes, nodeType) {
 }
 
 function inferType (value, key, nodeType) {
-  if (!value) return null
+  if (value === undefined) return null
+  if (value === null) return null
 
   if (Array.isArray(value)) {
     const type = inferType(value[0], key, nodeType)
-    return type ? {
+    return type !== null ? {
       type: new GraphQLList(type.type),
       resolve: (fields, args, context, { fieldName }) => {
         const value = fields[fieldName]
@@ -57,8 +58,6 @@ function inferType (value, key, nodeType) {
       return { type: is32BitInt(value) ? GraphQLInt : GraphQLFloat }
     case 'object':
       return createObjectType(value, key, nodeType)
-    default:
-      return null
   }
 }
 

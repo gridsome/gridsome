@@ -42,7 +42,7 @@ module.exports = nodeType => {
       page = Math.max(page, 1) // ensure page higher than 0
       perPage = Math.max(perPage, 1) // ensure page higher than 1
 
-      const collection = store.collections[nodeType.name]
+      const collection = store.getType(nodeType.name)
       const query = {}
 
       if (regex) {
