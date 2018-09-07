@@ -34,7 +34,7 @@ Gridsome automatically optimises your frontend to load and perform blazing fast.
 #### Scale globally at no cost
 Gridsome sites can be entirely hosted on a CDN and can handle thousands to millions of hits without breaking - and no expensive server costs. 
 
-#### A headless frontend
+#### The frontend for the headless
 Design and build websites that are decoupled from the CMS. This means you can easily change the CMS later or test a complete redesign without breaking your site.
 
 ## Get started
