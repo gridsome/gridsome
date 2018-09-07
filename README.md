@@ -29,7 +29,7 @@ Gridsome lets you use any CMS or data source for content. Pull data from WordPre
 Only critical HTML, CSS and JavaScript are loaded at first, and then the next pages are prefetched in the background so users can click around extremely fast without page reloads and even offline
 
 #### Extremely fast loading
-Gridsome automatically optimises your frontend to load and perform blazing fast. You get code-splitting, asset optimisation and lazy-loading out-of-the-box.
+Gridsome automatically optimises your frontend to load and perform blazing fast. You get code-splitting, asset optimisation, lazy-loading, and almost perfect Lighthouse scores out-of-the-box.
 
 #### Scale globally at no cost
 Gridsome sites can be entirely hosted on a CDN and can handle thousands to millions of hits without breaking - and no expensive server costs. 
