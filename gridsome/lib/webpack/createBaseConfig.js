@@ -154,6 +154,16 @@ module.exports = (context, options, { isProd, isServer }) => {
         name: `${assetsDir}/fonts/[name].[hash:8].[ext]`
       })
 
+  // data
+
+  config.module.rule('yaml')
+    .test(/\.ya?ml$/)
+    .use('json-loader')
+      .loader('json-loader')
+      .end()
+    .use('yaml-loader')
+      .loader('yaml-loader')
+
   // graphql
 
   config.module.rule('graphql')
