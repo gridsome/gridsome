@@ -61,10 +61,13 @@ test('update node', () => {
   const emit = jest.spyOn(source, 'emit')
 
   source.addType('post')
-  source.addNode('post', {
+
+  const oldNode = source.addNode('post', {
     _id: 'test',
     date: '2018-09-04T23:20:33.918Z'
   })
+
+  const oldTimestamp = oldNode.internal.timestamp
 
   const node = source.updateNode('post', 'test', {
     title: 'New title'
@@ -76,6 +79,7 @@ test('update node', () => {
   expect(node.title).toEqual('New title')
   expect(node.slug).toEqual('new-title')
   expect(node.date).toEqual('2018-09-04T23:20:33.918Z')
+  expect(node.internal.timestamp).not.toEqual(oldTimestamp)
   expect(emit).toHaveBeenCalledTimes(2)
 
   emit.mockRestore()

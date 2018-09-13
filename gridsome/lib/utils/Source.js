@@ -87,12 +87,14 @@ class Source extends EventEmitter {
     const node = this.getNode(type, id)
     const oldNode = cloneDeep(node)
     const fields = mapKeys(options.fields, (v, key) => camelCase(key))
+    const internal = this.createInternals(options.internal)
 
     node.title = options.title || fields.title || node.title
     node.date = options.date || fields.date || node.date
     node.slug = options.slug || fields.slug || this.slugify(node.title)
     node.fields = Object.assign({}, node.fields, fields)
     node.refs = Object.assign({}, node.refs, options.refs || {})
+    node.internal = Object.assign({}, node.internal, internal)
     node.path = options.path || this.makePath(node)
 
     this.emit('change', node, oldNode)
