@@ -5,8 +5,9 @@ const EventEmitter = require('events')
 const camelCase = require('camelcase')
 const dateFormat = require('dateformat')
 const pathToRegexp = require('path-to-regexp')
+const slugify = require('@sindresorhus/slugify')
 const parsePageQuery = require('../graphql/parsePageQuery')
-const { mapValues, mapKeys, cloneDeep, kebabCase } = require('lodash')
+const { mapValues, mapKeys, cloneDeep } = require('lodash')
 
 class Source extends EventEmitter {
   constructor (options, { context, store, transformers = {}}) {
@@ -225,7 +226,7 @@ class Source extends EventEmitter {
   }
 
   slugify (string) {
-    return kebabCase(string)
+    return slugify(string, { separator: '-' })
   }
 
   resolve (p) {

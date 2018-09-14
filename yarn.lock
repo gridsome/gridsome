@@ -676,6 +676,13 @@
   version "0.7.0"
   resolved "https://registry.yarnpkg.com/@sindresorhus/is/-/is-0.7.0.tgz#9a06f4f137ee84d7df0460c1fdb1135ffa6c50fd"
 
+"@sindresorhus/slugify@^0.3.0":
+  version "0.3.0"
+  resolved "https://registry.yarnpkg.com/@sindresorhus/slugify/-/slugify-0.3.0.tgz#39ec81f542b4fcaf7f67fbc8916efa990b65e139"
+  dependencies:
+    escape-string-regexp "^1.0.5"
+    lodash.deburr "^4.1.0"
+
 "@vue/cli-shared-utils@^3.0.0":
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/@vue/cli-shared-utils/-/cli-shared-utils-3.0.0.tgz#f4886ce9a62dd2088e112af4d54f61c1667318d0"
@@ -6616,6 +6623,10 @@ lodash.clonedeep@^4.3.2:
 lodash.debounce@^4.0.8:
   version "4.0.8"
   resolved "https://registry.yarnpkg.com/lodash.debounce/-/lodash.debounce-4.0.8.tgz#82d79bff30a67c4005ffd5e2515300ad9ca4d7af"
+
+lodash.deburr@^4.1.0:
+  version "4.1.0"
+  resolved "https://registry.yarnpkg.com/lodash.deburr/-/lodash.deburr-4.1.0.tgz#ddb1bbb3ef07458c0177ba07de14422cb033ff9b"
 
 lodash.defaults@4.2.0, lodash.defaults@^4.0.1:
   version "4.2.0"
