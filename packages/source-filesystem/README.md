@@ -1,8 +1,8 @@
-# Filesystem source for Gridsome
+# @gridsome/source-filesystem
 
 > Transform files into content that can be fetched with GraphQL in your components.
 
-### Usage
+## Usage
 
 ```js
 module.exports = {
@@ -18,10 +18,27 @@ module.exports = {
 }
 ```
 
-### Options
+## Options
 
-- **path** required
-- **route** optional
-- **type** optional, default: node
-- **index** optional, default: ['index']
-- **typeNamePrefix** optional, default: 'Filesystem'
+#### path
+
+- Type: `string` *required*
+
+#### route
+
+- Type: `string`
+
+#### type
+
+- Type: `string`
+- Default: `'node'`
+
+#### index
+
+- Type: `Array`
+- Default: `['index']`
+
+#### typeName
+
+- Type: `string`
+- Default: `'Filesystem'`

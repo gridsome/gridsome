@@ -1,4 +1,6 @@
-# Contentful source for Gridsome
+# @gridsome/source-contentful
+
+> Contentful source for Gridsome
 
 ## Usage
 

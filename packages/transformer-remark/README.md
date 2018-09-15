@@ -1,4 +1,6 @@
-# Remark transformer for Gridsome
+# @gridsome/transformer-remark
+
+> Markdown transformer for Gridsome
 
 ## Usage
 

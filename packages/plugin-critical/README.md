@@ -1,4 +1,6 @@
-# Extracts & inlines critical-path (above-the-fold) CSS
+# @gridsome/plugin-critical
+
+> Extracts & inlines critical-path (above-the-fold) CSS
 
 ## Usage
 

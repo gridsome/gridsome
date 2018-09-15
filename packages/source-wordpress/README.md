@@ -1,4 +1,6 @@
-# WordPress source for Gridsome
+# @gridsome/source-wordpress
+
+> WordPress source for Gridsome
 
 ## Usage
 

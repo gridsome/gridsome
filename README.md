@@ -1,6 +1,6 @@
 <div align="center">
   <br>
-  <img src="assets/logo.png" width="220">
+  <img src="https://cdn.rawgit.com/gridsome/gridsome/master/assets/logo.png" width="220">
   <br>
   <br>
   <p>A JAMstack framework for building blazing fast websites with <a href="https://vuejs.org">Vue.js</a></p>
@@ -18,6 +18,8 @@
   <br>
   <br>
 </div>
+
+> This project is under active development. Any feedback or contributions would be appreciated.
 
 ### Enjoy modern dev stack
 Build websites using latest web tech tools that developers love - Vue.js, GraphQL and Webpack. Get hot-reloading and all the power of Node.js. Gridsome makes building websites fun again.
