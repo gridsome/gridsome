@@ -4,6 +4,17 @@
   "name": "@gridsome/source-filesystem",
   "description": "Filesystem source for Gridsome",
   "main": "index.js",
+  "publishConfig": {
+    "access": "public"
+  },
+  "contributors": [
+    {
+      "name": "Tommy Vedvik (@tomtev)"
+    },
+    {
+      "name": "Hans-Jørgen Vedvik (@hjvedvik)"
+    }
+  ],
   "dependencies": {
     "chokidar": "^2.0.4",
     "fs-extra": "^7.0.0",

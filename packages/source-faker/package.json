@@ -4,6 +4,17 @@
   "version": "0.0.1",
   "description": "Source with fake data for Gridsome",
   "main": "index.js",
+  "publishConfig": {
+    "access": "public"
+  },
+  "contributors": [
+    {
+      "name": "Tommy Vedvik (@tomtev)"
+    },
+    {
+      "name": "Hans-Jørgen Vedvik (@hjvedvik)"
+    }
+  ],
   "dependencies": {
     "faker": "^4.1.0"
   },

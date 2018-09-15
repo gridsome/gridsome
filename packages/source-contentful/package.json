@@ -4,6 +4,17 @@
   "name": "@gridsome/source-contentful",
   "description": "Contentful source for Gridsome",
   "main": "index.js",
+  "publishConfig": {
+    "access": "public"
+  },
+  "contributors": [
+    {
+      "name": "Tommy Vedvik (@tomtev)"
+    },
+    {
+      "name": "Hans-Jørgen Vedvik (@hjvedvik)"
+    }
+  ],
   "dependencies": {
     "contentful": "^6.1.1"
   },

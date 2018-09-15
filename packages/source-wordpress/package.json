@@ -4,6 +4,17 @@
   "name": "@gridsome/source-wordpress",
   "description": "WordPress source for Gridsome",
   "main": "index.js",
+  "publishConfig": {
+    "access": "public"
+  },
+  "contributors": [
+    {
+      "name": "Tommy Vedvik (@tomtev)"
+    },
+    {
+      "name": "Hans-Jørgen Vedvik (@hjvedvik)"
+    }
+  ],
   "dependencies": {
     "axios": "^0.18.0",
     "better-queue": "^3.8.7"

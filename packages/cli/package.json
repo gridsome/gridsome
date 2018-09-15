@@ -3,6 +3,9 @@
   "name": "@gridsome/cli",
   "version": "0.0.1",
   "main": "bin/gridsome.js",
+  "publishConfig": {
+    "access": "public"
+  },
   "contributors": [
     {
       "name": "Tommy Vedvik (@tomtev)"

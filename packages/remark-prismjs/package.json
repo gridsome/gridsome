@@ -4,6 +4,17 @@
   "name": "@gridsome/remark-prismjs",
   "description": "Prism for Gridsome",
   "main": "index.js",
+  "publishConfig": {
+    "access": "public"
+  },
+  "contributors": [
+    {
+      "name": "Tommy Vedvik (@tomtev)"
+    },
+    {
+      "name": "Hans-Jørgen Vedvik (@hjvedvik)"
+    }
+  ],
   "dependencies": {
     "escape-html": "^1.0.3",
     "prismjs": "^1.15.0",
