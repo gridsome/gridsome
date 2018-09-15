@@ -1,5 +1,0 @@
-{
-  "presets": [
-    ["../../scripts/shared-babel-preset.js", { "browser": true }]
-  ]
-}
