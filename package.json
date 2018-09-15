@@ -8,6 +8,7 @@
   "scripts": {
     "bootstrap": "lerna bootstrap",
     "test": "node scripts/test.js",
+    "release": "node scripts/release.js",
     "lint": "eslint --fix \"gridsome/**/*.js\" \"packages/**/*.js\""
   },
   "jest": {
@@ -28,10 +29,12 @@
     "eslint": "^5.2.0",
     "eslint-plugin-node": "^7.0.1",
     "eslint-plugin-vue-libs": "^3.0.0",
-    "execa": "^0.10.0",
+    "execa": "^1.0.0",
+    "inquirer": "^6.2.0",
     "jest": "^23.1.0",
     "lerna": "^3.4.0",
-    "memfs": "^2.9.4"
+    "memfs": "^2.9.4",
+    "semver": "^5.5.1"
   },
   "engines": {
     "yarn": "^1.5.1"
