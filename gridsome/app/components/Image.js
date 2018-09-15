@@ -62,33 +62,39 @@ const supportsIntersectionObserver = (
   'intersectionRatio' in global.IntersectionObserverEntry.prototype
 )
 
+const observer = supportsIntersectionObserver
+  ? createObserver()
+  : null
+
 export function initIntersectionObserver (router) {
-  const observer = supportsIntersectionObserver
-    ? createObserver()
-    : null
-
-  const selector = '[data-src]'
-
   if (observer) {
     router.beforeEach((to, from, next) => {
-      document.querySelectorAll(selector).forEach(el => {
-        observer.unobserve(el)
-      })
+      unobserve()
       next()
     })
   }
 
   router.afterEach((to, from) => {
-    Vue.nextTick(() => {
-      const images = document.querySelectorAll(selector)
-
-      if (observer) {
-        images.forEach(el => observer.observe(el))
-      } else {
-        Array.from(images).forEach(el => loadImage(el))
-      }
-    })
+    Vue.nextTick(() => observe())
   })
+}
+
+export function observe (selector = '[data-src]', context = document) {
+  const images = context.querySelectorAll(selector)
+
+  if (observer) {
+    images.forEach(el => observer.observe(el))
+  } else {
+    Array.from(images).forEach(el => loadImage(el))
+  }
+}
+
+export function unobserve (selector = '[data-src]', context = document) {
+  if (observer) {
+    context.querySelectorAll(selector).forEach(el => {
+      observer.unobserve(el)
+    })
+  }
 }
 
 function createObserver () {

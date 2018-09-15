@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import sock from './sock'
 import fetch from './fetch'
+import { unobserve, observe } from '../components/Image'
 
 const active = {}
 
@@ -18,7 +19,10 @@ sock.onmessage = message => {
 
   for (const file in active) {
     const { options, vm } = active[file]
-    fetch(options, vm.$route)
+    unobserve(undefined, vm.$el)
+    fetch(options, vm.$route).then(() => {
+      Vue.nextTick(() => observe(undefined, vm.$el))
+    })
   }
 }
 
