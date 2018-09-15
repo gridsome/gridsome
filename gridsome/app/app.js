@@ -71,13 +71,15 @@ export default function createApp () {
       }
     },
     mounted () {
-      // let the Vue router handle all internal urls
-      // document.addEventListener('click', (event) => {
-      //   const $link = event.target.closest('a')
-      //   if (!$link || !$link.pathname) return
-      //   this.$router.push({ path: $link.pathname })
-      //   event.preventDefault()
-      // }, false)
+      // let Vue router handle internal URLs
+      document.addEventListener('click', event => {
+        const $el = event.target.closest('a')
+
+        if ($el && document.location.hostname === $el.hostname) {
+          router.push({ path: $el.pathname })
+          event.preventDefault()
+        }
+      }, false)
     },
     render (h) {
       // if (this.error && this.error.type === 404) {
