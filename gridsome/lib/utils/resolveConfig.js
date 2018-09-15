@@ -47,6 +47,7 @@ module.exports = (context, options = {}, pkg = {}) => {
   config.maxImageWidth = 1920
 
   config.siteUrl = localConfig.siteUrl || ''
+  config.baseUrl = localConfig.baseUrl || '/'
   config.siteName = localConfig.siteName || path.parse(context).name
   config.titleTemplate = localConfig.titleTemplate || `%s - ${config.siteName}`
 
