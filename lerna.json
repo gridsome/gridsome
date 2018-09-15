@@ -1,6 +1,15 @@
 {
-  "lerna": "2.9.0",
+  "version": "0.0.0",
   "npmClient": "yarn",
   "useWorkspaces": true,
-  "version": "0.0.1"
+  "ignoreChanges": [
+    "**/__fixtures__/**",
+    "**/__tests__/**",
+    "**/*.md"
+  ],
+  "command": {
+    "publish": {
+      "allowBranch": "master"
+    }
+  }
 }
