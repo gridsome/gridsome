@@ -16,8 +16,6 @@ module.exports = (context, options, { isProd, isServer }) => {
 
   config.mode(isProd ? 'production' : 'development')
 
-  config.entry('app').add(resolve('src/main.js', context))
-
   config.output
     .path(resolve(outDir, context))
     .publicPath(isProd ? options.publicPath || '/' : '/')
