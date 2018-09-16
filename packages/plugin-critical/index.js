@@ -45,8 +45,8 @@ class CriticalPlugin {
         base
       })
 
-      // we manually inline critical css because cheerio in inline-critical
-      // is messing up markup from Vue server renderer in some scenarios
+      // we manually inline critical css because cheerio is messing
+      // up the markup from Vue server renderer
       const resultHTML = await inlineCriticalCSS(filePath, criticalCSS)
 
       return fs.outputFile(filePath, resultHTML)

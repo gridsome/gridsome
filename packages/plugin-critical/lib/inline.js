@@ -8,21 +8,26 @@ const replaceStream = require('replacestream')
 exports.inlineCriticalCSS = function (filePath, css) {
   const html = fs.readFileSync(filePath, 'utf8')
   const indents = detectIndent(html).amount || 2
-  const inlineString = `<style id="___critical-css">${css}</style>`
+  const inlineString = `<style id="___critical-css" type="text/css">${css}</style>`
 
   let isInlined = false
   let stream = fs.createReadStream(filePath, { encoding: 'utf8' })
 
-  stream = stream.pipe(replaceStream(/<link.*>/g, match => {
-    if (/rel="stylesheet"/.test(match)) {
-      match = '<!-- removed blocking stylesheet -->'
+  stream = stream.pipe(replaceStream(/<link[^>]+>/g, match => {
+    if (/as="style"/.test(match)) {
+      match = '<!-- removed stylesheet -->'
     }
 
-    if (/as="style"/.test(match)) {
+    if (/rel="stylesheet"/.test(match)) {
       const fragment = htmlParser.parseFragment(match)
       const node = fragment.childNodes[0]
       const onload = `this.onload=null;this.rel='stylesheet'`
 
+      node.attrs.forEach(attr => {
+        if (attr.name === 'rel') attr.value = 'preload'
+      })
+
+      node.attrs.push({ name: 'as', value: 'style' })
       node.attrs.push({ name: 'onload', value: onload })
       fragment.childNodes.push(createNoScriptNode(node))
 
