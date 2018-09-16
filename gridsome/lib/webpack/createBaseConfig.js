@@ -176,8 +176,10 @@ module.exports = (context, options, { isProd, isServer }) => {
 
   // plugins
 
-  config.plugin('progress')
-    .use(require('webpack/lib/ProgressPlugin'))
+  if (process.stdout.isTTY) {
+    config.plugin('progress')
+      .use(require('webpack/lib/ProgressPlugin'))
+  }
 
   config.plugin('vue-loader')
     .use(VueLoaderPlugin)
