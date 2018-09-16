@@ -1,7 +1,6 @@
 {
-  "private": true,
   "name": "gridsome",
-  "version": "0.0.1",
+  "version": "0.0.0",
   "main": "index.js",
   "dependencies": {
     "@babel/core": "^7.0.0",

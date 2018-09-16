@@ -1,20 +1,8 @@
 {
-  "private": true,
-  "version": "0.0.1",
+  "version": "0.0.0",
   "name": "@gridsome/transformer-remark",
   "description": "Remark transformer for Gridsome",
   "main": "index.js",
-  "publishConfig": {
-    "access": "public"
-  },
-  "contributors": [
-    {
-      "name": "Tommy Vedvik (@tomtev)"
-    },
-    {
-      "name": "Hans-Jørgen Vedvik (@hjvedvik)"
-    }
-  ],
   "dependencies": {
     "gray-matter": "^4.0.1",
     "hast-util-to-html": "^4.0.1",
@@ -30,7 +18,18 @@
     "remark-squeeze-paragraphs": "^3.0.2",
     "unist-util-visit": "^1.4.0"
   },
-  "peerDependencies": {
-    "gridsome": "^0.0.1"
+  "publishConfig": {
+    "access": "public"
+  },
+  "contributors": [
+    {
+      "name": "Tommy Vedvik (@tomtev)"
+    },
+    {
+      "name": "Hans-Jørgen Vedvik (@hjvedvik)"
+    }
+  ],
+  "engines": {
+    "node": ">=8"
   }
 }

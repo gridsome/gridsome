@@ -1,9 +1,13 @@
 {
-  "private": true,
-  "version": "0.0.1",
+  "version": "0.0.0",
   "name": "@gridsome/source-filesystem",
   "description": "Filesystem source for Gridsome",
   "main": "index.js",
+  "dependencies": {
+    "chokidar": "^2.0.4",
+    "fs-extra": "^7.0.0",
+    "globby": "^8.0.1"
+  },
   "publishConfig": {
     "access": "public"
   },
@@ -15,12 +19,7 @@
       "name": "Hans-Jørgen Vedvik (@hjvedvik)"
     }
   ],
-  "dependencies": {
-    "chokidar": "^2.0.4",
-    "fs-extra": "^7.0.0",
-    "globby": "^8.0.1"
-  },
-  "peerDependencies": {
-    "gridsome": "^0.0.1"
+  "engines": {
+    "node": ">=8"
   }
 }

@@ -1,19 +1,7 @@
 {
-  "private": true,
+  "version": "0.0.0",
   "name": "@gridsome/cli",
-  "version": "0.0.1",
   "main": "bin/gridsome.js",
-  "publishConfig": {
-    "access": "public"
-  },
-  "contributors": [
-    {
-      "name": "Tommy Vedvik (@tomtev)"
-    },
-    {
-      "name": "Hans-Jørgen Vedvik (@hjvedvik)"
-    }
-  ],
   "bin": {
     "gridsome": "./bin/gridsome.js"
   },
@@ -27,6 +15,17 @@
     "fs-extra": "^6.0.1",
     "sort-package-json": "^1.15.0"
   },
+  "publishConfig": {
+    "access": "public"
+  },
+  "contributors": [
+    {
+      "name": "Tommy Vedvik (@tomtev)"
+    },
+    {
+      "name": "Hans-Jørgen Vedvik (@hjvedvik)"
+    }
+  ],
   "engines": {
     "node": ">=8"
   }

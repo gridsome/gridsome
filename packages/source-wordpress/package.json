@@ -1,9 +1,13 @@
 {
   "private": true,
-  "version": "0.0.1",
+  "version": "0.0.0",
   "name": "@gridsome/source-wordpress",
   "description": "WordPress source for Gridsome",
   "main": "index.js",
+  "dependencies": {
+    "axios": "^0.18.0",
+    "better-queue": "^3.8.7"
+  },
   "publishConfig": {
     "access": "public"
   },
@@ -15,11 +19,7 @@
       "name": "Hans-Jørgen Vedvik (@hjvedvik)"
     }
   ],
-  "dependencies": {
-    "axios": "^0.18.0",
-    "better-queue": "^3.8.7"
-  },
-  "peerDependencies": {
-    "gridsome": "^0.0.1"
+  "engines": {
+    "node": ">=8"
   }
 }

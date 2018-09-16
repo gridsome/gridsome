@@ -1,9 +1,13 @@
 {
-  "private": true,
-  "version": "0.0.1",
+  "version": "0.0.0",
   "name": "@gridsome/remark-prismjs",
   "description": "Prism for Gridsome",
   "main": "index.js",
+  "dependencies": {
+    "escape-html": "^1.0.3",
+    "prismjs": "^1.15.0",
+    "unist-util-visit": "^1.4.0"
+  },
   "publishConfig": {
     "access": "public"
   },
@@ -15,12 +19,7 @@
       "name": "Hans-Jørgen Vedvik (@hjvedvik)"
     }
   ],
-  "dependencies": {
-    "escape-html": "^1.0.3",
-    "prismjs": "^1.15.0",
-    "unist-util-visit": "^1.4.0"
-  },
-  "peerDependencies": {
-    "gridsome": "^0.0.1"
+  "engines": {
+    "node": ">=8"
   }
 }

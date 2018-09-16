@@ -1,9 +1,12 @@
 {
   "private": true,
+  "version": "0.0.0",
   "name": "@gridsome/source-faker",
-  "version": "0.0.1",
   "description": "Source with fake data for Gridsome",
   "main": "index.js",
+  "dependencies": {
+    "faker": "^4.1.0"
+  },
   "publishConfig": {
     "access": "public"
   },
@@ -15,10 +18,7 @@
       "name": "Hans-Jørgen Vedvik (@hjvedvik)"
     }
   ],
-  "dependencies": {
-    "faker": "^4.1.0"
-  },
-  "peerDependencies": {
-    "gridsome": "^0.0.1"
+  "engines": {
+    "node": ">=8"
   }
 }
