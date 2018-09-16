@@ -1,5 +1,5 @@
 {
-  "version": "0.0.1",
+  "version": "0.0.2",
   "name": "@gridsome/cli",
   "main": "bin/gridsome.js",
   "homepage": "https://github.com/gridsome/gridsome/tree/master/packages/cli#readme",
