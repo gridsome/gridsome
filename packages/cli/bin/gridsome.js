@@ -4,6 +4,7 @@ const path = require('path')
 const chalk = require('chalk')
 const fs = require('fs-extra')
 const program = require('commander')
+const resolveCwd = require('resolve-cwd')
 const create = require('../lib/commands/create')
 const pkgPath = require('find-up').sync('package.json')
 const context = pkgPath ? path.dirname(pkgPath) : process.cwd()
@@ -23,8 +24,12 @@ program
   })
 
 try {
-  // eslint-disable-next-line
-  require('gridsome')({ context, program })
+  const gridsomePath = resolveCwd.silent('gridsome')
+
+  if (gridsomePath) {
+    // eslint-disable-next-line
+    require(gridsomePath)({ context, program })
+  }
 } catch (err) {
   console.log(err)
 }

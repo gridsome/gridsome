@@ -19,6 +19,7 @@
     "execa": "^0.10.0",
     "find-up": "^2.1.0",
     "fs-extra": "^6.0.1",
+    "resolve-cwd": "^2.0.0",
     "sort-package-json": "^1.15.0"
   },
   "publishConfig": {
