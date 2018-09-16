@@ -1,10 +1,10 @@
-const glob = require('globby')
 const critical = require('critical')
+const micromatch = require('micromatch')
 
 class CriticalPlugin {
   static defaultOptions () {
     return {
-      paths: ['index.html'],
+      paths: ['/'],
       ignore: undefined,
       width: 1300,
       height: 900
@@ -22,13 +22,15 @@ class CriticalPlugin {
     const { outDir } = this.config
     const { paths, ...options } = this.options
 
-    const files = await glob(paths, { cwd: outDir })
+    const pages = queue.filter(page => {
+      return micromatch(page.path, paths).length
+    })
 
-    console.log(`Extract critical CSS (${files.length} pages)`)
+    console.log(`Extract critical CSS (${pages.length} pages)`)
 
-    await Promise.all(files.map(file => {
       return critical.generate({
         ...options,
+    await Promise.all(pages.map(async page => {
         minify: true,
         inline: true,
         base: outDir,
