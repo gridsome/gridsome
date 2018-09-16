@@ -2,7 +2,14 @@
   "version": "0.0.0",
   "name": "@gridsome/source-filesystem",
   "description": "Filesystem source for Gridsome",
+  "homepage": "https://github.com/gridsome/gridsome/tree/master/packages/source-filesystem#readme",
+  "repository": "https://github.com/gridsome/gridsome/tree/master/packages/source-filesystem",
   "main": "index.js",
+  "keywords": [
+    "gridsome",
+    "gridsome-plugin",
+    "gridsome-source"
+  ],
   "dependencies": {
     "chokidar": "^2.0.4",
     "fs-extra": "^7.0.0",
@@ -11,14 +18,6 @@
   "publishConfig": {
     "access": "public"
   },
-  "contributors": [
-    {
-      "name": "Tommy Vedvik (@tomtev)"
-    },
-    {
-      "name": "Hans-Jørgen Vedvik (@hjvedvik)"
-    }
-  ],
   "engines": {
     "node": ">=8"
   }

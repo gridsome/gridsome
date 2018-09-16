@@ -2,7 +2,15 @@
   "version": "0.0.0",
   "name": "@gridsome/remark-prismjs",
   "description": "Prism for Gridsome",
+  "homepage": "https://github.com/gridsome/gridsome/tree/master/packages/remark-prismjs#readme",
+  "repository": "https://github.com/gridsome/gridsome/tree/master/packages/remark-prismjs",
   "main": "index.js",
+  "keywords": [
+    "gridsome",
+    "gridsome-plugin",
+    "prismjs",
+    "remark"
+  ],
   "dependencies": {
     "escape-html": "^1.0.3",
     "prismjs": "^1.15.0",
@@ -11,14 +19,6 @@
   "publishConfig": {
     "access": "public"
   },
-  "contributors": [
-    {
-      "name": "Tommy Vedvik (@tomtev)"
-    },
-    {
-      "name": "Hans-Jørgen Vedvik (@hjvedvik)"
-    }
-  ],
   "engines": {
     "node": ">=8"
   }

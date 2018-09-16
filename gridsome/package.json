@@ -1,7 +1,26 @@
 {
-  "name": "gridsome",
   "version": "0.0.0",
+  "name": "gridsome",
+  "description": "A JAMstack framework for building blazing fast websites with Vue.js",
+  "homepage": "https://www.gridsome.org",
+  "repository": "https://github.com/gridsome/gridsome",
+  "bugs": "https://github.com/gridsome/gridsome/issues",
   "main": "index.js",
+  "keywords": [
+    "vue",
+    "gridsome",
+    "static site generators",
+    "jamstack",
+    "website",
+    "blog"
+  ],
+  "files": [
+    "app",
+    "bin",
+    "lib",
+    "index.js",
+    "graphql.js"
+  ],
   "dependencies": {
     "@babel/core": "^7.0.0",
     "@babel/plugin-syntax-dynamic-import": "^7.0.0",

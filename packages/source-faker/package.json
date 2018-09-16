@@ -2,21 +2,20 @@
   "version": "0.0.0",
   "name": "@gridsome/source-faker",
   "description": "Source with fake data for Gridsome",
+  "homepage": "https://github.com/gridsome/gridsome/tree/master/packages/source-faker#readme",
+  "repository": "https://github.com/gridsome/gridsome/tree/master/packages/source-faker",
   "main": "index.js",
+  "keywords": [
+    "gridsome",
+    "gridsome-plugin",
+    "faker"
+  ],
   "dependencies": {
     "faker": "^4.1.0"
   },
   "publishConfig": {
     "access": "public"
   },
-  "contributors": [
-    {
-      "name": "Tommy Vedvik (@tomtev)"
-    },
-    {
-      "name": "Hans-Jørgen Vedvik (@hjvedvik)"
-    }
-  ],
   "engines": {
     "node": ">=8"
   }
