@@ -1,4 +1,3 @@
-const { trim } = require('lodash')
 const camelCase = require('camelcase')
 
 const {

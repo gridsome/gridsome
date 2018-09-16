@@ -3,7 +3,7 @@ const Source = require('./Source')
 const EventEmitter = require('events')
 const { internalRE } = require('./index')
 const { cache, nodeCache } = require('./cache')
-const { defaultsDeep, mapValues, forEach } = require('lodash')
+const { defaultsDeep, mapValues } = require('lodash')
 
 class Plugins extends EventEmitter {
   constructor (service) {
