@@ -20,7 +20,7 @@ module.exports = async ({ routerData, config, graphql }) => {
   })
 
   const createPage = (page, currentPage = 1) => {
-    const fullPath = currentPage > 1 ? `${page.path}/${currentPage}` : page.path
+    const fullPath = currentPage > 1 ? `${trim(page.path, '/')}/${currentPage}` : page.path
     const route = router.resolve(fullPath).route
     const output = path.resolve(config.outDir, trim(route.path, '/'))
 

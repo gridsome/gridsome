@@ -2,21 +2,24 @@ const axios = require('axios')
 const Queue = require('better-queue')
 const querystring = require('querystring')
 
-const { Source } = require('gridsome')
-
-class WordPressSource extends Source {
+class WordPressSource {
   static defaultOptions () {
     return {
       perPage: 100,
       concurrent: 10,
       routes: {},
-      typeNamePrefix: 'WordPress'
+      typeName: 'WordPress'
     }
+  }
+
+  constructor (options, { context, source }) {
+    this.options = options
+    this.context = context
+    this.source = source
   }
 
   async apply () {
     const { baseUrl, perPage, concurrent } = this.options
-    const { GraphQLString } = this.graphql
     let { routes } = this.options
 
     const restUrl = `${baseUrl}/wp-json/wp/v2`
@@ -25,19 +28,18 @@ class WordPressSource extends Source {
     routes = {
       post: '/:year/:month/:day/:slug',
       post_tag: '/tag/:slug',
+      category: '/category/:slug',
       ...routes
     }
 
     // add prefix to post and term id's since
     // they will share the same node store
-    const makePostId = id => this.makeUid(`post-${id}`)
-    const makeTermId = id => this.makeUid(`term-${id}`)
+    const makePostId = id => this.source.makeUid(`post-${id}`)
+    const makeTermId = id => this.source.makeUid(`term-${id}`)
 
     const { data: types } = await axios.get(`${restUrl}/types`)
-    // info(`Post types (${Object.keys(types).length})`, namespace)
 
     const { data: taxonomies } = await axios.get(`${restUrl}/taxonomies`)
-    // info(`Taxonomy types (${Object.keys(taxonomies).length})`, namespace)
 
     for (const typeName in types) {
       const options = types[typeName]
@@ -46,20 +48,9 @@ class WordPressSource extends Source {
 
       restBases.posts[typeName] = options.rest_base
 
-      this.addType(typeName, {
+      this.source.addType(typeName, {
         name: options.name,
-        route: routes[typeName],
-        fields: () => ({
-          content: { type: GraphQLString, description: 'Content' },
-          excerpt: { type: GraphQLString, description: 'Excerpt' },
-          link: { type: GraphQLString, description: 'Link' }
-        }),
-        refs: ({ addReference, nodeTypes }) => options.taxonomies.forEach(tax => {
-          addReference({
-            name: tax,
-            type: nodeTypes[this.makeTypeName(tax)]
-          })
-        })
+        route: routes[typeName]
       })
     }
 
@@ -67,17 +58,9 @@ class WordPressSource extends Source {
       const options = taxonomies[typeName]
       restBases.taxonomies[typeName] = options.rest_base
 
-      this.addType({
-        type: typeName,
+      this.source.addType(typeName, {
         name: options.name,
-        route: routes[typeName],
-        fields: () => ({
-          count: { type: GraphQLString, description: 'Count' }
-        }),
-        belongsTo: ({ nodeTypes }) => ({
-          key: options.slug,
-          types: options.types.map(type => nodeTypes[this.makeTypeName(type)])
-        })
+        route: routes[typeName]
       })
     }
 
@@ -86,13 +69,10 @@ class WordPressSource extends Source {
       const endpoint = `${baseUrl}/wp-json/wp/v2/${restBase}`
       const posts = await fetchPaged(endpoint, { perPage, concurrent })
 
-      // info(`Post type ${types[typeName].name} (${posts.length})`, namespace)
-
       for (const post of posts) {
         const refs = {}
 
-        // add references if post has any
-        // taxonomy rest bases as properties
+        // add references if post has any taxonomy rest bases as properties
         for (const typeName in restBases.taxonomies) {
           const propName = restBases.taxonomies[typeName]
           if (post.hasOwnProperty(propName)) {
@@ -102,7 +82,7 @@ class WordPressSource extends Source {
           }
         }
 
-        this.addNode(post.type, {
+        this.source.addNode(post.type, {
           _id: makePostId(post.id),
           title: post.title ? post.title.rendered : '',
           date: new Date(post.date),
@@ -121,10 +101,8 @@ class WordPressSource extends Source {
       const endpoint = `${baseUrl}/wp-json/wp/v2/${restBase}`
       const terms = await fetchPaged(endpoint, { perPage, concurrent })
 
-      // info(`Taxonomy type ${taxonomies[typeName].name} (${terms.length})`, namespace)
-
       for (const term of terms) {
-        this.addNode(term.taxonomy, {
+        this.source.addNode(term.taxonomy, {
           _id: makeTermId(term.id),
           slug: term.slug,
           title: term.name,

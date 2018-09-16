@@ -1,3 +1,4 @@
+const { trim } = require('lodash')
 const camelCase = require('camelcase')
 
 const {
@@ -27,7 +28,7 @@ module.exports = store => {
     let route = page.path
 
     if (page.pageQuery.paginate.collection) {
-      route = `${page.path}/:page(\\d+)?`
+      route = `${page.path === '/' ? '' : page.path}/:page(\\d+)?`
       type = PAGED_ROUTE
       arr = pagedPages
     }
