@@ -8,7 +8,6 @@
   "scripts": {
     "bootstrap": "lerna bootstrap",
     "test": "node scripts/test.js",
-    "release": "node scripts/release.js",
     "lint": "eslint --fix \"gridsome/**/*.js\" \"packages/**/*.js\""
   },
   "jest": {
