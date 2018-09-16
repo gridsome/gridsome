@@ -1,9 +1,10 @@
 {
   "version": "0.0.2",
   "name": "@gridsome/cli",
-  "main": "bin/gridsome.js",
+  "description": "A command line tool for creating new Gridsome projects.",
   "homepage": "https://github.com/gridsome/gridsome/tree/master/packages/cli#readme",
   "repository": "https://github.com/gridsome/gridsome/tree/master/packages/cli",
+  "main": "bin/gridsome.js",
   "bin": {
     "gridsome": "./bin/gridsome.js"
   },
