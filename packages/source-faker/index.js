@@ -1,5 +1,4 @@
 const faker = require('faker')
-const { GraphQLString } = require('gridsome/graphql')
 
 class FakerSource {
   static defaultOptions () {
@@ -17,16 +16,7 @@ class FakerSource {
   apply () {
     this.source.addType('node', {
       name: 'Node',
-      route: '/:year/:month/:day/:slug',
-      fields: () => ({
-        author: { type: GraphQLString },
-        date: { type: GraphQLString },
-        thumbnail: { type: GraphQLString },
-        email: { type: GraphQLString },
-        avatar: { type: GraphQLString },
-        excerpt: { type: GraphQLString },
-        content: { type: GraphQLString }
-      })
+      route: '/:year/:month/:day/:slug'
     })
 
     for (let i = 0; i < this.options.numNodes; i++) {
