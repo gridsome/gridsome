@@ -1,6 +1,7 @@
 # @gridsome/source-contentful
 
-> Contentful source for Gridsome
+> Contentful source for Gridsome. This package is under development and
+API might change before v1 is released.
 
 ## Usage
 
@@ -14,7 +15,7 @@ module.exports = {
         accessToken: 'YOUR_ACCESS_TOKEN', // required
         host: 'cdn.contentful.com',
         environment: 'master',
-        namespace: 'Contentful'
+        typeName: 'Contentful'
       }
     }
   ]

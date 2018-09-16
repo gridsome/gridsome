@@ -107,6 +107,11 @@ function createRefs (contentType, nodeTypes) {
             const $in = obj.fields[key] || []
             const query = { [ref.key]: { $in }}
 
+            if (Array.isArray(schemaType)) {
+              // TODO: search multiple collections
+              return []
+            }
+
             return store.getType(schemaType).find(query)
           }
         }

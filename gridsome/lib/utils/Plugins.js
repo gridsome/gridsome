@@ -36,19 +36,19 @@ class Plugins extends EventEmitter {
       await instance.apply()
 
       // setup reversed references
-      forEach(source.ownTypeNames, typeName => {
-        const options = this.service.store.types[typeName]
+      // forEach(source.ownTypeNames, typeName => {
+      //   const options = this.service.store.types[typeName]
 
-        forEach(options.refs, (ref, key) => {
-          this.service.store.types[ref.typeName].belongsTo[options.type] = {
-            description: `Reference to ${typeName}`,
-            localKey: ref.key,
-            foreignType: options.type,
-            foreignKey: key,
-            foreignSchemaType: typeName
-          }
-        })
-      })
+      //   forEach(options.refs, (ref, key) => {
+      //     this.service.store.types[ref.typeName].belongsTo[options.type] = {
+      //       description: `Reference to ${typeName}`,
+      //       localKey: ref.key,
+      //       foreignType: options.type,
+      //       foreignKey: key,
+      //       foreignSchemaType: typeName
+      //     }
+      //   })
+      // })
 
       if (process.env.NODE_ENV === 'development') {
         let regenerateTimeout = null

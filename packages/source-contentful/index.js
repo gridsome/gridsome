@@ -1,16 +1,19 @@
 const contentful = require('contentful')
-const resolveType = require('./lib/resolve-type')
 
-const { Source } = require('gridsome')
-
-class ContentfulSource extends Source {
+class ContentfulSource {
   static defaultOptions () {
     return {
       space: undefined,
       environment: 'master',
       host: 'cdn.contentful.com',
-      typeNamePrefix: 'Contentful'
+      typeName: 'Contentful'
     }
+  }
+
+  constructor (options, { context, source }) {
+    this.options = options
+    this.context = context
+    this.source = source
   }
 
   async apply () {
@@ -45,33 +48,25 @@ class ContentfulSource extends Source {
         refs
       }
 
-      this.addType(contentType.name, {
+      this.source.addType(contentType.name, {
         name: contentType.name,
-        fields: () => fields.reduce((fields, field) => {
-          fields[field.id] = {
-            description: field.name,
-            type: resolveType(field, this.graphql)
+        refs: refs.reduce((refs, field) => {
+          refs[field.id] = {
+            key: '_id',
+            type: field.items.validations.reduce((types, { linkContentType }) => {
+              linkContentType.forEach(id => {
+                types.push(cache.contentTypes[id].contentType.name)
+              })
+              return types
+            }, [])
           }
 
-          return fields
-        }, {}),
-        refs: ({ addReference, nodeTypes }) => refs.forEach(field => addReference({
-          name: field.id,
-          description: field.name,
-          types: field.items.validations.reduce((types, { linkContentType }) => {
-            linkContentType.forEach(id => {
-              const { type } = this.getType(cache.contentTypes[id].contentType.name)
-              types.push(nodeTypes[type])
-            })
-            return types
-          }, [])
-        }))
+          return refs
+        }, {})
       })
     }
 
     const { items: entries } = await client.getEntries()
-
-    // api.service.info(`Entries (${entries.length})`, namespace)
 
     for (const item of entries) {
       const id = item.sys.contentType.sys.id
@@ -79,8 +74,8 @@ class ContentfulSource extends Source {
 
       // TODO: let user choose which field contains the slug
 
-      this.addNode(contentType.name, {
-        _id: this.makeUid(item.sys.id),
+      this.source.addNode(contentType.name, {
+        _id: this.source.makeUid(item.sys.id),
         title: item.fields[contentType.displayField],
         slug: item.fields.slug || '',
         created: new Date(item.sys.createdAt),
@@ -96,7 +91,7 @@ class ContentfulSource extends Source {
           if (!item.fields[id]) return refs
 
           refs[id] = item.fields[id].map(item => {
-            return this.makeUid(item.sys.id)
+            return this.source.makeUid(item.sys.id)
           })
 
           return refs
