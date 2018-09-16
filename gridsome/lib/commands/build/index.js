@@ -37,7 +37,7 @@ module.exports = async (context, args) => {
   await require('./processImages')(service.queue, worker, config)
 
   // 5. clean up
-  await plugins.callHook('afterBuild', { context, config })
+  await plugins.callHook('afterBuild', { context, config, queue })
   await fs.remove(path.resolve(config.outDir, config.manifestsDir))
 
   worker.end()

@@ -1,5 +1,7 @@
+const fs = require('fs-extra')
 const critical = require('critical')
 const micromatch = require('micromatch')
+const { inlineCriticalCSS } = require('./lib/inline')
 
 class CriticalPlugin {
   static defaultOptions () {
@@ -18,8 +20,8 @@ class CriticalPlugin {
 
   apply () {}
 
-  async afterBuild () {
-    const { outDir } = this.config
+  async afterBuild ({ queue }) {
+    const { outDir: base, baseUrl } = this.config
     const { paths, ...options } = this.options
 
     const pages = queue.filter(page => {
@@ -28,15 +30,26 @@ class CriticalPlugin {
 
     console.log(`Extract critical CSS (${pages.length} pages)`)
 
-      return critical.generate({
-        ...options,
     await Promise.all(pages.map(async page => {
+      const filePath = `${page.output}/index.html`
+      const sourceHTML = await fs.readFile(filePath, 'utf-8')
+
+      const criticalCSS = await critical.generate({
+        ignore: options.ignore,
+        width: options.width,
+        height: options.height,
+        folder: baseUrl,
+        html: sourceHTML,
+        inline: false,
         minify: true,
-        inline: true,
-        base: outDir,
-        src: file,
-        dest: file
+        base
       })
+
+      // we manually inline critical css because cheerio in inline-critical
+      // is messing up markup from Vue server renderer in some scenarios
+      const resultHTML = await inlineCriticalCSS(filePath, criticalCSS)
+
+      return fs.outputFile(filePath, resultHTML)
     }))
   }
 }

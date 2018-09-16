@@ -225,7 +225,7 @@ class Source extends EventEmitter {
     return camelCase(`${this.typeName} ${name}`, { pascalCase: true })
   }
 
-  slugify (string) {
+  slugify (string = '') {
     return slugify(string, { separator: '-' })
   }
 
