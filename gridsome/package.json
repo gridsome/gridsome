@@ -5,6 +5,7 @@
   "homepage": "https://www.gridsome.org",
   "repository": "https://github.com/gridsome/gridsome",
   "bugs": "https://github.com/gridsome/gridsome/issues",
+  "license": "MIT",
   "main": "index.js",
   "bin": {
     "gridsome": "./bin/gridsome.js"
