@@ -635,11 +635,12 @@
     follow-redirects "^1.2.5"
     is-buffer "^1.1.5"
 
-"@hjvedvik/tasks@^0.0.7":
-  version "0.0.7"
-  resolved "https://registry.yarnpkg.com/@hjvedvik/tasks/-/tasks-0.0.7.tgz#f2e31500cf62899a1940e5b8b8fe892e3571bba9"
+"@hjvedvik/tasks@^0.0.8":
+  version "0.0.8"
+  resolved "https://registry.yarnpkg.com/@hjvedvik/tasks/-/tasks-0.0.8.tgz#69440b92fccbe22c20c8d8788e723eac8f60aa59"
   dependencies:
     chalk "^2.4.1"
+    dateformat "^3.0.3"
     figures "^2.0.0"
     hirestime "^3.2.1"
     log-update "^2.3.0"
@@ -3470,7 +3471,7 @@ dateformat@^2.0.0:
   version "2.2.0"
   resolved "https://registry.yarnpkg.com/dateformat/-/dateformat-2.2.0.tgz#4065e2013cf9fb916ddfd82efb506ad4c6769062"
 
-dateformat@^3.0.0:
+dateformat@^3.0.0, dateformat@^3.0.3:
   version "3.0.3"
   resolved "https://registry.yarnpkg.com/dateformat/-/dateformat-3.0.3.tgz#a6e37499a4d9a9cf85ef5872044d62901c9889ae"
 

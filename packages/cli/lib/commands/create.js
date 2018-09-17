@@ -46,9 +46,10 @@ module.exports = async (name, starter = 'default') => {
     {
       title: `Install dependencies`,
       task: async (_, task) => {
+        task.setSummary('Installing dependencies...')
         try {
-          if (hasYarn) await exec('yarnpkg')
-          else await exec('npm', ['install'])
+          if (hasYarn) await exec('yarn', undefined, undefined, dir)
+          else await exec('npm', ['install', '--loglevel', 'error'], undefined, dir)
           task.setSummary(`Installed successfully with ${hasYarn ? 'Yarn' : 'npm'}`)
         } catch (err) {
           task.skip('Failed to install dependencies')
@@ -90,6 +91,9 @@ async function updatePkg (pkgPath, obj) {
   await fs.outputFile(pkgPath, JSON.stringify(newPkg, null, 2))
 }
 
-function exec (cmd, args = [], options = { stdio: 'ignore' }) {
-  return execa(cmd, args, options)
+function exec (cmd, args = [], options = {}, context = process.cwd()) {
+  return execa(cmd, args, {
+    stdio: options.stdio || 'ignore',
+    cwd: context
+  })
 }
