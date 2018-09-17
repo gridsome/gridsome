@@ -39,6 +39,17 @@ class ProcessQueue {
   }
 
   async preProcess (filePath, options = {}) {
+    if (!fs.existsSync(filePath)) {
+      return {
+        src: null,
+        sets: [],
+        srcset: [],
+        dataUri: null,
+        cacheKey: null,
+        sizes: { width: null, height: null }
+      }
+    }
+
     const hash = crypto.createHash('md5')
     const buffer = fs.readFileSync(filePath)
     const string = filePath + JSON.stringify(options)

@@ -59,12 +59,7 @@ module.exports = (context, options = {}, pkg = {}) => {
     ? { favicon: localConfig.icon }
     : localConfig.icon || {}
 
-  config.icon = {}
-  config.icon.faviconPath = icon.favicon || 'src/favicon.png'
-  config.icon.faviconSizes = icon.faviconSizes || [16, 32, 96]
-  config.icon.touchiconPath = icon.touchicon || config.icon.faviconPath
-  config.icon.touchiconSizes = icon.touchiconSizes || [76, 152, 120, 167, 180]
-  config.icon.precomposed = !!icon.precomposed
+  config.icon = normalizeIconsConfig(localConfig.icon)
 
   config.scss = {}
   config.sass = {}
@@ -162,4 +157,30 @@ function resolveTransformers (pkg, config) {
   }
 
   return result
+}
+
+function normalizeIconsConfig (config = {}) {
+  const res = {}
+
+  const faviconSizes = [16, 32, 96]
+  const touchiconSizes = [76, 152, 120, 167, 180]
+  const defaultIcon = 'src/favicon.png'
+  const icon = typeof config === 'string' ? { favicon: icon } : (config || {})
+
+  res.favicon = typeof icon.favicon === 'string'
+    ? { src: icon.favicon, sizes: faviconSizes }
+    : Object.assign({}, icon.favicon, {
+      sizes: faviconSizes,
+      src: defaultIcon
+    })
+
+  res.touchicon = typeof icon.touchicon === 'string'
+    ? { src: icon.touchicon, sizes: faviconSizes, precomposed: false }
+    : Object.assign({}, icon.touchicon, {
+      sizes: touchiconSizes,
+      src: res.favicon.src,
+      precomposed: false
+    })
+
+  return res
 }

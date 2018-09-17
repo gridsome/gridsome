@@ -110,3 +110,19 @@ test('skip srcset and dataUri', async () => {
   expect(result.sizes).toBeUndefined()
   expect(result.cacheKey).toBeUndefined()
 })
+
+test('skip missing files', async () => {
+  const filePath = path.resolve(__dirname, 'assets/1000x600-missing.png')
+  const config = { assetsDir: 'assets', maxImageWidth: 1000 }
+  const queue = new ProcessQueue({ config })
+
+  const result = await queue.add(filePath, { srcset: false })
+
+  expect(result.src).toBeNull()
+  expect(result.dataUri).toBeNull()
+  expect(result.cacheKey).toBeNull()
+  expect(result.sets).toHaveLength(0)
+  expect(result.srcset).toHaveLength(0)
+  expect(result.sizes.width).toBeNull()
+  expect(result.sizes.height).toBeNull()
+})

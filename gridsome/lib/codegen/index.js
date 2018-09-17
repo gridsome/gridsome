@@ -39,27 +39,21 @@ function generateConfig ({ config }) {
 }
 
 async function generateIcons ({ config, resolve, queue }) {
-  const {
-    touchiconPath,
-    touchiconSizes,
-    faviconPath,
-    faviconSizes,
-    precomposed
-  } = config.icon
+  const { touchicon, favicon } = config.icon
 
-  const touchicons = await queue.add(resolve(touchiconPath), {
-    sizes: touchiconSizes,
+  const touchicons = await queue.add(resolve(touchicon.src), {
+    sizes: touchicon.sizes,
     srcset: false
   })
 
-  const favicons = await queue.add(resolve(faviconPath), {
-    sizes: faviconSizes,
+  const favicons = await queue.add(resolve(favicon.src), {
+    sizes: favicon.sizes,
     srcset: false
   })
 
   return `export default ${JSON.stringify({
+    precomposed: touchicon.precomposed,
     touchicons: touchicons.sets,
-    favicons: favicons.sets,
-    precomposed
+    favicons: favicons.sets
   })}`
 }
