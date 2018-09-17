@@ -44,7 +44,7 @@ module.exports = (context, options = {}, pkg = {}) => {
   config.tmpDir = resolve('src/.temp')
   config.cacheDir = resolve('.cache')
   config.minProcessImageWidth = 500 // TODO: find a better name for this
-  config.maxImageWidth = 1920
+  config.maxImageWidth = localConfig.maxImageWidth || 1920
 
   config.siteUrl = localConfig.siteUrl || ''
   config.baseUrl = localConfig.baseUrl || '/'
@@ -54,6 +54,17 @@ module.exports = (context, options = {}, pkg = {}) => {
   config.manifestsDir = `${config.assetsDir}/manifest`
   config.clientManifestPath = `${config.manifestsDir}/client.json`
   config.serverBundlePath = `${config.manifestsDir}/server.json`
+
+  const icon = typeof localConfig.icon === 'string'
+    ? { favicon: localConfig.icon }
+    : localConfig.icon || {}
+
+  config.icon = {}
+  config.icon.faviconPath = icon.favicon || 'src/favicon.png'
+  config.icon.faviconSizes = icon.faviconSizes || [16, 32, 96]
+  config.icon.touchiconPath = icon.touchicon || config.icon.faviconPath
+  config.icon.touchiconSizes = icon.touchiconSizes || [76, 152, 120, 167, 180]
+  config.icon.precomposed = !!icon.precomposed
 
   config.scss = {}
   config.sass = {}

@@ -6,6 +6,7 @@ module.exports = async (service, filename = null) => {
     'routes.js': () => generateRoutes(service.routerData),
     'plugins.js': () => 'export default []',
     'config.js': () => generateConfig(service),
+    'icons.js': () => generateIcons(service),
     'now.js': () => `export default ${Date.now()}`
   }
 
@@ -35,4 +36,30 @@ function generateConfig ({ config }) {
     titleTemplate,
     version
   }, null, 2)}`
+}
+
+async function generateIcons ({ config, resolve, queue }) {
+  const {
+    touchiconPath,
+    touchiconSizes,
+    faviconPath,
+    faviconSizes,
+    precomposed
+  } = config.icon
+
+  const touchicons = await queue.add(resolve(touchiconPath), {
+    sizes: touchiconSizes,
+    srcset: false
+  })
+
+  const favicons = await queue.add(resolve(faviconPath), {
+    sizes: faviconSizes,
+    srcset: false
+  })
+
+  return `export default ${JSON.stringify({
+    touchicons: touchicons.sets,
+    favicons: favicons.sets,
+    precomposed
+  })}`
 }

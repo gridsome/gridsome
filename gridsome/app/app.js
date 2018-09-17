@@ -2,6 +2,7 @@ import Vue from 'vue'
 import Meta from 'vue-meta'
 import Router from 'vue-router'
 import Link from './components/Link'
+import icons from '~/.temp/icons.js'
 import config from '~/.temp/config.js'
 import initRoutes from '~/.temp/routes.js'
 import ClientOnly from './components/ClientOnly'
@@ -49,6 +50,23 @@ export default function createApp () {
     style: [],
     link: []
   }
+
+  icons.favicons.forEach(({ type, width, height, src: href }) => {
+    head.link.push({
+      rel: 'icon',
+      type: `image/${type}`,
+      sizes: `${width}x${height}`,
+      href
+    })
+  })
+
+  icons.touchicons.forEach(({ width, height, src: href }) => {
+    head.link.push({
+      rel: `apple-touch-icon${icons.precomposed ? '-precomposed' : ''}`,
+      sizes: `${width}x${height}`,
+      href
+    })
+  })
 
   const options = {
     router,

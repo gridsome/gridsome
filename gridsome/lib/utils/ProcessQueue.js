@@ -38,7 +38,7 @@ class ProcessQueue {
     return data
   }
 
-  async preProcess (filePath, options) {
+  async preProcess (filePath, options = {}) {
     const hash = crypto.createHash('md5')
     const buffer = fs.readFileSync(filePath)
     const string = filePath + JSON.stringify(options)
@@ -51,8 +51,8 @@ class ProcessQueue {
       width
     )
 
-    const imageHeight = Math.round(height * (imageWidth / width))
-    const imageSizes = [480, 1024, 1920, 2560].filter(size => {
+    const imageHeight = Math.ceil(height * (imageWidth / width))
+    const imageSizes = (options.sizes || [480, 1024, 1920, 2560]).filter(size => {
       return size <= maxImageWidth && size <= imageWidth
     })
 
@@ -70,7 +70,7 @@ class ProcessQueue {
       let src = ''
 
       if (process.env.NODE_ENV === 'development') {
-        const query = { ...options, width: srcWidth, path: filePath }
+        const query = { width: srcWidth, path: filePath }
         src = `/___asset?${createOptionsQuery(query)}`
       } else {
         src = `/${assetsDir}/static/${name}-${srcWidth}${ext}`
@@ -80,21 +80,23 @@ class ProcessQueue {
     }
 
     const sets = imageSizes.map(width => {
-      return { src: createSrcPath(width), width }
+      const height = Math.ceil(imageHeight * (width / imageWidth))
+      return { src: createSrcPath(width), width, height, type }
     })
-
-    const dataUri = await createDataUri(buffer, type, imageWidth, imageHeight)
 
     const result = {
       src: sets[sets.length - 1].src,
-      cacheKey: hash.update(string).digest('hex'),
-      sizes: options.sizes || `(max-width: ${imageWidth}px) 100vw, ${imageWidth}px`,
       size: { width: imageWidth, height: imageHeight },
-      dataUri,
+      type,
       sets
     }
 
-    result.srcset = result.sets.map(({ src, width }) => `${src} ${width}w`)
+    if (options.srcset !== false) {
+      result.cacheKey = hash.update(string).digest('hex')
+      result.dataUri = await createDataUri(buffer, type, imageWidth, imageHeight)
+      result.sizes = options.sizes || `(max-width: ${imageWidth}px) 100vw, ${imageWidth}px`,
+      result.srcset = result.sets.map(({ src, width }) => `${src} ${width}w`)
+    }
 
     return result
   }
