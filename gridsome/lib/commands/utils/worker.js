@@ -65,7 +65,7 @@ exports.processImage = async function ({
 
     if (isPng) plugins.push(imageminPngquant({ quality: config.quality }))
     if (isWebp) plugins.push(imageminWebp({ quality: config.quality }))
-    if (isJpeg) plugins.push(imageminJpegoptim({ max: quality }))
+    if (isJpeg) plugins.push(imageminJpegoptim({ max: config.quality }))
 
     buffer = await pipeline.toBuffer()
     buffer = await imagemin.buffer(buffer, { plugins })
