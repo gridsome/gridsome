@@ -25,6 +25,7 @@ module.exports = (context, options, { isProd, isServer }) => {
   config.resolve
     .set('symlinks', true)
     .alias
+      .set('~', resolve('src', context))
       .set('@', resolve('src', context))
       .set('@gridsome/app', resolve('../../app'))
       .set('@gridsome/temp', resolve('src/.temp', context))

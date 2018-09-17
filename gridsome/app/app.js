@@ -2,9 +2,9 @@ import Vue from 'vue'
 import Meta from 'vue-meta'
 import Router from 'vue-router'
 import Link from './components/Link'
-import config from '@gridsome/temp/config.js'
+import config from '~/.temp/config.js'
+import initRoutes from '~/.temp/routes.js'
 import ClientOnly from './components/ClientOnly'
-import initRoutes from '@gridsome/temp/routes.js'
 import Image, { initIntersectionObserver } from './components/Image'
 
 Vue.use(Meta)
