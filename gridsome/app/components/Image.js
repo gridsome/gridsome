@@ -47,7 +47,11 @@ export default {
         h('img', {
           ...data,
           class: noscriptClass,
-          attrs: { src, alt: props.alt }
+          attrs: {
+            src,
+            alt: props.alt,
+            width: size.width
+          }
         })
       ]))
     }

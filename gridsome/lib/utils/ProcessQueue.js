@@ -44,20 +44,30 @@ class ProcessQueue {
     const string = filePath + JSON.stringify(options)
     const { type, width, height } = imageSize.sync(buffer)
     const { assetsDir, maxImageWidth } = this.config
-    const imageSizes = [480, 1024, 1920, 2560].filter(size => size < width)
+
+    const imageWidth = Math.min(
+      parseInt(options.width, 10) || width,
+      maxImageWidth,
+      width
+    )
+
+    const imageHeight = Math.round(height * (imageWidth / width))
+    const imageSizes = [480, 1024, 1920, 2560].filter(size => {
+      return size <= maxImageWidth && size <= imageWidth
+    })
 
     if (
-      (imageSizes.length === 1 && imageSizes[0] < width) ||
+      (imageSizes.length === 1 && imageSizes[0] <= imageWidth) ||
       (imageSizes.length === 0)
     ) {
-      imageSizes.push(width)
+      if (imageWidth <= maxImageWidth) {
+        imageSizes.push(imageWidth)
+      }
     }
 
     const createSrcPath = (srcWidth = maxImageWidth) => {
       const { name, ext } = path.parse(filePath)
       let src = ''
-
-      if (srcWidth > width) srcWidth = width
 
       if (process.env.NODE_ENV === 'development') {
         const query = { ...options, width: srcWidth, path: filePath }
@@ -69,14 +79,17 @@ class ProcessQueue {
       return src
     }
 
-    const sets = imageSizes.map(width => ({ src: createSrcPath(width), width }))
-    const dataUri = await createDataUri(buffer, type, width, height)
+    const sets = imageSizes.map(width => {
+      return { src: createSrcPath(width), width }
+    })
+
+    const dataUri = await createDataUri(buffer, type, imageWidth, imageHeight)
 
     const result = {
-      src: sets[0].src,
+      src: sets[sets.length - 1].src,
       cacheKey: hash.update(string).digest('hex'),
-      sizes: options.sizes || `(max-width: ${width}px) 100vw, ${width}px`,
-      size: { width, height },
+      sizes: options.sizes || `(max-width: ${imageWidth}px) 100vw, ${imageWidth}px`,
+      size: { width: imageWidth, height: imageHeight },
       dataUri,
       sets
     }
