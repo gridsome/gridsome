@@ -1,11 +1,13 @@
 const path = require('path')
 const fs = require('fs-extra')
+const sharp = require('sharp')
 const imagemin = require('imagemin')
 const imageminWebp = require('imagemin-webp')
 const imageminPngquant = require('imagemin-pngquant')
+const imageminJpegoptim = require('imagemin-jpegoptim')
 const { createBundleRenderer } = require('vue-server-renderer')
 
-// sharp.simd(true)
+sharp.simd(true)
 
 exports.processImage = async function ({
   filePath,
@@ -15,32 +17,58 @@ exports.processImage = async function ({
   minWidth = 500,
   resizeImage = false
 }) {
-  const supportedExtensions = ['.png', '.jpeg', '.jpg']
   const { ext } = path.parse(filePath)
   let buffer = fs.readFileSync(filePath)
 
-  if (supportedExtensions.includes(ext)) {
-    const resizeWidth = parseInt(options.width) || minWidth
-    let resize
-
-    if (options.width) {
-      resizeImage = true
+  if (['.png', '.jpeg', '.jpg', '.webp'].includes(ext)) {
+    const config = {
+      pngCompressionLevel: parseInt(options.pngCompressionLevel, 10) || 9,
+      quality: parseInt(options.quality, 10) || 75,
+      width: parseInt(options.width, 10),
+      jpegProgressive: true
     }
 
-    if (resizeImage && size.width > resizeWidth) {
+    const isPng = /\.png$/.test(ext)
+    const isJpeg = /\.jpe?g$/.test(ext)
+    const isWebp = /\.webp$/.test(ext)
+
+    let pipeline = sharp(buffer)
+
+    if (config.width && config.width <= size.width) {
       const ratio = size.height / size.width
-      const width = resizeWidth
-      const height = Math.round(width * ratio)
+      const height = Math.round(config.width * ratio)
 
-      resize = { width, height }
+      pipeline = pipeline.resize(config.width, height)
     }
 
-    buffer = await imagemin.buffer(buffer, {
-      plugins: [
-        imageminWebp({ quality: 80, resize }),
-        imageminPngquant({ quality: 80 })
-      ]
-    })
+    if (isPng) {
+      pipeline = pipeline.png({
+        compressionLevel: config.pngCompressionLevel,
+        adaptiveFiltering: false
+      })
+    }
+
+    if (isJpeg) {
+      pipeline = pipeline.jpeg({
+        progressive: config.jpegProgressive,
+        quality: config.quality
+      })
+    }
+
+    if (isWebp) {
+      pipeline = pipeline.webp({
+        quality: config.quality
+      })
+    }
+
+    const plugins = []
+
+    if (isPng) plugins.push(imageminPngquant({ quality: config.quality }))
+    if (isWebp) plugins.push(imageminWebp({ quality: config.quality }))
+    if (isJpeg) plugins.push(imageminJpegoptim({ max: quality }))
+
+    buffer = await pipeline.toBuffer()
+    buffer = await imagemin.buffer(buffer, { plugins })
   }
 
   try {
