@@ -1,4 +1,5 @@
 <p align="center">
+  <br>
   <img src="https://cdn.rawgit.com/gridsome/gridsome/master/assets/logo.png" width="220">
   <br>
   <br>
