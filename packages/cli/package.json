@@ -14,7 +14,6 @@
   ],
   "dependencies": {
     "@hjvedvik/tasks": "^0.0.8",
-    "@vue/cli-shared-utils": "^3.0.0",
     "chalk": "^2.4.1",
     "commander": "^2.15.1",
     "execa": "^0.10.0",

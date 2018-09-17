@@ -3,16 +3,16 @@ const fs = require('fs-extra')
 const execa = require('execa')
 const chalk = require('chalk')
 const Tasks = require('@hjvedvik/tasks')
-const { error } = require('@vue/cli-shared-utils')
 const sortPackageJson = require('sort-package-json')
 
 module.exports = async (name, starter = 'default') => {
-  const dir = path.resolve(process.cwd(), name)
+  const dir = aboslutePath(name)
+  const projectName = path.basename(dir)
   const starters = ['default', 'wordpress']
   const hasYarn = await useYarn()
 
   if (fs.existsSync(dir)) {
-    return error(`Directory «${name}» already exists.`)
+    return console.log(chalk.red(`Directory «${projectName}» already exists.`))
   }
 
   if (starters.includes(starter)) {
@@ -37,7 +37,10 @@ module.exports = async (name, starter = 'default') => {
       title: 'Update project package.json',
       task: async (_, task) => {
         try {
-          await updatePkg(`${dir}/package.json`, { name, private: true })
+          await updatePkg(`${dir}/package.json`, {
+            name: projectName,
+            private: true
+          })
         } catch (err) {
           task.skip('Failed to update package.json')
         }
@@ -45,15 +48,54 @@ module.exports = async (name, starter = 'default') => {
     },
     {
       title: `Install dependencies`,
-      task: async (_, task) => {
-        task.setSummary('Installing dependencies...')
-        try {
-          if (hasYarn) await exec('yarn', undefined, undefined, dir)
-          else await exec('npm', ['install', '--loglevel', 'error'], undefined, dir)
-          task.setSummary(`Installed successfully with ${hasYarn ? 'Yarn' : 'npm'}`)
-        } catch (err) {
-          task.skip('Failed to install dependencies')
+      task: (_, task) => {
+        const command = hasYarn ? 'yarn' : 'npm'
+        const stdio = ['ignore', 'pipe', 'ignore']
+        const options = { cwd: dir, stdio }
+        const args = []
+
+        if (command === 'npm') {
+          task.setStatus('Installing dependencies with npm...')
+          args.push('install', '--loglevel', 'error')
+        } else if (command === 'yarn') {
+          args.push('--json')
         }
+
+        return new Promise((resolve, reject) => {
+          const child = exec(command, args, options, dir)
+
+          child.stdout.on('data', buffer => {
+            let str = buffer.toString().trim()
+
+            if (str && command === 'yarn' && str.indexOf('"type":') !== -1) {
+              const newLineIndex = str.lastIndexOf('\n')
+
+              if (newLineIndex !== -1) {
+                str = str.substr(newLineIndex)
+              }
+
+              try {
+                const { type, data } = JSON.parse(str)
+
+                if (type === 'step') {
+                  const { message, current, total } = data
+                  task.setStatus(`${message} (${current} of ${total})`)
+                }
+              } catch (e) {}
+            } else {
+              task.setStatus(`Installing dependencies with ${command}...`)
+            }
+          })
+
+          child.on('close', code => {
+            if (code !== 0) {
+              reject(`Command failed: ${command} ${args.join(' ')}`)
+              return
+            }
+
+            resolve()
+          })
+        })
       }
     }
   ])
@@ -62,7 +104,7 @@ module.exports = async (name, starter = 'default') => {
     await tasks.run()
   } catch (err) {
     console.log()
-    return error(err.message)
+    return console.log(chalk.red(err.message))
   }
 
   const developCommand = 'gridsome develop'
@@ -85,7 +127,8 @@ async function useYarn () {
 }
 
 async function updatePkg (pkgPath, obj) {
-  const pkg = JSON.parse(await fs.readFile(pkgPath, 'utf-8'))
+  const content = await fs.readFile(pkgPath, 'utf-8')
+  const pkg = JSON.parse(content)
   const newPkg = sortPackageJson(Object.assign(pkg, obj))
 
   await fs.outputFile(pkgPath, JSON.stringify(newPkg, null, 2))
@@ -96,4 +139,9 @@ function exec (cmd, args = [], options = {}, context = process.cwd()) {
     stdio: options.stdio || 'ignore',
     cwd: context
   })
+}
+
+function aboslutePath (string) {
+  if (path.isAbsolute(string)) return string
+  return path.join(process.cwd(), string)
 }
