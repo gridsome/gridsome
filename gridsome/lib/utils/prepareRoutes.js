@@ -18,7 +18,7 @@ module.exports = store => {
 
   const notFoundComponent = notFoundPage
     ? notFoundPage.component
-    : '@gridsome/app/pages/404.vue'
+    : 'gridsome/app/pages/404.vue'
 
   pages.forEach(page => {
     const name = camelCase(page.path.replace(/\//g, ' ')) || 'home'
