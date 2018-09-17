@@ -56,11 +56,11 @@ export default function createApp () {
     methods: {},
     metaInfo: head,
     mounted () {
-      // let Vue router handle internal URLs
+      // let Vue router handle internal URLs for anchors in innerHTML
       document.addEventListener('click', event => {
         const $el = event.target.closest('a')
 
-        if ($el && document.location.hostname === $el.hostname) {
+        if ($el && !$el.__vue__ && document.location.hostname === $el.hostname) {
           router.push({ path: $el.pathname })
           event.preventDefault()
         }
