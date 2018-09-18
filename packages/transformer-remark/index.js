@@ -42,6 +42,9 @@ class RemarkTransformer {
           properties: {
             className: options.anchorClassName || 'icon icon-link'
           }
+        },
+        linkProperties: {
+          'aria-hidden': 'true'
         }
       }],
       // user plugins
