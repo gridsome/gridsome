@@ -9,6 +9,7 @@ test('generate srcset for image', async () => {
   const result = await queue.add(filePath)
 
   expect(result.type).toEqual('png')
+  expect(result.filePath).toEqual(filePath)
   expect(result.src).toEqual('/assets/static/1000x600-1000.png')
   expect(result.sizes).toEqual('(max-width: 1000px) 100vw, 1000px')
   expect(result.dataUri).toEqual('data:image/svg+xml,%3csvg fill=\'none\' viewBox=\'0 0 1000 600\' xmlns=\'http://www.w3.org/2000/svg\'/%3e')

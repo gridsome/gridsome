@@ -84,7 +84,7 @@ class ProcessQueue {
         const query = { width: srcWidth, path: filePath }
         src = `/___asset?${createOptionsQuery(query)}`
       } else {
-        src = `/${assetsDir}/static/${name}-${srcWidth}${ext}`
+        src = '/' + path.join(assetsDir, `static/${name}-${srcWidth}${ext}`)
       }
 
       return src
@@ -98,6 +98,7 @@ class ProcessQueue {
     const result = {
       src: sets[sets.length - 1].src,
       size: { width: imageWidth, height: imageHeight },
+      filePath,
       type,
       sets
     }

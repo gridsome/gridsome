@@ -71,11 +71,7 @@ exports.processImage = async function ({
     buffer = await imagemin.buffer(buffer, { plugins })
   }
 
-  try {
-    fs.outputFileSync(destPath, buffer)
-  } catch (err) {
-    throw new Error(`Failed to process image:\n${filePath}`)
-  }
+  return fs.outputFileSync(destPath, buffer)
 }
 
 exports.processImages = async function ({ queue, outDir, minWidth }) {
@@ -107,13 +103,13 @@ exports.renderHtml = async function ({
 
     const context = {
       url: page.path,
-      queryResults: {
+      pageQuery: {
         data: {}
       }
     }
 
     if (page.hasData) {
-      context.queryResults = require(`${page.output}/data.json`)
+      context.pageQuery = require(`${page.output}/data.json`)
     }
 
     try {
