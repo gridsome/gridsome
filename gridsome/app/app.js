@@ -8,8 +8,13 @@ import initRoutes from '~/.temp/routes.js'
 import ClientOnly from './components/ClientOnly'
 import Image, { initIntersectionObserver } from './components/Image'
 
-Vue.use(Meta)
 Vue.use(Router)
+Vue.use(Meta, {
+  keyName: 'metaInfo', // TODO: change this to 'head'
+  attribute: 'data-vue-tag',
+  ssrAttribute: 'data-html-server-rendered',
+  tagIDKeyName: 'key'
+})
 
 Vue.component('g-link', Link)
 Vue.component('g-image', Image)
