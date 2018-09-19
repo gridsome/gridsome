@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html {{{ meta.inject().htmlAttrs.text() }}}>
+<html data-head-server-rendered="true" {{{ head.inject().htmlAttrs.text() }}}>
   <head>
-    {{{ meta.inject().title.text() }}}
-    {{{ meta.inject().meta.text() }}}
-    {{{ meta.inject().style.text() }}}
-    {{{ meta.inject().link.text() }}}
+    {{{ head.inject().title.text() }}}
+    {{{ head.inject().meta.text() }}}
+    {{{ head.inject().script.text() }}}
+    {{{ head.inject().style.text() }}}
+    {{{ head.inject().link.text() }}}
     {{{ renderResourceHints() }}}
     {{{ renderStyles() }}}
   </head>

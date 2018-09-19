@@ -39,6 +39,8 @@ export default function createApp () {
   const head = {
     title: config.siteName,
     titleTemplate: config.titleTemplate,
+    __dangerouslyDisableSanitizers: ['style', 'script'],
+    __dangerouslyDisableSanitizersByTagID: {},
     htmlAttrs: {
       lang: 'en'
     },
@@ -47,6 +49,7 @@ export default function createApp () {
       { name: 'generator', content: `Gridsome v${config.version}` },
       { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' }
     ],
+    script: [],
     style: [],
     link: []
   }
