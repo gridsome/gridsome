@@ -1,21 +1,18 @@
 const fs = require('fs-extra')
 const htmlParser = require('parse5')
 const getStream = require('get-stream')
-const detectIndent = require('detect-indent')
-const indentString = require('indent-string')
 const replaceStream = require('replacestream')
 
 exports.inlineCriticalCSS = function (filePath, css) {
   const html = fs.readFileSync(filePath, 'utf8')
-  const indents = detectIndent(html).amount || 2
-  const inlineString = `<style id="___critical-css" type="text/css">${css}</style>`
+  const inlineString = `<style id="___critical-css">${css}</style>`
 
   let isInlined = false
   let stream = fs.createReadStream(filePath, { encoding: 'utf8' })
 
   stream = stream.pipe(replaceStream(/<link[^>]+>/g, match => {
     if (/as="style"/.test(match)) {
-      match = '<!-- removed stylesheet -->'
+      match = ''
     }
 
     if (/rel="stylesheet"/.test(match)) {
@@ -35,7 +32,7 @@ exports.inlineCriticalCSS = function (filePath, css) {
     }
 
     if (!isInlined) {
-      match = `${inlineString}\n` + indentString(match, indents * 2)
+      match = `${inlineString}` + match
       isInlined = true
     }
 

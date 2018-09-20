@@ -33,17 +33,23 @@ class CriticalPlugin {
     await Promise.all(pages.map(async page => {
       const filePath = `${page.output}/index.html`
       const sourceHTML = await fs.readFile(filePath, 'utf-8')
+      let criticalCSS = ''
 
-      const criticalCSS = await critical.generate({
-        ignore: options.ignore,
-        width: options.width,
-        height: options.height,
-        folder: baseUrl,
-        html: sourceHTML,
-        inline: false,
-        minify: true,
-        base
-      })
+      try {
+        criticalCSS = await critical.generate({
+          ignore: options.ignore,
+          width: options.width,
+          height: options.height,
+          folder: baseUrl,
+          html: sourceHTML,
+          inline: false,
+          minify: true,
+          base
+        })
+      } catch (err) {
+        console.log(err.message)
+        return
+      }
 
       // we manually inline critical css because cheerio is messing
       // up the markup from Vue server renderer

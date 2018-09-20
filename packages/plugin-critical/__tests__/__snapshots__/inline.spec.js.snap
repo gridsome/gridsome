@@ -4,18 +4,7 @@ exports[`inline critical css 1`] = `
 "<!DOCTYPE html>
 <html lang=\\"en\\">
   <head>
-    <title>Gridsome</title>
-    <meta charset=\\"utf-8\\"/>
-    <meta name=\\"generator\\" content=\\"Gridsome v0.0.1\\"/>
-    <meta name=\\"viewport\\" content=\\"width=device-width, initial-scale=1, viewport-fit=cover\\"/>
-    <style id=\\"___critical-css\\" type=\\"text/css\\">a{color:red;}</style>
-    <!-- removed stylesheet -->
-    <!-- removed stylesheet -->
-    <link rel=\\"prefetch\\" href=\\"/css/3.styles.css\\">
-    <link rel=\\"preload\\" href=\\"/css/styles.css\\" as=\\"style\\" onload=\\"this.onload=null;this.rel='stylesheet'\\"><noscript><link rel=\\"stylesheet\\" href=\\"/css/styles.css\\"></noscript>
-    <link rel=\\"preload\\" href=\\"/css/2.styles.css\\" as=\\"style\\" onload=\\"this.onload=null;this.rel='stylesheet'\\"><noscript><link rel=\\"stylesheet\\" href=\\"/css/2.styles.css\\"></noscript>
-    <link rel=\\"preload\\" href=\\"/css/3.styles.css\\" as=\\"style\\" onload=\\"this.onload=null;this.rel='stylesheet'\\"><noscript><link rel=\\"stylesheet\\" href=\\"/css/3.styles.css\\"></noscript>
-    <link rel=\\"preload\\" href=\\"/js/app.js\\" as=\\"script\\">
+    <title>Gridsome</title><meta charset=\\"utf-8\\"/><meta name=\\"generator\\" content=\\"Gridsome v0.0.1\\"/><meta name=\\"viewport\\" content=\\"width=device-width, initial-scale=1, viewport-fit=cover\\"/><style id=\\"___critical-css\\">a{color:red;}</style><link rel=\\"prefetch\\" href=\\"/css/3.styles.css\\"><link rel=\\"preload\\" href=\\"/css/styles.css\\" as=\\"style\\" onload=\\"this.onload=null;this.rel='stylesheet'\\"><noscript><link rel=\\"stylesheet\\" href=\\"/css/styles.css\\"></noscript><link rel=\\"preload\\" href=\\"/css/2.styles.css\\" as=\\"style\\" onload=\\"this.onload=null;this.rel='stylesheet'\\"><noscript><link rel=\\"stylesheet\\" href=\\"/css/2.styles.css\\"></noscript><link rel=\\"preload\\" href=\\"/css/3.styles.css\\" as=\\"style\\" onload=\\"this.onload=null;this.rel='stylesheet'\\"><noscript><link rel=\\"stylesheet\\" href=\\"/css/3.styles.css\\"></noscript><link rel=\\"preload\\" href=\\"/js/app.js\\" as=\\"script\\">
   </head>
   <body>
     <div id=\\"app\\"></div>
