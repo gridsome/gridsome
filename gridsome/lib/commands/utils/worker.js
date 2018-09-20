@@ -2,10 +2,12 @@ const path = require('path')
 const fs = require('fs-extra')
 const sharp = require('sharp')
 const imagemin = require('imagemin')
+const { template } = require('lodash')
 const imageminWebp = require('imagemin-webp')
 const imageminPngquant = require('imagemin-pngquant')
 const imageminJpegoptim = require('imagemin-jpegoptim')
 const { createBundleRenderer } = require('vue-server-renderer')
+const { createHTMLRenderer } = require('../../utils/html')
 
 sharp.simd(true)
 
@@ -83,19 +85,18 @@ exports.processImages = async function ({ queue, outDir, minWidth }) {
 
 exports.renderHtml = async function ({
   pages,
-  templatePath,
+  htmlTemplate,
   clientManifestPath,
   serverBundlePath
 }) {
-  const template = fs.readFileSync(templatePath, 'utf-8')
+  const renderHTML = createHTMLRenderer(htmlTemplate)
   const clientManifest = require(clientManifestPath)
   const serverBundle = require(serverBundlePath)
 
   const renderer = createBundleRenderer(serverBundle, {
     inject: false,
     runInNewContext: false,
-    clientManifest,
-    template
+    clientManifest
   })
 
   for (let i = 0, l = pages.length; i < l; i++) {
@@ -113,8 +114,28 @@ exports.renderHtml = async function ({
     }
 
     try {
-      const html = await renderer.renderToString(context)
-      fs.outputFileSync(`${page.output}/index.html`, html)
+      const app = await renderer.renderToString(context)
+      const inject = context.head.inject()
+
+      const head = ''
+        + inject.title.text()
+        + inject.meta.text()
+        + inject.link.text()
+        + inject.style.text()
+        + inject.script.text()
+        + inject.noscript.text()
+        + context.renderResourceHints()
+        + context.renderStyles()
+
+      const result = renderHTML({
+        htmlAttrs: `data-html-server-rendered="true" ${inject.htmlAttrs.text()}`,
+        bodyAttrs: inject.bodyAttrs.text(),
+        scripts: context.renderScripts(),
+        head,
+        app
+      })
+
+      fs.outputFileSync(`${page.output}/index.html`, result)
     } catch (err) {
       throw err
     }

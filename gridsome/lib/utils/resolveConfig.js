@@ -61,6 +61,9 @@ module.exports = (context, options = {}, pkg = {}) => {
 
   config.icon = normalizeIconsConfig(localConfig.icon)
 
+  config.templatePath = path.resolve(config.appPath, 'index.html')
+  config.htmlTemplate = fs.readFileSync(config.templatePath, 'utf-8')
+
   config.scss = {}
   config.sass = {}
   config.less = {}

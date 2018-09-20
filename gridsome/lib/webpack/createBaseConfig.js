@@ -1,6 +1,7 @@
 const path = require('path')
 const Config = require('webpack-chain')
 const { VueLoaderPlugin } = require('vue-loader')
+const { createHTMLRenderer } = require('../utils/html')
 const CSSExtractPlugin = require('mini-css-extract-plugin')
 
 const resolve = (p, c) => path.resolve(c || __dirname, p)
@@ -188,10 +189,17 @@ module.exports = (context, options, { isProd, isServer }) => {
   // config.plugin('friendly-errors')
   //   .use(require('friendly-errors-webpack-plugin'))
 
-  config.plugin('html')
-    .use(require('html-webpack-plugin'), [{
-      template: resolve('../../app/index.dev.html')
-    }])
+  if (!isProd) {
+    config.plugin('html')
+      .use(require('html-webpack-plugin'), [{
+        minify: true,
+        templateContent () {
+          return createHTMLRenderer(options.htmlTemplate)({
+            app: '<div id="app"></div>'
+          })
+        }
+      }])
+  }
 
   config.plugin('injections')
     .use(require('webpack/lib/DefinePlugin'), [{
