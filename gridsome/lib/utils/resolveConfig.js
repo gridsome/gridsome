@@ -75,13 +75,18 @@ module.exports = (context, options = {}, pkg = {}) => {
 
 function resolvePkg (context) {
   const pkgPath = path.resolve(context, 'package.json')
+  let pkg = { dependencies: {} }
 
   try {
     const content = fs.readFileSync(pkgPath, 'utf-8')
-    return JSON.parse(content)
+    pkg = Object.assign(pkg, JSON.parse(content))
   } catch (err) {}
 
-  return {}
+  if (!Object.keys(pkg.dependencies).includes('gridsome')) {
+    throw new Error('This is not a Gridsome project.')
+  }
+
+  return pkg
 }
 
 function normalizePlugins (plugins) {
