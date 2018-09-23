@@ -4,10 +4,9 @@ const sharp = require('sharp')
 const imagemin = require('imagemin')
 const { template } = require('lodash')
 const imageminWebp = require('imagemin-webp')
+const createRenderFn = require('./createRenderFn')
 const imageminPngquant = require('imagemin-pngquant')
 const imageminJpegoptim = require('imagemin-jpegoptim')
-const { createBundleRenderer } = require('vue-server-renderer')
-const { createHTMLRenderer } = require('../../utils/html')
 
 sharp.simd(true)
 
@@ -89,53 +88,22 @@ exports.renderHtml = async function ({
   clientManifestPath,
   serverBundlePath
 }) {
-  const renderHTML = createHTMLRenderer(htmlTemplate)
-  const clientManifest = require(clientManifestPath)
-  const serverBundle = require(serverBundlePath)
-
-  const renderer = createBundleRenderer(serverBundle, {
-    inject: false,
-    runInNewContext: false,
-    clientManifest
+  const render = createRenderFn({
+    htmlTemplate,
+    clientManifestPath,
+    serverBundlePath
   })
 
   for (let i = 0, l = pages.length; i < l; i++) {
-    const page = pages[i]
-
-    const context = {
-      url: page.path,
-      pageQuery: {
-        data: {}
-      }
-    }
-
-    if (page.hasData) {
-      context.pageQuery = require(`${page.output}/data.json`)
-    }
-
     try {
-      const app = await renderer.renderToString(context)
-      const inject = context.head.inject()
+      const page = pages[i]
+      const { data } = page.hasData
+        ? require(`${page.output}/data.json`)
+        : { data: {}}
 
-      const head = ''
-        + inject.title.text()
-        + inject.meta.text()
-        + inject.link.text()
-        + inject.style.text()
-        + inject.script.text()
-        + inject.noscript.text()
-        + context.renderResourceHints()
-        + context.renderStyles()
-
-      const result = renderHTML({
-        htmlAttrs: `data-html-server-rendered="true" ${inject.htmlAttrs.text()}`,
-        bodyAttrs: inject.bodyAttrs.text(),
-        scripts: context.renderScripts(),
-        head,
-        app
-      })
-
-      fs.outputFileSync(`${page.output}/index.html`, result)
+      const html = await render(page.path, data)
+      
+      fs.outputFileSync(`${page.output}/index.html`, html)
     } catch (err) {
       throw err
     }
