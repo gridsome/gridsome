@@ -8,10 +8,10 @@
 </p>
 
 <p align="center">
-  <a title="Downloads" href="https://github.com/gridsome/gridsome/releases/latest">
-    <img src="https://img.shields.io/github/downloads/gridsome/gridsome/total.svg?style=flat-square">
+  <a title="Total downloads" href="https://www.npmjs.com/package/gridsome">
+    <img src="https://img.shields.io/npm/dt/gridsome.svg?style=flat-square">
   </a>
-  <a title="NPM Package" href="https://www.npmjs.com/package/gridsome">
+  <a title="Current version" href="https://www.npmjs.com/package/gridsome">
     <img src="https://img.shields.io/npm/v/gridsome.svg?style=flat-square">
   </a>
   <a title="MIT License" href="LICENSE">
