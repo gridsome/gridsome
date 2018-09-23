@@ -6,8 +6,7 @@ module.exports = async (context, args) => {
   const hirestime = require('hirestime')
   const Service = require('../../Service')
   const createWorker = require('../utils/createWorker')
-  const createClientConfig = require('../../webpack/createClientConfig')
-  const createServerConfig = require('../../webpack/createServerConfig')
+  const compileAssets = require('../utils/compileAssets')
 
   const buildTime = hirestime()
   const service = new Service(context, { args })
@@ -20,9 +19,7 @@ module.exports = async (context, args) => {
   const queue = await require('./createRenderQueue')(service)
 
   // 1. compile assets with webpack
-  const clientConfig = createClientConfig(context, config, plugins)
-  const serverConfig = createServerConfig(context, config, plugins)
-  await require('./compileAssets')(context, { clientConfig, serverConfig })
+  await compileAssets(context, config, plugins)
 
   // 2. run all GraphQL queries and save results into data.json files
   await plugins.callHook('beforeRenderQueries', { context, config, queue })
