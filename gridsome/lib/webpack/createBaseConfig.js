@@ -205,6 +205,7 @@ module.exports = (context, options, { isProd, isServer }) => {
     .use(require('webpack/lib/DefinePlugin'), [{
       'BASE_URL': JSON.stringify(options.base || '/'),
       'GRIDSOME_HASH': JSON.stringify(new Date().getTime().toString()),
+      'GRIDSOME_MODE': JSON.stringify(process.env.GRIDSOME_MODE || ''),
       'process.client': !isServer,
       'process.server': isServer
     }])

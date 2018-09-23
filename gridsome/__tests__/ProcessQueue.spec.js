@@ -73,18 +73,18 @@ test('do not resize if image is too small', async () => {
   expect(result.srcset).toHaveLength(1)
 })
 
-test('serve from dev server in develop', async () => {
+test('get url for server in serve mode', async () => {
   const relPath = 'assets/1000x600.png'
   const absPath = path.resolve(__dirname, relPath)
   const config = { assetsDir: 'assets', maxImageWidth: 500 }
   const queue = new ProcessQueue({ config, context: __dirname })
-  const env = process.env.NODE_ENV
+  const mode = process.env.GRIDSOME_MODE
 
-  process.env.NODE_ENV = 'development'
+  process.env.GRIDSOME_MODE = 'serve'
 
   const result = await queue.add(absPath)
 
-  process.env.NODE_ENV = env
+  process.env.GRIDSOME_MODE = mode
 
   expect(result.src).toEqual(`/static/${relPath}?width=500`)
 })

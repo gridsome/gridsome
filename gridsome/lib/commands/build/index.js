@@ -1,5 +1,6 @@
 module.exports = async (context, args) => {
   process.env.NODE_ENV = 'production'
+  process.env.GRIDSOME_MODE = 'static'
 
   const path = require('path')
   const fs = require('fs-extra')

@@ -1,5 +1,6 @@
 module.exports = async (context, args) => {
   process.env.NODE_ENV = 'production'
+  process.env.GRIDSOME_MODE === 'serve'
 
   const chalk = require('chalk')
   const Service = require('../Service')

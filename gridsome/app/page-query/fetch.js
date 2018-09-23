@@ -1,4 +1,4 @@
-/* global GRAPHQL_ENDPOINT, GRIDSOME_HASH */
+/* global GRAPHQL_ENDPOINT, GRIDSOME_HASH, GRIDSOME_MODE */
 
 import cache from './cache'
 
@@ -8,7 +8,7 @@ export default (options, route) => {
 
   route.meta.cacheKey = cacheKey
 
-  if (process.env.NODE_ENV === 'development') {
+  if (GRIDSOME_MODE === 'serve') {
     const variables = { ...route.params, path: route.path }
 
     return new Promise(resolve => {

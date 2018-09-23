@@ -20,7 +20,7 @@ class ProcessQueue {
   async add (filePath, options = {}) {
     const data = await this.preProcess(filePath, options)
 
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.GRIDSOME_MODE === 'serve') {
       return data
     }
 
@@ -81,7 +81,7 @@ class ProcessQueue {
       const { name, ext } = path.parse(filePath)
       let src = ''
 
-      if (process.env.NODE_ENV === 'development') {
+      if (process.env.GRIDSOME_MODE === 'serve') {
         const query = { width: srcWidth }
         const relPath = path.relative(this.context, filePath)
         src = `/static/${relPath}?${createOptionsQuery(query)}`

@@ -2,6 +2,7 @@ const validateQuery = require('../../graphql/utils/validateQuery')
 
 module.exports = function (source, map) {
   const isDev = process.env.NODE_ENV === 'development'
+  const isServing = process.env.GRIDSOME_MODE === 'serve'
   const { schema, config } = process.GRIDSOME_SERVICE
   const errors = validateQuery(schema, source)
 
@@ -16,7 +17,7 @@ module.exports = function (source, map) {
     import initPageQuery from '${config.appPath}/page-query'
     ${isDev && `import initDevQuery from '${config.appPath}/page-query/dev'`}
 
-    const query = ${isDev ? JSON.stringify(source) : 'undefined'}
+    const query = ${isServing ? JSON.stringify(source) : 'undefined'}
 
     export default Component => {
       initPageQuery(Component, query)

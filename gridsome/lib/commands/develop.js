@@ -1,5 +1,6 @@
 module.exports = async (context, args) => {
   process.env.NODE_ENV = 'development'
+  process.env.GRIDSOME_MODE = 'serve'
 
   const fs = require('fs-extra')
   const chalk = require('chalk')
