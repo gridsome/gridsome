@@ -1,4 +1,5 @@
 const path = require('path')
+const Router = require('vue-router')
 const autoBind = require('auto-bind')
 const hirestime = require('hirestime')
 const Store = require('./utils/Store')
@@ -86,6 +87,17 @@ class Service {
 
   generateRoutes () {
     this.routerData = prepareRoutes(this.store)
+
+    this.router = new Router({
+      base: '/',
+      mode: 'history',
+      fallback: false,
+      routes: this.routerData.pages.map(page => ({
+        path: page.route || page.path,
+        component: () => page
+      }))
+    })
+
     return generateFiles(this)
   }
 
@@ -102,6 +114,16 @@ class Service {
     const func = typeof docOrQuery === 'object' ? execute : graphql
 
     return func(this.schema, docOrQuery, undefined, context, variables)
+  }
+
+  queryRouteData (route, docOrQuery) {
+    if (!route.matched.length) {
+      return { data: {}}
+    }
+
+    const page = route.matched[0].components.default()
+    const variables = { ...route.params, path: route.path }
+    return this.graphql(page.pageQuery.query, variables)
   }
 
   broadcast (message, hotReload = true) {

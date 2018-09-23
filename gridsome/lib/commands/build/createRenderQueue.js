@@ -1,6 +1,5 @@
 const path = require('path')
 const { trim } = require('lodash')
-const Router = require('vue-router')
 
 const {
   PAGED_ROUTE,
@@ -9,19 +8,10 @@ const {
   DYNAMIC_TEMPLATE_ROUTE
 } = require('../../utils')
 
-module.exports = async ({ routerData, config, graphql }) => {
-  const router = new Router({
-    base: '/',
-    mode: 'history',
-    fallback: false,
-    routes: routerData.pages.map(page => ({
-      path: page.route || page.path
-    }))
-  })
-
+module.exports = async ({ router, config, graphql }) => {
   const createPage = (page, currentPage = 1) => {
     const fullPath = currentPage > 1 ? `${trim(page.path, '/')}/${currentPage}` : page.path
-    const route = router.resolve(fullPath).route
+    const { route } = router.resolve(fullPath)
     const output = path.resolve(config.outDir, trim(route.path, '/'))
 
     return {
@@ -33,7 +23,7 @@ module.exports = async ({ routerData, config, graphql }) => {
   }
 
   const createTemplate = (node, page) => {
-    const route = router.resolve(node.path).route
+    const { route } = router.resolve(node.path)
     const output = path.resolve(config.outDir, trim(route.path, '/'))
 
     return {
@@ -46,7 +36,9 @@ module.exports = async ({ routerData, config, graphql }) => {
 
   const queue = []
 
-  for (const page of routerData.pages) {
+  for (const route of router.options.routes) {
+    const page = route.component()
+
     switch (page.type) {
       case STATIC_ROUTE:
       case STATIC_TEMPLATE_ROUTE:
