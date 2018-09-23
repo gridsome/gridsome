@@ -1,12 +1,8 @@
 const path = require('path')
-const fs = require('fs-extra')
 const glob = require('globby')
-const chalk = require('chalk')
 const crypto = require('crypto')
 const chokidar = require('chokidar')
-const { kebabCase } = require('lodash')
-const compiler = require('vue-template-compiler')
-const { parse } = require('@vue/component-compiler-utils')
+const { createPagePath, parseComponent } = require('./lib/utils')
 
 class VueSource {
   static defaultOptions () {
@@ -55,7 +51,7 @@ function createPage (source, file) {
   const { name } = path.parse(file)
   const absPath = source.source.resolve(file)
   const { pageQuery } = parseComponent(absPath)
-  const component = file.replace('src', '@')
+  const component = file.replace('src', '~')
   const _id = createId(file)
   let type = 'page'
 
@@ -78,52 +74,6 @@ function createPage (source, file) {
   }
 
   return { type, options }
-}
-
-function parseComponent (file) {
-  const filename = path.parse(file).name
-  const source = fs.readFileSync(file, 'utf-8')
-  const { customBlocks } = parse({ filename, source, compiler })
-  const block = customBlocks.filter(block => {
-    // TODO: remove deprecation warning before v1.0
-    if (block.type === 'graphql') {
-      console.log(chalk.yellow(
-        `${filename}.vue: The <graphql> block is deprecated. Use <page-query> instead.`
-      ))
-    }
-
-    return /^(graphql|page-query)$/.test(block.type)
-  }).shift()
-
-  const res = {
-    pageQuery: { content: null }
-  }
-
-  if (block) {
-    res.pageQuery = {
-      content: block.content,
-      options: block.attrs
-    }
-  }
-
-  return res
-}
-
-/**
- * Index.vue -> /
- * Features.vue -> /features
- * blog/Index.vue -> /blog
- * AboutUs.vue -> /about-us
- */
-function createPagePath (file) {
-  const route = file
-    .replace(/^src\//, '')        // remove src dirname
-    .replace(/^pages\//, '')      // remove pages dirname
-    .replace(/\.vue$/, '')        // removes .vue extension
-    .replace(/\/?[iI]ndex$/, '/') // replaces /index with a /
-    .replace(/(^\/+|\/+$)/g, '')  // remove slahes
-
-  return '/' + route.split('/').map(s => kebabCase(s)).join('/')
 }
 
 function createId (string) {
