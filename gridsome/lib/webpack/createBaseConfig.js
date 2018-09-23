@@ -163,8 +163,9 @@ module.exports = (context, options, { isProd, isServer }) => {
 
   // graphql
 
+  // TODO: remove graphql loader before v1.0
   config.module.rule('graphql')
-    .resourceQuery(/blockType=graphql/)
+    .resourceQuery(/blockType=(graphql|page-query)/)
     .use('page-query')
       .loader(require.resolve('./loaders/page-query'))
 

@@ -1,6 +1,7 @@
 const path = require('path')
 const fs = require('fs-extra')
 const glob = require('globby')
+const chalk = require('chalk')
 const crypto = require('crypto')
 const chokidar = require('chokidar')
 const { kebabCase } = require('lodash')
@@ -83,7 +84,16 @@ function parseComponent (file) {
   const filename = path.parse(file).name
   const source = fs.readFileSync(file, 'utf-8')
   const { customBlocks } = parse({ filename, source, compiler })
-  const block = customBlocks.filter(block => block.type === 'graphql').shift()
+  const block = customBlocks.filter(block => {
+    // TODO: remove deprecation warning before v1.0
+    if (block.type === 'graphql') {
+      console.log(chalk.yellow(
+        `${filename}.vue: The <graphql> block is deprecated. Use <page-query> instead.`
+      ))
+    }
+
+    return /^(graphql|page-query)$/.test(block.type)
+  }).shift()
 
   const res = {
     pageQuery: { content: null }
