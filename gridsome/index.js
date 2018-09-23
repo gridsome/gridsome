@@ -1,5 +1,5 @@
 const chalk = require('chalk')
-const { develop, build, explore } = require('./lib')
+const { develop, build, serve, explore } = require('./lib')
 
 module.exports = ({ context, program }) => {
   program
@@ -7,8 +7,8 @@ module.exports = ({ context, program }) => {
     .description('start development server')
     .option('-p, --port <port>', 'use specified port (default: 8080)')
     .option('-h, --host <host>', 'use specified host (default: 0.0.0.0)')
-    .action(({ host, port }) => {
-      wrapCommand(develop)(context, { host, port })
+    .action(args => {
+      wrapCommand(develop)(context, args)
     })
 
   program
@@ -23,8 +23,17 @@ module.exports = ({ context, program }) => {
     .description('explore GraphQL data')
     .option('-p, --port <port>', 'use specified port (default: 8080)')
     .option('-h, --host <host>', 'use specified host (default: 0.0.0.0)')
-    .action(({ host, port }) => {
-      wrapCommand(explore)(context, { host, port })
+    .action(args => {
+      wrapCommand(explore)(context, args)
+    })
+
+  program
+    .command('serve')
+    .description('start a production node.js server')
+    .option('-p, --port <port>', 'use specified port (default: 8080)')
+    .option('-h, --host <host>', 'use specified host (default: 0.0.0.0)')
+    .action(args => {
+      wrapCommand(serve)(context, args)
     })
 }
 

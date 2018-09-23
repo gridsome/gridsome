@@ -33,7 +33,7 @@ module.exports = (context, options = {}, pkg = {}) => {
 
   config.pkg = options.pkg || resolvePkg(context)
   config.host = args.host || 'localhost'
-  config.port = parseInt(args.port) || 8080
+  config.port = parseInt(args.port, 10) || 8080
   config.plugins = normalizePlugins(plugins)
   config.chainWebpack = localConfig.chainWebpack
   config.transformers = resolveTransformers(config.pkg, localConfig)
@@ -45,6 +45,9 @@ module.exports = (context, options = {}, pkg = {}) => {
   config.cacheDir = resolve('.cache')
   config.minProcessImageWidth = 500 // TODO: find a better name for this
   config.maxImageWidth = localConfig.maxImageWidth || 1920
+
+  // max cache age for html markup in serve mode
+  config.maxCacheAge = localConfig.maxCacheAge || 1000
 
   config.siteUrl = localConfig.siteUrl || ''
   config.baseUrl = localConfig.baseUrl || '/'
