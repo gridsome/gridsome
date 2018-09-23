@@ -2,7 +2,6 @@ const path = require('path')
 const fs = require('fs-extra')
 const sharp = require('sharp')
 const imagemin = require('imagemin')
-const { template } = require('lodash')
 const imageminWebp = require('imagemin-webp')
 const createRenderFn = require('./createRenderFn')
 const imageminPngquant = require('imagemin-pngquant')
@@ -102,7 +101,7 @@ exports.renderHtml = async function ({
         : { data: {}}
 
       const html = await render(page.path, data)
-      
+
       fs.outputFileSync(`${page.output}/index.html`, html)
     } catch (err) {
       throw err

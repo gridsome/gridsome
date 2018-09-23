@@ -108,7 +108,7 @@ class ProcessQueue {
     if (options.srcset !== false) {
       result.cacheKey = hash.update(string).digest('hex')
       result.dataUri = await createDataUri(buffer, type, imageWidth, imageHeight)
-      result.sizes = options.sizes || `(max-width: ${imageWidth}px) 100vw, ${imageWidth}px`,
+      result.sizes = options.sizes || `(max-width: ${imageWidth}px) 100vw, ${imageWidth}px`
       result.srcset = result.sets.map(({ src, width }) => `${src} ${width}w`)
     }
 

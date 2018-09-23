@@ -38,7 +38,6 @@ export default function createApp () {
     }
   })
 
-
   if (process.client) {
     initIntersectionObserver(router)
   }

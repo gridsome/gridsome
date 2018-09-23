@@ -17,21 +17,21 @@ module.exports = function createRenderFn ({
   })
 
   return async function render (url, data = {}) {
-    const context = { url, pageQuery: { data } }
+    const context = { url, pageQuery: { data }}
 
     try {
       const app = await renderer.renderToString(context)
       const inject = context.head.inject()
 
-      const head = ''
-        + inject.title.text()
-        + inject.meta.text()
-        + inject.link.text()
-        + inject.style.text()
-        + inject.script.text()
-        + inject.noscript.text()
-        + context.renderResourceHints()
-        + context.renderStyles()
+      const head = '' +
+        inject.title.text() +
+        inject.meta.text() +
+        inject.link.text() +
+        inject.style.text() +
+        inject.script.text() +
+        inject.noscript.text() +
+        context.renderResourceHints() +
+        context.renderStyles()
 
       return renderHTML({
         htmlAttrs: `data-html-server-rendered="true" ${inject.htmlAttrs.text()}`,

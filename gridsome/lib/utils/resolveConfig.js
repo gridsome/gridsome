@@ -58,10 +58,6 @@ module.exports = (context, options = {}, pkg = {}) => {
   config.clientManifestPath = `${config.manifestsDir}/client.json`
   config.serverBundlePath = `${config.manifestsDir}/server.json`
 
-  const icon = typeof localConfig.icon === 'string'
-    ? { favicon: localConfig.icon }
-    : localConfig.icon || {}
-
   config.icon = normalizeIconsConfig(localConfig.icon)
 
   config.templatePath = path.resolve(config.appPath, 'index.html')
@@ -78,7 +74,7 @@ module.exports = (context, options = {}, pkg = {}) => {
 
 function resolvePkg (context) {
   const pkgPath = path.resolve(context, 'package.json')
-  let pkg = { dependencies: {} }
+  let pkg = { dependencies: {}}
 
   try {
     const content = fs.readFileSync(pkgPath, 'utf-8')

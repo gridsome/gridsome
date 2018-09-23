@@ -4,7 +4,6 @@ const getStream = require('get-stream')
 const replaceStream = require('replacestream')
 
 exports.inlineCriticalCSS = function (filePath, css) {
-  const html = fs.readFileSync(filePath, 'utf8')
   const inlineString = `<style id="___critical-css">${css}</style>`
 
   let isInlined = false
