@@ -7,7 +7,8 @@ const svgDataUri = require('mini-svg-data-uri')
 // const md5File = require('md5-file')
 
 class ProcessQueue {
-  constructor ({ config }) {
+  constructor ({ context, config }) {
+    this.context = context
     this.config = config
     this._queue = new Map()
   }
@@ -81,8 +82,9 @@ class ProcessQueue {
       let src = ''
 
       if (process.env.NODE_ENV === 'development') {
-        const query = { width: srcWidth, path: filePath }
-        src = `/___asset?${createOptionsQuery(query)}`
+        const query = { width: srcWidth }
+        const relPath = path.relative(this.context, filePath)
+        src = `/static/${relPath}?${createOptionsQuery(query)}`
       } else {
         src = '/' + path.join(assetsDir, `static/${name}-${srcWidth}${ext}`)
       }

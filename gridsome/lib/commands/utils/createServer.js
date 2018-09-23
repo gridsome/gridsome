@@ -11,7 +11,7 @@ const endpoints = {
   explore: '/___explore'
 }
 
-module.exports = ({ schema, store, config, queue }, worker) => {
+module.exports = ({ context, schema, store, config, queue }, worker) => {
   const app = express()
 
   app.use(
@@ -24,12 +24,17 @@ module.exports = ({ schema, store, config, queue }, worker) => {
     endpoint: endpoints.graphql
   }))
 
-  app.get('/___asset', async (req, res, next) => {
-    const query = mapValues(req.query, value => {
+  app.get('/static/*', async (req, res, next) => {
+    const options = mapValues(req.query, value => {
       return decodeURIComponent(value)
     })
 
-    const { path: filePath, ...options } = query
+    const filePath = path.resolve(context, req.params[0])
+
+    if (!fs.existsSync(filePath)) {
+      return res.sendStatus(404)
+    }
+
     const minWidth = config.minProcessImageWidth
     const { ext } = path.parse(filePath)
     const { cacheKey, size } = await queue.preProcess(filePath, options)

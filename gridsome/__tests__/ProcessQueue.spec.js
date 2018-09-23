@@ -74,18 +74,19 @@ test('do not resize if image is too small', async () => {
 })
 
 test('serve from dev server in develop', async () => {
-  const filePath = path.resolve(__dirname, 'assets/1000x600.png')
-  const config = { assetsDir: 'assets', maxImageWidth: 1000 }
-  const queue = new ProcessQueue({ config })
+  const relPath = 'assets/1000x600.png'
+  const absPath = path.resolve(__dirname, relPath)
+  const config = { assetsDir: 'assets', maxImageWidth: 500 }
+  const queue = new ProcessQueue({ config, context: __dirname })
   const env = process.env.NODE_ENV
 
   process.env.NODE_ENV = 'development'
 
-  const result = await queue.add(filePath)
+  const result = await queue.add(absPath)
 
   process.env.NODE_ENV = env
 
-  expect(result.src).toEqual(`/___asset?width=1000&path=${encodeURIComponent(filePath)}`)
+  expect(result.src).toEqual(`/static/${relPath}?width=500`)
 })
 
 test('get queue values', async () => {
