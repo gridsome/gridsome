@@ -61,6 +61,7 @@ export default {
 }
 
 const supportsIntersectionObserver = (
+  'document' in global &&
   'IntersectionObserver' in global &&
   'IntersectionObserverEntry' in global &&
   'intersectionRatio' in global.IntersectionObserverEntry.prototype

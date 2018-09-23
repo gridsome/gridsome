@@ -38,7 +38,11 @@ export default function createApp () {
     }
   })
 
-  initIntersectionObserver(router)
+
+  if (process.client) {
+    initIntersectionObserver(router)
+  }
+
   initRoutes(router)
 
   const head = {
