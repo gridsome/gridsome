@@ -179,14 +179,6 @@ test('add page with query', () => {
   })
 })
 
-test('fail if adding page with invaild query', () => {
-  expect(() => source.addPage('page', {
-    pageQuery: {
-      content: 'query Test { page {}}'
-    }
-  })).toThrow('Expected Name')
-})
-
 test('update page', () => {
   source.addPage('page', {
     _id: 'test',

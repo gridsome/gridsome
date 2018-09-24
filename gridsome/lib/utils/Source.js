@@ -143,9 +143,12 @@ class Source extends EventEmitter {
       _id: options._id,
       type: type || 'page',
       component: options.component,
-      pageQuery: parsePageQuery(options.pageQuery || {}),
       internal: this.createInternals({ type })
     }
+
+    try {
+      page.pageQuery = parsePageQuery(options.pageQuery || {})
+    } catch (err) {}
 
     page.title = options.title || page._id
     page.slug = options.slug || this.slugify(page.title)
@@ -160,12 +163,15 @@ class Source extends EventEmitter {
     const page = this.getPage(id)
     const oldPage = cloneDeep(page)
 
+    try {
+      page.pageQuery = options.pageQuery
+        ? parsePageQuery(options.pageQuery)
+        : page.pageQuery
+    } catch (err) {}
+
     page.title = options.title || page.title
     page.slug = options.slug || page.slug
     page.path = options.path || `/${page.slug}`
-    page.pageQuery = options.pageQuery
-      ? parsePageQuery(options.pageQuery)
-      : page.pageQuery
 
     this.emit('updatePage', page, oldPage)
 

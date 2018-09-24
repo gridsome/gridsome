@@ -4,10 +4,15 @@ module.exports = function (source, map) {
   const isDev = process.env.NODE_ENV === 'development'
   const isServing = process.env.GRIDSOME_MODE === 'serve'
   const { schema, config } = process.GRIDSOME_SERVICE
-  const errors = validateQuery(schema, source)
 
-  if (errors && errors.length) {
-    return this.callback(errors, source, map)
+  try {
+    const errors = validateQuery(schema, source)
+
+    if (errors && errors.length) {
+      return this.callback(errors, source, map)
+    }
+  } catch (err) {
+    return this.callback(err, source, map)
   }
 
   this.dependency(`${config.appPath}/page-query/index.js`)

@@ -1,9 +1,8 @@
-const { parse } = require('../../graphql/graphql')
+// const { parse } = require('../../graphql/graphql')
 const validateQuery = require('../../graphql/utils/validateQuery')
 
 module.exports = async function (source, map) {
   const { config, schema, graphql } = process.GRIDSOME_SERVICE
-  const errors = validateQuery(schema, source)
   const callback = this.async()
 
   this.dependency(`${config.appPath}/static-query/index.js`)
@@ -14,12 +13,17 @@ module.exports = async function (source, map) {
     this.dependency(`${config.tmpDir}/now.js`)
   }
 
-  if (errors && errors.length) {
-    return callback(errors, source, map)
+  try {
+    const errors = validateQuery(schema, source)
+
+    if (errors && errors.length) {
+      return callback(errors, source, map)
+    }
+  } catch (err) {
+    return callback(err, source, map)
   }
 
-  const doc = parse(source)
-  const { data } = await graphql(doc)
+  const { data } = await graphql(source)
 
   callback(null, `
     import initStaticQuery from '${config.appPath}/static-query'
