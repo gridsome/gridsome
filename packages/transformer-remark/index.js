@@ -138,27 +138,12 @@ class RemarkTransformer {
       }
 
       for (const node of images) {
-        const res = await this.queue.add(
+        const { imageHTML, noscriptHTML } = await this.queue.add(
           path.resolve(dirname, node.url)
         )
 
-        const className = 'g-image g-image--lazy'
-
-        const image = '' +
-          `<img class="${className}" ` +
-          `src="${res.dataUri}" width="${res.size.width}" ` +
-          `data-srcset="${res.srcset.join(', ')}" ` +
-          `data-sizes="${res.sizes}" ` +
-          `data-src="${res.src}">`
-
-        const fallback = '' +
-          `<noscript>` +
-          `<img class="${className} g-image--loaded" ` +
-          `src="${res.src}" width="${res.size.width}">` +
-          `</noscript>`
-
         node.type = 'html'
-        node.value = image + fallback
+        node.value = imageHTML + noscriptHTML
       }
 
       return toHAST(ast, options)

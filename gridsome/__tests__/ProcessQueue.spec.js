@@ -15,6 +15,8 @@ test('generate srcset for image', async () => {
   expect(result.src).toEqual('/assets/static/1000x600-1000.png')
   expect(result.sizes).toEqual('(max-width: 1000px) 100vw, 1000px')
   expect(result.dataUri).toMatchSnapshot()
+  expect(result.imageHTML).toMatchSnapshot()
+  expect(result.noscriptHTML).toMatchSnapshot()
   expect(result.sets).toHaveLength(2)
   expect(result.srcset).toHaveLength(2)
   expect(result.sets[0].src).toEqual('/assets/static/1000x600-480.png')
@@ -112,6 +114,17 @@ test('get queue values', async () => {
   expect(values).toHaveLength(2)
 })
 
+test('disable lazy loading', async () => {
+  const filePath = path.resolve(__dirname, 'assets/1000x600.png')
+  const config = { assetsDir: 'assets', maxImageWidth: 1000 }
+  const queue = new ProcessQueue({ config })
+
+  const result = await queue.add(filePath, { immediate: true })
+
+  expect(result.imageHTML).toMatchSnapshot()
+  expect(result.noscriptHTML).toEqual('')
+})
+
 test('skip srcset and dataUri', async () => {
   const filePath = path.resolve(__dirname, 'assets/1000x600.png')
   const config = { assetsDir: 'assets', maxImageWidth: 1000 }
@@ -123,6 +136,7 @@ test('skip srcset and dataUri', async () => {
   expect(result.dataUri).toBeUndefined()
   expect(result.sizes).toBeUndefined()
   expect(result.cacheKey).toBeUndefined()
+  expect(result.imageHTML).toMatchSnapshot()
 })
 
 test('skip missing files', async () => {

@@ -54,7 +54,6 @@ class ProcessQueue {
 
     const hash = crypto.createHash('md5')
     const buffer = fs.readFileSync(filePath)
-    const string = filePath + JSON.stringify(options)
     const { type, width, height } = imageSize.sync(buffer)
     const { assetsDir, maxImageWidth } = this.config
 
@@ -101,17 +100,41 @@ class ProcessQueue {
     const result = {
       src: sets[sets.length - 1].src,
       size: { width: imageWidth, height: imageHeight },
+      noscriptHTML: '',
+      imageHTML: '',
       filePath,
       type,
       sets
     }
 
-    if (options.srcset !== false) {
-      result.cacheKey = hash.update(string).digest('hex')
+    const classNames = ['g-image']
+    const isSrcset = options.srcset !== false
+    const isLazy = options.immediate === undefined
+
+    if (isSrcset) {
+      result.cacheKey = hash.update(filePath + JSON.stringify(options)).digest('hex')
       result.dataUri = await createDataUri(buffer, type, imageWidth, imageHeight, options)
       result.sizes = options.sizes || `(max-width: ${imageWidth}px) 100vw, ${imageWidth}px`
       result.srcset = result.sets.map(({ src, width }) => `${src} ${width}w`)
     }
+
+    if (isLazy) {
+      classNames.push('g-image--lazy')
+
+      result.noscriptHTML = '' +
+        `<noscript>` +
+        `<img class="${classNames.join(' ')} g-image--loaded" ` +
+        `src="${result.src}" width="${result.size.width}">` +
+        `</noscript>`
+    }
+
+    result.imageHTML = '' +
+      `<img class="${classNames.join(' ')}" ` +
+      `src="${isLazy ? result.dataUri || result.src : result.src}" ` +
+      `width="${result.size.width}"` +
+      (isLazy && isSrcset ? ` data-srcset="${result.srcset.join(', ')}"` : '') +
+      (isLazy && isSrcset ? ` data-sizes="${result.sizes}"` : '') +
+      (isLazy && isSrcset ? ` data-src="${result.src}">` : '>')
 
     return result
   }
