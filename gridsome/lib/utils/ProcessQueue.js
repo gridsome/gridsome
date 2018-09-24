@@ -1,5 +1,6 @@
 const fs = require('fs')
 const path = require('path')
+const sharp = require('sharp')
 const crypto = require('crypto')
 const { reduce, trim } = require('lodash')
 const imageSize = require('probe-image-size')
@@ -107,7 +108,7 @@ class ProcessQueue {
 
     if (options.srcset !== false) {
       result.cacheKey = hash.update(string).digest('hex')
-      result.dataUri = await createDataUri(buffer, type, imageWidth, imageHeight)
+      result.dataUri = await createDataUri(buffer, type, imageWidth, imageHeight, options)
       result.sizes = options.sizes || `(max-width: ${imageWidth}px) 100vw, ${imageWidth}px`
       result.srcset = result.sets.map(({ src, width }) => `${src} ${width}w`)
     }
@@ -116,30 +117,53 @@ class ProcessQueue {
   }
 }
 
+ProcessQueue.uid = 0
+
 function createOptionsQuery (options) {
   return reduce(options, (values, value, key) => {
     return (values.push(`${key}=${encodeURIComponent(value)}`), values)
   }, []).join('&')
 }
 
-function createDataUri (buffer, type, width, height) {
+async function createDataUri (buffer, type, width, height, options = {}) {
+  const blur = options.blur !== undefined ? parseInt(options.blur, 10) : 40
+
   return svgDataUri(
-    `<svg fill="none" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg"/>`
+    `<svg fill="none" viewBox="0 0 ${width} ${height}" ` +
+    `xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">` +
+    (blur > 0 ? await createBlurSvg(buffer, type, width, height, blur) : '') +
+    `</svg>`
   )
-
-  // TODO: traced svg fallback
-  // if (!/(jpe?g|png|bmp)/.test(type)) {
-  //   return svgDataUri(
-  //     `<svg fill="none" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg"/>`
-  //   )
-  // }
-
-  // return new Promise((resolve, reject) => {
-  //   potrace.trace(buffer, (err, svg) => {
-  //     if (err) reject(err)
-  //     else resolve(svgDataUri(svg))
-  //   })
-  // })
 }
+
+async function createBlurSvg (buffer, type, width, height, blur) {
+  const blurWidth = 64
+  const blurHeight = Math.round(height * (blurWidth / width))
+  const blurBuffer = await sharp(buffer).resize(blurWidth, blurHeight).toBuffer()
+  const base64 = blurBuffer.toString('base64')
+  const id = `__svg-blur-${ProcessQueue.uid++}`
+
+  return '' +
+    `<filter id="${id}">` +
+    `<feGaussianBlur in="SourceGraphic" stdDeviation="${blur}" />` +
+    `</filter>` +
+    `<image x="0" y="0" filter="url(#${id})" width="${width}" height="${height}" xlink:href="data:image/${type};base64,${base64}" />`
+}
+
+// async function createTracedSvg (buffer, type, width, height) {
+//   // TODO: traced svg fallback
+//   if (!/(jpe?g|png|bmp)/.test(type)) {
+//     return svgDataUri(
+//       `<svg fill="none" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg"/>`
+//     )
+//   }
+
+//   return new Promise((resolve, reject) => {
+//     potrace.trace(buffer, (err, svg) => {
+//       if (err) reject(err)
+//       else resolve(svgDataUri(svg))
+//     })
+//   })
+// }
 
 module.exports = ProcessQueue

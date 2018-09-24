@@ -20,7 +20,8 @@ export default {
     src: { type: Object },
     width: { type: String },
     alt: { type: String },
-    immediate: { type: true }
+    immediate: { type: true },
+    blur: { type: String }
 
     // responsive: true
     // grayscale: false

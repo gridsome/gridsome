@@ -1,6 +1,8 @@
 const path = require('path')
 const ProcessQueue = require('../lib/utils/ProcessQueue')
 
+beforeEach(() => (ProcessQueue.uid = 0))
+
 test('generate srcset for image', async () => {
   const filePath = path.resolve(__dirname, 'assets/1000x600.png')
   const config = { assetsDir: 'assets', maxImageWidth: 1000 }
@@ -12,7 +14,7 @@ test('generate srcset for image', async () => {
   expect(result.filePath).toEqual(filePath)
   expect(result.src).toEqual('/assets/static/1000x600-1000.png')
   expect(result.sizes).toEqual('(max-width: 1000px) 100vw, 1000px')
-  expect(result.dataUri).toEqual('data:image/svg+xml,%3csvg fill=\'none\' viewBox=\'0 0 1000 600\' xmlns=\'http://www.w3.org/2000/svg\'/%3e')
+  expect(result.dataUri).toMatchSnapshot()
   expect(result.sets).toHaveLength(2)
   expect(result.srcset).toHaveLength(2)
   expect(result.sets[0].src).toEqual('/assets/static/1000x600-480.png')
@@ -36,13 +38,23 @@ test('resize image by width attribute', async () => {
 
   expect(result.src).toEqual('/assets/static/1000x600-300.png')
   expect(result.sizes).toEqual('(max-width: 300px) 100vw, 300px')
-  expect(result.dataUri).toEqual('data:image/svg+xml,%3csvg fill=\'none\' viewBox=\'0 0 300 180\' xmlns=\'http://www.w3.org/2000/svg\'/%3e')
+  expect(result.dataUri).toMatchSnapshot()
   expect(result.sets).toHaveLength(1)
   expect(result.srcset).toHaveLength(1)
   expect(result.sets[0].src).toEqual('/assets/static/1000x600-300.png')
   expect(result.sets[0].width).toEqual(300)
   expect(result.sets[0].height).toEqual(180)
   expect(result.srcset[0]).toEqual('/assets/static/1000x600-300.png 300w')
+})
+
+test('disable blur filter', async () => {
+  const filePath = path.resolve(__dirname, 'assets/1000x600.png')
+  const config = { assetsDir: 'assets', maxImageWidth: 1000 }
+  const queue = new ProcessQueue({ config })
+
+  const result = await queue.add(filePath, { blur: '0' })
+
+  expect(result.dataUri).toMatchSnapshot()
 })
 
 test('respect config.maxImageWidth', async () => {

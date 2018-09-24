@@ -6,6 +6,7 @@ const { processImages } = require('../lib/commands/utils/worker')
 
 const assetsDir = path.resolve(__dirname, 'assets')
 
+beforeEach(() => (ProcessQueue.uid = 0))
 afterAll(() => fs.remove(path.join(assetsDir, 'static')))
 
 test('process png image', async () => {
