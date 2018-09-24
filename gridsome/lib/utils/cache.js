@@ -1,4 +1,5 @@
 const LRU = require('lru-cache')
+const crypto = require('crypto')
 
 const cache = new LRU({ max: 1000 })
 
@@ -13,9 +14,10 @@ exports.cache = (cacheKey, fallback) => {
 }
 
 exports.nodeCache = (node, key, fallback) => {
-  const id = node.$loki
-  const timestamp = node.internal.timestamp
-  const cacheKey = `${id}-${timestamp}-${key}`
+  const { $loki, fields, internal } = node
+  const string = JSON.stringify({ $loki, fields, internal })
+  const hash = crypto.createHash('md5').update(string).digest('hex')
+  const cacheKey = `${$loki}-${hash}-${key}`
 
   let result = cache.get(cacheKey)
 
