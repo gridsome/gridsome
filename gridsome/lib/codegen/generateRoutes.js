@@ -1,9 +1,11 @@
+const slugify = require('@sindresorhus/slugify')
+
 module.exports = ({ pages, notFoundComponent }) => {
   let res = `import NotFound from ${JSON.stringify(notFoundComponent)}\n\n`
 
   res += `export const routes = [${pages.map(page => {
     const component = JSON.stringify(page.component)
-    const chunkName = JSON.stringify(page.name || page.chunkName)
+    const chunkName = JSON.stringify(slugify(page.name || page.chunkName))
 
     const options = [
       `    path: ${JSON.stringify(page.route || page.path)}`,

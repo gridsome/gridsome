@@ -204,8 +204,8 @@ module.exports = (context, options, { isProd, isServer }) => {
 
   config.plugin('injections')
     .use(require('webpack/lib/DefinePlugin'), [{
-      'BASE_URL': JSON.stringify(options.base || '/'),
-      'GRIDSOME_HASH': JSON.stringify(new Date().getTime().toString()),
+      'BASE_URL': JSON.stringify(options.publicPath),
+      'GRIDSOME_CACHE_DIR': JSON.stringify(options.cacheDir),
       'GRIDSOME_MODE': JSON.stringify(process.env.GRIDSOME_MODE || ''),
       'process.client': !isServer,
       'process.server': isServer
@@ -216,6 +216,18 @@ module.exports = (context, options, { isProd, isServer }) => {
       .use(CSSExtractPlugin, [{
         filename: `${assetsDir}/css/styles.[chunkhash:8].css`
       }])
+
+    config.optimization.splitChunks({
+      cacheGroups: {
+        data: {
+          test: m => m.resource && m.request.startsWith(`${options.cacheDir}/data`),
+          name: 'data/chunks',
+          chunks: 'all',
+          maxSize: 50000,
+          minSize: 1
+        }
+      }
+    })
   }
 
   // helpes

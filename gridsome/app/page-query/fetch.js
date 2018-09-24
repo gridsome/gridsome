@@ -1,14 +1,14 @@
-/* global GRAPHQL_ENDPOINT, GRIDSOME_HASH, GRIDSOME_MODE */
+/* global GRAPHQL_ENDPOINT, GRIDSOME_MODE, GRIDSOME_CACHE_DIR */
 
 import cache from './cache'
 
 export default (options, route) => {
-  const query = options.__pageQuery
   const cacheKey = route.fullPath
 
   route.meta.cacheKey = cacheKey
 
   if (GRIDSOME_MODE === 'serve') {
+    const query = options.__pageQuery
     const variables = { ...route.params, path: route.path }
 
     return new Promise(resolve => {
@@ -23,20 +23,14 @@ export default (options, route) => {
           resolve(res)
         })
     })
-  }
-
-  return new Promise(resolve => {
-    if (cache.has(cacheKey)) {
-      return resolve(cache.get(cacheKey))
-    }
-
-    fetch(`${route.path.replace(/\/$/, '')}/data.json?${GRIDSOME_HASH}`, {
-      headers: { 'Content-Type': 'application/json' }
-    })
-      .then(res => res.json())
-      .then(res => {
-        cache.set(cacheKey, res.data)
+  } else if (GRIDSOME_MODE === 'static') {
+    return new Promise(resolve => {
+      import(
+        `${GRIDSOME_CACHE_DIR}/data${route.path}.json`
+      ).then(res => {
+        cache.set(cacheKey, res.default.data)
         resolve(res)
       })
-  })
+    })
+  }
 }

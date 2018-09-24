@@ -8,7 +8,7 @@ module.exports = async (queue, worker, config) => {
   const chunks = chunk(queue, 1000)
   const resolve = p => path.resolve(config.outDir, p)
 
-  const htmlTemplate = config.htmlTemplate
+  const { cacheDir, htmlTemplate } = config
   const clientManifestPath = resolve(config.clientManifestPath)
   const serverBundlePath = resolve(config.serverBundlePath)
 
@@ -23,6 +23,7 @@ module.exports = async (queue, worker, config) => {
     return worker
       .renderHtml({
         pages,
+        cacheDir,
         htmlTemplate,
         clientManifestPath,
         serverBundlePath

@@ -83,6 +83,7 @@ exports.processImages = async function ({ queue, outDir, minWidth }) {
 
 exports.renderHtml = async function ({
   pages,
+  cacheDir,
   htmlTemplate,
   clientManifestPath,
   serverBundlePath
@@ -97,7 +98,7 @@ exports.renderHtml = async function ({
     try {
       const page = pages[i]
       const { data } = page.hasData
-        ? require(`${page.output}/data.json`)
+        ? require(`${cacheDir}/data${page.path}.json`)
         : { data: {}}
 
       const html = await render(page.path, data)

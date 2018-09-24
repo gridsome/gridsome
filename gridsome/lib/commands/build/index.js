@@ -19,12 +19,12 @@ module.exports = async (context, args) => {
 
   const queue = await require('./createRenderQueue')(service)
 
-  // 1. compile assets with webpack
-  await compileAssets(context, config, plugins)
-
-  // 2. run all GraphQL queries and save results into data.json files
+  // 1. run all GraphQL queries and save results into data.json files
   await plugins.callHook('beforeRenderQueries', { context, config, queue })
-  await require('./renderQueries')(queue, graphql)
+  await require('./renderQueries')(queue, graphql, config)
+
+  // 2. compile assets with webpack
+  await compileAssets(context, config, plugins)
 
   // 3. render a static index.html file for each possible route
   await plugins.callHook('beforeRenderHTML', { context, config, queue })

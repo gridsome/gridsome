@@ -62,12 +62,13 @@ module.exports = async (context, args) => {
 
     const { data } = await service.queryRouteData(route)
 
-    render(route.path, data)
-      .then(html => {
-        cache.set(route.fullPath, html)
-        res.end(html)
-      })
-      .catch(err => next(err))
+    try {
+      const html = await render(route.path, data)
+      cache.set(route.fullPath, html)
+      res.end(html)
+    } catch (err) {
+      next(err)
+    }
   })
 
   await plugins.callHook('afterServe', { context, config, app })
