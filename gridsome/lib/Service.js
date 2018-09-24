@@ -117,13 +117,16 @@ class Service {
   }
 
   queryRouteData (route, docOrQuery) {
-    if (!route.matched.length) {
-      return { data: {}}
-    }
+    const emptyData = { data: {}}
 
-    const page = route.matched[0].components.default()
+    if (!route.matched.length) return emptyData
+
+    const { pageQuery } = route.matched[0].components.default()
     const variables = { ...route.params, path: route.path }
-    return this.graphql(page.pageQuery.query, variables)
+
+    return pageQuery.query
+      ? this.graphql(pageQuery.query, variables)
+      : emptyData
   }
 
   broadcast (message, hotReload = true) {
