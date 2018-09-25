@@ -102,10 +102,13 @@ export default function createApp () {
     }
   }
 
+  const isServer = process.server
+  const isClient = process.client
+
   try {
     const main = require('@/main.js')
     if (typeof main.default === 'function') {
-      main.default(Vue, { options, router, head })
+      main.default(Vue, { options, router, head, isServer, isClient })
     }
   } catch (err) {}
 
