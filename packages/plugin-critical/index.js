@@ -40,7 +40,7 @@ class CriticalPlugin {
           ignore: options.ignore,
           width: options.width,
           height: options.height,
-          folder: baseUrl,
+          pathPrefix: baseUrl,
           html: sourceHTML,
           inline: false,
           minify: true,
@@ -50,6 +50,9 @@ class CriticalPlugin {
         console.log(err.message)
         return
       }
+
+      // remove path prefix from hashed urls
+      criticalCSS = criticalCSS.replace(/="url\([/\w]+%23(\w+)\)"/g, '="url(%23$1)"')
 
       // we manually inline critical css because cheerio is messing
       // up the markup from Vue server renderer
