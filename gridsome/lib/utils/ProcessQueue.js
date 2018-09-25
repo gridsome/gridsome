@@ -118,7 +118,7 @@ class ProcessQueue {
       result.srcset = result.sets.map(({ src, width }) => `${src} ${width}w`)
     }
 
-    if (isLazy) {
+    if (isLazy && isSrcset) {
       classNames.push('g-image--lazy')
 
       result.noscriptHTML = '' +
