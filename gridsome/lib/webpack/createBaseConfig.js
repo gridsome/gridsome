@@ -100,6 +100,8 @@ module.exports = (context, options, { isProd, isServer }) => {
     .use('babel-loader')
       .loader('babel-loader')
       .options({
+        babelrc: false,
+        configFile: false,
         presets: [require.resolve('./babel-preset')]
       })
 
