@@ -1,4 +1,4 @@
-const { BREAK } = require('graphql/language/visitor')
+const { BREAK } = require('graphql')
 
 const {
   visit,

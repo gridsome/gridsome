@@ -97,13 +97,15 @@ exports.renderHtml = async function ({
   for (let i = 0, l = pages.length; i < l; i++) {
     try {
       const page = pages[i]
-      const { data } = page.hasData
-        ? require(`${cacheDir}/data${page.path}.json`)
-        : { data: {}}
+      let data = {}
+
+      if (page.dataOutput) {
+        data = require(page.dataOutput).data
+      }
 
       const html = await render(page.path, data)
 
-      fs.outputFileSync(`${page.output}/index.html`, html)
+      fs.outputFileSync(page.htmlOutput, html)
     } catch (err) {
       throw err
     }

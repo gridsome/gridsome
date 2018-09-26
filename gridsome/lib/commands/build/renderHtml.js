@@ -8,7 +8,7 @@ module.exports = async (queue, worker, config) => {
   const chunks = chunk(queue, 1000)
   const resolve = p => path.resolve(config.outDir, p)
 
-  const { cacheDir, htmlTemplate } = config
+  const { htmlTemplate } = config
   const clientManifestPath = resolve(config.clientManifestPath)
   const serverBundlePath = resolve(config.serverBundlePath)
 
@@ -16,14 +16,13 @@ module.exports = async (queue, worker, config) => {
     // reduce amount of data sent to worker
     const pages = chunk.map(page => ({
       path: page.path,
-      output: page.output,
-      hasData: !!page.query
+      htmlOutput: page.htmlOutput,
+      dataOutput: page.dataOutput
     }))
 
     return worker
       .renderHtml({
         pages,
-        cacheDir,
         htmlTemplate,
         clientManifestPath,
         serverBundlePath

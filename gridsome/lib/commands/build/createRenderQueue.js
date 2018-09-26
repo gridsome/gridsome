@@ -10,26 +10,36 @@ const {
 
 module.exports = async ({ router, config, graphql }) => {
   const createPage = (page, currentPage = 1) => {
-    const fullPath = currentPage > 1 ? `${trim(page.path, '/')}/${currentPage}` : page.path
+    const isPager = currentPage > 1
+    const fullPath = isPager ? `${trim(page.path, '/')}/${currentPage}` : page.path
     const { route } = router.resolve(fullPath)
-    const output = path.resolve(config.outDir, trim(route.path, '/'))
+    const { query } = page.pageQuery
+    const routePath = trim(route.path, '/')
+    const dataPath = !routePath ? 'index.json' : `${routePath}.json`
+    const htmlOutput = path.resolve(config.outDir, routePath, 'index.html')
+    const dataOutput = path.resolve(config.cacheDir, 'data', dataPath)
 
     return {
       path: fullPath,
-      query: page.pageQuery.query,
-      output,
+      dataOutput: query ? dataOutput : null,
+      htmlOutput,
+      query,
       route
     }
   }
 
   const createTemplate = (node, page) => {
     const { route } = router.resolve(node.path)
-    const output = path.resolve(config.outDir, trim(route.path, '/'))
+    const { query } = page.pageQuery
+    const routePath = trim(route.path, '/')
+    const htmlOutput = path.resolve(config.outDir, routePath, 'index.html')
+    const dataOutput = path.resolve(config.cacheDir, 'data', `${routePath}.json`)
 
     return {
       path: node.path,
-      query: page.pageQuery.query,
-      output,
+      dataOutput: query ? dataOutput : null,
+      htmlOutput,
+      query,
       route
     }
   }
