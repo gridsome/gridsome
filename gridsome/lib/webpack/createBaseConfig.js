@@ -209,8 +209,8 @@ module.exports = (context, options, { isProd, isServer }) => {
       'BASE_URL': JSON.stringify(options.publicPath),
       'GRIDSOME_CACHE_DIR': JSON.stringify(options.cacheDir),
       'GRIDSOME_MODE': JSON.stringify(process.env.GRIDSOME_MODE || ''),
-      'process.client': !isServer,
-      'process.server': isServer
+      'process.isClient': !isServer,
+      'process.isServer': isServer
     }])
 
   if (isProd && !isServer) {

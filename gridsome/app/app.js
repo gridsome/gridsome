@@ -38,7 +38,7 @@ export default function createApp () {
     }
   })
 
-  if (process.client) {
+  if (process.isClient) {
     initIntersectionObserver(router)
   }
 
@@ -102,8 +102,8 @@ export default function createApp () {
     }
   }
 
-  const isServer = process.server
-  const isClient = process.client
+  const isServer = process.isServer
+  const isClient = process.isClient
 
   try {
     const main = require('@/main.js')

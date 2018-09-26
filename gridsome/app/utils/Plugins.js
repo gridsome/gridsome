@@ -1,8 +1,8 @@
 import Vue from 'vue'
 import plugins from 'plugins-loader!@gridsome/temp/plugins.js'
 
-const isServer = process.server === true
-const isClient = process.client === true
+const isServer = process.isServer === true
+const isClient = process.isClient === true
 
 class Plugins {
   constructor () {

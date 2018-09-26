@@ -14,13 +14,13 @@ export default ({ options }, query = true) => {
 
   options.computed = merge.computed({
     $page () {
-      return process.server
+      return process.isServer
         ? this.$ssrContext.pageQuery.data
         : cache.get(this.$route.meta.cacheKey)
     }
   }, options.computed)
 
-  if (process.server) return
+  if (process.isServer) return
 
   createRouteGuard(options, 'beforeRouteEnter')
   createRouteGuard(options, 'beforeRouteUpdate')
