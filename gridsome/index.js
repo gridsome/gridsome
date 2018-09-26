@@ -40,8 +40,8 @@ module.exports = ({ context, program }) => {
 function wrapCommand (fn) {
   return (...args) => {
     return fn(...args).catch(err => {
-      console.error(chalk.red(err.message))
-      process.exitCode = 1
+      console.error(chalk.red(err.stack))
+      process.exit(1)
     })
   }
 }
