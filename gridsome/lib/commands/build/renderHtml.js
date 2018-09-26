@@ -29,6 +29,7 @@ module.exports = async (queue, worker, config) => {
         serverBundlePath
       })
       .catch(err => {
+        worker.end()
         throw err
       })
   }))

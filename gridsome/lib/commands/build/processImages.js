@@ -10,7 +10,8 @@ module.exports = async (queue, worker, { outDir, minProcessImageWidth }) => {
     return worker
       .processImages({ queue, outDir, minWidth: minProcessImageWidth })
       .catch(err => {
-        console.log(err.message)
+        worker.end()
+        throw err
       })
   }))
 
