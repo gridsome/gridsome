@@ -27,7 +27,7 @@ export default (options, route) => {
     return new Promise(resolve => {
       const path = route.path.replace(/[\/]+$/, '')
       const dataOutput = !path ? '/index.json' : `${path}.json`
-      import(`${GRIDSOME_CACHE_DIR}/data${dataOutput}`).then(res => {
+      import(/* webpackChunkName: "data/" */ `${GRIDSOME_CACHE_DIR}/data${dataOutput}`).then(res => {
         cache.set(cacheKey, res.default.data)
         resolve(res)
       })

@@ -223,7 +223,7 @@ module.exports = (context, options, { isProd, isServer }) => {
       cacheGroups: {
         data: {
           test: m => m.resource && m.request.startsWith(`${options.cacheDir}/data`),
-          name: 'data/chunks',
+          name: false,
           chunks: 'all',
           maxSize: 60000,
           minSize: 5000
