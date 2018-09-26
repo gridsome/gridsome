@@ -1,4 +1,5 @@
 const path = require('path')
+const chalk = require('chalk')
 const Router = require('vue-router')
 const autoBind = require('auto-bind')
 const hirestime = require('hirestime')
@@ -10,7 +11,9 @@ const ProcessQueue = require('./utils/ProcessQueue')
 const createSchema = require('./graphql/createSchema')
 const resolveConfig = require('./utils/resolveConfig')
 const prepareRoutes = require('./utils/prepareRoutes')
+const resolveSystemInfo = require('./utils/resolveSystemInfo')
 const { execute, graphql } = require('./graphql/graphql')
+const { version } = require('../package.json')
 
 class Service {
   constructor (context, options = {}) {
@@ -19,6 +22,14 @@ class Service {
     this.clients = {}
     this.context = context
     this.config = resolveConfig(context, options)
+    this.system = resolveSystemInfo()
+
+    console.log(`Gridsome v${version}`)
+    console.log(chalk.gray(
+      `CPU ${this.system.cpus.model} ` +
+      `(${this.system.cpus.physical} cores)`
+    ))
+    console.log()
 
     autoBind(this)
   }

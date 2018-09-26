@@ -11,8 +11,8 @@ module.exports = async (context, args) => {
 
   const buildTime = hirestime()
   const service = new Service(context, { args })
-  const { config, graphql, plugins } = await service.bootstrap()
-  const worker = createWorker(config)
+  const { config, system, graphql, plugins } = await service.bootstrap()
+  const worker = createWorker(config, system.cpus.logical)
 
   await plugins.callHook('beforeBuild', { context, config })
   await fs.remove(config.outDir)
@@ -21,7 +21,7 @@ module.exports = async (context, args) => {
 
   // 1. run all GraphQL queries and save results into data.json files
   await plugins.callHook('beforeRenderQueries', { context, config, queue })
-  await require('./renderQueries')(queue, graphql, config)
+  await require('./renderQueries')(queue, graphql, config.cacheDir, system.cpus.logical)
 
   // 2. compile assets with webpack
   await compileAssets(context, config, plugins)
