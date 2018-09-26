@@ -28,6 +28,7 @@ module.exports = (context, options, { isProd, isServer }) => {
     .alias
       .set('~', resolve('src', context))
       .set('@', resolve('src', context))
+      .set('gridsome$', path.resolve(options.appPath, 'index.js'))
       .end()
     .extensions
       .merge(['.js', '.vue', '.json'])
