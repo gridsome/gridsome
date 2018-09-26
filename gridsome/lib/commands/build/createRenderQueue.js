@@ -19,10 +19,14 @@ module.exports = async ({ router, config, graphql }) => {
     const htmlOutput = path.resolve(config.outDir, routePath, 'index.html')
     const dataOutput = path.resolve(config.cacheDir, 'data', dataPath)
 
+    // TODO: remove this before v1.0
+    const output = path.dirname(htmlOutput)
+
     return {
       path: fullPath,
       dataOutput: query ? dataOutput : null,
       htmlOutput,
+      output,
       query,
       route
     }
@@ -35,10 +39,14 @@ module.exports = async ({ router, config, graphql }) => {
     const htmlOutput = path.resolve(config.outDir, routePath, 'index.html')
     const dataOutput = path.resolve(config.cacheDir, 'data', `${routePath}.json`)
 
+    // TODO: remove this before v1.0
+    const output = path.dirname(htmlOutput)
+
     return {
       path: node.path,
       dataOutput: query ? dataOutput : null,
       htmlOutput,
+      output,
       query,
       route
     }

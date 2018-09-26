@@ -30,9 +30,8 @@ class CriticalPlugin {
 
     console.log(`Extract critical CSS (${pages.length} pages)`)
 
-    await Promise.all(pages.map(async page => {
-      const filePath = `${page.output}/index.html`
-      const sourceHTML = await fs.readFile(filePath, 'utf-8')
+    await Promise.all(pages.map(async ({ htmlOutput }) => {
+      const sourceHTML = await fs.readFile(htmlOutput, 'utf-8')
       let criticalCSS = ''
 
       try {
@@ -56,9 +55,9 @@ class CriticalPlugin {
 
       // we manually inline critical css because cheerio is messing
       // up the markup from Vue server renderer
-      const resultHTML = await inlineCriticalCSS(filePath, criticalCSS)
+      const resultHTML = await inlineCriticalCSS(htmlOutput, criticalCSS)
 
-      return fs.outputFile(filePath, resultHTML)
+      return fs.outputFile(htmlOutput, resultHTML)
     }))
   }
 }
