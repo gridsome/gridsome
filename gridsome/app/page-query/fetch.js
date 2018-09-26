@@ -25,9 +25,8 @@ export default (options, route) => {
     })
   } else if (GRIDSOME_MODE === 'static') {
     return new Promise(resolve => {
-      import(
-        `${GRIDSOME_CACHE_DIR}/data${route.path}.json`
-      ).then(res => {
+      const path = route.path.replace(/[\/]+$/, '')
+      import(`${GRIDSOME_CACHE_DIR}/data${path}.json`).then(res => {
         cache.set(cacheKey, res.default.data)
         resolve(res)
       })
