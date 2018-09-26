@@ -12,9 +12,11 @@ module.exports = function createRenderFn ({
   const serverBundle = require(serverBundlePath)
 
   const renderer = createBundleRenderer(serverBundle, {
-    inject: false,
+    clientManifest,
     runInNewContext: false,
-    clientManifest
+    shouldPrefetch (file, type) {
+      return type === 'script' && !/js\/data(?:[^/]+)?\//.test(file)
+    }
   })
 
   return async function render (url, data = {}) {

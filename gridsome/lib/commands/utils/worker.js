@@ -83,7 +83,6 @@ exports.processImages = async function ({ queue, outDir, minWidth }) {
 
 exports.renderHtml = async function ({
   pages,
-  cacheDir,
   htmlTemplate,
   clientManifestPath,
   serverBundlePath
