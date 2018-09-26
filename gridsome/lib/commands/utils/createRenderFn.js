@@ -21,22 +21,25 @@ module.exports = function createRenderFn ({
 
     try {
       const app = await renderer.renderToString(context)
-      const inject = context.head.inject()
+      const inject = context.meta ? context.meta.inject() : null
 
       const head = '' +
-        inject.title.text() +
-        inject.meta.text() +
-        inject.link.text() +
-        inject.style.text() +
-        inject.script.text() +
-        inject.noscript.text() +
+        (inject ? inject.title.text() : '') +
+        (inject ? inject.meta.text() : '') +
+        (inject ? inject.link.text() : '') +
+        (inject ? inject.style.text() : '') +
+        (inject ? inject.script.text() : '') +
+        (inject ? inject.noscript.text() : '') +
         context.renderResourceHints() +
         context.renderStyles()
 
+      const htmlAttrs = inject ? inject.htmlAttrs.text() : ''
+      const bodyAttrs = inject ? inject.bodyAttrs.text() : ''
+
       return renderHTML({
-        htmlAttrs: `data-html-server-rendered="true" ${inject.htmlAttrs.text()}`,
-        bodyAttrs: inject.bodyAttrs.text(),
+        htmlAttrs: inject ? `data-html-server-rendered="true" ${htmlAttrs}` : '',
         scripts: context.renderScripts(),
+        bodyAttrs,
         head,
         app
       })

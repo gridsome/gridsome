@@ -10,7 +10,7 @@ import Image, { initIntersectionObserver } from './components/Image'
 
 Vue.use(Router)
 Vue.use(Meta, {
-  keyName: 'metaInfo', // TODO: change this to 'head'
+  // keyName: 'head', TODO: change this to 'head'
   attribute: 'data-vue-tag',
   ssrAttribute: 'data-html-server-rendered',
   tagIDKeyName: 'key'
@@ -83,7 +83,9 @@ export default function createApp () {
     router,
     data: {},
     methods: {},
-    metaInfo: head,
+    metaInfo () {
+      return head
+    },
     mounted () {
       // let Vue router handle internal URLs for anchors in innerHTML
       document.addEventListener('click', event => {
@@ -112,5 +114,7 @@ export default function createApp () {
     }
   } catch (err) {}
 
-  return { app: new Vue(options), router }
+  const app = new Vue(options)
+
+  return { app, router }
 }

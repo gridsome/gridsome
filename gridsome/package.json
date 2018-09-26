@@ -91,7 +91,7 @@
     "uuid": "^3.3.2",
     "vue": "^2.5.17",
     "vue-loader": "^15.3.0",
-    "vue-meta": "^1.5.3",
+    "vue-meta": "^1.5.4",
     "vue-router": "^3.0.1",
     "vue-server-renderer": "^2.5.17",
     "vue-template-compiler": "^2.5.17",
