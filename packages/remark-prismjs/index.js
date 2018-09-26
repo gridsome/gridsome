@@ -8,7 +8,7 @@ module.exports = options => {
 
   // highlight for graphql and static-query tags in html
   Prism.languages.html.graphql = {
-    pattern: /(<(graphql|static-query)[\s\S]*?>)[\s\S]*?(?=<\/(graphql|static-query)>)/i,
+    pattern: /(<(page|static)-query[\s\S]*?>)[\s\S]*?(?=<\/(page|static)-query>)/i,
     inside: Prism.languages.graphql,
     lookbehind: true,
     greedy: true
