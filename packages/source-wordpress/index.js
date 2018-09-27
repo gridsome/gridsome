@@ -85,7 +85,7 @@ class WordPressSource {
         this.source.addNode(post.type, {
           _id: makePostId(post.id),
           title: post.title ? post.title.rendered : '',
-          date: new Date(post.date),
+          date: post.date ? new Date(post.date) : null,
           slug: post.slug,
           fields: {
             content: post.content ? post.content.rendered : '',
@@ -127,12 +127,14 @@ async function taskHandler (task, cb) {
 function fetchPaged (url, options = {}) {
   return new Promise(async (resolve, reject) => {
     const query = querystring.stringify({ per_page: options.perPage })
-    const { data, headers } = await axios.get(`${url}?${query}`)
-    const totalItems = parseInt(headers['x-wp-total'], 10)
-    const totalPages = parseInt(headers['x-wp-totalpages'], 10)
+    const res = await axios.get(`${url}?${query}`)
+    const totalItems = parseInt(res.headers['x-wp-total'], 10)
+    const totalPages = parseInt(res.headers['x-wp-totalpages'], 10)
+
+    res.data = ensureArrayData(url, res.data)
 
     if (!totalItems || totalPages <= 1) {
-      return resolve(data)
+      return resolve(res.data)
     }
 
     const queue = new Queue(taskHandler, {
@@ -149,14 +151,22 @@ function fetchPaged (url, options = {}) {
       queue.destroy()
     })
 
-    queue.on('task_finish', (id, response) => {
-      data.push(...response.data)
+    queue.on('task_finish', (id, { data }) => {
+      res.data.push(...ensureArrayData(data))
     })
 
     queue.on('drain', () => {
-      resolve(data)
+      resolve(res.data)
     })
   })
+}
+
+function ensureArrayData (url, data) {
+  if (!Array.isArray(data)) {
+    console.error(`Failed to fetch ${url}`)
+    return []
+  }
+  return data
 }
 
 module.exports = WordPressSource
