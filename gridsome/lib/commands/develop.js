@@ -65,7 +65,11 @@ module.exports = async (context, args) => {
     console.log()
   })
 
-  app.use(devMiddleware)
+  app.use((req, res, next) => {
+    return req.originalUrl !== endpoints.explore
+      ? devMiddleware(req, res, next)
+      : next()
+  })
 
   app.listen(port, host, err => {
     if (err) throw err
