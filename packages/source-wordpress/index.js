@@ -152,7 +152,7 @@ function fetchPaged (url, options = {}) {
     })
 
     queue.on('task_finish', (id, { data }) => {
-      res.data.push(...ensureArrayData(data))
+      res.data.push(...ensureArrayData(id, data))
     })
 
     queue.on('drain', () => {
@@ -163,8 +163,12 @@ function fetchPaged (url, options = {}) {
 
 function ensureArrayData (url, data) {
   if (!Array.isArray(data)) {
-    console.error(`Failed to fetch ${url}`)
-    return []
+    try {
+      data = JSON.parse(data)
+    } catch (err) {
+      console.error(`Failed to parse results from ${url}`)
+      return []
+    }
   }
   return data
 }
