@@ -61,7 +61,9 @@ function createPage (source, file) {
     pageQuery,
     slug: source.source.slugify(name),
     path: createPagePath(file),
-    file
+    internal: {
+      origin: file
+    }
   }
 
   if (/^src\/pages\/404\.vue$/.test(file)) {

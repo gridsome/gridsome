@@ -146,7 +146,8 @@ test('generate slug from any string', () => {
 test('add page', () => {
   const emit = jest.spyOn(source, 'emit')
   const page = source.addPage('page', {
-    title: 'Lorem ipsum dolor sit amet'
+    title: 'Lorem ipsum dolor sit amet',
+    internal: { origin: 'Test.vue' }
   })
 
   expect(page).toHaveProperty('$loki')
@@ -155,6 +156,7 @@ test('add page', () => {
   expect(page.title).toEqual('Lorem ipsum dolor sit amet')
   expect(page.slug).toEqual('lorem-ipsum-dolor-sit-amet')
   expect(page.path).toEqual('/lorem-ipsum-dolor-sit-amet')
+  expect(page.internal.origin).toEqual('Test.vue')
   expect(emit).toHaveBeenCalledTimes(1)
 
   emit.mockRestore()
@@ -182,17 +184,20 @@ test('add page with query', () => {
 test('update page', () => {
   source.addPage('page', {
     _id: 'test',
-    title: 'Lorem ipsum dolor sit amet'
+    title: 'Lorem ipsum dolor sit amet',
+    internal: { origin: 'Test.vue' }
   })
 
   const emit = jest.spyOn(source, 'emit')
   const page = source.updatePage('test', {
+    internal: { origin: 'Test2.vue' },
     title: 'New title'
   })
 
   expect(page.title).toEqual('New title')
   expect(page.slug).toEqual('lorem-ipsum-dolor-sit-amet')
   expect(page.path).toEqual('/lorem-ipsum-dolor-sit-amet')
+  expect(page.internal.origin).toEqual('Test2.vue')
   expect(emit).toHaveBeenCalledTimes(1)
 
   emit.mockRestore()

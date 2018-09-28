@@ -143,7 +143,7 @@ class Source extends EventEmitter {
       _id: options._id,
       type: type || 'page',
       component: options.component,
-      internal: this.createInternals({ type })
+      internal: this.createInternals(options.internal)
     }
 
     try {
@@ -153,6 +153,7 @@ class Source extends EventEmitter {
     page.title = options.title || page._id
     page.slug = options.slug || this.slugify(page.title)
     page.path = options.path || `/${page.slug}`
+    page.file = options.file
 
     this.emit('addPage', page)
 
@@ -162,6 +163,7 @@ class Source extends EventEmitter {
   updatePage (id, options) {
     const page = this.getPage(id)
     const oldPage = cloneDeep(page)
+    const internal = this.createInternals(options.internal)
 
     try {
       page.pageQuery = options.pageQuery
@@ -172,6 +174,8 @@ class Source extends EventEmitter {
     page.title = options.title || page.title
     page.slug = options.slug || page.slug
     page.path = options.path || `/${page.slug}`
+    page.file = options.file || page.file
+    page.internal = Object.assign({}, page.internal, internal)
 
     this.emit('updatePage', page, oldPage)
 

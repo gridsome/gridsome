@@ -91,7 +91,7 @@ class Plugins extends EventEmitter {
           this.emit('broadcast', {
             type: 'updateQuery',
             query: page.pageQuery.content,
-            file: page.file
+            file: page.internal.origin
           })
         })
       }
