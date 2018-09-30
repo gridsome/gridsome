@@ -5,18 +5,21 @@ module.exports = ({ pages, notFoundComponent }) => {
 
   res += `export const routes = [${pages.map(page => {
     const component = JSON.stringify(page.component)
-    const chunkName = JSON.stringify(slugify(page.name || page.chunkName))
+    const chunkName = JSON.stringify('component--' + slugify(page.name || page.chunkName))
+    const props = []
 
-    const options = [
-      `    path: ${JSON.stringify(page.route || page.path)}`,
-      `    component: () => import(/* webpackChunkName: ${chunkName} */ ${component})`
-    ]
+    props.push(`    path: ${JSON.stringify(page.route || page.path)}`)
+    props.push(`    component: () => import(/* webpackChunkName: ${chunkName} */ ${component})`)
 
-    if (page.name) {
-      options.unshift(`    name: ${JSON.stringify(page.name)}`)
+    if (page.pageQuery.query) {
+      props.push(`    meta: { data: true }`)
     }
 
-    return `\n  {\n${options.join(',\n')}\n  }`
+    if (page.name) {
+      props.unshift(`    name: ${JSON.stringify(page.name)}`)
+    }
+
+    return `\n  {\n${props.join(',\n')}\n  }`
   }).join(',')}\n]\n\n`
 
   res += `export { NotFound }\n\n`

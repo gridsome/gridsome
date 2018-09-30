@@ -31,7 +31,7 @@ module.exports = (context, options, { isProd, isServer }) => {
       .set('gridsome$', path.resolve(options.appPath, 'index.js'))
       .end()
     .extensions
-      .merge(['.js', '.vue', '.json'])
+      .merge(['.js', '.vue'])
       .end()
     .modules
       .add(resolve('../../node_modules'))
@@ -209,6 +209,7 @@ module.exports = (context, options, { isProd, isServer }) => {
     .use(require('webpack/lib/DefinePlugin'), [{
       'BASE_URL': JSON.stringify(options.publicPath),
       'GRIDSOME_CACHE_DIR': JSON.stringify(options.cacheDir),
+      'GRIDSOME_DATA_DIR': JSON.stringify(`${options.cacheDir}/data`),
       'GRIDSOME_MODE': JSON.stringify(process.env.GRIDSOME_MODE || ''),
       'process.isClient': !isServer,
       'process.isServer': isServer

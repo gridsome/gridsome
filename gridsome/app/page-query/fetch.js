@@ -1,14 +1,9 @@
-/* global GRAPHQL_ENDPOINT, GRIDSOME_MODE, GRIDSOME_CACHE_DIR */
+/* global GRAPHQL_ENDPOINT, GRIDSOME_MODE, GRIDSOME_DATA_DIR */
 
 import cache from './cache'
 
-export default (options, route) => {
-  const cacheKey = route.fullPath
-
-  route.meta.cacheKey = cacheKey
-
+export default (route, query) => {
   if (GRIDSOME_MODE === 'serve') {
-    const query = options.__pageQuery
     const variables = { ...route.params, path: route.path }
 
     return new Promise(resolve => {
@@ -19,16 +14,17 @@ export default (options, route) => {
       })
         .then(res => res.json())
         .then(res => {
-          cache.set(cacheKey, res.data)
+          cache.set(route.fullPath, res.data)
           resolve(res)
         })
     })
   } else if (GRIDSOME_MODE === 'static') {
     return new Promise(resolve => {
-      const path = route.path.replace(/[\/]+$/, '')
-      const dataOutput = !path ? '/index.json' : `${path}.json`
-      import(/* webpackChunkName: "data/" */ `${GRIDSOME_CACHE_DIR}/data${dataOutput}`).then(res => {
-        cache.set(cacheKey, res.default.data)
+      const routePath = route.path.replace(/[\/]+$/, '')
+      const filename = !routePath ? '/index.json' : `${routePath}.json`
+
+      import(/* webpackChunkName: "data/" */ `${GRIDSOME_DATA_DIR}${filename}`).then(res => {
+        cache.set(route.fullPath, res.default.data)
         resolve(res)
       })
     })

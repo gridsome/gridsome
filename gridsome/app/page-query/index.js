@@ -1,6 +1,5 @@
 import Vue from 'vue'
 import cache from './cache'
-import fetch from './fetch'
 
 const merge = Vue.config.optionMergeStrategies
 
@@ -16,22 +15,24 @@ export default ({ options }, query = true) => {
     $page () {
       return process.isServer
         ? this.$ssrContext.pageQuery.data
-        : cache.get(this.$route.meta.cacheKey)
+        : cache.get(this.$route.fullPath)
     }
   }, options.computed)
 
-  if (process.isServer) return
+  if (process.isClient) {
+    const createRouteGuard = hook => {
+      options[hook] = merge[hook]([createGuardFunc(options)], options[hook])
+    }
 
-  createRouteGuard(options, 'beforeRouteEnter')
-  createRouteGuard(options, 'beforeRouteUpdate')
-}
+    const createGuardFunc = () => {
+      return (to, from, next) => {
+        import(/* webpackChunkName: "page-query" */ './fetch').then(m => {
+          m.default(to, options.__pageQuery).then(next)
+        })
+      }
+    }
 
-function createRouteGuard (options, hook) {
-  options[hook] = merge[hook]([createGuardFunc(options)], options[hook])
-}
-
-function createGuardFunc (options) {
-  return (to, from, next) => {
-    fetch(options, to).then(next)
+    createRouteGuard('beforeRouteEnter')
+    createRouteGuard('beforeRouteUpdate')
   }
 }
