@@ -11,7 +11,7 @@ const {
 module.exports = async ({ router, config, graphql }) => {
   const createPage = (page, currentPage = 1) => {
     const isPager = currentPage > 1
-    const fullPath = isPager ? `${trim(page.path, '/')}/${currentPage}` : page.path
+    const fullPath = isPager ? `${page.path}/${currentPage}` : page.path
     const { route } = router.resolve(fullPath)
     const { query } = page.pageQuery
     const routePath = trim(route.path, '/')
@@ -23,7 +23,7 @@ module.exports = async ({ router, config, graphql }) => {
     const output = path.dirname(htmlOutput)
 
     return {
-      path: fullPath,
+      path: fullPath.replace(/\/+/g, '/'),
       dataOutput: query ? dataOutput : null,
       htmlOutput,
       output,
