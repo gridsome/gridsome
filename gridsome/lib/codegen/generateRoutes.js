@@ -21,13 +21,5 @@ module.exports = ({ pages, notFoundComponent }) => {
 
   res += `export { NotFound }\n\n`
 
-  res += `export default router => {
-  router.addRoutes([...routes, {
-    path: '*',
-    name: '404',
-    component: NotFound
-  }])
-}\n`
-
   return res
 }

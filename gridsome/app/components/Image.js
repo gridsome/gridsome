@@ -1,14 +1,9 @@
 import Vue from 'vue'
+import caniuse from '../utils/caniuse'
+import { createObserver } from '../utils/intersectionObserver'
 
-const supportsIntersectionObserver = (
-  'document' in global &&
-  'IntersectionObserver' in global &&
-  'IntersectionObserverEntry' in global &&
-  'intersectionRatio' in global.IntersectionObserverEntry.prototype
-)
-
-const observer = supportsIntersectionObserver
-  ? createObserver()
+const observer = caniuse.IntersectionObserver
+  ? createObserver(intersectionHandler)
   : null
 
 let uid = 0
@@ -96,7 +91,7 @@ export default {
   }
 }
 
-export function initIntersectionObserver (router) {
+export function initImageObserver (router) {
   if (observer) {
     router.beforeEach((to, from, next) => {
       unobserve()
@@ -127,20 +122,11 @@ export function unobserve (selector = '[data-src]', context = document) {
   }
 }
 
-function createObserver () {
-  const observer = new IntersectionObserver(entries => {
-    entries.forEach(({ intersectionRatio, target }) => {
-      if (intersectionRatio > 0 && target.dataset.src) {
-        observer.unobserve(target)
-        loadImage(target)
-      }
-    })
-  }, {
-    rootMargin: '20px',
-    threshold: 0.1
-  })
-
-  return observer
+function intersectionHandler ({ intersectionRatio, target }) {
+  if (intersectionRatio > 0 && target.dataset.src) {
+    observer.unobserve(target)
+    loadImage(target)
+  }
 }
 
 function loadImage (el) {
