@@ -38,7 +38,7 @@ module.exports = (context, options = {}, pkg = {}) => {
   config.chainWebpack = localConfig.chainWebpack
   config.transformers = resolveTransformers(config.pkg, localConfig)
   config.outDir = resolve(localConfig.outDir || 'dist')
-  config.assetsDir = localConfig.assetsDir || '_assets'
+  config.assetsDir = localConfig.assetsDir || 'assets'
   config.publicPath = localConfig.publicPath || '/'
   config.appPath = path.resolve(__dirname, '../../app')
   config.tmpDir = resolve('src/.temp')

@@ -5,12 +5,17 @@ const hirestime = require('hirestime')
 module.exports = async (queue, worker, config) => {
   const timer = hirestime()
   const totalPages = queue.length
-  const chunks = chunk(queue, 1000)
+  const chunks = chunk(queue, 50)
   const resolve = p => path.resolve(config.outDir, p)
 
   const { htmlTemplate } = config
   const clientManifestPath = resolve(config.clientManifestPath)
   const serverBundlePath = resolve(config.serverBundlePath)
+
+  const onError = err => {
+    worker.end()
+    throw err
+  }
 
   await Promise.all(chunks.map(chunk => {
     // reduce amount of data sent to worker
@@ -26,12 +31,8 @@ module.exports = async (queue, worker, config) => {
         htmlTemplate,
         clientManifestPath,
         serverBundlePath
-      })
-      .catch(err => {
-        worker.end()
-        throw err
-      })
-  }))
+      }).catch(onError)
+  })).catch(onError)
 
   console.info(`Render HTML (${totalPages} pages) - ${timer(hirestime.S)}s`)
 }

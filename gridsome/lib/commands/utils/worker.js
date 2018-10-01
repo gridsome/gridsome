@@ -93,20 +93,21 @@ exports.renderHtml = async function ({
     serverBundlePath
   })
 
+  let page, html
+
   for (let i = 0, l = pages.length; i < l; i++) {
+    page = pages[i]
+
+    const { data } = page.dataOutput
+      ? await fs.readJson(page.dataOutput)
+      : {}
+
     try {
-      const page = pages[i]
-      let data = {}
-
-      if (page.dataOutput) {
-        data = require(page.dataOutput).data
-      }
-
-      const html = await render(page.path, data)
-
-      fs.outputFileSync(page.htmlOutput, html)
+      html = await render(page.path, data)
     } catch (err) {
       throw err
     }
+
+    await fs.outputFile(page.htmlOutput, html)
   }
 }

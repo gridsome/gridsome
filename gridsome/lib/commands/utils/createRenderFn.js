@@ -31,6 +31,8 @@ module.exports = function createRenderFn ({
     }
 
     const inject = context.meta.inject()
+    const htmlAttrs = inject.htmlAttrs.text()
+    const bodyAttrs = inject.bodyAttrs.text()
 
     const head = '' +
       inject.title.text() +
@@ -42,11 +44,8 @@ module.exports = function createRenderFn ({
       context.renderResourceHints() +
       context.renderStyles()
 
-    const htmlAttrs = inject.htmlAttrs.text()
-    const bodyAttrs = inject.bodyAttrs.text()
-
     return renderHTML({
-      htmlAttrs: inject ? `data-html-server-rendered="true" ${htmlAttrs}` : '',
+      htmlAttrs: `data-html-server-rendered="true" ${htmlAttrs}`,
       scripts: context.renderScripts(),
       bodyAttrs,
       head,

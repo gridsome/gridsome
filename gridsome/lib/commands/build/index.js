@@ -21,7 +21,7 @@ module.exports = async (context, args) => {
 
   // 1. run all GraphQL queries and save results into data.json files
   await plugins.callHook('beforeRenderQueries', { context, config, queue })
-  await require('./renderQueries')(queue, graphql, config.cacheDir, system.cpus.logical)
+  await require('./renderQueries')(queue, graphql, system)
 
   // 2. compile assets with webpack
   await compileAssets(context, config, plugins)
