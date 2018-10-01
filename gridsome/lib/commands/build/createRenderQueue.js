@@ -16,7 +16,7 @@ module.exports = async ({ router, config, graphql }) => {
     const { query } = page.pageQuery
     const routePath = trim(route.path, '/')
     const dataPath = !routePath ? 'index.json' : `${routePath}.json`
-    const htmlOutput = path.resolve(config.outDir, routePath, 'index.html')
+    const htmlOutput = path.resolve(config.targetDir, routePath, 'index.html')
     const dataOutput = path.resolve(config.cacheDir, 'data', dataPath)
 
     // TODO: remove this before v1.0
@@ -36,7 +36,7 @@ module.exports = async ({ router, config, graphql }) => {
     const { route } = router.resolve(node.path)
     const { query } = page.pageQuery
     const routePath = trim(route.path, '/')
-    const htmlOutput = path.resolve(config.outDir, routePath, 'index.html')
+    const htmlOutput = path.resolve(config.targetDir, routePath, 'index.html')
     const dataOutput = path.resolve(config.cacheDir, 'data', `${routePath}.json`)
 
     // TODO: remove this before v1.0

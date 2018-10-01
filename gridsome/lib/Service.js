@@ -121,7 +121,7 @@ class Service {
   }
 
   graphql (docOrQuery, variables = {}) {
-    const context = { store: this.store }
+    const context = { store: this.store, config: this.config }
     const func = typeof docOrQuery === 'object' ? execute : graphql
 
     return func(this.schema, docOrQuery, undefined, context, variables)

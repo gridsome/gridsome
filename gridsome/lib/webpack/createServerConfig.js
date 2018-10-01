@@ -6,6 +6,7 @@ const resolve = p => path.resolve(__dirname, p)
 module.exports = (context, options, plugins) => {
   const isProd = process.env.NODE_ENV === 'production'
   const config = createBaseConfig(context, options, { isProd, isServer: true })
+  const { targetDir, serverBundlePath } = options
 
   config.entry('app').add(resolve('../../app/entry.server.js'))
 
@@ -18,7 +19,7 @@ module.exports = (context, options, plugins) => {
 
   config.plugin('ssr-server')
     .use(require('./plugins/VueSSRServerPlugin'), [{
-      filename: options.serverBundlePath
+      filename: path.relative(targetDir, serverBundlePath)
     }])
 
   plugins.callHookSync('chainWebpack', config, { context, isProd, isServer: true })

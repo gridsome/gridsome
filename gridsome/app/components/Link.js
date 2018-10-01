@@ -2,6 +2,7 @@
 
 import router from '../router'
 import caniuse from '../utils/caniuse'
+import { stripPathPrefix } from '../utils/helpers'
 import { createObserver } from '../utils/intersectionObserver'
 
 const observer = caniuse.IntersectionObserver
@@ -70,7 +71,8 @@ function intersectionHandler ({ intersectionRatio, target }) {
         if (isPreloaded[target.pathname]) return
         else isPreloaded[target.pathname] = true
 
-        const { route } = router.resolve(target.pathname)
+        const path = stripPathPrefix(target.pathname)
+        const { route } = router.resolve({ path })
 
         const fetchComponentData = options => {
           setTimeout(() => {

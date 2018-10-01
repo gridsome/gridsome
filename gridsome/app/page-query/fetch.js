@@ -1,6 +1,8 @@
 /* global GRAPHQL_ENDPOINT, GRIDSOME_MODE, GRIDSOME_DATA_DIR */
 
 import cache from './cache'
+import config from '~/.temp/config.js'
+import { unslash } from '../utils/helpers'
 
 export default (route, query) => {
   if (GRIDSOME_MODE === 'serve') {
@@ -20,8 +22,9 @@ export default (route, query) => {
     })
   } else if (GRIDSOME_MODE === 'static') {
     return new Promise(resolve => {
-      const routePath = route.path.replace(/[\/]+$/, '')
-      const filename = !routePath ? '/index.json' : `${routePath}.json`
+      const re = new RegExp(`^${config.pathPrefix}`)
+      const routePath = unslash(route.path.replace(re, '/'))
+      const filename = !routePath ? '/index.json' : `/${routePath}.json`
 
       import(/* webpackChunkName: "data/" */ `${GRIDSOME_DATA_DIR}${filename}`).then(res => {
         cache.set(route.fullPath, res.default.data)

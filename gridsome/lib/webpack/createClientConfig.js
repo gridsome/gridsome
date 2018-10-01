@@ -6,6 +6,7 @@ const resolve = p => path.resolve(__dirname, p)
 module.exports = (context, options, plugins) => {
   const isProd = process.env.NODE_ENV === 'production'
   const config = createBaseConfig(context, options, { isProd, isServer: false })
+  const { targetDir, clientManifestPath } = options
 
   config.entry('app').add(resolve('../../app/entry.client.js'))
 
@@ -24,7 +25,7 @@ module.exports = (context, options, plugins) => {
   if (isProd) {
     config.plugin('ssr-client')
       .use(require('./plugins/VueSSRClientPlugin'), [{
-        filename: options.clientManifestPath
+        filename: path.relative(targetDir, clientManifestPath)
       }])
 
     config.plugin('optimize-css')

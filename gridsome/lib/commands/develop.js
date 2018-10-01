@@ -2,6 +2,7 @@ module.exports = async (context, args) => {
   process.env.NODE_ENV = 'development'
   process.env.GRIDSOME_MODE = 'serve'
 
+  const path = require('path')
   const fs = require('fs-extra')
   const chalk = require('chalk')
   const webpack = require('webpack')
@@ -11,18 +12,24 @@ module.exports = async (context, args) => {
   const createServer = require('./utils/createServer')
   const createSockJsServer = require('./utils/createSockJsServer')
   const createClientConfig = require('../webpack/createClientConfig')
+  const { default: playground } = require('graphql-playground-middleware-express')
 
   const service = new Service(context, { args })
   const { config, system, clients, plugins } = await service.bootstrap()
+  const pathPrefix = path.join(config.pathPrefix, '/')
   const port = await resolvePort(config.port)
   const host = config.host || 'localhost'
   const { endpoints } = createServer
 
-  const sockjsEndpoint = await createSockJsServer(host, clients)
-  const fullUrl = `http://${host}:${port}`
-  const gqlEndpoint = fullUrl + endpoints.graphql
-  const exploreEndpoint = fullUrl + endpoints.explore
-  const wsEndpoint = `ws://${host}:${port}${endpoints.graphql}`
+  const createUrl = (pathname = '/', protocol = 'http', prefix = pathPrefix) => {
+    return `${protocol}://${host}:${port}` + path.join(prefix, pathname)
+  }
+
+  const sockjsEndpoint = await createSockJsServer(host, clients, pathPrefix)
+  const fullUrl = createUrl()
+  const gqlEndpoint = createUrl(endpoints.graphql, undefined, '/')
+  const exploreEndpoint = createUrl(endpoints.explore, undefined, '/')
+  const wsEndpoint = createUrl(endpoints.graphql, 'ws')
   const clientConfig = createClientConfig(context, config, plugins)
 
   clientConfig
@@ -46,6 +53,11 @@ module.exports = async (context, args) => {
   const worker = createWorker(config, system.cpus.logical)
   const app = createServer(service, worker)
 
+  app.get(
+    endpoints.explore,
+    playground({ endpoint: endpoints.graphql })
+  )
+
   app.use(require('connect-history-api-fallback')())
   app.use(require('webpack-hot-middleware')(compiler, {
     quiet: true,
@@ -53,7 +65,7 @@ module.exports = async (context, args) => {
   }))
 
   const devMiddleware = require('webpack-dev-middleware')(compiler, {
-    publicPath: webpackConfig.output.publicPath,
+    pathPrefix: webpackConfig.output.pathPrefix,
     logLevel: 'error',
     noInfo: true
   })

@@ -24,7 +24,7 @@ class Plugins extends EventEmitter {
         })
       })
 
-      const source = new Source(options, { context, store, transformers })
+      const source = new Source(options, { context, store, config, transformers })
       const instance = new PluginClass(options, { context, config, source, queue })
 
       return { source, instance }

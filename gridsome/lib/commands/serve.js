@@ -17,6 +17,7 @@ module.exports = async (context, args) => {
 
   const service = new Service(context, { args })
   const { config, clients, plugins } = await service.bootstrap()
+  const pathPrefix = path.join(config.pathPrefix, '/')
   const resolve = p => path.resolve(config.outDir, p)
   const port = await resolvePort(config.port)
   const host = config.host || 'localhost'
@@ -25,11 +26,15 @@ module.exports = async (context, args) => {
   await plugins.callHook('beforeServe', { context, config })
   await fs.remove(config.outDir)
 
+  const createUrl = (pathname = '/', protocol = 'http') => {
+    return `${protocol}://${host}:${port}` + path.join(pathPrefix, pathname)
+  }
+
   const worker = createWorker(config)
-  const sockjsEndpoint = await createSockJsServer(host, clients)
-  const fullUrl = `http://${host}:${port}`
-  const gqlEndpoint = fullUrl + endpoints.graphql
-  const wsEndpoint = `ws://${host}:${port}${endpoints.graphql}`
+  const sockjsEndpoint = await createSockJsServer(host, clients, pathPrefix)
+  const fullUrl = createUrl()
+  const gqlEndpoint = createUrl(endpoints.graphql)
+  const wsEndpoint = createUrl(endpoints.graphql, 'ws')
 
   await compileAssets(context, config, plugins, {
     'SOCKJS_ENDPOINT': JSON.stringify(sockjsEndpoint),
@@ -44,8 +49,8 @@ module.exports = async (context, args) => {
 
   const render = createRenderFn({
     htmlTemplate: config.htmlTemplate,
-    clientManifestPath: resolve(config.clientManifestPath),
-    serverBundlePath: resolve(config.serverBundlePath)
+    clientManifestPath: config.clientManifestPath,
+    serverBundlePath: config.serverBundlePath
   })
 
   const app = createServer(service, worker)
@@ -75,8 +80,6 @@ module.exports = async (context, args) => {
 
   app.listen(port, host, err => {
     if (err) throw err
-
-    const fullUrl = `http://localhost:${port}`
 
     console.log()
     console.log(`  Site running at: ${chalk.cyan(fullUrl)}`)

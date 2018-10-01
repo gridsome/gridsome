@@ -4,7 +4,6 @@ const express = require('express')
 const { mapValues } = require('lodash')
 const bodyParser = require('body-parser')
 const graphqlHTTP = require('express-graphql')
-const { default: playground } = require('graphql-playground-middleware-express')
 
 const endpoints = {
   graphql: '/___graphql',
@@ -20,11 +19,8 @@ module.exports = ({ context, schema, store, config, queue }, worker) => {
     graphqlHTTP({ schema, context: { store }})
   )
 
-  app.get(endpoints.explore, playground({
-    endpoint: endpoints.graphql
-  }))
-
-  app.get('/static/*', async (req, res, next) => {
+  const assetsDir = path.relative(config.targetDir, config.assetsDir)
+  app.get(path.join(config.pathPrefix, assetsDir, 'static', '*'), async (req, res, next) => {
     const options = mapValues(req.query, value => {
       return decodeURIComponent(value)
     })
@@ -38,7 +34,7 @@ module.exports = ({ context, schema, store, config, queue }, worker) => {
     const minWidth = config.minProcessImageWidth
     const { ext } = path.parse(filePath)
     const { cacheKey, size } = await queue.preProcess(filePath, options)
-    const destPath = path.resolve(config.cacheDir, cacheKey + ext)
+    const destPath = path.resolve(config.cacheDir, assetsDir, cacheKey + ext)
     const args = { filePath, destPath, minWidth, options, size }
 
     const serveFile = file => {

@@ -9,7 +9,9 @@ const builtInPlugins = [
 ]
 
 module.exports = (context, options = {}, pkg = {}) => {
-  const resolve = p => path.resolve(context, p)
+  const resolve = (...p) => path.resolve(context, ...p)
+  const isServing = process.env.GRIDSOME_MODE === 'serve'
+  const isProd = process.env.NODE_ENV === 'production'
   const configPath = resolve('gridsome.config.js')
   const args = options.args || {}
   const plugins = []
@@ -31,15 +33,20 @@ module.exports = (context, options = {}, pkg = {}) => {
     plugins.unshift(...builtInPlugins)
   }
 
+  if (localConfig.pathPrefix && /\/+$/.test(localConfig.pathPrefix)) {
+    throw new Error(`pathPrefix must not have a trailing slash`)
+  }
+
   config.pkg = options.pkg || resolvePkg(context)
   config.host = args.host || 'localhost'
   config.port = parseInt(args.port, 10) || 8080
   config.plugins = normalizePlugins(plugins)
   config.chainWebpack = localConfig.chainWebpack
   config.transformers = resolveTransformers(config.pkg, localConfig)
+  config.pathPrefix = isProd && isServing ? '/' : localConfig.pathPrefix || '/'
   config.outDir = resolve(localConfig.outDir || 'dist')
-  config.assetsDir = localConfig.assetsDir || 'assets'
-  config.publicPath = localConfig.publicPath || '/'
+  config.targetDir = path.join(config.outDir, config.pathPrefix)
+  config.assetsDir = path.join(config.targetDir, localConfig.assetsDir || 'assets')
   config.appPath = path.resolve(__dirname, '../../app')
   config.tmpDir = resolve('src/.temp')
   config.cacheDir = resolve('.cache')
@@ -54,9 +61,9 @@ module.exports = (context, options = {}, pkg = {}) => {
   config.siteName = localConfig.siteName || path.parse(context).name
   config.titleTemplate = localConfig.titleTemplate || `%s - ${config.siteName}`
 
-  config.manifestsDir = `${config.assetsDir}/manifest`
-  config.clientManifestPath = `${config.manifestsDir}/client.json`
-  config.serverBundlePath = `${config.manifestsDir}/server.json`
+  config.manifestsDir = path.join(config.assetsDir, 'manifest')
+  config.clientManifestPath = path.join(config.manifestsDir, 'client.json')
+  config.serverBundlePath = path.join(config.manifestsDir, 'server.json')
 
   config.icon = normalizeIconsConfig(localConfig.icon)
 

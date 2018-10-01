@@ -20,7 +20,7 @@ sock.onmessage = message => {
   for (const file in active) {
     const { options, vm } = active[file]
     unobserve(undefined, vm.$el)
-    fetch(options, vm.$route).then(() => {
+    fetch(vm.$route, options.__pageQuery).then(() => {
       Vue.nextTick(() => observe(undefined, vm.$el))
     })
   }

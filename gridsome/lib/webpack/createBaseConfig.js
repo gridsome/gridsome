@@ -8,8 +8,8 @@ const resolve = (p, c) => path.resolve(c || __dirname, p)
 
 module.exports = (context, options, { isProd, isServer }) => {
   const { cacheDirectory, cacheIdentifier } = createCacheOptions()
-  const assetsDir = options.assetsDir
-  const outDir = options.outDir
+  const { targetDir, pathPrefix } = options
+  const assetsDir = path.relative(targetDir, options.assetsDir)
   const config = new Config()
 
   const filename = `${assetsDir}/js/[name]${isProd ? '.[contenthash]' : ''}.js`
@@ -18,8 +18,8 @@ module.exports = (context, options, { isProd, isServer }) => {
   config.mode(isProd ? 'production' : 'development')
 
   config.output
-    .path(resolve(outDir, context))
-    .publicPath(isProd ? options.publicPath || '/' : '/')
+    .path(targetDir)
+    .publicPath(isProd ? path.join(pathPrefix, '/') : '/')
     .chunkFilename(filename)
     .filename(filename)
 
@@ -207,7 +207,7 @@ module.exports = (context, options, { isProd, isServer }) => {
 
   config.plugin('injections')
     .use(require('webpack/lib/DefinePlugin'), [{
-      'BASE_URL': JSON.stringify(options.publicPath),
+      'PATH_PREFIX': JSON.stringify(options.pathPrefix),
       'GRIDSOME_CACHE_DIR': JSON.stringify(options.cacheDir),
       'GRIDSOME_DATA_DIR': JSON.stringify(`${options.cacheDir}/data`),
       'GRIDSOME_MODE': JSON.stringify(process.env.GRIDSOME_MODE || ''),

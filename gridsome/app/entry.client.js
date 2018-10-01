@@ -1,4 +1,5 @@
 import createApp from './app'
+import { stripPathPrefix } from './utils/helpers'
 import { initImageObserver } from './components/Image'
 
 const { app, router } = createApp()
@@ -18,7 +19,10 @@ document.addEventListener('click', event => {
     /\.[^.]+$/.test($el.pathname) // link to a file
   ) return
 
-  router.push({ path: $el.pathname })
+  const path = stripPathPrefix($el.pathname)
+  const { location } = router.resolve({ path })
+
+  router.push(location)
   event.preventDefault()
 }, false)
 

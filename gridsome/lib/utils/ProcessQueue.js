@@ -55,7 +55,8 @@ class ProcessQueue {
     const hash = crypto.createHash('md5')
     const buffer = fs.readFileSync(filePath)
     const { type, width, height } = imageSize.sync(buffer)
-    const { assetsDir, maxImageWidth } = this.config
+    const { targetDir, pathPrefix, maxImageWidth } = this.config
+    const assetsDir = path.relative(targetDir, this.config.assetsDir)
 
     const imageWidth = Math.min(
       parseInt(options.width, 10) || width,
@@ -79,17 +80,17 @@ class ProcessQueue {
 
     const createSrcPath = (srcWidth = maxImageWidth) => {
       const { name, ext } = path.parse(filePath)
-      let src = ''
+      let filename = ''
 
       if (process.env.GRIDSOME_MODE === 'serve') {
         const query = { width: srcWidth }
         const relPath = path.relative(this.context, filePath)
-        src = `/static/${relPath}?${createOptionsQuery(query)}`
+        filename = `${relPath}?${createOptionsQuery(query)}`
       } else {
-        src = '/' + path.join(assetsDir, `static/${name}-${srcWidth}${ext}`)
+        filename = `${name}-${srcWidth}${ext}`
       }
 
-      return src
+      return path.join(pathPrefix, assetsDir, 'static', filename)
     }
 
     const sets = imageSizes.map(width => {

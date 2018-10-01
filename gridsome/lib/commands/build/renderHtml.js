@@ -6,14 +6,11 @@ module.exports = async (queue, worker, config) => {
   const timer = hirestime()
   const totalPages = queue.length
   const chunks = chunk(queue, 50)
-  const resolve = p => path.resolve(config.outDir, p)
 
-  const { htmlTemplate } = config
-  const clientManifestPath = resolve(config.clientManifestPath)
-  const serverBundlePath = resolve(config.serverBundlePath)
+  const { htmlTemplate, clientManifestPath, serverBundlePath } = config
 
   const onError = err => {
-    worker.end()
+    // worker.end()
     throw err
   }
 

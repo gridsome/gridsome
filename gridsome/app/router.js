@@ -1,11 +1,12 @@
 import Vue from 'vue'
 import Router from 'vue-router'
+import config from '~/.temp/config.js'
 import { routes, NotFound } from '~/.temp/routes.js'
 
 Vue.use(Router)
 
 const router = new Router({
-  base: '/',
+  base: config.pathPrefix,
   mode: 'history',
   fallback: false,
   routes: [...routes, {

@@ -15,6 +15,7 @@ module.exports = function createRenderFn ({
     clientManifest,
     runInNewContext: false,
     shouldPrefetch (file, type) {
+      // don't prefetch page data since we preload it with the g-link component
       return type === 'script' && !/js\/data(?:[^/]+)?\//.test(file)
     }
   })
@@ -36,6 +37,7 @@ module.exports = function createRenderFn ({
 
     const head = '' +
       inject.title.text() +
+      inject.base.text() +
       inject.meta.text() +
       inject.link.text() +
       inject.style.text() +

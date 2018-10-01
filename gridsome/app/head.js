@@ -23,6 +23,7 @@ const head = {
     { name: 'generator', content: `Gridsome v${config.version}` },
     { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' }
   ],
+  base: {},
   script: [],
   style: [],
   link: []
