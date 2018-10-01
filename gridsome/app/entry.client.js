@@ -8,13 +8,18 @@ initImageObserver(router)
 // let Vue router handle internal URLs for anchors in innerHTML
 document.addEventListener('click', event => {
   const $el = event.target.closest('a')
-  const isLocal = document.location.hostname === $el.hostname
-  const notVueElement = $el && !$el.__vue__
+  const { hostname } = document.location
 
-  if (isLocal && notVueElement && !event.defaultPrevented) {
-    router.push({ path: $el.pathname })
-    event.preventDefault()
-  }
+  if (
+    event.defaultPrevented ||     // disables this behavior
+    $el === null ||               // no link clicked
+    $el.__gLink__ ||              // g-link anchor
+    $el.hostname !== hostname ||  // external link
+    /\.[^.]+$/.test($el.pathname) // link to a file
+  ) return
+
+  router.push({ path: $el.pathname })
+  event.preventDefault()
 }, false)
 
 router.onReady(() => {
