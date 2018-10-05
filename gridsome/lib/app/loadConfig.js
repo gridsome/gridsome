@@ -77,7 +77,7 @@ module.exports = (context, options = {}, pkg = {}) => {
   config.stylus = {}
   config.postcss = {}
 
-  return config
+  return Object.freeze(config)
 }
 
 function resolvePkg (context) {
