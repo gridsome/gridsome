@@ -1,11 +1,11 @@
-const fs = require('fs')
 const path = require('path')
+const fs = require('fs-extra')
 const sharp = require('sharp')
 const crypto = require('crypto')
 const { reduce, trim } = require('lodash')
+const md5File = require('md5-file/promise')
 const imageSize = require('probe-image-size')
 const svgDataUri = require('mini-svg-data-uri')
-// const md5File = require('md5-file')
 
 class ProcessQueue {
   constructor ({ context, config }) {
@@ -52,8 +52,8 @@ class ProcessQueue {
       }
     }
 
-    const hash = crypto.createHash('md5')
-    const buffer = fs.readFileSync(filePath)
+    const hash = await md5File(filePath)
+    const buffer = await fs.readFile(filePath)
     const { type, width, height } = imageSize.sync(buffer)
     const { targetDir, pathPrefix, maxImageWidth } = this.config
     const assetsDir = path.relative(targetDir, this.config.assetsDir)
@@ -79,15 +79,16 @@ class ProcessQueue {
     }
 
     const createSrcPath = (srcWidth = maxImageWidth) => {
-      const { name, ext } = path.parse(filePath)
+      const relPath = path.relative(this.context, filePath)
       let filename = ''
 
       if (process.env.GRIDSOME_MODE === 'serve') {
-        const query = { width: srcWidth }
-        const relPath = path.relative(this.context, filePath)
-        filename = `${relPath}?${createOptionsQuery(query)}`
+        const query = createOptionsQuery({ width: srcWidth })
+        filename = `${relPath}?${query}`
       } else {
-        filename = `${name}-${srcWidth}${ext}`
+        const { name, ext } = path.parse(relPath)
+        const urlHash = !process.env.GRIDSOME_TEST ? hash : 'test'
+        filename = `${name}-${srcWidth}.${urlHash}${ext}`
       }
 
       return path.join(pathPrefix, assetsDir, 'static', filename)
@@ -101,6 +102,7 @@ class ProcessQueue {
     const result = {
       src: sets[sets.length - 1].src,
       size: { width: imageWidth, height: imageHeight },
+      cacheKey: genHash(filePath + hash + JSON.stringify(options)),
       noscriptHTML: '',
       imageHTML: '',
       filePath,
@@ -113,7 +115,6 @@ class ProcessQueue {
     const isLazy = options.immediate === undefined
 
     if (isSrcset) {
-      result.cacheKey = hash.update(filePath + JSON.stringify(options)).digest('hex')
       result.dataUri = await createDataUri(buffer, type, imageWidth, imageHeight, options)
       result.sizes = options.sizes || `(max-width: ${imageWidth}px) 100vw, ${imageWidth}px`
       result.srcset = result.sets.map(({ src, width }) => `${src} ${width}w`)
@@ -143,6 +144,10 @@ class ProcessQueue {
 
 ProcessQueue.uid = 0
 
+function genHash (string) {
+  return crypto.createHash('md5').update(string).digest('hex')
+}
+
 function createOptionsQuery (options) {
   return reduce(options, (values, value, key) => {
     return (values.push(`${key}=${encodeURIComponent(value)}`), values)
@@ -168,9 +173,11 @@ async function createBlurSvg (buffer, type, width, height, blur) {
   const id = `__svg-blur-${ProcessQueue.uid++}`
 
   return '' +
+    '<defs>' +
     `<filter id="${id}">` +
-    `<feGaussianBlur in="SourceGraphic" stdDeviation="${blur}" />` +
+    `<feGaussianBlur in="SourceGraphic" stdDeviation="${blur}"/>` +
     `</filter>` +
+    '</defs>' +
     `<image x="0" y="0" filter="url(#${id})" width="${width}" height="${height}" xlink:href="data:image/${type};base64,${base64}" />`
 }
 

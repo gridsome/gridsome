@@ -7,5 +7,7 @@ module.exports = async function (source, map) {
   const options = utils.parseQuery(this.query || '?')
   const res = await queue.add(this.resourcePath, options)
 
+  this.dependency(this.resourcePath)
+
   callback(null, `module.exports = ${JSON.stringify(res)}`)
 }

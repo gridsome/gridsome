@@ -24,8 +24,14 @@ module.exports = ({ context, config, queue }) => {
     const destPath = path.resolve(config.cacheDir, assetsDir, cacheKey + ext)
     const args = { filePath, destPath, minWidth, options, size }
 
-    const serveFile = file => {
-      const buffer = fs.readFileSync(file)
+    const serveFile = async file => {
+      const buffer = await fs.readFile(file)
+
+      if (process.env.NODE_ENV === 'development') {
+        res.header('Cache-Control', 'private, no-cache, no-store, must-revalidate')
+        res.header('Pragma', 'no-cache')
+        res.header('Expires', '-1')
+      }
 
       res.contentType(ext)
       res.end(buffer, 'binary')
