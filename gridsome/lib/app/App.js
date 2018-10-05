@@ -3,26 +3,25 @@ const chalk = require('chalk')
 const Router = require('vue-router')
 const autoBind = require('auto-bind')
 const hirestime = require('hirestime')
-const Store = require('./utils/Store')
-const Plugins = require('./utils/Plugins')
-const generateFiles = require('./codegen')
-const { BOOTSTRAP_FULL } = require('./utils')
-const ProcessQueue = require('./utils/ProcessQueue')
-const createSchema = require('./graphql/createSchema')
-const resolveConfig = require('./utils/resolveConfig')
-const prepareRoutes = require('./utils/prepareRoutes')
-const resolveSystemInfo = require('./utils/resolveSystemInfo')
-const { execute, graphql } = require('./graphql/graphql')
-const { version } = require('../package.json')
+const BaseStore = require('./BaseStore')
+const PluginsRunner = require('./PluginsRunner')
+const createGenerateFn = require('./createGenerateFn')
+const ImageProcessQueue = require('./ImageProcessQueue')
+const createSchema = require('../graphql/createSchema')
+const loadConfig = require('./loadConfig')
+const createRoutes = require('./createRoutes')
+const sysinfo = require('../utils/sysinfo')
+const { execute, graphql } = require('../graphql/graphql')
+const { version } = require('../../package.json')
 
-class Service {
+class App {
   constructor (context, options = {}) {
-    process.GRIDSOME_SERVICE = this
+    process.GRIDSOME = this
 
     this.clients = {}
     this.context = context
-    this.config = resolveConfig(context, options)
-    this.system = resolveSystemInfo()
+    this.config = loadConfig(context, options)
+    this.system = sysinfo
 
     console.log(`Gridsome v${version}`)
     console.log(chalk.gray(
@@ -34,7 +33,7 @@ class Service {
     autoBind(this)
   }
 
-  async bootstrap (phase = BOOTSTRAP_FULL) {
+  async bootstrap (phase) {
     const bootstrapTime = hirestime()
 
     const phases = [
@@ -67,9 +66,10 @@ class Service {
   //
 
   init () {
-    this.queue = new ProcessQueue(this)
-    this.store = new Store(this)
-    this.plugins = new Plugins(this)
+    this.store = new BaseStore(this)
+    this.queue = new ImageProcessQueue(this)
+    this.plugins = new PluginsRunner(this)
+    this.generate = createGenerateFn(this)
 
     this.plugins.on('broadcast', message => {
       this.broadcast(message)
@@ -97,7 +97,7 @@ class Service {
   }
 
   generateRoutes () {
-    this.routerData = prepareRoutes(this.store)
+    this.routerData = createRoutes(this.store)
 
     this.router = new Router({
       base: '/',
@@ -109,7 +109,7 @@ class Service {
       }))
     })
 
-    return generateFiles(this)
+    return this.generate()
   }
 
   //
@@ -145,8 +145,10 @@ class Service {
       this.clients[client].write(JSON.stringify(message))
     }
 
-    return hotReload ? generateFiles(this, 'now.js') : undefined
+    return hotReload
+      ? this.generate('now.js')
+      : undefined
   }
 }
 
-module.exports = Service
+module.exports = App

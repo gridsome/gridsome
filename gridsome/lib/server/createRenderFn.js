@@ -1,5 +1,5 @@
 const chalk = require('chalk')
-const { createHTMLRenderer } = require('../../utils/html')
+const createHTMLRenderer = require('./createHTMLRenderer')
 const { createBundleRenderer } = require('vue-server-renderer')
 
 module.exports = function createRenderFn ({

@@ -1,26 +1,12 @@
 const path = require('path')
 const fs = require('fs-extra')
-const express = require('express')
 const { mapValues } = require('lodash')
-const bodyParser = require('body-parser')
-const graphqlHTTP = require('express-graphql')
 
-const endpoints = {
-  graphql: '/___graphql',
-  explore: '/___explore'
-}
-
-module.exports = ({ context, schema, store, config, queue }, worker) => {
-  const app = express()
-
-  app.use(
-    endpoints.graphql,
-    bodyParser.json(),
-    graphqlHTTP({ schema, context: { store }})
-  )
-
+module.exports = ({ context, config, queue }, worker) => {
   const assetsDir = path.relative(config.targetDir, config.assetsDir)
-  app.get(path.join(config.pathPrefix, assetsDir, 'static', '*'), async (req, res, next) => {
+  const minWidth = config.minProcessImageWidth
+
+  return async (req, res, next) => {
     const options = mapValues(req.query, value => {
       return decodeURIComponent(value)
     })
@@ -31,7 +17,6 @@ module.exports = ({ context, schema, store, config, queue }, worker) => {
       return res.sendStatus(404)
     }
 
-    const minWidth = config.minProcessImageWidth
     const { ext } = path.parse(filePath)
     const { cacheKey, size } = await queue.preProcess(filePath, options)
     const destPath = path.resolve(config.cacheDir, assetsDir, cacheKey + ext)
@@ -54,9 +39,5 @@ module.exports = ({ context, schema, store, config, queue }, worker) => {
     } catch (err) {
       next(err)
     }
-  })
-
-  return app
+  }
 }
-
-module.exports.endpoints = endpoints

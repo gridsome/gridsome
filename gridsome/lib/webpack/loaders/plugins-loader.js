@@ -1,7 +1,7 @@
 const { camelCase } = require('lodash')
 
 module.exports = async function (source, map) {
-  const { config } = process.GRIDSOME_SERVICE
+  const { config } = process.GRIDSOME
   const isServer = this.target === 'node'
   const isBrowser = this.target === 'web'
 

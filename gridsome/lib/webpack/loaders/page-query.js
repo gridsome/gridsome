@@ -3,7 +3,7 @@ const validateQuery = require('../../graphql/utils/validateQuery')
 module.exports = function (source, map) {
   const isDev = process.env.NODE_ENV === 'development'
   const isServing = process.env.GRIDSOME_MODE === 'serve'
-  const { schema, config } = process.GRIDSOME_SERVICE
+  const { schema, config } = process.GRIDSOME
 
   try {
     const errors = validateQuery(schema, source)

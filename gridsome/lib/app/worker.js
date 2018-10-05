@@ -3,7 +3,7 @@ const fs = require('fs-extra')
 const sharp = require('sharp')
 const imagemin = require('imagemin')
 const imageminWebp = require('imagemin-webp')
-const createRenderFn = require('./createRenderFn')
+const createRenderFn = require('../server/createRenderFn')
 const imageminPngquant = require('imagemin-pngquant')
 const imageminJpegoptim = require('imagemin-jpegoptim')
 

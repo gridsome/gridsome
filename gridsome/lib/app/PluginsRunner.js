@@ -1,24 +1,24 @@
 const pMap = require('p-map')
 const Source = require('./Source')
 const EventEmitter = require('events')
-const { internalRE } = require('./index')
-const { cache, nodeCache } = require('./cache')
 const { defaultsDeep, mapValues } = require('lodash')
+const { internalRE } = require('../utils/constants')
+const { cache, nodeCache } = require('../utils/cache')
 
 class Plugins extends EventEmitter {
-  constructor (service) {
+  constructor (app) {
     super()
 
-    this.service = service
+    this.app = app
 
-    this.plugins = service.config.plugins.map(entry => {
+    this.plugins = app.config.plugins.map(entry => {
       const use = entry.use.replace(internalRE, '../')
       const PluginClass = require(use)
       const defaults = PluginClass.defaultOptions()
       const options = defaultsDeep(entry.options, defaults)
-      const { context, config, store, queue } = service
+      const { context, config, store, queue } = app
 
-      const transformers = mapValues(service.config.transformers, entry => {
+      const transformers = mapValues(app.config.transformers, entry => {
         return new entry.TransformerClass(entry.options, {
           queue, cache, nodeCache, localOptions: options[entry.name] || {}
         })
@@ -37,10 +37,10 @@ class Plugins extends EventEmitter {
 
       // setup reversed references
       // forEach(source.ownTypeNames, typeName => {
-      //   const options = this.service.store.types[typeName]
+      //   const options = this.app.store.types[typeName]
 
       //   forEach(options.refs, (ref, key) => {
-      //     this.service.store.types[ref.typeName].belongsTo[options.type] = {
+      //     this.app.store.types[ref.typeName].belongsTo[options.type] = {
       //       description: `Reference to ${typeName}`,
       //       localKey: ref.key,
       //       foreignType: options.type,

@@ -5,7 +5,7 @@ const {
   STATIC_ROUTE,
   STATIC_TEMPLATE_ROUTE,
   DYNAMIC_TEMPLATE_ROUTE
-} = require('./index')
+} = require('../utils/constants')
 
 module.exports = store => {
   const pages = store.pages.find({ type: 'page' })

@@ -2,7 +2,7 @@ const path = require('path')
 const fs = require('fs-extra')
 const crypto = require('crypto')
 const { defaultsDeep, camelCase } = require('lodash')
-const { internalRE, transformerRE } = require('./index')
+const { internalRE, transformerRE } = require('../utils/constants')
 
 const builtInPlugins = [
   'internal://plugins/source-vue'

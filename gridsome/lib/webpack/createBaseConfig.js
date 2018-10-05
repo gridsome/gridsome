@@ -1,7 +1,7 @@
 const path = require('path')
 const Config = require('webpack-chain')
 const { VueLoaderPlugin } = require('vue-loader')
-const { createHTMLRenderer } = require('../utils/html')
+const createHTMLRenderer = require('../server/createHTMLRenderer')
 const CSSExtractPlugin = require('mini-css-extract-plugin')
 
 const resolve = (p, c) => path.resolve(c || __dirname, p)

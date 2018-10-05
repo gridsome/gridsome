@@ -8,6 +8,7 @@ class VueSource {
   static defaultOptions () {
     return {
       typeName: 'Vue',
+      pathPrefix: '/',
       path: ['src/pages/**/*.vue', 'src/templates/*.vue']
     }
   }

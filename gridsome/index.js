@@ -1,6 +1,3 @@
-const chalk = require('chalk')
-const { develop, build, serve, explore } = require('./lib')
-
 module.exports = ({ context, program }) => {
   program
     .command('develop')
@@ -8,14 +5,14 @@ module.exports = ({ context, program }) => {
     .option('-p, --port <port>', 'use specified port (default: 8080)')
     .option('-h, --host <host>', 'use specified host (default: 0.0.0.0)')
     .action(args => {
-      wrapCommand(develop)(context, args)
+      wrapCommand(require('./lib/develop'))(context, args)
     })
 
   program
     .command('build')
     .description('build site for production')
     .action(() => {
-      wrapCommand(build)(context, {})
+      wrapCommand(require('./lib/build'))(context, {})
     })
 
   program
@@ -24,7 +21,7 @@ module.exports = ({ context, program }) => {
     .option('-p, --port <port>', 'use specified port (default: 8080)')
     .option('-h, --host <host>', 'use specified host (default: 0.0.0.0)')
     .action(args => {
-      wrapCommand(explore)(context, args)
+      wrapCommand(require('./lib/explore'))(context, args)
     })
 
   program
@@ -33,11 +30,13 @@ module.exports = ({ context, program }) => {
     .option('-p, --port <port>', 'use specified port (default: 8080)')
     .option('-h, --host <host>', 'use specified host (default: 0.0.0.0)')
     .action(args => {
-      wrapCommand(serve)(context, args)
+      wrapCommand(require('./lib/serve'))(context, args)
     })
 }
 
 function wrapCommand (fn) {
+  const chalk = require('chalk')
+
   return (...args) => {
     return fn(...args).catch(err => {
       console.error(chalk.red(err.stack))

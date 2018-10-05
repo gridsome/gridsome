@@ -2,7 +2,7 @@
 const validateQuery = require('../../graphql/utils/validateQuery')
 
 module.exports = async function (source, map) {
-  const { config, schema, graphql } = process.GRIDSOME_SERVICE
+  const { config, schema, graphql } = process.GRIDSOME
   const callback = this.async()
 
   this.dependency(`${config.appPath}/static-query/index.js`)

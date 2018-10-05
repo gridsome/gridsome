@@ -1,6 +1,6 @@
 const hirestime = require('hirestime')
-const createClientConfig = require('../../webpack/createClientConfig')
-const createServerConfig = require('../../webpack/createServerConfig')
+const createClientConfig = require('./createClientConfig')
+const createServerConfig = require('./createServerConfig')
 
 module.exports = async (context, config, plugins, defines = {}) => {
   const compileTime = hirestime()

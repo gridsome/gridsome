@@ -1,6 +1,6 @@
 const Loki = require('lokijs')
 
-class Store {
+class BaseStore {
   constructor () {
     this.data = new Loki()
     this.collections = {}
@@ -62,4 +62,4 @@ class Store {
   }
 }
 
-module.exports = Store
+module.exports = BaseStore
