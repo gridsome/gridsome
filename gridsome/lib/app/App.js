@@ -5,7 +5,7 @@ const autoBind = require('auto-bind')
 const hirestime = require('hirestime')
 const BaseStore = require('./BaseStore')
 const PluginsRunner = require('./PluginsRunner')
-const createGenerateFn = require('./createGenerateFn')
+const CodeGenerator = require('./CodeGenerator')
 const ImageProcessQueue = require('./ImageProcessQueue')
 const createSchema = require('../graphql/createSchema')
 const loadConfig = require('./loadConfig')
@@ -69,7 +69,7 @@ class App {
     this.store = new BaseStore(this)
     this.queue = new ImageProcessQueue(this)
     this.plugins = new PluginsRunner(this)
-    this.generate = createGenerateFn(this)
+    this.generator = new CodeGenerator(this)
 
     this.plugins.on('broadcast', message => {
       this.broadcast(message)
@@ -109,7 +109,7 @@ class App {
       }))
     })
 
-    return this.generate()
+    return this.generator.generate()
   }
 
   //
@@ -146,7 +146,7 @@ class App {
     }
 
     return hotReload
-      ? this.generate('now.js')
+      ? this.generator.generate('now.js')
       : undefined
   }
 }

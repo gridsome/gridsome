@@ -1,32 +1,44 @@
+const path = require('path')
 const fs = require('fs-extra')
 const slugify = require('@sindresorhus/slugify')
 
-module.exports = app => {
-  const files = {
-    'icons.js': () => genIcons(app),
-    'config.js': () => genConfig(app),
-    'routes.js': () => genRoutes(app),
-    'plugins.js': () => 'export default []',
-    'now.js': () => `export default ${Date.now()}`
+class CodeGenerator {
+  constructor (app) {
+    this.app = app
+
+    this.files = {
+      'icons.js': () => genIcons(app),
+      'config.js': () => genConfig(app),
+      'routes.js': () => genRoutes(app),
+      'plugins.js': () => 'export default []',
+      'now.js': () => `export default ${Date.now()}`
+    }
+
+    // TODO: let plugins add generated files
   }
 
-  const outputFile = async filename => {
-    const content = await files[filename](app)
-    await fs.outputFile(`${app.config.tmpDir}/${filename}`, content)
-  }
+  async generate (filename = null) {
+    const outDir = this.app.config.tmpDir
 
-  return async function generate (filename = null) {
+    const outputFile = async filename => {
+      const content = await this.files[filename](this.app)
+      const filepath = path.join(outDir, filename)
+      await fs.outputFile(filepath, content)
+    }
+
     if (filename) {
       await outputFile(filename)
     } else {
-      await fs.remove(app.config.tmpDir)
+      await fs.remove(outDir)
 
-      for (const filename in files) {
+      for (const filename in this.files) {
         await outputFile(filename)
       }
     }
   }
 }
+
+module.exports = CodeGenerator
 
 async function genIcons ({ config, resolve, queue }) {
   const { touchicon, favicon } = config.icon
