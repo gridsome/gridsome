@@ -19,6 +19,7 @@ module.exports = async (context, args) => {
 
   await plugins.callHook('beforeBuild', { context, config })
   await fs.remove(config.outDir)
+  await fs.copy(config.staticDir, config.targetDir)
 
   const queue = await createRenderQueue(app)
 

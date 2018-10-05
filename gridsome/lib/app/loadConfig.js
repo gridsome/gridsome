@@ -44,6 +44,7 @@ module.exports = (context, options = {}, pkg = {}) => {
   config.chainWebpack = localConfig.chainWebpack
   config.transformers = resolveTransformers(config.pkg, localConfig)
   config.pathPrefix = isProd && isServing ? '/' : localConfig.pathPrefix || '/'
+  config.staticDir = resolve('static')
   config.outDir = resolve(localConfig.outDir || 'dist')
   config.targetDir = path.join(config.outDir, config.pathPrefix)
   config.assetsDir = path.join(config.targetDir, localConfig.assetsDir || 'assets')

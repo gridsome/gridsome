@@ -1,5 +1,6 @@
 const fs = require('fs-extra')
 const chalk = require('chalk')
+const express = require('express')
 const createApp = require('./app')
 const createExpressServer = require('./server/createExpressServer')
 const createSockJsServer = require('./server/createSockJsServer')
@@ -24,6 +25,7 @@ module.exports = async (context, args) => {
   )
 
   server.app.use(require('connect-history-api-fallback')())
+  server.app.use(config.pathPrefix, express.static(config.staticDir))
 
   const webpackConfig = createWebpackConfig()
   const compiler = require('webpack')(webpackConfig)
