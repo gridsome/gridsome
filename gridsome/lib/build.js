@@ -39,7 +39,7 @@ module.exports = async (context, args) => {
 
   // 5. clean up
   await plugins.callHook('afterBuild', { context, config, queue })
-  await fs.remove(path.resolve(config.outDir, config.manifestsDir))
+  await fs.remove(config.manifestsDir)
 
   console.log()
   console.log(`  Done in ${buildTime(hirestime.S)}s`)
