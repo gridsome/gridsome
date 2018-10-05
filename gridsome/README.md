@@ -1,10 +1,14 @@
 <p align="center">
   <br>
-  <img src="https://cdn.rawgit.com/gridsome/gridsome/master/assets/logo.png" width="220">
-  <br>
-  <br>
+  <a href="https://www.gridsome.org">
+    <img src="https://raw.githubusercontent.com/gridsome/gridsome/master/assets/logo.png" width="120"/>
+  </a>
+</p>
+
+<h1 align="center">Gridsome</h1>
+
+<p align="center">
   A JAMstack framework for building blazing fast websites with <a href="https://vuejs.org">Vue.js</a>
-  <br>
 </p>
 
 <p align="center">
