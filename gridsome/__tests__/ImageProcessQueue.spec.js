@@ -1,12 +1,17 @@
 const path = require('path')
-const ProcessQueue = require('../lib/utils/ProcessQueue')
+const fs = require('fs-extra')
+const ImageProcessQueue = require('../lib/app/ImageProcessQueue')
+const targetDir = path.join(__dirname, 'assets', 'static')
+const assetsDir = path.join(targetDir, 'assets')
+const pathPrefix = '/'
 
-beforeEach(() => (ProcessQueue.uid = 0))
+beforeEach(() => (ImageProcessQueue.uid = 0))
+afterAll(() => fs.remove(targetDir))
 
 test('generate srcset for image', async () => {
   const filePath = path.resolve(__dirname, 'assets/1000x600.png')
-  const config = { assetsDir: 'assets', maxImageWidth: 1000 }
-  const queue = new ProcessQueue({ config })
+  const config = { pathPrefix, targetDir, assetsDir, maxImageWidth: 1000 }
+  const queue = new ImageProcessQueue({ config })
 
   const result = await queue.add(filePath)
 
@@ -33,8 +38,8 @@ test('generate srcset for image', async () => {
 
 test('resize image by width attribute', async () => {
   const filePath = path.resolve(__dirname, 'assets/1000x600.png')
-  const config = { assetsDir: 'assets', maxImageWidth: 1000 }
-  const queue = new ProcessQueue({ config })
+  const config = { pathPrefix, targetDir, assetsDir, maxImageWidth: 1000 }
+  const queue = new ImageProcessQueue({ config })
 
   const result = await queue.add(filePath, { width: 300 })
 
@@ -51,8 +56,8 @@ test('resize image by width attribute', async () => {
 
 test('disable blur filter', async () => {
   const filePath = path.resolve(__dirname, 'assets/1000x600.png')
-  const config = { assetsDir: 'assets', maxImageWidth: 1000 }
-  const queue = new ProcessQueue({ config })
+  const config = { pathPrefix, targetDir, assetsDir, maxImageWidth: 1000 }
+  const queue = new ImageProcessQueue({ config })
 
   const result = await queue.add(filePath, { blur: '0' })
 
@@ -61,8 +66,8 @@ test('disable blur filter', async () => {
 
 test('respect config.maxImageWidth', async () => {
   const filePath = path.resolve(__dirname, 'assets/1000x600.png')
-  const config = { assetsDir: 'assets', maxImageWidth: 600 }
-  const queue = new ProcessQueue({ config })
+  const config = { pathPrefix, targetDir, assetsDir, maxImageWidth: 600 }
+  const queue = new ImageProcessQueue({ config })
 
   const result = await queue.add(filePath)
 
@@ -77,8 +82,8 @@ test('respect config.maxImageWidth', async () => {
 
 test('do not resize if image is too small', async () => {
   const filePath = path.resolve(__dirname, 'assets/350x250.png')
-  const config = { assetsDir: 'assets', maxImageWidth: 600 }
-  const queue = new ProcessQueue({ config })
+  const config = { pathPrefix, targetDir, assetsDir, maxImageWidth: 600 }
+  const queue = new ImageProcessQueue({ config })
 
   const result = await queue.add(filePath, { width: 600 })
 
@@ -90,8 +95,8 @@ test('do not resize if image is too small', async () => {
 test('get url for server in serve mode', async () => {
   const relPath = 'assets/1000x600.png'
   const absPath = path.resolve(__dirname, relPath)
-  const config = { assetsDir: 'assets', maxImageWidth: 500 }
-  const queue = new ProcessQueue({ config, context: __dirname })
+  const config = { pathPrefix, targetDir, assetsDir, maxImageWidth: 500 }
+  const queue = new ImageProcessQueue({ config, context: __dirname })
   const mode = process.env.GRIDSOME_MODE
 
   process.env.GRIDSOME_MODE = 'serve'
@@ -100,13 +105,13 @@ test('get url for server in serve mode', async () => {
 
   process.env.GRIDSOME_MODE = mode
 
-  expect(result.src).toEqual(`/static/${relPath}?width=500`)
+  expect(result.src).toEqual(`/assets/static/${relPath}?width=500`)
 })
 
 test('get queue values', async () => {
   const filePath = path.resolve(__dirname, 'assets/1000x600.png')
-  const config = { assetsDir: 'assets', maxImageWidth: 1000 }
-  const queue = new ProcessQueue({ config })
+  const config = { pathPrefix, targetDir, assetsDir, maxImageWidth: 1000 }
+  const queue = new ImageProcessQueue({ config })
 
   await queue.add(filePath)
   const values = queue.queue
@@ -116,8 +121,8 @@ test('get queue values', async () => {
 
 test('disable lazy loading', async () => {
   const filePath = path.resolve(__dirname, 'assets/1000x600.png')
-  const config = { assetsDir: 'assets', maxImageWidth: 1000 }
-  const queue = new ProcessQueue({ config })
+  const config = { pathPrefix, targetDir, assetsDir, maxImageWidth: 1000 }
+  const queue = new ImageProcessQueue({ config })
 
   const result = await queue.add(filePath, { immediate: true })
 
@@ -127,8 +132,8 @@ test('disable lazy loading', async () => {
 
 test('skip srcset and dataUri', async () => {
   const filePath = path.resolve(__dirname, 'assets/1000x600.png')
-  const config = { assetsDir: 'assets', maxImageWidth: 1000 }
-  const queue = new ProcessQueue({ config })
+  const config = { pathPrefix, targetDir, assetsDir, maxImageWidth: 1000 }
+  const queue = new ImageProcessQueue({ config })
 
   const result = await queue.add(filePath, { srcset: false })
 
@@ -141,8 +146,8 @@ test('skip srcset and dataUri', async () => {
 
 test('skip missing files', async () => {
   const filePath = path.resolve(__dirname, 'assets/1000x600-missing.png')
-  const config = { assetsDir: 'assets', maxImageWidth: 1000 }
-  const queue = new ProcessQueue({ config })
+  const config = { pathPrefix, targetDir, assetsDir, maxImageWidth: 1000 }
+  const queue = new ImageProcessQueue({ config })
 
   const result = await queue.add(filePath, { srcset: false })
 

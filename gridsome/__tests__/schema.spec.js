@@ -1,5 +1,5 @@
-const Store = require('../lib/utils/Store')
-const Source = require('../lib/utils/Source')
+const Source = require('../lib/app/Source')
+const BaseStore = require('../lib/app/BaseStore')
 const createSchema = require('../lib/graphql/createSchema')
 const { inferTypes } = require('../lib/graphql/schema/infer-types')
 
@@ -29,7 +29,7 @@ const transformers = {
 }
 
 beforeEach(() => {
-  store = new Store()
+  store = new BaseStore()
   source = new Source({ typeName: 'Test' }, { store, transformers })
 })
 

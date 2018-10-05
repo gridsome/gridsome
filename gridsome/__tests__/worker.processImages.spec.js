@@ -1,13 +1,14 @@
 const path = require('path')
 const fs = require('fs-extra')
 const imageSize = require('probe-image-size')
-const ProcessQueue = require('../lib/utils/ProcessQueue')
-const { processImages } = require('../lib/commands/utils/worker')
+const ImageProcessQueue = require('../lib/app/ImageProcessQueue')
+const { process: processImages } = require('../lib/workers/image-processor')
+const targetDir = path.join(__dirname, 'assets', 'static')
+const assetsDir = path.join(targetDir, 'assets')
+const pathPrefix = '/'
 
-const assetsDir = path.resolve(__dirname, 'assets')
-
-beforeEach(() => (ProcessQueue.uid = 0))
-afterAll(() => fs.remove(path.join(assetsDir, 'static')))
+beforeEach(() => (ImageProcessQueue.uid = 0))
+afterAll(() => fs.remove(targetDir))
 
 test('process png image', async () => {
   const files = await process(['1000x600.png'])
@@ -64,11 +65,12 @@ test('do not upscale images', async () => {
 })
 
 async function process (filenames, options = {}) {
-  const config = { assetsDir: '', maxImageWidth: 1000 }
-  const processQueue = new ProcessQueue({ config })
+  const testAssetsDir = path.join(__dirname, 'assets')
+  const config = { pathPrefix, targetDir, assetsDir, maxImageWidth: 1000 }
+  const processQueue = new ImageProcessQueue({ config })
 
   const files = await Promise.all(filenames.map(async filename => {
-    const filePath = path.join(assetsDir, filename)
+    const filePath = path.join(testAssetsDir, filename)
     return processQueue.add(filePath, options)
   }))
 

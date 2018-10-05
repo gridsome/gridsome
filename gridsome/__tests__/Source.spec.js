@@ -1,5 +1,5 @@
-const Store = require('../lib/utils/Store')
-const Source = require('../lib/utils/Source')
+const Source = require('../lib/app/Source')
+const BaseStore = require('../lib/app/BaseStore')
 
 let store, source
 
@@ -12,7 +12,7 @@ const transformers = {
 }
 
 beforeEach(() => {
-  store = new Store()
+  store = new BaseStore()
   source = new Source({ typeName: 'Test' }, { store, transformers })
 })
 
