@@ -3,9 +3,10 @@ const pMap = require('p-map')
 const fs = require('fs-extra')
 const hirestime = require('hirestime')
 const { trim, chunk } = require('lodash')
+const sysinfo = require('./utils/sysinfo')
 
 const createApp = require('./app')
-const createWorker = require('./app/createWorker')
+const { createWorker } = require('./workers')
 const compileAssets = require('./webpack/compileAssets')
 
 module.exports = async (context, args) => {
@@ -14,8 +15,7 @@ module.exports = async (context, args) => {
 
   const buildTime = hirestime()
   const app = await createApp(context, { args })
-  const { config, system, graphql, plugins } = app
-  const worker = createWorker(config, system.cpus.logical)
+  const { config, graphql, plugins } = app
 
   await plugins.callHook('beforeBuild', { context, config })
   await fs.remove(config.outDir)
@@ -24,24 +24,22 @@ module.exports = async (context, args) => {
 
   // 1. run all GraphQL queries and save results into json files
   await plugins.callHook('beforeRenderQueries', { context, config, queue })
-  await renderPageQueries(queue, graphql, system)
+  await renderPageQueries(queue, graphql)
 
   // 2. compile assets with webpack
   await compileAssets(context, config, plugins)
 
   // 3. render a static index.html file for each possible route
   await plugins.callHook('beforeRenderHTML', { context, config, queue })
-  await renderHTML(queue, worker, config)
+  await renderHTML(queue, config)
 
   // 4. process queued images
   await plugins.callHook('beforeProcessImages', { context, config, queue: app.queue })
-  await processImages(app.queue, worker, config)
+  await processImages(app.queue, config)
 
   // 5. clean up
   await plugins.callHook('afterBuild', { context, config, queue })
   await fs.remove(path.resolve(config.outDir, config.manifestsDir))
-
-  worker.end()
 
   console.log()
   console.log(`  Done in ${buildTime(hirestime.S)}s`)
@@ -147,7 +145,7 @@ async function createRenderQueue ({ router, config, graphql }) {
   return queue
 }
 
-async function renderPageQueries (queue, graphql, system) {
+async function renderPageQueries (queue, graphql) {
   const timer = hirestime()
   const pages = queue.filter(page => !!page.dataOutput)
 
@@ -156,20 +154,21 @@ async function renderPageQueries (queue, graphql, system) {
     const results = await graphql(page.query, variables)
 
     await fs.outputFile(page.dataOutput, JSON.stringify(results))
-  }, { concurrency: system.cpus.logical })
+  }, { concurrency: sysinfo.cpus.logical })
 
   console.info(`Run GraphQL (${pages.length} queries) - ${timer(hirestime.S)}s`)
 }
 
-async function renderHTML (queue, worker, config) {
+async function renderHTML (queue, config) {
   const timer = hirestime()
   const totalPages = queue.length
   const chunks = chunk(queue, 50)
+  const worker = createWorker('html-writer')
 
   const { htmlTemplate, clientManifestPath, serverBundlePath } = config
 
   const onError = err => {
-    // worker.end()
+    worker.end()
     throw err
   }
 
@@ -182,7 +181,7 @@ async function renderHTML (queue, worker, config) {
     }))
 
     return worker
-      .renderHtml({
+      .render({
         pages,
         htmlTemplate,
         clientManifestPath,
@@ -190,22 +189,27 @@ async function renderHTML (queue, worker, config) {
       }).catch(onError)
   })).catch(onError)
 
+  worker.end()
+
   console.info(`Render HTML (${totalPages} pages) - ${timer(hirestime.S)}s`)
 }
 
-async function processImages (queue, worker, { outDir, minProcessImageWidth }) {
+async function processImages (queue, { outDir, minProcessImageWidth }) {
   const timer = hirestime()
   const chunks = chunk(queue.queue, 100)
+  const worker = createWorker('image-processor')
   const totalAssets = queue.queue.length
 
   await Promise.all(chunks.map(queue => {
     return worker
-      .processImages({ queue, outDir, minWidth: minProcessImageWidth })
+      .process({ queue, outDir, minWidth: minProcessImageWidth })
       .catch(err => {
         worker.end()
         throw err
       })
   }))
+
+  worker.end()
 
   console.info(`Process images (${totalAssets} images) - ${timer(hirestime.S)}s`)
 }

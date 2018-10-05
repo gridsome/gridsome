@@ -2,7 +2,6 @@ const fs = require('fs-extra')
 const chalk = require('chalk')
 const express = require('express')
 const createApp = require('./app')
-const createWorker = require('./app/createWorker')
 const compileAssets = require('./webpack/compileAssets')
 const createExpressServer = require('./server/createExpressServer')
 const createSockJsServer = require('./server/createSockJsServer')
@@ -17,8 +16,7 @@ module.exports = async (context, args) => {
   await plugins.callHook('beforeServe', { context, config })
   await fs.remove(config.outDir)
 
-  const worker = createWorker(config)
-  const server = await createExpressServer(app, worker)
+  const server = await createExpressServer(app)
   const sock = await createSockJsServer(app)
 
   await compileAssets(context, config, plugins, {

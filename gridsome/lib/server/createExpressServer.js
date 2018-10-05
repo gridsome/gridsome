@@ -9,7 +9,7 @@ const endpoint = {
   explore: '/___explore'
 }
 
-module.exports = async (app, worker) => {
+module.exports = async app => {
   const port = await resolvePort(app.config.port)
   const { config, schema, store } = app
   const server = express()
@@ -22,7 +22,7 @@ module.exports = async (app, worker) => {
 
   const assetsDir = path.relative(config.targetDir, config.assetsDir)
   const route = path.join(config.pathPrefix, assetsDir, 'static', '*')
-  server.get(route, require('./middlewares/assets')(app, worker))
+  server.get(route, require('./middlewares/assets')(app))
 
   const createUrl = (endpoint, protocol = 'http') => {
     return `${protocol}://${config.host}:${port}${endpoint}`

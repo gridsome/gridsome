@@ -3,7 +3,6 @@ const fs = require('fs-extra')
 const sharp = require('sharp')
 const imagemin = require('imagemin')
 const imageminWebp = require('imagemin-webp')
-const createRenderFn = require('../server/createRenderFn')
 const imageminPngquant = require('imagemin-pngquant')
 const imageminJpegoptim = require('imagemin-jpegoptim')
 
@@ -74,40 +73,9 @@ exports.processImage = async function ({
   return fs.outputFileSync(destPath, buffer)
 }
 
-exports.processImages = async function ({ queue, outDir, minWidth }) {
+exports.process = async function ({ queue, outDir, minWidth }) {
   return Promise.all(queue.map(data => {
     const destPath = path.resolve(outDir, data.destination)
     return exports.processImage({ destPath, minWidth, ...data })
   }))
-}
-
-exports.renderHtml = async function ({
-  pages,
-  htmlTemplate,
-  clientManifestPath,
-  serverBundlePath
-}) {
-  const render = createRenderFn({
-    htmlTemplate,
-    clientManifestPath,
-    serverBundlePath
-  })
-
-  let page, html
-
-  for (let i = 0, l = pages.length; i < l; i++) {
-    page = pages[i]
-
-    const { data } = page.dataOutput
-      ? await fs.readJson(page.dataOutput)
-      : {}
-
-    try {
-      html = await render(page.path, data)
-    } catch (err) {
-      throw err
-    }
-
-    await fs.outputFile(page.htmlOutput, html)
-  }
 }

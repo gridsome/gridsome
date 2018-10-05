@@ -1,9 +1,11 @@
 const path = require('path')
 const fs = require('fs-extra')
 const { mapValues } = require('lodash')
+const { createWorker } = require('../../workers')
 
-module.exports = ({ context, config, queue }, worker) => {
+module.exports = ({ context, config, queue }) => {
   const assetsDir = path.relative(config.targetDir, config.assetsDir)
+  const worker = createWorker('image-processor')
   const minWidth = config.minProcessImageWidth
 
   return async (req, res, next) => {

@@ -21,12 +21,11 @@ class App {
     this.clients = {}
     this.context = context
     this.config = loadConfig(context, options)
-    this.system = sysinfo
 
     console.log(`Gridsome v${version}`)
     console.log(chalk.gray(
-      `CPU ${this.system.cpus.model} ` +
-      `(${this.system.cpus.physical} cores)`
+      `CPU ${sysinfo.cpus.model} ` +
+      `(${sysinfo.cpus.physical} cores)`
     ))
     console.log()
 

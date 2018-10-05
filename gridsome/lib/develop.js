@@ -1,7 +1,6 @@
 const fs = require('fs-extra')
 const chalk = require('chalk')
 const createApp = require('./app')
-const createWorker = require('./app/createWorker')
 const createExpressServer = require('./server/createExpressServer')
 const createSockJsServer = require('./server/createSockJsServer')
 const createClientConfig = require('./webpack/createClientConfig')
@@ -12,10 +11,9 @@ module.exports = async (context, args) => {
   process.env.GRIDSOME_MODE = 'serve'
 
   const app = await createApp(context, { args })
-  const { config, system, plugins } = app
+  const { config, plugins } = app
 
-  const worker = createWorker(config, system.cpus.logical)
-  const server = await createExpressServer(app, worker)
+  const server = await createExpressServer(app)
   const sock = await createSockJsServer(app)
 
   await fs.remove(config.cacheDir)
