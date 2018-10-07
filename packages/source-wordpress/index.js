@@ -5,6 +5,7 @@ const querystring = require('querystring')
 class WordPressSource {
   static defaultOptions () {
     return {
+      baseUrl: '',
       perPage: 100,
       concurrent: 10,
       routes: {},
@@ -22,8 +23,14 @@ class WordPressSource {
     const { baseUrl, perPage, concurrent } = this.options
     let { routes } = this.options
 
-    const restUrl = `${baseUrl}/wp-json/wp/v2`
+    const restUrl = `${baseUrl.replace(/\/+$/, '')}/wp-json/wp/v2`
     const restBases = { posts: {}, taxonomies: {}}
+
+    try {
+      await axios.get(restUrl)
+    } catch (err) {
+      throw new Error(`Failed to fetch baseUrl ${baseUrl}`)
+    }
 
     routes = {
       post: '/:year/:month/:day/:slug',
@@ -38,7 +45,6 @@ class WordPressSource {
     const makeTermId = id => this.source.makeUid(`term-${id}`)
 
     const { data: types } = await axios.get(`${restUrl}/types`)
-
     const { data: taxonomies } = await axios.get(`${restUrl}/taxonomies`)
 
     for (const typeName in types) {
@@ -66,7 +72,7 @@ class WordPressSource {
 
     for (const typeName in restBases.posts) {
       const restBase = restBases.posts[typeName]
-      const endpoint = `${baseUrl}/wp-json/wp/v2/${restBase}`
+      const endpoint = `${restUrl}/${restBase}`
       const posts = await fetchPaged(endpoint, { perPage, concurrent })
 
       for (const post of posts) {
@@ -98,7 +104,7 @@ class WordPressSource {
 
     for (const typeName in restBases.taxonomies) {
       const restBase = restBases.taxonomies[typeName]
-      const endpoint = `${baseUrl}/wp-json/wp/v2/${restBase}`
+      const endpoint = `${restUrl}/${restBase}`
       const terms = await fetchPaged(endpoint, { perPage, concurrent })
 
       for (const term of terms) {
@@ -131,7 +137,11 @@ function fetchPaged (url, options = {}) {
     const totalItems = parseInt(res.headers['x-wp-total'], 10)
     const totalPages = parseInt(res.headers['x-wp-totalpages'], 10)
 
-    res.data = ensureArrayData(url, res.data)
+    try {
+      res.data = ensureArrayData(url, res.data)
+    } catch (err) {
+      return reject(err)
+    }
 
     if (!totalItems || totalPages <= 1) {
       return resolve(res.data)
@@ -152,7 +162,11 @@ function fetchPaged (url, options = {}) {
     })
 
     queue.on('task_finish', (id, { data }) => {
-      res.data.push(...ensureArrayData(id, data))
+      try {
+        res.data.push(...ensureArrayData(id, data))
+      } catch (err) {
+        return reject(err)
+      }
     })
 
     queue.on('drain', () => {
@@ -166,8 +180,11 @@ function ensureArrayData (url, data) {
     try {
       data = JSON.parse(data)
     } catch (err) {
-      console.error(`Failed to parse results from ${url}`)
-      return []
+      throw new Error(
+        `Failed to fetch ${url}\n` +
+        `Expected JSON response but got:\n` +
+        `${data.trim().substring(0, 150)}...\n`
+      )
     }
   }
   return data
