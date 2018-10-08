@@ -1,5 +1,4 @@
 const path = require('path')
-const chalk = require('chalk')
 const Router = require('vue-router')
 const autoBind = require('auto-bind')
 const hirestime = require('hirestime')
@@ -10,7 +9,6 @@ const ImageProcessQueue = require('./ImageProcessQueue')
 const createSchema = require('../graphql/createSchema')
 const loadConfig = require('./loadConfig')
 const createRoutes = require('./createRoutes')
-const sysinfo = require('../utils/sysinfo')
 const { execute, graphql } = require('../graphql/graphql')
 const { version } = require('../../package.json')
 
@@ -22,13 +20,6 @@ class App {
     this.context = context
     this.config = loadConfig(context, options)
 
-    console.log(`Gridsome v${version}`)
-    console.log(chalk.gray(
-      `CPU ${sysinfo.cpus.model} ` +
-      `(${sysinfo.cpus.physical} cores)`
-    ))
-    console.log()
-
     autoBind(this)
   }
 
@@ -39,10 +30,11 @@ class App {
       { title: 'Initialize', run: this.init },
       { title: 'Run plugins', run: this.runPlugins },
       { title: 'Create GraphQL schema', run: this.createSchema },
-      { title: 'Generate temporary files', run: this.generateRoutes }
+      { title: 'Generate code', run: this.generateFiles }
     ]
 
-    console.info('Bootstrapping...')
+    console.log(`Gridsome v${version}`)
+    console.log()
 
     for (const current of phases) {
       if (phases.indexOf(current) <= phase) {
@@ -75,7 +67,7 @@ class App {
     })
 
     this.plugins.on('generateRoutes', () => {
-      this.generateRoutes()
+      this.generateFiles()
     })
 
     return this.plugins.callHook('init')
@@ -95,7 +87,7 @@ class App {
     })
   }
 
-  generateRoutes () {
+  generateFiles () {
     this.routerData = createRoutes(this.store)
 
     this.router = new Router({
