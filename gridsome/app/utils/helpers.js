@@ -9,6 +9,7 @@ export function url (string) {
 }
 
 const re = new RegExp(`^${config.pathPrefix}`)
+const replacement = config.pathPrefix !== '/' ? '' : '/'
 export function stripPathPrefix (string) {
-  return string.replace(re, '')
+  return string.replace(re, replacement)
 }

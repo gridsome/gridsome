@@ -8,6 +8,7 @@ const builtInPlugins = [
   'internal://plugins/source-vue'
 ]
 
+// TODO: use joi to define and validate config schema
 module.exports = (context, options = {}, pkg = {}) => {
   const resolve = (...p) => path.resolve(context, ...p)
   const isServing = process.env.GRIDSOME_MODE === 'serve'
