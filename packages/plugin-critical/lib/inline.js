@@ -1,9 +1,18 @@
+const path = require('path')
 const fs = require('fs-extra')
 const htmlParser = require('parse5')
 const getStream = require('get-stream')
 const replaceStream = require('replacestream')
 
-exports.inlineCriticalCSS = function (filePath, css) {
+exports.createPolyfillScript = function () {
+  const filePath = path.resolve(__dirname, 'polyfill.txt')
+  const fileContent = fs.readFileSync(filePath, 'utf-8')
+  const code = fileContent.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '').trim()
+
+  return `<script>${code}</script>`
+}
+
+exports.inlineCriticalCSS = function (filePath, { css, polyfill }) {
   const inlineString = `<style id="___critical-css">${css}</style>`
 
   let isInlined = false
@@ -37,6 +46,12 @@ exports.inlineCriticalCSS = function (filePath, css) {
 
     return match
   }))
+
+  if (polyfill) {
+    stream = stream.pipe(replaceStream(/<\/body>/g, match => {
+      return polyfill + match
+    }))
+  }
 
   return getStream(stream)
 }
