@@ -48,13 +48,23 @@ Gridsome sites can be entirely hosted on a CDN and can handle thousands to milli
 ### The frontend for the headless
 Design and build websites that are decoupled from the CMS. This means you can easily change the CMS later or test a complete redesign without breaking your site.
 
-## Get started
+## Quick start
 
-```sh
-$ npm install -g @gridsome/cli
-$ gridsome create awesome-site
-$ cd awesome-site
-$ gridsome develop
-```
+### 1. Install Gridsome CLI tool
+`npm install --global @gridsome/cli`
 
-Your browser will now open your site at `http://localhost:8080`. Happy coding!
+### 2. Create a Gridsome project
+1. `gridsome create my-gridsome-site` to create a new project </li>
+2. `cd my-gridsome-site` to open folder
+3. `gridsome develop` to start local dev server at `http://localhost:8080`
+4. Happy coding 🎉🙌
+
+### 3. Next steps
+1. Add .vue files to `/pages` directory to create pages.
+2. Use `gridsome build` to generate static files in a `/dist` folder
+3. Use `gridsome serve` for server-side rendering
+
+### Learn more...
+
+- [How it works](https://gridsome.org/docs/how-it-works)
+- [How to deploy](https://gridsome.org/docs/deployment)
