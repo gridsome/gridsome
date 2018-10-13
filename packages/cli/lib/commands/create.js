@@ -20,6 +20,8 @@ module.exports = async (name, starter = 'default') => {
   }
 
   const url = `https://github.com/${starter}.git`
+  const developCommand = 'gridsome develop'
+  const buildCommand = 'gridsome build'
 
   const tasks = new Tasks([
     {
@@ -89,8 +91,15 @@ module.exports = async (name, starter = 'default') => {
 
           child.on('close', code => {
             if (code !== 0) {
-              reject(`Command failed: ${command} ${args.join(' ')}`)
-              return
+              return reject(
+                new Error(
+                  `Failed to install dependencies with ${command}. ` +
+                  `Please enter ${chalk.cyan(name)} directory and ` +
+                  `install dependencies with yarn or npm manually. ` +
+                  `Then run ${chalk.cyan(developCommand)} to start ` +
+                  `local development.\n\n    Exit code ${code}`
+                )
+              )
             }
 
             resolve()
@@ -103,12 +112,8 @@ module.exports = async (name, starter = 'default') => {
   try {
     await tasks.run()
   } catch (err) {
-    console.log()
-    return console.log(chalk.red(err.message))
+    throw err
   }
-
-  const developCommand = 'gridsome develop'
-  const buildCommand = 'gridsome build'
 
   console.log()
   console.log(`  - Enter directory ${chalk.green(`cd ${name}`)}`)
