@@ -2,6 +2,7 @@ const path = require('path')
 const fs = require('fs-extra')
 const execa = require('execa')
 const chalk = require('chalk')
+const semver = require('semver')
 const Tasks = require('@hjvedvik/tasks')
 const sortPackageJson = require('sort-package-json')
 
@@ -124,11 +125,10 @@ module.exports = async (name, starter = 'default') => {
 
 async function useYarn () {
   try {
-    await exec('yarnpkg', ['--version'])
-    return true
-  } catch (e) {
-    return false
-  }
+    const { stdout: version } = await execa('yarn', ['--version'])
+    return semver.satisfies(version, '>= 1.4.0')
+  } catch (err) {}
+  return false
 }
 
 async function updatePkg (pkgPath, obj) {
