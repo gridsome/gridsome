@@ -46,6 +46,30 @@ test('process webp image', async () => {
   expect(toStats.size).toBeLessThan(fromStats.size)
 })
 
+test('process svg image', async () => {
+  const files = await process(['logo.svg'])
+  const { type, width, height } = imageSize.sync(files[0].buffer)
+  const fromStats = await fs.stat(files[0].filePath)
+  const toStats = await fs.stat(files[0].destPath)
+
+  expect(type).toEqual('svg')
+  expect(width).toEqual(400)
+  expect(height).toEqual(400)
+  expect(toStats.size).toEqual(fromStats.size)
+})
+
+test('process gif image', async () => {
+  const files = await process(['logo.gif'])
+  const { type, width, height } = imageSize.sync(files[0].buffer)
+  const fromStats = await fs.stat(files[0].filePath)
+  const toStats = await fs.stat(files[0].destPath)
+
+  expect(type).toEqual('gif')
+  expect(width).toEqual(1666)
+  expect(height).toEqual(1666)
+  expect(toStats.size).toEqual(fromStats.size)
+})
+
 test('resize image', async () => {
   const files = await process(['1000x600.png'], { width: 100 })
   const { type, width, height } = imageSize.sync(files[0].buffer)
@@ -70,7 +94,7 @@ async function process (filenames, options = {}) {
     targetDir,
     assetsDir,
     maxImageWidth: 1000,
-    imageExtensions: ['.jpg', '.png', '.webp']
+    imageExtensions: ['.jpg', '.png', '.svg', '.gif', '.webp']
   }
   const testAssetsDir = path.join(__dirname, 'assets')
   const processQueue = new ImageProcessQueue({ context: __dirname, config })
