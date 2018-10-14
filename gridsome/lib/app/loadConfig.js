@@ -54,6 +54,7 @@ module.exports = (context, options = {}, pkg = {}) => {
   config.cacheDir = resolve('.cache')
   config.minProcessImageWidth = 500 // TODO: find a better name for this
   config.maxImageWidth = localConfig.maxImageWidth || 1920
+  config.imageExtensions = ['.png', '.jpeg', '.jpg', '.webp']
 
   // max cache age for html markup in serve mode
   config.maxCacheAge = localConfig.maxCacheAge || 1000

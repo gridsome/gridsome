@@ -13,14 +13,26 @@ module.exports = ({ context, config, queue }) => {
       return decodeURIComponent(value)
     })
 
-    const filePath = path.resolve(context, req.params[0])
+    const relPath = req.params[0].replace(/(%2e|\.){2}/g, '')
+    const filePath = path.join(context, relPath)
 
-    if (!fs.existsSync(filePath)) {
+    if (
+      !filePath.startsWith(context) ||
+      !fs.existsSync(filePath)
+    ) {
       return res.sendStatus(404)
     }
 
     const { ext } = path.parse(filePath)
-    const { cacheKey, size } = await queue.preProcess(filePath, options)
+    let data
+
+    try {
+      data = await queue.preProcess(filePath, options)
+    } catch (err) {
+      return next(err)
+    }
+
+    const { cacheKey, size } = data
     const destPath = path.resolve(config.cacheDir, assetsDir, cacheKey + ext)
     const args = { filePath, destPath, minWidth, options, size }
 

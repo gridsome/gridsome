@@ -19,7 +19,13 @@ class ProcessQueue {
   }
 
   async add (filePath, options = {}) {
-    const data = await this.preProcess(filePath, options)
+    let data
+
+    try {
+      data = await this.preProcess(filePath, options)
+    } catch (err) {
+      throw err
+    }
 
     if (process.env.GRIDSOME_MODE === 'serve') {
       return data
@@ -41,15 +47,18 @@ class ProcessQueue {
   }
 
   async preProcess (filePath, options = {}) {
-    if (!fs.existsSync(filePath)) {
-      return {
-        src: null,
-        sets: [],
-        srcset: [],
-        dataUri: null,
-        cacheKey: null,
-        sizes: { width: null, height: null }
-      }
+    const { ext } = path.parse(filePath)
+    const { imageExtensions } = this.config
+
+    if (!imageExtensions.includes(ext)) {
+      throw new Error(
+        `${ext} is not a supported image format. ` +
+        `Supported extensions are ${imageExtensions.join(', ')}.`
+      )
+    }
+
+    if (!await fs.exists(filePath)) {
+      throw new Error(`${filePath} was not found. `)
     }
 
     const hash = await md5File(filePath)

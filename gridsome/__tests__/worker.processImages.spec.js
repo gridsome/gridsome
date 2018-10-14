@@ -65,8 +65,14 @@ test('do not upscale images', async () => {
 })
 
 async function process (filenames, options = {}) {
+  const config = {
+    pathPrefix,
+    targetDir,
+    assetsDir,
+    maxImageWidth: 1000,
+    imageExtensions: ['.jpg', '.png', '.webp']
+  }
   const testAssetsDir = path.join(__dirname, 'assets')
-  const config = { pathPrefix, targetDir, assetsDir, maxImageWidth: 1000 }
   const processQueue = new ImageProcessQueue({ context: __dirname, config })
 
   const files = await Promise.all(filenames.map(async filename => {
