@@ -171,27 +171,25 @@ async function renderHTML (queue, config) {
 
   const { htmlTemplate, clientManifestPath, serverBundlePath } = config
 
-  const onError = err => {
-    worker.end()
-    throw err
-  }
-
-  await Promise.all(chunks.map(chunk => {
-    // reduce amount of data sent to worker
-    const pages = chunk.map(page => ({
+  await Promise.all(chunks.map(async queue => {
+    const pages = queue.map(page => ({
       path: page.path,
       htmlOutput: page.htmlOutput,
       dataOutput: page.dataOutput
     }))
 
-    return worker
-      .render({
+    try {
+      await worker.render({
         pages,
         htmlTemplate,
         clientManifestPath,
         serverBundlePath
-      }).catch(onError)
-  })).catch(onError)
+      })
+    } catch (err) {
+      worker.end()
+      throw err
+    }
+  }))
 
   worker.end()
 
@@ -204,13 +202,17 @@ async function processImages (queue, { outDir, minProcessImageWidth }) {
   const worker = createWorker('image-processor')
   const totalAssets = queue.queue.length
 
-  await Promise.all(chunks.map(queue => {
-    return worker
-      .process({ queue, outDir, minWidth: minProcessImageWidth })
-      .catch(err => {
-        worker.end()
-        throw err
+  await Promise.all(chunks.map(async queue => {
+    try {
+      await worker.process({
+        queue,
+        outDir,
+        minWidth: minProcessImageWidth
       })
+    } catch (err) {
+      worker.end()
+      throw err
+    }
   }))
 
   worker.end()
