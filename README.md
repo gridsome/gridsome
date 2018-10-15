@@ -68,3 +68,17 @@ Design and build websites that are decoupled from the CMS. This means you can ea
 
 - [How it works](https://gridsome.org/docs/how-it-works)
 - [How to deploy](https://gridsome.org/docs/deployment)
+
+## Roadmap for v1.0
+
+- [x] `*.vue` pages and templates
+- [x] GraphQL data layer
+- [x] Multi-process image processing
+- [x] Multi-process HTML rendering
+- [x] Lazy-loading images and pages
+- [x] Pagination
+- [ ] Taxonomies
+- [ ] Plugin APIs
+- [ ] Documentation
+- [ ] Guides
+- [ ] Tests
