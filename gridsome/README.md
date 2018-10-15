@@ -1,11 +1,11 @@
 <p align="center">
   <br>
   <a href="https://www.gridsome.org">
-    <img src="https://raw.githubusercontent.com/gridsome/gridsome/master/assets/logo.png" width="120"/>
+    <img src="https://raw.githubusercontent.com/gridsome/gridsome/master/assets/logo.png" width="90"/>
   </a>
 </p>
 
-<h1 align="center">Gridsome</h1>
+<h2 align="center">Gridsome</h2>
 
 <p align="center">
   A JAMstack framework for building blazing fast websites with <a href="https://vuejs.org">Vue.js</a>
@@ -43,7 +43,7 @@
 4. Happy coding 🎉🙌
 
 ### 3. Next steps
-1. Add .vue files to `/pages` directory to create pages.
+1. Add `.vue` files to `/pages` directory to create pages.
 2. Use `gridsome build` to generate static files in a `/dist` folder
 3. Use `gridsome serve` for server-side rendering
 
