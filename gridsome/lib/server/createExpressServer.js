@@ -3,6 +3,7 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const resolvePort = require('./resolvePort')
 const graphqlHTTP = require('express-graphql')
+const { forwardSlash } = require('../utils')
 
 const endpoint = {
   graphql: '/___graphql',
@@ -22,10 +23,10 @@ module.exports = async app => {
 
   const assetsDir = path.relative(config.targetDir, config.assetsDir)
   const route = path.join(config.pathPrefix, assetsDir, 'static', '*')
-  server.get(route, require('./middlewares/assets')(app))
+  server.get(forwardSlash(route), require('./middlewares/assets')(app))
 
   const createUrl = (endpoint, protocol = 'http') => {
-    return `${protocol}://${config.host}:${port}${endpoint}`
+    return `${protocol}://${config.host}:${port}${forwardSlash(endpoint)}`
   }
 
   return {

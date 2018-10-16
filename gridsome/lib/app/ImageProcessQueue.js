@@ -6,6 +6,7 @@ const { reduce, trim } = require('lodash')
 const md5File = require('md5-file/promise')
 const imageSize = require('probe-image-size')
 const svgDataUri = require('mini-svg-data-uri')
+const { forwardSlash } = require('../utils')
 
 class ProcessQueue {
   constructor ({ context, config }) {
@@ -93,14 +94,14 @@ class ProcessQueue {
 
       if (process.env.GRIDSOME_MODE === 'serve') {
         const query = createOptionsQuery({ width: srcWidth })
-        filename = `${relPath}?${query}`
+        filename = `${forwardSlash(relPath)}?${query}`
       } else {
         const { name, ext } = path.parse(relPath)
         const urlHash = !process.env.GRIDSOME_TEST ? hash : 'test'
         filename = `${name}-${srcWidth}.${urlHash}${ext}`
       }
 
-      return path.join(pathPrefix, assetsDir, 'static', filename)
+      return forwardSlash(path.join(pathPrefix, assetsDir, 'static', filename))
     }
 
     const sets = imageSizes.map(width => {

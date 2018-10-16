@@ -1,5 +1,6 @@
 const path = require('path')
 const Config = require('webpack-chain')
+const { forwardSlash } = require('../utils')
 const { VueLoaderPlugin } = require('vue-loader')
 const createHTMLRenderer = require('../server/createHTMLRenderer')
 const CSSExtractPlugin = require('mini-css-extract-plugin')
@@ -8,8 +9,8 @@ const resolve = (p, c) => path.resolve(c || __dirname, p)
 
 module.exports = (context, options, { isProd, isServer }) => {
   const { cacheDirectory, cacheIdentifier } = createCacheOptions()
-  const { targetDir, pathPrefix } = options
-  const assetsDir = path.relative(targetDir, options.assetsDir)
+  const assetsDir = path.relative(options.targetDir, options.assetsDir)
+  const pathPrefix = forwardSlash(path.join(options.pathPrefix, '/'))
   const config = new Config()
 
   const filename = `${assetsDir}/js/[name]${isProd ? '.[contenthash]' : ''}.js`
@@ -18,8 +19,8 @@ module.exports = (context, options, { isProd, isServer }) => {
   config.mode(isProd ? 'production' : 'development')
 
   config.output
-    .path(targetDir)
-    .publicPath(isProd ? path.join(pathPrefix, '/') : '/')
+    .path(options.targetDir)
+    .publicPath(isProd ? pathPrefix : '/')
     .chunkFilename(filename)
     .filename(filename)
 
