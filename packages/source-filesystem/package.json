@@ -14,7 +14,8 @@
     "chokidar": "^2.0.4",
     "fs-extra": "^7.0.0",
     "globby": "^8.0.1",
-    "lodash": "^4.17.10"
+    "lodash": "^4.17.10",
+    "slash": "^2.0.0"
   },
   "publishConfig": {
     "access": "public"

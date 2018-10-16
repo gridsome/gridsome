@@ -1,6 +1,7 @@
 const path = require('path')
 const fs = require('fs-extra')
 const glob = require('globby')
+const slash = require('slash')
 const chokidar = require('chokidar')
 const { mapValues } = require('lodash')
 
@@ -74,17 +75,17 @@ class FilesystemSource {
 
       // TODO: update nodes when changed
       watcher.on('add', file => {
-        const node = this.createNode(file)
+        const node = this.createNode(slash(file))
         this.source.addNode(options.type, node)
       })
 
       watcher.on('unlink', file => {
-        const id = this.source.makeUid(file)
+        const id = this.source.makeUid(slash(file))
         this.source.removeNode(options.type, id)
       })
 
       watcher.on('change', file => {
-        const node = this.createNode(file)
+        const node = this.createNode(slash(file))
         this.source.updateNode(options.type, node._id, node)
       })
     }
@@ -127,7 +128,7 @@ class FilesystemSource {
     if (this.options.route) return
 
     const { dir, name } = path.parse(file)
-    const segments = dir.split(path.sep).map(s => this.source.slugify(s))
+    const segments = dir.split('/').map(s => this.source.slugify(s))
 
     if (!this.options.index.includes(name)) {
       segments.push(this.source.slugify(name))
