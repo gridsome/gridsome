@@ -14,6 +14,7 @@ module.exports = async (context, args) => {
   const { config, plugins } = app
 
   await plugins.callHook('beforeServe', { context, config })
+  await fs.ensureDir(config.cacheDir)
   await fs.remove(config.outDir)
 
   const server = await createExpressServer(app)

@@ -18,6 +18,7 @@ module.exports = async (context, args) => {
   const { config, graphql, plugins } = app
 
   await plugins.callHook('beforeBuild', { context, config })
+  await fs.ensureDir(config.cacheDir)
   await fs.remove(config.outDir)
 
   if (fs.existsSync(config.staticDir)) {

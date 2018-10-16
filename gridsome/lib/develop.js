@@ -18,6 +18,7 @@ module.exports = async (context, args) => {
   const sock = await createSockJsServer(app)
 
   await fs.remove(config.cacheDir)
+  await fs.ensureDir(config.cacheDir)
 
   server.app.get(
     server.endpoint.explore,
