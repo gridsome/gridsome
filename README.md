@@ -78,7 +78,7 @@ Design and build websites that are decoupled from the CMS. This means you can ea
 - [x] Lazy-loading images and pages
 - [x] Pagination
 - [ ] Taxonomies
-- [ ] Plugin APIs
+- [ ] Plugin API
 - [ ] Service Worker
 - [ ] Documentation
 - [ ] Guides

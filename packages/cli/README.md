@@ -13,12 +13,10 @@ Run `gridsome create {name} {starter}` to create a new Gridsome project.
 - **name** - directory name to create the project in
 - **starter** - optional starter kit name
 
-
 | Official starter kits |                                         |
 | --------------------- | --------------------------------------- |
 | Default               | `gridsome create my-website`            |
 | WordPress             | `gridsome create my-blog wordpress`     |
-| Contentful            | `gridsome create my-blog contentful`    |
 
 ## Start local development
 
