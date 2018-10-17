@@ -1,5 +1,6 @@
 const path = require('path')
 const glob = require('globby')
+const slash = require('slash')
 const crypto = require('crypto')
 const chokidar = require('chokidar')
 const { createPagePath, parseComponent } = require('./lib/utils')
@@ -30,9 +31,9 @@ class VueSource {
         cwd: this.context
       })
 
-      watcher.on('add', file => this.addPage(file))
-      watcher.on('unlink', file => this.source.removePage(createId(file)))
-      watcher.on('change', file => this.updatePage(file))
+      watcher.on('add', file => this.addPage(slash(file)))
+      watcher.on('unlink', file => this.source.removePage(createId(slash(file))))
+      watcher.on('change', file => this.updatePage(slash(file)))
     }
   }
 
