@@ -30,13 +30,14 @@ export default ({ options }) => {
   if (options.__pageQueryDev) return
 
   const merge = Vue.config.optionMergeStrategies
+  const slash = string => string.replace(/\\+/g, '/')
 
   options.mounted = merge.mounted([function () {
-    active[options.__file] = { options, vm: this }
+    active[slash(options.__file)] = { options, vm: this }
   }], options.mounted)
 
   options.beforeDestroy = merge.beforeDestroy([function () {
-    delete active[options.__file]
+    delete active[slash(options.__file)]
   }], options.beforeDestroy)
 
   options.__pageQueryDev = true
