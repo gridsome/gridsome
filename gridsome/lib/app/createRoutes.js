@@ -44,6 +44,13 @@ module.exports = store => {
 
   templates.forEach(page => {
     const typeName = page.pageQuery.type
+
+    if (!store.types.hasOwnProperty(typeName)) {
+      return console.info(
+        `No content type was found for ${page.internal.origin}`
+      )
+    }
+
     const contentType = store.types[typeName]
     const collection = store.collections[typeName]
     const { component, pageQuery } = page
