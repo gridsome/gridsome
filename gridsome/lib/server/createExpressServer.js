@@ -22,7 +22,7 @@ module.exports = async app => {
   )
 
   const assetsDir = path.relative(config.targetDir, config.assetsDir)
-  const route = path.join(config.pathPrefix, assetsDir, 'static', '*')
+  const route = path.posix.join(config.pathPrefix, assetsDir, 'static', '*')
   server.get(forwardSlash(route), require('./middlewares/assets')(app))
 
   const createUrl = (endpoint, protocol = 'http') => {
