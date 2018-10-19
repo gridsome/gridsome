@@ -2,7 +2,7 @@ const path = require('path')
 const fs = require('fs-extra')
 const sharp = require('sharp')
 const crypto = require('crypto')
-const { reduce, trim } = require('lodash')
+const { trim } = require('lodash')
 const md5File = require('md5-file/promise')
 const imageSize = require('probe-image-size')
 const svgDataUri = require('mini-svg-data-uri')
@@ -90,15 +90,31 @@ class ProcessQueue {
 
     const createSrcPath = (srcWidth = maxImageWidth) => {
       const relPath = path.relative(this.context, filePath)
+      const imageOptions = []
       let filename = ''
 
+      imageOptions.push({
+        key: 'width',
+        shortKey: 'w',
+        value: srcWidth
+      })
+
+      if (options.quality) {
+        imageOptions.push({
+          key: 'quality',
+          shortKey: 'q',
+          value: options.quality
+        })
+      }
+
       if (process.env.GRIDSOME_MODE === 'serve') {
-        const query = createOptionsQuery({ width: srcWidth })
+        const query = createOptionsQuery(imageOptions)
         filename = `${forwardSlash(relPath)}?${query}`
       } else {
         const { name, ext } = path.parse(relPath)
         const urlHash = !process.env.GRIDSOME_TEST ? hash : 'test'
-        filename = `${name}-${srcWidth}.${urlHash}${ext}`
+        const string = createOptionsString(imageOptions)
+        filename = `${name}-${string}.${urlHash}${ext}`
       }
 
       return forwardSlash(path.join(pathPrefix, assetsDir, 'static', filename))
@@ -159,9 +175,15 @@ function genHash (string) {
 }
 
 function createOptionsQuery (options) {
-  return reduce(options, (values, value, key) => {
+  return options.reduce((values, { key, value }) => {
     return (values.push(`${key}=${encodeURIComponent(value)}`), values)
   }, []).join('&')
+}
+
+function createOptionsString (options) {
+  return options.reduce((values, { shortKey, value }) => {
+    return (values.push(`${shortKey}${encodeURIComponent(value)}`), values)
+  }, []).join('-')
 }
 
 async function createDataUri (buffer, type, width, height, options = {}) {

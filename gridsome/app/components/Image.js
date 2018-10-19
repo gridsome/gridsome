@@ -16,12 +16,12 @@ export default {
     width: { type: String },
     alt: { type: String },
     immediate: { type: true },
+    quality: { type: String },
     blur: { type: String }
 
     // responsive: true
     // grayscale: false
     // duotone: false
-    // quality: 80
     // focus: center
     // rotate: 0
     // transition-name?
