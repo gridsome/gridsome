@@ -23,16 +23,12 @@ class ContentfulSource {
       space, accessToken, environment, host
     })
 
-    const cache = { contentTypes: {} }
+    const refs = {}
+    const cache = { contentTypes: {}}
     const { items: contentTypes } = await client.getContentTypes()
-
-    let refs
-
-    // api.service.info(`Content types (${contentTypes.length})`, namespace)
 
     for (const contentType of contentTypes) {
       // filter out fields which are not references
-
       const fields = contentType.fields.filter(({ type, items }) => {
         if (items) return items.type !== 'Link'
         return type !== 'Link'
@@ -40,7 +36,7 @@ class ContentfulSource {
 
       // get all reference fields
       // TODO: include Asset references
-      refs = contentType.fields.filter(({ items }) => {
+      refs[contentType.sys.id] = contentType.fields.filter(({ items }) => {
         return items && items.type === 'Link' && items.linkType === 'Entry'
       })
 
@@ -55,7 +51,7 @@ class ContentfulSource {
     for (const contentType of contentTypes) {
       this.source.addType(contentType.name, {
         name: contentType.name,
-        refs: refs.reduce((refs, field) => {
+        refs: refs[contentType.sys.id].reduce((refs, field) => {
           refs[field.id] = {
             key: '_id',
             type: field.items.validations.reduce((types, { linkContentType }) => {
@@ -78,7 +74,7 @@ class ContentfulSource {
       const { contentType, fields, refs } = cache.contentTypes[id]
 
       // TODO: let user choose which field contains the slug
-      
+
       this.source.addNode(contentType.name, {
         _id: this.source.makeUid(item.sys.id),
         title: item.fields[contentType.displayField],
@@ -92,7 +88,7 @@ class ContentfulSource {
           return fields
         }, {}),
 
-        refs: refs.reduce((refs, { id }) => {
+        refs: refs[contentType.sys.id].reduce((refs, { id }) => {
           if (!item.fields[id]) return refs
 
           refs[id] = item.fields[id].map(item => {
