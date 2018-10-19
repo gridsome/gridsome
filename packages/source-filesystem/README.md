@@ -19,6 +19,8 @@ module.exports = {
 }
 ```
 
+A filesystem source will also require a transformer in order to parse the files. The example above is looking for a set of [Markdown](https://en.wikipedia.org/wiki/Markdown) files, so in order to let [Gridsome](https://gridsome.org) understand the content of the files, you must install [@gridsome/transformer-remark](https://www.npmjs.com/package/@gridsome/transformer-remark) as a dev dependency in your project. Gridsome will automatically transform the files for you as long as a transformer that supports your files is found in your `package.json`.
+
 ## Options
 
 #### path
@@ -46,4 +48,3 @@ Define a dynamic route if your source is able to have a certain pathname structu
 - Default: `['index']`
 
 Define which files to consider as index files. These files will not have their filename appear in its route path and will become the main `index.html` file of the directory. Make sure there is only one possible index file per directory if multiple index names are defined.
-
