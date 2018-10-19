@@ -10,14 +10,33 @@ class FilesystemSource {
     return {
       path: undefined,
       route: undefined,
-      type: 'node',
       refs: {},
       index: ['index'],
-      typeName: 'Filesystem'
+      typeName: 'FileNode'
     }
   }
 
   constructor (options, { context, source }) {
+    // TODO: remove this before v1.0
+    if (options.type) {
+      if (options.typeName === 'FileNode') {
+        source.typeName = 'Filesystem'
+        options.typeName = 'Filesystem'
+      }
+
+      const typeName = source.makeTypeName(options.type)
+
+      console.log(
+        `The 'type' option for @gridsome/source-filesystem is ` +
+        `deprecated. Use the 'typeName' option to set the GrahpQL ` +
+        `node type and template name instead. Change 'typeName' from ` +
+        `'${options.typeName}' to '${typeName}' in your ` +
+        `gridsome.config.js\n`
+      )
+    } else {
+      options.type = ''
+    }
+
     this.options = options
     this.context = context
     this.source = source
