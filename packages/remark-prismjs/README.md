@@ -2,6 +2,10 @@
 
 > Syntax highlighter for markdown code blocks
 
+## Install
+- `yarn add @gridsome/remark-prismjs`
+- `npm install @gridsome/remark-prismjs`
+
 ## Usage
 
 Add syntax highlighter to a single markdown source:

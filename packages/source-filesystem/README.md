@@ -2,6 +2,10 @@
 
 > Transform files into content that can be fetched with GraphQL in your components.
 
+## Install
+- `yarn add @gridsome/source-filesystem`
+- `npm install @gridsome/source-filesystem`
+
 ## Usage
 
 ```js

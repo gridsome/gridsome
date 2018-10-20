@@ -2,6 +2,10 @@
 
 > Markdown transformer for Gridsome
 
+## Install
+- `yarn add @gridsome/transformer-remark`
+- `npm install @gridsome/transformer-remark`
+
 ## Usage
 
 ```js
