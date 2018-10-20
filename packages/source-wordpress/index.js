@@ -43,9 +43,22 @@ class WordPressSource {
     // they will share the same node store
     const makePostId = id => this.source.makeUid(`post-${id}`)
     const makeTermId = id => this.source.makeUid(`term-${id}`)
+    let types = {}
+    let taxonomies = {}
 
-    const { data: types } = await axios.get(`${restUrl}/types`)
-    const { data: taxonomies } = await axios.get(`${restUrl}/taxonomies`)
+    try {
+      const res = await axios.get(`${restUrl}/types`)
+      types = res.data
+    } catch (err) {
+      throw err
+    }
+
+    try {
+      const res = await axios.get(`${restUrl}/taxonomies`)
+      taxonomies = res.data
+    } catch (err) {
+      throw err
+    }
 
     for (const typeName in types) {
       const options = types[typeName]
@@ -73,7 +86,13 @@ class WordPressSource {
     for (const typeName in restBases.posts) {
       const restBase = restBases.posts[typeName]
       const endpoint = `${restUrl}/${restBase}`
-      const posts = await fetchPaged(endpoint, { perPage, concurrent })
+      let posts = []
+
+      try {
+        posts = await fetchPaged(endpoint, { perPage, concurrent })
+      } catch (err) {
+        console.error(err.message)
+      }
 
       for (const post of posts) {
         const refs = {}
@@ -105,7 +124,13 @@ class WordPressSource {
     for (const typeName in restBases.taxonomies) {
       const restBase = restBases.taxonomies[typeName]
       const endpoint = `${restUrl}/${restBase}`
-      const terms = await fetchPaged(endpoint, { perPage, concurrent })
+      let terms = []
+
+      try {
+        terms = await fetchPaged(endpoint, { perPage, concurrent })
+      } catch (err) {
+        console.error(err.message)
+      }
 
       for (const term of terms) {
         this.source.addNode(term.taxonomy, {
@@ -133,7 +158,15 @@ async function taskHandler (task, cb) {
 function fetchPaged (url, options = {}) {
   return new Promise(async (resolve, reject) => {
     const query = querystring.stringify({ per_page: options.perPage })
-    const res = await axios.get(`${url}?${query}`)
+    const endpoint = `${url}?${query}`
+    let res
+
+    try {
+      res = await axios.get(endpoint)
+    } catch (err) {
+      return reject(new Error(`${err.message}: ${endpoint}`))
+    }
+
     const totalItems = parseInt(res.headers['x-wp-total'], 10)
     const totalPages = parseInt(res.headers['x-wp-totalpages'], 10)
 
@@ -157,7 +190,7 @@ function fetchPaged (url, options = {}) {
     }
 
     queue.on('task_failed', (id, err) => {
-      reject(`${id} failed with error: ${err}`)
+      reject(new Error(`${err.message}: ${id}`))
       queue.destroy()
     })
 
@@ -182,7 +215,7 @@ function ensureArrayData (url, data) {
     } catch (err) {
       throw new Error(
         `Failed to fetch ${url}\n` +
-        `Expected JSON response but got:\n` +
+        `Expected JSON response but received:\n` +
         `${data.trim().substring(0, 150)}...\n`
       )
     }
