@@ -61,7 +61,8 @@ const {
 async function createRenderQueue ({ router, config, graphql }) {
   const createPage = (page, currentPage = 1) => {
     const isPager = currentPage > 1
-    const fullPath = isPager ? `${page.path}/${currentPage}` : page.path
+    const pagePath = page.path.replace(/\/+$/, '')
+    const fullPath = isPager ? `${pagePath}/${currentPage}` : page.path
     const { route } = router.resolve(fullPath)
     const { query } = page.pageQuery
     const routePath = trim(route.path, '/')
