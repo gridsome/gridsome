@@ -8,7 +8,7 @@
 <h2 align="center">Gridsome</h2>
 
 <p align="center">
-  A JAMstack framework for building blazing fast websites with <a href="https://vuejs.org">Vue.js</a>
+  Build blazing fast websites for any CMS or data with <a href="//vuejs.org">Vue.js</a>
 </p>
 
 <p align="center">
