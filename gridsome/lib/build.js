@@ -44,6 +44,7 @@ module.exports = async (context, args) => {
 
   // 5. clean up
   await plugins.callHook('afterBuild', { context, config, queue })
+  await fs.remove(path.resolve(config.cacheDir, 'data'))
   await fs.remove(config.manifestsDir)
 
   console.log()
