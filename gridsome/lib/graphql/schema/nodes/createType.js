@@ -24,10 +24,10 @@ const fieldsInterface = new GraphQLInterfaceType({
 
 module.exports = ({ contentType, nodeTypes, fields }) => {
   const nodeType = new GraphQLObjectType({
-    name: contentType.name,
+    name: contentType.typeName,
     description: contentType.description,
     interfaces: [nodeInterface],
-    isTypeOf: node => node.typeName === contentType.name,
+    isTypeOf: node => node.typeName === contentType.typeName,
     fields: () => ({
       _id: { type: new GraphQLNonNull(GraphQLID) },
       type: { type: new GraphQLNonNull(GraphQLString) },
@@ -40,7 +40,7 @@ module.exports = ({ contentType, nodeTypes, fields }) => {
 
       ...extendNodeType(contentType, nodeType),
       ...createFields(contentType, fields),
-      ...createRefs(contentType, nodeTypes),
+      ...createRefs(contentType, nodeTypes, fields),
       ...createBelongsToRefs(contentType, nodeTypes)
     })
   })
@@ -51,8 +51,8 @@ module.exports = ({ contentType, nodeTypes, fields }) => {
 function extendNodeType (contentType, nodeType) {
   const fields = {}
 
-  for (const mimeType in contentType.mimeTypes) {
-    const transformer = contentType.mimeTypes[mimeType]
+  for (const mimeType in contentType.options.mimeTypes) {
+    const transformer = contentType.options.mimeTypes[mimeType]
     if (typeof transformer.extendNodeType === 'function') {
       Object.assign(fields, transformer.extendNodeType({
         contentType,
@@ -67,7 +67,7 @@ function extendNodeType (contentType, nodeType) {
 function createFields (contentType, customFields) {
   const fields = {
     type: new GraphQLObjectType({
-      name: `${contentType.name}Fields`,
+      name: `${contentType.typeName}Fields`,
       interfaces: [fieldsInterface],
       fields: {
         title: { type: GraphQLString },
@@ -79,40 +79,55 @@ function createFields (contentType, customFields) {
   return { fields }
 }
 
-function createRefs (contentType, nodeTypes) {
-  if (isEmpty(contentType.refs)) return null
+function createRefs (contentType, nodeTypes, fields) {
+  if (isEmpty(contentType.options.refs)) return null
 
   const refs = {
     resolve: obj => obj,
     type: new GraphQLObjectType({
-      name: `${contentType.name}References`,
-      fields: () => mapValues(contentType.refs, (ref, key) => {
-        const { schemaType, description } = ref
-        let refType = nodeTypes[schemaType]
+      name: `${contentType.typeName}References`,
+      fields: () => mapValues(contentType.options.refs, (ref, key) => {
+        const { typeName, description } = ref
 
-        if (Array.isArray(schemaType)) {
+        if (!fields.hasOwnProperty(key)) {
+          throw new Error(
+            `${contentType.typeName} cannot create reference to ` +
+            `${typeName} because it does not have the field ${key}.`
+          )
+        }
+
+        const isList = fields[key].type instanceof GraphQLList
+        let refType = nodeTypes[typeName]
+
+        if (Array.isArray(typeName)) {
+          refType = new GraphQLList(refType)
+
           // TODO: create union collection
           const fieldTypeName = camelCase(key, { pascalCase: true })
           refType = new GraphQLUnionType({
-            name: `${contentType.name}${fieldTypeName}Union`,
+            name: `${contentType.typeName}${fieldTypeName}Union`,
             interfaces: [nodeInterface],
-            types: schemaType.map(schemaType => nodeTypes[schemaType])
+            types: typeName.map(typeName => nodeTypes[typeName])
           })
         }
 
         return {
           description,
-          type: new GraphQLList(refType),
+          type: isList ? new GraphQLList(refType) : refType,
           resolve: (obj, args, { store }) => {
             const $in = obj.fields[key] || []
             const query = { [ref.key]: { $in }}
 
-            if (Array.isArray(schemaType)) {
+            if (Array.isArray(typeName)) {
               // TODO: search multiple collections
               return []
             }
 
-            return store.getType(schemaType).find(query)
+            const { collection } = store.getContentType(typeName)
+
+            return isList
+              ? collection.find(query)
+              : collection.findOne(query)
           }
         }
       })
@@ -128,7 +143,7 @@ function createBelongsToRefs (contentType, nodeTypes) {
   const belongsTo = {
     resolve: obj => obj,
     type: new GraphQLObjectType({
-      name: `${contentType.name}BelongsTo`,
+      name: `${contentType.typeName}BelongsTo`,
       fields: () => mapValues(contentType.belongsTo, ref => {
         const { foreignSchemaType, description } = ref
         const nodeType = nodeTypes[foreignSchemaType]
@@ -137,7 +152,7 @@ function createBelongsToRefs (contentType, nodeTypes) {
           description,
           type: new GraphQLList(nodeType),
           resolve: (obj, args, { store }) => {
-            const collection = store.getType(foreignSchemaType)
+            const { collection } = store.getContentType(foreignSchemaType)
             const value = obj[ref.localKey]
             const key = ref.foreignKey
 

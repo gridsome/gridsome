@@ -13,7 +13,7 @@ const { execute, graphql } = require('../graphql/graphql')
 const { version } = require('../../package.json')
 
 class App {
-  constructor (context, options = {}) {
+  constructor (context, options) {
     process.GRIDSOME = this
 
     this.events = []
@@ -75,7 +75,7 @@ class App {
   }
 
   async loadSources () {
-    return this.dispatch('loadSources')
+    return this.dispatch('loadSource')
   }
 
   async createSchema () {
@@ -118,15 +118,15 @@ class App {
 
   dispatch (eventName, ...args) {
     if (!this.events[eventName]) return
-    return Promise.all(this.events[eventName].map(({ handler }) => {
-      return handler(...args)
+    return Promise.all(this.events[eventName].map(({ api, handler }) => {
+      return handler(...args, api)
     }))
   }
 
   dispatchSync (eventName, ...args) {
     if (!this.events[eventName]) return
-    return this.events[eventName].map(({ handler }) => {
-      return handler(...args)
+    return this.events[eventName].map(({ api, handler }) => {
+      return handler(...args, api)
     })
   }
 

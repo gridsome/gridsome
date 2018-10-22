@@ -17,9 +17,10 @@ class FilesystemSource {
   }
 
   constructor (api, options) {
+    this.api = api
     this.options = options
     this.context = api.context
-    this.source = api.store
+    this.store = api.store
     this.nodesCache = {}
 
     // TODO: remove this before v1.0
@@ -42,7 +43,7 @@ class FilesystemSource {
       options.type = ''
     }
 
-    api.loadSources(args => this.addNodes(args))
+    api.loadSource(args => this.addNodes(args))
   }
 
   async addNodes () {
@@ -51,16 +52,18 @@ class FilesystemSource {
     const refs = this.normalizeRefs(options.refs)
     const files = await glob(options.path, { cwd: this.context })
 
-    this.source.addType(options.type, {
+    const contentType = this.store.addContentType({
+      typeName: options.typeName,
       route: options.route,
       refs: mapValues(refs, ref => ({
-        key: ref.key,
-        type: ref.type
+        typeName: ref.typeName,
+        key: ref.key
       }))
     })
 
     mapValues(refs, ref => {
-      this.source.addType(ref.type, {
+      this.store.addContentType({
+        typeName: ref.typeName,
         route: ref.route
       })
     })
@@ -72,19 +75,19 @@ class FilesystemSource {
       for (const fieldName in node.fields) {
         if (options.refs.hasOwnProperty(fieldName)) {
           const value = node.fields[fieldName]
-          const type = options.refs[fieldName].type
+          const typeName = options.refs[fieldName].typeName
 
           node.refs[fieldName] = value
 
           if (Array.isArray(value)) {
-            value.forEach(v => this.addRefNode(type, fieldName, v))
+            value.forEach(v => this.addRefNode(typeName, fieldName, v))
           } else {
-            this.addRefNode(type, fieldName, value)
+            this.addRefNode(typeName, fieldName, value)
           }
         }
       }
 
-      this.source.addNode(options.type, node)
+      contentType.addNode(node)
     })
 
     if (process.env.NODE_ENV === 'development') {
@@ -96,17 +99,17 @@ class FilesystemSource {
       // TODO: update nodes when changed
       watcher.on('add', file => {
         const node = this.createNode(slash(file))
-        this.source.addNode(options.type, node)
+        contentType.addNode(options.type, node)
       })
 
       watcher.on('unlink', file => {
-        const id = this.source.makeUid(slash(file))
-        this.source.removeNode(options.type, id)
+        const id = this.store.makeUid(slash(file))
+        contentType.removeNode(options.type, id)
       })
 
       watcher.on('change', file => {
         const node = this.createNode(slash(file))
-        this.source.updateNode(options.type, node._id, node)
+        contentType.updateNode(options.type, node._id, node)
       })
     }
   }
@@ -114,31 +117,29 @@ class FilesystemSource {
   // helpers
 
   createNode (file) {
-    const filePath = this.source.resolve(file)
-    const mimeType = this.source.mime.lookup(file)
+    const filePath = this.store.resolve(file)
+    const mimeType = this.store.mime.lookup(file)
     const content = fs.readFileSync(filePath, 'utf-8')
-    const result = this.source.transform(mimeType, content)
 
     const node = {
-      _id: this.source.makeUid(file),
+      _id: this.store.makeUid(file),
       path: this.normalizePath(file),
-      fields: result.fields,
-      refs: {},
       internal: {
         mimeType,
-        origin: filePath,
-        content: result.content
+        content,
+        origin: filePath
       }
     }
 
     return node
   }
 
-  addRefNode (type, fieldName, value) {
-    const cacheKey = `${type}-${fieldName}-${value}`
+  addRefNode (typeName, fieldName, value) {
+    const cacheKey = `${typeName}-${fieldName}-${value}`
+    const contentType = this.store.getContentType(typeName)
 
     if (!this.nodesCache[cacheKey] && value) {
-      this.source.addNode(type, { title: value, slug: value })
+      contentType.addNode({ title: value, slug: value })
       this.nodesCache[cacheKey] = true
     }
   }
@@ -148,10 +149,10 @@ class FilesystemSource {
     if (this.options.route) return
 
     const { dir, name } = path.parse(file)
-    const segments = dir.split('/').map(s => this.source.slugify(s))
+    const segments = dir.split('/').map(s => this.store.slugify(s))
 
     if (!this.options.index.includes(name)) {
-      segments.push(this.source.slugify(name))
+      segments.push(this.store.slugify(name))
     }
 
     return `/${segments.join('/')}`
@@ -159,9 +160,9 @@ class FilesystemSource {
 
   normalizeRefs (refs) {
     return mapValues(refs, (ref, key) => ({
-      type: ref.type || key,
-      key: ref.key || 'slug',
-      route: ref.route || `/${ref.type || key}/:slug`
+      route: ref.route || `/${this.store.slugify(ref.typeName)}/:slug`,
+      typeName: ref.typeName || this.options.typeName,
+      key: ref.key
     }))
   }
 }

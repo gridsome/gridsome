@@ -17,7 +17,7 @@ module.exports = nodeType => {
       }
     },
     resolve (object, { _id, path, nullable }, { store }, { returnType }) {
-      const collection = store.getType(returnType)
+      const { collection } = store.getContentType(returnType)
       const node = _id ? collection.get(_id) : collection.findOne({ path })
 
       if (!node && !nullable) {

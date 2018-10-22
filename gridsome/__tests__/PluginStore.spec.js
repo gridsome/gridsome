@@ -1,43 +1,46 @@
-const Source = require('../lib/app/Source')
-const BaseStore = require('../lib/app/BaseStore')
+const App = require('../lib/app/App')
+const PluginAPI = require('../lib/app/PluginAPI')
 
-let store, source
+let app, api
 
 const transformers = {
   'application/json': {
     parse (content) {
-      return JSON.parse(content)
+      return {
+        fields: JSON.parse(content)
+      }
     }
   }
 }
 
 beforeEach(() => {
-  store = new BaseStore()
-  source = new Source({ typeName: 'Test' }, { store, transformers })
+  app = new App('/', { config: { plugins: [] }})
+  app.init()
+  api = new PluginAPI(app, { options: {}, transformers })
 })
 
 afterAll(() => {
-  store = null
-  source = null
+  app = null
+  api = null
 })
 
 test('add type', () => {
-  const contentType = source.addType('post')
+  const contentType = api.store.addContentType({
+    typeName: 'TestPost'
+  })
 
-  expect(contentType.type).toEqual('post')
-  expect(contentType.name).toEqual('TestPost')
+  expect(contentType.typeName).toEqual('TestPost')
   expect(contentType.route).toBeUndefined()
   expect(typeof contentType.makePath).toBe('function')
-  expect(store.types).toHaveProperty('TestPost')
-  expect(store.collections).toHaveProperty('TestPost')
-  expect(source.ownTypeNames).toContain('TestPost')
 })
 
 test('add node', () => {
-  source.addType('post')
+  const contentType = api.store.addContentType({
+    typeName: 'TestPost'
+  })
 
-  const emit = jest.spyOn(source, 'emit')
-  const node = source.addNode('post', {
+  const emit = jest.spyOn(contentType, 'emit')
+  const node = contentType.addNode({
     _id: 'test',
     title: 'Lorem ipsum dolor sit amet',
     date: '2018-09-04T23:20:33.918Z'
@@ -45,7 +48,6 @@ test('add node', () => {
 
   expect(node).toHaveProperty('$loki')
   expect(node._id).toEqual('test')
-  expect(node.type).toEqual('post')
   expect(node.typeName).toEqual('TestPost')
   expect(node.title).toEqual('Lorem ipsum dolor sit amet')
   expect(node.slug).toEqual('lorem-ipsum-dolor-sit-amet')
@@ -58,23 +60,24 @@ test('add node', () => {
 })
 
 test('update node', () => {
-  const emit = jest.spyOn(source, 'emit')
+  const contentType = api.store.addContentType({
+    typeName: 'TestPost'
+  })
 
-  source.addType('post')
+  const emit = jest.spyOn(contentType, 'emit')
 
-  const oldNode = source.addNode('post', {
+  const oldNode = contentType.addNode({
     _id: 'test',
     date: '2018-09-04T23:20:33.918Z'
   })
 
   const oldTimestamp = oldNode.internal.timestamp
 
-  const node = source.updateNode('post', 'test', {
+  const node = contentType.updateNode('test', {
     title: 'New title'
   })
 
   expect(node._id).toEqual('test')
-  expect(node.type).toEqual('post')
   expect(node.typeName).toEqual('TestPost')
   expect(node.title).toEqual('New title')
   expect(node.slug).toEqual('new-title')
@@ -86,56 +89,90 @@ test('update node', () => {
 })
 
 test('remove node', () => {
-  const emit = jest.spyOn(source, 'emit')
+  const contentType = api.store.addContentType({
+    typeName: 'TestPost'
+  })
 
-  source.addType('post')
-  source.addNode('post', { _id: 'test' })
-  source.removeNode('post', 'test')
+  const emit = jest.spyOn(contentType, 'emit')
 
-  expect(source.getNode('post', 'test')).toBeNull()
+  contentType.addNode({ _id: 'test' })
+  contentType.removeNode('test')
+
+  expect(contentType.getNode('test')).toBeNull()
   expect(emit).toHaveBeenCalledTimes(2)
 
   emit.mockRestore()
 })
 
 test('add type with ref', () => {
-  const contentType = source.addType('post', {
+  const contentType = api.store.addContentType({
+    typeName: 'TestPost',
     refs: {
       author: {
         key: '_id',
-        type: 'author'
+        typeName: 'TestAuthor'
       }
     }
   })
 
-  expect(contentType.refs.author).toMatchObject({
-    type: 'author',
+  expect(contentType.options.refs.author).toMatchObject({
     key: '_id',
+    fieldName: 'author',
     typeName: 'TestAuthor',
-    schemaType: 'TestAuthor',
-    description: 'Reference to author'
+    description: 'Reference to TestAuthor'
   })
 })
 
 test('add type with dynamic route', () => {
-  const contentType = source.addType('post', {
+  const contentType = api.store.addContentType({
+    typeName: 'TestPost',
     route: ':year/:month/:day/:slug'
   })
 
-  const node = source.addNode('post', {
+  const node = contentType.addNode({
     title: 'Lorem ipsum dolor sit amet',
     date: '2018-09-04T23:20:33.918Z'
   })
 
-  expect(contentType.route).toEqual(':year/:month/:day/:slug')
+  expect(contentType.options.route).toEqual(':year/:month/:day/:slug')
   expect(node.path).toEqual('2018/09/05/lorem-ipsum-dolor-sit-amet')
 })
 
+test('transform node', () => {
+  const contentType = api.store.addContentType({
+    typeName: 'TestPost'
+  })
+
+  const node = contentType.addNode({
+    internal: {
+      mimeType: 'application/json',
+      content: JSON.stringify({ foo: 'bar' })
+    }
+  })
+
+  expect(node.fields).toMatchObject({ foo: 'bar' })
+})
+
+test('fail if transformer is not installed', () => {
+  const contentType = api.store.addContentType({
+    typeName: 'TestPost'
+  })
+
+  expect(() => {
+    contentType.addNode({
+      internal: {
+        mimeType: 'text/markdown',
+        content: '# Test'
+      }
+    })
+  }).toThrow('No transformer for text/markdown is installed')
+})
+
 test('generate slug from any string', () => {
-  const slug1 = source.slugify('Lorem ipsum dolor sit amet')
-  const slug2 = source.slugify('String with æøå characters')
-  const slug3 = source.slugify('String/with / slashes')
-  const slug4 = source.slugify('  Trim  string   ')
+  const slug1 = api.store.slugify('Lorem ipsum dolor sit amet')
+  const slug2 = api.store.slugify('String with æøå characters')
+  const slug3 = api.store.slugify('String/with / slashes')
+  const slug4 = api.store.slugify('  Trim  string   ')
 
   expect(slug1).toEqual('lorem-ipsum-dolor-sit-amet')
   expect(slug2).toEqual('string-with-aeoa-characters')
@@ -144,8 +181,8 @@ test('generate slug from any string', () => {
 })
 
 test('add page', () => {
-  const emit = jest.spyOn(source, 'emit')
-  const page = source.addPage('page', {
+  const emit = jest.spyOn(api.store, 'emit')
+  const page = api.store.addPage('page', {
     title: 'Lorem ipsum dolor sit amet',
     internal: { origin: 'Test.vue' }
   })
@@ -163,7 +200,7 @@ test('add page', () => {
 })
 
 test('add page with query', () => {
-  const page = source.addPage('page', {
+  const page = api.store.addPage('page', {
     pageQuery: {
       content: 'query Test { page { _id } }',
       options: {
@@ -182,14 +219,14 @@ test('add page with query', () => {
 })
 
 test('update page', () => {
-  source.addPage('page', {
+  api.store.addPage('page', {
     _id: 'test',
     title: 'Lorem ipsum dolor sit amet',
     internal: { origin: 'Test.vue' }
   })
 
-  const emit = jest.spyOn(source, 'emit')
-  const page = source.updatePage('test', {
+  const emit = jest.spyOn(api.store, 'emit')
+  const page = api.store.updatePage('test', {
     internal: { origin: 'Test2.vue' },
     title: 'New title'
   })
@@ -204,9 +241,9 @@ test('update page', () => {
 })
 
 test('update page path when slug is changed', () => {
-  source.addPage('page', { _id: 'test' })
+  api.store.addPage('page', { _id: 'test' })
 
-  const page = source.updatePage('test', {
+  const page = api.store.updatePage('test', {
     slug: 'new-title'
   })
 
@@ -216,27 +253,13 @@ test('update page path when slug is changed', () => {
 })
 
 test('remove page', () => {
-  const emit = jest.spyOn(source, 'emit')
+  const emit = jest.spyOn(api.store, 'emit')
 
-  source.addPage('page', { _id: 'test' })
-  source.removePage('test')
+  api.store.addPage('page', { _id: 'test' })
+  api.store.removePage('test')
 
-  expect(source.getPage('test')).toBeNull()
+  expect(api.store.getPage('test')).toBeNull()
   expect(emit).toHaveBeenCalledTimes(2)
 
   emit.mockRestore()
-})
-
-test('transform node', () => {
-  const content = JSON.stringify({ foo: 'bar' })
-  const mimeType = source.mime.lookup('filename.json')
-  const result = source.transform(mimeType, content)
-
-  expect(result).toMatchObject({ foo: 'bar' })
-})
-
-test('fail if transformer is not installed', () => {
-  expect(() => {
-    source.transform('text/markdown', '')
-  }).toThrow('No transformer for text/markdown is installed')
 })

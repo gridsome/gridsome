@@ -1,14 +1,14 @@
-const Source = require('./Source')
 const { mapValues } = require('lodash')
+const PluginStore = require('./PluginStore')
 const { cache, nodeCache } = require('../utils/cache')
 
 class PluginAPI {
-  constructor (app, { options }) {
+  constructor (app, { options, transformers }) {
     this.app = app
     this.options = options
     this.context = app.context
 
-    this.transformers = mapValues(app.config.transformers, entry => {
+    this.transformers = transformers || mapValues(app.config.transformers, entry => {
       return new entry.TransformerClass(entry.options, {
         localOptions: options[entry.name] || {},
         queue: app.queue,
@@ -17,7 +17,7 @@ class PluginAPI {
       })
     })
 
-    this.store = new Source(app, this)
+    this.store = new PluginStore(app, this)
   }
 
   addClientFile (options) {}
@@ -26,8 +26,9 @@ class PluginAPI {
     this.app.on(eventName, { api: this, handler })
   }
 
-  loadSources (handler) {
-    this.on('loadSources', handler)
+  loadSource (handler) {
+    this.on('loadSource', handler)
+  }
   }
 
   chainWebpack (fn) {

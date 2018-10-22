@@ -8,14 +8,16 @@ class FakerSource {
     }
   }
 
-  constructor (options, { source }) {
+  constructor (api, options) {
+    this.api = api
     this.options = options
-    this.source = source
+
+    api.loadSource(() => this.createFakerNodes())
   }
 
-  apply () {
-    this.source.addType('node', {
-      name: 'Node',
+  createFakerNodes () {
+    const contentType = this.api.store.addContentType({
+      typeName: this.options.typeName,
       route: '/:year/:month/:day/:slug'
     })
 
@@ -43,7 +45,7 @@ class FakerSource {
       }
 
       try {
-        this.source.addNode('node', options)
+        contentType.addNode(options)
       } catch (err) {
         this.logger.warn(err.message)
       }

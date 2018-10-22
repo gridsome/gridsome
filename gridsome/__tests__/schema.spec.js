@@ -1,5 +1,5 @@
-const Source = require('../lib/app/Source')
-const BaseStore = require('../lib/app/BaseStore')
+const App = require('../lib/app/App')
+const PluginAPI = require('../lib/app/PluginAPI')
 const createSchema = require('../lib/graphql/createSchema')
 const { inferTypes } = require('../lib/graphql/schema/infer-types')
 
@@ -13,7 +13,7 @@ const {
   GraphQLObjectType
 } = require('../graphql')
 
-let store, source
+let app, api
 
 const transformers = {
   'application/json': {
@@ -29,18 +29,22 @@ const transformers = {
 }
 
 beforeEach(() => {
-  store = new BaseStore()
-  source = new Source({ typeName: 'Test' }, { store, transformers })
+  app = new App('/', { config: { plugins: [] }})
+  app.init()
+  api = new PluginAPI(app, { options: {}, transformers })
 })
 
 afterAll(() => {
-  store = null
-  source = null
+  app = null
+  api = null
 })
 
 test('create node type with custom fields', async () => {
-  source.addType('post')
-  source.addNode('post', {
+  const contentType = api.store.addContentType({
+    typeName: 'TestPost'
+  })
+
+  contentType.addNode({
     _id: '1',
     fields: {
       foo: 'bar',
@@ -61,8 +65,11 @@ test('create node type with custom fields', async () => {
 })
 
 test('get node by path', async () => {
-  source.addType('post')
-  source.addNode('post', { _id: '1', path: '/test' })
+  const contentType = api.store.addContentType({
+    typeName: 'TestPost'
+  })
+
+  contentType.addNode({ _id: '1', path: '/test' })
 
   const query = '{ testPost (path: "/test") { _id }}'
   const { data } = await createSchemaAndExecute(query)
@@ -71,8 +78,11 @@ test('get node by path', async () => {
 })
 
 test('fail if node with given ID is missing', async () => {
-  source.addType('post')
-  source.addNode('post', { _id: '1' })
+  const contentType = api.store.addContentType({
+    typeName: 'TestPost'
+  })
+
+  contentType.addNode({ _id: '1' })
 
   const query = '{ testPost (_id: "2") { _id }}'
   const { errors } = await createSchemaAndExecute(query)
@@ -81,8 +91,11 @@ test('fail if node with given ID is missing', async () => {
 })
 
 test('fail if node with given path is missing', async () => {
-  source.addType('post')
-  source.addNode('post', { path: '/test' })
+  const contentType = api.store.addContentType({
+    typeName: 'TestPost'
+  })
+
+  contentType.addNode('post', { path: '/test' })
 
   const query = '{ testPost (path: "/fail") { _id }}'
   const { errors } = await createSchemaAndExecute(query)
@@ -91,9 +104,12 @@ test('fail if node with given path is missing', async () => {
 })
 
 test('create connection', async () => {
-  source.addType('post')
-  source.addNode('post', { title: 'test 1', date: '2018-09-01T00:00:00.000Z' })
-  source.addNode('post', { title: 'test 2', date: '2018-09-04T00:00:00.000Z' })
+  const contentType = api.store.addContentType({
+    typeName: 'TestPost'
+  })
+
+  contentType.addNode({ title: 'test 1', date: '2018-09-01T00:00:00.000Z' })
+  contentType.addNode({ title: 'test 2', date: '2018-09-04T00:00:00.000Z' })
 
   const query = '{ allTestPost { totalCount edges { node { title }}}}'
   const { data } = await createSchemaAndExecute(query)
@@ -104,10 +120,13 @@ test('create connection', async () => {
 })
 
 test('get nodes by path regex', async () => {
-  source.addType('post')
-  source.addNode('post', { path: '/node-1' })
-  source.addNode('post', { path: '/node-2' })
-  source.addNode('post', { path: '/some-3' })
+  const contentType = api.store.addContentType({
+    typeName: 'TestPost'
+  })
+
+  contentType.addNode({ path: '/node-1' })
+  contentType.addNode({ path: '/node-2' })
+  contentType.addNode({ path: '/some-3' })
 
   const query = '{ allTestPost (regex: "/node") { edges { node { _id }}}}'
   const { data } = await createSchemaAndExecute(query)
@@ -116,24 +135,73 @@ test('get nodes by path regex', async () => {
 })
 
 test('create node reference', async () => {
-  source.addType('author')
-  source.addType('post', {
+  const authorContentType = api.store.addContentType({
+    typeName: 'TestAuthor'
+  })
+
+  const postContentType = api.store.addContentType({
+    typeName: 'TestPost',
     refs: {
       author: {
-        type: 'author',
+        key: '_id',
+        typeName: 'TestAuthor'
+      }
+    }
+  })
+
+  postContentType.addNode({ _id: '1', fields: { author: '2' }})
+  authorContentType.addNode({ _id: '2', title: 'Test Author' })
+
+  const query = '{ testPost (_id: "1") { refs { author { _id title }}}}'
+  const { data } = await createSchemaAndExecute(query)
+
+  expect(data.testPost.refs.author._id).toEqual('2')
+  expect(data.testPost.refs.author.title).toEqual('Test Author')
+})
+
+test('create node list reference', async () => {
+  const authorContentType = api.store.addContentType({
+    typeName: 'TestAuthor'
+  })
+
+  const postContentType = api.store.addContentType({
+    typeName: 'TestPost',
+    refs: {
+      author: {
+        key: '_id',
+        typeName: 'TestAuthor'
+      }
+    }
+  })
+
+  postContentType.addNode({ _id: '1', fields: { author: ['2'] }})
+  authorContentType.addNode({ _id: '2', title: 'Test Author' })
+
+  const query = '{ testPost (_id: "1") { refs { author { _id title }}}}'
+  const { data } = await createSchemaAndExecute(query)
+
+  expect(data.testPost.refs.author[0]._id).toEqual('2')
+  expect(data.testPost.refs.author[0].title).toEqual('Test Author')
+})
+
+test('create node reference to same type', async () => {
+  const postContentType = api.store.addContentType({
+    typeName: 'TestPost',
+    refs: {
+      related: {
         key: '_id'
       }
     }
   })
 
-  source.addNode('post', { _id: '1', fields: { author: '2' }})
-  source.addNode('author', { _id: '2' })
+  postContentType.addNode({ _id: '1', fields: { related: '2' }})
+  postContentType.addNode({ _id: '2', title: 'Test' })
 
-  const query = '{ testPost (_id: "1") { refs { author { _id type }}}}'
+  const query = '{ testPost (_id: "1") { refs { related { _id title }}}}'
   const { data } = await createSchemaAndExecute(query)
 
-  expect(data.testPost.refs.author[0]._id).toEqual('2')
-  expect(data.testPost.refs.author[0].type).toEqual('author')
+  expect(data.testPost.refs.related._id).toEqual('2')
+  expect(data.testPost.refs.related.title).toEqual('Test')
 })
 
 test('infer types from node fields', () => {
@@ -182,11 +250,15 @@ test('infer types from node fields', () => {
 })
 
 test('transformer extends node type', async () => {
-  source.addType('post')
-  source.addNode('post', {
+  const contentType = api.store.addContentType({
+    typeName: 'TestPost'
+  })
+
+  contentType.addNode({
     _id: '1',
     internal: {
-      mimeType: 'application/json'
+      mimeType: 'application/json',
+      content: ''
     }
   })
 
@@ -197,6 +269,6 @@ test('transformer extends node type', async () => {
 })
 
 async function createSchemaAndExecute (query) {
-  const schema = createSchema(store)
-  return graphql(schema, query, undefined, { store })
+  const schema = createSchema(app.store)
+  return graphql(schema, query, undefined, { store: app.store })
 }

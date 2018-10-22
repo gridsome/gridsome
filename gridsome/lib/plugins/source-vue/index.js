@@ -19,7 +19,7 @@ class VueSource {
     this.context = api.context
     this.source = api.store
 
-    api.loadSources(args => this.addPages(args))
+    api.loadSource(args => this.addPages(args))
   }
 
   async addPages () {

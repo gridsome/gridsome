@@ -1,4 +1,3 @@
-const pMap = require('p-map')
 const EventEmitter = require('events')
 const PluginAPI = require('./PluginAPI')
 const { defaultsDeep } = require('lodash')
@@ -10,7 +9,9 @@ class Plugins extends EventEmitter {
     this.plugins = []
 
     app.config.plugins.map(entry => {
-      const Plugin = require(entry.entries.serverEntry)
+      const Plugin = entry.entries.serverEntry
+        ? require(entry.entries.serverEntry)
+        : null
 
       if (typeof Plugin !== 'function') return
       if (!Plugin.prototype) return

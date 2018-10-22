@@ -1,11 +1,11 @@
 const Loki = require('lokijs')
+const ContentTypeCollection = require('./ContentTypeCollection')
 
 class BaseStore {
   constructor () {
     this.data = new Loki()
     this.collections = {}
     this.taxonomies = {}
-    this.types = {}
 
     this.pages = this.data.addCollection('Page', {
       indices: ['type'],
@@ -16,34 +16,23 @@ class BaseStore {
 
   // nodes
 
-  addType (type, options) {
-    this.types[type] = options
-    this.collections[type] = this.data.addCollection(type, {
-      unique: ['_id', 'path'],
-      indices: ['date'],
-      autoupdate: true
-    })
+  addContentType (pluginStore, options) {
+    const collection = new ContentTypeCollection(this, pluginStore, options)
+    this.collections[options.typeName] = collection
+    return collection
   }
 
-  getType (type) {
+  getContentType (type) {
     return this.collections[type]
-  }
-
-  addNode (type, options) {
-    return this.collections[type].insert(options)
-  }
-
-  getNode (type, _id) {
-    return this.collections[type].findOne({ _id })
-  }
-
-  removeNode (type, _id) {
-    return this.collections[type].findAndRemove({ _id })
   }
 
   // taxonomies
 
-  addTaxonomy (type, options) {
+  addTaxonomy (pluginStore, options) {
+    // TODO: implement taxonomies
+  }
+
+  getTaxonomy (type) {
     // TODO: implement taxonomies
   }
 

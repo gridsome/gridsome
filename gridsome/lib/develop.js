@@ -12,7 +12,7 @@ module.exports = async (context, args) => {
   process.env.GRIDSOME_MODE = 'serve'
 
   const app = await createApp(context, { args })
-  const { config, plugins } = app
+  const { config } = app
 
   const server = await createExpressServer(app)
   const sock = await createSockJsServer(app)

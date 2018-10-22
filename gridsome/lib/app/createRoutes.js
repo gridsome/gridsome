@@ -44,15 +44,15 @@ module.exports = store => {
 
   templates.forEach(page => {
     const typeName = page.pageQuery.type
+    const contentType = store.getContentType(typeName)
 
-    if (!store.types.hasOwnProperty(typeName)) {
+    if (!contentType) {
       return console.info(
         `No content type was found for ${page.internal.origin}`
       )
     }
 
-    const contentType = store.types[typeName]
-    const collection = store.collections[typeName]
+    const { options, collection } = contentType
     const { component, pageQuery } = page
 
     // Add a dynamic route for this template if a route is
@@ -60,10 +60,10 @@ module.exports = store => {
     // difference here is that dynamic routes has route and name
     // while static routes has path and chunkName.
 
-    if (contentType.route) {
+    if (options.route) {
       dynamicTemplates.push({
         type: DYNAMIC_TEMPLATE_ROUTE,
-        route: contentType.route,
+        route: options.route,
         name: camelCase(typeName),
         component,
         pageQuery,

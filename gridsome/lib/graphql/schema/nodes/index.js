@@ -9,12 +9,14 @@ module.exports = store => {
   const connections = {}
   const nodeTypes = {}
 
-  for (const typeName in store.types) {
-    const collection = store.collections[typeName]
+  for (const typeName in store.collections) {
+    const contentType = store.getContentType(typeName)
+    const nodes = contentType.collection.find()
+    const fields = inferTypes(nodes, typeName)
     const nodeType = nodeTypes[typeName] = createType({
-      fields: inferTypes(collection.find(), typeName),
-      contentType: store.types[typeName],
-      nodeTypes
+      contentType,
+      nodeTypes,
+      fields
     })
 
     queries[camelCase(typeName)] = createQuery(nodeType)

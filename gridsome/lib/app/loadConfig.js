@@ -10,6 +10,10 @@ const builtInPlugins = [
 
 // TODO: use joi to define and validate config schema
 module.exports = (context, options = {}, pkg = {}) => {
+  if (options.config) {
+    return options.config
+  }
+
   const resolve = (...p) => path.resolve(context, ...p)
   const isServing = process.env.GRIDSOME_MODE === 'serve'
   const isProd = process.env.NODE_ENV === 'production'
@@ -129,8 +133,8 @@ function resolvePluginEntries (id) {
   }
 
   return Object.freeze({
-    browserEntry: entryPath('browser.js'),
-    serverEntry: entryPath('server.js') || entryPath('index.js')
+    browserEntry: entryPath('gridsome.browser.js'),
+    serverEntry: entryPath('gridsome.server.js') || entryPath('index.js')
   })
 }
 
