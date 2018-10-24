@@ -21,10 +21,6 @@ module.exports = async (context, args) => {
   await fs.ensureDir(config.cacheDir)
   await fs.remove(config.outDir)
 
-  if (fs.existsSync(config.staticDir)) {
-    await fs.copy(config.staticDir, config.targetDir)
-  }
-
   const queue = await createRenderQueue(app)
 
   // 1. run all GraphQL queries and save results into json files
@@ -42,7 +38,12 @@ module.exports = async (context, args) => {
   await plugins.callHook('beforeProcessImages', { context, config, queue: app.queue })
   await processImages(app.queue, config)
 
-  // 5. clean up
+  // 5. copy static files
+  if (fs.existsSync(config.staticDir)) {
+    await fs.copy(config.staticDir, config.targetDir)
+  }
+
+  // 6. clean up
   await plugins.callHook('afterBuild', { context, config, queue })
   await fs.remove(path.resolve(config.cacheDir, 'data'))
   await fs.remove(config.manifestsDir)

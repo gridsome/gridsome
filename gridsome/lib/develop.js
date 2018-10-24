@@ -25,8 +25,8 @@ module.exports = async (context, args) => {
     playground({ endpoint: server.endpoint.graphql })
   )
 
-  server.app.use(require('connect-history-api-fallback')())
   server.app.use(config.pathPrefix, express.static(config.staticDir))
+  server.app.use(require('connect-history-api-fallback')())
 
   const webpackConfig = createWebpackConfig()
   const compiler = require('webpack')(webpackConfig)
