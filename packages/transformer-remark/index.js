@@ -63,6 +63,13 @@ class RemarkTransformer {
   parse (source) {
     const file = parse(source)
 
+    // if no title was found by gray-matter,
+    // try to find the first one in the content
+    if (!file.data.title) {
+      const title = file.content.trim().match(/^#+\s+(.*)/)
+      if (title) file.data.title = title[1]
+    }
+
     return {
       fields: file.data,
       content: file.content,
