@@ -136,7 +136,7 @@ class ProcessQueue {
       sets
     }
 
-    const classNames = ['g-image']
+    const classNames = (options.classNames || []).concat(['g-image'])
     const isSrcset = options.srcset !== false
     const isLazy = options.immediate === undefined
 
@@ -152,7 +152,9 @@ class ProcessQueue {
       result.noscriptHTML = '' +
         `<noscript>` +
         `<img class="${classNames.join(' ')} g-image--loaded" ` +
-        `src="${result.src}" width="${result.size.width}">` +
+        `src="${result.src}" width="${result.size.width}"` +
+        (options.height ? ` height="${options.height}"` : '') +
+        (options.alt ? ` alt="${options.alt}">` : '>') +
         `</noscript>`
     }
 
@@ -160,6 +162,8 @@ class ProcessQueue {
       `<img class="${classNames.join(' ')}" ` +
       `src="${isLazy ? result.dataUri || result.src : result.src}" ` +
       `width="${result.size.width}"` +
+      (options.height ? ` height="${options.height}"` : '') +
+      (options.alt ? ` alt="${options.alt}"` : '') +
       (isLazy && isSrcset ? ` data-srcset="${result.srcset.join(', ')}"` : '') +
       (isLazy && isSrcset ? ` data-sizes="${result.sizes}"` : '') +
       (isLazy && isSrcset ? ` data-src="${result.src}">` : '>')

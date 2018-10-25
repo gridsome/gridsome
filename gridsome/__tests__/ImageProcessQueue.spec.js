@@ -79,6 +79,27 @@ test('set custom quality', async () => {
   expect(result.src).toEqual('/assets/static/1000x600-w1000-q10.test.png')
 })
 
+test('add custom attributes to markup', async () => {
+  const filePath = path.resolve(__dirname, 'assets/1000x600.png')
+  const queue = new ImageProcessQueue({ context, config: baseconfig })
+
+  const result = await queue.add(filePath, {
+    classNames: ['test-1', 'test-2'],
+    alt: 'Alternative text',
+    height: '100'
+  })
+
+  expect(result.imageHTML).toMatch(/test-1/)
+  expect(result.imageHTML).toMatch(/test-2/)
+  expect(result.imageHTML).toMatch(/height=\"100\"/)
+  expect(result.imageHTML).toMatch(/alt=\"Alternative text\"/)
+
+  expect(result.noscriptHTML).toMatch(/test-1/)
+  expect(result.noscriptHTML).toMatch(/test-2/)
+  expect(result.noscriptHTML).toMatch(/height=\"100\"/)
+  expect(result.noscriptHTML).toMatch(/alt=\"Alternative text\"/)
+})
+
 test('respect config.maxImageWidth', async () => {
   const filePath = path.resolve(__dirname, 'assets/1000x600.png')
   const config = { ...baseconfig, maxImageWidth: 600 }
