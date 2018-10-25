@@ -1,7 +1,7 @@
 <p align="center">
   <br>
   <a href="https://www.gridsome.org">
-    <img src="https://raw.githubusercontent.com/gridsome/gridsome/master/assets/logo.svg" width="90"/>
+    <img src="https://raw.githubusercontent.com/gridsome/gridsome/master/assets/logo.png" width="90"/>
   </a>
 </p>
 
