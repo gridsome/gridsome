@@ -9,7 +9,7 @@ const sortPackageJson = require('sort-package-json')
 module.exports = async (name, starter = 'default') => {
   const dir = aboslutePath(name)
   const projectName = path.basename(dir)
-  const starters = ['default', 'wordpress']
+  const starters = ['default', 'wordpress', 'markdown-blog']
   const hasYarn = await useYarn()
 
   if (fs.existsSync(dir)) {
