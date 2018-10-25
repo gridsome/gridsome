@@ -1,9 +1,6 @@
 module.exports = {
   extends: [
-    "plugin:vue-libs/recommended"
-  ],
-  plugins: [
-    "node"
+    "plugin:node/recommended"
   ],
   env: {
     "jest": true
@@ -16,7 +13,7 @@ module.exports = {
   },
   overrides: [
     {
-      files: ['**/__tests__/**/*.js', "**/cli-test-utils/**/*.js"],
+      files: ["**/__tests__/**/*.js", "**/cli-test-utils/**/*.js"],
       rules: {
         "node/no-extraneous-require": "off"
       }

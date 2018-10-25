@@ -49,6 +49,7 @@
     "chokidar": "^2.0.4",
     "connect-history-api-fallback": "^1.5.0",
     "css-loader": "^1.0.0",
+    "dateformat": "^3.0.3",
     "express": "^4.16.3",
     "express-graphql": "^0.6.12",
     "file-loader": "^1.1.11",
@@ -104,7 +105,7 @@
     "yaml-loader": "^0.5.0"
   },
   "engines": {
-    "node": ">=8"
+    "node": ">=8.3"
   },
   "contributors": [
     {

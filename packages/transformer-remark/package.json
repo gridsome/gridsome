@@ -27,6 +27,9 @@
     "unified": "^7.0.0",
     "unist-util-visit": "^1.4.0"
   },
+  "peerDependencies": {
+    "gridsome": "latest"
+  },
   "publishConfig": {
     "access": "public"
   },
