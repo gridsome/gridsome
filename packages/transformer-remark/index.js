@@ -1,13 +1,17 @@
-const path = require('path')
-const isUrl = require('is-url')
-const remark = require('remark')
+const unified = require('unified')
 const parse = require('gray-matter')
 const words = require('lodash.words')
+const markdown = require('remark-parse')
 const visit = require('unist-util-visit')
 const htmlToText = require('html-to-text')
-const toHAST = require('mdast-util-to-hast')
-const hastToHTML = require('hast-util-to-html')
-const { HeadingType, HeadingLevels } = require('./lib/types/HeadingType')
+const { normalizePlugins } = require('./lib/utils')
+
+const imagePlugin = require('./lib/plugins/image')
+
+const {
+  HeadingType,
+  HeadingLevels
+} = require('./lib/types/HeadingType')
 
 const {
   GraphQLInt,
@@ -26,8 +30,9 @@ class RemarkTransformer {
     this.nodeCache = nodeCache
     this.queue = queue
 
-    this.remarkPlugins = this.normalizePlugins([
+    this.remarkPlugins = normalizePlugins([
       // built-in plugins
+      'remark-parse',
       'remark-slug',
       'remark-fix-guillemets',
       'remark-squeeze-paragraphs',
@@ -47,6 +52,8 @@ class RemarkTransformer {
           'aria-hidden': 'true'
         }
       }],
+      // built-in plugins
+      imagePlugin,
       // user plugins
       ...options.plugins || [],
       ...localOptions.plugins || []
@@ -103,59 +110,22 @@ class RemarkTransformer {
     }
   }
 
-  normalizePlugins (arr = []) {
-    return arr.map(entry => {
-      return Array.isArray(entry)
-        ? [require(entry[0]), entry[1] || {}]
-        : [require(entry), {}]
-    })
-  }
-
   toAST (node) {
     return this.nodeCache(node, 'ast', () => {
-      const ast = remark().parse(node.internal.content)
-
-      // apply remark transforms to ast
-      for (const [attacher, options] of this.remarkPlugins) {
-        attacher(options)(ast)
-      }
-
-      return ast
-    })
-  }
-
-  toHAST (node) {
-    return this.nodeCache(node, 'hast', async () => {
-      const ast = await this.toAST(node)
-      const options = { allowDangerousHTML: true }
-      const dirname = path.dirname(node.internal.origin)
-      const images = []
-
-      if (path.isAbsolute(node.internal.origin)) {
-        visit(ast, 'image', node => {
-          if (!isUrl(node.url)) images.push(node)
-        })
-      }
-
-      for (const node of images) {
-        const { imageHTML, noscriptHTML } = await this.queue.add(
-          path.resolve(dirname, node.url)
-        )
-
-        node.type = 'html'
-        node.value = imageHTML + noscriptHTML
-      }
-
-      return toHAST(ast, options)
+      return unified()
+        .use(markdown)
+        .parse(node.internal.content)
     })
   }
 
   toHTML (node) {
-    return this.nodeCache(node, 'html', async () => {
-      const hast = await this.toHAST(node)
-      const options = { allowDangerousHTML: true }
-
-      return hastToHTML(hast, options)
+    return this.nodeCache(node, 'html', () => {
+      return unified()
+        .data('node', node)
+        .data('queue', this.queue)
+        .use(this.remarkPlugins)
+        .use(require('remark-html'))
+        .process(node.internal.content)
     })
   }
 

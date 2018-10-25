@@ -6,7 +6,7 @@ const {
 } = require('gridsome/graphql')
 
 const HeadingType = new GraphQLObjectType({
-  name: 'MarkdownHeading',
+  name: 'RemarkHeading',
   fields: {
     depth: { type: GraphQLInt },
     value: { type: GraphQLString },
@@ -15,7 +15,7 @@ const HeadingType = new GraphQLObjectType({
 })
 
 const HeadingLevels = new GraphQLEnumType({
-  name: 'HeadingLevels',
+  name: 'RemarkHeadingLevels',
   values: {
     h1: { value: 1 },
     h2: { value: 2 },
