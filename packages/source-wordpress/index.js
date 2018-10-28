@@ -114,7 +114,8 @@ class WordPressSource {
           slug: post.slug,
           fields: {
             content: post.content ? post.content.rendered : '',
-            excerpt: post.excerpt ? post.excerpt.rendered : ''
+            excerpt: post.excerpt ? post.excerpt.rendered : '',
+            betterFeaturedImage: post.better_featured_image ? post.better_featured_image.source_url : ''
           },
           refs
         })
