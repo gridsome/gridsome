@@ -32,7 +32,7 @@ module.exports = nodeType => {
     description: `Connection to all ${nodeType.name} nodes`,
     args: {
       sortBy: { type: GraphQLString, defaultValue: 'date' },
-      order: { type: sortOrderType, defaultValue: -1 },
+      order: { type: sortOrderType, defaultValue: 'DESC' },
       perPage: { type: GraphQLInt, defaultValue: 25 },
       skip: { type: GraphQLInt, defaultValue: 0 },
       page: { type: GraphQLInt, defaultValue: 1 },

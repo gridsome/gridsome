@@ -38,7 +38,7 @@ module.exports = ({ contentType, nodeTypes, fields }) => {
       content: { type: GraphQLString },
       date: dateType,
 
-      ...extendNodeType(contentType, nodeType),
+      ...extendNodeType(contentType, nodeType, nodeTypes),
       ...createFields(contentType, fields),
       ...createRefs(contentType, nodeTypes, fields),
       ...createBelongsToRefs(contentType, nodeTypes)
@@ -48,7 +48,7 @@ module.exports = ({ contentType, nodeTypes, fields }) => {
   return nodeType
 }
 
-function extendNodeType (contentType, nodeType) {
+function extendNodeType (contentType, nodeType, nodeTypes) {
   const fields = {}
 
   for (const mimeType in contentType.options.mimeTypes) {
@@ -56,8 +56,20 @@ function extendNodeType (contentType, nodeType) {
     if (typeof transformer.extendNodeType === 'function') {
       Object.assign(fields, transformer.extendNodeType({
         contentType,
+        nodeTypes,
         nodeType
       }))
+    }
+  }
+
+  for (const fieldName in contentType.options.fields) {
+    const field = contentType.options.fields[fieldName]
+    if (typeof field === 'function') {
+      fields[fieldName] = field({
+        contentType,
+        nodeTypes,
+        nodeType
+      })
     }
   }
 
@@ -88,15 +100,9 @@ function createRefs (contentType, nodeTypes, fields) {
       name: `${contentType.typeName}References`,
       fields: () => mapValues(contentType.options.refs, (ref, key) => {
         const { typeName, description } = ref
+        const field = fields[key] || { type: GraphQLString }
 
-        if (!fields.hasOwnProperty(key)) {
-          throw new Error(
-            `${contentType.typeName} cannot create reference to ` +
-            `${typeName} because it does not have the field ${key}.`
-          )
-        }
-
-        const isList = fields[key].type instanceof GraphQLList
+        const isList = field.type instanceof GraphQLList
         let refType = nodeTypes[typeName]
 
         if (Array.isArray(typeName)) {
@@ -115,8 +121,10 @@ function createRefs (contentType, nodeTypes, fields) {
           description,
           type: isList ? new GraphQLList(refType) : refType,
           resolve: (obj, args, { store }) => {
-            const $in = obj.fields[key] || []
-            const query = { [ref.key]: { $in }}
+            const value = obj.fields[key] || []
+            const query = Array.isArray(value)
+              ? { [ref.key]: { $in: value }}
+              : { [ref.key]: value }
 
             if (Array.isArray(typeName)) {
               // TODO: search multiple collections

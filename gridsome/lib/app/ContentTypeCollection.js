@@ -12,7 +12,7 @@ class ContentTypeCollection extends EventEmitter {
     this._store = store
     this._pluginStore = pluginStore
 
-    this.options = options
+    this.options = { refs: {}, fields: {}, ...options }
     this.typeName = options.typeName
     this.description = options.description
     this.collection = store.data.addCollection(options.typeName, {
@@ -20,6 +20,14 @@ class ContentTypeCollection extends EventEmitter {
       indices: ['date'],
       autoupdate: true
     })
+  }
+
+  addReference (fieldName, options) {
+    this.options.refs[camelCase(fieldName)] = options
+  }
+
+  addGraphQLField (fieldName, options) {
+    this.options.fields[camelCase(fieldName)] = options
   }
 
   addNode (options) {
