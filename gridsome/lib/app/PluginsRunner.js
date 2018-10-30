@@ -20,7 +20,11 @@ class Plugins extends EventEmitter {
 
       const transformers = mapValues(app.config.transformers, entry => {
         return new entry.TransformerClass(entry.options, {
-          queue, cache, nodeCache, localOptions: options[entry.name] || {}
+          localOptions: options[entry.name] || {},
+          context,
+          queue,
+          cache,
+          nodeCache
         })
       })
 
