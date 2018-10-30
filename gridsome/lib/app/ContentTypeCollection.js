@@ -26,7 +26,7 @@ class ContentTypeCollection extends EventEmitter {
     this.options.refs[camelCase(fieldName)] = options
   }
 
-  addGraphQLField (fieldName, options) {
+  addSchemaField (fieldName, options) {
     this.options.fields[camelCase(fieldName)] = options
   }
 

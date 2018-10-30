@@ -12,6 +12,7 @@ const createRoutes = require('./createRoutes')
 const { execute, graphql } = require('../graphql/graphql')
 const { version } = require('../../package.json')
 
+
 class App {
   constructor (context, options) {
     process.GRIDSOME = this
@@ -70,8 +71,6 @@ class App {
     this.plugins.on('generateRoutes', () => {
       this.generateFiles()
     })
-
-    // return this.plugins.callHook('init')
   }
 
   async loadSources () {
@@ -79,11 +78,9 @@ class App {
   }
 
   async createSchema () {
-    // const queries = await this.plugins.callHook('createSchemaQueries', {
-    //   store: this.store
-    // })
-
-    this.schema = createSchema(this.store)
+    this.schema = createSchema(this.store, {
+      schemas: await this.dispatch('createSchema', { graphql })
+    })
   }
 
   generateFiles () {

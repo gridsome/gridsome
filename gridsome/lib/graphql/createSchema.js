@@ -3,16 +3,15 @@ const {
   GraphQLObjectType
 } = require('./graphql')
 
-module.exports = (store, options = {}) => {
+module.exports = store => {
   const directives = require('./schema/directives')
   const pagesSchema = require('./schema/pages')()
   const nodesSchema = require('./schema/nodes')(store)
 
-  return new GraphQLSchema({
+  const schema = new GraphQLSchema({
     query: new GraphQLObjectType({
       name: 'RootQuery',
       fields: {
-        ...options.queries,
         ...pagesSchema.queries,
         ...nodesSchema.queries,
         ...pagesSchema.connections,
@@ -21,4 +20,10 @@ module.exports = (store, options = {}) => {
     }),
     directives
   })
+
+  // TODO: merge schemas once query directives are working in
+  // graphql-tools or Gridsome has found another way to figure out
+  // pagination etc...
+
+  return schema
 }

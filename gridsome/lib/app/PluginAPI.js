@@ -29,6 +29,9 @@ class PluginAPI {
   loadSource (handler) {
     this.on('loadSource', handler)
   }
+
+  createSchema (handler) {
+    this.on('createSchema', handler)
   }
 
   chainWebpack (fn) {
