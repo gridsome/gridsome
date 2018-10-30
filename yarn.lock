@@ -6485,11 +6485,6 @@ html-comment-regex@^1.1.0:
   resolved "https://registry.yarnpkg.com/html-comment-regex/-/html-comment-regex-1.1.1.tgz#668b93776eaae55ebde8f3ad464b307a4963625e"
   integrity sha1-ZouTd26q5V696POtRkswekljYl4=
 
-html-element-attributes@^2.0.0:
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/html-element-attributes/-/html-element-attributes-2.0.0.tgz#2c9fcbd4738c560b357d0232aa3449676b10ab77"
-  integrity sha512-eZgT5wMPRqOCG9pIJ//IdX43i940XACFhKfgKUdspWUGsS/MXq+3ilrK5v6Esl/qxQpMnPt5+uVK443konZkNg==
-
 html-encoding-sniffer@^1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/html-encoding-sniffer/-/html-encoding-sniffer-1.0.2.tgz#e70d84b94da53aa375e11fe3a351be6642ca46f8"
@@ -8629,11 +8624,6 @@ math-random@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/math-random/-/math-random-1.0.1.tgz#8b3aac588b8a66e4975e3cdea67f7bb329601fac"
   integrity sha1-izqsWIuKZuSXXjzepn97sylgH6w=
-
-md-attr-parser@^1.1.6:
-  version "1.1.6"
-  resolved "https://registry.yarnpkg.com/md-attr-parser/-/md-attr-parser-1.1.6.tgz#bc62253c757000e810c4a92e1c90021e1a20cd3d"
-  integrity sha512-oyu7OcQHJKVUTKycsKSxpkFtAWTVp6la1aSJ5AKxRalDH4xFOpfDwij5SQqJl1PXVycDEqFfzKV4dk4ZGMRr+g==
 
 md5-file@^4.0.0:
   version "4.0.0"
@@ -11093,14 +11083,6 @@ relateurl@0.2.x:
   version "0.2.7"
   resolved "https://registry.yarnpkg.com/relateurl/-/relateurl-0.2.7.tgz#54dbf377e51440aca90a4cd274600d3ff2d888a9"
   integrity sha1-VNvzd+UUQKypCkzSdGANP/LYiKk=
-
-remark-attr@^0.7.1:
-  version "0.7.1"
-  resolved "https://registry.yarnpkg.com/remark-attr/-/remark-attr-0.7.1.tgz#008483ff62530ef2bfadcaaf16838d9a72f72277"
-  integrity sha512-rnwh7HaiQ3rMHuXALNPXsHFIzBdwGS8rgrgKsaO+pR+eqRJlvBvBBGiqdUHDHAIn33TVLeX/Rt15NJDLhLHQ/w==
-  dependencies:
-    html-element-attributes "^2.0.0"
-    md-attr-parser "^1.1.6"
 
 remark-autolink-headings@^5.0.0:
   version "5.0.0"

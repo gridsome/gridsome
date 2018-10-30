@@ -24,9 +24,10 @@ class RemarkTransformer {
     return ['text/markdown', 'text/x-markdown']
   }
 
-  constructor (options, { localOptions, nodeCache, queue }) {
+  constructor (options, { localOptions, context, nodeCache, queue }) {
     this.options = options
     this.localOptions = this.localOptions
+    this.context = context
     this.nodeCache = nodeCache
     this.queue = queue
 
@@ -130,6 +131,7 @@ class RemarkTransformer {
       return unified()
         .data('node', node)
         .data('queue', this.queue)
+        .data('context', this.context)
         .use(this.remarkPlugins)
         .use(require('remark-html'))
         .process(node.internal.content)

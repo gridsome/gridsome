@@ -12,6 +12,7 @@
     "remark"
   ],
   "dependencies": {
+    "fs-extra": "^6.0.1",
     "gray-matter": "^4.0.1",
     "hast-util-to-html": "^4.0.1",
     "html-to-text": "^4.0.0",
