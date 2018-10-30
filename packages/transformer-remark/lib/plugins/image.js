@@ -12,7 +12,7 @@ module.exports = function attacher () {
 
     if (path.isAbsolute(node.internal.origin)) {
       visit(tree, 'image', node => {
-        if (!isUrl(node.url)) images.push(node)
+        if (isLocalPath(node.url)) images.push(node)
       })
     }
 
@@ -37,4 +37,9 @@ module.exports = function attacher () {
 
     callback()
   }
+}
+
+function isLocalPath (string) {
+  if (/^\//.test(string)) return false
+  return !isUrl(string)
 }
