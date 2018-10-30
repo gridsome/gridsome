@@ -106,8 +106,6 @@ function createRefs (contentType, nodeTypes, fields) {
         let refType = nodeTypes[typeName]
 
         if (Array.isArray(typeName)) {
-          refType = new GraphQLList(refType)
-
           // TODO: create union collection
           const fieldTypeName = camelCase(key, { pascalCase: true })
           refType = new GraphQLUnionType({
