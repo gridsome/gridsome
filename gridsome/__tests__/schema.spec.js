@@ -2,6 +2,7 @@ const App = require('../lib/app/App')
 const PluginAPI = require('../lib/app/PluginAPI')
 const createSchema = require('../lib/graphql/createSchema')
 const { inferTypes } = require('../lib/graphql/schema/infer-types')
+const { GraphQLDate } = require('../lib/graphql/schema/types/date')
 
 const {
   graphql,
@@ -247,6 +248,26 @@ test('infer types from node fields', () => {
   expect(types.obj.type.getFields().foo.type).toEqual(GraphQLString)
   expect(types.emptyList).toBeUndefined()
   expect(types.emptyObj).toBeUndefined()
+})
+
+test('infer date fields', () => {
+  const types = inferTypes([
+    {
+      fields: {
+        date1: '2018',
+        date2: '2018-11',
+        date3: '2018-11-01',
+        date4: '2018-11-01T19:20+01:00',
+        date5: '2018-11-01T19:20:30+01:00'
+      }
+    },
+  ], 'TestPost')
+
+  expect(types.date1.type).toEqual(GraphQLDate)
+  expect(types.date2.type).toEqual(GraphQLDate)
+  expect(types.date3.type).toEqual(GraphQLDate)
+  expect(types.date4.type).toEqual(GraphQLDate)
+  expect(types.date5.type).toEqual(GraphQLDate)
 })
 
 test('transformer extends node type', async () => {

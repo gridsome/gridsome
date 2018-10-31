@@ -1,7 +1,37 @@
 const moment = require('moment')
 const { GraphQLString, GraphQLScalarType, Kind } = require('../../graphql')
 
-// TODO: improve this
+const ISO_8601_FORMAT = [
+  'YYYY',
+  'YYYY-MM',
+  'YYYY-MM-DD',
+  'YYYYMMDD',
+
+  // Local Time
+  'YYYY-MM-DDTHH',
+  'YYYY-MM-DDTHH:mm',
+  'YYYY-MM-DDTHHmm',
+  'YYYY-MM-DDTHH:mm:ss',
+  'YYYY-MM-DDTHHmmss',
+  'YYYY-MM-DDTHH:mm:ss.SSS',
+  'YYYY-MM-DDTHHmmss.SSS',
+
+  // Coordinated Universal Time (UTC)
+  'YYYY-MM-DDTHHZ',
+  'YYYY-MM-DDTHH:mmZ',
+  'YYYY-MM-DDTHHmmZ',
+  'YYYY-MM-DDTHH:mm:ssZ',
+  'YYYY-MM-DDTHHmmssZ',
+  'YYYY-MM-DDTHH:mm:ss.SSSZ',
+  'YYYY-MM-DDTHHmmss.SSSZ',
+
+  'YYYY-[W]WW',
+  'YYYY[W]WW',
+  'YYYY-[W]WW-E',
+  'YYYY[W]WWE',
+  'YYYY-DDDD',
+  'YYYYDDDD',
+]
 
 exports.GraphQLDate = new GraphQLScalarType({
   name: 'Date',
@@ -13,7 +43,8 @@ exports.GraphQLDate = new GraphQLScalarType({
 })
 
 exports.isDate = value => {
-  return !!Date.parse(value)
+  const date = moment.utc(value, ISO_8601_FORMAT, true)
+  return date.isValid() && typeof value !== 'number'
 }
 
 exports.dateType = {
