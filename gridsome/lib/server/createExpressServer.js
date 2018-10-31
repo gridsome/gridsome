@@ -1,8 +1,8 @@
 const path = require('path')
 const express = require('express')
-const bodyParser = require('body-parser')
 const resolvePort = require('./resolvePort')
 const graphqlHTTP = require('express-graphql')
+const graphqlMiddleware = require('./middlewares/graphql')
 const { forwardSlash } = require('../utils')
 
 const endpoint = {
@@ -17,7 +17,7 @@ module.exports = async app => {
 
   server.use(
     endpoint.graphql,
-    bodyParser.json(),
+    graphqlMiddleware(app),
     graphqlHTTP({ schema, context: { store, config }})
   )
 

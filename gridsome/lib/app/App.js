@@ -79,7 +79,9 @@ class App {
 
   async createSchema () {
     this.schema = createSchema(this.store, {
-      schemas: await this.dispatch('createSchema', { graphql })
+      schemas: await this.dispatch('createSchema', () => ({
+        graphql: this.graphql
+      }))
     })
   }
 
@@ -113,10 +115,10 @@ class App {
     events[eventName].push({ api, handler })
   }
 
-  dispatch (eventName, ...args) {
+  dispatch (eventName, cb, ...args) {
     if (!this.events[eventName]) return
     return Promise.all(this.events[eventName].map(({ api, handler }) => {
-      return handler(...args, api)
+      return typeof cb === 'function' ? handler(cb(api)) : handler(...args, api)
     }))
   }
 
@@ -138,6 +140,12 @@ class App {
   graphql (docOrQuery, variables = {}) {
     const context = { store: this.store, config: this.config }
     const func = typeof docOrQuery === 'object' ? execute : graphql
+
+    if (typeof docOrQuery === 'string') {
+      // workaround until query directives
+      // works in mergeSchema from graphql-tools
+      docOrQuery = docOrQuery.replace(/@paginate/g, '')
+    }
 
     return func(this.schema, docOrQuery, undefined, context, variables)
   }
