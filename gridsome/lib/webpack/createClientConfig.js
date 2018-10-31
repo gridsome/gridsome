@@ -3,10 +3,10 @@ const createBaseConfig = require('./createBaseConfig')
 
 const resolve = p => path.resolve(__dirname, p)
 
-module.exports = (context, options, plugins) => {
+module.exports = app => {
   const isProd = process.env.NODE_ENV === 'production'
-  const config = createBaseConfig(context, options, { isProd, isServer: false })
-  const { targetDir, clientManifestPath } = options
+  const config = createBaseConfig(app, { isProd, isServer: false })
+  const { targetDir, clientManifestPath } = app.config
 
   config.entry('app').add(resolve('../../app/entry.client.js'))
 
@@ -39,11 +39,11 @@ module.exports = (context, options, plugins) => {
       }])
   }
 
-  plugins.callHookSync('chainWebpack', config, { context, isProd, isServer: false })
-
-  if (typeof options.chainWebpack === 'function') {
-    options.chainWebpack(config, { context, isProd, isServer: false })
-  }
+  app.dispatchSync('chainWebpack', config, {
+    context: app.context,
+    isServer: false,
+    isProd
+  })
 
   return config
 }

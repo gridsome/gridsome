@@ -63,7 +63,7 @@ module.exports = async (context, args) => {
   //
 
   function createWebpackConfig () {
-    const clientConfig = createClientConfig(context, config, plugins)
+    const clientConfig = createClientConfig(app)
 
     clientConfig
       .plugin('dev-endpoints')

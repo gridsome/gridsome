@@ -16,6 +16,7 @@ class App {
   constructor (context, options = {}) {
     process.GRIDSOME = this
 
+    this.events = []
     this.clients = {}
     this.context = context
     this.config = loadConfig(context, options)
@@ -28,7 +29,7 @@ class App {
 
     const phases = [
       { title: 'Initialize', run: this.init },
-      { title: 'Run plugins', run: this.runPlugins },
+      { title: 'Load sources', run: this.loadSources },
       { title: 'Create GraphQL schema', run: this.createSchema },
       { title: 'Generate code', run: this.generateFiles }
     ]
@@ -45,7 +46,7 @@ class App {
       }
     }
 
-    await this.plugins.callHook('afterBootstrap')
+    // await this.plugins.callHook('afterBootstrap')
 
     console.info(`Bootstrap finish - ${bootstrapTime(hirestime.S)}s`)
 
@@ -70,21 +71,19 @@ class App {
       this.generateFiles()
     })
 
-    return this.plugins.callHook('init')
+    // return this.plugins.callHook('init')
   }
 
-  runPlugins () {
-    return this.plugins.run()
+  async loadSources () {
+    return this.dispatch('loadSources')
   }
 
   async createSchema () {
-    const queries = await this.plugins.callHook('createSchemaQueries', {
-      store: this.store
-    })
+    // const queries = await this.plugins.callHook('createSchemaQueries', {
+    //   store: this.store
+    // })
 
-    this.schema = createSchema(this.store, {
-      queries: queries.length ? Object.assign(...queries) : {}
-    })
+    this.schema = createSchema(this.store)
   }
 
   generateFiles () {
@@ -101,6 +100,34 @@ class App {
     })
 
     return this.generator.generate()
+  }
+
+  //
+  // Events
+  //
+
+  on (eventName, { api, handler }) {
+    const { events } = this
+
+    if (!Array.isArray(events[eventName])) {
+      events[eventName] = []
+    }
+
+    events[eventName].push({ api, handler })
+  }
+
+  dispatch (eventName, ...args) {
+    if (!this.events[eventName]) return
+    return Promise.all(this.events[eventName].map(({ handler }) => {
+      return handler(...args)
+    }))
+  }
+
+  dispatchSync (eventName, ...args) {
+    if (!this.events[eventName]) return
+    return this.events[eventName].map(({ handler }) => {
+      return handler(...args)
+    })
   }
 
   //

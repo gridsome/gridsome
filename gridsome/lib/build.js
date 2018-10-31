@@ -15,27 +15,27 @@ module.exports = async (context, args) => {
 
   const buildTime = hirestime()
   const app = await createApp(context, { args })
-  const { config, graphql, plugins } = app
+  const { config, graphql } = app
 
-  await plugins.callHook('beforeBuild', { context, config })
+  await app.dispatch('beforeBuild', { context, config })
   await fs.ensureDir(config.cacheDir)
   await fs.remove(config.outDir)
 
   const queue = await createRenderQueue(app)
 
   // 1. run all GraphQL queries and save results into json files
-  await plugins.callHook('beforeRenderQueries', { context, config, queue })
+  await app.dispatch('beforeRenderQueries', { context, config, queue })
   await renderPageQueries(queue, graphql)
 
   // 2. compile assets with webpack
-  await compileAssets(context, config, plugins)
+  await compileAssets(app)
 
   // 3. render a static index.html file for each possible route
-  await plugins.callHook('beforeRenderHTML', { context, config, queue })
+  await app.dispatch('beforeRenderHTML', { context, config, queue })
   await renderHTML(queue, config)
 
   // 4. process queued images
-  await plugins.callHook('beforeProcessImages', { context, config, queue: app.queue })
+  await app.dispatch('beforeProcessImages', { context, config, queue: app.queue })
   await processImages(app.queue, config)
 
   // 5. copy static files
@@ -44,7 +44,7 @@ module.exports = async (context, args) => {
   }
 
   // 6. clean up
-  await plugins.callHook('afterBuild', { context, config, queue })
+  await app.dispatch('afterBuild', { context, config, queue })
   await fs.remove(path.resolve(config.cacheDir, 'data'))
   await fs.remove(config.manifestsDir)
 

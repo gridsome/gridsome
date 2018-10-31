@@ -16,15 +16,20 @@ class FilesystemSource {
     }
   }
 
-  constructor (options, { context, source }) {
+  constructor (api, options) {
+    this.options = options
+    this.context = api.context
+    this.source = api.store
+    this.nodesCache = {}
+
     // TODO: remove this before v1.0
     if (options.type) {
       if (options.typeName === 'FileNode') {
-        source.typeName = 'Filesystem'
+        api.source.typeName = 'Filesystem'
         options.typeName = 'Filesystem'
       }
 
-      const typeName = source.makeTypeName(options.type)
+      const typeName = api.source.makeTypeName(options.type)
 
       console.log(
         `The 'type' option for @gridsome/source-filesystem is ` +
@@ -37,14 +42,10 @@ class FilesystemSource {
       options.type = ''
     }
 
-    this.options = options
-    this.context = context
-    this.source = source
-
-    this.nodesCache = {}
+    api.loadSources(args => this.addNodes(args))
   }
 
-  async apply () {
+  async addNodes () {
     const { options } = this
 
     const refs = this.normalizeRefs(options.refs)

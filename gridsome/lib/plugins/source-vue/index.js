@@ -14,13 +14,15 @@ class VueSource {
     }
   }
 
-  constructor (options, { context, source }) {
+  constructor (api, options) {
     this.options = options
-    this.context = context
-    this.source = source
+    this.context = api.context
+    this.source = api.store
+
+    api.loadSources(args => this.addPages(args))
   }
 
-  async apply () {
+  async addPages () {
     const files = await glob(this.options.path, { cwd: this.context })
 
     files.forEach(file => this.addPage(file))

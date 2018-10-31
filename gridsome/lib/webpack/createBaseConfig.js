@@ -7,10 +7,11 @@ const CSSExtractPlugin = require('mini-css-extract-plugin')
 
 const resolve = (p, c) => path.resolve(c || __dirname, p)
 
-module.exports = (context, options, { isProd, isServer }) => {
+module.exports = (app, { isProd, isServer }) => {
+  const { config: projectConfig } = app
   const { cacheDirectory, cacheIdentifier } = createCacheOptions()
-  const assetsDir = path.relative(options.targetDir, options.assetsDir)
-  const pathPrefix = forwardSlash(path.join(options.pathPrefix, '/'))
+  const assetsDir = path.relative(projectConfig.targetDir, projectConfig.assetsDir)
+  const pathPrefix = forwardSlash(path.join(projectConfig.pathPrefix, '/'))
   const config = new Config()
 
   const filename = `${assetsDir}/js/[name]${isProd ? '.[contenthash]' : ''}.js`
@@ -19,7 +20,7 @@ module.exports = (context, options, { isProd, isServer }) => {
   config.mode(isProd ? 'production' : 'development')
 
   config.output
-    .path(options.targetDir)
+    .path(projectConfig.targetDir)
     .publicPath(isProd ? pathPrefix : '/')
     .chunkFilename(filename)
     .filename(filename)
@@ -27,9 +28,9 @@ module.exports = (context, options, { isProd, isServer }) => {
   config.resolve
     .set('symlinks', true)
     .alias
-      .set('~', resolve('src', context))
-      .set('@', resolve('src', context))
-      .set('gridsome$', path.resolve(options.appPath, 'index.js'))
+      .set('~', resolve('src', app.context))
+      .set('@', resolve('src', app.context))
+      .set('gridsome$', path.resolve(projectConfig.appPath, 'index.js'))
       .end()
     .extensions
       .merge(['.js', '.vue'])
@@ -86,7 +87,7 @@ module.exports = (context, options, { isProd, isServer }) => {
         if (/\.vue\.jsx?$/.test(filepath)) {
           return false
         }
-        if (filepath.startsWith(options.appPath)) {
+        if (filepath.startsWith(projectConfig.appPath)) {
           return false
         }
         return /node_modules/.test(filepath)
@@ -111,12 +112,12 @@ module.exports = (context, options, { isProd, isServer }) => {
 
   createCSSRule(config, 'css', /\.css$/)
   createCSSRule(config, 'postcss', /\.p(ost)?css$/)
-  createCSSRule(config, 'scss', /\.scss$/, 'sass-loader', options.scss)
-  createCSSRule(config, 'sass', /\.sass$/, 'sass-loader', Object.assign({ indentedSyntax: true }, options.sass))
-  createCSSRule(config, 'less', /\.less$/, 'less-loader', options.less)
+  createCSSRule(config, 'scss', /\.scss$/, 'sass-loader', projectConfig.scss)
+  createCSSRule(config, 'sass', /\.sass$/, 'sass-loader', Object.assign({ indentedSyntax: true }, projectConfig.sass))
+  createCSSRule(config, 'less', /\.less$/, 'less-loader', projectConfig.less)
   createCSSRule(config, 'stylus', /\.styl(us)?$/, 'stylus-loader', Object.assign({
     preferPathResolver: 'webpack'
-  }, options.stylus))
+  }, projectConfig.stylus))
 
   // assets
 
@@ -199,7 +200,7 @@ module.exports = (context, options, { isProd, isServer }) => {
       .use(require('html-webpack-plugin'), [{
         minify: true,
         templateContent () {
-          return createHTMLRenderer(options.htmlTemplate)({
+          return createHTMLRenderer(projectConfig.htmlTemplate)({
             app: '<div id="app"></div>'
           })
         }
@@ -208,9 +209,9 @@ module.exports = (context, options, { isProd, isServer }) => {
 
   config.plugin('injections')
     .use(require('webpack/lib/DefinePlugin'), [{
-      'PATH_PREFIX': JSON.stringify(options.pathPrefix),
-      'GRIDSOME_CACHE_DIR': JSON.stringify(options.cacheDir),
-      'GRIDSOME_DATA_DIR': JSON.stringify(`${options.cacheDir}/data`),
+      'PATH_PREFIX': JSON.stringify(projectConfig.pathPrefix),
+      'GRIDSOME_CACHE_DIR': JSON.stringify(projectConfig.cacheDir),
+      'GRIDSOME_DATA_DIR': JSON.stringify(`${projectConfig.cacheDir}/data`),
       'GRIDSOME_MODE': JSON.stringify(process.env.GRIDSOME_MODE || ''),
       'process.isClient': !isServer,
       'process.isServer': isServer
@@ -225,7 +226,7 @@ module.exports = (context, options, { isProd, isServer }) => {
     config.optimization.splitChunks({
       cacheGroups: {
         data: {
-          test: m => m.resource && m.request.startsWith(`${options.cacheDir}/data`),
+          test: m => m.resource && m.request.startsWith(`${projectConfig.cacheDir}/data`),
           name: false,
           chunks: 'all',
           maxSize: 60000,
@@ -247,8 +248,7 @@ module.exports = (context, options, { isProd, isServer }) => {
         isProd,
         isServer,
         config: (
-          (options.chainWebpack || '').toString() +
-          (options.configureWebpack || '').toString()
+          (projectConfig.chainWebpack || '').toString()
         )
       })
     }

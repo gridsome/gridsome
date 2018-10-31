@@ -3,7 +3,7 @@ const createBaseConfig = require('./createBaseConfig')
 
 const resolve = p => path.resolve(__dirname, p)
 
-module.exports = (context, options, plugins) => {
+module.exports = (context, options, app) => {
   const isProd = process.env.NODE_ENV === 'production'
   const config = createBaseConfig(context, options, { isProd, isServer: true })
   const { targetDir, serverBundlePath } = options
@@ -22,11 +22,11 @@ module.exports = (context, options, plugins) => {
       filename: path.relative(targetDir, serverBundlePath)
     }])
 
-  plugins.callHookSync('chainWebpack', config, { context, isProd, isServer: true })
-
-  if (typeof options.chainWebpack === 'function') {
-    options.chainWebpack(config, { context, isProd, isServer: true })
-  }
+  app.dispatchSync('chainWebpack', config, {
+    context: app.context,
+    isServer: true,
+    isProd
+  })
 
   return config
 }

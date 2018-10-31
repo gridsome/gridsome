@@ -10,13 +10,13 @@ const parsePageQuery = require('../graphql/parsePageQuery')
 const { mapValues, mapKeys, cloneDeep } = require('lodash')
 
 class Source extends EventEmitter {
-  constructor (options, { context, store, transformers = {}}) {
+  constructor (app, api) {
     super()
 
-    this.typeName = options.typeName
-    this.context = context
-    this.store = store
-    this.transformers = transformers
+    this.typeName = api.options.typeName
+    this.transformers = api.transformers
+    this.context = app.context
+    this.store = app.store
     this.ownTypeNames = []
     this.mime = mime
   }

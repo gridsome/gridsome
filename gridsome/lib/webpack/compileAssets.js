@@ -2,18 +2,22 @@ const hirestime = require('hirestime')
 const createClientConfig = require('./createClientConfig')
 const createServerConfig = require('./createServerConfig')
 
-module.exports = async (context, config, plugins, defines = {}) => {
+module.exports = async (app, defines = {}) => {
   const compileTime = hirestime()
 
-  const clientConfig = createClientConfig(context, config, plugins)
-  const serverConfig = createServerConfig(context, config, plugins)
-  const payload = { context, config, clientConfig, serverConfig }
+  const clientConfig = createClientConfig(app)
+  const serverConfig = createServerConfig(app)
 
   clientConfig
     .plugin('gridsome-endpoints')
       .use(require('webpack/lib/DefinePlugin'), [defines])
 
-  await plugins.callHook('beforeCompileAssets', payload)
+  await app.dispatch('beforeCompileAssets', {
+    context: app.context,
+    config: app.config,
+    clientConfig,
+    serverConfig
+  })
 
   await compile([
     clientConfig.toConfig(),

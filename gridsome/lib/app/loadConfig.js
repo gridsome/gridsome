@@ -5,7 +5,7 @@ const { defaultsDeep, camelCase } = require('lodash')
 const { internalRE, transformerRE } = require('../utils/constants')
 
 const builtInPlugins = [
-  'internal://plugins/source-vue'
+  path.resolve(__dirname, '../plugins/source-vue')
 ]
 
 // TODO: use joi to define and validate config schema
@@ -33,6 +33,8 @@ module.exports = (context, options = {}, pkg = {}) => {
   if (options.useBuiltIn !== false) {
     plugins.unshift(...builtInPlugins)
   }
+
+  plugins.push(context)
 
   if (localConfig.pathPrefix && /\/+$/.test(localConfig.pathPrefix)) {
     throw new Error(`pathPrefix must not have a trailing slash`)
@@ -104,39 +106,32 @@ function normalizePlugins (plugins) {
       plugin = { options: {}, use: plugin }
     }
 
-    const re = /(?:^@?gridsome[/-]|\/)(source|plugin)-([\w-]+)/
-    const use = plugin.use.replace(internalRE, '../')
-    const uid = crypto.createHash('md5').update(`${use}-${index}`).digest('hex')
-    const { isBrowser, isServer, isApp } = resolvePluginType(use)
-    const [, type, name] = plugin.use.match(re)
+    const hash = crypto.createHash('md5')
+    // const re = /(?:^@?gridsome[/-]|\/)(source|plugin)-([\w-]+)/
+    const uid = hash.update(`${plugin.use}-${index}`).digest('hex')
+    const entries = resolvePluginEntries(plugin.use)
 
     return defaultsDeep({
       instance: undefined,
       options: {},
-      isBrowser,
-      isServer,
-      isApp,
-      name,
-      use,
-      uid,
-      type
+      entries,
+      uid
     }, plugin)
   })
 }
 
-function resolvePluginType (id) {
-  const exists = entry => {
-    const pluginPath = path.parse(require.resolve(id)).dir
-    return /^@gridsome\//.test(id) && process.env.GRIDSOME_DEV
-      ? fs.existsSync(`${pluginPath}/src/${entry}`)
-      : fs.existsSync(`${pluginPath}/${entry}`)
+function resolvePluginEntries (id) {
+  const dirName = path.isAbsolute(id) ? id : path.dirname(require.resolve(id))
+
+  const entryPath = entry => {
+    const filePath = path.resolve(dirName, entry)
+    return fs.existsSync(filePath) ? filePath : null
   }
 
-  const isBrowser = exists('browser.js')
-  const isServer = exists('server.js')
-  const isApp = exists('app.js')
-
-  return { isBrowser, isServer, isApp }
+  return Object.freeze({
+    browserEntry: entryPath('browser.js'),
+    serverEntry: entryPath('server.js') || entryPath('index.js')
+  })
 }
 
 function resolveTransformers (pkg, config) {
