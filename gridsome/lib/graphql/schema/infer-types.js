@@ -19,6 +19,7 @@ function inferTypes (nodes, nodeType) {
     node = nodes[i]
 
     for (const key in node.fields) {
+      if (key.startsWith('__')) continue
       if ((type = inferType(node.fields[key], key, nodeType))) {
         fields[key] = type
       }

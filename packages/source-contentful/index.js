@@ -6,7 +6,8 @@ class ContentfulSource {
       space: undefined,
       environment: 'master',
       host: 'cdn.contentful.com',
-      typeName: 'Contentful'
+      typeName: 'Contentful',
+      routes: {}
     }
   }
 
@@ -16,8 +17,9 @@ class ContentfulSource {
     api.loadSource(args => this.fetchContentfulContent(args))
   }
 
-  async fetchContentfulContent ({ store }) {
-    const { space, accessToken, environment, host } = this.options
+  async fetchContentfulContent (store) {
+    const { addContentType, getContentType, makeTypeName, slugify } = store
+    const { space, accessToken, environment, host, routes } = this.options
 
     const client = contentful.createClient({
       space, accessToken, environment, host
@@ -31,8 +33,9 @@ class ContentfulSource {
     }
 
     for (const contentType of contentTypes) {
-      store.addContentType({
-        typeName: store.makeTypeName(contentType.name),
+      addContentType({
+        typeName: makeTypeName(contentType.name),
+        route: routes[contentType.name] || `${slugify(contentType.name)}/:slug`,
         refs: contentType.fields.reduce((refs, { id, items }) => {
           if (items && items.type === 'Link' && items.linkType === 'Entry') {
             refs[id] = {
@@ -40,7 +43,7 @@ class ContentfulSource {
               typeName: items.validations.reduce((types, { linkContentType }) => {
                 linkContentType.forEach(id => {
                   const contentType = cache.contentTypes[id]
-                  const typeName = store.makeTypeName(contentType.name)
+                  const typeName = makeTypeName(contentType.name)
                   types.push(typeName)
                 })
 
@@ -59,8 +62,8 @@ class ContentfulSource {
     for (const item of entries) {
       const id = item.sys.contentType.sys.id
       const contentType = cache.contentTypes[id]
-      const typeName = store.makeTypeName(contentType.name)
-      const collection = store.getContentType(typeName)
+      const typeName = makeTypeName(contentType.name)
+      const collection = getContentType(typeName)
       
       const fields = contentType.fields.reduce((fields, { id, type, items }) => {
         if (!item.fields[id]) return fields
@@ -81,7 +84,6 @@ class ContentfulSource {
       })
 
       // TODO: let user choose which field contains the slug
-
       collection.addNode({
         _id: item.sys.id,
         title: item.fields[contentType.displayField],

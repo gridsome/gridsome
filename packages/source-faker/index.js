@@ -12,11 +12,11 @@ class FakerSource {
     this.api = api
     this.options = options
 
-    api.loadSource(() => this.createFakerNodes())
+    api.loadSource(store => this.createFakerNodes(store))
   }
 
-  createFakerNodes () {
-    const contentType = this.api.store.addContentType({
+  createFakerNodes ({ addContentType }) {
+    const contentType = addContentType({
       typeName: this.options.typeName,
       route: '/:year/:month/:day/:slug'
     })

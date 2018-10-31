@@ -74,7 +74,7 @@ class App {
   }
 
   async loadSources () {
-    return this.dispatch('loadSource')
+    return this.dispatch('loadSource', api => api.store)
   }
 
   async createSchema () {

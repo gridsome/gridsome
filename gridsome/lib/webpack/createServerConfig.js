@@ -3,10 +3,10 @@ const createBaseConfig = require('./createBaseConfig')
 
 const resolve = p => path.resolve(__dirname, p)
 
-module.exports = (context, options, app) => {
+module.exports = app => {
   const isProd = process.env.NODE_ENV === 'production'
-  const config = createBaseConfig(context, options, { isProd, isServer: true })
-  const { targetDir, serverBundlePath } = options
+  const config = createBaseConfig(app, { isProd, isServer: true })
+  const { targetDir, serverBundlePath } = app.config
 
   config.entry('app').add(resolve('../../app/entry.server.js'))
 

@@ -62,19 +62,24 @@ class RemarkTransformer {
   }
 
   parse (source) {
-    const file = parse(source)
+    const { data, content, excerpt } = parse(source)
 
     // if no title was found by gray-matter,
     // try to find the first one in the content
-    if (!file.data.title) {
-      const title = file.content.trim().match(/^#+\s+(.*)/)
-      if (title) file.data.title = title[1]
+    if (!data.title) {
+      const title = content.trim().match(/^#+\s+(.*)/)
+      if (title) data.title = title[1]
     }
 
+    data.__remarkContent = content
+    data.__remarkExcerpt = excerpt
+
     return {
-      fields: file.data,
-      content: file.content,
-      excerpt: file.excerpt
+      title: data.title,
+      slug: data.slug,
+      path: data.path,
+      date: data.date,
+      fields: data
     }
   }
 
@@ -122,7 +127,7 @@ class RemarkTransformer {
     return this.nodeCache(node, 'ast', () => {
       return unified()
         .use(markdown)
-        .parse(node.internal.content)
+        .parse(node.fields.__remarkContent)
     })
   }
 
@@ -134,7 +139,7 @@ class RemarkTransformer {
         .data('context', this.context)
         .use(this.remarkPlugins)
         .use(require('remark-html'))
-        .process(node.internal.content)
+        .process(node.fields.__remarkContent)
     })
   }
 

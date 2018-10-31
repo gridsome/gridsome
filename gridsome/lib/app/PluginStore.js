@@ -1,6 +1,7 @@
 const path = require('path')
 const crypto = require('crypto')
 const mime = require('mime-types')
+const autoBind = require('auto-bind')
 const EventEmitter = require('events')
 const camelCase = require('camelcase')
 const pathToRegexp = require('path-to-regexp')
@@ -11,6 +12,7 @@ const { mapValues, cloneDeep } = require('lodash')
 class Source extends EventEmitter {
   constructor (app, api) {
     super()
+    autoBind(this)
 
     this.typeName = api.options.typeName
     this.transformers = api.transformers

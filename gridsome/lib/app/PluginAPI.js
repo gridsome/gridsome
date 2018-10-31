@@ -1,3 +1,4 @@
+const autoBind = require('auto-bind')
 const { mapValues } = require('lodash')
 const PluginStore = require('./PluginStore')
 const { cache, nodeCache } = require('../utils/cache')
@@ -7,6 +8,8 @@ class PluginAPI {
     this.app = app
     this.options = options
     this.context = app.context
+
+    autoBind(this)
 
     this.transformers = transformers || mapValues(app.config.transformers, entry => {
       return new entry.TransformerClass(entry.options, {
