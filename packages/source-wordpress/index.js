@@ -13,13 +13,13 @@ class WordPressSource {
     }
   }
 
-  constructor (options, { context, source }) {
+  constructor (api, options) {
     this.options = options
-    this.context = context
-    this.source = source
+
+    api.loadSource(args => this.fetchWordPressContent(args))
   }
 
-  async apply () {
+  async fetchWordPressContent ({ store }) {
     const { baseUrl, perPage, concurrent } = this.options
     let { routes } = this.options
 
@@ -39,10 +39,6 @@ class WordPressSource {
       ...routes
     }
 
-    // add prefix to post and term id's since
-    // they will share the same node store
-    const makePostId = id => this.source.makeUid(`post-${id}`)
-    const makeTermId = id => this.source.makeUid(`term-${id}`)
     let types = {}
     let taxonomies = {}
 
@@ -60,31 +56,55 @@ class WordPressSource {
       throw err
     }
 
-    for (const typeName in types) {
-      const options = types[typeName]
+    for (const type in types) {
+      const options = types[type]
 
-      if (typeName === 'attachment') continue
+      const typeName = store.makeTypeName(type)
+      const route = routes[type] || `/${options.rest_base}/:slug`
 
-      restBases.posts[typeName] = options.rest_base
+      restBases.posts[type] = options.rest_base
 
-      this.source.addType(typeName, {
-        name: options.name,
-        route: routes[typeName]
-      })
+      const collection = store.addContentType({ typeName, route })
+
+      if (type !== 'attachment') {
+        const attachmentTypeName = store.makeTypeName('attachment')
+
+        collection.addReference('featuredMedia', {
+          typeName: attachmentTypeName,
+          key: '_id'
+        })
+
+        // collection.addSchemaField('featuredMedia', ({ nodeTypes }) => ({
+        //   type: nodeTypes[attachmentTypeName],
+        //   async resolve (node, args, { store }) {
+        //     const { collection } = store.getContentType(attachmentTypeName)
+        //     return collection.findOne({ _id: node.fields.featuredMedia })
+        //   }
+        // }))
+      }
     }
 
-    for (const typeName in taxonomies) {
-      const options = taxonomies[typeName]
-      restBases.taxonomies[typeName] = options.rest_base
+    for (const type in taxonomies) {
+      const options = taxonomies[type]
+      const typeName = store.makeTypeName(type)
+      const route = routes[type] || `/${options.rest_base}/:slug`
 
-      this.source.addType(typeName, {
-        name: options.name,
-        route: routes[typeName]
-      })
+      restBases.taxonomies[type] = options.rest_base
+
+      for (const type of options.types) {
+        const postTypeName = store.makeTypeName(type)
+        const collection = store.getContentType(postTypeName)
+
+        collection.addReference(options.rest_base, { typeName, key: '_id' })
+      }
+
+      store.addContentType({ typeName, route })
     }
 
-    for (const typeName in restBases.posts) {
-      const restBase = restBases.posts[typeName]
+    for (const type in restBases.posts) {
+      const restBase = restBases.posts[type]
+      const typeName = store.makeTypeName(type)
+      const collection = store.getContentType(typeName)
       const endpoint = `${restUrl}/${restBase}`
       let posts = []
 
@@ -95,34 +115,42 @@ class WordPressSource {
       }
 
       for (const post of posts) {
-        const refs = {}
+        let fields = {}
 
+        if (post.type === 'attachment') {
+          fields.url = post.source_url
+          fields.mediaType = post.media_type
+          fields.mimeType = post.mime_type
+          fields.width = post.media_details.width
+          fields.height = post.media_details.height
+        } else {
+          fields.content = post.content ? post.content.rendered : ''
+          fields.excerpt = post.excerpt ? post.excerpt.rendered : ''
+          fields.featuredMedia = post.featured_media
+        }
+        
         // add references if post has any taxonomy rest bases as properties
-        for (const typeName in restBases.taxonomies) {
-          const propName = restBases.taxonomies[typeName]
+        for (const type in restBases.taxonomies) {
+          const propName = restBases.taxonomies[type]
           if (post.hasOwnProperty(propName)) {
-            refs[typeName] = post[propName].map(id => {
-              return makeTermId(id)
-            })
+            fields[propName] = post[propName]
           }
         }
 
-        this.source.addNode(post.type, {
-          _id: makePostId(post.id),
+        collection.addNode({
+          _id: post.id,
           title: post.title ? post.title.rendered : '',
           date: post.date ? new Date(post.date) : null,
           slug: post.slug,
-          fields: {
-            content: post.content ? post.content.rendered : '',
-            excerpt: post.excerpt ? post.excerpt.rendered : ''
-          },
-          refs
+          fields
         })
       }
     }
 
-    for (const typeName in restBases.taxonomies) {
-      const restBase = restBases.taxonomies[typeName]
+    for (const type in restBases.taxonomies) {
+      const restBase = restBases.taxonomies[type]
+      const typeName = store.makeTypeName(type)
+      const collection = store.getContentType(typeName)
       const endpoint = `${restUrl}/${restBase}`
       let terms = []
 
@@ -133,8 +161,8 @@ class WordPressSource {
       }
 
       for (const term of terms) {
-        this.source.addNode(term.taxonomy, {
-          _id: makeTermId(term.id),
+        collection.addNode({
+          _id: term.id,
           slug: term.slug,
           title: term.name,
           fields: {
