@@ -3,7 +3,7 @@ const EventEmitter = require('events')
 const camelCase = require('camelcase')
 const dateFormat = require('dateformat')
 const slugify = require('@sindresorhus/slugify')
-const { mapKeys, cloneDeep } = require('lodash')
+const { mapKeys, cloneDeep, deepMerge } = require('lodash')
 
 class ContentTypeCollection extends EventEmitter {
   constructor (store, pluginStore, options) {
@@ -77,32 +77,39 @@ class ContentTypeCollection extends EventEmitter {
     this.emit('change', undefined, oldNode)
   }
 
-  createNode (options) {
+  createNode (options = {}) {
     const { typeName } = this.options
     const internal = this.createInternals(options.internal)
-    // all field names must be camelCased in order to work in GraphQL
-    const fields = mapKeys(options.fields, (v, key) => camelCase(key))
     const _id = options._id || this.makeUid(JSON.stringify(options))
+    let node = { _id, typeName, internal }
 
-    // transform node content
+    // transform content with transformer for given mime type
     if (internal.content && internal.mimeType) {
       const result = this.transform(internal)
-      Object.assign(fields, result.fields)
+      
+      if (result.title) options.title = result.title
+      if (result.slug) options.slug = result.slug
+      if (result.path) options.path = result.path
+      if (result.date) options.date = result.date
+      if (result.content) options.content = result.content
+      if (result.excerpt) options.excerpt = result.excerpt
+
+      if (result.fields) {
+        options.fields = Object.assign(options.fields || {}, result.fields)
+      }
     }
 
-    const node = {
-      _id,
-      fields,
-      typeName,
-      internal,
-      refs: options.refs || {},
-      withPath: !!options.path
-    }
+    node.fields = mapKeys(options.fields, (v, key) => {
+      return key.startsWith('__') ? key : camelCase(key)
+    })
 
-    node.title = options.title || fields.title || options._id
-    node.date = options.date || fields.date || new Date().toISOString()
-    node.slug = options.slug || fields.slug || this.slugify(node.title)
+    node.title = options.title || node.fields.title || options._id
+    node.date = options.date || node.fields.date || new Date().toISOString()
+    node.slug = options.slug || node.fields.slug || this.slugify(node.title)
+    node.content = options.content || node.fields.content || ''
+    node.excerpt = options.excerpt || node.fields.excerpt || ''
     node.path = options.path || this.makePath(node)
+    node.withPath = !!options.path
 
     return node
   }

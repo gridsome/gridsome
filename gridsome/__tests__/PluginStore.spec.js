@@ -53,7 +53,6 @@ test('add node', () => {
   expect(node.slug).toEqual('lorem-ipsum-dolor-sit-amet')
   expect(node.date).toEqual('2018-09-04T23:20:33.918Z')
   expect(node.fields).toMatchObject({})
-  expect(node.refs).toMatchObject({})
   expect(emit).toHaveBeenCalledTimes(1)
 
   emit.mockRestore()

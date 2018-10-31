@@ -22,13 +22,13 @@ const nodeInterface = new GraphQLInterfaceType({
   name: 'NodeInterface',
   fields: () => ({
     _id: { type: new GraphQLNonNull(GraphQLID) },
-    type: { type: new GraphQLNonNull(GraphQLString) },
     internal: { type: new GraphQLNonNull(internalInterface) },
     title: { type: GraphQLString },
     slug: { type: GraphQLString },
     path: { type: GraphQLString },
     date: { type: GraphQLDate },
-    content: { type: GraphQLString }
+    content: { type: GraphQLString },
+    excerpt: { type: GraphQLString }
   })
 })
 

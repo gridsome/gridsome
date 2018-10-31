@@ -26,16 +26,13 @@ class Source extends EventEmitter {
     return this.addContentType(...args)
   }
 
-  addContentType (type, options = {}) {
-    const typeName = typeof type === 'string'
-      ? this.makeTypeName(type)
-      : type.typeName
+  addContentType (options) {
+    if (!options.typeName) {
+      throw new Error(`«typeName» option is required.`)
+    }
 
-    options = type
-    type = typeName
-
-    if (this.store.collections.hasOwnProperty(typeName)) {
-      return this.store.getContentType(typeName)
+    if (this.store.collections.hasOwnProperty(options.typeName)) {
+      return this.store.getContentType(options.typeName)
     }
 
     // function for generating paths from routes for this type
@@ -47,18 +44,19 @@ class Source extends EventEmitter {
     const refs = mapValues(options.refs, (ref, key) => ({
       fieldName: key,
       key: ref.key || '_id',
-      description: `Reference to ${ref.typeName}`,
-      typeName: ref.typeName || typeName
+      typeName: ref.typeName || options.typeName,
+      description: Array.isArray(ref.typeName)
+        ? `Reference to ${ref.typeName.join(', ')}`
+        : `Reference to ${ref.typeName}`
     }))
 
     return this.store.addContentType(this, {
       route: options.route,
       fields: options.fields || {},
+      typeName: options.typeName,
       mimeTypes: [],
       belongsTo: {},
-      typeName,
       makePath,
-      type,
       refs
     })
   }

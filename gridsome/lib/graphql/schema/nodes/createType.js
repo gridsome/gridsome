@@ -30,12 +30,12 @@ module.exports = ({ contentType, nodeTypes, fields }) => {
     isTypeOf: node => node.typeName === contentType.typeName,
     fields: () => ({
       _id: { type: new GraphQLNonNull(GraphQLID) },
-      type: { type: new GraphQLNonNull(GraphQLString) },
       internal: { type: new GraphQLNonNull(internalType) },
       title: { type: GraphQLString },
       slug: { type: GraphQLString },
       path: { type: GraphQLString },
       content: { type: GraphQLString },
+      excerpt: { type: GraphQLString },
       date: dateType,
 
       ...extendNodeType(contentType, nodeType, nodeTypes),
