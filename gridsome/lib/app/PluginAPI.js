@@ -11,9 +11,10 @@ class PluginAPI {
     this.transformers = transformers || mapValues(app.config.transformers, entry => {
       return new entry.TransformerClass(entry.options, {
         localOptions: options[entry.name] || {},
+        context: app.context,
         queue: app.queue,
-        nodeCache,
-        cache
+        cache,
+        nodeCache
       })
     })
 
