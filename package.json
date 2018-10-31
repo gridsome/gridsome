@@ -29,8 +29,9 @@
     "@babel/plugin-transform-runtime": "^7.0.0",
     "@babel/preset-env": "^7.0.0",
     "@babel/runtime": "^7.0.0",
+    "@lerna/conventional-commits": "^3.4.1",
     "babel-eslint": "^10.0.1",
-    "conventional-changelog-cli": "^2.0.5",
+    "conventional-changelog": "^2.0.3",
     "eslint": "^5.2.0",
     "eslint-plugin-node": "^7.0.1",
     "eslint-plugin-vue": "^4.7.1",
@@ -43,6 +44,7 @@
     "semver": "^5.5.1"
   },
   "engines": {
+    "node": ">=8.3",
     "yarn": "^1.5.1"
   }
 }

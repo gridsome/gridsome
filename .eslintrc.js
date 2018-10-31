@@ -13,8 +13,12 @@ module.exports = {
   },
   overrides: [
     {
-      files: ["**/__tests__/**/*.js", "**/cli-test-utils/**/*.js"],
+      files: [
+        "scripts/**/*.js",
+        "**/__tests__/**/*.js"
+      ],
       rules: {
+        "node/no-unpublished-require": "off",
         "node/no-extraneous-require": "off"
       }
     }
