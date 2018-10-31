@@ -18,3 +18,19 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 ### Bug Fixes
 
 * **source-wordpress:** skip failing requests gridsome/gridsome-starter-wordpress[#2](https://github.com/gridsome/gridsome/issues/2) ([74dc51f](https://github.com/gridsome/gridsome/commit/74dc51f))
+
+
+<a name="0.0.3"></a>
+## [0.0.3](https://github.com/gridsome/gridsome/compare/142896c2454016dc989a7872faffec7263fc658c...@gridsome/source-wordpress@0.0.3) (2018-10-15)
+
+
+### Bug Fixes
+
+* **source-wordpress:** better error handling ([0777b32](https://github.com/gridsome/gridsome/commit/0777b32))
+* **source-wordpress:** skip non json responses ([57aa13f](https://github.com/gridsome/gridsome/commit/57aa13f))
+* **source-wordpress:** try to parse response ([923a7d2](https://github.com/gridsome/gridsome/commit/923a7d2))
+
+
+
+<a name="0.0.2"></a>
+## [0.0.2](https://github.com/gridsome/gridsome/compare/142896c2454016dc989a7872faffec7263fc658c...@gridsome/source-wordpress@0.0.3) (2018-09-16)

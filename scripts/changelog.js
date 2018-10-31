@@ -21,7 +21,7 @@ async function run () {
     'tag', '-l', '--format', '%(refname:short)|%(taggerdate:short)'
   ])
 
-  const tags = tagsList.split('\n').map(string => {
+  const allTags = tagsList.split('\n').map(string => {
     const [name, date] = string.split('|')
     const version = name.charAt(0) === 'v'
       ? name.substring(1)
@@ -35,14 +35,23 @@ async function run () {
       ? name.replace(/@gridsome/, 'packages')
       : 'gridsome'
 
+    const tags = allTags.slice().reverse().filter(tag => {
+      return tag.name.startsWith(name)
+    })
+
+    // v0.0.1 tag
+    tags.push({
+      name: '142896c2454016dc989a7872faffec7263fc658c',
+      date: '2018-09-16',
+      version: '0.0.1'
+    })
+
     return {
       name,
+      tags,
       dirname,
       location: resolve(dirname),
       changelog: resolve(dirname, 'CHANGELOG.md'),
-      tags: tags.slice().reverse().filter(tag => {
-        return tag.name.startsWith(name)
-      })
     }
   })
 

@@ -27,3 +27,18 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 ### Bug Fixes
 
 * **critical:** use htmlOutput ([c2c9670](https://github.com/gridsome/gridsome/commit/c2c9670))
+
+
+<a name="0.0.3"></a>
+## [0.0.3](https://github.com/gridsome/gridsome/compare/142896c2454016dc989a7872faffec7263fc658c...@gridsome/plugin-critical@0.0.3) (2018-09-26)
+
+
+### Bug Fixes
+
+* **critical:** remove path prefix from hashed urls ([cb33203](https://github.com/gridsome/gridsome/commit/cb33203))
+* **plugin-critical:** dont inline if failing ([56f375e](https://github.com/gridsome/gridsome/commit/56f375e))
+
+
+
+<a name="0.0.2"></a>
+## [0.0.2](https://github.com/gridsome/gridsome/compare/142896c2454016dc989a7872faffec7263fc658c...@gridsome/plugin-critical@0.0.3) (2018-09-16)

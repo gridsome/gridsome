@@ -164,3 +164,22 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 ## [0.0.4](https://github.com/gridsome/gridsome/compare/gridsome@0.0.3...gridsome@0.0.4) (2018-09-17)
 
 **Note:** Version bump only for package gridsome
+
+
+<a name="0.0.3"></a>
+## [0.0.3](https://github.com/gridsome/gridsome/compare/142896c2454016dc989a7872faffec7263fc658c...gridsome@0.0.3) (2018-09-17)
+
+
+### Bug Fixes
+
+* webpack progress in tty only ([bab7e8a](https://github.com/gridsome/gridsome/commit/bab7e8a))
+
+
+
+<a name="0.0.2"></a>
+## [0.0.2](https://github.com/gridsome/gridsome/compare/142896c2454016dc989a7872faffec7263fc658c...gridsome@0.0.3) (2018-09-16)
+
+
+### Bug Fixes
+
+* add local bin to core package ([0bab302](https://github.com/gridsome/gridsome/commit/0bab302))

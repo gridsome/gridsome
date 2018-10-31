@@ -21,3 +21,17 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 ### Bug Fixes
 
 * hot reload filesystem sources in windows ([8e7b76a](https://github.com/gridsome/gridsome/commit/8e7b76a))
+
+
+<a name="0.0.3"></a>
+## [0.0.3](https://github.com/gridsome/gridsome/compare/142896c2454016dc989a7872faffec7263fc658c...@gridsome/source-filesystem@0.0.3) (2018-09-26)
+
+
+### Bug Fixes
+
+* **filesystem:** add missing dep ([5e96dc2](https://github.com/gridsome/gridsome/commit/5e96dc2))
+
+
+
+<a name="0.0.2"></a>
+## [0.0.2](https://github.com/gridsome/gridsome/compare/142896c2454016dc989a7872faffec7263fc658c...@gridsome/source-filesystem@0.0.3) (2018-09-16)

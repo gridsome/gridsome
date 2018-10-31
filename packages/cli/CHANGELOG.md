@@ -31,3 +31,17 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 ### Bug Fixes
 
 * **cli:** install dependencies after create ([fa5caea](https://github.com/gridsome/gridsome/commit/fa5caea))
+
+
+<a name="0.0.3"></a>
+## [0.0.3](https://github.com/gridsome/gridsome/compare/142896c2454016dc989a7872faffec7263fc658c...@gridsome/cli@0.0.3) (2018-09-17)
+
+
+### Bug Fixes
+
+* **cli:** resolve local gridsome ([3f2201d](https://github.com/gridsome/gridsome/commit/3f2201d))
+
+
+
+<a name="0.0.2"></a>
+## [0.0.2](https://github.com/gridsome/gridsome/compare/142896c2454016dc989a7872faffec7263fc658c...@gridsome/cli@0.0.3) (2018-09-16)
