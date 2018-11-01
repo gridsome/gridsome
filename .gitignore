@@ -1,6 +1,5 @@
 *.log
 .DS_Store
 node_modules
-projects
 coverage
 dist
