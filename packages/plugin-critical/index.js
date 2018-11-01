@@ -7,30 +7,12 @@ const {
   inlineCriticalCSS
 } = require('./lib/inline')
 
-class CriticalPlugin {
-  static defaultOptions () {
-    return {
-      paths: ['/'],
-      ignore: undefined,
-      polyfill: true,
-      width: 1300,
-      height: 900
-    }
-  }
-
-  constructor (options, { config }) {
-    this.options = options
-    this.config = config
-  }
-
-  apply () {}
-
-  async afterBuild ({ queue }) {
-    const { outDir: base, pathPrefix } = this.config
-    const { paths, ...options } = this.options
+module.exports = function (api, options) {
+  api.afterBuild(async ({ queue, config }) => {
+    const { outDir: base, pathPrefix } = config
 
     const pages = queue.filter(page => {
-      return micromatch(page.path, paths).length
+      return micromatch(page.path, options.paths).length
     })
 
     console.log(`Extract critical CSS (${pages.length} pages)`)
@@ -69,7 +51,13 @@ class CriticalPlugin {
 
       return fs.outputFile(htmlOutput, resultHTML)
     }))
-  }
+  })
 }
 
-module.exports = CriticalPlugin
+module.exports.defaultOptions = () => ({
+  paths: ['/'],
+  ignore: undefined,
+  polyfill: true,
+  width: 1300,
+  height: 900
+})

@@ -22,7 +22,7 @@ module.exports = app => {
       filename: path.relative(targetDir, serverBundlePath)
     }])
 
-  app.dispatchSync('chainWebpack', config, {
+  app.dispatchSync('chainWebpack', null, config, {
     context: app.context,
     isServer: true,
     isProd

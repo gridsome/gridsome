@@ -27,7 +27,7 @@ class PluginAPI {
     })
   }
 
-  on (eventName, handler) {
+  _on (eventName, handler) {
     this._app.on(eventName, { api: this, handler })
   }
 
@@ -36,15 +36,39 @@ class PluginAPI {
   }
 
   loadSource (handler) {
-    this.on('loadSource', handler)
+    this._on('loadSource', handler)
   }
 
   createSchema (handler) {
-    this.on('createSchema', handler)
+    this._on('createSchema', handler)
   }
 
   chainWebpack (fn) {
-    this.on('chainWebpack', fn)
+    this._on('chainWebpack', fn)
+  }
+
+  //
+  // build hooks
+  //
+
+  beforeBuild (fn) {
+    this._on('beforeBuild', fn)
+  }
+
+  beforeRenderQueries (fn) {
+    this._on('beforeRenderQueries', fn)
+  }
+
+  beforeRenderHTML (fn) {
+    this._on('beforeRenderHTML', fn)
+  }
+
+  beforeProcessImages (fn) {
+    this._on('beforeProcessImages', fn)
+  }
+
+  afterBuild (fn) {
+    this._on('afterBuild', fn)
   }
 }
 

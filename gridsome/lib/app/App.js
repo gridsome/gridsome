@@ -122,10 +122,10 @@ class App {
     }))
   }
 
-  dispatchSync (eventName, ...args) {
+  dispatchSync (eventName, cb, ...args) {
     if (!this.events[eventName]) return
     return this.events[eventName].map(({ api, handler }) => {
-      return handler(...args, api)
+      return typeof cb === 'function' ? handler(cb(api)) : handler(...args, api)
     })
   }
 

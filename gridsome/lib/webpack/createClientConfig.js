@@ -39,7 +39,7 @@ module.exports = app => {
       }])
   }
 
-  app.dispatchSync('chainWebpack', config, {
+  app.dispatchSync('chainWebpack', null, config, {
     context: app.context,
     isServer: false,
     isProd
