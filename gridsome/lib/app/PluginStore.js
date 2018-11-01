@@ -61,6 +61,8 @@ class Source extends EventEmitter {
       belongsTo: {},
       makePath,
       refs
+    }).on('change', (node, oldNode) => {
+      this.emit('change', node, oldNode)
     })
   }
 

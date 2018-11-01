@@ -99,17 +99,17 @@ class FilesystemSource {
       // TODO: update nodes when changed
       watcher.on('add', file => {
         const node = this.createNode(slash(file))
-        contentType.addNode(options.type, node)
+        contentType.addNode(node)
       })
 
       watcher.on('unlink', file => {
         const id = this.store.makeUid(slash(file))
-        contentType.removeNode(options.type, id)
+        contentType.removeNode(id)
       })
 
       watcher.on('change', file => {
         const node = this.createNode(slash(file))
-        contentType.updateNode(options.type, node._id, node)
+        contentType.updateNode(node._id, node)
       })
     }
   }

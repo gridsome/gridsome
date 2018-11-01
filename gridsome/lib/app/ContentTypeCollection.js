@@ -54,14 +54,20 @@ class ContentTypeCollection extends EventEmitter {
   updateNode (id, options) {
     const node = this.getNode(id)
     const oldNode = cloneDeep(node)
-    const fields = mapKeys(options.fields, (v, key) => camelCase(key))
     const internal = this.createInternals(options.internal)
 
-    node.title = options.title || fields.title || node.title
-    node.date = options.date || fields.date || node.date
-    node.slug = options.slug || fields.slug || this.slugify(node.title)
-    node.fields = Object.assign({}, node.fields, fields)
-    node.refs = Object.assign({}, node.refs, options.refs || {})
+    // transform content with transformer for given mime type
+    if (internal.content && internal.mimeType) {
+      this.transformNodeOptions(options, internal)
+    }
+
+    node.fields = mapKeys(options.fields || {}, (v, key) => {
+      return key.startsWith('__') ? key : camelCase(key)
+    })
+
+    node.title = options.title || node.fields.title || node.title
+    node.date = options.date || node.fields.date || node.date
+    node.slug = options.slug || node.fields.slug || this.slugify(node.title)
     node.internal = Object.assign({}, node.internal, internal)
     node.path = options.path || this.makePath(node)
 
@@ -85,18 +91,7 @@ class ContentTypeCollection extends EventEmitter {
 
     // transform content with transformer for given mime type
     if (internal.content && internal.mimeType) {
-      const result = this.transform(internal)
-      
-      if (result.title) options.title = result.title
-      if (result.slug) options.slug = result.slug
-      if (result.path) options.path = result.path
-      if (result.date) options.date = result.date
-      if (result.content) options.content = result.content
-      if (result.excerpt) options.excerpt = result.excerpt
-
-      if (result.fields) {
-        options.fields = Object.assign(options.fields || {}, result.fields)
-      }
+      this.transformNodeOptions(options, internal)
     }
 
     node.fields = mapKeys(options.fields, (v, key) => {
@@ -120,6 +115,21 @@ class ContentTypeCollection extends EventEmitter {
       mimeType: options.mimeType,
       content: options.content,
       timestamp: Date.now()
+    }
+  }
+
+  transformNodeOptions (options, internal) {
+    const result = this.transform(internal)
+      
+    if (result.title) options.title = result.title
+    if (result.slug) options.slug = result.slug
+    if (result.path) options.path = result.path
+    if (result.date) options.date = result.date
+    if (result.content) options.content = result.content
+    if (result.excerpt) options.excerpt = result.excerpt
+
+    if (result.fields) {
+      options.fields = Object.assign(options.fields || {}, result.fields)
     }
   }
 

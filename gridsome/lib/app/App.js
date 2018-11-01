@@ -3,11 +3,12 @@ const Router = require('vue-router')
 const autoBind = require('auto-bind')
 const hirestime = require('hirestime')
 const BaseStore = require('./BaseStore')
-const PluginsRunner = require('./PluginsRunner')
+const PluginAPI = require('./PluginAPI')
 const CodeGenerator = require('./CodeGenerator')
 const ImageProcessQueue = require('./ImageProcessQueue')
 const createSchema = require('../graphql/createSchema')
 const loadConfig = require('./loadConfig')
+const { defaultsDeep } = require('lodash')
 const createRoutes = require('./createRoutes')
 const { execute, graphql } = require('../graphql/graphql')
 const { version } = require('../../package.json')
@@ -19,8 +20,11 @@ class App {
 
     this.events = []
     this.clients = {}
+    this.plugins = []
     this.context = context
     this.config = loadConfig(context, options)
+    this.isInitialized = false
+    this.isBootstrapped = false
 
     autoBind(this)
   }
@@ -47,9 +51,9 @@ class App {
       }
     }
 
-    // await this.plugins.callHook('afterBootstrap')
-
     console.info(`Bootstrap finish - ${bootstrapTime(hirestime.S)}s`)
+
+    this.isBootstrapped = true
 
     return this
   }
@@ -61,16 +65,30 @@ class App {
   init () {
     this.store = new BaseStore(this)
     this.queue = new ImageProcessQueue(this)
-    this.plugins = new PluginsRunner(this)
     this.generator = new CodeGenerator(this)
 
-    this.plugins.on('broadcast', message => {
-      this.broadcast(message)
+    this.config.plugins.map(entry => {
+      const Plugin = entry.entries.serverEntry
+        ? require(entry.entries.serverEntry)
+        : null
+
+      if (typeof Plugin !== 'function') return
+      if (!Plugin.prototype) return
+
+      const defaults = typeof Plugin.defaultOptions === 'function'
+        ? Plugin.defaultOptions()
+        : {}
+
+      entry.options = defaultsDeep(entry.options, defaults)
+
+      const { context } = this
+      const api = new PluginAPI(this, { entry })
+      const instance = new Plugin(api, entry.options, { context })
+
+      this.plugins.push({ api, entry, instance })
     })
 
-    this.plugins.on('generateRoutes', () => {
-      this.generateFiles()
-    })
+    this.isInitialized = true
   }
 
   async loadSources () {

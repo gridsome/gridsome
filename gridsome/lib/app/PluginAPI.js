@@ -25,6 +25,58 @@ class PluginAPI {
     this.store = new PluginStore(app, entry.options.typeName, {
       transformers: pluginTransformers
     })
+
+    if (process.env.NODE_ENV === 'development') {
+      let regenerateTimeout = null
+
+      // use timeout as a workaround for when files are renamed,
+      // which triggers both addPage and removePage events...
+      const regenerateRoutes = () => {
+        clearTimeout(regenerateTimeout)
+        regenerateTimeout = setTimeout(() => {
+          if (app.isBootstrapped) {
+            app.generator.generate('routes.js')
+          }
+        }, 20)
+      }
+
+      this.store.on('removePage', regenerateRoutes)
+      this.store.on('addPage', regenerateRoutes)
+
+      this.store.on('change', (node, oldNode = node) => {
+        if (!app.isBootstrapped) return
+
+        if (
+          (node && node.withPath && node.path !== oldNode.path) ||
+          (!node && oldNode.withPath)
+        ) {
+          return regenerateRoutes()
+        }
+
+        app.broadcast({
+          type: 'updateAllQueries'
+        })
+      })
+
+      this.store.on('updatePage', async (page, oldPage) => {
+        if (!app.isBootstrapped) return
+
+        const { pageQuery: { paginate: oldPaginate }} = oldPage
+        const { pageQuery: { paginate }} = page
+
+        // regenerate route.js whenever paging options changes
+        if (paginate.collection !== oldPaginate.collection) {
+          return regenerateRoutes()
+        }
+
+        // send query to front-end for re-fetch
+        app.broadcast({
+          type: 'updateQuery',
+          query: page.pageQuery.content,
+          file: page.internal.origin
+        })
+      })
+    }
   }
 
   _on (eventName, handler) {
