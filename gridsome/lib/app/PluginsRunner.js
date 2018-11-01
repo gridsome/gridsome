@@ -20,12 +20,13 @@ class Plugins extends EventEmitter {
         ? Plugin.defaultOptions()
         : {}
 
-      const { context } = app
-      const options = defaultsDeep(entry.options, defaults)
-      const api = new PluginAPI(app, { options })
-      const instance = new Plugin(api, options, { context })
+      entry.options = defaultsDeep(entry.options, defaults)
 
-      this.plugins.push(instance)
+      const { context } = app
+      const api = new PluginAPI(app, { entry })
+      const instance = new Plugin(api, entry.options, { context })
+
+      this.plugins.push({ api, entry, instance })
     })
   }
 

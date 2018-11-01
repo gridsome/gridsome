@@ -38,7 +38,7 @@ class ContentTypeCollection extends EventEmitter {
     const { mimeTypes } = this.options
     const { mimeType } = node.internal
     if (mimeType && !mimeTypes.hasOwnProperty(mimeType)) {
-      mimeTypes[mimeType] = this._pluginStore.transformers[mimeType]
+      mimeTypes[mimeType] = this._pluginStore._transformers[mimeType]
     }
 
     this.collection.insert(node)
@@ -143,7 +143,7 @@ class ContentTypeCollection extends EventEmitter {
   }
 
   transform ({ mimeType, content }, options) {
-    const transformer = this._pluginStore.transformers[mimeType]
+    const transformer = this._pluginStore._transformers[mimeType]
 
     if (!transformer) {
       throw new Error(`No transformer for ${mimeType} is installed.`)

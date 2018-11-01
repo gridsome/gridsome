@@ -87,6 +87,9 @@ module.exports = (app, { isProd, isServer }) => {
         if (/\.vue\.jsx?$/.test(filepath)) {
           return false
         }
+        if (/gridsome\.client\.js$/.test(filepath)) {
+          return false
+        }
         if (filepath.startsWith(projectConfig.appPath)) {
           return false
         }

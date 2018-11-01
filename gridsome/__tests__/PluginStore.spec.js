@@ -14,9 +14,11 @@ const transformers = {
 }
 
 beforeEach(() => {
+  const entry = { options: {}, clientOptions: undefined }
+
   app = new App('/', { config: { plugins: [] }})
   app.init()
-  api = new PluginAPI(app, { options: {}, transformers })
+  api = new PluginAPI(app, { entry, transformers })
 })
 
 afterAll(() => {

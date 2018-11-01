@@ -10,12 +10,13 @@ const parsePageQuery = require('../graphql/parsePageQuery')
 const { mapValues, cloneDeep } = require('lodash')
 
 class Source extends EventEmitter {
-  constructor (app, api) {
+  constructor (app, typeName, { transformers }) {
     super()
     autoBind(this)
 
-    this.typeName = api.options.typeName
-    this.transformers = api.transformers
+    this._typeName = typeName
+    this._transformers = transformers
+    
     this.context = app.context
     this.store = app.store
     this.mime = mime
@@ -138,11 +139,11 @@ class Source extends EventEmitter {
   }
 
   makeTypeName (name = '') {
-    if (!this.typeName) {
+    if (!this._typeName) {
       throw new Error(`Missing typeName option.`)
     }
 
-    return camelCase(`${this.typeName} ${name}`, { pascalCase: true })
+    return camelCase(`${this._typeName} ${name}`, { pascalCase: true })
   }
 
   slugify (string = '') {

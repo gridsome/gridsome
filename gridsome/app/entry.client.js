@@ -1,8 +1,16 @@
+import Vue from 'vue'
 import createApp from './app'
+import plugins from '~/.temp/plugins-client.js'
 import { stripPathPrefix } from './utils/helpers'
 import { initImageObserver } from './components/Image'
 
-const { app, router } = createApp()
+const { app, router } = createApp(context => {
+  for (const { run, options } of plugins) {
+    if (typeof run === 'function') {
+      run(Vue, options, context)
+    }
+  }
+})
 
 initImageObserver(router)
 

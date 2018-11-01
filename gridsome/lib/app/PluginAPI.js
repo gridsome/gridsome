@@ -4,16 +4,17 @@ const PluginStore = require('./PluginStore')
 const { cache, nodeCache } = require('../utils/cache')
 
 class PluginAPI {
-  constructor (app, { options, transformers }) {
-    this.app = app
-    this.options = options
+  constructor (app, { entry, transformers }) {
+    this._entry = entry
+    this._app = app
+
     this.context = app.context
 
     autoBind(this)
 
-    this.transformers = transformers || mapValues(app.config.transformers, entry => {
-      return new entry.TransformerClass(entry.options, {
-        localOptions: options[entry.name] || {},
+    const pluginTransformers = transformers || mapValues(app.config.transformers, transformer => {
+      return new transformer.TransformerClass(transformer.options, {
+        localOptions: entry.options[transformer.name] || {},
         context: app.context,
         queue: app.queue,
         cache,
@@ -21,13 +22,17 @@ class PluginAPI {
       })
     })
 
-    this.store = new PluginStore(app, this)
+    this.store = new PluginStore(app, entry.options.typeName, {
+      transformers: pluginTransformers
+    })
   }
 
-  addClientFile (options) {}
-
   on (eventName, handler) {
-    this.app.on(eventName, { api: this, handler })
+    this._app.on(eventName, { api: this, handler })
+  }
+
+  setClientOptions (options) {
+    this._entry.clientOptions = options
   }
 
   loadSource (handler) {

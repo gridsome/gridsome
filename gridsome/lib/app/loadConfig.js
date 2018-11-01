@@ -38,6 +38,7 @@ module.exports = (context, options = {}, pkg = {}) => {
     plugins.unshift(...builtInPlugins)
   }
 
+  // add project root as plugin
   plugins.push(context)
 
   if (localConfig.pathPrefix && /\/+$/.test(localConfig.pathPrefix)) {
@@ -47,7 +48,7 @@ module.exports = (context, options = {}, pkg = {}) => {
   config.pkg = options.pkg || resolvePkg(context)
   config.host = args.host || 'localhost'
   config.port = parseInt(args.port, 10) || 8080
-  config.plugins = normalizePlugins(plugins)
+  config.plugins = normalizePlugins(context, plugins)
   config.chainWebpack = localConfig.chainWebpack
   config.transformers = resolveTransformers(config.pkg, localConfig)
   config.pathPrefix = isProd && isServing ? '/' : localConfig.pathPrefix || '/'
@@ -104,23 +105,24 @@ function resolvePkg (context) {
   return pkg
 }
 
-function normalizePlugins (plugins) {
+function normalizePlugins (context, plugins) {
   return plugins.map((plugin, index) => {
     if (typeof plugin === 'string') {
-      plugin = { options: {}, use: plugin }
+      plugin = { use: plugin }
     }
 
     const hash = crypto.createHash('md5')
-    // const re = /(?:^@?gridsome[/-]|\/)(source|plugin)-([\w-]+)/
     const uid = hash.update(`${plugin.use}-${index}`).digest('hex')
     const entries = resolvePluginEntries(plugin.use)
 
-    return defaultsDeep({
-      instance: undefined,
+    return defaultsDeep(plugin, {
+      server: true,
+      clientOptions: undefined,
       options: {},
       entries,
+      index,
       uid
-    }, plugin)
+    })
   })
 }
 
@@ -133,7 +135,7 @@ function resolvePluginEntries (id) {
   }
 
   return Object.freeze({
-    browserEntry: entryPath('gridsome.browser.js'),
+    clientEntry: entryPath('gridsome.client.js'),
     serverEntry: entryPath('gridsome.server.js') || entryPath('index.js')
   })
 }
