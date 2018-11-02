@@ -170,7 +170,6 @@ class App {
 
   queryRouteData (route, docOrQuery) {
     const emptyData = { data: {}}
-    
     if (!route.matched.length) return emptyData
 
     const { pageQuery } = route.matched[0].components.default()
