@@ -4,6 +4,7 @@ const camelCase = require('camelcase')
 const dateFormat = require('dateformat')
 const slugify = require('@sindresorhus/slugify')
 const { mapKeys, cloneDeep, deepMerge } = require('lodash')
+const { warn } = require('../utils/log')
 
 class ContentTypeCollection extends EventEmitter {
   constructor (store, pluginStore, options) {
@@ -41,8 +42,12 @@ class ContentTypeCollection extends EventEmitter {
       mimeTypes[mimeType] = this._pluginStore._transformers[mimeType]
     }
 
-    this.collection.insert(node)
-    this.emit('change', node)
+    try {
+      this.collection.insert(node)
+      this.emit('change', node)
+    } catch (err) {
+      warn(`Skipping duplicate path for ${node.path}`, this.typeName)
+    }
 
     return node
   }
