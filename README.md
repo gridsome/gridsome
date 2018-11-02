@@ -76,7 +76,7 @@ Install [Node.js 8.3](https://nodejs.org/en/download/) or higher and [Yarn](http
 1. Clone this repository.
 2. Create a new Gridsome project inside the `/projects` folder.
 3. Enter the new project folder and run `yarn` (or `lerna bootstrap` if installed).
-4. The project will now use the local packages when you run `gridsome develop`
+4. The project will now use the local packages when you run `gridsome develop`.
 
 To use `@gridsome/cli` in the repo as a global command. Enter the `/packages/cli` folder and run `npm link`.
 

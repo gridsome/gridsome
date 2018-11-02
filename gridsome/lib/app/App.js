@@ -96,10 +96,10 @@ class App {
   }
 
   async createSchema () {
+    const graphql = require('../graphql/graphql')
+
     this.schema = createSchema(this.store, {
-      schemas: await this.dispatch('createSchema', () => ({
-        graphql: this.graphql
-      }))
+      schemas: await this.dispatch('createSchema', () => graphql)
     })
   }
 
