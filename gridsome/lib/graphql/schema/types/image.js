@@ -30,7 +30,7 @@ exports.imageType = {
             return fields[fieldName];
         }
 
-        const result = await process.GRIDSOME.queue.add(fields[fieldName]);
+        const result = await context.queue.add(fields[fieldName]);
         
         return result;
     }

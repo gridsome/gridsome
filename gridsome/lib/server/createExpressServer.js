@@ -18,7 +18,7 @@ module.exports = async app => {
   server.use(
     endpoint.graphql,
     graphqlMiddleware(app),
-    graphqlHTTP({ schema, context: { store, config }})
+    graphqlHTTP({ schema, context: app.createSchemaContext() })
   )
 
   const assetsDir = path.relative(config.targetDir, config.assetsDir)
