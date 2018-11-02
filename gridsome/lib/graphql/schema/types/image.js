@@ -1,36 +1,42 @@
-const fs = require('fs');
-const path = require('path');
+const fs = require('fs')
+const path = require('path')
 
 const { GraphQLJSON } = require('../../graphql')
-const { SUPPORTED_IMAGE_TYPES } = require('../../../utils/constants');
+const { SUPPORTED_IMAGE_TYPES } = require('../../../utils/constants')
 
 exports.isImage = value => {
-    const extName = path.extname(value);
+    const extName = path.extname(value)
 
     if (!(typeof value === 'string' || value instanceof String)) {
-        return false;
+        return false
     }
 
     if (!SUPPORTED_IMAGE_TYPES.includes(extName)) {
-        return false;
+        return false
     }
 
     if(path.basename(value) === value) {
-        return false;
-    }    
+        return false
+    }
 
-    return true;
+    return true
 }
 
 exports.imageType = {
     type: GraphQLJSON,
     args: {},
     resolve: async (fields, {}, context, { fieldName }) => {
-        if (!fs.existsSync(fields[fieldName])) {
-            return fields[fieldName];
+        let file = fields[fieldName]
+        
+        if (file.startsWith(path.sep)) {
+            file = `.${file}`
         }
 
-        const result = await context.queue.add(fields[fieldName]);
+        if (!fs.existsSync(file)) {
+            return fields[fieldName]
+        }
+
+        const result = await context.queue.add(file);
         
         return result;
     }
