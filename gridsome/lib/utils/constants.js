@@ -8,12 +8,14 @@ module.exports = {
   SOURCE_PLUGIN: 'source',
   TRANSFORMER_PLUGIN: 'transformer',
 
+  SUPPORTED_IMAGE_TYPES: ['.png', '.jpeg', '.jpg', '.gif', '.svg', '.webp'],
+
   BOOTSTRAP_CONFIG: 0,
   BOOTSTRAP_PLUGINS: 1,
   BOOTSTRAP_GRAPHQL: 2,
   BOOTSTRAP_FULL: Number.MAX_SAFE_INTEGER,
 
   internalRE: /^internal\:\/\//,
-  transformerRE: /(?:^@?gridsome[/-]|\/)transformer-([\w-]+)/
+  transformerRE: /(?:^@?gridsome[/-]|\/)transformer-([\w-]+)/,
 }
 
