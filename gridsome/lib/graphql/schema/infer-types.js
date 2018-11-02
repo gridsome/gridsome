@@ -1,6 +1,7 @@
 const camelCase = require('camelcase')
 const { mapValues, isEmpty } = require('lodash')
 const { isDate, dateType } = require('./types/date')
+const { isFile, fileType } = require('./types/file');
 
 const {
   GraphQLInt,
@@ -48,6 +49,10 @@ function inferType (value, key, nodeType) {
 
   if (isDate(value)) {
     return dateType
+  }
+
+  if (isFile(value)) {
+    return fileType
   }
 
   switch (type) {
