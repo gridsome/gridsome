@@ -2,11 +2,9 @@ const App = require('../lib/app/App')
 const PluginAPI = require('../lib/app/PluginAPI')
 const JSONTransformer = require('./__fixtures__/JSONTransformer')
 
-let app, api
-
-beforeEach(() => {
-  app = new App('/', { config: { plugins: [] }}).init()
-  api = new PluginAPI(app, {
+function createPlugin (context = '/') {
+  const app = new App(context, { config: { plugins: [] }}).init()
+  const api = new PluginAPI(app, {
     entry: { options: {}, clientOptions: undefined },
     transformers: {
       'application/json': {
@@ -16,14 +14,13 @@ beforeEach(() => {
       }
     }
   })
-})
 
-afterAll(() => {
-  app = null
-  api = null
-})
+  return api
+}
 
 test('add type', () => {
+  const api = createPlugin()
+
   const contentType = api.store.addContentType({
     typeName: 'TestPost'
   })
@@ -34,6 +31,8 @@ test('add type', () => {
 })
 
 test('add node', () => {
+  const api = createPlugin()
+
   const contentType = api.store.addContentType({
     typeName: 'TestPost'
   })
@@ -58,6 +57,8 @@ test('add node', () => {
 })
 
 test('update node', () => {
+  const api = createPlugin()
+
   const contentType = api.store.addContentType({
     typeName: 'TestPost'
   })
@@ -87,6 +88,8 @@ test('update node', () => {
 })
 
 test('remove node', () => {
+  const api = createPlugin()
+
   const contentType = api.store.addContentType({
     typeName: 'TestPost'
   })
@@ -103,6 +106,8 @@ test('remove node', () => {
 })
 
 test('add type with ref', () => {
+  const api = createPlugin()
+
   const contentType = api.store.addContentType({
     typeName: 'TestPost',
     refs: {
@@ -122,6 +127,8 @@ test('add type with ref', () => {
 })
 
 test('add type with dynamic route', () => {
+  const api = createPlugin()
+
   const contentType = api.store.addContentType({
     typeName: 'TestPost',
     route: ':year/:month/:day/:slug'
@@ -137,6 +144,8 @@ test('add type with dynamic route', () => {
 })
 
 test('transform node', () => {
+  const api = createPlugin()
+
   const contentType = api.store.addContentType({
     typeName: 'TestPost'
   })
@@ -152,6 +161,8 @@ test('transform node', () => {
 })
 
 test('resolve absolute file paths', () => {
+  const api = createPlugin('/absolute/dir/to/project')
+
   const contentType1 = api.store.addContentType({
     typeName: 'A',
     resolveAbsolutePaths: true
@@ -187,7 +198,7 @@ test('resolve absolute file paths', () => {
   })
 
   expect(node1.fields.file).toEqual('/absolute/dir/to/a/image.png')
-  expect(node1.fields.file2).toEqual('/image.png')
+  expect(node1.fields.file2).toEqual('/absolute/dir/to/project/image.png')
   expect(node1.fields.file3).toEqual('/absolute/dir/to/image.png')
   expect(node1.fields.text).toEqual('Lorem ipsum dolor sit amet.')
   expect(node1.fields.text2).toEqual('example.com')
@@ -197,6 +208,8 @@ test('resolve absolute file paths', () => {
 })
 
 test('don\'t touch absolute paths when resolveAbsolutePaths is not set', () => {
+  const api = createPlugin('/absolute/dir/to/project')
+
   const contentType = api.store.addContentType({ typeName: 'A' })
 
   const node = contentType.addNode({
@@ -216,6 +229,8 @@ test('don\'t touch absolute paths when resolveAbsolutePaths is not set', () => {
 })
 
 test('always resolve relative paths from filesytem sources', () => {
+  const api = createPlugin()
+
   const contentType = api.store.addContentType({ typeName: 'A' })
 
   const node = contentType.addNode({
@@ -231,6 +246,8 @@ test('always resolve relative paths from filesytem sources', () => {
 })
 
 test('resolve paths from external sources', () => {
+  const api = createPlugin()
+
   const contentType1 = api.store.addContentType({ typeName: 'A' })
   const contentType2 = api.store.addContentType({ typeName: 'B', resolveAbsolutePaths: true })
 
@@ -265,6 +282,8 @@ test('resolve paths from external sources', () => {
 })
 
 test('fail if transformer is not installed', () => {
+  const api = createPlugin()
+
   const contentType = api.store.addContentType({
     typeName: 'TestPost'
   })
@@ -280,6 +299,8 @@ test('fail if transformer is not installed', () => {
 })
 
 test('generate slug from any string', () => {
+  const api = createPlugin()
+
   const slug1 = api.store.slugify('Lorem ipsum dolor sit amet')
   const slug2 = api.store.slugify('String with æøå characters')
   const slug3 = api.store.slugify('String/with / slashes')
@@ -292,6 +313,8 @@ test('generate slug from any string', () => {
 })
 
 test('add page', () => {
+  const api = createPlugin()
+
   const emit = jest.spyOn(api.store, 'emit')
   const page = api.store.addPage('page', {
     title: 'Lorem ipsum dolor sit amet',
@@ -311,6 +334,8 @@ test('add page', () => {
 })
 
 test('add page with query', () => {
+  const api = createPlugin()
+
   const page = api.store.addPage('page', {
     pageQuery: {
       content: 'query Test { page { _id } }',
@@ -330,6 +355,8 @@ test('add page with query', () => {
 })
 
 test('update page', () => {
+  const api = createPlugin()
+
   api.store.addPage('page', {
     _id: 'test',
     title: 'Lorem ipsum dolor sit amet',
@@ -352,6 +379,8 @@ test('update page', () => {
 })
 
 test('update page path when slug is changed', () => {
+  const api = createPlugin()
+
   api.store.addPage('page', { _id: 'test' })
 
   const page = api.store.updatePage('test', {
@@ -364,6 +393,8 @@ test('update page path when slug is changed', () => {
 })
 
 test('remove page', () => {
+  const api = createPlugin()
+
   const emit = jest.spyOn(api.store, 'emit')
 
   api.store.addPage('page', { _id: 'test' })
