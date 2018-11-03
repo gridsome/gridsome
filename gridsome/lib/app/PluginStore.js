@@ -8,14 +8,27 @@ const pathToRegexp = require('path-to-regexp')
 const slugify = require('@sindresorhus/slugify')
 const parsePageQuery = require('../graphql/parsePageQuery')
 const { mapValues, cloneDeep } = require('lodash')
+const { cache, nodeCache } = require('../utils/cache')
 
 class Source extends EventEmitter {
-  constructor (app, typeName, { transformers }) {
+  constructor (app, options, { transformers }) {
     super()
     autoBind(this)
 
-    this._typeName = typeName
-    this._transformers = transformers
+    this._app = app
+    this._typeName = options.typeName
+    this._fileBasePath = options.fileBasePath
+    this._transformers = mapValues(transformers || app.config.transformers, transformer => {
+      return new transformer.TransformerClass(transformer.options, {
+        localOptions: options[transformer.name] || {},
+        resolveNodeFilePath: app.store.resolveNodeFilePath,
+        resolveFilePath: app.resolveFilePath,
+        context: app.context,
+        queue: app.queue,
+        cache,
+        nodeCache
+      })
+    })
     
     this.context = app.context
     this.store = app.store
@@ -57,6 +70,7 @@ class Source extends EventEmitter {
       route: options.route,
       fields: options.fields || {},
       typeName: options.typeName,
+      fileBasePath: options.fileBasePath,
       mimeTypes: [],
       belongsTo: {},
       makePath,
