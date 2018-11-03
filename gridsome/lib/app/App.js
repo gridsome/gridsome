@@ -12,7 +12,7 @@ const { defaultsDeep } = require('lodash')
 const createRoutes = require('./createRoutes')
 const { execute, graphql } = require('../graphql/graphql')
 const { version } = require('../../package.json')
-
+const { resolvePath } = require('../utils')
 
 class App {
   constructor (context, options) {
@@ -89,6 +89,8 @@ class App {
     })
 
     this.isInitialized = true
+
+    return this
   }
 
   async loadSources () {
@@ -153,6 +155,19 @@ class App {
 
   resolve (p) {
     return path.resolve(this.context, p)
+  }
+
+  resolveFilePath (fromPath, toPath, from = '') {
+    return resolvePath(fromPath, toPath, from, {
+      context: this.context
+    })
+  }
+
+  resolveNodeFilePath (node, toPath) {
+    const { getContentType } = this._app.store
+    const { collection: { fileBasePath } } = getContentType(node.typeName)
+
+    return app.resolveFilePath(node.internal.origin, toPath, fileBasePath)
   }
 
   graphql (docOrQuery, variables = {}) {

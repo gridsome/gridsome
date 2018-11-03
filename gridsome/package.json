@@ -66,6 +66,7 @@
     "imagemin-jpegoptim": "^5.2.0",
     "imagemin-pngquant": "^6.0.0",
     "imagemin-webp": "^4.1.0",
+    "is-relative": "^1.0.0",
     "jest-worker": "^23.2.0",
     "json-loader": "^0.5.7",
     "loader-utils": "^1.1.0",

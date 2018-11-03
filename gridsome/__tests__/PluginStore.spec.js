@@ -1,24 +1,21 @@
 const App = require('../lib/app/App')
 const PluginAPI = require('../lib/app/PluginAPI')
+const JSONTransformer = require('./__fixtures__/JSONTransformer')
 
 let app, api
 
-const transformers = {
-  'application/json': {
-    parse (content) {
-      return {
-        fields: JSON.parse(content)
+beforeEach(() => {
+  app = new App('/', { config: { plugins: [] }}).init()
+  api = new PluginAPI(app, {
+    entry: { options: {}, clientOptions: undefined },
+    transformers: {
+      'application/json': {
+        TransformerClass: JSONTransformer,
+        options: {},
+        name: 'json'
       }
     }
-  }
-}
-
-beforeEach(() => {
-  const entry = { options: {}, clientOptions: undefined }
-
-  app = new App('/', { config: { plugins: [] }})
-  app.init()
-  api = new PluginAPI(app, { entry, transformers })
+  })
 })
 
 afterAll(() => {
@@ -152,6 +149,130 @@ test('transform node', () => {
   })
 
   expect(node.fields).toMatchObject({ foo: 'bar' })
+})
+
+test('resolve absolute file paths', () => {
+  const contentType1 = api.store.addContentType({ typeName: 'A', fileBasePath: 'file' })
+  const contentType2 = api.store.addContentType({ typeName: 'B', fileBasePath: 'root' })
+  const contentType3 = api.store.addContentType({ typeName: 'C', fileBasePath: '/path/to/dir' })
+
+  const node1 = contentType1.addNode({
+    fields: {
+      file: 'image.png',
+      file2: '/image.png',
+      file3: '../image.png',
+      image: 'https://example.com/image.jpg',
+      image2: '//example.com/image.jpg',
+      text: 'Lorem ipsum dolor sit amet.',
+      text2: 'example.com'
+    },
+    internal: {
+      origin: '/absolute/dir/to/a/file.md'
+    }
+  })
+
+  const node2 = contentType2.addNode({
+    fields: {
+      file: '/image.png'
+    },
+    internal: {
+      origin: '/absolute/dir/to/a/file.md'
+    }
+  })
+
+  const node3 = contentType3.addNode({
+    fields: {
+      file: '/image.png'
+    },
+    internal: {
+      origin: '/absolute/dir/to/a/file.md'
+    }
+  })
+
+  expect(node1.fields.file).toEqual('/absolute/dir/to/a/image.png')
+  expect(node1.fields.file2).toEqual('/absolute/dir/to/a/image.png')
+  expect(node1.fields.file3).toEqual('/absolute/dir/to/image.png')
+  expect(node1.fields.text).toEqual('Lorem ipsum dolor sit amet.')
+  expect(node1.fields.text2).toEqual('example.com')
+  expect(node1.fields.image).toEqual('https://example.com/image.jpg')
+  expect(node1.fields.image2).toEqual('//example.com/image.jpg')
+  expect(node2.fields.file).toEqual('/image.png')
+  expect(node3.fields.file).toEqual('/path/to/dir/image.png')
+})
+
+test('don\'t touch paths when fileBasePath is not set', () => {
+  const contentType = api.store.addContentType({ typeName: 'A' })
+
+  const node = contentType.addNode({
+    fields: {
+      file: 'image.png',
+      file2: '/image.png',
+      file3: '../image.png'
+    },
+    internal: {
+      origin: '/absolute/dir/to/a/file.md'
+    }
+  })
+
+  expect(node.fields.file).toEqual('image.png')
+  expect(node.fields.file2).toEqual('/image.png')
+  expect(node.fields.file3).toEqual('/absolute/dir/to/image.png')
+})
+
+test('always resolve relative paths from filesytem sources', () => {
+  const contentType = api.store.addContentType({ typeName: 'A' })
+
+  const node = contentType.addNode({
+    fields: {
+      file: '../image.png'
+    },
+    internal: {
+      origin: '/absolute/dir/to/a/file.md'
+    }
+  })
+
+  expect(node.fields.file).toEqual('/absolute/dir/to/image.png')
+})
+
+test('resolve paths from external sources', () => {
+  const contentType1 = api.store.addContentType({
+    typeName: 'A',
+    fileBasePath: 'path'
+  })
+
+  const contentType2 = api.store.addContentType({
+    typeName: 'B',
+    fileBasePath: 'host'
+  })
+
+  const node1 = contentType1.addNode({
+    fields: {
+      file: 'image.png',
+      file2: '/image.png',
+      file3: '../../image.png'
+    },
+    internal: {
+      origin: 'https://example.com/2018/11/02/blog-post.html'
+    }
+  })
+
+  const node2 = contentType2.addNode({
+    fields: {
+      file: 'images/image.png',
+      file2: '/images/image.png',
+      file3: './images/image.png'
+    },
+    internal: {
+      origin: 'https://example.com/2018/11/02/another-blog-post/'
+    }
+  })
+
+  expect(node1.fields.file).toEqual('https://example.com/2018/11/02/image.png')
+  expect(node1.fields.file2).toEqual('https://example.com/2018/11/02/image.png')
+  expect(node1.fields.file3).toEqual('https://example.com/2018/image.png')
+  expect(node2.fields.file).toEqual('https://example.com/images/image.png')
+  expect(node2.fields.file2).toEqual('https://example.com/images/image.png')
+  expect(node2.fields.file3).toEqual('https://example.com/images/image.png')
 })
 
 test('fail if transformer is not installed', () => {

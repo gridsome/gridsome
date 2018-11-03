@@ -3,6 +3,7 @@ const PluginAPI = require('../lib/app/PluginAPI')
 const createSchema = require('../lib/graphql/createSchema')
 const { inferTypes } = require('../lib/graphql/schema/infer-types')
 const { GraphQLDate } = require('../lib/graphql/schema/types/date')
+const JSONTransformer = require('./__fixtures__/JSONTransformer')
 
 const {
   graphql,
@@ -16,25 +17,18 @@ const {
 
 let app, api
 
-const transformers = {
-  'application/json': {
-    extendNodeType () {
-      return {
-        myField: {
-          type: GraphQLString,
-          resolve: () => 'value'
-        }
+beforeEach(() => {
+  app = new App('/', { config: { plugins: [] }}).init()
+  api = new PluginAPI(app, {
+    entry: { options: {}, clientOptions: undefined },
+    transformers: {
+      'application/json': {
+        TransformerClass: JSONTransformer,
+        options: {},
+        name: 'json'
       }
     }
-  }
-}
-
-beforeEach(() => {
-  const entry = { options: {}, clientOptions: undefined }
-
-  app = new App('/', { config: { plugins: [] }})
-  app.init()
-  api = new PluginAPI(app, { entry, transformers })
+  })
 })
 
 afterAll(() => {
