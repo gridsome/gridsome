@@ -53,15 +53,6 @@ class BaseStore {
   removePage (_id) {
     return this.pages.findAndRemove({ _id })
   }
-
-  //
-  // helpers
-  //
-
-  resolveNodeFilePath (node, toPath) {
-    const { collection: { fileBasePath } } = this.getContentType(node.typeName)
-    return this.app.resolveFilePath(node.internal.origin, toPath, fileBasePath)
-  }
 }
 
 module.exports = BaseStore

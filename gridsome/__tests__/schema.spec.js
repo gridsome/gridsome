@@ -285,6 +285,42 @@ test('transformer extends node type', async () => {
   expect(data.testPost.myField).toEqual('value')
 })
 
+test('transformer should resolve absolute paths', async () => {
+  const contentType = api.store.addContentType({
+    typeName: 'TestPost',
+    resolveAbsolutePaths: true
+  })
+
+  contentType.addNode({
+    _id: '1',
+    internal: {
+      mimeType: 'application/json',
+      origin: '/absolute/dir/to/a/file.md',
+      content: JSON.stringify({
+        file: '/image.png',
+        file2: 'image.png',
+        file3: '../image.png'
+      })
+    }
+  })
+
+  const { data } = await createSchemaAndExecute(`{
+    testPost (_id: "1") {
+      fields {
+        file
+        file2
+        file3
+      }
+      fileField
+    }
+  }`)
+
+  expect(data.testPost.fields.file).toEqual('/image.png')
+  expect(data.testPost.fields.file2).toEqual('/absolute/dir/to/a/image.png')
+  expect(data.testPost.fields.file3).toEqual('/absolute/dir/to/image.png')
+  expect(data.testPost.fileField).toEqual('/absolute/dir/to/a/image.png')
+})
+
 async function createSchemaAndExecute (query) {
   const schema = createSchema(app.store)
   return graphql(schema, query, undefined, { store: app.store })

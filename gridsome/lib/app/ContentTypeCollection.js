@@ -4,7 +4,7 @@ const EventEmitter = require('events')
 const camelCase = require('camelcase')
 const dateFormat = require('dateformat')
 const slugify = require('@sindresorhus/slugify')
-const { mapKeys, cloneDeep, deepMerge } = require('lodash')
+const { mapKeys, cloneDeep } = require('lodash')
 const { warn } = require('../utils/log')
 
 class ContentTypeCollection extends EventEmitter {
@@ -16,8 +16,8 @@ class ContentTypeCollection extends EventEmitter {
 
     this.options = { refs: {}, fields: {}, ...options }
     this.typeName = options.typeName
-    this.fileBasePath = options.fileBasePath || pluginStore._fileBasePath
     this.description = options.description
+    this.resolveAbsolutePaths = options.resolveAbsolutePaths || false
     this.collection = store.data.addCollection(options.typeName, {
       unique: ['_id', 'path'],
       indices: ['date'],
@@ -174,7 +174,7 @@ class ContentTypeCollection extends EventEmitter {
   }
 
   resolveFilePath (...args) {
-    return this._pluginStore._app.resolveFilePath(...args, this.fileBasePath)
+    return this._pluginStore._app.resolveFilePath(...args, this.resolveAbsolutePaths)
   }
 
   makePath ({ date, slug }) {

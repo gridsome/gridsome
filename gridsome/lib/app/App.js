@@ -157,17 +157,10 @@ class App {
     return path.resolve(this.context, p)
   }
 
-  resolveFilePath (fromPath, toPath, from = '') {
-    return resolvePath(fromPath, toPath, from, {
+  resolveFilePath (fromPath, toPath, isAbsolute) {
+    return resolvePath(fromPath, toPath, isAbsolute, {
       context: this.context
     })
-  }
-
-  resolveNodeFilePath (node, toPath) {
-    const { getContentType } = this._app.store
-    const { collection: { fileBasePath } } = getContentType(node.typeName)
-
-    return app.resolveFilePath(node.internal.origin, toPath, fileBasePath)
   }
 
   graphql (docOrQuery, variables = {}) {

@@ -17,12 +17,11 @@ class Source extends EventEmitter {
 
     this._app = app
     this._typeName = options.typeName
-    this._fileBasePath = options.fileBasePath
+    this._resolveAbsolutePaths = options.resolveAbsolutePaths || false
     this._transformers = mapValues(transformers || app.config.transformers, transformer => {
       return new transformer.TransformerClass(transformer.options, {
         localOptions: options[transformer.name] || {},
-        resolveNodeFilePath: app.store.resolveNodeFilePath,
-        resolveFilePath: app.resolveFilePath,
+        resolveNodeFilePath: this.resolveNodeFilePath,
         context: app.context,
         queue: app.queue,
         cache,
@@ -66,11 +65,15 @@ class Source extends EventEmitter {
         : `Reference to ${ref.typeName}`
     }))
 
+    if (typeof options.resolveAbsolutePaths === 'undefined') {
+      options.resolveAbsolutePaths = this._resolveAbsolutePaths
+    }
+
     return this.store.addContentType(this, {
       route: options.route,
       fields: options.fields || {},
       typeName: options.typeName,
-      fileBasePath: options.fileBasePath,
+      resolveAbsolutePaths: options.resolveAbsolutePaths,
       mimeTypes: [],
       belongsTo: {},
       makePath,
@@ -168,6 +171,16 @@ class Source extends EventEmitter {
 
   resolve (p) {
     return path.resolve(this.context, p)
+  }
+
+  resolveNodeFilePath (node, toPath) {
+    const { collection } = this.getContentType(node.typeName)
+
+    return this._app.resolveFilePath(
+      node.internal.origin,
+      toPath,
+      collection.resolveAbsolutePaths
+    )
   }
 }
 

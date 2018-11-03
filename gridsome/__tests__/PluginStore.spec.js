@@ -152,9 +152,15 @@ test('transform node', () => {
 })
 
 test('resolve absolute file paths', () => {
-  const contentType1 = api.store.addContentType({ typeName: 'A', fileBasePath: 'file' })
-  const contentType2 = api.store.addContentType({ typeName: 'B', fileBasePath: 'root' })
-  const contentType3 = api.store.addContentType({ typeName: 'C', fileBasePath: '/path/to/dir' })
+  const contentType1 = api.store.addContentType({
+    typeName: 'A',
+    resolveAbsolutePaths: true
+  })
+
+  const contentType2 = api.store.addContentType({
+    typeName: 'C',
+    resolveAbsolutePaths: '/path/to/dir'
+  })
 
   const node1 = contentType1.addNode({
     fields: {
@@ -180,33 +186,23 @@ test('resolve absolute file paths', () => {
     }
   })
 
-  const node3 = contentType3.addNode({
-    fields: {
-      file: '/image.png'
-    },
-    internal: {
-      origin: '/absolute/dir/to/a/file.md'
-    }
-  })
-
   expect(node1.fields.file).toEqual('/absolute/dir/to/a/image.png')
-  expect(node1.fields.file2).toEqual('/absolute/dir/to/a/image.png')
+  expect(node1.fields.file2).toEqual('/image.png')
   expect(node1.fields.file3).toEqual('/absolute/dir/to/image.png')
   expect(node1.fields.text).toEqual('Lorem ipsum dolor sit amet.')
   expect(node1.fields.text2).toEqual('example.com')
   expect(node1.fields.image).toEqual('https://example.com/image.jpg')
   expect(node1.fields.image2).toEqual('//example.com/image.jpg')
-  expect(node2.fields.file).toEqual('/image.png')
-  expect(node3.fields.file).toEqual('/path/to/dir/image.png')
+  expect(node2.fields.file).toEqual('/path/to/dir/image.png')
 })
 
-test('don\'t touch paths when fileBasePath is not set', () => {
+test('don\'t touch absolute paths when resolveAbsolutePaths is not set', () => {
   const contentType = api.store.addContentType({ typeName: 'A' })
 
   const node = contentType.addNode({
     fields: {
-      file: 'image.png',
-      file2: '/image.png',
+      file: '/image.png',
+      file2: 'image.png',
       file3: '../image.png'
     },
     internal: {
@@ -214,8 +210,8 @@ test('don\'t touch paths when fileBasePath is not set', () => {
     }
   })
 
-  expect(node.fields.file).toEqual('image.png')
-  expect(node.fields.file2).toEqual('/image.png')
+  expect(node.fields.file).toEqual('/image.png')
+  expect(node.fields.file2).toEqual('/absolute/dir/to/a/image.png')
   expect(node.fields.file3).toEqual('/absolute/dir/to/image.png')
 })
 
@@ -235,20 +231,13 @@ test('always resolve relative paths from filesytem sources', () => {
 })
 
 test('resolve paths from external sources', () => {
-  const contentType1 = api.store.addContentType({
-    typeName: 'A',
-    fileBasePath: 'path'
-  })
-
-  const contentType2 = api.store.addContentType({
-    typeName: 'B',
-    fileBasePath: 'host'
-  })
+  const contentType1 = api.store.addContentType({ typeName: 'A' })
+  const contentType2 = api.store.addContentType({ typeName: 'B', resolveAbsolutePaths: true })
 
   const node1 = contentType1.addNode({
     fields: {
-      file: 'image.png',
-      file2: '/image.png',
+      file: '/image.png',
+      file2: 'image.png',
       file3: '../../image.png'
     },
     internal: {
@@ -267,12 +256,12 @@ test('resolve paths from external sources', () => {
     }
   })
 
-  expect(node1.fields.file).toEqual('https://example.com/2018/11/02/image.png')
+  expect(node1.fields.file).toEqual('/image.png')
   expect(node1.fields.file2).toEqual('https://example.com/2018/11/02/image.png')
   expect(node1.fields.file3).toEqual('https://example.com/2018/image.png')
-  expect(node2.fields.file).toEqual('https://example.com/images/image.png')
+  expect(node2.fields.file).toEqual('https://example.com/2018/11/02/images/image.png')
   expect(node2.fields.file2).toEqual('https://example.com/images/image.png')
-  expect(node2.fields.file3).toEqual('https://example.com/images/image.png')
+  expect(node2.fields.file3).toEqual('https://example.com/2018/11/02/images/image.png')
 })
 
 test('fail if transformer is not installed', () => {
