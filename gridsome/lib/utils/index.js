@@ -1,6 +1,7 @@
 const url = require('url')
 const path = require('path')
 const slash = require('slash')
+const isUrl = require('is-url')
 const mime = require('mime-types')
 const isRelative = require('is-relative')
 
@@ -8,7 +9,20 @@ exports.forwardSlash = function (input) {
   return slash(input)
 }
 
-exports.resolvePath = function (fromPath, toPath, isAbsolute, { context }) {
+exports.parseUrl = function (input) {
+  const { protocol, host, path: pathName } = url.parse(input)
+  const basePath = pathName.endsWith('/') ? pathName : path.dirname(pathName)
+  const baseUrl = `${protocol}//${host}`
+  const fullUrl = `${baseUrl}${path.join(basePath, '/')}`
+
+  return {
+    baseUrl,
+    basePath,
+    fullUrl
+  }
+}
+
+exports.resolvePath = function (fromPath, toPath, rootDir) {
   if (typeof toPath !== 'string') return toPath
   if (typeof fromPath !== 'string') return toPath
   if (path.extname(toPath).length <= 1) return toPath
@@ -16,28 +30,33 @@ exports.resolvePath = function (fromPath, toPath, isAbsolute, { context }) {
   if (mime.lookup(toPath) === 'application/x-msdownload') return toPath
   if (!mime.lookup(toPath)) return toPath
 
-  let isUrl = false
-  let dirName = path.dirname(fromPath)
+  const parse = string => { 
+    let rootPath = ''
+    let basePath = string
 
-  const joinUrl = (...parts) => {
-    return context + exports.forwardSlash(path.join('/', ...parts))
+    if (isUrl(string)) {
+      const info = exports.parseUrl(string)
+      rootPath = info.baseUrl
+      basePath = info.basePath
+    } else {
+      if (path.extname(basePath).length) {
+        basePath = path.join(path.dirname(basePath), '/')
+      } else {
+        basePath = path.join(basePath, '/')
+      }
+    }
+
+    return { rootPath, basePath }
   }
 
-  if (/^(https?:)?\/{2}\w+/.test(fromPath)) {
-    const info = url.parse(fromPath.replace(/[^/]*\/?$/, ''))
-    context = `${info.protocol}//${info.host}`
-    dirName = info.path.replace(/\/+$/, '')
-    isUrl = true
+  if (isRelative(toPath)) {
+    const { rootPath, basePath } = parse(fromPath)
+    return rootPath + path.resolve(basePath, toPath)
   }
 
-  if (typeof isAbsolute === 'string' && path.isAbsolute(isAbsolute)) {
-    return isUrl ? joinUrl(isAbsolute, toPath) : path.join(isAbsolute, toPath)
-  } else if (isAbsolute === true && !isRelative(toPath)) {
-    return isUrl ? joinUrl(toPath) : path.join(context, toPath)
-  } else if (isRelative(toPath)) {
-    return isUrl
-      ? joinUrl(path.resolve(dirName, toPath))
-      : path.resolve(dirName, toPath)
+  if (rootDir) {
+    const { rootPath, basePath } = parse(rootDir)
+    return rootPath + path.join(basePath, toPath)
   }
 
   return toPath

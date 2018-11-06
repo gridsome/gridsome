@@ -1,4 +1,5 @@
 const path = require('path')
+const isUrl = require('is-url')
 const Router = require('vue-router')
 const autoBind = require('auto-bind')
 const hirestime = require('hirestime')
@@ -12,7 +13,7 @@ const { defaultsDeep } = require('lodash')
 const createRoutes = require('./createRoutes')
 const { execute, graphql } = require('../graphql/graphql')
 const { version } = require('../../package.json')
-const { resolvePath } = require('../utils')
+const { parseUrl, resolvePath } = require('../utils')
 
 class App {
   constructor (context, options) {
@@ -158,9 +159,21 @@ class App {
   }
 
   resolveFilePath (fromPath, toPath, isAbsolute) {
-    return resolvePath(fromPath, toPath, isAbsolute, {
-      context: this.context
-    })
+    let rootDir = null
+
+    if (typeof isAbsolute === 'string') {
+      rootDir = isUrl(isAbsolute)
+        ? parseUrl(isAbsolute).fullUrl
+        : isAbsolute
+    }
+
+    if (isAbsolute === true) {
+      rootDir = isUrl(fromPath)
+        ? parseUrl(fromPath).baseUrl
+        : this.context
+    }
+
+    return resolvePath(fromPath, toPath, rootDir)
   }
 
   graphql (docOrQuery, variables = {}) {

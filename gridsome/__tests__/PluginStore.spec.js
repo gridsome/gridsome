@@ -163,17 +163,12 @@ test('transform node', () => {
 test('resolve absolute file paths', () => {
   const api = createPlugin('/absolute/dir/to/project')
 
-  const contentType1 = api.store.addContentType({
-    typeName: 'A',
+  const contentType = api.store.addContentType({
+    typeName: 'Test',
     resolveAbsolutePaths: true
   })
 
-  const contentType2 = api.store.addContentType({
-    typeName: 'C',
-    resolveAbsolutePaths: '/path/to/dir'
-  })
-
-  const node1 = contentType1.addNode({
+  const node = contentType.addNode({
     fields: {
       file: 'image.png',
       file2: '/image.png',
@@ -188,7 +183,24 @@ test('resolve absolute file paths', () => {
     }
   })
 
-  const node2 = contentType2.addNode({
+  expect(node.fields.file).toEqual('/absolute/dir/to/a/image.png')
+  expect(node.fields.file2).toEqual('/absolute/dir/to/project/image.png')
+  expect(node.fields.file3).toEqual('/absolute/dir/to/image.png')
+  expect(node.fields.text).toEqual('Lorem ipsum dolor sit amet.')
+  expect(node.fields.text2).toEqual('example.com')
+  expect(node.fields.image).toEqual('https://example.com/image.jpg')
+  expect(node.fields.image2).toEqual('//example.com/image.jpg')
+})
+
+test('resolve absolute file paths with a custom path', () => {
+  const api = createPlugin('/absolute/dir/to/project')
+
+  const contentType = api.store.addContentType({
+    typeName: 'C',
+    resolveAbsolutePaths: '/path/to/dir'
+  })
+
+  const node = contentType.addNode({
     fields: {
       file: '/image.png'
     },
@@ -197,14 +209,7 @@ test('resolve absolute file paths', () => {
     }
   })
 
-  expect(node1.fields.file).toEqual('/absolute/dir/to/a/image.png')
-  expect(node1.fields.file2).toEqual('/absolute/dir/to/project/image.png')
-  expect(node1.fields.file3).toEqual('/absolute/dir/to/image.png')
-  expect(node1.fields.text).toEqual('Lorem ipsum dolor sit amet.')
-  expect(node1.fields.text2).toEqual('example.com')
-  expect(node1.fields.image).toEqual('https://example.com/image.jpg')
-  expect(node1.fields.image2).toEqual('//example.com/image.jpg')
-  expect(node2.fields.file).toEqual('/path/to/dir/image.png')
+  expect(node.fields.file).toEqual('/path/to/dir/image.png')
 })
 
 test('don\'t touch absolute paths when resolveAbsolutePaths is not set', () => {
@@ -246,7 +251,7 @@ test('always resolve relative paths from filesytem sources', () => {
 })
 
 test('resolve paths from external sources', () => {
-  const api = createPlugin()
+  const api = createPlugin('/absolute/dir/to/project')
 
   const contentType1 = api.store.addContentType({ typeName: 'A' })
   const contentType2 = api.store.addContentType({ typeName: 'B', resolveAbsolutePaths: true })
@@ -258,27 +263,74 @@ test('resolve paths from external sources', () => {
       file3: '../../image.png'
     },
     internal: {
-      origin: 'https://example.com/2018/11/02/blog-post.html'
+      origin: 'https://www.example.com/2018/11/02/blog-post'
     }
   })
 
   const node2 = contentType2.addNode({
     fields: {
-      file: 'images/image.png',
-      file2: '/images/image.png',
+      file: '/images/image.png',
+      file2: 'images/image.png',
       file3: './images/image.png'
     },
     internal: {
-      origin: 'https://example.com/2018/11/02/another-blog-post/'
+      origin: 'https://www.example.com/2018/11/02/another-blog-post/'
     }
   })
 
   expect(node1.fields.file).toEqual('/image.png')
-  expect(node1.fields.file2).toEqual('https://example.com/2018/11/02/image.png')
-  expect(node1.fields.file3).toEqual('https://example.com/2018/image.png')
-  expect(node2.fields.file).toEqual('https://example.com/2018/11/02/images/image.png')
-  expect(node2.fields.file2).toEqual('https://example.com/images/image.png')
-  expect(node2.fields.file3).toEqual('https://example.com/2018/11/02/images/image.png')
+  expect(node1.fields.file2).toEqual('https://www.example.com/2018/11/02/image.png')
+  expect(node1.fields.file3).toEqual('https://www.example.com/2018/image.png')
+  expect(node2.fields.file).toEqual('https://www.example.com/images/image.png')
+  expect(node2.fields.file2).toEqual('https://www.example.com/2018/11/02/another-blog-post/images/image.png')
+  expect(node2.fields.file3).toEqual('https://www.example.com/2018/11/02/another-blog-post/images/image.png')
+})
+
+test('resolve paths from external sources with a custom url', () => {
+  const api = createPlugin()
+
+  const contentType = api.store.addContentType({
+    typeName: 'A',
+    resolveAbsolutePaths: 'https://cdn.example.com/assets/images'
+  })
+
+  const contentType2 = api.store.addContentType({
+    typeName: 'B',
+    resolveAbsolutePaths: 'https://cdn.example.com/assets/images/'
+  })
+
+  const node = contentType.addNode({
+    fields: {
+      file: '/image.png',
+      file2: 'image.png',
+      file3: '../image.png',
+      file4: 'https://subdomain.example.com/images/image.png'
+    },
+    internal: {
+      origin: 'https://www.example.com/2018/11/02/blog-post.html'
+    }
+  })
+
+  const node2 = contentType2.addNode({
+    fields: {
+      file: '/image.png',
+      file2: 'image.png',
+      file3: '../image.png',
+      file4: 'https://subdomain.example.com/images/image.png'
+    },
+    internal: {
+      origin: 'https://www.example.com/2018/11/02/blog-post.html'
+    }
+  })
+
+  expect(node.fields.file).toEqual('https://cdn.example.com/assets/image.png')
+  expect(node.fields.file2).toEqual('https://www.example.com/2018/11/02/image.png')
+  expect(node.fields.file3).toEqual('https://www.example.com/2018/11/image.png')
+  expect(node.fields.file4).toEqual('https://subdomain.example.com/images/image.png')
+  expect(node2.fields.file).toEqual('https://cdn.example.com/assets/images/image.png')
+  expect(node2.fields.file2).toEqual('https://www.example.com/2018/11/02/image.png')
+  expect(node2.fields.file3).toEqual('https://www.example.com/2018/11/image.png')
+  expect(node2.fields.file4).toEqual('https://subdomain.example.com/images/image.png')
 })
 
 test('fail if transformer is not installed', () => {
