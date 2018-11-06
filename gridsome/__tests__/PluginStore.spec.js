@@ -173,8 +173,11 @@ test('resolve absolute file paths', () => {
       file: 'image.png',
       file2: '/image.png',
       file3: '../image.png',
-      image: 'https://example.com/image.jpg',
-      image2: '//example.com/image.jpg',
+      url: 'https://example.com/image.jpg',
+      url2: '//example.com/image.jpg',
+      url3: 'git@github.com:gridsome/gridsome.git',
+      url4: 'ftp://ftp.example.com',
+      email: 'email@example.com',
       text: 'Lorem ipsum dolor sit amet.',
       text2: 'example.com'
     },
@@ -188,8 +191,11 @@ test('resolve absolute file paths', () => {
   expect(node.fields.file3).toEqual('/absolute/dir/to/image.png')
   expect(node.fields.text).toEqual('Lorem ipsum dolor sit amet.')
   expect(node.fields.text2).toEqual('example.com')
-  expect(node.fields.image).toEqual('https://example.com/image.jpg')
-  expect(node.fields.image2).toEqual('//example.com/image.jpg')
+  expect(node.fields.url).toEqual('https://example.com/image.jpg')
+  expect(node.fields.url2).toEqual('//example.com/image.jpg')
+  expect(node.fields.url3).toEqual('git@github.com:gridsome/gridsome.git')
+  expect(node.fields.url4).toEqual('ftp://ftp.example.com')
+  expect(node.fields.email).toEqual('email@example.com')
 })
 
 test('resolve absolute file paths with a custom path', () => {
