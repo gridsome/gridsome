@@ -26,7 +26,7 @@ exports.resolvePath = function (fromPath, toPath, rootDir) {
   if (typeof toPath !== 'string') return toPath
   if (typeof fromPath !== 'string') return toPath
   if (path.extname(toPath).length <= 1) return toPath
-  if (/^(https?:)?\/{2}\w+/.test(toPath)) return toPath
+  if (isUrl(toPath)) return toPath
   if (mime.lookup(toPath) === 'application/x-msdownload') return toPath
   if (!mime.lookup(toPath)) return toPath
 
@@ -46,7 +46,10 @@ exports.resolvePath = function (fromPath, toPath, rootDir) {
       }
     }
 
-    return { rootPath, basePath }
+    return {
+      rootPath,
+      basePath
+    }
   }
 
   if (isRelative(toPath)) {
