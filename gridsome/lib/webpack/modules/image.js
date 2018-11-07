@@ -1,3 +1,5 @@
+const isUrl = require('is-url')
+
 module.exports = () => ({
   postTransformNode (node) {
     if (node.tag === 'g-image') {
@@ -6,9 +8,11 @@ module.exports = () => ({
           if (!isStatic(attr.value)) return
 
           const value = extractValue(attr.value)
-          const query = createOptionsQuery(node.attrs)
 
-          attr.value = `require("!!image-loader?${query}!${value}")`
+          if (!isUrl(value)) {
+            const query = createOptionsQuery(node.attrs)
+            attr.value = `require("!!image-loader?${query}!${value}")`
+          }
 
           return
         }
