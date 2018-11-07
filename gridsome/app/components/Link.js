@@ -20,6 +20,11 @@ export default {
   },
 
   render: (h, { data, props, parent, children, ...res }) => {
+    if (props.to && props.to.type === 'file') {
+      data.attrs.href = props.to.src
+      return h('a', data, children)
+    }
+
     const ref = data.ref || `__link_${uid++}`
     const to = typeof props.to === 'string'
       ? { path: props.to, params: {}}

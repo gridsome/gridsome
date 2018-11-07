@@ -6,7 +6,7 @@ const hirestime = require('hirestime')
 const BaseStore = require('./BaseStore')
 const PluginAPI = require('./PluginAPI')
 const CodeGenerator = require('./CodeGenerator')
-const ImageProcessQueue = require('./ImageProcessQueue')
+const AssetsQueue = require('./queue/AssetsQueue')
 const createSchema = require('../graphql/createSchema')
 const loadConfig = require('./loadConfig')
 const { defaultsDeep } = require('lodash')
@@ -65,7 +65,7 @@ class App {
 
   init () {
     this.store = new BaseStore(this)
-    this.queue = new ImageProcessQueue(this)
+    this.queue = new AssetsQueue(this)
     this.generator = new CodeGenerator(this)
 
     this.config.plugins.map(entry => {

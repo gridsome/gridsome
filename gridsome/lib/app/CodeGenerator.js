@@ -57,8 +57,8 @@ async function genIcons ({ config, resolve, queue }) {
 
   return `export default ${JSON.stringify({
     precomposed: touchicon.precomposed,
-    touchicons: touchicons.sets,
-    favicons: favicons.sets
+    touchicons: touchicons.sets || [],
+    favicons: favicons.sets || []
   })}`
 }
 
