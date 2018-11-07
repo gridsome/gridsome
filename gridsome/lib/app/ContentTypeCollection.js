@@ -1,9 +1,10 @@
+const path = require('path')
 const crypto = require('crypto')
 const EventEmitter = require('events')
 const camelCase = require('camelcase')
 const dateFormat = require('dateformat')
 const slugify = require('@sindresorhus/slugify')
-const { mapKeys, cloneDeep, deepMerge } = require('lodash')
+const { mapKeys, cloneDeep } = require('lodash')
 const { warn } = require('../utils/log')
 
 class ContentTypeCollection extends EventEmitter {
@@ -16,6 +17,7 @@ class ContentTypeCollection extends EventEmitter {
     this.options = { refs: {}, fields: {}, ...options }
     this.typeName = options.typeName
     this.description = options.description
+    this.resolveAbsolutePaths = options.resolveAbsolutePaths || false
     this.collection = store.data.addCollection(options.typeName, {
       unique: ['_id', 'path'],
       indices: ['date'],
@@ -66,15 +68,17 @@ class ContentTypeCollection extends EventEmitter {
       this.transformNodeOptions(options, internal)
     }
 
-    node.fields = mapKeys(options.fields || {}, (v, key) => {
+    const fields = mapKeys(options.fields || {}, (v, key) => {
       return key.startsWith('__') ? key : camelCase(key)
     })
 
-    node.title = options.title || node.fields.title || node.title
-    node.date = options.date || node.fields.date || node.date
-    node.slug = options.slug || node.fields.slug || this.slugify(node.title)
+    node.title = options.title || fields.title || node.title
+    node.date = options.date || fields.date || node.date
+    node.slug = options.slug || fields.slug || this.slugify(node.title)
     node.internal = Object.assign({}, node.internal, internal)
     node.path = options.path || this.makePath(node)
+
+    node.fields = this.processNodeFields(fields, node.internal.origin)
 
     this.emit('change', node, oldNode)
 
@@ -99,17 +103,19 @@ class ContentTypeCollection extends EventEmitter {
       this.transformNodeOptions(options, internal)
     }
 
-    node.fields = mapKeys(options.fields, (v, key) => {
+    const fields = mapKeys(options.fields, (v, key) => {
       return key.startsWith('__') ? key : camelCase(key)
     })
 
-    node.title = options.title || node.fields.title || options._id
-    node.date = options.date || node.fields.date || new Date().toISOString()
-    node.slug = options.slug || node.fields.slug || this.slugify(node.title)
-    node.content = options.content || node.fields.content || ''
-    node.excerpt = options.excerpt || node.fields.excerpt || ''
+    node.title = options.title || fields.title || options._id
+    node.date = options.date || fields.date || new Date().toISOString()
+    node.slug = options.slug || fields.slug || this.slugify(node.title)
+    node.content = options.content || fields.content || ''
+    node.excerpt = options.excerpt || fields.excerpt || ''
     node.path = options.path || this.makePath(node)
     node.withPath = !!options.path
+
+    node.fields = this.processNodeFields(fields, node.internal.origin)
 
     return node
   }
@@ -136,6 +142,39 @@ class ContentTypeCollection extends EventEmitter {
     if (result.fields) {
       options.fields = Object.assign(options.fields || {}, result.fields)
     }
+  }
+
+  processNodeFields (fields, origin) {
+    const processField = field => {
+      switch (typeof field) {
+        case 'object':
+          return processFields(field)
+        case 'string':
+          if (path.extname(field).length > 1) {
+            return this.resolveFilePath(origin, field)
+          }
+        default:
+          return field
+      }
+    }
+
+    const processFields = fields => {
+      const res = {}
+
+      for (const key in fields) {
+        res[key] = Array.isArray(fields[key])
+          ? fields[key].map(processField)
+          : processField(fields[key])
+      }
+
+      return res
+    }
+
+    return processFields(fields)
+  }
+
+  resolveFilePath (...args) {
+    return this._pluginStore._app.resolveFilePath(...args, this.resolveAbsolutePaths)
   }
 
   makePath ({ date, slug }) {

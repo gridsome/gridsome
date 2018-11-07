@@ -20,6 +20,7 @@
       "gridsome/lib/**/*.js"
     ],
     "testPathIgnorePatterns": [
+      "/__fixtures__/",
       "/projects/",
       "/scripts/"
     ]

@@ -3,6 +3,7 @@ const PluginAPI = require('../lib/app/PluginAPI')
 const createSchema = require('../lib/graphql/createSchema')
 const { inferTypes } = require('../lib/graphql/schema/infer-types')
 const { GraphQLDate } = require('../lib/graphql/schema/types/date')
+const JSONTransformer = require('./__fixtures__/JSONTransformer')
 
 const {
   graphql,
@@ -16,25 +17,18 @@ const {
 
 let app, api
 
-const transformers = {
-  'application/json': {
-    extendNodeType () {
-      return {
-        myField: {
-          type: GraphQLString,
-          resolve: () => 'value'
-        }
+beforeEach(() => {
+  app = new App('/', { config: { plugins: [] }}).init()
+  api = new PluginAPI(app, {
+    entry: { options: {}, clientOptions: undefined },
+    transformers: {
+      'application/json': {
+        TransformerClass: JSONTransformer,
+        options: {},
+        name: 'json'
       }
     }
-  }
-}
-
-beforeEach(() => {
-  const entry = { options: {}, clientOptions: undefined }
-
-  app = new App('/', { config: { plugins: [] }})
-  app.init()
-  api = new PluginAPI(app, { entry, transformers })
+  })
 })
 
 afterAll(() => {
@@ -289,6 +283,42 @@ test('transformer extends node type', async () => {
   const { data } = await createSchemaAndExecute(query)
 
   expect(data.testPost.myField).toEqual('value')
+})
+
+test('transformer should resolve absolute paths', async () => {
+  const contentType = api.store.addContentType({
+    typeName: 'TestPost',
+    resolveAbsolutePaths: true
+  })
+
+  contentType.addNode({
+    _id: '1',
+    internal: {
+      mimeType: 'application/json',
+      origin: '/absolute/dir/to/a/file.md',
+      content: JSON.stringify({
+        file: '/image.png',
+        file2: 'image.png',
+        file3: '../image.png'
+      })
+    }
+  })
+
+  const { data } = await createSchemaAndExecute(`{
+    testPost (_id: "1") {
+      fields {
+        file
+        file2
+        file3
+      }
+      fileField
+    }
+  }`)
+
+  expect(data.testPost.fields.file).toEqual('/image.png')
+  expect(data.testPost.fields.file2).toEqual('/absolute/dir/to/a/image.png')
+  expect(data.testPost.fields.file3).toEqual('/absolute/dir/to/image.png')
+  expect(data.testPost.fileField).toEqual('/absolute/dir/to/a/image.png')
 })
 
 async function createSchemaAndExecute (query) {
