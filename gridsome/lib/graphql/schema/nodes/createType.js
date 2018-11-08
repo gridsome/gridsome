@@ -15,41 +15,54 @@ const {
   GraphQLInterfaceType
 } = require('../../graphql')
 
-const fieldsInterface = new GraphQLInterfaceType({
-  name: 'FieldsInterface',
-  fields: () => ({
-    title: { type: GraphQLString }
-  })
-})
-
 module.exports = ({ contentType, nodeTypes, fields }) => {
   const nodeType = new GraphQLObjectType({
     name: contentType.typeName,
     description: contentType.description,
     interfaces: [nodeInterface],
     isTypeOf: node => node.typeName === contentType.typeName,
-    fields: () => ({
-      id: {
-        type: new GraphQLNonNull(GraphQLID),
-        resolve: node => node._id
-      },
+    fields: () => {
+      const refs = createRefs(contentType, nodeTypes, fields)
 
-      title: { type: GraphQLString },
-      slug: { type: GraphQLString },
-      path: { type: GraphQLString },
-      content: { type: GraphQLString },
-      excerpt: { type: GraphQLString },
-      date: dateType,
+      const nodeFields = {
+        ...fields,
+        ...refs,
+        
+        id: {
+          type: new GraphQLNonNull(GraphQLID),
+          resolve: node => node._id
+        },
 
-      ...extendNodeType(contentType, nodeType, nodeTypes),
-      ...createFields(contentType, fields),
-      ...createRefs(contentType, nodeTypes, fields),
-      ...createBelongsToRefs(contentType, nodeTypes)
-      _id: {
-        deprecationReason: 'Use node.id instead.',
-        type: new GraphQLNonNull(GraphQLID)
-      },
-    })
+        title: { type: GraphQLString },
+        slug: { type: GraphQLString },
+        path: { type: GraphQLString },
+        content: { type: GraphQLString },
+        excerpt: { type: GraphQLString },
+        date: dateType,
+
+        ...extendNodeType(contentType, nodeType, nodeTypes),
+        ...createFields(contentType, fields),
+        ...createBelongsToRefs(contentType, nodeTypes),
+
+        _id: {
+          deprecationReason: 'Use node.id instead.',
+          type: new GraphQLNonNull(GraphQLID)
+        },
+      }
+
+      if (!isEmpty(refs)) {
+        nodeFields.refs = {
+          resolve: obj => obj,
+          deprecationReason: 'Use ref on node instead.',
+          type: new GraphQLObjectType({
+            name: `${contentType.typeName}References`,
+            fields: () => refs
+          })
+        }
+      }
+
+      return nodeFields
+    }
   })
 
   return nodeType
@@ -84,14 +97,13 @@ function extendNodeType (contentType, nodeType, nodeTypes) {
 }
 
 function createFields (contentType, customFields) {
+  if (isEmpty(customFields)) return {}
+
   const fields = {
+    deprecationReason: 'Get field on node instead.',
     type: new GraphQLObjectType({
       name: `${contentType.typeName}Fields`,
-      interfaces: [fieldsInterface],
-      fields: {
-        title: { type: GraphQLString },
-        ...customFields
-      }
+      fields: () => customFields
     })
   }
 
@@ -101,53 +113,45 @@ function createFields (contentType, customFields) {
 function createRefs (contentType, nodeTypes, fields) {
   if (isEmpty(contentType.options.refs)) return null
 
-  const refs = {
-    resolve: obj => obj,
-    type: new GraphQLObjectType({
-      name: `${contentType.typeName}References`,
-      fields: () => mapValues(contentType.options.refs, (ref, key) => {
-        const { typeName, description } = ref
-        const field = fields[key] || { type: GraphQLString }
+  return mapValues(contentType.options.refs, (ref, key) => {
+    const { typeName, description } = ref
+    const field = fields[key] || { type: GraphQLString }
 
-        const isList = field.type instanceof GraphQLList
-        let refType = nodeTypes[typeName]
+    const isList = field.type instanceof GraphQLList
+    let refType = nodeTypes[typeName]
+
+    if (Array.isArray(typeName)) {
+      // TODO: create union collection
+      const fieldTypeName = camelCase(key, { pascalCase: true })
+      refType = new GraphQLUnionType({
+        name: `${contentType.typeName}${fieldTypeName}Union`,
+        interfaces: [nodeInterface],
+        types: typeName.map(typeName => nodeTypes[typeName])
+      })
+    }
+
+    return {
+      description,
+      type: isList ? new GraphQLList(refType) : refType,
+      resolve: (obj, args, { store }) => {
+        const value = obj.fields[key] || []
+        const query = Array.isArray(value)
+          ? { [ref.key]: { $in: value }}
+          : { [ref.key]: value }
 
         if (Array.isArray(typeName)) {
-          // TODO: create union collection
-          const fieldTypeName = camelCase(key, { pascalCase: true })
-          refType = new GraphQLUnionType({
-            name: `${contentType.typeName}${fieldTypeName}Union`,
-            interfaces: [nodeInterface],
-            types: typeName.map(typeName => nodeTypes[typeName])
-          })
+          // TODO: search multiple collections
+          return []
         }
 
-        return {
-          description,
-          type: isList ? new GraphQLList(refType) : refType,
-          resolve: (obj, args, { store }) => {
-            const value = obj.fields[key] || []
-            const query = Array.isArray(value)
-              ? { [ref.key]: { $in: value }}
-              : { [ref.key]: value }
+        const { collection } = store.getContentType(typeName)
 
-            if (Array.isArray(typeName)) {
-              // TODO: search multiple collections
-              return []
-            }
-
-            const { collection } = store.getContentType(typeName)
-
-            return isList
-              ? collection.find(query)
-              : collection.findOne(query)
-          }
-        }
-      })
-    })
-  }
-
-  return { refs }
+        return isList
+          ? collection.find(query)
+          : collection.findOne(query)
+      }
+    }
+  })
 }
 
 function createBelongsToRefs (contentType, nodeTypes) {

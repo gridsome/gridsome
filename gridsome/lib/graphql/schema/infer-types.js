@@ -11,6 +11,12 @@ const {
   GraphQLObjectType
 } = require('../graphql')
 
+const resolve = (obj, args, ctx, { fieldName }) => {
+  return obj.hasOwnProperty('$loki') // the node object
+    ? obj.fields[fieldName]
+    : obj[fieldName]
+}
+
 function inferTypes (nodes, nodeType) {
   const fields = {}
   let node, type
@@ -52,11 +58,11 @@ function inferType (value, key, nodeType) {
 
   switch (type) {
     case 'string':
-      return { type: GraphQLString }
+      return { type: GraphQLString, resolve }
     case 'boolean':
-      return { type: GraphQLBoolean }
+      return { type: GraphQLBoolean, resolve }
     case 'number':
-      return { type: is32BitInt(value) ? GraphQLInt : GraphQLFloat }
+      return { type: is32BitInt(value) ? GraphQLInt : GraphQLFloat, resolve }
     case 'object':
       return createObjectType(value, key, nodeType)
   }
