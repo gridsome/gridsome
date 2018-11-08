@@ -1,4 +1,5 @@
 const moment = require('moment')
+const { fieldResolver } = require('../resolvers')
 const { GraphQLString, GraphQLScalarType, Kind } = require('../../graphql')
 
 const ISO_8601_FORMAT = [
@@ -53,8 +54,11 @@ exports.dateType = {
     format: { type: GraphQLString, description: 'Date format' },
     locale: { type: GraphQLString, description: 'Locale', defaultValue: 'en' }
   },
-  resolve: (fields, { format, locale }, context, { fieldName }) => {
-    return moment(fields[fieldName]).locale(locale).format(format)
+  resolve: (obj, args, context, info) => {
+    const value = fieldResolver(obj, args, context, info)
+    const { format, locale } = args
+
+    return moment(value).locale(locale).format(format)
   }
 }
 

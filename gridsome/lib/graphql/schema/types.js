@@ -7,8 +7,6 @@ const {
   GraphQLObjectType
 } = require('../graphql')
 
-const { internalInterface } = require('./interfaces')
-
 const pageInfoType = new GraphQLObjectType({
   name: 'PageInfo',
   fields: () => ({
@@ -27,19 +25,7 @@ const sortOrderType = new GraphQLEnumType({
   }
 })
 
-const internalType = new GraphQLObjectType({
-  name: 'NodeInternal',
-  interfaces: [internalInterface],
-  fields: () => ({
-    origin: { type: GraphQLString },
-    mimeType: { type: GraphQLString },
-    content: { type: GraphQLString },
-    timestamp: { type: GraphQLInt }
-  })
-})
-
 module.exports = {
   pageInfoType,
-  sortOrderType,
-  internalType
+  sortOrderType
 }

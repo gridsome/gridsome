@@ -1,5 +1,6 @@
 const camelCase = require('camelcase')
 const { mapValues, isEmpty } = require('lodash')
+const { fieldResolver } = require('./resolvers')
 const { isDate, dateType } = require('./types/date')
 
 const {
@@ -10,12 +11,6 @@ const {
   GraphQLBoolean,
   GraphQLObjectType
 } = require('../graphql')
-
-const resolve = (obj, args, ctx, { fieldName }) => {
-  return obj.hasOwnProperty('$loki') // the node object
-    ? obj.fields[fieldName]
-    : obj[fieldName]
-}
 
 function inferTypes (nodes, nodeType) {
   const fields = {}
@@ -58,11 +53,20 @@ function inferType (value, key, nodeType) {
 
   switch (type) {
     case 'string':
-      return { type: GraphQLString, resolve }
+      return {
+        type: GraphQLString,
+        resolve: fieldResolver
+      }
     case 'boolean':
-      return { type: GraphQLBoolean, resolve }
+      return {
+        type: GraphQLBoolean,
+        resolve: fieldResolver
+      }
     case 'number':
-      return { type: is32BitInt(value) ? GraphQLInt : GraphQLFloat, resolve }
+      return {
+        type: is32BitInt(value) ? GraphQLInt : GraphQLFloat,
+        resolve: fieldResolver
+      }
     case 'object':
       return createObjectType(value, key, nodeType)
   }
