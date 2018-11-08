@@ -38,8 +38,8 @@ function inferType (value, key, nodeType) {
     const type = inferType(value[0], key, nodeType)
     return type !== null ? {
       type: new GraphQLList(type.type),
-      resolve: (fields, args, context, { fieldName }) => {
-        const value = fields[fieldName]
+      resolve: (obj, args, context, info) => {
+        const value = fieldResolver(obj, args, context, info)
         return Array.isArray(value) ? value : []
       }
     } : null
