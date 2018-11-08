@@ -27,11 +27,7 @@ module.exports = ({ contentType, nodeTypes, fields }) => {
       const refs = createRefs(contentType, nodeTypes, customFields)
 
       const nodeFields = {
-        id: {
-          type: new GraphQLNonNull(GraphQLID),
-          resolve: node => node._id
-        },
-
+        id: { type: new GraphQLNonNull(GraphQLID) },
         title: { type: GraphQLString },
         slug: { type: GraphQLString },
         path: { type: GraphQLString },
@@ -46,7 +42,8 @@ module.exports = ({ contentType, nodeTypes, fields }) => {
 
         _id: {
           deprecationReason: 'Use node.id instead.',
-          type: new GraphQLNonNull(GraphQLID)
+          type: new GraphQLNonNull(GraphQLID),
+          resolve: node => node.id
         },
       }
 

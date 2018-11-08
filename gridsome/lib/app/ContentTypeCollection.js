@@ -19,7 +19,7 @@ class ContentTypeCollection extends EventEmitter {
     this.description = options.description
     this.resolveAbsolutePaths = options.resolveAbsolutePaths || false
     this.collection = store.data.addCollection(options.typeName, {
-      unique: ['_id', 'path'],
+      unique: ['id', 'path'],
       indices: ['date'],
       autoupdate: true
     })
@@ -54,8 +54,8 @@ class ContentTypeCollection extends EventEmitter {
     return node
   }
 
-  getNode (_id) {
-    return this.collection.findOne({ _id })
+  getNode (id) {
+    return this.collection.findOne({ id })
   }
 
   updateNode (id, options) {
@@ -85,18 +85,21 @@ class ContentTypeCollection extends EventEmitter {
     return node
   }
 
-  removeNode (_id) {
-    const oldNode = this.collection.findOne({ _id })
+  removeNode (id) {
+    const oldNode = this.collection.findOne({ id })
 
-    this.collection.findAndRemove({ _id })
+    this.collection.findAndRemove({ id })
     this.emit('change', undefined, oldNode)
   }
 
   createNode (options = {}) {
     const { typeName } = this.options
     const internal = this.createInternals(options.internal)
-    const _id = options._id || this.makeUid(JSON.stringify(options))
-    let node = { _id, typeName, internal }
+    const id = options.id || options._id || this.makeUid(JSON.stringify(options))
+    let node = { id, typeName, internal }
+
+    // TODO: remove before 1.0
+    node._id = id
 
     // transform content with transformer for given mime type
     if (internal.content && internal.mimeType) {
@@ -107,7 +110,7 @@ class ContentTypeCollection extends EventEmitter {
       return key.startsWith('__') ? key : camelCase(key)
     })
 
-    node.title = options.title || fields.title || options._id
+    node.title = options.title || fields.title || node.id
     node.date = options.date || fields.date || new Date().toISOString()
     node.slug = options.slug || fields.slug || this.slugify(node.title)
     node.content = options.content || fields.content || ''

@@ -58,7 +58,7 @@ class Source extends EventEmitter {
     // normalize references
     const refs = mapValues(options.refs, (ref, key) => ({
       fieldName: key,
-      key: ref.key || '_id',
+      key: ref.key || 'id',
       typeName: ref.typeName || options.typeName,
       description: Array.isArray(ref.typeName)
         ? `Reference to ${ref.typeName.join(', ')}`
@@ -91,11 +91,14 @@ class Source extends EventEmitter {
 
   addPage (type, options) {
     const page = {
-      _id: options._id,
+      id: options.id || options._id,
       type: type || 'page',
       component: options.component,
       internal: this.createInternals(options.internal)
     }
+
+    // TODO: remove before 1.0
+    page._id = page.id
 
     try {
       page.pageQuery = parsePageQuery(options.pageQuery || {})

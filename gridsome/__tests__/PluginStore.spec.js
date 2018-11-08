@@ -39,13 +39,13 @@ test('add node', () => {
 
   const emit = jest.spyOn(contentType, 'emit')
   const node = contentType.addNode({
-    _id: 'test',
+    id: 'test',
     title: 'Lorem ipsum dolor sit amet',
     date: '2018-09-04T23:20:33.918Z'
   })
 
   expect(node).toHaveProperty('$loki')
-  expect(node._id).toEqual('test')
+  expect(node.id).toEqual('test')
   expect(node.typeName).toEqual('TestPost')
   expect(node.title).toEqual('Lorem ipsum dolor sit amet')
   expect(node.slug).toEqual('lorem-ipsum-dolor-sit-amet')
@@ -66,7 +66,7 @@ test('update node', () => {
   const emit = jest.spyOn(contentType, 'emit')
 
   const oldNode = contentType.addNode({
-    _id: 'test',
+    id: 'test',
     date: '2018-09-04T23:20:33.918Z'
   })
 
@@ -76,7 +76,7 @@ test('update node', () => {
     title: 'New title'
   })
 
-  expect(node._id).toEqual('test')
+  expect(node.id).toEqual('test')
   expect(node.typeName).toEqual('TestPost')
   expect(node.title).toEqual('New title')
   expect(node.slug).toEqual('new-title')
@@ -96,7 +96,7 @@ test('remove node', () => {
 
   const emit = jest.spyOn(contentType, 'emit')
 
-  contentType.addNode({ _id: 'test' })
+  contentType.addNode({ id: 'test' })
   contentType.removeNode('test')
 
   expect(contentType.getNode('test')).toBeNull()
@@ -112,14 +112,14 @@ test('add type with ref', () => {
     typeName: 'TestPost',
     refs: {
       author: {
-        key: '_id',
+        key: 'id',
         typeName: 'TestAuthor'
       }
     }
   })
 
   expect(contentType.options.refs.author).toMatchObject({
-    key: '_id',
+    key: 'id',
     fieldName: 'author',
     typeName: 'TestAuthor',
     description: 'Reference to TestAuthor'
@@ -396,7 +396,7 @@ test('add page with query', () => {
 
   const page = api.store.addPage('page', {
     pageQuery: {
-      content: 'query Test { page { _id } }',
+      content: 'query Test { page { id } }',
       options: {
         foo: 'bar'
       }
@@ -404,7 +404,7 @@ test('add page with query', () => {
   })
 
   expect(typeof page.pageQuery.query).toEqual('object')
-  expect(page.pageQuery.content).toEqual('query Test { page { _id } }')
+  expect(page.pageQuery.content).toEqual('query Test { page { id } }')
   expect(page.pageQuery.options).toMatchObject({ foo: 'bar' })
   expect(page.pageQuery.paginate).toMatchObject({
     collection: undefined,
@@ -416,7 +416,7 @@ test('update page', () => {
   const api = createPlugin()
 
   api.store.addPage('page', {
-    _id: 'test',
+    id: 'test',
     title: 'Lorem ipsum dolor sit amet',
     internal: { origin: 'Test.vue' }
   })
@@ -439,7 +439,7 @@ test('update page', () => {
 test('update page path when slug is changed', () => {
   const api = createPlugin()
 
-  api.store.addPage('page', { _id: 'test' })
+  api.store.addPage('page', { id: 'test' })
 
   const page = api.store.updatePage('test', {
     slug: 'new-title'
@@ -455,7 +455,7 @@ test('remove page', () => {
 
   const emit = jest.spyOn(api.store, 'emit')
 
-  api.store.addPage('page', { _id: 'test' })
+  api.store.addPage('page', { id: 'test' })
   api.store.removePage('test')
 
   expect(api.store.getPage('test')).toBeNull()
