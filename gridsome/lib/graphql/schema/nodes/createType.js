@@ -29,7 +29,6 @@ module.exports = ({ contentType, nodeTypes, fields }) => {
     interfaces: [nodeInterface],
     isTypeOf: node => node.typeName === contentType.typeName,
     fields: () => ({
-      internal: { type: new GraphQLNonNull(internalType) },
       id: {
         type: new GraphQLNonNull(GraphQLID),
         resolve: node => node._id
