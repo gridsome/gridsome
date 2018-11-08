@@ -23,8 +23,12 @@ module.exports = () => {
   const pageType = new GraphQLObjectType({
     name: 'Page',
     fields: () => ({
+      id: {
+        type: new GraphQLNonNull(GraphQLID),
+        resolve: node => node.$loki
+      },
+
       type: { type: new GraphQLNonNull(GraphQLString) },
-      internal: { type: new GraphQLNonNull(internalType) },
       title: { type: GraphQLString },
       slug: { type: GraphQLString },
       path: { type: GraphQLString },
@@ -34,6 +38,7 @@ module.exports = () => {
       date: dateType,
 
       _id: {
+        deprecationReason: 'Use node.id instead.',
         type: new GraphQLNonNull(GraphQLID),
         resolve: node => node.$loki
       }

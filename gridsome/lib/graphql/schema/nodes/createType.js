@@ -29,8 +29,12 @@ module.exports = ({ contentType, nodeTypes, fields }) => {
     interfaces: [nodeInterface],
     isTypeOf: node => node.typeName === contentType.typeName,
     fields: () => ({
-      _id: { type: new GraphQLNonNull(GraphQLID) },
       internal: { type: new GraphQLNonNull(internalType) },
+      id: {
+        type: new GraphQLNonNull(GraphQLID),
+        resolve: node => node._id
+      },
+
       title: { type: GraphQLString },
       slug: { type: GraphQLString },
       path: { type: GraphQLString },
@@ -42,6 +46,10 @@ module.exports = ({ contentType, nodeTypes, fields }) => {
       ...createFields(contentType, fields),
       ...createRefs(contentType, nodeTypes, fields),
       ...createBelongsToRefs(contentType, nodeTypes)
+      _id: {
+        deprecationReason: 'Use node.id instead.',
+        type: new GraphQLNonNull(GraphQLID)
+      },
     })
   })
 
