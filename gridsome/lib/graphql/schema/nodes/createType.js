@@ -42,7 +42,6 @@ module.exports = ({ contentType, nodeTypes, fields }) => {
 
         ...extendNodeType(contentType, nodeType, nodeTypes),
         ...createFields(contentType, fields),
-        ...createBelongsToRefs(contentType, nodeTypes),
 
         _id: {
           deprecationReason: 'Use node.id instead.',
@@ -152,39 +151,4 @@ function createRefs (contentType, nodeTypes, fields) {
       }
     }
   })
-}
-
-function createBelongsToRefs (contentType, nodeTypes) {
-  if (isEmpty(contentType.belongsTo)) return null
-
-  const belongsTo = {
-    resolve: obj => obj,
-    type: new GraphQLObjectType({
-      name: `${contentType.typeName}BelongsTo`,
-      fields: () => mapValues(contentType.belongsTo, ref => {
-        const { foreignSchemaType, description } = ref
-        const nodeType = nodeTypes[foreignSchemaType]
-
-        return {
-          description,
-          type: new GraphQLList(nodeType),
-          resolve: (obj, args, { store }) => {
-            const { collection } = store.getContentType(foreignSchemaType)
-            const value = obj[ref.localKey]
-            const key = ref.foreignKey
-
-            return collection.find().filter(node => {
-              const field = node.fields[key]
-
-              return Array.isArray(field)
-                ? field.includes(value)
-                : false
-            })
-          }
-        }
-      })
-    })
-  }
-
-  return { belongsTo }
 }
