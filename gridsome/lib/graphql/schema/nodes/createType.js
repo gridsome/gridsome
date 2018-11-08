@@ -23,8 +23,8 @@ module.exports = ({ contentType, nodeTypes, fields }) => {
     interfaces: [nodeInterface],
     isTypeOf: node => node.typeName === contentType.typeName,
     fields: () => {
-      const customFields = omit(fields, SPECIAL_FIELDS)
-      const refs = createRefs(contentType, nodeTypes, customFields)
+      const rootFields = omit(fields, SPECIAL_FIELDS)
+      const refs = createRefs(contentType, nodeTypes, rootFields)
 
       const nodeFields = {
         id: { type: new GraphQLNonNull(GraphQLID) },
@@ -35,10 +35,10 @@ module.exports = ({ contentType, nodeTypes, fields }) => {
         excerpt: { type: GraphQLString },
         date: dateType,
 
-        ...customFields,
+        ...rootFields,
         ...refs,
         ...extendNodeType(contentType, nodeType, nodeTypes),
-        ...createFields(contentType, customFields),
+        ...createFields(contentType, fields),
 
         _id: {
           deprecationReason: 'Use node.id instead.',
