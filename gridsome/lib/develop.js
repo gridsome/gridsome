@@ -37,11 +37,14 @@ module.exports = async (context, args) => {
 
   const devMiddleware = require('webpack-dev-middleware')(compiler, {
     pathPrefix: webpackConfig.output.pathPrefix,
-    logLevel: 'error',
-    noInfo: true
+    logLevel: 'silent'
   })
 
-  devMiddleware.waitUntilValid(() => {
+  compiler.hooks.done.tap('gridsome develop', stats => {
+    if (stats.hasErrors()) {
+      return
+    }
+    
     console.log()
     console.log(`  Site running at:          ${chalk.cyan(server.url.site)}`)
     console.log(`  Explore GraphQL data at:  ${chalk.cyan(server.url.explore)}`)
@@ -64,6 +67,10 @@ module.exports = async (context, args) => {
 
   function createWebpackConfig () {
     const clientConfig = createClientConfig(app)
+
+    clientConfig
+      .plugin('friendly-errors')
+        .use(require('friendly-errors-webpack-plugin'))
 
     clientConfig
       .plugin('dev-endpoints')
