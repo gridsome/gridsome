@@ -4,7 +4,7 @@ module.exports = function (api, options) {
   api.loadSource(({ addContentType, slugify }) => {
     const contentType = addContentType({
       typeName: options.typeName,
-      route: '/:year/:month/:day/:slug'
+      route: options.route || '/blog/:year/:month/:day/:slug'
     })
 
     for (let i = 0; i < options.numNodes; i++) {
