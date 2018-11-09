@@ -1,14 +1,16 @@
 const path = require('path')
 const fs = require('fs-extra')
 const sharp = require('sharp')
+const isUrl = require('is-url')
 const crypto = require('crypto')
 const { trim } = require('lodash')
+const mime = require('mime-types')
 const md5File = require('md5-file/promise')
 const imageSize = require('probe-image-size')
 const svgDataUri = require('mini-svg-data-uri')
-const { forwardSlash } = require('../utils')
+const { forwardSlash } = require('../../utils')
 
-class ProcessQueue {
+class ImageProcessQueue {
   constructor ({ context, config }) {
     this.context = context
     this.config = config
@@ -20,31 +22,31 @@ class ProcessQueue {
   }
 
   async add (filePath, options = {}) {
-    let data
+    let asset
 
     try {
-      data = await this.preProcess(filePath, options)
+      asset = await this.preProcess(filePath, options)
     } catch (err) {
       throw err
     }
 
     if (process.env.GRIDSOME_MODE === 'serve') {
-      return data
+      return asset
     }
 
-    data.sets.forEach(({ src, width }) => {
-      if (!this._queue.has(src + data.cacheKey)) {
-        this._queue.set(src + data.cacheKey, {
+    asset.sets.forEach(({ src, width }) => {
+      if (!this._queue.has(src + asset.cacheKey)) {
+        this._queue.set(src + asset.cacheKey, {
           options: { ...options, width },
           destination: trim(src, '/'),
-          cacheKey: data.cacheKey,
-          size: data.size,
+          cacheKey: asset.cacheKey,
+          size: asset.size,
           filePath
         })
       }
     })
 
-    return data
+    return asset
   }
 
   async preProcess (filePath, options = {}) {
@@ -58,15 +60,23 @@ class ProcessQueue {
       )
     }
 
+    if (isUrl(filePath)) {
+      return {
+        src: filePath,
+        sets: []
+      }
+    }
+
     if (!await fs.exists(filePath)) {
       throw new Error(`${filePath} was not found. `)
     }
 
     const hash = await md5File(filePath)
     const buffer = await fs.readFile(filePath)
-    const { type, width, height } = imageSize.sync(buffer)
+    const { width, height } = imageSize.sync(buffer)
     const { targetDir, pathPrefix, maxImageWidth } = this.config
     const assetsDir = path.relative(targetDir, this.config.assetsDir)
+    const mimeType = mime.lookup(filePath)
 
     const imageWidth = Math.min(
       parseInt(options.width, 10) || width,
@@ -122,17 +132,18 @@ class ProcessQueue {
 
     const sets = imageSizes.map(width => {
       const height = Math.ceil(imageHeight * (width / imageWidth))
-      return { src: createSrcPath(width), width, height, type }
+      return { src: createSrcPath(width), width, height }
     })
 
-    const result = {
+    const results = {
+      type: 'image',
+      filePath,
+      mimeType,
       src: sets[sets.length - 1].src,
       size: { width: imageWidth, height: imageHeight },
       cacheKey: genHash(filePath + hash + JSON.stringify(options)),
       noscriptHTML: '',
       imageHTML: '',
-      filePath,
-      type,
       sets
     }
 
@@ -141,38 +152,38 @@ class ProcessQueue {
     const isLazy = options.immediate === undefined
 
     if (isSrcset) {
-      result.dataUri = await createDataUri(buffer, type, imageWidth, imageHeight, options)
-      result.sizes = options.sizes || `(max-width: ${imageWidth}px) 100vw, ${imageWidth}px`
-      result.srcset = result.sets.map(({ src, width }) => `${src} ${width}w`)
+      results.dataUri = await createDataUri(buffer, mimeType, imageWidth, imageHeight, options)
+      results.sizes = options.sizes || `(max-width: ${imageWidth}px) 100vw, ${imageWidth}px`
+      results.srcset = results.sets.map(({ src, width }) => `${src} ${width}w`)
     }
 
     if (isLazy && isSrcset) {
       classNames.push('g-image--lazy')
 
-      result.noscriptHTML = '' +
+      results.noscriptHTML = '' +
         `<noscript>` +
         `<img class="${classNames.join(' ')} g-image--loaded" ` +
-        `src="${result.src}" width="${result.size.width}"` +
+        `src="${results.src}" width="${results.size.width}"` +
         (options.height ? ` height="${options.height}"` : '') +
         (options.alt ? ` alt="${options.alt}">` : '>') +
         `</noscript>`
     }
 
-    result.imageHTML = '' +
+    results.imageHTML = '' +
       `<img class="${classNames.join(' ')}" ` +
-      `src="${isLazy ? result.dataUri || result.src : result.src}" ` +
-      `width="${result.size.width}"` +
+      `src="${isLazy ? results.dataUri || results.src : results.src}" ` +
+      `width="${results.size.width}"` +
       (options.height ? ` height="${options.height}"` : '') +
       (options.alt ? ` alt="${options.alt}"` : '') +
-      (isLazy && isSrcset ? ` data-srcset="${result.srcset.join(', ')}"` : '') +
-      (isLazy && isSrcset ? ` data-sizes="${result.sizes}"` : '') +
-      (isLazy && isSrcset ? ` data-src="${result.src}">` : '>')
+      (isLazy && isSrcset ? ` data-srcset="${results.srcset.join(', ')}"` : '') +
+      (isLazy && isSrcset ? ` data-sizes="${results.sizes}"` : '') +
+      (isLazy && isSrcset ? ` data-src="${results.src}">` : '>')
 
-    return result
+    return results
   }
 }
 
-ProcessQueue.uid = 0
+ImageProcessQueue.uid = 0
 
 function genHash (string) {
   return crypto.createHash('md5').update(string).digest('hex')
@@ -201,12 +212,12 @@ async function createDataUri (buffer, type, width, height, options = {}) {
   )
 }
 
-async function createBlurSvg (buffer, type, width, height, blur) {
+async function createBlurSvg (buffer, mimeType, width, height, blur) {
   const blurWidth = 64
   const blurHeight = Math.round(height * (blurWidth / width))
   const blurBuffer = await sharp(buffer).resize(blurWidth, blurHeight).toBuffer()
   const base64 = blurBuffer.toString('base64')
-  const id = `__svg-blur-${ProcessQueue.uid++}`
+  const id = `__svg-blur-${ImageProcessQueue.uid++}`
 
   return '' +
     '<defs>' +
@@ -214,7 +225,7 @@ async function createBlurSvg (buffer, type, width, height, blur) {
     `<feGaussianBlur in="SourceGraphic" stdDeviation="${blur}"/>` +
     `</filter>` +
     '</defs>' +
-    `<image x="0" y="0" filter="url(#${id})" width="${width}" height="${height}" xlink:href="data:image/${type};base64,${base64}" />`
+    `<image x="0" y="0" filter="url(#${id})" width="${width}" height="${height}" xlink:href="data:${mimeType};base64,${base64}" />`
 }
 
 // async function createTracedSvg (buffer, type, width, height) {
@@ -233,4 +244,4 @@ async function createBlurSvg (buffer, type, width, height, blur) {
 //   })
 // }
 
-module.exports = ProcessQueue
+module.exports = ImageProcessQueue

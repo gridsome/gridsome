@@ -35,8 +35,9 @@ module.exports = async (context, args) => {
   await renderHTML(queue, config)
 
   // 4. process queued images
-  await app.dispatch('beforeProcessImages', () => ({ context, config, queue: app.queue }))
-  await processImages(app.queue, config)
+  await app.dispatch('beforeProcessAssets', () => ({ context, config, queue: app.queue }))
+  await processFiles(app.queue.files, config)
+  await processImages(app.queue.images, config)
 
   // 5. copy static files
   if (fs.existsSync(config.staticDir)) {
@@ -198,6 +199,17 @@ async function renderHTML (queue, config) {
   worker.end()
 
   console.info(`Render HTML (${totalPages} pages) - ${timer(hirestime.S)}s`)
+}
+
+async function processFiles (queue, { outDir }) {
+  const timer = hirestime()
+  const totalFiles = queue.queue.length
+
+  for (const file of queue.queue) {
+    await fs.copy(file.filePath, path.join(outDir, file.destination))
+  }
+
+  console.info(`Process files (${totalFiles} files) - ${timer(hirestime.S)}s`)
 }
 
 async function processImages (queue, { outDir, minProcessImageWidth }) {

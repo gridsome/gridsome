@@ -12,7 +12,7 @@ export default {
   functional: true,
 
   props: {
-    src: { type: Object },
+    src: { type: [Object, String] },
     width: { type: String },
     alt: { type: String },
     immediate: { type: true },
@@ -30,11 +30,26 @@ export default {
 
   render: (h, { data, props, parent }) => {
     const isDev = process.env.NODE_ENV === 'development'
-    const { src, srcset, sizes, size, dataUri } = props.src
     const isLazy = typeof props.immediate === 'undefined'
     const classNames = (data.class || []).concat(['g-image'])
     const noscriptClass = classNames.slice()
     const res = []
+
+    let src = ''
+    let sizes = ''
+    let dataUri = ''
+    let srcset = []
+    let size = { width: undefined }
+
+    if (typeof props.src === 'string') {
+      src = props.src
+    } else {
+      src = props.src.src
+      srcset = props.src.srcset
+      sizes = props.src.sizes
+      size = props.src.size
+      dataUri = props.src.dataUri
+    }
 
     const ref = data.ref || `__image_${uid++}`
     const key = data.key || isDev ? ref : undefined

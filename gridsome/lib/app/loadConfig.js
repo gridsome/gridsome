@@ -113,7 +113,7 @@ function normalizePlugins (context, plugins) {
 
     const hash = crypto.createHash('md5')
     const uid = hash.update(`${plugin.use}-${index}`).digest('hex')
-    const entries = resolvePluginEntries(plugin.use)
+    const entries = resolvePluginEntries(plugin.use, context)
 
     return defaultsDeep(plugin, {
       server: true,
@@ -126,8 +126,16 @@ function normalizePlugins (context, plugins) {
   })
 }
 
-function resolvePluginEntries (id) {
-  const dirName = path.isAbsolute(id) ? id : path.dirname(require.resolve(id))
+function resolvePluginEntries (id, context) {
+  let dirName = ''
+
+  if (path.isAbsolute(id)) {
+    dirName = id
+  } else if (id.startsWith('~/')) {
+    dirName = path.join(context, id.replace(/^~\//, ''))
+  } else {
+    dirName = path.dirname(require.resolve(id))
+  }
 
   const entryPath = entry => {
     const filePath = path.resolve(dirName, entry)

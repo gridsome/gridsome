@@ -6,14 +6,13 @@ const { createWorker } = require('../../workers')
 module.exports = ({ context, config, queue }) => {
   const assetsDir = path.relative(config.targetDir, config.assetsDir)
   const worker = createWorker('image-processor')
-  const minWidth = config.minProcessImageWidth
 
   return async (req, res, next) => {
     const options = mapValues(req.query, value => {
       return decodeURIComponent(value)
     })
 
-    const relPath = req.params[0].replace(/(%2e|\.){2}/g, '')
+    const relPath = req.params[1].replace(/(%2e|\.){2}/g, '')
     const filePath = path.join(context, relPath)
 
     if (
@@ -24,17 +23,13 @@ module.exports = ({ context, config, queue }) => {
     }
 
     const { ext } = path.parse(filePath)
-    let data
+    let asset
 
     try {
-      data = await queue.preProcess(filePath, options)
+      asset = await queue.add(filePath, options)
     } catch (err) {
       return next(err)
     }
-
-    const { cacheKey, size } = data
-    const destPath = path.resolve(config.cacheDir, assetsDir, cacheKey + ext)
-    const args = { filePath, destPath, minWidth, options, size }
 
     const serveFile = async file => {
       const buffer = await fs.readFile(file)
@@ -49,13 +44,28 @@ module.exports = ({ context, config, queue }) => {
       res.end(buffer, 'binary')
     }
 
-    if (fs.existsSync(destPath)) {
-      return serveFile(destPath)
-    }
-
     try {
-      await worker.processImage(args)
-      serveFile(destPath)
+      if (asset.type === 'image') {
+        const destPath = path.join(
+          config.cacheDir,
+          assetsDir,
+          asset.cacheKey + ext
+        )
+
+        if (!fs.existsSync(destPath)) {
+          await worker.processImage({
+            minWidth: config.minProcessImageWidth,
+            size: asset.size,
+            filePath,
+            destPath,
+            options
+          })
+        }
+
+        serveFile(destPath)
+      } else {
+        serveFile(filePath)
+      }
     } catch (err) {
       next(err)
     }

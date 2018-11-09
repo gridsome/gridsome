@@ -8,14 +8,26 @@ const pathToRegexp = require('path-to-regexp')
 const slugify = require('@sindresorhus/slugify')
 const parsePageQuery = require('../graphql/parsePageQuery')
 const { mapValues, cloneDeep } = require('lodash')
+const { cache, nodeCache } = require('../utils/cache')
 
 class Source extends EventEmitter {
-  constructor (app, typeName, { transformers }) {
+  constructor (app, options, { transformers }) {
     super()
     autoBind(this)
 
-    this._typeName = typeName
-    this._transformers = transformers
+    this._app = app
+    this._typeName = options.typeName
+    this._resolveAbsolutePaths = options.resolveAbsolutePaths || false
+    this._transformers = mapValues(transformers || app.config.transformers, transformer => {
+      return new transformer.TransformerClass(transformer.options, {
+        localOptions: options[transformer.name] || {},
+        resolveNodeFilePath: this.resolveNodeFilePath,
+        context: app.context,
+        queue: app.queue,
+        cache,
+        nodeCache
+      })
+    })
     
     this.context = app.context
     this.store = app.store
@@ -53,10 +65,15 @@ class Source extends EventEmitter {
         : `Reference to ${ref.typeName}`
     }))
 
+    if (typeof options.resolveAbsolutePaths === 'undefined') {
+      options.resolveAbsolutePaths = this._resolveAbsolutePaths
+    }
+
     return this.store.addContentType(this, {
       route: options.route,
       fields: options.fields || {},
       typeName: options.typeName,
+      resolveAbsolutePaths: options.resolveAbsolutePaths,
       mimeTypes: [],
       belongsTo: {},
       makePath,
@@ -154,6 +171,16 @@ class Source extends EventEmitter {
 
   resolve (p) {
     return path.resolve(this.context, p)
+  }
+
+  resolveNodeFilePath (node, toPath) {
+    const { collection } = this.getContentType(node.typeName)
+
+    return this._app.resolveFilePath(
+      node.internal.origin,
+      toPath,
+      collection.resolveAbsolutePaths
+    )
   }
 }
 

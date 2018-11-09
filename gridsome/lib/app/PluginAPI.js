@@ -9,22 +9,9 @@ class PluginAPI {
     this._app = app
 
     this.context = app.context
+    this.store = new PluginStore(app, entry.options, { transformers })
 
     autoBind(this)
-
-    const pluginTransformers = transformers || mapValues(app.config.transformers, transformer => {
-      return new transformer.TransformerClass(transformer.options, {
-        localOptions: entry.options[transformer.name] || {},
-        context: app.context,
-        queue: app.queue,
-        cache,
-        nodeCache
-      })
-    })
-
-    this.store = new PluginStore(app, entry.options.typeName, {
-      transformers: pluginTransformers
-    })
 
     if (process.env.NODE_ENV === 'development') {
       let regenerateTimeout = null

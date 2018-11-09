@@ -1,18 +1,19 @@
 const path = require('path')
+const isUrl = require('is-url')
 const Router = require('vue-router')
 const autoBind = require('auto-bind')
 const hirestime = require('hirestime')
 const BaseStore = require('./BaseStore')
 const PluginAPI = require('./PluginAPI')
 const CodeGenerator = require('./CodeGenerator')
-const ImageProcessQueue = require('./ImageProcessQueue')
+const AssetsQueue = require('./queue/AssetsQueue')
 const createSchema = require('../graphql/createSchema')
 const loadConfig = require('./loadConfig')
 const { defaultsDeep } = require('lodash')
 const createRoutes = require('./createRoutes')
 const { execute, graphql } = require('../graphql/graphql')
 const { version } = require('../../package.json')
-
+const { parseUrl, resolvePath } = require('../utils')
 
 class App {
   constructor (context, options) {
@@ -64,7 +65,7 @@ class App {
 
   init () {
     this.store = new BaseStore(this)
-    this.queue = new ImageProcessQueue(this)
+    this.queue = new AssetsQueue(this)
     this.generator = new CodeGenerator(this)
 
     this.config.plugins.map(entry => {
@@ -89,6 +90,8 @@ class App {
     })
 
     this.isInitialized = true
+
+    return this
   }
 
   async loadSources () {
@@ -96,10 +99,10 @@ class App {
   }
 
   async createSchema () {
+    const graphql = require('../graphql/graphql')
+
     this.schema = createSchema(this.store, {
-      schemas: await this.dispatch('createSchema', () => ({
-        graphql: this.graphql
-      }))
+      schemas: await this.dispatch('createSchema', () => graphql)
     })
   }
 
@@ -153,6 +156,24 @@ class App {
 
   resolve (p) {
     return path.resolve(this.context, p)
+  }
+
+  resolveFilePath (fromPath, toPath, isAbsolute) {
+    let rootDir = null
+
+    if (typeof isAbsolute === 'string') {
+      rootDir = isUrl(isAbsolute)
+        ? parseUrl(isAbsolute).fullUrl
+        : isAbsolute
+    }
+
+    if (isAbsolute === true) {
+      rootDir = isUrl(fromPath)
+        ? parseUrl(fromPath).baseUrl
+        : this.context
+    }
+
+    return resolvePath(fromPath, toPath, rootDir)
   }
 
   graphql (docOrQuery, variables = {}) {

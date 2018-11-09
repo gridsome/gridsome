@@ -1,32 +1,26 @@
 const App = require('../lib/app/App')
 const PluginAPI = require('../lib/app/PluginAPI')
+const JSONTransformer = require('./__fixtures__/JSONTransformer')
 
-let app, api
-
-const transformers = {
-  'application/json': {
-    parse (content) {
-      return {
-        fields: JSON.parse(content)
+function createPlugin (context = '/') {
+  const app = new App(context, { config: { plugins: [] }}).init()
+  const api = new PluginAPI(app, {
+    entry: { options: {}, clientOptions: undefined },
+    transformers: {
+      'application/json': {
+        TransformerClass: JSONTransformer,
+        options: {},
+        name: 'json'
       }
     }
-  }
+  })
+
+  return api
 }
 
-beforeEach(() => {
-  const entry = { options: {}, clientOptions: undefined }
-
-  app = new App('/', { config: { plugins: [] }})
-  app.init()
-  api = new PluginAPI(app, { entry, transformers })
-})
-
-afterAll(() => {
-  app = null
-  api = null
-})
-
 test('add type', () => {
+  const api = createPlugin()
+
   const contentType = api.store.addContentType({
     typeName: 'TestPost'
   })
@@ -37,6 +31,8 @@ test('add type', () => {
 })
 
 test('add node', () => {
+  const api = createPlugin()
+
   const contentType = api.store.addContentType({
     typeName: 'TestPost'
   })
@@ -61,6 +57,8 @@ test('add node', () => {
 })
 
 test('update node', () => {
+  const api = createPlugin()
+
   const contentType = api.store.addContentType({
     typeName: 'TestPost'
   })
@@ -90,6 +88,8 @@ test('update node', () => {
 })
 
 test('remove node', () => {
+  const api = createPlugin()
+
   const contentType = api.store.addContentType({
     typeName: 'TestPost'
   })
@@ -106,6 +106,8 @@ test('remove node', () => {
 })
 
 test('add type with ref', () => {
+  const api = createPlugin()
+
   const contentType = api.store.addContentType({
     typeName: 'TestPost',
     refs: {
@@ -125,6 +127,8 @@ test('add type with ref', () => {
 })
 
 test('add type with dynamic route', () => {
+  const api = createPlugin()
+
   const contentType = api.store.addContentType({
     typeName: 'TestPost',
     route: ':year/:month/:day/:slug'
@@ -140,6 +144,8 @@ test('add type with dynamic route', () => {
 })
 
 test('transform node', () => {
+  const api = createPlugin()
+
   const contentType = api.store.addContentType({
     typeName: 'TestPost'
   })
@@ -154,7 +160,188 @@ test('transform node', () => {
   expect(node.fields).toMatchObject({ foo: 'bar' })
 })
 
+test('resolve absolute file paths', () => {
+  const api = createPlugin('/absolute/dir/to/project')
+
+  const contentType = api.store.addContentType({
+    typeName: 'Test',
+    resolveAbsolutePaths: true
+  })
+
+  const node = contentType.addNode({
+    fields: {
+      file: 'image.png',
+      file2: '/image.png',
+      file3: '../image.png',
+      url: 'https://example.com/image.jpg',
+      url2: '//example.com/image.jpg',
+      url3: 'git@github.com:gridsome/gridsome.git',
+      url4: 'ftp://ftp.example.com',
+      email: 'email@example.com',
+      text: 'Lorem ipsum dolor sit amet.',
+      text2: 'example.com'
+    },
+    internal: {
+      origin: '/absolute/dir/to/a/file.md'
+    }
+  })
+
+  expect(node.fields.file).toEqual('/absolute/dir/to/a/image.png')
+  expect(node.fields.file2).toEqual('/absolute/dir/to/project/image.png')
+  expect(node.fields.file3).toEqual('/absolute/dir/to/image.png')
+  expect(node.fields.text).toEqual('Lorem ipsum dolor sit amet.')
+  expect(node.fields.text2).toEqual('example.com')
+  expect(node.fields.url).toEqual('https://example.com/image.jpg')
+  expect(node.fields.url2).toEqual('//example.com/image.jpg')
+  expect(node.fields.url3).toEqual('git@github.com:gridsome/gridsome.git')
+  expect(node.fields.url4).toEqual('ftp://ftp.example.com')
+  expect(node.fields.email).toEqual('email@example.com')
+})
+
+test('resolve absolute file paths with a custom path', () => {
+  const api = createPlugin('/absolute/dir/to/project')
+
+  const contentType = api.store.addContentType({
+    typeName: 'C',
+    resolveAbsolutePaths: '/path/to/dir'
+  })
+
+  const node = contentType.addNode({
+    fields: {
+      file: '/image.png'
+    },
+    internal: {
+      origin: '/absolute/dir/to/a/file.md'
+    }
+  })
+
+  expect(node.fields.file).toEqual('/path/to/dir/image.png')
+})
+
+test('don\'t touch absolute paths when resolveAbsolutePaths is not set', () => {
+  const api = createPlugin('/absolute/dir/to/project')
+
+  const contentType = api.store.addContentType({ typeName: 'A' })
+
+  const node = contentType.addNode({
+    fields: {
+      file: '/image.png',
+      file2: 'image.png',
+      file3: '../image.png'
+    },
+    internal: {
+      origin: '/absolute/dir/to/a/file.md'
+    }
+  })
+
+  expect(node.fields.file).toEqual('/image.png')
+  expect(node.fields.file2).toEqual('/absolute/dir/to/a/image.png')
+  expect(node.fields.file3).toEqual('/absolute/dir/to/image.png')
+})
+
+test('always resolve relative paths from filesytem sources', () => {
+  const api = createPlugin()
+
+  const contentType = api.store.addContentType({ typeName: 'A' })
+
+  const node = contentType.addNode({
+    fields: {
+      file: '../image.png'
+    },
+    internal: {
+      origin: '/absolute/dir/to/a/file.md'
+    }
+  })
+
+  expect(node.fields.file).toEqual('/absolute/dir/to/image.png')
+})
+
+test('resolve paths from external sources', () => {
+  const api = createPlugin('/absolute/dir/to/project')
+
+  const contentType1 = api.store.addContentType({ typeName: 'A' })
+  const contentType2 = api.store.addContentType({ typeName: 'B', resolveAbsolutePaths: true })
+
+  const node1 = contentType1.addNode({
+    fields: {
+      file: '/image.png',
+      file2: 'image.png',
+      file3: '../../image.png'
+    },
+    internal: {
+      origin: 'https://www.example.com/2018/11/02/blog-post'
+    }
+  })
+
+  const node2 = contentType2.addNode({
+    fields: {
+      file: '/images/image.png',
+      file2: 'images/image.png',
+      file3: './images/image.png'
+    },
+    internal: {
+      origin: 'https://www.example.com/2018/11/02/another-blog-post/'
+    }
+  })
+
+  expect(node1.fields.file).toEqual('/image.png')
+  expect(node1.fields.file2).toEqual('https://www.example.com/2018/11/02/image.png')
+  expect(node1.fields.file3).toEqual('https://www.example.com/2018/image.png')
+  expect(node2.fields.file).toEqual('https://www.example.com/images/image.png')
+  expect(node2.fields.file2).toEqual('https://www.example.com/2018/11/02/another-blog-post/images/image.png')
+  expect(node2.fields.file3).toEqual('https://www.example.com/2018/11/02/another-blog-post/images/image.png')
+})
+
+test('resolve paths from external sources with a custom url', () => {
+  const api = createPlugin()
+
+  const contentType = api.store.addContentType({
+    typeName: 'A',
+    resolveAbsolutePaths: 'https://cdn.example.com/assets/images'
+  })
+
+  const contentType2 = api.store.addContentType({
+    typeName: 'B',
+    resolveAbsolutePaths: 'https://cdn.example.com/assets/images/'
+  })
+
+  const node = contentType.addNode({
+    fields: {
+      file: '/image.png',
+      file2: 'image.png',
+      file3: '../image.png',
+      file4: 'https://subdomain.example.com/images/image.png'
+    },
+    internal: {
+      origin: 'https://www.example.com/2018/11/02/blog-post.html'
+    }
+  })
+
+  const node2 = contentType2.addNode({
+    fields: {
+      file: '/image.png',
+      file2: 'image.png',
+      file3: '../image.png',
+      file4: 'https://subdomain.example.com/images/image.png'
+    },
+    internal: {
+      origin: 'https://www.example.com/2018/11/02/blog-post.html'
+    }
+  })
+
+  expect(node.fields.file).toEqual('https://cdn.example.com/assets/image.png')
+  expect(node.fields.file2).toEqual('https://www.example.com/2018/11/02/image.png')
+  expect(node.fields.file3).toEqual('https://www.example.com/2018/11/image.png')
+  expect(node.fields.file4).toEqual('https://subdomain.example.com/images/image.png')
+  expect(node2.fields.file).toEqual('https://cdn.example.com/assets/images/image.png')
+  expect(node2.fields.file2).toEqual('https://www.example.com/2018/11/02/image.png')
+  expect(node2.fields.file3).toEqual('https://www.example.com/2018/11/image.png')
+  expect(node2.fields.file4).toEqual('https://subdomain.example.com/images/image.png')
+})
+
 test('fail if transformer is not installed', () => {
+  const api = createPlugin()
+
   const contentType = api.store.addContentType({
     typeName: 'TestPost'
   })
@@ -170,6 +357,8 @@ test('fail if transformer is not installed', () => {
 })
 
 test('generate slug from any string', () => {
+  const api = createPlugin()
+
   const slug1 = api.store.slugify('Lorem ipsum dolor sit amet')
   const slug2 = api.store.slugify('String with æøå characters')
   const slug3 = api.store.slugify('String/with / slashes')
@@ -182,6 +371,8 @@ test('generate slug from any string', () => {
 })
 
 test('add page', () => {
+  const api = createPlugin()
+
   const emit = jest.spyOn(api.store, 'emit')
   const page = api.store.addPage('page', {
     title: 'Lorem ipsum dolor sit amet',
@@ -201,6 +392,8 @@ test('add page', () => {
 })
 
 test('add page with query', () => {
+  const api = createPlugin()
+
   const page = api.store.addPage('page', {
     pageQuery: {
       content: 'query Test { page { _id } }',
@@ -220,6 +413,8 @@ test('add page with query', () => {
 })
 
 test('update page', () => {
+  const api = createPlugin()
+
   api.store.addPage('page', {
     _id: 'test',
     title: 'Lorem ipsum dolor sit amet',
@@ -242,6 +437,8 @@ test('update page', () => {
 })
 
 test('update page path when slug is changed', () => {
+  const api = createPlugin()
+
   api.store.addPage('page', { _id: 'test' })
 
   const page = api.store.updatePage('test', {
@@ -254,6 +451,8 @@ test('update page path when slug is changed', () => {
 })
 
 test('remove page', () => {
+  const api = createPlugin()
+
   const emit = jest.spyOn(api.store, 'emit')
 
   api.store.addPage('page', { _id: 'test' })

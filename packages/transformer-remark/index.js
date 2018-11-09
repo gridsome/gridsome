@@ -26,7 +26,7 @@ class RemarkTransformer {
 
   constructor (options, { localOptions, context, nodeCache, queue }) {
     this.options = options
-    this.localOptions = this.localOptions
+    this.localOptions = localOptions
     this.context = context
     this.nodeCache = nodeCache
     this.queue = queue
