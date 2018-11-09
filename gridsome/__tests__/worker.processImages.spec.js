@@ -1,6 +1,7 @@
 const path = require('path')
 const fs = require('fs-extra')
 const imageSize = require('probe-image-size')
+const AssetsQueue = require('../lib/app/queue/AssetsQueue')
 const ImageProcessQueue = require('../lib/app/queue/ImageProcessQueue')
 const { process: processImages } = require('../lib/workers/image-processor')
 const targetDir = path.join(__dirname, 'assets', 'static')
@@ -97,14 +98,14 @@ async function process (filenames, options = {}) {
     imageExtensions: ['.jpg', '.png', '.svg', '.gif', '.webp']
   }
   const testAssetsDir = path.join(__dirname, 'assets')
-  const processQueue = new ImageProcessQueue({ context: __dirname, config })
+  const processQueue = new AssetsQueue({ context: __dirname, config })
 
   const files = await Promise.all(filenames.map(async filename => {
     const filePath = path.join(testAssetsDir, filename)
     return processQueue.add(filePath, options)
   }))
 
-  await processImages({ queue: processQueue.queue, outDir: assetsDir })
+  await processImages({ queue: processQueue.images.queue, outDir: assetsDir })
 
   return Promise.all(files.map(({ filePath, src }) => {
     const destPath = path.join(assetsDir, src)

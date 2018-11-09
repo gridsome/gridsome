@@ -1,9 +1,9 @@
 const path = require('path')
 const fs = require('fs-extra')
 const AssetsQueue = require('../lib/app/queue/AssetsQueue')
-const targetDir = path.join(__dirname, 'assets', 'static')
+const context = __dirname
+const targetDir = path.join(context, 'assets', 'static')
 const assetsDir = path.join(targetDir, 'assets')
-const context = assetsDir
 const pathPrefix = '/'
 
 const baseconfig = {
@@ -42,4 +42,28 @@ test('generate src with hash', async () => {
   const result = await queue.add(filePath, { hash: true })
 
   expect(result.src).toEqual('/assets/files/dummy.test.pdf')
+})
+
+test('handle external file urls', async () => {
+  const filePath = 'https://www.example.com/assets/files/document.pdf'
+  const queue = new AssetsQueue({ context, config: baseconfig })
+
+  const result = await queue.add(filePath)
+
+  expect(result.type).toEqual('file')
+  expect(result.src).toEqual('https://www.example.com/assets/files/document.pdf')
+  expect(result.mimeType).toEqual('application/pdf')
+  expect(result.filePath).toEqual(filePath)
+})
+
+test('handle external file urls', async () => {
+  const filePath = '/assets/files/document.pdf'
+  const queue = new AssetsQueue({ context, config: baseconfig })
+
+  const result = await queue.add(filePath)
+
+  expect(result.type).toEqual('file')
+  expect(result.src).toEqual('/assets/files/document.pdf')
+  expect(result.mimeType).toEqual('application/pdf')
+  expect(result.filePath).toEqual(filePath)
 })

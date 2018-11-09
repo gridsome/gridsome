@@ -2,9 +2,9 @@ const path = require('path')
 const fs = require('fs-extra')
 const AssetsQueue = require('../lib/app/queue/AssetsQueue')
 const ImageProcessQueue = require('../lib/app/queue/ImageProcessQueue')
-const targetDir = path.join(__dirname, 'assets', 'static')
+const context = __dirname
+const targetDir = path.join(context, 'assets', 'static')
 const assetsDir = path.join(targetDir, 'assets')
-const context = assetsDir
 const pathPrefix = '/'
 
 const baseconfig = {
@@ -190,6 +190,30 @@ test('skip srcset and dataUri', async () => {
   expect(result.dataUri).toBeUndefined()
   expect(result.sizes).toBeUndefined()
   expect(result.imageHTML).toMatchSnapshot()
+})
+
+test('handle external image urls', async () => {
+  const filePath = 'https://www.example.com/assets/images/image.png'
+  const queue = new AssetsQueue({ context, config: baseconfig })
+
+  const result = await queue.add(filePath)
+
+  expect(result.type).toEqual('image')
+  expect(result.src).toEqual(filePath)
+  expect(result.filePath).toEqual(filePath)
+  expect(result.mimeType).toEqual('image/png')
+})
+
+test('handle absolute image paths outside context', async () => {
+  const filePath = '/assets/images/image.png'
+  const queue = new AssetsQueue({ context, config: baseconfig })
+
+  const result = await queue.add(filePath)
+
+  expect(result.type).toEqual('image')
+  expect(result.src).toEqual(filePath)
+  expect(result.filePath).toEqual(filePath)
+  expect(result.mimeType).toEqual('image/png')
 })
 
 test('fail if file is missing', async () => {

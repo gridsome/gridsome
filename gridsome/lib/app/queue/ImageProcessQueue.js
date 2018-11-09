@@ -60,13 +60,6 @@ class ImageProcessQueue {
       )
     }
 
-    if (isUrl(filePath)) {
-      return {
-        src: filePath,
-        sets: []
-      }
-    }
-
     if (!await fs.exists(filePath)) {
       throw new Error(`${filePath} was not found. `)
     }
@@ -136,9 +129,6 @@ class ImageProcessQueue {
     })
 
     const results = {
-      type: 'image',
-      filePath,
-      mimeType,
       src: sets[sets.length - 1].src,
       size: { width: imageWidth, height: imageHeight },
       cacheKey: genHash(filePath + hash + JSON.stringify(options)),

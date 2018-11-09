@@ -1,4 +1,6 @@
 const path = require('path')
+const isUrl = require('is-url')
+const mime = require('mime-types')
 const FileProcessQueue = require('./FileProcessQueue')
 const ImageProcessQueue = require('./ImageProcessQueue')
 
@@ -9,13 +11,27 @@ class AssetsQueue {
     this.images = new ImageProcessQueue(app)
   }
 
-  add (filePath, options) {
+  async add (filePath, options) {
+    const { config, context } = this.app
     const { ext } = path.parse(filePath)
-    const { imageExtensions } = this.app.config
+    const isImage = config.imageExtensions.includes(ext)
+    
+    const data = {
+      type: isImage ? 'image' : 'file',
+      mimeType: mime.lookup(filePath),
+      filePath
+    }
 
-    return imageExtensions.includes(ext)
-      ? this.images.add(filePath, options)
-      : this.files.add(filePath, options)
+    // TODO: process external files and images
+    if (isUrl(filePath) || !filePath.startsWith(context)) {
+      return { ...data, src: filePath }
+    }
+
+    const results = isImage
+      ? await this.images.add(filePath, options)
+      : await this.files.add(filePath, options)
+
+    return { ...data, ...results }
   }
 }
 

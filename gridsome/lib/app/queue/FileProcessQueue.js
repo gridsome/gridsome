@@ -2,7 +2,6 @@ const path = require('path')
 const fs = require('fs-extra')
 const isUrl = require('is-url')
 const { trim } = require('lodash')
-const mime = require('mime-types')
 const md5File = require('md5-file/promise')
 const { forwardSlash } = require('../../utils')
 
@@ -41,10 +40,6 @@ class FileProcessQueue {
   }
 
   async preProcess (filePath, options) {
-    if (isUrl(filePath)) {
-      return filePath
-    }
-
     if (!await fs.exists(filePath)) {
       throw new Error(`${filePath} was not found. `)
     }
@@ -52,7 +47,6 @@ class FileProcessQueue {
     const { targetDir, pathPrefix } = this.config
     const assetsDir = path.relative(targetDir, this.config.assetsDir)
     const relPath = path.relative(this.context, filePath)
-    const mimeType = mime.lookup(filePath)
 
     let filename = ''
 
@@ -71,9 +65,6 @@ class FileProcessQueue {
     }
 
     return {
-      type: 'file',
-      filePath,
-      mimeType,
       src: forwardSlash(path.join(pathPrefix, assetsDir, 'files', filename))
     }
   }

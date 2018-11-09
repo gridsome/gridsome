@@ -39,16 +39,16 @@ export default {
     let sizes = ''
     let dataUri = ''
     let srcset = []
-    let size = { width: undefined }
+    let size = { width: props.width }
 
     if (typeof props.src === 'string') {
       src = props.src
     } else {
       src = props.src.src
-      srcset = props.src.srcset
-      sizes = props.src.sizes
-      size = props.src.size
-      dataUri = props.src.dataUri
+      if (props.src.srcset) srcset = props.src.srcset
+      if (props.src.sizes) sizes = props.src.sizes
+      if (props.src.size) size = props.src.size
+      if (props.src.dataUri) dataUri = props.src.dataUri
     }
 
     const ref = data.ref || `__image_${uid++}`
