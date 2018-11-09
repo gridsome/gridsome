@@ -44,22 +44,35 @@ module.exports = CodeGenerator
 
 async function genIcons ({ config, resolve, queue }) {
   const { touchicon, favicon } = config.icon
+  const touchiconPath = resolve(touchicon.src)
+  const faviconPath = resolve(favicon.src)
+  
+  const icons = {
+    precomposed: false,
+    touchicons: [],
+    favicons: []
+  }
 
-  const touchicons = await queue.add(resolve(touchicon.src), {
-    sizes: touchicon.sizes,
-    srcset: false
-  })
+  if (await fs.exists(touchiconPath)) {
+    const touchicons = await queue.add(touchiconPath, {
+      sizes: touchicon.sizes,
+      srcset: false
+    })
+    
+    icons.precomposed = touchicon.precomposed
+    icons.touchicons = touchicons.sets
+  }
 
-  const favicons = await queue.add(resolve(favicon.src), {
-    sizes: favicon.sizes,
-    srcset: false
-  })
+  if (await fs.exists(faviconPath)) {
+    const favicons = await queue.add(faviconPath, {
+      sizes: favicon.sizes,
+      srcset: false
+    })
 
-  return `export default ${JSON.stringify({
-    precomposed: touchicon.precomposed,
-    touchicons: touchicons.sets || [],
-    favicons: favicons.sets || []
-  })}`
+    icons.favicons = favicons.sets
+  }
+
+  return `export default ${JSON.stringify(icons, null, 2)}`
 }
 
 function genConfig ({ config }) {
