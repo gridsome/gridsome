@@ -68,7 +68,7 @@ class DatoCmsSource {
 
       const contentType = {
         typeName: makeTypeName(itemType.name),
-        route: routes[itemType.name] || `${slugify(itemType.name)}/:slug`,
+        route: routes[itemType.name] || `/${slugify(itemType.name)}/:slug`,
       }
 
       const collection = addContentType(contentType)
