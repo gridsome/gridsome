@@ -1,0 +1,23 @@
+{
+  "version": "0.0.1",
+  "name": "@gridsome/source-datocms",
+  "description": "DatoCMS source for Gridsome",
+  "homepage": "https://github.com/gridsome/gridsome/tree/master/packages/source-datocms#readme",
+  "repository": "https://github.com/gridsome/gridsome/tree/master/packages/source-datocms",
+  "main": "index.js",
+  "keywords": [
+    "gridsome",
+    "gridsome-plugin",
+    "datocms"
+  ],
+  "dependencies": {
+    "datocms-client": "^0.7.5",
+    "humps": "^2.0.1"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=8"
+  }
+}
