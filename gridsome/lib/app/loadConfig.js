@@ -2,7 +2,7 @@ const path = require('path')
 const fs = require('fs-extra')
 const crypto = require('crypto')
 const { defaultsDeep, camelCase } = require('lodash')
-const { internalRE, transformerRE } = require('../utils/constants')
+const { internalRE, transformerRE, SUPPORTED_IMAGE_TYPES } = require('../utils/constants')
 
 const builtInPlugins = [
   path.resolve(__dirname, '../plugins/source-vue')
@@ -61,7 +61,7 @@ module.exports = (context, options = {}, pkg = {}) => {
   config.cacheDir = resolve('.cache')
   config.minProcessImageWidth = 500 // TODO: find a better name for this
   config.maxImageWidth = localConfig.maxImageWidth || 1920
-  config.imageExtensions = ['.png', '.jpeg', '.jpg', '.gif', '.svg', '.webp']
+  config.imageExtensions = SUPPORTED_IMAGE_TYPES
 
   // max cache age for html markup in serve mode
   config.maxCacheAge = localConfig.maxCacheAge || 1000

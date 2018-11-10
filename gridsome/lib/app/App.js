@@ -177,7 +177,8 @@ class App {
   }
 
   graphql (docOrQuery, variables = {}) {
-    const context = { store: this.store, config: this.config }
+    const context = this.createSchemaContext();
+    
     const func = typeof docOrQuery === 'object' ? execute : graphql
 
     if (typeof docOrQuery === 'string') {
@@ -191,7 +192,6 @@ class App {
 
   queryRouteData (route, docOrQuery) {
     const emptyData = { data: {}}
-
     if (!route.matched.length) return emptyData
 
     const { pageQuery } = route.matched[0].components.default()
@@ -210,6 +210,14 @@ class App {
     return hotReload
       ? this.generator.generate('now.js')
       : undefined
+  }
+
+  createSchemaContext() {
+    return {
+      store: this.store,
+      config: this.config,
+      queue: this.queue
+    };
   }
 }
 
