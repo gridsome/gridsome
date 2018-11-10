@@ -2,30 +2,34 @@ const fs = require('fs')
 const path = require('path')
 
 const { GraphQLJSON } = require('../../graphql')
+const { fieldResolver } = require('../resolvers')
 const { SUPPORTED_IMAGE_TYPES } = require('../../../utils/constants')
 
 exports.isImage = value => {
-  const extName = path.extname(value)
+  if (typeof value === 'string') {
+    const ext = path.extname(value).toLowerCase()
 
-  if (!(typeof value === 'string' || value instanceof String)) {
-    return false
+    if (SUPPORTED_IMAGE_TYPES.includes(ext)) {
+      return true
+    }
   }
 
-  if (!SUPPORTED_IMAGE_TYPES.includes(extName.toLowerCase())) {
-    return false
-  }
-
-  if (path.basename(value) === value) {
-    return false
-  }
-
-  return true
+  return false
 }
 
 exports.imageType = {
   type: GraphQLJSON,
   args: {},
-  resolve: async (fields, { }, context, { fieldName }) => {
-    return await context.queue.add(fields[fieldName]);;
+  async resolve (obj, args, context, info) {
+    const value = fieldResolver(obj, args, context, info)
+    const result = await context.queue.add(value)
+
+    return {
+      src: result.src,
+      size: result.size,
+      sizes: result.sizes,
+      srcset: result.srcset,
+      dataUri: result.dataUri
+    }
   }
 }

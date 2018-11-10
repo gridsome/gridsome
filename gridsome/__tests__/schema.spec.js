@@ -1,9 +1,16 @@
+const path = require('path')
 const App = require('../lib/app/App')
 const PluginAPI = require('../lib/app/PluginAPI')
 const createSchema = require('../lib/graphql/createSchema')
 const { inferTypes } = require('../lib/graphql/schema/infer-types')
 const { GraphQLDate } = require('../lib/graphql/schema/types/date')
+const { imageType } = require('../lib/graphql/schema/types/image')
 const JSONTransformer = require('./__fixtures__/JSONTransformer')
+
+const context = __dirname
+const targetDir = path.join(context, 'assets', 'static')
+const assetsDir = path.join(targetDir, 'assets')
+const pathPrefix = '/'
 
 const {
   graphql,
@@ -18,7 +25,17 @@ const {
 let app, api
 
 beforeEach(() => {
-  app = new App('/', { config: { plugins: [] }}).init()
+  app = new App(context, {
+    config: {
+      plugins: [],
+      pathPrefix,
+      targetDir,
+      assetsDir,
+      imageExtensions: ['.png'],
+      maxImageWidth: 1000
+    }
+  }).init()
+  
   api = new PluginAPI(app, {
     entry: { options: {}, clientOptions: undefined },
     transformers: {
@@ -318,6 +335,26 @@ test('infer date fields', () => {
   expect(types.date5.type).toEqual(GraphQLDate)
 })
 
+test('infer image fields', () => {
+  const types = inferTypes([
+    {
+      fields: {
+        image1: 'image.png',
+        image2: '/image.png',
+        image3: './image.png',
+        image4: 'https://www.example.com/images/image.png',
+        file1: './document.pdf'
+      }
+    },
+  ], 'TestPost')
+
+  expect(types.image1.type).toEqual(imageType.type)
+  expect(types.image2.type).toEqual(imageType.type)
+  expect(types.image3.type).toEqual(imageType.type)
+  expect(types.image4.type).toEqual(imageType.type)
+  expect(types.file1.type).toEqual(GraphQLString)
+})
+
 test('transformer extends node type', async () => {
   const contentType = api.store.addContentType({
     typeName: 'TestPost'
@@ -347,33 +384,61 @@ test('transformer should resolve absolute paths', async () => {
     id: '1',
     internal: {
       mimeType: 'application/json',
-      origin: '/absolute/dir/to/a/file.md',
+      origin: `${context}/assets/file.md`,
+      content: JSON.stringify({})
+    }
+  })
+
+  const { data } = await createSchemaAndExecute(`{
+    testPost (id: "1") {
+      fileField
+    }
+  }`)
+
+  expect(data.testPost.fileField).toEqual(`${context}/assets/image.png`)
+})
+
+test('process image types in schema', async () => {
+  const contentType = api.store.addContentType({
+    typeName: 'TestPost'
+  })
+
+  contentType.addNode({
+    id: '1',
+    internal: {
+      mimeType: 'application/json',
+      origin: `${context}/assets/file.md`,
       content: JSON.stringify({
-        file: '/image.png',
-        file2: 'image.png',
-        file3: '../image.png'
+        file: '/assets/350x250.png',
+        file2: 'https://www.example.com/images/image.png',
+        file3: './350x250.png'
       })
     }
   })
 
   const { data } = await createSchemaAndExecute(`{
     testPost (id: "1") {
-      fields {
-        file
-        file2
-        file3
-      }
-      fileField
+      file
+      file2
+      file3
     }
   }`)
 
-  expect(data.testPost.fields.file).toEqual('/image.png')
-  expect(data.testPost.fields.file2).toEqual('/absolute/dir/to/a/image.png')
-  expect(data.testPost.fields.file3).toEqual('/absolute/dir/to/image.png')
-  expect(data.testPost.fileField).toEqual('/absolute/dir/to/a/image.png')
+  expect(data.testPost.file.src).toEqual('/assets/350x250.png')
+  expect(data.testPost.file.size).toBeUndefined()
+  expect(data.testPost.file.sizes).toBeUndefined()
+  expect(data.testPost.file.srcset).toBeUndefined()
+  expect(data.testPost.file.dataUri).toBeUndefined()
+  expect(data.testPost.file2.src).toEqual('https://www.example.com/images/image.png')
+  expect(data.testPost.file3.src).toEqual('/assets/static/350x250-w350.test.png')
+  expect(data.testPost.file3.size).toMatchObject({ width: 350, height: 250 })
+  expect(data.testPost.file3.sizes).toEqual('(max-width: 350px) 100vw, 350px')
+  expect(data.testPost.file3.srcset).toHaveLength(1)
+  expect(data.testPost.file3.dataUri).toMatch(/data:image\/png/g)
 })
 
 async function createSchemaAndExecute (query) {
   const schema = createSchema(app.store)
-  return graphql(schema, query, undefined, { store: app.store })
+  const context = app.createSchemaContext()
+  return graphql(schema, query, undefined, context)
 }
