@@ -13,7 +13,7 @@ Vue.use(Meta, {
 const head = {
   title: config.siteName,
   titleTemplate: config.titleTemplate,
-  __dangerouslyDisableSanitizers: ['style', 'script'],
+  __dangerouslyDisableSanitizers: ['style', 'script', 'noscript'],
   __dangerouslyDisableSanitizersByTagID: {},
   htmlAttrs: {
     lang: 'en'
@@ -24,6 +24,7 @@ const head = {
     { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' }
   ],
   base: {},
+  noscript: [],
   script: [],
   style: [],
   link: []
@@ -44,6 +45,10 @@ icons.touchicons.forEach(({ width, height, src: href }) => {
     sizes: `${width}x${height}`,
     href
   })
+})
+
+head.noscript.push({
+  innerHTML: `<style>.g-image--loading{display:none;}</style>`
 })
 
 export default head

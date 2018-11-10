@@ -32,7 +32,7 @@ export default {
     const isDev = process.env.NODE_ENV === 'development'
     const isLazy = typeof props.immediate === 'undefined'
     const classNames = (data.class || []).concat(['g-image'])
-    const noscriptClass = classNames.slice()
+    const noscriptClassNames = classNames.slice()
     const res = []
 
     let src = ''
@@ -84,22 +84,23 @@ export default {
       }
 
       classNames.push('g-image--lazy')
-      noscriptClass.push('g-image--loaded')
+      classNames.push('g-image--loading')
+      noscriptClassNames.push('g-image--loaded')
 
       parent.$once('hook:mounted', () => onMount(parent.$refs[ref]))
       parent.$once('hook:updated', () => onMount(parent.$refs[ref]))
       parent.$once('hook:beforeDestroy', () => onDestroy(parent.$refs[ref]))
 
-      res.push(h('noscript', null, [
-        h('img', {
-          class: noscriptClass,
-          attrs: {
-            src,
-            alt: props.alt,
-            width: size.width
-          }
-        })
-      ]))
+      // must render as innerHTML to make hydration work
+      res.push(h('noscript', {
+        domProps: {
+          innerHTML: `` + 
+            `<img src="${src}" class="${noscriptClassNames.join(' ')}"` +
+            (size.width ? ` width="${size.width}"`: '') +
+            (props.alt ? ` alt="${props.alt}"` : '') +
+            `>`
+        }
+      }))
     }
 
     return res
@@ -151,6 +152,7 @@ function loadImage (el) {
     delete el.dataset.sizes
     delete el.onload
 
+    el.classList.remove('g-image--loading')
     el.classList.add('g-image--loaded')
   }
 

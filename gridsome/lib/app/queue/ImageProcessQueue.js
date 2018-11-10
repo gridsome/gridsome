@@ -157,6 +157,8 @@ class ImageProcessQueue {
         (options.height ? ` height="${options.height}"` : '') +
         (options.alt ? ` alt="${options.alt}">` : '>') +
         `</noscript>`
+      
+      classNames.push('g-image--loading')
     }
 
     results.imageHTML = '' +
