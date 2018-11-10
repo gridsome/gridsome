@@ -1,5 +1,6 @@
 const camelCase = require('camelcase')
 const { mapValues, isEmpty } = require('lodash')
+const { fieldResolver } = require('./resolvers')
 const { isDate, dateType } = require('./types/date')
 const { isImage, imageType } = require('./types/image');
 
@@ -38,8 +39,8 @@ function inferType (value, key, nodeType) {
     const type = inferType(value[0], key, nodeType)
     return type !== null ? {
       type: new GraphQLList(type.type),
-      resolve: (fields, args, context, { fieldName }) => {
-        const value = fields[fieldName]
+      resolve: (obj, args, context, info) => {
+        const value = fieldResolver(obj, args, context, info)
         return Array.isArray(value) ? value : []
       }
     } : null
@@ -57,11 +58,20 @@ function inferType (value, key, nodeType) {
 
   switch (type) {
     case 'string':
-      return { type: GraphQLString }
+      return {
+        type: GraphQLString,
+        resolve: fieldResolver
+      }
     case 'boolean':
-      return { type: GraphQLBoolean }
+      return {
+        type: GraphQLBoolean,
+        resolve: fieldResolver
+      }
     case 'number':
-      return { type: is32BitInt(value) ? GraphQLInt : GraphQLFloat }
+      return {
+        type: is32BitInt(value) ? GraphQLInt : GraphQLFloat,
+        resolve: fieldResolver
+      }
     case 'object':
       return createObjectType(value, key, nodeType)
   }

@@ -8,21 +8,10 @@ const {
 
 const { GraphQLDate } = require('./types/date')
 
-const internalInterface = new GraphQLInterfaceType({
-  name: 'InternalInterface',
-  fields: () => ({
-    origin: { type: GraphQLString },
-    mimeType: { type: GraphQLString },
-    content: { type: GraphQLString },
-    timestamp: { type: GraphQLInt }
-  })
-})
-
 const nodeInterface = new GraphQLInterfaceType({
   name: 'NodeInterface',
   fields: () => ({
-    _id: { type: new GraphQLNonNull(GraphQLID) },
-    internal: { type: new GraphQLNonNull(internalInterface) },
+    id: { type: new GraphQLNonNull(GraphQLID) },
     title: { type: GraphQLString },
     slug: { type: GraphQLString },
     path: { type: GraphQLString },
@@ -33,6 +22,5 @@ const nodeInterface = new GraphQLInterfaceType({
 })
 
 module.exports = {
-  nodeInterface,
-  internalInterface
+  nodeInterface
 }

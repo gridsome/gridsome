@@ -42,6 +42,32 @@ test('create node type with custom fields', async () => {
   })
 
   contentType.addNode({
+    id: '1',
+    fields: {
+      foo: 'bar',
+      list: ['item'],
+      obj: {
+        foo: 'bar'
+      }
+    }
+  })
+
+  const query = '{ testPost (id: "1") { id _id foo list obj { foo }}}'
+  const { data } = await createSchemaAndExecute(query)
+
+  expect(data.testPost.id).toEqual('1')
+  expect(data.testPost.foo).toEqual('bar')
+  expect(data.testPost.list[0]).toEqual('item')
+  expect(data.testPost.obj.foo).toEqual('bar')
+})
+
+// TODO: remove test before 1.0
+test('get deprecated node fields', async () => {
+  const contentType = api.store.addContentType({
+    typeName: 'TestPost'
+  })
+
+  contentType.addNode({
     _id: '1',
     fields: {
       foo: 'bar',
@@ -66,12 +92,12 @@ test('get node by path', async () => {
     typeName: 'TestPost'
   })
 
-  contentType.addNode({ _id: '1', path: '/test' })
+  contentType.addNode({ id: '1', path: '/test' })
 
-  const query = '{ testPost (path: "/test") { _id }}'
+  const query = '{ testPost (path: "/test") { id }}'
   const { data } = await createSchemaAndExecute(query)
 
-  expect(data.testPost._id).toEqual('1')
+  expect(data.testPost.id).toEqual('1')
 })
 
 test('fail if node with given ID is missing', async () => {
@@ -79,9 +105,9 @@ test('fail if node with given ID is missing', async () => {
     typeName: 'TestPost'
   })
 
-  contentType.addNode({ _id: '1' })
+  contentType.addNode({ id: '1' })
 
-  const query = '{ testPost (_id: "2") { _id }}'
+  const query = '{ testPost (id: "2") { id }}'
   const { errors } = await createSchemaAndExecute(query)
 
   expect(errors[0].message).toEqual('A TestPost with id 2 was not found')
@@ -140,6 +166,32 @@ test('create node reference', async () => {
     typeName: 'TestPost',
     refs: {
       author: {
+        key: 'id',
+        typeName: 'TestAuthor'
+      }
+    }
+  })
+
+  postContentType.addNode({ id: '1', fields: { author: '2' }})
+  authorContentType.addNode({ id: '2', title: 'Test Author' })
+
+  const query = '{ testPost (id: "1") { author { id title }}}'
+  const { data } = await createSchemaAndExecute(query)
+
+  expect(data.testPost.author.id).toEqual('2')
+  expect(data.testPost.author.title).toEqual('Test Author')
+})
+
+// TODO: remove this test before 1.0
+test('create deprecated node reference', async () => {
+  const authorContentType = api.store.addContentType({
+    typeName: 'TestAuthor'
+  })
+
+  const postContentType = api.store.addContentType({
+    typeName: 'TestPost',
+    refs: {
+      author: {
         key: '_id',
         typeName: 'TestAuthor'
       }
@@ -165,19 +217,19 @@ test('create node list reference', async () => {
     typeName: 'TestPost',
     refs: {
       author: {
-        key: '_id',
+        key: 'id',
         typeName: 'TestAuthor'
       }
     }
   })
 
-  postContentType.addNode({ _id: '1', fields: { author: ['2'] }})
-  authorContentType.addNode({ _id: '2', title: 'Test Author' })
+  postContentType.addNode({ id: '1', fields: { author: ['2'] }})
+  authorContentType.addNode({ id: '2', title: 'Test Author' })
 
-  const query = '{ testPost (_id: "1") { refs { author { _id title }}}}'
+  const query = '{ testPost (id: "1") { refs { author { id title }}}}'
   const { data } = await createSchemaAndExecute(query)
 
-  expect(data.testPost.refs.author[0]._id).toEqual('2')
+  expect(data.testPost.refs.author[0].id).toEqual('2')
   expect(data.testPost.refs.author[0].title).toEqual('Test Author')
 })
 
@@ -186,18 +238,18 @@ test('create node reference to same type', async () => {
     typeName: 'TestPost',
     refs: {
       related: {
-        key: '_id'
+        key: 'id'
       }
     }
   })
 
-  postContentType.addNode({ _id: '1', fields: { related: '2' }})
-  postContentType.addNode({ _id: '2', title: 'Test' })
+  postContentType.addNode({ id: '1', fields: { related: '2' }})
+  postContentType.addNode({ id: '2', title: 'Test' })
 
-  const query = '{ testPost (_id: "1") { refs { related { _id title }}}}'
+  const query = '{ testPost (id: "1") { refs { related { id title }}}}'
   const { data } = await createSchemaAndExecute(query)
 
-  expect(data.testPost.refs.related._id).toEqual('2')
+  expect(data.testPost.refs.related.id).toEqual('2')
   expect(data.testPost.refs.related.title).toEqual('Test')
 })
 
@@ -272,14 +324,14 @@ test('transformer extends node type', async () => {
   })
 
   contentType.addNode({
-    _id: '1',
+    id: '1',
     internal: {
       mimeType: 'application/json',
       content: ''
     }
   })
 
-  const query = '{ testPost (_id: "1") { myField }}'
+  const query = '{ testPost (id: "1") { myField }}'
   const { data } = await createSchemaAndExecute(query)
 
   expect(data.testPost.myField).toEqual('value')
@@ -292,7 +344,7 @@ test('transformer should resolve absolute paths', async () => {
   })
 
   contentType.addNode({
-    _id: '1',
+    id: '1',
     internal: {
       mimeType: 'application/json',
       origin: '/absolute/dir/to/a/file.md',
@@ -305,7 +357,7 @@ test('transformer should resolve absolute paths', async () => {
   })
 
   const { data } = await createSchemaAndExecute(`{
-    testPost (_id: "1") {
+    testPost (id: "1") {
       fields {
         file
         file2

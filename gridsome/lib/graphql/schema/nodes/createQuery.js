@@ -8,7 +8,8 @@ module.exports = nodeType => {
   return {
     type: nodeType,
     args: {
-      _id: { type: GraphQLString },
+      _id: { type: GraphQLString, deprecationReason: 'Use id instead.' },
+      id: { type: GraphQLString },
       path: { type: GraphQLString },
       nullable: {
         type: GraphQLBoolean,
@@ -16,14 +17,14 @@ module.exports = nodeType => {
         description: 'Will return an error if not nullable.'
       }
     },
-    resolve (object, { _id, path, nullable }, { store }, { returnType }) {
+    resolve (object, { _id, id = _id, path, nullable }, { store }, { returnType }) {
       const { collection } = store.getContentType(returnType)
-      const node = _id ? collection.get(_id) : collection.findOne({ path })
+      const node = id ? collection.get(id) : collection.findOne({ path })
 
       if (!node && !nullable) {
         const message = path
           ? `${path} was not found`
-          : `A ${returnType} with id ${_id} was not found`
+          : `A ${returnType} with id ${id} was not found`
 
         throw new GraphQLError(message)
       }
