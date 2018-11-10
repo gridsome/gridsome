@@ -8,6 +8,7 @@
   "keywords": [
     "gridsome",
     "gridsome-plugin",
+    "gridsome-source",
     "contentful"
   ],
   "dependencies": {
