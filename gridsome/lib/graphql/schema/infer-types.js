@@ -2,7 +2,8 @@ const camelCase = require('camelcase')
 const { mapValues, isEmpty } = require('lodash')
 const { fieldResolver } = require('./resolvers')
 const { isDate, dateType } = require('./types/date')
-const { isImage, imageType } = require('./types/image');
+const { isFile, fileType } = require('./types/file')
+const { isImage, imageType } = require('./types/image')
 
 const {
   GraphQLInt,
@@ -52,16 +53,15 @@ function inferType (value, key, nodeType) {
     return dateType
   }
 
-  if (isImage(value)) {
-    return imageType
-  }
-
   switch (type) {
     case 'string':
-      return {
+      if (isImage(value)) return imageType
+      if (isFile(value)) return fileType
+
+      return value ? {
         type: GraphQLString,
         resolve: fieldResolver
-      }
+      } : null
     case 'boolean':
       return {
         type: GraphQLBoolean,

@@ -24,6 +24,7 @@ test('generate srcset for image', async () => {
 
   const result = await queue.add(filePath)
 
+  expect(queue.images.queue).toHaveLength(2)
   expect(result.type).toEqual('image')
   expect(result.mimeType).toEqual('image/png')
   expect(result.filePath).toEqual(filePath)
@@ -51,6 +52,7 @@ test('generate srcset for image with path prefix', async () => {
 
   const result = await queue.add(filePath)
 
+  expect(queue.images.queue).toHaveLength(2)
   expect(result.src).toEqual('/base/path/assets/static/1000x600-w1000.test.png')
   expect(result.sets[0].src).toEqual('/base/path/assets/static/1000x600-w480.test.png')
   expect(result.sets[1].src).toEqual('/base/path/assets/static/1000x600-w1000.test.png')
@@ -64,6 +66,7 @@ test('resize image by width attribute', async () => {
 
   const result = await queue.add(filePath, { width: 300 })
 
+  expect(queue.images.queue).toHaveLength(1)
   expect(result.src).toEqual('/assets/static/1000x600-w300.test.png')
   expect(result.sizes).toEqual('(max-width: 300px) 100vw, 300px')
   expect(result.dataUri).toMatchSnapshot()
@@ -81,6 +84,7 @@ test('disable blur filter', async () => {
 
   const result = await queue.add(filePath, { blur: '0' })
 
+  expect(queue.images.queue).toHaveLength(2)
   expect(result.dataUri).toMatchSnapshot()
 })
 
@@ -90,6 +94,7 @@ test('set custom quality', async () => {
 
   const result = await queue.add(filePath, { quality: 10 })
 
+  expect(queue.images.queue).toHaveLength(2)
   expect(result.src).toEqual('/assets/static/1000x600-w1000-q10.test.png')
 })
 
@@ -102,6 +107,8 @@ test('add custom attributes to markup', async () => {
     alt: 'Alternative text',
     height: '100'
   })
+
+  expect(queue.images.queue).toHaveLength(2)
 
   expect(result.imageHTML).toMatch(/test-1/)
   expect(result.imageHTML).toMatch(/test-2/)
@@ -121,6 +128,7 @@ test('respect config.maxImageWidth', async () => {
 
   const result = await queue.add(filePath)
 
+  expect(queue.images.queue).toHaveLength(2)
   expect(result.src).toEqual('/assets/static/1000x600-w600.test.png')
   expect(result.sets).toHaveLength(2)
   expect(result.srcset).toHaveLength(2)
@@ -137,6 +145,7 @@ test('do not resize if image is too small', async () => {
 
   const result = await queue.add(filePath, { width: 600 })
 
+  expect(queue.images.queue).toHaveLength(1)
   expect(result.src).toEqual('/assets/static/350x250-w350.test.png')
   expect(result.sets).toHaveLength(1)
   expect(result.srcset).toHaveLength(1)
@@ -156,6 +165,7 @@ test('get url for server in serve mode', async () => {
 
   process.env.GRIDSOME_MODE = mode
 
+  expect(queue.images.queue).toHaveLength(0)
   expect(result.src).toEqual('/assets/static/assets/1000x600.png?width=500')
   expect(result2.src).toEqual('/assets/static/assets/1000x600.png?width=200&quality=50')
 })
@@ -165,9 +175,8 @@ test('get queue values', async () => {
   const queue = new AssetsQueue({ context, config: baseconfig })
 
   await queue.add(filePath)
-  const values = queue.images.queue
 
-  expect(values).toHaveLength(2)
+  expect(queue.images.queue).toHaveLength(2)
 })
 
 test('disable lazy loading', async () => {
@@ -176,6 +185,7 @@ test('disable lazy loading', async () => {
 
   const result = await queue.add(filePath, { immediate: true })
 
+  expect(queue.images.queue).toHaveLength(2)
   expect(result.imageHTML).toMatchSnapshot()
   expect(result.noscriptHTML).toEqual('')
 })
@@ -186,6 +196,7 @@ test('skip srcset and dataUri', async () => {
 
   const result = await queue.add(filePath, { srcset: false })
 
+  expect(queue.images.queue).toHaveLength(2)
   expect(result.srcset).toBeUndefined()
   expect(result.dataUri).toBeUndefined()
   expect(result.sizes).toBeUndefined()
@@ -198,6 +209,7 @@ test('handle external image urls', async () => {
 
   const result = await queue.add(filePath)
 
+  expect(queue.images.queue).toHaveLength(0)
   expect(result.type).toEqual('image')
   expect(result.src).toEqual(filePath)
   expect(result.filePath).toEqual(filePath)
@@ -210,6 +222,7 @@ test('handle absolute image paths outside context', async () => {
 
   const result = await queue.add(filePath)
 
+  expect(queue.images.queue).toHaveLength(0)
   expect(result.type).toEqual('image')
   expect(result.src).toEqual(filePath)
   expect(result.filePath).toEqual(filePath)

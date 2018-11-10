@@ -1,28 +1,30 @@
 const fs = require('fs')
 const path = require('path')
+const mime = require('mime-types')
 
 const { GraphQLJSON } = require('../../graphql')
 const { fieldResolver } = require('../resolvers')
 const { SUPPORTED_IMAGE_TYPES } = require('../../../utils/constants')
 
-exports.isImage = value => {
+exports.isFile = value => {
   if (typeof value === 'string') {
+    const mimeType = mime.lookup(value)
     const ext = path.extname(value).toLowerCase()
 
-    if (SUPPORTED_IMAGE_TYPES.includes(ext)) {
-      return true
+    if (mimeType && mimeType !== 'application/x-msdownload') {
+      return !SUPPORTED_IMAGE_TYPES.includes(ext)
     }
   }
 
   return false
 }
 
-exports.imageType = {
+exports.fileType = {
   type: GraphQLJSON,
   args: {},
   async resolve (obj, args, context, info) {
     const value = fieldResolver(obj, args, context, info)
-
+    
     if (!value) return null
 
     const result = await context.queue.add(value)
@@ -30,11 +32,7 @@ exports.imageType = {
     return {
       type: result.type,
       mimeType: result.mimeType,
-      src: result.src,
-      size: result.size,
-      sizes: result.sizes,
-      srcset: result.srcset,
-      dataUri: result.dataUri
+      src: result.src
     }
   }
 }

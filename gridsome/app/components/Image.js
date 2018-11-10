@@ -12,7 +12,7 @@ export default {
   functional: true,
 
   props: {
-    src: { type: [Object, String] },
+    src: { type: [Object, String], required: true },
     width: { type: String },
     alt: { type: String },
     immediate: { type: true },

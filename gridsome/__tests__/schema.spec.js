@@ -4,6 +4,7 @@ const PluginAPI = require('../lib/app/PluginAPI')
 const createSchema = require('../lib/graphql/createSchema')
 const { inferTypes } = require('../lib/graphql/schema/infer-types')
 const { GraphQLDate } = require('../lib/graphql/schema/types/date')
+const { fileType } = require('../lib/graphql/schema/types/file')
 const { imageType } = require('../lib/graphql/schema/types/image')
 const JSONTransformer = require('./__fixtures__/JSONTransformer')
 
@@ -293,7 +294,8 @@ test('infer types from node fields', () => {
         falsyBoolean: false,
         booleanList: [false],
         emptyList: [],
-        emptyObj: {}
+        emptyObj: {},
+        emptyString: ''
       }
     }
   ], 'TestPost')
@@ -313,6 +315,7 @@ test('infer types from node fields', () => {
   expect(types.obj.type.getFields().foo.type).toEqual(GraphQLString)
   expect(types.emptyList).toBeUndefined()
   expect(types.emptyObj).toBeUndefined()
+  expect(types.emptyString).toBeUndefined()
 })
 
 test('infer date fields', () => {
@@ -342,8 +345,7 @@ test('infer image fields', () => {
         image1: 'image.png',
         image2: '/image.png',
         image3: './image.png',
-        image4: 'https://www.example.com/images/image.png',
-        file1: './document.pdf'
+        image4: 'https://www.example.com/images/image.png'
       }
     },
   ], 'TestPost')
@@ -352,7 +354,20 @@ test('infer image fields', () => {
   expect(types.image2.type).toEqual(imageType.type)
   expect(types.image3.type).toEqual(imageType.type)
   expect(types.image4.type).toEqual(imageType.type)
-  expect(types.file1.type).toEqual(GraphQLString)
+})
+
+test('infer file fields', () => {
+  const types = inferTypes([
+    {
+      fields: {
+        file1: './document.pdf',
+        file2: 'https://www.example.com/files/document.pdf'
+      }
+    },
+  ], 'TestPost')
+
+  expect(types.file1.type).toEqual(fileType.type)
+  expect(types.file2.type).toEqual(fileType.type)
 })
 
 test('transformer extends node type', async () => {
@@ -409,9 +424,54 @@ test('process image types in schema', async () => {
       mimeType: 'application/json',
       origin: `${context}/assets/file.md`,
       content: JSON.stringify({
-        file: '/assets/350x250.png',
-        file2: 'https://www.example.com/images/image.png',
-        file3: './350x250.png'
+        image: '/assets/350x250.png',
+        image2: 'https://www.example.com/images/image.png',
+        image3: './350x250.png'
+      })
+    }
+  })
+
+  const { data } = await createSchemaAndExecute(`{
+    testPost (id: "1") {
+      image
+      image2
+      image3
+    }
+  }`)
+
+  expect(data.testPost.image.type).toEqual('image')
+  expect(data.testPost.image.mimeType).toEqual('image/png')
+  expect(data.testPost.image.src).toEqual('/assets/350x250.png')
+  expect(data.testPost.image.size).toBeUndefined()
+  expect(data.testPost.image.sizes).toBeUndefined()
+  expect(data.testPost.image.srcset).toBeUndefined()
+  expect(data.testPost.image.dataUri).toBeUndefined()
+  expect(data.testPost.image2.type).toEqual('image')
+  expect(data.testPost.image2.mimeType).toEqual('image/png')
+  expect(data.testPost.image2.src).toEqual('https://www.example.com/images/image.png')
+  expect(data.testPost.image3.type).toEqual('image')
+  expect(data.testPost.image3.mimeType).toEqual('image/png')
+  expect(data.testPost.image3.src).toEqual('/assets/static/350x250-w350.test.png')
+  expect(data.testPost.image3.size).toMatchObject({ width: 350, height: 250 })
+  expect(data.testPost.image3.sizes).toEqual('(max-width: 350px) 100vw, 350px')
+  expect(data.testPost.image3.srcset).toHaveLength(1)
+  expect(data.testPost.image3.dataUri).toMatch(/data:image\/png/g)
+})
+
+test('process file types in schema', async () => {
+  const contentType = api.store.addContentType({
+    typeName: 'TestPost'
+  })
+
+  contentType.addNode({
+    id: '1',
+    internal: {
+      mimeType: 'application/json',
+      origin: `${context}/assets/file.md`,
+      content: JSON.stringify({
+        file: '/assets/document.pdf',
+        file2: 'https://www.example.com/assets/document.pdf',
+        file3: './dummy.pdf'
       })
     }
   })
@@ -424,17 +484,15 @@ test('process image types in schema', async () => {
     }
   }`)
 
-  expect(data.testPost.file.src).toEqual('/assets/350x250.png')
-  expect(data.testPost.file.size).toBeUndefined()
-  expect(data.testPost.file.sizes).toBeUndefined()
-  expect(data.testPost.file.srcset).toBeUndefined()
-  expect(data.testPost.file.dataUri).toBeUndefined()
-  expect(data.testPost.file2.src).toEqual('https://www.example.com/images/image.png')
-  expect(data.testPost.file3.src).toEqual('/assets/static/350x250-w350.test.png')
-  expect(data.testPost.file3.size).toMatchObject({ width: 350, height: 250 })
-  expect(data.testPost.file3.sizes).toEqual('(max-width: 350px) 100vw, 350px')
-  expect(data.testPost.file3.srcset).toHaveLength(1)
-  expect(data.testPost.file3.dataUri).toMatch(/data:image\/png/g)
+  expect(data.testPost.file.type).toEqual('file')
+  expect(data.testPost.file.mimeType).toEqual('application/pdf')
+  expect(data.testPost.file.src).toEqual('/assets/document.pdf')
+  expect(data.testPost.file2.type).toEqual('file')
+  expect(data.testPost.file2.mimeType).toEqual('application/pdf')
+  expect(data.testPost.file2.src).toEqual('https://www.example.com/assets/document.pdf')
+  expect(data.testPost.file3.type).toEqual('file')
+  expect(data.testPost.file3.mimeType).toEqual('application/pdf')
+  expect(data.testPost.file3.src).toEqual('/assets/files/dummy.pdf')
 })
 
 async function createSchemaAndExecute (query) {
