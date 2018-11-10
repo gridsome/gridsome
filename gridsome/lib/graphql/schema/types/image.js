@@ -1,7 +1,11 @@
 const fs = require('fs')
 const path = require('path')
 
-const { GraphQLJSON } = require('../../graphql')
+const {
+  GraphQLInt,
+  GraphQLJSON
+} = require('../../graphql')
+
 const { fieldResolver } = require('../resolvers')
 const { SUPPORTED_IMAGE_TYPES } = require('../../../utils/constants')
 
@@ -19,13 +23,17 @@ exports.isImage = value => {
 
 exports.imageType = {
   type: GraphQLJSON,
-  args: {},
+  args: {
+    width: { type: GraphQLInt, description: 'Width' },
+    quality: { type: GraphQLInt, description: 'Quality (default: 75)' },
+    blur: { type: GraphQLInt, description: 'Blur level for base64 string' }
+  },
   async resolve (obj, args, context, info) {
     const value = fieldResolver(obj, args, context, info)
 
     if (!value) return null
 
-    const result = await context.queue.add(value)
+    const result = await context.queue.add(value, args)
 
     return {
       type: result.type,

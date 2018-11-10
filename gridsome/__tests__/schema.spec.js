@@ -426,7 +426,8 @@ test('process image types in schema', async () => {
       content: JSON.stringify({
         image: '/assets/350x250.png',
         image2: 'https://www.example.com/images/image.png',
-        image3: './350x250.png'
+        image3: './350x250.png',
+        image4: './1000x600.png'
       })
     }
   })
@@ -436,6 +437,7 @@ test('process image types in schema', async () => {
       image
       image2
       image3
+      image4 (width: 300, quality: 100, blur: 0)
     }
   }`)
 
@@ -456,6 +458,10 @@ test('process image types in schema', async () => {
   expect(data.testPost.image3.sizes).toEqual('(max-width: 350px) 100vw, 350px')
   expect(data.testPost.image3.srcset).toHaveLength(1)
   expect(data.testPost.image3.dataUri).toMatch(/data:image\/png/g)
+  expect(data.testPost.image4.src).toEqual('/assets/static/1000x600-w300-q100.test.png')
+  expect(data.testPost.image4.size).toMatchObject({ width: 300, height: 180 })
+  expect(data.testPost.image4.sizes).toEqual('(max-width: 300px) 100vw, 300px')
+  expect(data.testPost.image4.srcset).toHaveLength(1)
 })
 
 test('process file types in schema', async () => {
