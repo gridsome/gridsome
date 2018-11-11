@@ -1,6 +1,7 @@
 const autoBind = require('auto-bind')
 const { mapValues } = require('lodash')
 const PluginStore = require('./PluginStore')
+const createRoutes = require('./createRoutes')
 const { cache, nodeCache } = require('../utils/cache')
 
 class PluginAPI {
@@ -22,6 +23,7 @@ class PluginAPI {
         clearTimeout(regenerateTimeout)
         regenerateTimeout = setTimeout(() => {
           if (app.isBootstrapped) {
+            app.routerData = createRoutes(app.store)
             app.generator.generate('routes.js')
           }
         }, 20)
@@ -34,6 +36,7 @@ class PluginAPI {
         if (!app.isBootstrapped) return
 
         if (
+          (node && node.withPath && node === oldNode) ||
           (node && node.withPath && node.path !== oldNode.path) ||
           (!node && oldNode.withPath)
         ) {
