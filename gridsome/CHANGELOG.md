@@ -3,6 +3,46 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+<a name="0.3.0"></a>
+# [0.3.0](https://github.com/gridsome/gridsome/compare/gridsome@0.2.5...gridsome@0.3.0) (2018-11-11)
+
+
+### Bug Fixes
+
+* clear errors in terminal when resolved ([832e7de](https://github.com/gridsome/gridsome/commit/832e7de))
+* dont fail when missing favicon.png ([829091b](https://github.com/gridsome/gridsome/commit/829091b))
+* handle urls in process queue ([60623ee](https://github.com/gridsome/gridsome/commit/60623ee))
+* **image:** render fallback as html string ([738ef23](https://github.com/gridsome/gridsome/commit/738ef23))
+* **store:** warn and skip when duplicate path detected ([215b3e9](https://github.com/gridsome/gridsome/commit/215b3e9))
+* keep hash when resolving raw html links ([87860ab](https://github.com/gridsome/gridsome/commit/87860ab))
+* lazy load external image urls ([4f7f867](https://github.com/gridsome/gridsome/commit/4f7f867))
+* send context to transformer ([7b50bae](https://github.com/gridsome/gridsome/commit/7b50bae))
+* send graphql to createSchema api ([86363c3](https://github.com/gridsome/gridsome/commit/86363c3))
+* update routes when source path changes ([85171cf](https://github.com/gridsome/gridsome/commit/85171cf))
+
+
+### Features
+
+* addReference and addSchemaField ([c159ee5](https://github.com/gridsome/gridsome/commit/c159ee5))
+* build hooks ([32774f0](https://github.com/gridsome/gridsome/commit/32774f0))
+* cleaner graphql schema ([#31](https://github.com/gridsome/gridsome/issues/31)) ([98420a2](https://github.com/gridsome/gridsome/commit/98420a2))
+* client plugin api ([caa6a17](https://github.com/gridsome/gridsome/commit/caa6a17))
+* copy linked files ([7dd26f2](https://github.com/gridsome/gridsome/commit/7dd26f2))
+* plugin api ([7a7889b](https://github.com/gridsome/gridsome/commit/7a7889b))
+* **contentful:** use new plugin api ([eaf6092](https://github.com/gridsome/gridsome/commit/eaf6092))
+* **graphql:** createSchema api [wip] ([c5d6d6b](https://github.com/gridsome/gridsome/commit/c5d6d6b))
+* **graphql:** date field type ([d9f8335](https://github.com/gridsome/gridsome/commit/d9f8335))
+* **graphql:** file type ([05f6c98](https://github.com/gridsome/gridsome/commit/05f6c98))
+* **graphql:** image arguments ([e38b243](https://github.com/gridsome/gridsome/commit/e38b243))
+* **graphql:** image type ([#25](https://github.com/gridsome/gridsome/issues/25)) ([316c91d](https://github.com/gridsome/gridsome/commit/316c91d))
+* **graphql:** merge third party schemas ([1f33169](https://github.com/gridsome/gridsome/commit/1f33169))
+* resolve file paths ([#26](https://github.com/gridsome/gridsome/issues/26)) ([a4baf68](https://github.com/gridsome/gridsome/commit/a4baf68))
+* store api ([15d1c97](https://github.com/gridsome/gridsome/commit/15d1c97))
+* **store:** set content and excerpt on node ([43c4236](https://github.com/gridsome/gridsome/commit/43c4236))
+* support local plugins ([#22](https://github.com/gridsome/gridsome/issues/22)) ([568207f](https://github.com/gridsome/gridsome/commit/568207f))
+
+
+
 
 
 <a name="0.2.5"></a>

@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+<a name="0.1.0"></a>
+# [0.1.0](https://github.com/gridsome/gridsome/tree/master/packages/source-contentful/compare/@gridsome/source-contentful@0.0.3...@gridsome/source-contentful@0.1.0) (2018-11-11)
+
+
+### Features
+
+* **contentful:** use new plugin api ([eaf6092](https://github.com/gridsome/gridsome/tree/master/packages/source-contentful/commit/eaf6092))
+
+
+
 
 
 <a name="0.0.3"></a>

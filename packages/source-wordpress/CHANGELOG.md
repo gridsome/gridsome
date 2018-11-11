@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+<a name="0.1.0"></a>
+# [0.1.0](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/compare/@gridsome/source-wordpress@0.0.5...@gridsome/source-wordpress@0.1.0) (2018-11-11)
+
+
+### Features
+
+* **wordpress:** use new plugin api ([6cdc37b](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/commit/6cdc37b))
+
+
+
 
 
 <a name="0.0.5"></a>
