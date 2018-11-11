@@ -28,7 +28,7 @@ document.addEventListener('click', event => {
   ) return
 
   const path = stripPathPrefix($el.pathname)
-  const { location } = router.resolve({ path })
+  const { location } = router.resolve({ path, hash: $el.hash })
 
   router.push(location)
   event.preventDefault()
