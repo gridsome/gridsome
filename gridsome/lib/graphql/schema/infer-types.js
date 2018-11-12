@@ -83,7 +83,7 @@ function createObjectType (obj, key, nodeType) {
 
   return !isEmpty(fields) ? {
     type: new GraphQLObjectType({ name, fields }),
-    resolve: obj => obj
+    resolve: fieldResolver
   } : null
 }
 
