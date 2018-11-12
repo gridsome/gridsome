@@ -54,6 +54,17 @@ exports.dateType = {
     format: { type: GraphQLString, description: 'Date format' },
     locale: { type: GraphQLString, description: 'Locale', defaultValue: 'en' }
   },
+  resolve: (obj, args, context, { fieldName }) => {
+    const { format, locale } = args
+    const value = obj[fieldName]
+
+    return moment(value).locale(locale).format(format)
+  }
+}
+
+// TODO: remove this before v1.0
+exports.dateTypeField = {
+  ...exports.dateType,
   resolve: (obj, args, context, info) => {
     const value = fieldResolver(obj, args, context, info)
     const { format, locale } = args
@@ -61,4 +72,3 @@ exports.dateType = {
     return moment(value).locale(locale).format(format)
   }
 }
-

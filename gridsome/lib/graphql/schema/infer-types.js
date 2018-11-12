@@ -1,7 +1,7 @@
 const camelCase = require('camelcase')
 const { mapValues, isEmpty } = require('lodash')
 const { fieldResolver } = require('./resolvers')
-const { isDate, dateType } = require('./types/date')
+const { isDate, dateTypeField } = require('./types/date')
 const { isFile, fileType } = require('./types/file')
 const { isImage, imageType } = require('./types/image')
 
@@ -50,7 +50,7 @@ function inferType (value, key, nodeType) {
   const type = typeof value
 
   if (isDate(value)) {
-    return dateType
+    return dateTypeField
   }
 
   switch (type) {
