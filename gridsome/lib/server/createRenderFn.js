@@ -46,10 +46,14 @@ module.exports = function createRenderFn ({
       context.renderResourceHints() +
       context.renderStyles()
 
+    const scripts = '' +
+      context.renderScripts() +
+      inject.script.text({ body: true })
+
     return renderHTML({
       htmlAttrs: `data-html-server-rendered="true" ${htmlAttrs}`,
-      scripts: context.renderScripts(),
       bodyAttrs,
+      scripts,
       head,
       app
     })
