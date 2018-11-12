@@ -1,10 +1,8 @@
 const camelCase = require('camelcase')
 const { dateType } = require('../types/date')
-const { mapValues, isEmpty, omit } = require('lodash')
+const { mapValues, isEmpty } = require('lodash')
 
 const { nodeInterface } = require('../interfaces')
-
-const SPECIAL_FIELDS = ['id', 'title', 'slug', 'path', 'date', 'content', 'excerpt']
 
 const {
   GraphQLID,
@@ -23,22 +21,23 @@ module.exports = ({ contentType, nodeTypes, fields }) => {
     interfaces: [nodeInterface],
     isTypeOf: node => node.typeName === contentType.typeName,
     fields: () => {
-      const rootFields = omit(fields, SPECIAL_FIELDS)
-      const refs = createRefs(contentType, nodeTypes, rootFields)
+      const refs = createRefs(contentType, nodeTypes, fields)
 
       const nodeFields = {
+        ...fields,
+        ...refs,
+
+        content: { type: GraphQLString },
+        excerpt: { type: GraphQLString },
+
+        ...extendNodeType(contentType, nodeType, nodeTypes),
+        ...createFields(contentType, fields),
+
         id: { type: new GraphQLNonNull(GraphQLID) },
         title: { type: GraphQLString },
         slug: { type: GraphQLString },
         path: { type: GraphQLString },
-        content: { type: GraphQLString },
-        excerpt: { type: GraphQLString },
         date: dateType,
-
-        ...rootFields,
-        ...refs,
-        ...extendNodeType(contentType, nodeType, nodeTypes),
-        ...createFields(contentType, fields),
 
         _id: {
           deprecationReason: 'Use node.id instead.',
