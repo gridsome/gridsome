@@ -30,39 +30,41 @@
 
 > This project is under active development. Any feedback or contributions would be appreciated.
 
-### Enjoy modern dev stack
-Build websites using latest web tech tools that developers love - Vue.js, GraphQL and Webpack. Get hot-reloading and all the power of Node.js. Gridsome makes building websites fun again.
+### Enjoy a modern development stack
+Build websites with modern tools like Vue.js, webpack and Node.js. Get hot-reloading and access to any packages from npm and write CSS in your favorite preprocessor like Sass or Less with autoprefixing.
 
-### Bring your own data
-Gridsome lets you use any CMS or data source for content. Pull data from WordPress, Contentful or any other headless CMS or APIs and access it with GraphQL in your components and pages.
+### Connect to any CMS or data source
+Use any CMS or data source for content. Pull data from WordPress, Contentful, local Markdown, or any other headless CMS or APIs and access it with GraphQL in your pages and components.
 
-### Mobile-first architecture
-Only critical HTML, CSS and JavaScript are loaded at first, and then the next pages are prefetched in the background so users can click around extremely fast without page reloads and even offline
+### PWA Offline-first architecture
+Only critical HTML, CSS, and JavaScript get loaded first. The next pages are then prefetched so users can click around incredibly fast without page reloads, even when offline.
 
-### Extremely fast loading
-Gridsome automatically optimises your frontend to load and perform blazing fast. You get code-splitting, asset optimisation, lazy-loading, and almost perfect Lighthouse scores out-of-the-box.
+### Get perfect page speed scores
+Gridsome automatically optimises your frontend to load and perform blazing fast. You get code-splitting, image optimisation, lazy-loading, and almost perfect lighthouse scores out-of-the-box.
 
-### Scale globally at no cost
-Gridsome sites can be entirely hosted on a CDN and can handle thousands to millions of hits without breaking - and no expensive server costs. 
+### Build future ready websites
+The future of the web is JavaScript, API's, and Markup - the [JAMstack](https://jamstack.org/). Gridsome uses the power of blazing-fast static site generator, JavaScript and APIs to create stunning dynamic web experiences.
 
-### The frontend for the headless
-Design and build websites that are decoupled from the CMS. This means you can easily change the CMS later or test a complete redesign without breaking your site.
+### Ready for global domination
+Gridsome sites are usually not connected to any database and can be hosted entirely on a global CDN. It can handle thousands to millions of hits without breaking - and no expensive server costs.
 
 ## Quick start
 
 ### 1. Install Gridsome CLI tool
+
 `npm install --global @gridsome/cli`
 
 ### 2. Create a Gridsome project
-1. `gridsome create my-gridsome-site` to create a new project </li>
+
+1. `gridsome create my-gridsome-site` to create a new project
 2. `cd my-gridsome-site` to open folder
 3. `gridsome develop` to start local dev server at `http://localhost:8080`
 4. Happy coding 🎉🙌
 
 ### 3. Next steps
-1. Add `.vue` files to `/pages` directory to create pages.
-2. Use `gridsome build` to generate static files in a `/dist` folder
-3. Use `gridsome serve` for server-side rendering
+
+1. Create `.vue` components in the `~/src/pages` directory to create pages
+2. Use `gridsome build` to generate static files in a `~/dist` folder
 
 ### Learn more...
 
@@ -74,13 +76,13 @@ Design and build websites that are decoupled from the CMS. This means you can ea
 Install [Node.js 8.3](https://nodejs.org/en/download/) or higher and [Yarn](https://yarnpkg.com/lang/en/docs/install/). It's also recommended to install [Lerna](https://www.npmjs.com/package/lerna) globally.
 
 1. Clone this repository.
-2. Create a new Gridsome project inside the `/projects` folder.
+2. Create a new Gridsome project inside the `~/projects` folder.
 3. Enter the new project folder and run `yarn` (or `lerna bootstrap` if installed).
 4. The project will now use the local packages when you run `gridsome develop`.
 
-To use `@gridsome/cli` in the repo as a global command. Enter the `/packages/cli` folder and run `npm link`.
+To use `@gridsome/cli` in the repo as a global command. Enter the `~/packages/cli` folder and run `npm link`.
 
-Yarn will add dependencies from your test projects to the root `yarn.lock` file. So you should not commit changes in that file unless you have added dependencies to any of the core packages. If you need to commit it, remove your projects from the `/projects` folder temporary and run `yarn` or `lerna bootstrap` in the root folder. Yarn will then clean up the lock file with only core dependencies. Commit the file and move your projects back and run `yarn` or `lerna bootstrap` again to start developing.
+Yarn will add dependencies from your test projects to the root `yarn.lock` file. So you should not commit changes in that file unless you have added dependencies to any of the core packages. If you need to commit it, remove your projects from the `~/projects` folder temporary and run `yarn` or `lerna bootstrap` in the root folder. Yarn will then clean up the lock file with only core dependencies. Commit the file and move your projects back and run `yarn` or `lerna bootstrap` again to start developing.
 
 ## Roadmap for v1.0
 
@@ -90,7 +92,7 @@ Yarn will add dependencies from your test projects to the root `yarn.lock` file.
 - [x] Multi-process HTML rendering
 - [x] Lazy-loading images and pages
 - [x] Pagination
-- [ ] Plugin API
+- [x] Plugin API
 - [ ] Taxonomies
 - [ ] Service Worker
 - [ ] Documentation
