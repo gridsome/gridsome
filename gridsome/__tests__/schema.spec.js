@@ -370,6 +370,73 @@ test('infer file fields', () => {
   expect(types.file2.type).toEqual(fileType.type)
 })
 
+test('should get values from object fields', async () => {
+  const contentType = api.store.addContentType({
+    typeName: 'TestPost'
+  })
+
+  contentType.addNode({
+    id: '1',
+    fields: {
+      myObject: {
+        value: 'test1',
+        otherObject: {
+          value: 'test2'
+        }
+      }
+    }
+  })
+
+  const { data } = await createSchemaAndExecute(`{
+    testPost (id: "1") {
+      myObject {
+        value
+        otherObject {
+          value
+        }
+      }
+    }
+  }`)
+
+  expect(data.testPost.myObject.value).toEqual('test1')
+  expect(data.testPost.myObject.otherObject.value).toEqual('test2')
+})
+
+test('should format dates from schema', async () => {
+  const contentType = api.store.addContentType({
+    typeName: 'TestPostDate'
+  })
+
+  contentType.addNode({
+    id: '1',
+    date: '2018-10-10',
+    fields: {
+      customDate: '2018-10-10',
+      dateObject: {
+        date: '2018-10-10'
+      }
+    }
+  })
+
+  const { data } = await createSchemaAndExecute(`{
+    testPostDate (id: "1") {
+      date
+      customDate
+      date2: date(format: "YYYY-MM-DD")
+      date3: customDate(format: "DD/MM/YYYY")
+      dateObject {
+        date(format: "DD/MM/YYYY")
+      }
+    }
+  }`)
+
+  expect(data.testPostDate.date).toEqual('2018-10-10T00:00:00+02:00')
+  expect(data.testPostDate.customDate).toEqual('2018-10-10T00:00:00+02:00')
+  expect(data.testPostDate.date2).toEqual('2018-10-10')
+  expect(data.testPostDate.date3).toEqual('10/10/2018')
+  expect(data.testPostDate.dateObject.date).toEqual('10/10/2018')
+})
+
 test('transformer extends node type', async () => {
   const contentType = api.store.addContentType({
     typeName: 'TestPost'
