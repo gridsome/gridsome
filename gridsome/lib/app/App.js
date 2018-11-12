@@ -89,6 +89,13 @@ class App {
       this.plugins.push({ api, entry, instance })
     })
 
+    // run config.chainWebpack after all plugins
+    if (typeof this.config.chainWebpack === 'function') {
+      this.on('chainWebpack', {
+        handler: this.config.chainWebpack
+      })
+    }
+
     this.isInitialized = true
 
     return this
