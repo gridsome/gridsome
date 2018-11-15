@@ -1,0 +1,23 @@
+{
+  "version": "0.1.0",
+  "name": "@gridsome/source-drupal",
+  "description": "Drupal source for Gridsome",
+  "homepage": "https://github.com/gridsome/gridsome/tree/master/packages/source-drupal#readme",
+  "repository": "https://github.com/gridsome/gridsome/tree/master/packages/source-drupal",
+  "main": "index.js",
+  "keywords": [
+    "gridsome",
+    "gridsome-plugin",
+    "gridsome-source",
+    "drupal"
+  ],
+  "dependencies": {
+    "axios": "^0.18.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=8.3"
+  }
+}
