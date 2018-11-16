@@ -23,7 +23,7 @@ class PluginAPI {
         clearTimeout(regenerateTimeout)
         regenerateTimeout = setTimeout(() => {
           if (app.isBootstrapped) {
-            app.routerData = createRoutes(app.store)
+            app.routerData = createRoutes(app)
             app.generator.generate('routes.js')
           }
         }, 20)
