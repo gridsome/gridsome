@@ -1,6 +1,7 @@
 const axios = require('axios')
 const Queue = require('better-queue')
 const querystring = require('querystring')
+const { camelCase, mapKeys } = require('lodash')
 
 class WordPressSource {
   static defaultOptions () {
@@ -14,6 +15,7 @@ class WordPressSource {
   }
 
   constructor (api, options) {
+    this.api = api
     this.options = options
 
     api.loadSource(args => this.fetchWordPressContent(args))
@@ -24,7 +26,7 @@ class WordPressSource {
     const { baseUrl, perPage, concurrent } = this.options
     let { routes } = this.options
 
-    const restUrl = `${baseUrl.replace(/\/+$/, '')}/wp-json/wp/v2`
+    const restUrl = `${baseUrl.replace(/\/+$/, '')}/wp-json`
     const restBases = { posts: {}, taxonomies: {}}
 
     try {
@@ -37,52 +39,62 @@ class WordPressSource {
       post: '/:year/:month/:day/:slug',
       post_tag: '/tag/:slug',
       category: '/category/:slug',
+      author: '/author/:slug',
       ...routes
     }
 
+    let users = {}
     let types = {}
     let taxonomies = {}
 
     try {
-      const res = await axios.get(`${restUrl}/types`)
+      const res = await axios.get(`${restUrl}/wp/v2/users`)
+      users = res.data
+    } catch (err) {
+      throw err
+    }
+
+    try {
+      const res = await axios.get(`${restUrl}/wp/v2/types`)
       types = res.data
     } catch (err) {
       throw err
     }
 
     try {
-      const res = await axios.get(`${restUrl}/taxonomies`)
+      const res = await axios.get(`${restUrl}/wp/v2/taxonomies`)
       taxonomies = res.data
     } catch (err) {
       throw err
     }
 
+    const authors = addContentType({
+      typeName: makeTypeName('author'),
+      route: routes.author
+    })
+
+    for (const user of users) {
+      authors.addNode({
+        id: user.id,
+        title: user.name,
+        slug: user.slug,
+        fields: {
+          url: user.url,
+          description: user.description,
+          avatars: mapKeys(user.avatar_urls, (v, key) => `avatar${key}`),
+          acf: this.createCustomFields(user.acf)
+        }
+      })
+    }
+
     for (const type in types) {
       const options = types[type]
-
       const typeName = makeTypeName(type)
       const route = routes[type] || `/${options.rest_base}/:slug`
 
       restBases.posts[type] = options.rest_base
 
-      const collection = addContentType({ typeName, route })
-
-      if (type !== 'attachment') {
-        const attachmentTypeName = makeTypeName('attachment')
-
-        collection.addReference('featuredMedia', {
-          typeName: attachmentTypeName,
-          key: '_id'
-        })
-
-        // collection.addSchemaField('featuredMedia', ({ nodeTypes }) => ({
-        //   type: nodeTypes[attachmentTypeName],
-        //   async resolve (node, args, { store }) {
-        //     const { collection } = getContentType(attachmentTypeName)
-        //     return collection.findOne({ _id: node.fields.featuredMedia })
-        //   }
-        // }))
-      }
+      addContentType({ typeName, route })
     }
 
     for (const type in taxonomies) {
@@ -92,13 +104,6 @@ class WordPressSource {
 
       restBases.taxonomies[type] = options.rest_base
 
-      for (const type of options.types) {
-        const postTypeName = makeTypeName(type)
-        const collection = getContentType(postTypeName)
-
-        collection.addReference(options.rest_base, { typeName, key: '_id' })
-      }
-
       addContentType({ typeName, route })
     }
 
@@ -106,7 +111,7 @@ class WordPressSource {
       const restBase = restBases.posts[type]
       const typeName = makeTypeName(type)
       const collection = getContentType(typeName)
-      const endpoint = `${restUrl}/${restBase}`
+      const endpoint = `${restUrl}/wp/v2/${restBase}`
       let posts = []
 
       try {
@@ -116,10 +121,16 @@ class WordPressSource {
       }
 
       for (const post of posts) {
-        let fields = {}
+        const fields = {
+          author: {
+            typeName: makeTypeName('author'),
+            value: post.author || 0
+          },
+          acf: this.createCustomFields(post.acf)
+        }
 
         if (post.type === 'attachment') {
-          fields.url = post.source_url
+          fields.attachment = post.source_url
           fields.mediaType = post.media_type
           fields.mimeType = post.mime_type
           fields.width = post.media_details.width
@@ -127,19 +138,25 @@ class WordPressSource {
         } else {
           fields.content = post.content ? post.content.rendered : ''
           fields.excerpt = post.excerpt ? post.excerpt.rendered : ''
-          fields.featuredMedia = post.featured_media
+          fields.featuredMedia = {
+            typeName: makeTypeName('attachment'),
+            value: post.featured_media
+          }
         }
         
         // add references if post has any taxonomy rest bases as properties
         for (const type in restBases.taxonomies) {
           const propName = restBases.taxonomies[type]
           if (post.hasOwnProperty(propName)) {
-            fields[propName] = post[propName]
+            fields[propName] = {
+              typeName: makeTypeName(type),
+              value: post[propName]
+            }
           }
         }
 
         collection.addNode({
-          _id: post.id,
+          id: post.id,
           title: post.title ? post.title.rendered : '',
           date: post.date ? new Date(post.date) : null,
           content: post.content ? post.content.rendered : '',
@@ -154,7 +171,7 @@ class WordPressSource {
       const restBase = restBases.taxonomies[type]
       const typeName = makeTypeName(type)
       const collection = getContentType(typeName)
-      const endpoint = `${restUrl}/${restBase}`
+      const endpoint = `${restUrl}/wp/v2/${restBase}`
       let terms = []
 
       try {
@@ -173,6 +190,58 @@ class WordPressSource {
           }
         })
       }
+    }
+  }
+
+  createCustomFields (fields) {
+    const res = {}
+
+    if (!fields) return fields
+
+    for (const key in fields) {
+      const fieldValue = this.createCustomField(fields[key])
+
+      if (fieldValue !== null) {
+        res[camelCase(key)] = fieldValue
+      }
+    }
+
+    return res
+  }
+
+  createCustomField (value) {
+    if (value === null) return null
+    if (value === undefined) return null
+    
+    const type = typeof value
+    const { makeTypeName } = this.api.store
+
+    if (Array.isArray(value)) {
+      return value.map(v => this.createCustomField(v))
+    }
+
+    switch (type) {
+      case 'string':
+      case 'boolean':
+      case 'number':
+        return !isNaN(value)
+          ? Number(value)
+          : value
+
+      case 'object':
+        if (value.post_type) {
+          return {
+            typeName: makeTypeName(value.post_type),
+            value: value.ID
+          }
+        } else if (value.filename) {
+          return {
+            typeName: makeTypeName('attachment'),
+            value: value.ID
+          }
+        }
+
+        return this.createCustomFields(value)
     }
   }
 }
