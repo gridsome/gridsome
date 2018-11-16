@@ -114,7 +114,7 @@ class App {
   }
 
   generateFiles () {
-    this.routerData = createRoutes(this.store)
+    this.routerData = createRoutes(this)
 
     this.router = new Router({
       base: '/',
