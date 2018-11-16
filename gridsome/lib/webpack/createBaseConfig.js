@@ -106,9 +106,9 @@ module.exports = (app, { isProd, isServer }) => {
     .use('babel-loader')
       .loader('babel-loader')
       .options({
-        babelrc: false,
-        configFile: false,
-        presets: [require.resolve('./babel-preset')]
+        presets: [
+          require.resolve('./babel-preset')
+        ]
       })
 
   // css
