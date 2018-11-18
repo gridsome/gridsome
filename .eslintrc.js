@@ -1,25 +1,21 @@
 module.exports = {
   extends: [
-    "plugin:node/recommended"
+    'plugin:node/recommended',
+    'plugin:vue-libs/recommended'
   ],
   env: {
-    "jest": true
+    jest: true
   },
-  rules: {
-    "indent": ["error", 2, {
-      "MemberExpression": "off",
-      "SwitchCase": 1
-    }]
-  },
+  rules: {},
   overrides: [
     {
       files: [
-        "scripts/**/*.js",
-        "**/__tests__/**/*.js"
+        'scripts/**/*.js',
+        '**/__tests__/**/*.js'
       ],
       rules: {
-        "node/no-unpublished-require": "off",
-        "node/no-extraneous-require": "off"
+        'node/no-unpublished-require': 'off',
+        'node/no-extraneous-require': 'off'
       }
     }
   ]
