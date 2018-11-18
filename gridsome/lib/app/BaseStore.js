@@ -11,6 +11,12 @@ class BaseStore {
 
     autoBind(this)
 
+    this.nodeIndex = this.data.addCollection('nodeIndex', {
+      indices: ['path', 'typeName'],
+      unique: ['uid', 'path'],
+      autoupdate: true
+    })
+
     this.pages = this.data.addCollection('Page', {
       indices: ['type'],
       unique: ['path'],

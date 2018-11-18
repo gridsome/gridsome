@@ -45,6 +45,17 @@ class ContentTypeCollection extends EventEmitter {
     }
 
     try {
+      this._store.nodeIndex.insert({
+        path: node.path,
+        typeName: node.typeName,
+        uid: node.uid,
+        id: node.id
+      })
+    } catch (err) {
+      warn(`Skipping duplicate path for ${node.path}`, this.typeName)
+    }
+
+    try {
       this.collection.insert(node)
       this.emit('change', node)
     } catch (err) {
@@ -58,9 +69,17 @@ class ContentTypeCollection extends EventEmitter {
     return this.collection.findOne({ id })
   }
 
+  getNodeIndexEntry (node) {
+    return this._store.nodeIndex.findOne({
+      typeName: node.typeName,
+      id: node.id
+    })
+  }
+
   updateNode (id, options) {
     const node = this.getNode(id)
     const oldNode = cloneDeep(node)
+    const indexEntry = this.getNodeIndexEntry(node)
     const internal = this.createInternals(options.internal)
 
     // transform content with transformer for given mime type
@@ -79,6 +98,7 @@ class ContentTypeCollection extends EventEmitter {
     node.path = options.path || this.makePath(node)
 
     node.fields = this.processNodeFields(fields, node.internal.origin)
+    indexEntry.path = node.path
 
     this.emit('change', node, oldNode)
 
@@ -86,14 +106,17 @@ class ContentTypeCollection extends EventEmitter {
   }
 
   removeNode (id) {
-    const oldNode = this.collection.findOne({ id })
+    const node = this.collection.findOne({ id })
+
+    this._store.nodeIndex.findAndRemove({ uid: node.uid })
 
     this.collection.findAndRemove({ id })
-    this.emit('change', undefined, oldNode)
+    this.emit('change', undefined, node)
   }
 
   createNode (options = {}) {
     const { typeName } = this.options
+    const hash = crypto.createHash('md5')
     const internal = this.createInternals(options.internal)
     const id = options.id || options._id || this.makeUid(JSON.stringify(options))
     let node = { id, typeName, internal }
@@ -110,6 +133,7 @@ class ContentTypeCollection extends EventEmitter {
       return key.startsWith('__') ? key : camelCase(key)
     })
 
+    node.uid = hash.update(typeName + node.id).digest('hex')
     node.title = options.title || fields.title || node.id
     node.date = options.date || fields.date || new Date().toISOString()
     node.slug = options.slug || fields.slug || this.slugify(node.title)
@@ -166,7 +190,7 @@ class ContentTypeCollection extends EventEmitter {
 
       for (const key in fields) {
         res[key] = Array.isArray(fields[key])
-          ? fields[key].map(processField)
+          ? fields[key].map(v => processField(v))
           : processField(fields[key])
       }
 
