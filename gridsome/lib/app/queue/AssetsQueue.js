@@ -15,7 +15,7 @@ class AssetsQueue {
     const { config, context } = this.app
     const { ext } = path.parse(filePath)
     const isImage = config.imageExtensions.includes(ext)
-    
+
     const data = {
       type: isImage ? 'image' : 'file',
       mimeType: mime.lookup(filePath),

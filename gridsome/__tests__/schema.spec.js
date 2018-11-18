@@ -23,7 +23,7 @@ beforeEach(() => {
       maxImageWidth: 1000
     }
   }).init()
-  
+
   api = new PluginAPI(app, {
     entry: { options: {}, clientOptions: undefined },
     transformers: {
@@ -40,7 +40,6 @@ afterAll(() => {
   app = null
   api = null
 })
-
 
 test('create node type with custom fields', async () => {
   const contentType = api.store.addContentType({
@@ -70,7 +69,7 @@ test('create node type with custom fields', async () => {
   })
 
   const query = '{ testPost (id: "1") { id foo list obj { foo }}}'
-  const { errors, data } = await createSchemaAndExecute(query)
+  const { data } = await createSchemaAndExecute(query)
 
   expect(data.testPost.id).toEqual('1')
   expect(data.testPost.foo).toEqual('bar')

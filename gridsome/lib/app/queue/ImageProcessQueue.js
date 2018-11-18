@@ -1,7 +1,6 @@
 const path = require('path')
 const fs = require('fs-extra')
 const sharp = require('sharp')
-const isUrl = require('is-url')
 const crypto = require('crypto')
 const { trim } = require('lodash')
 const mime = require('mime-types')
@@ -157,7 +156,7 @@ class ImageProcessQueue {
         (options.height ? ` height="${options.height}"` : '') +
         (options.alt ? ` alt="${options.alt}">` : '>') +
         `</noscript>`
-      
+
       classNames.push('g-image--loading')
     }
 

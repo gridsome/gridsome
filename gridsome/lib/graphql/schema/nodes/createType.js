@@ -12,8 +12,7 @@ const {
   GraphQLString,
   GraphQLNonNull,
   GraphQLUnionType,
-  GraphQLObjectType,
-  GraphQLInterfaceType
+  GraphQLObjectType
 } = require('../../graphql')
 
 module.exports = ({ contentType, nodeTypes }) => {
@@ -47,7 +46,7 @@ module.exports = ({ contentType, nodeTypes }) => {
           deprecationReason: 'Use node.id instead.',
           type: new GraphQLNonNull(GraphQLID),
           resolve: node => node.id
-        },
+        }
       }
 
       if (!isEmpty(refs)) {

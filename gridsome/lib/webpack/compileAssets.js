@@ -10,7 +10,7 @@ module.exports = async (app, defines = {}) => {
 
   clientConfig
     .plugin('gridsome-endpoints')
-      .use(require('webpack/lib/DefinePlugin'), [defines])
+    .use(require('webpack/lib/DefinePlugin'), [defines])
 
   await app.dispatch('beforeCompileAssets', {
     context: app.context,

@@ -1,6 +1,5 @@
 const {
   GraphQLID,
-  GraphQLInt,
   GraphQLString,
   GraphQLNonNull,
   GraphQLInterfaceType

@@ -1,4 +1,3 @@
-const fs = require('fs')
 const path = require('path')
 const mime = require('mime-types')
 
@@ -24,7 +23,7 @@ exports.fileType = {
   args: {},
   async resolve (obj, args, context, info) {
     const value = fieldResolver(obj, args, context, info)
-    
+
     if (!value) return null
 
     const result = await context.queue.add(value)

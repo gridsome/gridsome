@@ -44,7 +44,7 @@ module.exports = async (context, args) => {
     if (stats.hasErrors()) {
       return
     }
-    
+
     console.log()
     console.log(`  Site running at:          ${chalk.cyan(server.url.site)}`)
     console.log(`  Explore GraphQL data at:  ${chalk.cyan(server.url.explore)}`)
@@ -70,15 +70,15 @@ module.exports = async (context, args) => {
 
     clientConfig
       .plugin('friendly-errors')
-        .use(require('friendly-errors-webpack-plugin'))
+      .use(require('friendly-errors-webpack-plugin'))
 
     clientConfig
       .plugin('dev-endpoints')
-        .use(require('webpack/lib/DefinePlugin'), [{
-          'SOCKJS_ENDPOINT': JSON.stringify(sock.url),
-          'GRAPHQL_ENDPOINT': JSON.stringify(server.url.graphql),
-          'GRAPHQL_WS_ENDPOINT': JSON.stringify(server.url.websocket)
-        }])
+      .use(require('webpack/lib/DefinePlugin'), [{
+        'SOCKJS_ENDPOINT': JSON.stringify(sock.url),
+        'GRAPHQL_ENDPOINT': JSON.stringify(server.url.graphql),
+        'GRAPHQL_WS_ENDPOINT': JSON.stringify(server.url.websocket)
+      }])
 
     clientConfig.entryPoints.store.forEach((entry, name) => {
       clientConfig.entry(name)

@@ -68,7 +68,7 @@ class ContentTypeCollection extends EventEmitter {
       this.transformNodeOptions(options, internal)
     }
 
-    const fields = mapKeys(options.fields || {}, (v, key) => {
+    const fields = mapKeys(options.fields || {}, (v, key) => {
       return key.startsWith('__') ? key : camelCase(key)
     })
 
@@ -96,7 +96,7 @@ class ContentTypeCollection extends EventEmitter {
     const { typeName } = this.options
     const internal = this.createInternals(options.internal)
     const id = options.id || options._id || this.makeUid(JSON.stringify(options))
-    let node = { id, typeName, internal }
+    const node = { id, typeName, internal }
 
     // TODO: remove before 1.0
     node._id = id
@@ -134,7 +134,7 @@ class ContentTypeCollection extends EventEmitter {
 
   transformNodeOptions (options, internal) {
     const result = this.transform(internal)
-      
+
     if (result.title) options.title = result.title
     if (result.slug) options.slug = result.slug
     if (result.path) options.path = result.path
@@ -143,7 +143,7 @@ class ContentTypeCollection extends EventEmitter {
     if (result.excerpt) options.excerpt = result.excerpt
 
     if (result.fields) {
-      options.fields = Object.assign(options.fields || {}, result.fields)
+      options.fields = Object.assign(options.fields || {}, result.fields)
     }
   }
 
@@ -156,9 +156,9 @@ class ContentTypeCollection extends EventEmitter {
           if (path.extname(field).length > 1) {
             return this.resolveFilePath(origin, field)
           }
-        default:
-          return field
       }
+
+      return field
     }
 
     const processFields = fields => {

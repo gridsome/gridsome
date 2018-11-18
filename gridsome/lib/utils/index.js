@@ -30,7 +30,7 @@ exports.resolvePath = function (fromPath, toPath, rootDir) {
   if (mime.lookup(toPath) === 'application/x-msdownload') return toPath
   if (!mime.lookup(toPath)) return toPath
 
-  const parse = string => { 
+  const parse = string => {
     let rootPath = ''
     let basePath = string
 
