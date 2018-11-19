@@ -267,17 +267,27 @@ test('create node list reference', async () => {
 
   authorContentType.addNode({
     id: '2',
-    title: 'Test Author'
+    title: 'First Author'
+  })
+
+  authorContentType.addNode({
+    id: '3',
+    title: 'Second Author'
+  })
+
+  authorContentType.addNode({
+    id: '4',
+    title: 'Third Author'
   })
 
   postContentType.addNode({
     id: '1',
     fields: {
-      author: ['2'],
+      author: '2',
       customRefs: {
-        author: {
+        authors: {
           typeName: 'TestAuthor',
-          value: ['2']
+          value: ['2', '3', '4']
         }
       }
     }
@@ -287,17 +297,21 @@ test('create node list reference', async () => {
     testPost (id: "1") {
       author { id title }
       customRefs {
-        author { id title }
+        authors (sortBy: "title", limit: 2, skip: 1) {
+          id
+          title
+        }
       }
     }
   }`
 
   const { data } = await createSchemaAndExecute(query)
 
-  expect(data.testPost.author[0].id).toEqual('2')
-  expect(data.testPost.author[0].title).toEqual('Test Author')
-  expect(data.testPost.customRefs.author[0].id).toEqual('2')
-  expect(data.testPost.customRefs.author[0].title).toEqual('Test Author')
+  expect(data.testPost.author.id).toEqual('2')
+  expect(data.testPost.author.title).toEqual('First Author')
+  expect(data.testPost.customRefs.authors).toHaveLength(2)
+  expect(data.testPost.customRefs.authors[0].title).toEqual('Second Author')
+  expect(data.testPost.customRefs.authors[1].title).toEqual('Third Author')
 })
 
 test('create node reference to same type', async () => {
@@ -318,6 +332,49 @@ test('create node reference to same type', async () => {
 
   expect(data.testPost.refs.related.id).toEqual('2')
   expect(data.testPost.refs.related.title).toEqual('Test')
+})
+
+test('create reference with multiple node types', async () => {
+  const posts = api.store.addContentType({ typeName: 'TestPost' })
+  const authors = api.store.addContentType({ typeName: 'TestAuthor' })
+  const users = api.store.addContentType({ typeName: 'TestUser' })
+
+  authors.addNode({ id: '1', title: 'Author', fields: { name: 'Test' }})
+  users.addNode({ id: '2', title: 'User', fields: { username: 'test' }})
+
+  posts.addNode({
+    id: '3',
+    fields: {
+      people: {
+        typeName: ['TestAuthor', 'TestUser'],
+        value: ['1', '2']
+      }
+    }
+  })
+
+  const query = `{
+    testPost (id: "3") {
+      id
+      people {
+        ...on NodeInterface {
+          id
+          title
+        }
+        ...on TestAuthor {
+          name
+        }
+        ...on TestUser {
+          username
+        }
+      }
+    }
+  }`
+
+  const { data } = await createSchemaAndExecute(query)
+
+  expect(data.testPost.people).toHaveLength(2)
+  expect(data.testPost.people[0]).toMatchObject({ id: '1', title: 'Author', name: 'Test' })
+  expect(data.testPost.people[1]).toMatchObject({ id: '2', title: 'User', username: 'test' })
 })
 
 test('should get values from object fields', async () => {

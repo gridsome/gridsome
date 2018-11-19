@@ -13,16 +13,41 @@ function refResolver (obj, args, context, info) {
   const isList = Array.isArray(value)
   const query = { [key || 'id']: isList ? { $in: value } : value }
 
+  // search for multiple node types by filtering the global
+  // node index before joining each node type collections
   if (Array.isArray(typeName)) {
-    // TODO: search multiple collections
-    return isList ? [] : null
+    const options = { removeMeta: true }
+    const indexQuery = { ...query, typeName: { $in: typeName }}
+    const mapper = (left, right) => ({ ...left, ...right })
+    let nodeIndex = context.store.nodeIndex.chain().find(indexQuery)
+
+    typeName.forEach(typeName => {
+      const { collection } = context.store.getContentType(typeName)
+      nodeIndex = nodeIndex.eqJoin(collection, 'uid', 'uid', mapper, options)
+    })
+
+    const result = nodeIndex
+      .simplesort(args.sortBy, args.order === -1)
+      .offset(args.skip)
+      .limit(args.limit)
+      .data()
+
+    return isList ? result : result[0]
   }
 
   const { collection } = context.store.getContentType(typeName)
 
-  return isList
-    ? collection.find(query)
-    : collection.findOne(query)
+  if (isList) {
+    return collection
+      .chain()
+      .find(query)
+      .simplesort(args.sortBy, args.order === -1)
+      .offset(args.skip)
+      .limit(args.limit)
+      .data()
+  }
+
+  return collection.findOne(query)
 }
 
 module.exports = {

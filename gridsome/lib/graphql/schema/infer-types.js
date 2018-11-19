@@ -1,5 +1,6 @@
 const camelCase = require('camelcase')
 const { isEmpty, mapValues } = require('lodash')
+const { sortOrderType } = require('./types')
 const { nodeInterface } = require('./interfaces')
 const { isDate, dateTypeField } = require('./types/date')
 const { isFile, fileType } = require('./types/file')
@@ -53,11 +54,11 @@ function populateFeilds (obj, currentObj = {}) {
 
 function populateField (value, currentValue) {
   if (Array.isArray(value)) {
-    return value.slice(0, 1).map(value => {
-      return populateField(value, currentValue ? currentValue[0] : undefined)
+    return value.map((value, index) => {
+      return populateField(value, currentValue ? currentValue[index] : undefined)
     })
   } else if (typeof value === 'object') {
-    return populateFeilds(value, currentValue)
+    return isRef(value) ? value : populateFeilds(value, currentValue)
   }
 
   return currentValue !== undefined ? currentValue : value
@@ -131,21 +132,30 @@ function createObjectType (obj, key, typeName, nodeTypes) {
 
 function createRefType (obj, key, typeName, nodeTypes) {
   const typeNames = Array.isArray(obj.typeName) ? obj.typeName : [obj.typeName]
-  const name = createTypeName(typeName, key + 'Ref')
   const isList = Array.isArray(obj.value)
+  const res = { resolve: refResolver }
 
-  const type = typeNames.length > 1
+  res.type = typeNames.length > 1
     ? new GraphQLUnionType({
-      name,
       interfaces: [nodeInterface],
+      name: createTypeName(typeName, key + 'Ref'),
+      description: `Reference to ${typeNames.join(', ')} nodes`,
       types: () => typeNames.map(typeName => nodeTypes[typeName])
     })
     : nodeTypes[typeNames[0]]
 
-  return {
-    type: isList ? new GraphQLList(type) : type,
-    resolve: refResolver
+  if (isList) {
+    res.type = new GraphQLList(res.type)
+
+    res.args = {
+      sortBy: { type: GraphQLString, defaultValue: 'date' },
+      order: { type: sortOrderType, defaultValue: 'DESC' },
+      skip: { type: GraphQLInt, defaultValue: 0 },
+      limit: { type: GraphQLInt }
+    }
   }
+
+  return res
 }
 
 function createTypeName (typeName, key) {
