@@ -1,17 +1,14 @@
-const camelCase = require('camelcase')
-const inferTypes = require('../infer-types')
 const { dateType } = require('../types/date')
-const { mapValues, isEmpty } = require('lodash')
 const { refResolver } = require('../resolvers')
-
+const { mapValues, isEmpty } = require('lodash')
 const { nodeInterface } = require('../interfaces')
+const { inferTypes, createRefType } = require('../infer-types')
 
 const {
   GraphQLID,
   GraphQLList,
   GraphQLString,
   GraphQLNonNull,
-  GraphQLUnionType,
   GraphQLObjectType,
   GraphQLInterfaceType
 } = require('../../graphql')
@@ -115,24 +112,13 @@ function createRefs (contentType, nodeTypes, fields) {
 
   return mapValues(contentType.options.refs, (ref, key) => {
     const { typeName, description } = ref
+
     const field = fields[key] || { type: GraphQLString }
-
     const isList = field.type instanceof GraphQLList
-    let refType = nodeTypes[typeName]
-
-    if (Array.isArray(typeName)) {
-      // TODO: create union collection
-      const fieldTypeName = camelCase(key, { pascalCase: true })
-      refType = new GraphQLUnionType({
-        name: `${contentType.typeName}${fieldTypeName}Union`,
-        interfaces: [nodeInterface],
-        types: typeName.map(typeName => nodeTypes[typeName])
-      })
-    }
+    const obj = { typeName, value: isList ? [] : '' }
 
     return {
-      description,
-      type: isList ? new GraphQLList(refType) : refType,
+      ...createRefType(obj, key, contentType.name, nodeTypes),
       resolve: (obj, args, context, info) => {
         const field = {
           [info.fieldName]: {

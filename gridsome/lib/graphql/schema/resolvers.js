@@ -13,6 +13,14 @@ function refResolver (obj, args, context, info) {
   const isList = Array.isArray(value)
   const query = { [key || 'id']: isList ? { $in: value } : value }
 
+  const applyArgs = chain => {
+    if (args.sortBy) chain = chain.simplesort(args.sortBy, args.order === -1)
+    if (args.skip) chain = chain.offset(args.skip)
+    if (args.limit) chain = chain.limit(args.limit)
+
+    return chain
+  }
+
   // search for multiple node types by filtering the global
   // node index before joining each node type collections
   if (Array.isArray(typeName)) {
@@ -21,33 +29,21 @@ function refResolver (obj, args, context, info) {
     const mapper = (left, right) => ({ ...left, ...right })
     let nodeIndex = context.store.nodeIndex.chain().find(indexQuery)
 
-    typeName.forEach(typeName => {
-      const { collection } = context.store.getContentType(typeName)
+    for (let i = 0, l = typeName.length; i < l; i++) {
+      const { collection } = context.store.getContentType(typeName[i])
       nodeIndex = nodeIndex.eqJoin(collection, 'uid', 'uid', mapper, options)
-    })
+    }
 
-    const result = nodeIndex
-      .simplesort(args.sortBy, args.order === -1)
-      .offset(args.skip)
-      .limit(args.limit)
-      .data()
+    const result = applyArgs(nodeIndex).data()
 
     return isList ? result : result[0]
   }
 
   const { collection } = context.store.getContentType(typeName)
 
-  if (isList) {
-    return collection
-      .chain()
-      .find(query)
-      .simplesort(args.sortBy, args.order === -1)
-      .offset(args.skip)
-      .limit(args.limit)
-      .data()
-  }
-
-  return collection.findOne(query)
+  return isList
+    ? applyArgs(collection.chain().find(query)).data()
+    : collection.findOne(query)
 }
 
 module.exports = {

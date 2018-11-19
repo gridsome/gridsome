@@ -11,8 +11,8 @@ class ContentTypeCollection extends EventEmitter {
   constructor (store, pluginStore, options) {
     super()
 
-    this._store = store
-    this._pluginStore = pluginStore
+    this.baseStore = store
+    this.pluginStore = pluginStore
 
     this.options = { refs: {}, fields: {}, ...options }
     this.typeName = options.typeName
@@ -41,26 +41,24 @@ class ContentTypeCollection extends EventEmitter {
     const { mimeTypes } = this.options
     const { mimeType } = node.internal
     if (mimeType && !mimeTypes.hasOwnProperty(mimeType)) {
-      mimeTypes[mimeType] = this._pluginStore._transformers[mimeType]
+      mimeTypes[mimeType] = this.pluginStore._transformers[mimeType]
     }
 
     try {
-      this._store.nodeIndex.insert({
+      this.baseStore.nodeIndex.insert({
         path: node.path,
         typeName: node.typeName,
         uid: node.uid,
-        id: node.id
+        id: node.id,
+        _id: node.id // TODO: remove this before v1.0
       })
     } catch (err) {
       warn(`Skipping duplicate path for ${node.path}`, this.typeName)
+      return null
     }
 
-    try {
-      this.collection.insert(node)
-      this.emit('change', node)
-    } catch (err) {
-      warn(`Skipping duplicate path for ${node.path}`, this.typeName)
-    }
+    this.collection.insert(node)
+    this.emit('change', node)
 
     return node
   }
@@ -69,17 +67,10 @@ class ContentTypeCollection extends EventEmitter {
     return this.collection.findOne({ id })
   }
 
-  getNodeIndexEntry (node) {
-    return this._store.nodeIndex.findOne({
-      typeName: node.typeName,
-      id: node.id
-    })
-  }
-
   updateNode (id, options) {
     const node = this.getNode(id)
     const oldNode = cloneDeep(node)
-    const indexEntry = this.getNodeIndexEntry(node)
+    const indexEntry = this.baseStore.nodeIndex.findOne({ uid: node.uid })
     const internal = this.createInternals(options.internal)
 
     // transform content with transformer for given mime type
@@ -108,9 +99,9 @@ class ContentTypeCollection extends EventEmitter {
   removeNode (id) {
     const node = this.collection.findOne({ id })
 
-    this._store.nodeIndex.findAndRemove({ uid: node.uid })
-
+    this.baseStore.nodeIndex.findAndRemove({ uid: node.uid })
     this.collection.findAndRemove({ id })
+
     this.emit('change', undefined, node)
   }
 
@@ -201,7 +192,7 @@ class ContentTypeCollection extends EventEmitter {
   }
 
   resolveFilePath (...args) {
-    return this._pluginStore._app.resolveFilePath(...args, this.resolveAbsolutePaths)
+    return this.pluginStore._app.resolveFilePath(...args, this.resolveAbsolutePaths)
   }
 
   makePath ({ date, slug }) {
@@ -224,7 +215,7 @@ class ContentTypeCollection extends EventEmitter {
   }
 
   transform ({ mimeType, content }, options) {
-    const transformer = this._pluginStore._transformers[mimeType]
+    const transformer = this.pluginStore._transformers[mimeType]
 
     if (!transformer) {
       throw new Error(`No transformer for ${mimeType} is installed.`)

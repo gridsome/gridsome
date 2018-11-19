@@ -148,7 +148,7 @@ function createRefType (obj, key, typeName, nodeTypes) {
     res.type = new GraphQLList(res.type)
 
     res.args = {
-      sortBy: { type: GraphQLString, defaultValue: 'date' },
+      sortBy: { type: GraphQLString },
       order: { type: sortOrderType, defaultValue: 'DESC' },
       skip: { type: GraphQLInt, defaultValue: 0 },
       limit: { type: GraphQLInt }
@@ -178,4 +178,8 @@ function isRef (obj) {
   )
 }
 
-module.exports = inferTypes
+module.exports = {
+  inferTypes,
+  createObjectType,
+  createRefType
+}

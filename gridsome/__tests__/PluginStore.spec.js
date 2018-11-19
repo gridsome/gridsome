@@ -44,7 +44,7 @@ test('add node', () => {
     date: '2018-09-04T23:20:33.918Z'
   })
 
-  const indexEntry = contentType.getNodeIndexEntry(node)
+  const indexEntry = api.store.store.nodeIndex.findOne({ uid: node.uid })
 
   expect(node).toHaveProperty('$loki')
   expect(node.id).toEqual('test')
@@ -84,7 +84,7 @@ test('update node', () => {
     title: 'New title'
   })
 
-  const nodeIndex = contentType.getNodeIndexEntry(node)
+  const nodeIndex = api.store.store.nodeIndex.findOne({ uid: node.uid })
 
   expect(node.id).toEqual('test')
   expect(node.typeName).toEqual('TestPost')
@@ -113,7 +113,7 @@ test('remove node', () => {
 
   contentType.removeNode('test')
 
-  const indexEntry = contentType.getNodeIndexEntry(node)
+  const indexEntry = api.store.store.nodeIndex.findOne({ uid: node.uid })
 
   expect(contentType.getNode('test')).toBeNull()
   expect(emit).toHaveBeenCalledTimes(2)
