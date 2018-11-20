@@ -25,9 +25,9 @@ function refResolver (obj, args, context, info) {
   // node index before joining each node type collections
   if (Array.isArray(typeName)) {
     const options = { removeMeta: true }
-    const indexQuery = { ...query, typeName: { $in: typeName }}
+    const indexQuery = { ...query, type: 'node', typeName: { $in: typeName }}
     const mapper = (left, right) => ({ ...left, ...right })
-    let nodeIndex = context.store.nodeIndex.chain().find(indexQuery)
+    let nodeIndex = context.store.index.chain().find(indexQuery)
 
     for (let i = 0, l = typeName.length; i < l; i++) {
       const { collection } = context.store.getContentType(typeName[i])

@@ -96,8 +96,9 @@ test('get deprecated node fields', async () => {
   })
 
   const query = '{ testPost (_id: "1") { _id fields { foo list obj { foo } }}}'
-  const { data } = await createSchemaAndExecute(query)
+  const { errors, data } = await createSchemaAndExecute(query)
 
+  expect(errors).toBeUndefined()
   expect(data.testPost._id).toEqual('1')
   expect(data.testPost.fields.foo).toEqual('bar')
   expect(data.testPost.fields.list[0]).toEqual('item')
@@ -112,8 +113,9 @@ test('get node by path', async () => {
   contentType.addNode({ id: '1', path: '/test' })
 
   const query = '{ testPost (path: "/test") { id }}'
-  const { data } = await createSchemaAndExecute(query)
+  const { errors, data } = await createSchemaAndExecute(query)
 
+  expect(errors).toBeUndefined()
   expect(data.testPost.id).toEqual('1')
 })
 
@@ -152,8 +154,9 @@ test('create connection', async () => {
   contentType.addNode({ title: 'test 2', date: '2018-09-04T00:00:00.000Z' })
 
   const query = '{ allTestPost { totalCount edges { node { title }}}}'
-  const { data } = await createSchemaAndExecute(query)
+  const { errors, data } = await createSchemaAndExecute(query)
 
+  expect(errors).toBeUndefined()
   expect(data.allTestPost.totalCount).toEqual(2)
   expect(data.allTestPost.edges[0].node.title).toEqual('test 2')
   expect(data.allTestPost.edges[1].node.title).toEqual('test 1')
@@ -169,8 +172,9 @@ test('get nodes by path regex', async () => {
   contentType.addNode({ path: '/some-3' })
 
   const query = '{ allTestPost (regex: "/node") { edges { node { _id }}}}'
-  const { data } = await createSchemaAndExecute(query)
+  const { errors, data } = await createSchemaAndExecute(query)
 
+  expect(errors).toBeUndefined()
   expect(data.allTestPost.edges.length).toEqual(2)
 })
 
@@ -216,8 +220,9 @@ test('create node reference', async () => {
     }
   }`
 
-  const { data } = await createSchemaAndExecute(query)
+  const { errors, data } = await createSchemaAndExecute(query)
 
+  expect(errors).toBeUndefined()
   expect(data.testPost.author.id).toEqual('2')
   expect(data.testPost.author.title).toEqual('Test Author')
   expect(data.testPost.customRefs.author.id).toEqual('2')
@@ -244,8 +249,9 @@ test('create deprecated node reference', async () => {
   authorContentType.addNode({ _id: '2', title: 'Test Author' })
 
   const query = '{ testPost (_id: "1") { refs { author { _id title }}}}'
-  const { data } = await createSchemaAndExecute(query)
+  const { errors, data } = await createSchemaAndExecute(query)
 
+  expect(errors).toBeUndefined()
   expect(data.testPost.refs.author._id).toEqual('2')
   expect(data.testPost.refs.author.title).toEqual('Test Author')
 })
@@ -305,8 +311,9 @@ test('create node list reference', async () => {
     }
   }`
 
-  const { data } = await createSchemaAndExecute(query)
+  const { errors, data } = await createSchemaAndExecute(query)
 
+  expect(errors).toBeUndefined()
   expect(data.testPost.author.id).toEqual('2')
   expect(data.testPost.author.title).toEqual('First Author')
   expect(data.testPost.customRefs.authors).toHaveLength(2)
@@ -328,8 +335,9 @@ test('create node reference to same type', async () => {
   postContentType.addNode({ id: '2', title: 'Test' })
 
   const query = '{ testPost (id: "1") { refs { related { id title }}}}'
-  const { data } = await createSchemaAndExecute(query)
+  const { errors, data } = await createSchemaAndExecute(query)
 
+  expect(errors).toBeUndefined()
   expect(data.testPost.refs.related.id).toEqual('2')
   expect(data.testPost.refs.related.title).toEqual('Test')
 })
@@ -370,8 +378,9 @@ test('create reference with multiple node types', async () => {
     }
   }`
 
-  const { data } = await createSchemaAndExecute(query)
+  const { errors, data } = await createSchemaAndExecute(query)
 
+  expect(errors).toBeUndefined()
   expect(data.testPost.people).toHaveLength(2)
   expect(data.testPost.people[0]).toMatchObject({ id: '1', title: 'Author', name: 'Test' })
   expect(data.testPost.people[1]).toMatchObject({ id: '2', title: 'User', username: 'test' })
@@ -394,7 +403,7 @@ test('should get values from object fields', async () => {
     }
   })
 
-  const { data } = await createSchemaAndExecute(`{
+  const { errors, data } = await createSchemaAndExecute(`{
     testPost (id: "1") {
       myObject {
         value
@@ -405,6 +414,7 @@ test('should get values from object fields', async () => {
     }
   }`)
 
+  expect(errors).toBeUndefined()
   expect(data.testPost.myObject.value).toEqual('test1')
   expect(data.testPost.myObject.otherObject.value).toEqual('test2')
 })
@@ -425,7 +435,7 @@ test('should format dates from schema', async () => {
     }
   })
 
-  const { data } = await createSchemaAndExecute(`{
+  const { errors, data } = await createSchemaAndExecute(`{
     testPostDate (id: "1") {
       date
       customDate
@@ -437,6 +447,7 @@ test('should format dates from schema', async () => {
     }
   }`)
 
+  expect(errors).toBeUndefined()
   expect(data.testPostDate.date).toEqual('2018-10-10T00:00:00+02:00')
   expect(data.testPostDate.customDate).toEqual('2018-10-10T00:00:00+02:00')
   expect(data.testPostDate.date2).toEqual('2018-10-10')
@@ -458,8 +469,9 @@ test('transformer extends node type', async () => {
   })
 
   const query = '{ testPost (id: "1") { myField }}'
-  const { data } = await createSchemaAndExecute(query)
+  const { errors, data } = await createSchemaAndExecute(query)
 
+  expect(errors).toBeUndefined()
   expect(data.testPost.myField).toEqual('value')
 })
 
@@ -478,12 +490,13 @@ test('transformer should resolve absolute paths', async () => {
     }
   })
 
-  const { data } = await createSchemaAndExecute(`{
+  const { errors, data } = await createSchemaAndExecute(`{
     testPost (id: "1") {
       fileField
     }
   }`)
 
+  expect(errors).toBeUndefined()
   expect(data.testPost.fileField).toEqual(`${context}/assets/image.png`)
 })
 
@@ -506,7 +519,7 @@ test('process image types in schema', async () => {
     }
   })
 
-  const { data } = await createSchemaAndExecute(`{
+  const { errors, data } = await createSchemaAndExecute(`{
     testPost (id: "1") {
       image
       image2
@@ -515,6 +528,7 @@ test('process image types in schema', async () => {
     }
   }`)
 
+  expect(errors).toBeUndefined()
   expect(data.testPost.image.type).toEqual('image')
   expect(data.testPost.image.mimeType).toEqual('image/png')
   expect(data.testPost.image.src).toEqual('/assets/350x250.png')
@@ -556,7 +570,7 @@ test('process file types in schema', async () => {
     }
   })
 
-  const { data } = await createSchemaAndExecute(`{
+  const { errors, data } = await createSchemaAndExecute(`{
     testPost (id: "1") {
       file
       file2
@@ -564,6 +578,7 @@ test('process file types in schema', async () => {
     }
   }`)
 
+  expect(errors).toBeUndefined()
   expect(data.testPost.file.type).toEqual('file')
   expect(data.testPost.file.mimeType).toEqual('application/pdf')
   expect(data.testPost.file.src).toEqual('/assets/document.pdf')

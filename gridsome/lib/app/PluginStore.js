@@ -9,6 +9,7 @@ const slugify = require('@sindresorhus/slugify')
 const parsePageQuery = require('../graphql/parsePageQuery')
 const { mapValues, cloneDeep } = require('lodash')
 const { cache, nodeCache } = require('../utils/cache')
+const { warn } = require('../utils/log')
 
 class Source extends EventEmitter {
   constructor (app, options, { transformers }) {
@@ -42,8 +43,12 @@ class Source extends EventEmitter {
   }
 
   addContentType (options) {
-    if (!options.typeName) {
+    if (typeof options.typeName !== 'string') {
       throw new Error(`«typeName» option is required.`)
+    }
+
+    if (['page'].includes(options.typeName.toLowerCase())) {
+      throw new Error(`${options.typeName} is a reserved typeName`)
     }
 
     if (this.store.collections.hasOwnProperty(options.typeName)) {
@@ -104,12 +109,25 @@ class Source extends EventEmitter {
       page.pageQuery = parsePageQuery(options.pageQuery || {})
     } catch (err) {}
 
-    page.title = options.title || page._id
+    page.title = options.title || page.id
     page.slug = options.slug || this.slugify(page.title)
     page.path = options.path || `/${page.slug}`
     page.file = options.file
 
     this.emit('addPage', page)
+
+    try {
+      this.store.index.insert({
+        type: 'page',
+        path: page.path,
+        uid: page.id,
+        id: page.id,
+        _id: page.id // TODO: remove this before v1.0
+      })
+    } catch (err) {
+      warn(`Skipping duplicate path for ${page.path}`)
+      return null
+    }
 
     return this.store.addPage(page)
   }
@@ -118,6 +136,7 @@ class Source extends EventEmitter {
     const page = this.getPage(id)
     const oldPage = cloneDeep(page)
     const internal = this.createInternals(options.internal)
+    const entry = this.store.index.findOne({ uid: page.id })
 
     try {
       page.pageQuery = options.pageQuery
@@ -131,14 +150,17 @@ class Source extends EventEmitter {
     page.file = options.file || page.file
     page.internal = Object.assign({}, page.internal, internal)
 
+    entry.path = page.path
+
     this.emit('updatePage', page, oldPage)
 
     return page
   }
 
-  removePage (_id) {
-    this.store.removePage(_id)
-    this.emit('removePage', _id)
+  removePage (id) {
+    this.store.removePage(id)
+    this.store.index.findAndRemove({ uid: id })
+    this.emit('removePage', id)
   }
 
   getPage (_id) {
@@ -166,6 +188,14 @@ class Source extends EventEmitter {
     }
 
     return camelCase(`${this._typeName} ${name}`, { pascalCase: true })
+  }
+
+  makeReference ($typeName, $value) {
+    return {
+      $ref: true,
+      $typeName: typeName,
+      $value: value
+    }
   }
 
   slugify (string = '') {

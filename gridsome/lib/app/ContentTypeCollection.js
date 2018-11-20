@@ -45,7 +45,8 @@ class ContentTypeCollection extends EventEmitter {
     }
 
     try {
-      this.baseStore.nodeIndex.insert({
+      this.baseStore.index.insert({
+        type: 'node',
         path: node.path,
         typeName: node.typeName,
         uid: node.uid,
@@ -70,7 +71,7 @@ class ContentTypeCollection extends EventEmitter {
   updateNode (id, options) {
     const node = this.getNode(id)
     const oldNode = cloneDeep(node)
-    const indexEntry = this.baseStore.nodeIndex.findOne({ uid: node.uid })
+    const indexEntry = this.baseStore.index.findOne({ uid: node.uid })
     const internal = this.createInternals(options.internal)
 
     // transform content with transformer for given mime type
@@ -99,7 +100,7 @@ class ContentTypeCollection extends EventEmitter {
   removeNode (id) {
     const node = this.collection.findOne({ id })
 
-    this.baseStore.nodeIndex.findAndRemove({ uid: node.uid })
+    this.baseStore.index.findAndRemove({ uid: node.uid })
     this.collection.findAndRemove({ id })
 
     this.emit('change', undefined, node)

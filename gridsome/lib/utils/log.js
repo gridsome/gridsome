@@ -17,5 +17,5 @@ function log (type, color, message, tag) {
   const formatted = color ? chalk[color](message) : message
   const fn = console[type]
   
-  tag ? fn(tag, '>', formatted) : fn(format)
+  tag ? fn(tag, '>', formatted) : fn(formatted)
 }
