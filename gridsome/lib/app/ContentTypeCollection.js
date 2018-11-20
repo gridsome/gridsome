@@ -185,18 +185,17 @@ class ContentTypeCollection extends EventEmitter {
     const month = node.date ? dateFormat(node.date, 'mm') : null
     const day = node.date ? dateFormat(node.date, 'dd') : null
     const params = { year, month, day, slug: node.slug }
+    const { routeKeys } = this.options
 
-    // Use root level string fields as route params. Values is slugified
+    // Use root level string fields as route params. Values are slugified
     // but the original value will be available with '_raw' suffix.
-    for (let i = 0, l = this.options.routeKeys.length; i < l; i++) {
-      const keyName = this.options.routeKeys[i]
-      const fieldValue = node.fields[keyName]
+    for (let i = 0, l = routeKeys.length; i < l; i++) {
+      const keyName = routeKeys[i]
+      const fieldValue = node.fields[keyName] || keyName
       
       if (typeof fieldValue === 'string' && !params[keyName]) {
         params[keyName] = this.slugify(fieldValue)
         params[keyName + '_raw'] = fieldValue
-      } else if (!params[keyName]) {
-        params[keyName] = keyName
       }
     }
 
