@@ -63,6 +63,10 @@ module.exports = (context, options = {}, pkg = {}) => {
   config.maxImageWidth = localConfig.maxImageWidth || 1920
   config.imageExtensions = SUPPORTED_IMAGE_TYPES
 
+  config.transpileDependencies = Array.isArray(localConfig.transpileDependencies)
+    ? localConfig.transpileDependencies.slice()
+    : []
+
   // max cache age for html markup in serve mode
   config.maxCacheAge = localConfig.maxCacheAge || 1000
 
