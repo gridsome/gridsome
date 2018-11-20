@@ -115,10 +115,10 @@ class ContentTypeCollection extends EventEmitter {
     node.slug = options.slug || fields.slug || this.slugify(node.title)
     node.content = options.content || fields.content || ''
     node.excerpt = options.excerpt || fields.excerpt || ''
-    node.path = options.path || this.makePath(node)
     node.withPath = !!options.path
 
     node.fields = this.processNodeFields(fields, node.internal.origin)
+    node.path = options.path || this.makePath(node)
 
     return node
   }
@@ -180,13 +180,25 @@ class ContentTypeCollection extends EventEmitter {
     return this._pluginStore._app.resolveFilePath(...args, this.resolveAbsolutePaths)
   }
 
-  makePath ({ date, slug }) {
-    const year = date ? dateFormat(date, 'yyyy') : null
-    const month = date ? dateFormat(date, 'mm') : null
-    const day = date ? dateFormat(date, 'dd') : null
-    const params = { year, month, day, slug }
+  makePath (node) {
+    const year = node.date ? dateFormat(node.date, 'yyyy') : null
+    const month = node.date ? dateFormat(node.date, 'mm') : null
+    const day = node.date ? dateFormat(node.date, 'dd') : null
+    const params = { year, month, day, slug: node.slug }
 
-    // TODO: make custom fields available as route params
+    // Use root level string fields as route params. Values is slugified
+    // but the original value will be available with '_raw' suffix.
+    for (let i = 0, l = this.options.routeKeys.length; i < l; i++) {
+      const keyName = this.options.routeKeys[i]
+      const fieldValue = node.fields[keyName]
+      
+      if (typeof fieldValue === 'string' && !params[keyName]) {
+        params[keyName] = this.slugify(fieldValue)
+        params[keyName + '_raw'] = fieldValue
+      } else if (!params[keyName]) {
+        params[keyName] = keyName
+      }
+    }
 
     return this.options.makePath(params)
   }
