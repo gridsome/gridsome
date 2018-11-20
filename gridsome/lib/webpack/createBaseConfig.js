@@ -50,6 +50,10 @@ module.exports = (app, { isProd, isServer }) => {
 
   config.module.noParse(/^(vue|vue-router)$/)
 
+  if (app.config.runtimeCompiler) {
+    config.resolve.alias.set('vue$', 'vue/dist/vue.esm.js')
+  }
+
   if (!isProd) {
     config.devtool('cheap-module-eval-source-map')
   }

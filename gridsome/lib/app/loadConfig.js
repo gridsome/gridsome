@@ -63,6 +63,8 @@ module.exports = (context, options = {}, pkg = {}) => {
   config.maxImageWidth = localConfig.maxImageWidth || 1920
   config.imageExtensions = SUPPORTED_IMAGE_TYPES
 
+  config.runtimeCompiler = localConfig.runtimeCompiler || false
+
   config.transpileDependencies = Array.isArray(localConfig.transpileDependencies)
     ? localConfig.transpileDependencies.slice()
     : []
