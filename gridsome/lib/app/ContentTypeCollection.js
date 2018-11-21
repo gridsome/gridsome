@@ -4,7 +4,7 @@ const EventEmitter = require('events')
 const camelCase = require('camelcase')
 const dateFormat = require('dateformat')
 const slugify = require('@sindresorhus/slugify')
-const { mapKeys, cloneDeep } = require('lodash')
+const { mapKeys, cloneDeep, isObject } = require('lodash')
 const { warn } = require('../utils/log')
 
 class ContentTypeCollection extends EventEmitter {
@@ -193,9 +193,9 @@ class ContentTypeCollection extends EventEmitter {
       const keyName = routeKeys[i]
       const fieldValue = node.fields[keyName] || keyName
       
-      if (typeof fieldValue === 'string' && !params[keyName]) {
-        params[keyName] = this.slugify(fieldValue)
-        params[keyName + '_raw'] = fieldValue
+      if (!isObject(fieldValue) && !params[keyName]) {
+        params[keyName] = this.slugify(String(fieldValue))
+        params[keyName + '_raw'] = String(fieldValue)
       }
     }
 
