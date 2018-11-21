@@ -11,7 +11,7 @@ exports.isFile = value => {
     const mimeType = mime.lookup(value)
     const ext = path.extname(value).toLowerCase()
 
-    if (mimeType && mimeType !== 'application/x-msdownload') {
+    if (ext.length && mimeType && mimeType !== 'application/x-msdownload') {
       return !SUPPORTED_IMAGE_TYPES.includes(ext)
     }
   }

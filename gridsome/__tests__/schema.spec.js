@@ -494,7 +494,8 @@ test('process file types in schema', async () => {
       content: JSON.stringify({
         file: '/assets/document.pdf',
         file2: 'https://www.example.com/assets/document.pdf',
-        file3: './dummy.pdf'
+        file3: './dummy.pdf',
+        text: 'pdf'
       })
     }
   })
@@ -504,6 +505,7 @@ test('process file types in schema', async () => {
       file
       file2
       file3
+      text
     }
   }`)
 
@@ -516,6 +518,7 @@ test('process file types in schema', async () => {
   expect(data.testPost.file3.type).toEqual('file')
   expect(data.testPost.file3.mimeType).toEqual('application/pdf')
   expect(data.testPost.file3.src).toEqual('/assets/files/dummy.pdf')
+  expect(data.testPost.text).toEqual('pdf')
 })
 
 async function createSchemaAndExecute (query) {

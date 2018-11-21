@@ -179,7 +179,8 @@ test('resolve absolute file paths', () => {
       url4: 'ftp://ftp.example.com',
       email: 'email@example.com',
       text: 'Lorem ipsum dolor sit amet.',
-      text2: 'example.com'
+      text2: 'example.com',
+      text3: 'md'
     },
     internal: {
       origin: '/absolute/dir/to/a/file.md'
@@ -191,6 +192,7 @@ test('resolve absolute file paths', () => {
   expect(node.fields.file3).toEqual('/absolute/dir/to/image.png')
   expect(node.fields.text).toEqual('Lorem ipsum dolor sit amet.')
   expect(node.fields.text2).toEqual('example.com')
+  expect(node.fields.text3).toEqual('md')
   expect(node.fields.url).toEqual('https://example.com/image.jpg')
   expect(node.fields.url2).toEqual('//example.com/image.jpg')
   expect(node.fields.url3).toEqual('git@github.com:gridsome/gridsome.git')
