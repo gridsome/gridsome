@@ -28,7 +28,7 @@ module.exports = async (context, args) => {
   server.app.use(config.pathPrefix, express.static(config.staticDir))
   server.app.use(require('connect-history-api-fallback')())
 
-  const webpackConfig = createWebpackConfig()
+  const webpackConfig = await createWebpackConfig()
   const compiler = require('webpack')(webpackConfig)
   server.app.use(require('webpack-hot-middleware')(compiler, {
     quiet: true,
@@ -65,8 +65,8 @@ module.exports = async (context, args) => {
   // helpers
   //
 
-  function createWebpackConfig () {
-    const clientConfig = createClientConfig(app)
+  async function createWebpackConfig () {
+    const clientConfig = await createClientConfig(app)
 
     clientConfig
       .plugin('friendly-errors')

@@ -3,7 +3,7 @@ const createBaseConfig = require('./createBaseConfig')
 
 const resolve = p => path.resolve(__dirname, p)
 
-module.exports = app => {
+module.exports = async app => {
   const isProd = process.env.NODE_ENV === 'production'
   const config = createBaseConfig(app, { isProd, isServer: true })
   const { targetDir, serverBundlePath } = app.config
@@ -22,7 +22,7 @@ module.exports = app => {
       filename: path.relative(targetDir, serverBundlePath)
     }])
 
-  app.dispatchSync('chainWebpack', null, config, {
+  await app.dispatch('chainWebpack', null, config, {
     context: app.context,
     isServer: true,
     isProd
