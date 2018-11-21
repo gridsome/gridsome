@@ -41,6 +41,42 @@ afterAll(() => {
   api = null
 })
 
+test('add meta data', async () => {
+  api.store.addMetaData('myValue', {
+    test: 'Test Value'
+  })
+
+  api.store.addMetaData('myValue', {
+    object: {
+      list: ['one', 'two', 'three'],
+      value: 1000
+    }
+  })
+
+  api.store.addMetaData('myOtherValue', 'Value')
+
+  const query = `{
+    metaData {
+      myValue {
+        test
+        object {
+          list
+          value
+        }
+      }
+      myOtherValue
+    }
+  }`
+
+  const { errors, data } = await createSchemaAndExecute(query)
+
+  expect(errors).toBeUndefined()
+  expect(data.metaData.myValue.test).toEqual('Test Value')
+  expect(data.metaData.myValue.object.list).toHaveLength(3)
+  expect(data.metaData.myValue.object.value).toEqual(1000)
+  expect(data.metaData.myOtherValue).toEqual('Value')
+})
+
 test('create node type with custom fields', async () => {
   const contentType = api.store.addContentType({
     typeName: 'TestPost'

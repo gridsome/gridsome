@@ -16,6 +16,21 @@ class BaseStore {
       unique: ['path'],
       autoupdate: true
     })
+
+    this.metaData = this.data.addCollection('MetaData', {
+      unique: ['key'],
+      autoupdate: true
+    })
+  }
+
+  // site
+  
+  addMetaData (key, data) {
+    const node = this.metaData.findOne({ key })
+    
+    return node
+      ? Object.assign(node.data, data)
+      : this.metaData.insert({ key, data })
   }
 
   // nodes
