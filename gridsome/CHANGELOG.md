@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+<a name="0.3.4"></a>
+## [0.3.4](https://github.com/gridsome/gridsome/compare/gridsome@0.3.3...gridsome@0.3.4) (2018-11-22)
+
+
+### Bug Fixes
+
+* **graphql:** do not use file type if no extension ([3b1fb7c](https://github.com/gridsome/gridsome/commit/3b1fb7c))
+* **webpack:** allow async chainWebpack ([a0caa84](https://github.com/gridsome/gridsome/commit/a0caa84))
+
+
+
+
+
 <a name="0.3.3"></a>
 ## [0.3.3](https://github.com/gridsome/gridsome/compare/gridsome@0.3.2...gridsome@0.3.3) (2018-11-16)
 
