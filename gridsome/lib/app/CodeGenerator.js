@@ -46,7 +46,7 @@ async function genIcons ({ config, resolve, queue }) {
   const { touchicon, favicon } = config.icon
   const touchiconPath = resolve(touchicon.src)
   const faviconPath = resolve(favicon.src)
-  
+
   const icons = {
     precomposed: false,
     touchicons: [],
@@ -58,7 +58,7 @@ async function genIcons ({ config, resolve, queue }) {
       sizes: touchicon.sizes,
       srcset: false
     })
-    
+
     icons.precomposed = touchicon.precomposed
     icons.touchicons = touchicons.sets
   }
@@ -132,7 +132,6 @@ function genPlugins (app, isServer) {
     }))
 
   let res = ''
-  const options = []
 
   plugins.forEach(({ name, entry }) => {
     res += `import ${name} from ${JSON.stringify(entry)}\n`

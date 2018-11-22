@@ -1,4 +1,3 @@
-const fs = require('fs')
 const path = require('path')
 const mime = require('mime-types')
 
@@ -11,7 +10,7 @@ exports.isFile = value => {
     const mimeType = mime.lookup(value)
     const ext = path.extname(value).toLowerCase()
 
-    if (mimeType && mimeType !== 'application/x-msdownload') {
+    if (ext.length && mimeType && mimeType !== 'application/x-msdownload') {
       return !SUPPORTED_IMAGE_TYPES.includes(ext)
     }
   }
@@ -24,7 +23,7 @@ exports.fileType = {
   args: {},
   async resolve (obj, args, context, info) {
     const value = fieldResolver(obj, args, context, info)
-    
+
     if (!value) return null
 
     const result = await context.queue.add(value)

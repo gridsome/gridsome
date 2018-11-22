@@ -1,30 +1,28 @@
 const Prism = require('prismjs')
 const escapeHtml = require('escape-html')
 const visit = require('unist-util-visit')
-const loadLanguages = require('prismjs/components/index')
 
-module.exports = options => {
-  loadLanguages(['graphql'])
+// load all prismjs languages
+require('prismjs/components/index')()
 
-  // highlight for graphql and static-query tags in html
-  Prism.languages.html.graphql = {
-    pattern: /(<(page|static)-query[\s\S]*?>)[\s\S]*?(?=<\/(page|static)-query>)/i,
-    inside: Prism.languages.graphql,
-    lookbehind: true,
-    greedy: true
-  }
+// highlight page-query and static-query in html
+Prism.languages.html.graphql = {
+  pattern: /(<(page|static)-query[\s\S]*?>)[\s\S]*?(?=<\/(page|static)-query>)/i,
+  inside: Prism.languages.graphql,
+  lookbehind: true,
+  greedy: true
+}
 
-  return tree => {
-    visit(tree, 'code', node => {
-      node.type = 'html'
-      node.value = highlight(node, 'pre')
-    })
+module.exports = () => tree => {
+  visit(tree, 'code', node => {
+    node.type = 'html'
+    node.value = highlight(node, 'pre')
+  })
 
-    visit(tree, 'inlineCode', node => {
-      node.type = 'html'
-      node.value = highlight(node, 'code')
-    })
-  }
+  visit(tree, 'inlineCode', node => {
+    node.type = 'html'
+    node.value = highlight(node, 'code')
+  })
 }
 
 function highlight ({ value, lang }, tag = 'pre') {

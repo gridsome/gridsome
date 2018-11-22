@@ -9,8 +9,7 @@ const {
   GraphQLList,
   GraphQLString,
   GraphQLNonNull,
-  GraphQLObjectType,
-  GraphQLInterfaceType
+  GraphQLObjectType
 } = require('../../graphql')
 
 module.exports = ({ contentType, nodeTypes }) => {
@@ -44,7 +43,7 @@ module.exports = ({ contentType, nodeTypes }) => {
           deprecationReason: 'Use node.id instead.',
           type: new GraphQLNonNull(GraphQLID),
           resolve: node => node.id
-        },
+        }
       }
 
       if (!isEmpty(refs)) {
@@ -111,7 +110,7 @@ function createRefs (contentType, nodeTypes, fields) {
   if (isEmpty(contentType.options.refs)) return null
 
   return mapValues(contentType.options.refs, (ref, key) => {
-    const { typeName, description } = ref
+    const { typeName } = ref
 
     const field = fields[key] || { type: GraphQLString }
     const isList = field.type instanceof GraphQLList

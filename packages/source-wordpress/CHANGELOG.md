@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+<a name="0.1.1"></a>
+## [0.1.1](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/compare/@gridsome/source-wordpress@0.1.0...@gridsome/source-wordpress@0.1.1) (2018-11-22)
+
+
+### Bug Fixes
+
+* **wordpress:** skip missing types when referring taxonomies ([#49](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/issues/49)) ([1a72a76](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/commit/1a72a76))
+
+
+
+
+
 <a name="0.1.0"></a>
 # [0.1.0](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/compare/@gridsome/source-wordpress@0.0.5...@gridsome/source-wordpress@0.1.0) (2018-11-11)
 

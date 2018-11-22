@@ -1,5 +1,5 @@
 const camelCase = require('camelcase')
-const { isEmpty, mapValues } = require('lodash')
+const { isEmpty } = require('lodash')
 const { sortOrderType } = require('./types')
 const { nodeInterface } = require('./interfaces')
 const { isDate, dateTypeField } = require('./types/date')
@@ -27,7 +27,7 @@ function inferTypes (nodes, typeName, nodeTypes) {
 
   for (const key in fields) {
     const type = inferType(fields[key], key, typeName, nodeTypes)
-    
+
     if (type) {
       types[key] = type
     }
@@ -72,7 +72,7 @@ function inferType (value, key, typeName, nodeTypes) {
 
   if (Array.isArray(value)) {
     const type = inferType(value[0], key, typeName, nodeTypes)
-    
+
     return type !== null ? {
       type: new GraphQLList(type.type),
       resolve: (obj, args, context, info) => {

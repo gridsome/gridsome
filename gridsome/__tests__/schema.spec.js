@@ -23,7 +23,7 @@ beforeEach(() => {
       maxImageWidth: 1000
     }
   }).init()
-  
+
   api = new PluginAPI(app, {
     entry: { options: {}, clientOptions: undefined },
     transformers: {
@@ -40,7 +40,6 @@ afterAll(() => {
   app = null
   api = null
 })
-
 
 test('create node type with custom fields', async () => {
   const contentType = api.store.addContentType({
@@ -70,7 +69,7 @@ test('create node type with custom fields', async () => {
   })
 
   const query = '{ testPost (id: "1") { id foo list obj { foo }}}'
-  const { errors, data } = await createSchemaAndExecute(query)
+  const { data } = await createSchemaAndExecute(query)
 
   expect(data.testPost.id).toEqual('1')
   expect(data.testPost.foo).toEqual('bar')
@@ -565,7 +564,8 @@ test('process file types in schema', async () => {
       content: JSON.stringify({
         file: '/assets/document.pdf',
         file2: 'https://www.example.com/assets/document.pdf',
-        file3: './dummy.pdf'
+        file3: './dummy.pdf',
+        text: 'pdf'
       })
     }
   })
@@ -575,6 +575,7 @@ test('process file types in schema', async () => {
       file
       file2
       file3
+      text
     }
   }`)
 
@@ -588,6 +589,7 @@ test('process file types in schema', async () => {
   expect(data.testPost.file3.type).toEqual('file')
   expect(data.testPost.file3.mimeType).toEqual('application/pdf')
   expect(data.testPost.file3.src).toEqual('/assets/files/dummy.pdf')
+  expect(data.testPost.text).toEqual('pdf')
 })
 
 async function createSchemaAndExecute (query) {

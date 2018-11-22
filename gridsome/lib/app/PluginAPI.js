@@ -1,8 +1,6 @@
 const autoBind = require('auto-bind')
-const { mapValues } = require('lodash')
 const PluginStore = require('./PluginStore')
 const createRoutes = require('./createRoutes')
-const { cache, nodeCache } = require('../utils/cache')
 
 class PluginAPI {
   constructor (app, { entry, transformers }) {

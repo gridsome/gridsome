@@ -184,8 +184,8 @@ class App {
   }
 
   graphql (docOrQuery, variables = {}) {
-    const context = this.createSchemaContext();
-    
+    const context = this.createSchemaContext()
+
     const func = typeof docOrQuery === 'object' ? execute : graphql
 
     if (typeof docOrQuery === 'string') {
@@ -219,12 +219,12 @@ class App {
       : undefined
   }
 
-  createSchemaContext() {
+  createSchemaContext () {
     return {
       store: this.store,
       config: this.config,
       queue: this.queue
-    };
+    }
   }
 }
 

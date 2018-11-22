@@ -1,4 +1,3 @@
-const { internalType } = require('../types')
 const { dateType } = require('../types/date')
 
 const {

@@ -17,22 +17,21 @@ module.exports = async (name, starter = 'default') => {
   }
 
   if (starters.includes(starter)) {
-    starter = `gridsome/gridsome-starter-${starter}`
+    starter = `https://github.com/gridsome/gridsome-starter-${starter}.git`
   }
 
-  const url = `https://github.com/${starter}.git`
   const developCommand = 'gridsome develop'
   const buildCommand = 'gridsome build'
 
   const tasks = new Tasks([
     {
-      title: `Clone ${url}`,
+      title: `Clone ${starter}`,
       task: async () => {
         try {
-          await exec('git', ['clone', url, dir, '--single-branch'])
-          await fs.remove(`${dir}/.git`)
+          await exec('git', ['clone', starter, dir, '--single-branch'])
+          await fs.remove(path.join(dir, '.git'))
         } catch (err) {
-          throw new Error('Failed to clone repository')
+          throw new Error(err.message)
         }
       }
     },

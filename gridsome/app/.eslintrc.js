@@ -1,10 +1,10 @@
 module.exports = {
   extends: [
-    "plugin:vue/essential"
+    'plugin:vue/essential'
   ],
   parserOptions: {
-    parser: "babel-eslint",
-    sourceType: "module",
+    parser: 'babel-eslint',
+    sourceType: 'module',
     allowImportExportEverywhere: true
   }
 }

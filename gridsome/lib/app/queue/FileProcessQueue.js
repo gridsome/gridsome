@@ -1,6 +1,5 @@
 const path = require('path')
 const fs = require('fs-extra')
-const isUrl = require('is-url')
 const { trim } = require('lodash')
 const md5File = require('md5-file/promise')
 const { forwardSlash } = require('../../utils')
@@ -55,7 +54,7 @@ class FileProcessQueue {
     } else {
       const { name, ext } = path.parse(relPath)
       let urlHash = ''
-      
+
       if (options.hash) {
         const hash = await md5File(filePath)
         urlHash = `.${!process.env.GRIDSOME_TEST ? hash : 'test'}`
