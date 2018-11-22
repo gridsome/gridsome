@@ -19,8 +19,8 @@ module.exports = (context, options = {}, pkg = {}) => {
   const isProd = process.env.NODE_ENV === 'production'
   const configPath = resolve('gridsome.config.js')
   const args = options.args || {}
-  const plugins = []
   const config = {}
+  const plugins = []
 
   const localConfig = fs.existsSync(configPath)
     ? require(configPath)
@@ -36,6 +36,10 @@ module.exports = (context, options = {}, pkg = {}) => {
   // add built-in plugins as default
   if (options.useBuiltIn !== false) {
     plugins.unshift(...builtInPlugins)
+    plugins.unshift({
+      use: path.resolve(__dirname, '../plugins/core'),
+      options: config
+    })
   }
 
   // add project root as plugin
