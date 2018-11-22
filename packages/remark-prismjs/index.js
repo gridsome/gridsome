@@ -4,7 +4,7 @@ const visit = require('unist-util-visit')
 const loadLanguages = require('prismjs/components/index')
 
 module.exports = options => {
-  loadLanguages(['graphql'])
+  loadLanguages()
 
   // highlight for graphql and static-query tags in html
   Prism.languages.html.graphql = {
