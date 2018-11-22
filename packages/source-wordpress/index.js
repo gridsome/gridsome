@@ -95,6 +95,9 @@ class WordPressSource {
       for (const type of options.types) {
         const postTypeName = makeTypeName(type)
         const collection = getContentType(postTypeName)
+        if (!collection) {
+          continue;
+        }
 
         collection.addReference(options.rest_base, { typeName, key: '_id' })
       }
