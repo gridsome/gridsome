@@ -1,3 +1,4 @@
+const { omitBy, isEmpty } = require('lodash')
 const { mergeSchemas } = require('graphql-tools')
 
 const {
@@ -15,20 +16,13 @@ module.exports = (store, options = {}) => {
   const schema = new GraphQLSchema({
     query: new GraphQLObjectType({
       name: 'RootQuery',
-      fields: () => {
-        const res = {
-          ...pagesSchema.queries,
-          ...nodesSchema.queries,
-          ...pagesSchema.connections,
-          ...nodesSchema.connections
-        }
-
-        if (metaData) {
-          res.metaData = metaData
-        }
-
-        return res
-      }
+      fields: () => omitBy({
+        ...pagesSchema.queries,
+        ...nodesSchema.queries,
+        ...pagesSchema.connections,
+        ...nodesSchema.connections,
+        metaData
+      }, isEmpty)
     }),
     directives
   })
