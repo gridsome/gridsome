@@ -53,6 +53,24 @@ test('add meta data', async () => {
     }
   })
 
+  api.store.addMetaData('myList', [
+    {
+      name: 'Etiam Nibh',
+      description: 'Sociis natoque penatibus.'
+    },
+    {
+      name: 'Tellus Ultricies Cursus',
+      description: 'Nascetur ridiculus mus.'
+    }
+  ])
+
+  api.store.addMetaData('myList', [
+    {
+      name: 'Vulputate Magna',
+      description: 'Cras justo odio.'
+    }
+  ])
+
   api.store.addMetaData('myOtherValue', 'Value')
 
   const query = `{
@@ -65,6 +83,10 @@ test('add meta data', async () => {
         }
       }
       myOtherValue
+      myList {
+        name
+        description
+      }
     }
   }`
 
@@ -75,6 +97,19 @@ test('add meta data', async () => {
   expect(data.metaData.myValue.object.list).toHaveLength(3)
   expect(data.metaData.myValue.object.value).toEqual(1000)
   expect(data.metaData.myOtherValue).toEqual('Value')
+  expect(data.metaData.myList).toHaveLength(3)
+  expect(data.metaData.myList[0]).toMatchObject({
+    name: 'Etiam Nibh',
+    description: 'Sociis natoque penatibus.'
+  })
+  expect(data.metaData.myList[1]).toMatchObject({
+    name: 'Tellus Ultricies Cursus',
+    description: 'Nascetur ridiculus mus.'
+  })
+  expect(data.metaData.myList[2]).toMatchObject({
+    name: 'Vulputate Magna',
+    description: 'Cras justo odio.'
+  })
 })
 
 test('create node type with custom fields', async () => {

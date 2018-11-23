@@ -20,7 +20,7 @@ module.exports = (store, options = {}) => {
           ...pagesSchema.queries,
           ...nodesSchema.queries,
           ...pagesSchema.connections,
-          ...nodesSchema.connections,
+          ...nodesSchema.connections
         }
 
         if (metaData) {
