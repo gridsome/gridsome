@@ -494,6 +494,8 @@ test('process file types in schema', async () => {
         file: '/assets/document.pdf',
         file2: 'https://www.example.com/assets/document.pdf',
         file3: './dummy.pdf',
+        url: 'https://www.gridsome.org',
+        url2: 'https://www.gridsome.com',
         text: 'pdf'
       })
     }
@@ -504,6 +506,8 @@ test('process file types in schema', async () => {
       file
       file2
       file3
+      url
+      url2
       text
     }
   }`)
@@ -517,6 +521,8 @@ test('process file types in schema', async () => {
   expect(data.testPost.file3.type).toEqual('file')
   expect(data.testPost.file3.mimeType).toEqual('application/pdf')
   expect(data.testPost.file3.src).toEqual('/assets/files/dummy.pdf')
+  expect(data.testPost.url).toEqual('https://www.gridsome.org')
+  expect(data.testPost.url2).toEqual('https://www.gridsome.com')
   expect(data.testPost.text).toEqual('pdf')
 })
 
