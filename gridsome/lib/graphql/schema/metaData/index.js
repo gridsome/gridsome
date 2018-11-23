@@ -15,8 +15,8 @@ module.exports = (store, nodeTypes) => {
   return {
     resolve: () => fields,
     type: new GraphQLObjectType({
-      name: 'SiteData',
-      fields: () => inferTypes([{ fields }], 'SiteData', nodeTypes)
+      name: 'MetaData',
+      fields: () => inferTypes([{ fields }], 'MetaData', nodeTypes)
     })
   }
 }
