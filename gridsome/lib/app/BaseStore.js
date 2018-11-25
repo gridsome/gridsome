@@ -12,7 +12,7 @@ class BaseStore {
     autoBind(this)
 
     this.index = this.data.addCollection('nodeIndex', {
-      indices: ['path', 'typeName'],
+      indices: ['path', 'typeName', 'id'],
       unique: ['uid', 'path'],
       autoupdate: true
     })

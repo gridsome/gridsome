@@ -136,10 +136,8 @@ test('add type with ref', () => {
   })
 
   expect(contentType.options.refs.author).toMatchObject({
-    key: 'id',
-    fieldName: 'author',
     typeName: 'TestAuthor',
-    description: 'Reference to TestAuthor'
+    fieldName: 'author'
   })
 })
 

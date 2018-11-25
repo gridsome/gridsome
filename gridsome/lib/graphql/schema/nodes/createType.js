@@ -1,7 +1,7 @@
 const { dateType } = require('../types/date')
-const { refResolver } = require('../resolvers')
 const { mapValues, isEmpty } = require('lodash')
 const { nodeInterface } = require('../interfaces')
+const { createRefResolver } = require('../resolvers')
 const { inferTypes, createRefType } = require('../infer-types')
 
 const {
@@ -109,25 +109,23 @@ function createFields (contentType, customFields) {
 function createRefs (contentType, nodeTypes, fields) {
   if (isEmpty(contentType.options.refs)) return null
 
-  return mapValues(contentType.options.refs, (ref, key) => {
-    const { typeName } = ref
-
+  return mapValues(contentType.options.refs, ({ typeName, fieldName }, key) => {
     const field = fields[key] || { type: GraphQLString }
     const isList = field.type instanceof GraphQLList
-    const obj = { typeName, value: isList ? [] : '' }
+    const ref = { typeName, isList }
+    const resolve = createRefResolver(ref)
 
     return {
-      ...createRefType(obj, key, contentType.name, nodeTypes),
+      ...createRefType(ref, key, contentType.typeName, nodeTypes),
       resolve: (obj, args, context, info) => {
         const field = {
-          [info.fieldName]: {
+          [fieldName]: {
             typeName,
-            key: ref.key,
-            value: obj.fields[key]
+            id: obj.fields[key]
           }
         }
 
-        return refResolver(field, args, context, info)
+        return resolve(field, args, context, info)
       }
     }
   })

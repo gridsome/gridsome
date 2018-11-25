@@ -5,7 +5,7 @@ const { nodeInterface } = require('./interfaces')
 const { isDate, dateTypeField } = require('./types/date')
 const { isFile, fileType } = require('./types/file')
 const { isImage, imageType } = require('./types/image')
-const { fieldResolver, refResolver } = require('./resolvers')
+const { fieldResolver, createRefResolver } = require('./resolvers')
 
 const {
   GraphQLInt,
@@ -22,7 +22,7 @@ function inferTypes (nodes, typeName, nodeTypes) {
   let fields = {}
 
   for (let i = 0, l = nodes.length; i < l; i++) {
-    fields = populateFeilds(nodes[i].fields, fields)
+    fields = getFieldValues(nodes[i].fields, fields)
   }
 
   for (const key in fields) {
@@ -36,7 +36,7 @@ function inferTypes (nodes, typeName, nodeTypes) {
   return types
 }
 
-function populateFeilds (obj, currentObj = {}) {
+function getFieldValues (obj, currentObj = {}) {
   const res = { ...currentObj }
 
   for (const key in obj) {
@@ -46,19 +46,38 @@ function populateFeilds (obj, currentObj = {}) {
     if (value === undefined) continue
     if (value === null) continue
 
-    res[key] = populateField(value, currentObj[key])
+    res[key] = getFieldValue(value, currentObj[key])
   }
 
   return res
 }
 
-function populateField (value, currentValue) {
+function getFieldValue (value, currentValue) {
   if (Array.isArray(value)) {
+    if (isRefField(value[0])) {
+      const ref = currentValue || { typeName: [], isList: true }
+
+      for (let i = 0, l = value.length; i < l; i++) {
+        if (!ref.typeName.includes(value[i].typeName)) {
+          ref.typeName.push(value[i].typeName)
+        }
+      }
+
+      return ref
+    }
+
     return value.map((value, index) => {
-      return populateField(value, currentValue ? currentValue[index] : undefined)
+      return getFieldValue(value, currentValue ? currentValue[index] : undefined)
     })
   } else if (typeof value === 'object') {
-    return isRef(value) ? value : populateFeilds(value, currentValue)
+    if (isRefField(value)) {
+      const ref = currentValue || { typeName: value.typeName }
+      ref.isList = ref.isList || Array.isArray(value.id)
+
+      return ref
+    }
+
+    return getFieldValues(value, currentValue)
   }
 
   return currentValue !== undefined ? currentValue : value
@@ -112,8 +131,8 @@ function inferType (value, key, typeName, nodeTypes) {
   }
 }
 
-function createObjectType (obj, key, typeName, nodeTypes) {
-  const name = createTypeName(typeName, key)
+function createObjectType (obj, fieldName, typeName, nodeTypes) {
+  const name = createTypeName(typeName, fieldName)
   const fields = {}
 
   for (const key in obj) {
@@ -130,21 +149,25 @@ function createObjectType (obj, key, typeName, nodeTypes) {
   } : null
 }
 
-function createRefType (obj, key, typeName, nodeTypes) {
-  const typeNames = Array.isArray(obj.typeName) ? obj.typeName : [obj.typeName]
-  const isList = Array.isArray(obj.value)
-  const res = { resolve: refResolver }
+function createRefType (ref, fieldName, fieldTypeName, nodeTypes) {
+  const res = {
+    resolve: createRefResolver(ref)
+  }
 
-  res.type = typeNames.length > 1
-    ? new GraphQLUnionType({
-      interfaces: [nodeInterface],
-      name: createTypeName(typeName, key + 'Ref'),
-      description: `Reference to ${typeNames.join(', ')} nodes`,
-      types: () => typeNames.map(typeName => nodeTypes[typeName])
-    })
-    : nodeTypes[typeNames[0]]
+  if (Array.isArray(ref.typeName)) {
+    res.type = ref.typeName.length > 1
+      ? new GraphQLUnionType({
+        interfaces: [nodeInterface],
+        name: createTypeName(fieldTypeName, fieldName + 'Ref'),
+        description: `Reference to ${ref.typeName.join(', ')} nodes`,
+        types: () => ref.typeName.map(typeName => nodeTypes[typeName])
+      })
+      : nodeTypes[ref.typeName[0]]
+  } else {
+    res.type = nodeTypes[ref.typeName]
+  }
 
-  if (isList) {
+  if (ref.isList) {
     res.type = new GraphQLList(res.type)
 
     res.args = {
@@ -166,15 +189,21 @@ function is32BitInt (x) {
   return (x | 0) === x
 }
 
-function isRef (obj) {
-  if (typeof obj !== 'object') {
-    return false
-  }
-
+function isRefField (field) {
   return (
+    typeof field === 'object' &&
+    Object.keys(field).length === 2 &&
+    field.hasOwnProperty('typeName') &&
+    field.hasOwnProperty('id')
+  )
+}
+
+function isRef (obj) {
+  return (
+    typeof obj === 'object' &&
     Object.keys(obj).length === 2 &&
     obj.hasOwnProperty('typeName') &&
-    obj.hasOwnProperty('value')
+    obj.hasOwnProperty('isList')
   )
 }
 

@@ -42,11 +42,11 @@ afterAll(() => {
 })
 
 test('create node type with custom fields', async () => {
-  const contentType = api.store.addContentType({
+  const posts = api.store.addContentType({
     typeName: 'TestPost'
   })
 
-  contentType.addNode({
+  posts.addNode({
     id: '1',
     fields: {
       foo: 'bar',
@@ -57,7 +57,7 @@ test('create node type with custom fields', async () => {
     }
   })
 
-  contentType.addNode({
+  posts.addNode({
     id: '2',
     fields: {
       foo: 'bar',
@@ -79,11 +79,11 @@ test('create node type with custom fields', async () => {
 
 // TODO: remove test before 1.0
 test('get deprecated node fields', async () => {
-  const contentType = api.store.addContentType({
+  const posts = api.store.addContentType({
     typeName: 'TestPost'
   })
 
-  contentType.addNode({
+  posts.addNode({
     _id: '1',
     fields: {
       foo: 'bar',
@@ -105,11 +105,11 @@ test('get deprecated node fields', async () => {
 })
 
 test('get node by path', async () => {
-  const contentType = api.store.addContentType({
+  const posts = api.store.addContentType({
     typeName: 'TestPost'
   })
 
-  contentType.addNode({ id: '1', path: '/test' })
+  posts.addNode({ id: '1', path: '/test' })
 
   const query = '{ testPost (path: "/test") { id }}'
   const { errors, data } = await createSchemaAndExecute(query)
@@ -119,11 +119,11 @@ test('get node by path', async () => {
 })
 
 test('fail if node with given ID is missing', async () => {
-  const contentType = api.store.addContentType({
+  const posts = api.store.addContentType({
     typeName: 'TestPost'
   })
 
-  contentType.addNode({ id: '1' })
+  posts.addNode({ id: '1' })
 
   const query = '{ testPost (id: "2") { id }}'
   const { errors } = await createSchemaAndExecute(query)
@@ -132,11 +132,11 @@ test('fail if node with given ID is missing', async () => {
 })
 
 test('fail if node with given path is missing', async () => {
-  const contentType = api.store.addContentType({
+  const posts = api.store.addContentType({
     typeName: 'TestPost'
   })
 
-  contentType.addNode('post', { path: '/test' })
+  posts.addNode('post', { path: '/test' })
 
   const query = '{ testPost (path: "/fail") { _id }}'
   const { errors } = await createSchemaAndExecute(query)
@@ -145,12 +145,12 @@ test('fail if node with given path is missing', async () => {
 })
 
 test('create connection', async () => {
-  const contentType = api.store.addContentType({
+  const posts = api.store.addContentType({
     typeName: 'TestPost'
   })
 
-  contentType.addNode({ title: 'test 1', date: '2018-09-01T00:00:00.000Z' })
-  contentType.addNode({ title: 'test 2', date: '2018-09-04T00:00:00.000Z' })
+  posts.addNode({ title: 'test 1', date: '2018-09-01T00:00:00.000Z' })
+  posts.addNode({ title: 'test 2', date: '2018-09-04T00:00:00.000Z' })
 
   const query = '{ allTestPost { totalCount edges { node { title }}}}'
   const { errors, data } = await createSchemaAndExecute(query)
@@ -162,13 +162,13 @@ test('create connection', async () => {
 })
 
 test('get nodes by path regex', async () => {
-  const contentType = api.store.addContentType({
+  const posts = api.store.addContentType({
     typeName: 'TestPost'
   })
 
-  contentType.addNode({ path: '/node-1' })
-  contentType.addNode({ path: '/node-2' })
-  contentType.addNode({ path: '/some-3' })
+  posts.addNode({ path: '/node-1' })
+  posts.addNode({ path: '/node-2' })
+  posts.addNode({ path: '/some-3' })
 
   const query = '{ allTestPost (regex: "/node") { edges { node { _id }}}}'
   const { errors, data } = await createSchemaAndExecute(query)
@@ -178,11 +178,11 @@ test('get nodes by path regex', async () => {
 })
 
 test('create node reference', async () => {
-  const authorContentType = api.store.addContentType({
+  const authors = api.store.addContentType({
     typeName: 'TestAuthor'
   })
 
-  const postContentType = api.store.addContentType({
+  const posts = api.store.addContentType({
     typeName: 'TestPost',
     refs: {
       author: {
@@ -192,19 +192,19 @@ test('create node reference', async () => {
     }
   })
 
-  authorContentType.addNode({
+  authors.addNode({
     id: '2',
     title: 'Test Author'
   })
 
-  postContentType.addNode({
+  posts.addNode({
     id: '1',
     fields: {
       author: '2',
       customRefs: {
         author: {
           typeName: 'TestAuthor',
-          value: '2'
+          id: '2'
         }
       }
     }
@@ -230,37 +230,63 @@ test('create node reference', async () => {
 
 // TODO: remove this test before 1.0
 test('create deprecated node reference', async () => {
-  const authorContentType = api.store.addContentType({
+  const authors = api.store.addContentType({
     typeName: 'TestAuthor'
   })
 
-  const postContentType = api.store.addContentType({
+  const posts = api.store.addContentType({
     typeName: 'TestPost',
     refs: {
       author: {
+        key: '_id',
+        typeName: 'TestAuthor'
+      },
+      authors: {
         key: '_id',
         typeName: 'TestAuthor'
       }
     }
   })
 
-  postContentType.addNode({ _id: '1', fields: { author: '2' }})
-  authorContentType.addNode({ _id: '2', title: 'Test Author' })
+  posts.addNode({ _id: '1', fields: { author: '1', authors: ['1', '2'] }})
+  posts.addNode({ _id: '2', fields: { author: '8', authors: ['8', '9'] }})
+  authors.addNode({ _id: '1', title: 'Test Author' })
+  authors.addNode({ _id: '2', title: 'Test Author 2' })
+  authors.addNode({ _id: '3', title: 'Test Author 3' })
 
-  const query = '{ testPost (_id: "1") { refs { author { _id title }}}}'
+  const query = `{
+    testPost: testPost (_id: "1") {
+      refs {
+        author { _id title }
+        authors { _id title }
+      }
+    }
+    testPost2: testPost (_id: "2") {
+      refs {
+        author { _id title }
+        authors { _id title }
+      }
+    }
+  }`
+
   const { errors, data } = await createSchemaAndExecute(query)
 
   expect(errors).toBeUndefined()
-  expect(data.testPost.refs.author._id).toEqual('2')
+  expect(data.testPost.refs.author._id).toEqual('1')
   expect(data.testPost.refs.author.title).toEqual('Test Author')
+  expect(data.testPost.refs.authors).toHaveLength(2)
+  expect(data.testPost.refs.authors[0]).toMatchObject({ _id: '1', title: 'Test Author' })
+  expect(data.testPost.refs.authors[1]).toMatchObject({ _id: '2', title: 'Test Author 2' })
+  expect(data.testPost2.refs.author).toBeNull()
+  expect(data.testPost2.refs.authors).toHaveLength(0)
 })
 
 test('create node list reference', async () => {
-  const authorContentType = api.store.addContentType({
+  const authors = api.store.addContentType({
     typeName: 'TestAuthor'
   })
 
-  const postContentType = api.store.addContentType({
+  const posts = api.store.addContentType({
     typeName: 'TestPost',
     refs: {
       author: {
@@ -270,30 +296,20 @@ test('create node list reference', async () => {
     }
   })
 
-  authorContentType.addNode({
-    id: '2',
-    title: 'First Author'
-  })
+  authors.addNode({ id: '2', title: 'First Author' })
+  authors.addNode({ id: '3', title: 'Second Author' })
+  authors.addNode({ id: '4', title: 'Third Author' })
 
-  authorContentType.addNode({
-    id: '3',
-    title: 'Second Author'
-  })
-
-  authorContentType.addNode({
-    id: '4',
-    title: 'Third Author'
-  })
-
-  postContentType.addNode({
+  posts.addNode({
     id: '1',
     fields: {
       author: '2',
       customRefs: {
-        authors: {
-          typeName: 'TestAuthor',
-          value: ['2', '3', '4']
-        }
+        authors: [
+          { typeName: 'TestAuthor', id: '2' },
+          { typeName: 'TestAuthor', id: '3' },
+          { typeName: 'TestAuthor', id: '4' }
+        ]
       }
     }
   })
@@ -320,8 +336,54 @@ test('create node list reference', async () => {
   expect(data.testPost.customRefs.authors[1].title).toEqual('Third Author')
 })
 
+test('create node list reference with id as array', async () => {
+  const authors = api.store.addContentType({
+    typeName: 'TestAuthor'
+  })
+
+  const posts = api.store.addContentType({
+    typeName: 'TestPost',
+    refs: {
+      author: {
+        key: 'id',
+        typeName: 'TestAuthor'
+      }
+    }
+  })
+
+  authors.addNode({ id: '2', title: 'First Author' })
+  authors.addNode({ id: '3', title: 'Second Author' })
+  authors.addNode({ id: '4', title: 'Third Author' })
+
+  posts.addNode({
+    id: '1',
+    fields: {
+      authors: {
+        typeName: 'TestAuthor',
+        id: ['2', '3', '4']
+      }
+    }
+  })
+
+  const query = `{
+    testPost (id: "1") {
+      authors (sortBy: "title", limit: 2, skip: 1) {
+        id
+        title
+      }
+    }
+  }`
+
+  const { errors, data } = await createSchemaAndExecute(query)
+
+  expect(errors).toBeUndefined()
+  expect(data.testPost.authors).toHaveLength(2)
+  expect(data.testPost.authors[0].title).toEqual('Second Author')
+  expect(data.testPost.authors[1].title).toEqual('Third Author')
+})
+
 test('create node reference to same type', async () => {
-  const postContentType = api.store.addContentType({
+  const posts = api.store.addContentType({
     typeName: 'TestPost',
     refs: {
       related: {
@@ -330,8 +392,8 @@ test('create node reference to same type', async () => {
     }
   })
 
-  postContentType.addNode({ id: '1', fields: { related: '2' }})
-  postContentType.addNode({ id: '2', title: 'Test' })
+  posts.addNode({ id: '1', fields: { related: '2' }})
+  posts.addNode({ id: '2', title: 'Test' })
 
   const query = '{ testPost (id: "1") { refs { related { id title }}}}'
   const { errors, data } = await createSchemaAndExecute(query)
@@ -347,15 +409,16 @@ test('create reference with multiple node types', async () => {
   const users = api.store.addContentType({ typeName: 'TestUser' })
 
   authors.addNode({ id: '1', title: 'Author', fields: { name: 'Test' }})
-  users.addNode({ id: '2', title: 'User', fields: { username: 'test' }})
+  users.addNode({ id: '1', title: 'User', fields: { username: 'test' }})
+  users.addNode({ id: '2', title: 'User 2', fields: { username: 'test2' }})
 
   posts.addNode({
     id: '3',
     fields: {
-      people: {
-        typeName: ['TestAuthor', 'TestUser'],
-        value: ['1', '2']
-      }
+      people: [
+        { typeName: 'TestAuthor', id: '1' },
+        { typeName: 'TestUser', id: '1' }
+      ]
     }
   })
 
@@ -382,15 +445,15 @@ test('create reference with multiple node types', async () => {
   expect(errors).toBeUndefined()
   expect(data.testPost.people).toHaveLength(2)
   expect(data.testPost.people[0]).toMatchObject({ id: '1', title: 'Author', name: 'Test' })
-  expect(data.testPost.people[1]).toMatchObject({ id: '2', title: 'User', username: 'test' })
+  expect(data.testPost.people[1]).toMatchObject({ id: '1', title: 'User', username: 'test' })
 })
 
 test('should get values from object fields', async () => {
-  const contentType = api.store.addContentType({
+  const posts = api.store.addContentType({
     typeName: 'TestPost'
   })
 
-  contentType.addNode({
+  posts.addNode({
     id: '1',
     fields: {
       myObject: {
@@ -419,11 +482,11 @@ test('should get values from object fields', async () => {
 })
 
 test('should format dates from schema', async () => {
-  const contentType = api.store.addContentType({
+  const posts = api.store.addContentType({
     typeName: 'TestPostDate'
   })
 
-  contentType.addNode({
+  posts.addNode({
     id: '1',
     date: '2018-10-10',
     fields: {
@@ -455,11 +518,11 @@ test('should format dates from schema', async () => {
 })
 
 test('transformer extends node type', async () => {
-  const contentType = api.store.addContentType({
+  const posts = api.store.addContentType({
     typeName: 'TestPost'
   })
 
-  contentType.addNode({
+  posts.addNode({
     id: '1',
     internal: {
       mimeType: 'application/json',
@@ -475,12 +538,12 @@ test('transformer extends node type', async () => {
 })
 
 test('transformer should resolve absolute paths', async () => {
-  const contentType = api.store.addContentType({
+  const posts = api.store.addContentType({
     typeName: 'TestPost',
     resolveAbsolutePaths: true
   })
 
-  contentType.addNode({
+  posts.addNode({
     id: '1',
     internal: {
       mimeType: 'application/json',
@@ -500,11 +563,11 @@ test('transformer should resolve absolute paths', async () => {
 })
 
 test('process image types in schema', async () => {
-  const contentType = api.store.addContentType({
+  const posts = api.store.addContentType({
     typeName: 'TestPost'
   })
 
-  contentType.addNode({
+  posts.addNode({
     id: '1',
     internal: {
       mimeType: 'application/json',
@@ -552,11 +615,11 @@ test('process image types in schema', async () => {
 })
 
 test('process file types in schema', async () => {
-  const contentType = api.store.addContentType({
+  const posts = api.store.addContentType({
     typeName: 'TestPost'
   })
 
-  contentType.addNode({
+  posts.addNode({
     id: '1',
     internal: {
       mimeType: 'application/json',

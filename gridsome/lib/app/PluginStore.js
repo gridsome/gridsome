@@ -61,14 +61,12 @@ class Source extends EventEmitter {
       : () => null
 
     // normalize references
-    const refs = mapValues(options.refs, (ref, key) => ({
-      fieldName: key,
-      key: ref.key || 'id',
-      typeName: ref.typeName || options.typeName,
-      description: Array.isArray(ref.typeName)
-        ? `Reference to ${ref.typeName.join(', ')}`
-        : `Reference to ${ref.typeName}`
-    }))
+    const refs = mapValues(options.refs, (ref, key) => {
+      return {
+        typeName: ref.typeName || options.typeName,
+        fieldName: key
+      }
+    })
 
     if (typeof options.resolveAbsolutePaths === 'undefined') {
       options.resolveAbsolutePaths = this._resolveAbsolutePaths
@@ -188,14 +186,6 @@ class Source extends EventEmitter {
     }
 
     return camelCase(`${this._typeName} ${name}`, { pascalCase: true })
-  }
-
-  makeReference ($typeName, $value) {
-    return {
-      $ref: true,
-      $typeName: typeName,
-      $value: value
-    }
   }
 
   slugify (string = '') {
