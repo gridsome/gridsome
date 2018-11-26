@@ -46,12 +46,14 @@ class RemarkTransformer {
           type: 'element',
           tagName: 'span',
           properties: {
-            className: options.anchorClassName || 'icon icon-link'
+            className: options.autolinkClassName || 'icon icon-link'
           }
         },
         linkProperties: {
           'aria-hidden': 'true'
-        }
+        },
+        ...options.autolinkHeadings,
+        ...localOptions.autolinkHeadings
       }],
       // built-in plugins
       imagePlugin,
