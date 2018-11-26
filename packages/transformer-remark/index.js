@@ -17,7 +17,8 @@ const {
 const {
   GraphQLInt,
   GraphQLList,
-  GraphQLString
+  GraphQLString,
+  GraphQLBoolean
 } = require('gridsome/graphql')
 
 class RemarkTransformer {
@@ -94,16 +95,23 @@ class RemarkTransformer {
       headings: {
         type: new GraphQLList(HeadingType),
         args: {
-          depth: { type: HeadingLevels }
+          depth: { type: HeadingLevels },
+          stripTags: { type: GraphQLBoolean, defaultValue: true }
         },
-        resolve: async (node, { depth }) => {
-          const headings = await this.findHeadings(node, depth)
+        resolve: async (node, { depth, stripTags }) => {
+          const headings = await this.findHeadings(node)
 
-          return headings.filter(heading => {
-            return typeof depth === 'number'
-              ? heading.depth === depth
-              : true
-          })
+          return headings
+            .filter(heading =>
+              typeof depth === 'number' ? heading.depth === depth : true
+            )
+            .map(heading => ({
+              depth: heading.depth,
+              anchor: heading.anchor,
+              value: stripTags
+                ? heading.value.replace(/(<([^>]+)>)/ig, '')
+                : heading.value
+            }))
         }
       },
       timeToRead: {
@@ -162,9 +170,17 @@ class RemarkTransformer {
 
       visit(ast, 'heading', node => {
         const heading = { depth: node.depth, value: '', anchor: '' }
+        const children = node.children || []
 
-        visit(node, 'link', link => (heading.anchor = link.url))
-        visit(node, 'text', text => (heading.value = text.value))
+        for (let i = 0, l = children.length; i < l; i++) {
+          const el = children[i]
+
+          if (el.type === 'link') {
+            heading.anchor = el.url
+          } else if (el.value) {
+            heading.value += el.value
+          }
+        }
 
         headings.push(heading)
       })
