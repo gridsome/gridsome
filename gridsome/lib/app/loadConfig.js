@@ -58,6 +58,8 @@ module.exports = (context, options = {}, pkg = {}) => {
   config.outDir = resolve(localConfig.outDir || 'dist')
   config.targetDir = path.join(config.outDir, config.pathPrefix)
   config.assetsDir = path.join(config.targetDir, assetsDir)
+  config.imagesDir = path.join(config.assetsDir, 'static')
+  config.filesDir = path.join(config.assetsDir, 'files')
   config.appPath = path.resolve(__dirname, '../../app')
   config.tmpDir = resolve('src/.temp')
   config.cacheDir = resolve('.cache')

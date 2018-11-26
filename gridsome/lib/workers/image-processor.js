@@ -78,8 +78,7 @@ exports.processImage = async function ({
     buffer = await imagemin.buffer(buffer, { plugins })
   }
 
-  await fs.outputFile(cachePath, buffer)
-  await fs.copy(cachePath, destPath)
+  await fs.outputFile(destPath, buffer)
 }
 
 exports.process = async function ({ queue, outDir, cacheDir, minWidth }) {

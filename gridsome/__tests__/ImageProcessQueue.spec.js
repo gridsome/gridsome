@@ -3,20 +3,19 @@ const fs = require('fs-extra')
 const AssetsQueue = require('../lib/app/queue/AssetsQueue')
 const ImageProcessQueue = require('../lib/app/queue/ImageProcessQueue')
 const context = __dirname
-const targetDir = path.join(context, 'assets', 'static')
-const assetsDir = path.join(targetDir, 'assets')
+const imagesDir = path.join(context, 'assets', 'static')
 const pathPrefix = '/'
 
 const baseconfig = {
   pathPrefix,
-  targetDir,
-  assetsDir,
+  imagesDir,
+  targetDir: context,
   imageExtensions: ['.jpg', '.png', '.webp'],
   maxImageWidth: 1000
 }
 
 beforeEach(() => (ImageProcessQueue.uid = 0))
-afterAll(() => fs.remove(targetDir))
+afterAll(() => fs.remove(imagesDir))
 
 test('generate srcset for image', async () => {
   const filePath = path.resolve(__dirname, 'assets/1000x600.png')

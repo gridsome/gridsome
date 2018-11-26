@@ -6,8 +6,8 @@ const createSchema = require('../lib/graphql/createSchema')
 const JSONTransformer = require('./__fixtures__/JSONTransformer')
 
 const context = __dirname
-const targetDir = path.join(context, 'assets', 'static')
-const assetsDir = path.join(targetDir, 'assets')
+const imagesDir = path.join(context, 'assets', 'static')
+const filesDir = path.join(context, 'assets', 'files')
 const pathPrefix = '/'
 
 let app, api
@@ -17,8 +17,9 @@ beforeEach(() => {
     config: {
       plugins: [],
       pathPrefix,
-      targetDir,
-      assetsDir,
+      imagesDir,
+      filesDir,
+      targetDir: context,
       imageExtensions: ['.png'],
       maxImageWidth: 1000
     }

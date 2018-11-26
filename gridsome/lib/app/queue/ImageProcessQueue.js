@@ -51,7 +51,7 @@ class ImageProcessQueue {
 
   async preProcess (filePath, options = {}) {
     const { imageExtensions, targetDir, pathPrefix, maxImageWidth } = this.config
-    const assetsDir = path.relative(targetDir, this.config.assetsDir)
+    const imagesDir = path.relative(targetDir, this.config.imagesDir)
     const relPath = path.relative(this.context, filePath)
     const { name, ext } = path.parse(filePath)
     const mimeType = mime.lookup(filePath)
@@ -93,11 +93,11 @@ class ImageProcessQueue {
 
     const createSrcPath = (filename, imageOptions) => {
       if (process.env.GRIDSOME_MODE === 'serve') {
-        const query = createOptionsQuery(imageOptions)
-        filename = `${forwardSlash(relPath)}?${query}`
+        const query = '?' + createOptionsQuery(imageOptions)
+        return path.join('/', imagesDir, forwardSlash(relPath)) + query
       }
 
-      return forwardSlash(path.join(pathPrefix, assetsDir, 'static', filename))
+      return forwardSlash(path.join('/', pathPrefix, imagesDir, filename))
     }
 
     const sets = imageSizes.map((width = imageWidth) => {
