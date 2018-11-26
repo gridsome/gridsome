@@ -212,7 +212,7 @@ async function processFiles (queue, { outDir }) {
   console.info(`Process files (${totalFiles} files) - ${timer(hirestime.S)}s`)
 }
 
-async function processImages (queue, { outDir, minProcessImageWidth }) {
+async function processImages (queue, { outDir, imageCacheDir, minProcessImageWidth }) {
   const timer = hirestime()
   const chunks = chunk(queue.queue, 100)
   const worker = createWorker('image-processor')
@@ -223,6 +223,7 @@ async function processImages (queue, { outDir, minProcessImageWidth }) {
       await worker.process({
         queue,
         outDir,
+        cacheDir: imageCacheDir,
         minWidth: minProcessImageWidth
       })
     } catch (err) {

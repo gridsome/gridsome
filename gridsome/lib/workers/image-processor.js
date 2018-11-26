@@ -11,13 +11,21 @@ sharp.simd(true)
 exports.processImage = async function ({
   filePath,
   destPath,
+  cachePath,
   size,
   options = {},
   minWidth = 500,
   resizeImage = false
 }) {
+  if (cachePath && await fs.exists(cachePath)) {
+    fs.copy(cachePath, destPath)
+    return
+  } else if (await fs.exists(destPath)) {
+    return
+  }
+
   const { ext } = path.parse(filePath)
-  let buffer = fs.readFileSync(filePath)
+  let buffer = await fs.readFile(filePath)
 
   if (['.png', '.jpeg', '.jpg', '.webp'].includes(ext)) {
     const config = {
@@ -70,12 +78,20 @@ exports.processImage = async function ({
     buffer = await imagemin.buffer(buffer, { plugins })
   }
 
-  return fs.outputFileSync(destPath, buffer)
+  await fs.outputFile(cachePath, buffer)
+  await fs.copy(cachePath, destPath)
 }
 
-exports.process = async function ({ queue, outDir, minWidth }) {
-  return Promise.all(queue.map(data => {
-    const destPath = path.resolve(outDir, data.destination)
-    return exports.processImage({ destPath, minWidth, ...data })
+exports.process = async function ({ queue, outDir, cacheDir, minWidth }) {
+  return Promise.all(queue.map(set => {
+    const cachePath = cacheDir ? path.join(cacheDir, set.filename) : null
+    const destPath = path.join(outDir, set.destination)
+
+    return exports.processImage({
+      cachePath,
+      destPath,
+      minWidth,
+      ...set
+    })
   }))
 }

@@ -45,6 +45,8 @@ module.exports = (context, options = {}, pkg = {}) => {
     throw new Error(`pathPrefix must not have a trailing slash`)
   }
 
+  const assetsDir = localConfig.assetsDir || 'assets'
+
   config.pkg = options.pkg || resolvePkg(context)
   config.host = args.host || 'localhost'
   config.port = parseInt(args.port, 10) || 8080
@@ -55,10 +57,11 @@ module.exports = (context, options = {}, pkg = {}) => {
   config.staticDir = resolve('static')
   config.outDir = resolve(localConfig.outDir || 'dist')
   config.targetDir = path.join(config.outDir, config.pathPrefix)
-  config.assetsDir = path.join(config.targetDir, localConfig.assetsDir || 'assets')
+  config.assetsDir = path.join(config.targetDir, assetsDir)
   config.appPath = path.resolve(__dirname, '../../app')
   config.tmpDir = resolve('src/.temp')
   config.cacheDir = resolve('.cache')
+  config.imageCacheDir = resolve('.cache', assetsDir, 'static')
   config.minProcessImageWidth = 500 // TODO: find a better name for this
   config.maxImageWidth = localConfig.maxImageWidth || 1920
   config.imageExtensions = SUPPORTED_IMAGE_TYPES
