@@ -2,10 +2,9 @@ const {} = require('../utils')
 const Entity = require('./Entity')
 
 class Files extends Entity {
-  constructor(source, type, url) {
-    super(source, type, url)
-
-    this.entityType = 'file'
+  constructor(source, config) {
+    // config == { entityType, entityName, type, url }
+    super(source, config)
   }
 
   async initialize() {

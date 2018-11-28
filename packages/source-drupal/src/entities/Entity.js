@@ -7,12 +7,13 @@ const {
 const slugify = require('@sindresorhus/slugify')
 
 class Entity {
-  constructor(source, type, url) {
+  constructor(source, { entityType, entityName, type, url }) {
     this.source = source // instance of DrupalSource.js
 
-    this.entityType // see constructors in /src/entities/*
+    this.entityType = entityType
+    this.entityName = entityName
     this.graphQlContentType // gridsome store api addConentType
-    this.type = type
+    this.type = type // json:api type i.e. node--article
     this.relationshipTypes = [] // array of possible relationships
     this.url = url // url to fetch, pulled from apiSchema
     this.response = [] // response from this.fetchData
@@ -20,6 +21,10 @@ class Entity {
 
   get getEntityType() {
     return this.entityType
+  }
+
+  get getEntityName() {
+    return this.entityName
   }
 
   get getType() {
@@ -63,10 +68,11 @@ class Entity {
 
   createGraphQlType(override = {}) {
     const typeName = this.getTypeName
+    const pathName = this.createTypeName(this.getEntityName) // sort of a round about way to add an "s"
 
     return Object.assign({ 
       typeName,
-      route: `/${slugify(typeName)}/:slug`
+      route: `/${slugify(pathName)}/:slug`
     }, override)
   }
 

@@ -79,13 +79,15 @@ class DrupalSource {
        * [
        *  {
        *    entityType: 'node',
-       *    type: 'article',
-       *    url: 'some url'
+       *    entityName: 'article',
+       *    type: 'node--article',
+       *    url: '<jsonapi endpoint>'
        *  },
        *  {
        *    entityType: 'taxonomy_term',
-       *    type: 'category',
-       *    url: 'some url'
+       *    entityName: 'tags',
+       *    type: 'taxonomy_term--tags',
+       *    url: '<jsonapi endpoint>'
        *  },
        * 
        * ]
@@ -94,7 +96,8 @@ class DrupalSource {
         const keySplit = key.split('--') // [entityType, type, url]
 
         result.push({
-          entityType: (keySplit.length > 1) ? keySplit[0] : keySplit[0],
+          entityType: keySplit[0],
+          entityName: (keySplit.length > 1) ? keySplit[1] : keySplit[0],
           type: key,
           url: value
         })
@@ -118,11 +121,11 @@ class DrupalSource {
     await Promise.all(
       this.apiSchema.map((api) => {
         let { entities } = this.options
-        let { entityType, type, url } = api
+        let { entityType, entityName, type, url } = api
 
         if (this.supportedEntities[entityType] && entities.includes(entityType)) {
           // creating an instance of the entity class, see ./entities/*
-          this.entities[type] = new this.supportedEntities[entityType](this, type, url)
+          this.entities[type] = new this.supportedEntities[entityType](this, { entityType, entityName, type, url })
           return this.entities[type].initialize()
         }
       })

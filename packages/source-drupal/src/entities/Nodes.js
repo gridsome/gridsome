@@ -2,10 +2,9 @@ const {} = require('../utils')
 const Entity = require('./Entity')
 
 class Nodes extends Entity {
-  constructor(source, type, url) {
-    super(source, type, url)
-
-    this.entityType = 'node'
+  constructor(source, config) {
+    // config == { entityType, entityName, type, url }
+    super(source, config)
   }
 
   async initialize() {
