@@ -10,6 +10,14 @@ const slugify = (text) => {
     .toLowerCase();            // Trim - from end of text
 }
 
+const toPascalCase = (text) => {
+  return text.match(/[a-z]+/gi)
+    .map(function (word) {
+      return word.charAt(0).toUpperCase() + word.substr(1).toLowerCase()
+    })
+    .join('')
+}
+
 const cullByWordCount = (str) => {
   if (!str) return () => ''
   
@@ -24,5 +32,6 @@ const cullByWordCount = (str) => {
 
 module.exports = {
   slugify,
+  toPascalCase,
   cullByWordCount
 }
