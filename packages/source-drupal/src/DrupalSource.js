@@ -1,5 +1,5 @@
 const axios = require('axios')
-const reduce = require('lodash.reduce')
+const { reduce } = require('lodash')
 const { 
   cullByWordCount
 } = require('./utils')
@@ -161,6 +161,7 @@ class DrupalSource {
       // loop through each type specified in gridsome.config.js
       // create GraphQL Type and all the nodes for that type
       views.forEach(({ name, route }, index) => {
+        const { slugify } = this.store
         if (!name) throw new Error('name is a required for each type object')
 
         const type = addContentType({ 

@@ -1,10 +1,8 @@
 const axios = require('axios')
-const reduce = require('lodash.reduce')
-const uniqBy = require('lodash.uniqby')
+const { reduce, uniqBy } = require('lodash')
 const { 
   toPascalCase
 } = require('../utils')
-const slugify = require('@sindresorhus/slugify')
 
 class Entity {
   constructor(source, { entityType, entityName, type, url }) {
@@ -45,7 +43,7 @@ class Entity {
     try {
       const fetchRecurse = async (url) => {
         url = typeof url === 'object' ? url.href : url
-        
+
         const {
           data: {
             data,
@@ -68,12 +66,13 @@ class Entity {
   }
 
   createGraphQlType(override = {}) {
+    const { store } = this.source
     const typeName = this.getTypeName
     const pathName = this.createTypeName(this.getEntityName) // sort of a round about way to add an "s"
 
     return Object.assign({ 
       typeName,
-      route: `/${slugify(pathName)}/:slug`
+      route: `/${store.slugify(pathName)}/:slug`
     }, override)
   }
 
