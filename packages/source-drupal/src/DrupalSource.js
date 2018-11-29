@@ -1,5 +1,5 @@
 const axios = require('axios')
-const { reduce } = require('lodash')
+const { reduce, uniq } = require('lodash')
 const { 
   cullByWordCount
 } = require('./utils')
@@ -26,6 +26,7 @@ class DrupalSource {
     if (!options.baseUrl) throw new Error('baseUrl option is required')
 
     this.options = options
+    this.defaultEntities = ['node', 'taxonomy_term', 'file', 'user']
     this.supportedEntities = {
       node: Nodes,
       taxonomy_term: TaxonomyTerms,
@@ -123,11 +124,15 @@ class DrupalSource {
    * Once each entityType is processed, loop through again and buildRelationships()
    */
   async processEntities() {
+    let { entities: userEntities = [] } = this.options
+
+    // create unique array of user passed entities and defaultEntities
+    const entities = uniq(this.defaultEntities.concat(userEntities))
+
     await Promise.all(
       this.apiSchema.map((api) => {
-        let { entities } = this.options
         let { entityType, entityName, type, url } = api
-
+        
         if (this.supportedEntities[entityType] && entities.includes(entityType)) {
           // creating an instance of the entity class, see ./entities/*
           this.entities[type] = new this.supportedEntities[entityType](this, { entityType, entityName, type, url })
