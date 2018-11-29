@@ -44,7 +44,7 @@ class Entity {
   async fetchData() {
     try {
       const fetchRecurse = async (url) => {
-      
+      url = typeof url === 'object' ? url.href : url
         const {
           data: {
             data,
