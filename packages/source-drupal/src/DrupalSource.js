@@ -15,6 +15,7 @@ class DrupalSource {
   static defaultOptions() {
     return {
       baseUrl: '',
+      apiBase: 'jsonapi',
       views: [], // deprecated
       entities: [],
       format: 'json'
@@ -50,12 +51,16 @@ class DrupalSource {
   }
 
   async fetchJsonApiSchema() {
-    const { baseUrl } = this.options
+    const { baseUrl, apiBase } = this.options
 
     if (!baseUrl) throw new Error('baseUrl is required in gridsome.config.js')
 
+    const fullBaseUrl = baseUrl.endsWith('/') 
+      ? `${baseUrl}${apiBase}`
+      : `${baseUrl}/${apiBase}`
+
     try {
-      let response = await axios.get(`${baseUrl}jsonapi/`)
+      let response = await axios.get(fullBaseUrl)
 
       /**
        * response from /jsonapi with axios wrapper is shaped:
