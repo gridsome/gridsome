@@ -158,6 +158,32 @@ test('create connection', async () => {
   expect(data.allTestPost.edges[1].node.title).toEqual('test 1')
 })
 
+test('sort nodes collection', async () => {
+  const contentType = api.store.addContentType({
+    typeName: 'TestPost'
+  })
+
+  contentType.addNode({ title: 'c' })
+  contentType.addNode({ title: 'b' })
+  contentType.addNode({ title: 'a' })
+
+  const query = `{
+    allTestPost (sortBy: "title", order: ASC) {
+      edges {
+        node { title }
+      }
+    }
+  }`
+
+  const { errors, data } = await createSchemaAndExecute(query)
+
+  expect(errors).toBeUndefined()
+  expect(data.allTestPost.edges.length).toEqual(3)
+  expect(data.allTestPost.edges[0].node.title).toEqual('a')
+  expect(data.allTestPost.edges[1].node.title).toEqual('b')
+  expect(data.allTestPost.edges[2].node.title).toEqual('c')
+})
+
 test('get nodes by path regex', async () => {
   const contentType = api.store.addContentType({
     typeName: 'TestPost'

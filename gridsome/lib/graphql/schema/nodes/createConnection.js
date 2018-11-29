@@ -52,7 +52,7 @@ module.exports = nodeType => {
       const results = collection
         .chain()
         .find(query)
-        .simplesort(sortBy, order === -1)
+        .simplesort(sortBy, order === 'DESC')
         .offset(((page - 1) * perPage) + skip)
         .limit(perPage)
 
