@@ -11,6 +11,5 @@ const cullByWordCount = (str) => {
 }
 
 module.exports = {
-  toPascalCase,
   cullByWordCount
 }
