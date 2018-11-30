@@ -1,0 +1,29 @@
+{
+  "version": "0.0.0",
+  "name": "@gridsome/plugin-pwa",
+  "description": "Progressive Web App plugin for Gridsome",
+  "homepage": "https://github.com/gridsome/gridsome/tree/master/packages/plugin-pwa#readme",
+  "repository": "https://github.com/gridsome/gridsome/tree/master/packages/plugin-pwa",
+  "main": "index.js",
+  "files": [
+    "index.js",
+    "gridsome.client.js"
+  ],
+  "keywords": [
+    "gridsome",
+    "gridsome-plugin",
+    "service-worker",
+    "pwa"
+  ],
+  "dependencies": {
+    "fs-extra": "^7.0.0",
+    "register-service-worker": "^1.5.2",
+    "workbox-build": "^4.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=8.3"
+  }
+}
