@@ -1,4 +1,3 @@
-const {} = require('../utils')
 const Entity = require('./Entity')
 
 class Files extends Entity {

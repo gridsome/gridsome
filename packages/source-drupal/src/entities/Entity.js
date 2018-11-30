@@ -1,8 +1,5 @@
 const axios = require('axios')
 const { reduce, uniqBy } = require('lodash')
-const { 
-  toPascalCase
-} = require('../utils')
 
 class Entity {
   constructor(source, { entityType, entityName, type, url }) {
@@ -34,9 +31,11 @@ class Entity {
   }
 
   createTypeName(text = '') {
+    const { store } = this.source
+
     return (text.endsWith('s'))
-      ? toPascalCase(text)
-      : `${toPascalCase(text)}s`
+      ? store.makeTypeName(text)
+      : `${store.makeTypeName(text)}s`
   }
 
   async fetchData() {

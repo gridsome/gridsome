@@ -3,7 +3,7 @@ const { reduce, uniq } = require('lodash')
 const { 
   cullByWordCount
 } = require('./utils')
-const slugify = require('@sindresorhus/slugify')
+const { DEFAULT_ENTITIES } = require('./constants')
 const Nodes = require('./entities/Nodes')
 const TaxonomyTerms = require('./entities/TaxonomyTerms')
 const Files = require('./entities/Files')
@@ -14,6 +14,7 @@ class DrupalSource {
   // defaultOptions merged with this.options in App.vue
   static defaultOptions() {
     return {
+      typeName: 'Drupal',
       baseUrl: '',
       apiBase: 'jsonapi',
       views: [], // deprecated
@@ -26,7 +27,7 @@ class DrupalSource {
     if (!options.baseUrl) throw new Error('baseUrl option is required')
 
     this.options = options
-    this.defaultEntities = ['node', 'taxonomy_term', 'file', 'user']
+    this.defaultEntities = DEFAULT_ENTITIES
     this.supportedEntities = {
       node: Nodes,
       taxonomy_term: TaxonomyTerms,
@@ -52,9 +53,9 @@ class DrupalSource {
   }
 
   async fetchJsonApiSchema() {
-    const { baseUrl, apiBase } = this.options
+    const { typeName, baseUrl, apiBase } = this.options
 
-    if (!baseUrl) throw new Error('baseUrl is required in gridsome.config.js')
+    if (!baseUrl || !typeName ) throw new Error('Missing required fields in gridsome.config.js')
 
     const fullBaseUrl = baseUrl.endsWith('/') 
       ? `${baseUrl}${apiBase}`
