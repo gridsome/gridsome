@@ -6,6 +6,7 @@ const { refResolver } = require('../resolvers')
 
 const { nodeInterface } = require('../interfaces')
 
+const graphql = require('../../graphql')
 const {
   GraphQLID,
   GraphQLList,
@@ -13,7 +14,7 @@ const {
   GraphQLNonNull,
   GraphQLUnionType,
   GraphQLObjectType
-} = require('../../graphql')
+} = graphql
 
 module.exports = ({ contentType, nodeTypes }) => {
   const nodeType = new GraphQLObjectType({
@@ -87,7 +88,8 @@ function extendNodeType (contentType, nodeType, nodeTypes) {
       fields[fieldName] = field({
         contentType,
         nodeTypes,
-        nodeType
+        nodeType,
+        graphql
       })
     }
   }
