@@ -1,5 +1,4 @@
 const path = require('path')
-const fs = require('fs-extra')
 const AssetsQueue = require('../lib/app/queue/AssetsQueue')
 const context = __dirname
 const targetDir = path.join(context, 'assets', 'static')

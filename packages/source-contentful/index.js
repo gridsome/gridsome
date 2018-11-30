@@ -64,7 +64,7 @@ class ContentfulSource {
       const contentType = cache.contentTypes[id]
       const typeName = makeTypeName(contentType.name)
       const collection = getContentType(typeName)
-      
+
       const fields = contentType.fields.reduce((fields, { id, type, items }) => {
         if (!item.fields[id]) return fields
 

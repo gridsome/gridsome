@@ -5,12 +5,12 @@ const createServerConfig = require('./createServerConfig')
 module.exports = async (app, defines = {}) => {
   const compileTime = hirestime()
 
-  const clientConfig = createClientConfig(app)
-  const serverConfig = createServerConfig(app)
+  const clientConfig = await createClientConfig(app)
+  const serverConfig = await createServerConfig(app)
 
   clientConfig
     .plugin('gridsome-endpoints')
-      .use(require('webpack/lib/DefinePlugin'), [defines])
+    .use(require('webpack/lib/DefinePlugin'), [defines])
 
   await app.dispatch('beforeCompileAssets', {
     context: app.context,

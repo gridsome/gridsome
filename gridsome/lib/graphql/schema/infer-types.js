@@ -1,9 +1,10 @@
 const camelCase = require('camelcase')
-const { mapValues, isEmpty } = require('lodash')
-const { fieldResolver } = require('./resolvers')
+const { isEmpty } = require('lodash')
+const { nodeInterface } = require('./interfaces')
 const { isDate, dateTypeField } = require('./types/date')
 const { isFile, fileType } = require('./types/file')
 const { isImage, imageType } = require('./types/image')
+const { fieldResolver, refResolver } = require('./resolvers')
 
 const {
   GraphQLInt,
@@ -11,33 +12,66 @@ const {
   GraphQLFloat,
   GraphQLString,
   GraphQLBoolean,
+  GraphQLUnionType,
   GraphQLObjectType
 } = require('../graphql')
 
-function inferTypes (nodes, nodeType) {
-  const fields = {}
-  let node, type
+function inferTypes (nodes, typeName, nodeTypes) {
+  const types = {}
+  let fields = {}
 
   for (let i = 0, l = nodes.length; i < l; i++) {
-    node = nodes[i]
+    fields = populateFeilds(nodes[i].fields, fields)
+  }
 
-    for (const key in node.fields) {
-      if (key.startsWith('__')) continue
-      if ((type = inferType(node.fields[key], key, nodeType))) {
-        fields[key] = type
-      }
+  for (const key in fields) {
+    const type = inferType(fields[key], key, typeName, nodeTypes)
+
+    if (type) {
+      types[key] = type
     }
   }
 
-  return fields
+  return types
 }
 
-function inferType (value, key, nodeType) {
+function populateFeilds (obj, currentObj = {}) {
+  const res = { ...currentObj }
+
+  for (const key in obj) {
+    const value = obj[key]
+
+    if (key.startsWith('__')) continue
+    if (value === undefined) continue
+    if (value === null) continue
+
+    res[key] = populateField(value, currentObj[key])
+  }
+
+  return res
+}
+
+function populateField (value, currentValue) {
+  if (Array.isArray(value)) {
+    return value.slice(0, 1).map(value => {
+      return populateField(value, currentValue ? currentValue[0] : undefined)
+    })
+  } else if (typeof value === 'object') {
+    return populateFeilds(value, currentValue)
+  }
+
+  return currentValue !== undefined ? currentValue : value
+}
+
+function inferType (value, key, typeName, nodeTypes) {
+  const type = typeof value
+
   if (value === undefined) return null
   if (value === null) return null
 
   if (Array.isArray(value)) {
-    const type = inferType(value[0], key, nodeType)
+    const type = inferType(value[0], key, typeName, nodeTypes)
+
     return type !== null ? {
       type: new GraphQLList(type.type),
       resolve: (obj, args, context, info) => {
@@ -46,8 +80,6 @@ function inferType (value, key, nodeType) {
       }
     } : null
   }
-
-  const type = typeof value
 
   if (isDate(value)) {
     return dateTypeField
@@ -73,13 +105,23 @@ function inferType (value, key, nodeType) {
         resolve: fieldResolver
       }
     case 'object':
-      return createObjectType(value, key, nodeType)
+      return isRef(value)
+        ? createRefType(value, key, typeName, nodeTypes)
+        : createObjectType(value, key, typeName, nodeTypes)
   }
 }
 
-function createObjectType (obj, key, nodeType) {
-  const name = createTypeName(nodeType, key)
-  const fields = mapValues(obj, (value, key) => inferType(value, key, name))
+function createObjectType (obj, key, typeName, nodeTypes) {
+  const name = createTypeName(typeName, key)
+  const fields = {}
+
+  for (const key in obj) {
+    const type = inferType(obj[key], key, name, nodeTypes)
+
+    if (type) {
+      fields[key] = type
+    }
+  }
 
   return !isEmpty(fields) ? {
     type: new GraphQLObjectType({ name, fields }),
@@ -87,15 +129,43 @@ function createObjectType (obj, key, nodeType) {
   } : null
 }
 
-function createTypeName (nodeType, key) {
-  return camelCase(`${nodeType} ${key}`, { pascalCase: true })
+function createRefType (obj, key, typeName, nodeTypes) {
+  const typeNames = Array.isArray(obj.typeName) ? obj.typeName : [obj.typeName]
+  const name = createTypeName(typeName, key + 'Ref')
+  const isList = Array.isArray(obj.value)
+
+  const type = typeNames.length > 1
+    ? new GraphQLUnionType({
+      name,
+      interfaces: [nodeInterface],
+      types: () => typeNames.map(typeName => nodeTypes[typeName])
+    })
+    : nodeTypes[typeNames[0]]
+
+  return {
+    type: isList ? new GraphQLList(type) : type,
+    resolve: refResolver
+  }
+}
+
+function createTypeName (typeName, key) {
+  return camelCase(`${typeName} ${key}`, { pascalCase: true })
 }
 
 function is32BitInt (x) {
   return (x | 0) === x
 }
 
-module.exports = {
-  inferTypes,
-  inferType
+function isRef (obj) {
+  if (typeof obj !== 'object') {
+    return false
+  }
+
+  return (
+    Object.keys(obj).length === 2 &&
+    obj.hasOwnProperty('typeName') &&
+    obj.hasOwnProperty('value')
+  )
 }
+
+module.exports = inferTypes

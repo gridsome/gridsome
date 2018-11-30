@@ -31,7 +31,7 @@ const ISO_8601_FORMAT = [
   'YYYY-[W]WW-E',
   'YYYY[W]WWE',
   'YYYY-DDDD',
-  'YYYYDDDD',
+  'YYYYDDDD'
 ]
 
 exports.GraphQLDate = new GraphQLScalarType({

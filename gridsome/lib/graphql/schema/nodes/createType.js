@@ -1,6 +1,8 @@
 const camelCase = require('camelcase')
+const inferTypes = require('../infer-types')
 const { dateType } = require('../types/date')
 const { mapValues, isEmpty } = require('lodash')
+const { refResolver } = require('../resolvers')
 
 const { nodeInterface } = require('../interfaces')
 
@@ -10,17 +12,18 @@ const {
   GraphQLString,
   GraphQLNonNull,
   GraphQLUnionType,
-  GraphQLObjectType,
-  GraphQLInterfaceType
+  GraphQLObjectType
 } = require('../../graphql')
 
-module.exports = ({ contentType, nodeTypes, fields }) => {
+module.exports = ({ contentType, nodeTypes }) => {
   const nodeType = new GraphQLObjectType({
     name: contentType.typeName,
     description: contentType.description,
     interfaces: [nodeInterface],
     isTypeOf: node => node.typeName === contentType.typeName,
     fields: () => {
+      const nodes = contentType.collection.find()
+      const fields = inferTypes(nodes, contentType.typeName, nodeTypes)
       const refs = createRefs(contentType, nodeTypes, fields)
 
       const nodeFields = {
@@ -43,7 +46,7 @@ module.exports = ({ contentType, nodeTypes, fields }) => {
           deprecationReason: 'Use node.id instead.',
           type: new GraphQLNonNull(GraphQLID),
           resolve: node => node.id
-        },
+        }
       }
 
       if (!isEmpty(refs)) {
@@ -129,22 +132,16 @@ function createRefs (contentType, nodeTypes, fields) {
     return {
       description,
       type: isList ? new GraphQLList(refType) : refType,
-      resolve: (obj, args, { store }) => {
-        const value = obj.fields[key] || []
-        const query = Array.isArray(value)
-          ? { [ref.key]: { $in: value }}
-          : { [ref.key]: value }
-
-        if (Array.isArray(typeName)) {
-          // TODO: search multiple collections
-          return []
+      resolve: (obj, args, context, info) => {
+        const field = {
+          [info.fieldName]: {
+            typeName,
+            key: ref.key,
+            value: obj.fields[key]
+          }
         }
 
-        const { collection } = store.getContentType(typeName)
-
-        return isList
-          ? collection.find(query)
-          : collection.findOne(query)
+        return refResolver(field, args, context, info)
       }
     }
   })

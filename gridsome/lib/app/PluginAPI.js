@@ -1,8 +1,6 @@
 const autoBind = require('auto-bind')
-const { mapValues } = require('lodash')
 const PluginStore = require('./PluginStore')
 const createRoutes = require('./createRoutes')
-const { cache, nodeCache } = require('../utils/cache')
 
 class PluginAPI {
   constructor (app, { entry, transformers }) {
@@ -23,7 +21,7 @@ class PluginAPI {
         clearTimeout(regenerateTimeout)
         regenerateTimeout = setTimeout(() => {
           if (app.isBootstrapped) {
-            app.routerData = createRoutes(app.store)
+            app.routerData = createRoutes(app)
             app.generator.generate('routes.js')
           }
         }, 20)
@@ -105,8 +103,8 @@ class PluginAPI {
     this._on('beforeRenderHTML', fn)
   }
 
-  beforeProcessImages (fn) {
-    this._on('beforeProcessImages', fn)
+  beforeProcessAssets (fn) {
+    this._on('beforeProcessAssets', fn)
   }
 
   afterBuild (fn) {

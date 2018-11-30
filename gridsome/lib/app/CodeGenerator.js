@@ -46,8 +46,10 @@ async function genIcons ({ config, resolve, queue }) {
   const { touchicon, favicon } = config.icon
   const touchiconPath = resolve(touchicon.src)
   const faviconPath = resolve(favicon.src)
-  
+
   const icons = {
+    touchiconMimeType: null,
+    faviconMimeType: null,
     precomposed: false,
     touchicons: [],
     favicons: []
@@ -58,9 +60,10 @@ async function genIcons ({ config, resolve, queue }) {
       sizes: touchicon.sizes,
       srcset: false
     })
-    
+
     icons.precomposed = touchicon.precomposed
     icons.touchicons = touchicons.sets
+    icons.touchiconMimeType = touchicons.mimeType
   }
 
   if (await fs.exists(faviconPath)) {
@@ -70,6 +73,7 @@ async function genIcons ({ config, resolve, queue }) {
     })
 
     icons.favicons = favicons.sets
+    icons.faviconMimeType = favicons.mimeType
   }
 
   return `export default ${JSON.stringify(icons, null, 2)}`
@@ -132,7 +136,6 @@ function genPlugins (app, isServer) {
     }))
 
   let res = ''
-  const options = []
 
   plugins.forEach(({ name, entry }) => {
     res += `import ${name} from ${JSON.stringify(entry)}\n`

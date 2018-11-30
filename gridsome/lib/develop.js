@@ -28,7 +28,7 @@ module.exports = async (context, args) => {
   server.app.use(config.pathPrefix, express.static(config.staticDir))
   server.app.use(require('connect-history-api-fallback')())
 
-  const webpackConfig = createWebpackConfig()
+  const webpackConfig = await createWebpackConfig()
   const compiler = require('webpack')(webpackConfig)
   server.app.use(require('webpack-hot-middleware')(compiler, {
     quiet: true,
@@ -44,7 +44,7 @@ module.exports = async (context, args) => {
     if (stats.hasErrors()) {
       return
     }
-    
+
     console.log()
     console.log(`  Site running at:          ${chalk.cyan(server.url.site)}`)
     console.log(`  Explore GraphQL data at:  ${chalk.cyan(server.url.explore)}`)
@@ -65,20 +65,20 @@ module.exports = async (context, args) => {
   // helpers
   //
 
-  function createWebpackConfig () {
-    const clientConfig = createClientConfig(app)
+  async function createWebpackConfig () {
+    const clientConfig = await createClientConfig(app)
 
     clientConfig
       .plugin('friendly-errors')
-        .use(require('friendly-errors-webpack-plugin'))
+      .use(require('friendly-errors-webpack-plugin'))
 
     clientConfig
       .plugin('dev-endpoints')
-        .use(require('webpack/lib/DefinePlugin'), [{
-          'SOCKJS_ENDPOINT': JSON.stringify(sock.url),
-          'GRAPHQL_ENDPOINT': JSON.stringify(server.url.graphql),
-          'GRAPHQL_WS_ENDPOINT': JSON.stringify(server.url.websocket)
-        }])
+      .use(require('webpack/lib/DefinePlugin'), [{
+        'SOCKJS_ENDPOINT': JSON.stringify(sock.url),
+        'GRAPHQL_ENDPOINT': JSON.stringify(server.url.graphql),
+        'GRAPHQL_WS_ENDPOINT': JSON.stringify(server.url.websocket)
+      }])
 
     clientConfig.entryPoints.store.forEach((entry, name) => {
       clientConfig.entry(name)
