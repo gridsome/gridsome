@@ -412,6 +412,39 @@ test('should format dates from schema', async () => {
   expect(data.testPostDate.dateObject.date).toEqual('10/10/2018')
 })
 
+test('add custom schema fields', async () => {
+  const contentType = api.store.addContentType({
+    typeName: 'TestPost'
+  })
+
+  contentType.addNode({
+    id: '1',
+    fields: {
+      myField: 'test'
+    }
+  })
+
+  contentType.addSchemaField('myField', payload => {
+    const { nodeTypes, nodeType, graphql } = payload
+
+    expect(payload.contentType).toEqual(contentType)
+    expect(nodeTypes).toHaveProperty('TestPost')
+    expect(nodeTypes['TestPost']).toEqual(nodeType)
+    expect(graphql).toHaveProperty('graphql')
+
+    return {
+      type: graphql.GraphQLString,
+      resolve: () => 'my-custom-value'
+    }
+  })
+
+  const query = '{ testPost (id: "1") { myField }}'
+  const { errors, data } = await createSchemaAndExecute(query)
+
+  expect(errors).toBeUndefined()
+  expect(data.testPost.myField).toEqual('my-custom-value')
+})
+
 test('transformer extends node type', async () => {
   const contentType = api.store.addContentType({
     typeName: 'TestPost'

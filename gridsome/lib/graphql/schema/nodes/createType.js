@@ -1,4 +1,5 @@
 const camelCase = require('camelcase')
+const graphql = require('../../graphql')
 const inferTypes = require('../infer-types')
 const { dateType } = require('../types/date')
 const { mapValues, isEmpty } = require('lodash')
@@ -6,7 +7,6 @@ const { refResolver } = require('../resolvers')
 
 const { nodeInterface } = require('../interfaces')
 
-const graphql = require('../../graphql')
 const {
   GraphQLID,
   GraphQLList,
@@ -69,28 +69,20 @@ module.exports = ({ contentType, nodeTypes }) => {
 }
 
 function extendNodeType (contentType, nodeType, nodeTypes) {
+  const payload = { contentType, nodeTypes, nodeType, graphql }
   const fields = {}
 
   for (const mimeType in contentType.options.mimeTypes) {
     const transformer = contentType.options.mimeTypes[mimeType]
     if (typeof transformer.extendNodeType === 'function') {
-      Object.assign(fields, transformer.extendNodeType({
-        contentType,
-        nodeTypes,
-        nodeType
-      }))
+      Object.assign(fields, transformer.extendNodeType(payload))
     }
   }
 
   for (const fieldName in contentType.options.fields) {
     const field = contentType.options.fields[fieldName]
     if (typeof field === 'function') {
-      fields[fieldName] = field({
-        contentType,
-        nodeTypes,
-        nodeType,
-        graphql
-      })
+      fields[fieldName] = field(payload)
     }
   }
 
