@@ -1,3 +1,4 @@
+const url = require('url')
 const path = require('path')
 const mime = require('mime-types')
 
@@ -11,6 +12,12 @@ exports.isFile = value => {
     const ext = path.extname(value).toLowerCase()
 
     if (ext.length && mimeType && mimeType !== 'application/x-msdownload') {
+      const { hostname, pathname } = url.parse(value)
+
+      if (hostname && pathname === '/') {
+        return false
+      }
+
       return !SUPPORTED_IMAGE_TYPES.includes(ext)
     }
   }

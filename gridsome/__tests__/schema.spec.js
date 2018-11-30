@@ -161,6 +161,32 @@ test('create connection', async () => {
   expect(data.allTestPost.edges[1].node.title).toEqual('test 1')
 })
 
+test('sort nodes collection', async () => {
+  const contentType = api.store.addContentType({
+    typeName: 'TestPost'
+  })
+
+  contentType.addNode({ title: 'c' })
+  contentType.addNode({ title: 'b' })
+  contentType.addNode({ title: 'a' })
+
+  const query = `{
+    allTestPost (sortBy: "title", order: ASC) {
+      edges {
+        node { title }
+      }
+    }
+  }`
+
+  const { errors, data } = await createSchemaAndExecute(query)
+
+  expect(errors).toBeUndefined()
+  expect(data.allTestPost.edges.length).toEqual(3)
+  expect(data.allTestPost.edges[0].node.title).toEqual('a')
+  expect(data.allTestPost.edges[1].node.title).toEqual('b')
+  expect(data.allTestPost.edges[2].node.title).toEqual('c')
+})
+
 test('get nodes by path regex', async () => {
   const posts = api.store.addContentType({
     typeName: 'TestPost'
@@ -560,6 +586,39 @@ test('should format dates from schema', async () => {
   expect(data.testPostDate.dateObject.date).toEqual('10/10/2018')
 })
 
+test('add custom schema fields', async () => {
+  const contentType = api.store.addContentType({
+    typeName: 'TestPost'
+  })
+
+  contentType.addNode({
+    id: '1',
+    fields: {
+      myField: 'test'
+    }
+  })
+
+  contentType.addSchemaField('myField', payload => {
+    const { nodeTypes, nodeType, graphql } = payload
+
+    expect(payload.contentType).toEqual(contentType)
+    expect(nodeTypes).toHaveProperty('TestPost')
+    expect(nodeTypes['TestPost']).toEqual(nodeType)
+    expect(graphql).toHaveProperty('graphql')
+
+    return {
+      type: graphql.GraphQLString,
+      resolve: () => 'my-custom-value'
+    }
+  })
+
+  const query = '{ testPost (id: "1") { myField }}'
+  const { errors, data } = await createSchemaAndExecute(query)
+
+  expect(errors).toBeUndefined()
+  expect(data.testPost.myField).toEqual('my-custom-value')
+})
+
 test('transformer extends node type', async () => {
   const posts = api.store.addContentType({
     typeName: 'TestPost'
@@ -671,6 +730,8 @@ test('process file types in schema', async () => {
         file: '/assets/document.pdf',
         file2: 'https://www.example.com/assets/document.pdf',
         file3: './dummy.pdf',
+        url: 'https://www.gridsome.org',
+        url2: 'https://www.gridsome.com',
         text: 'pdf'
       })
     }
@@ -681,6 +742,8 @@ test('process file types in schema', async () => {
       file
       file2
       file3
+      url
+      url2
       text
     }
   }`)
@@ -695,6 +758,8 @@ test('process file types in schema', async () => {
   expect(data.testPost.file3.type).toEqual('file')
   expect(data.testPost.file3.mimeType).toEqual('application/pdf')
   expect(data.testPost.file3.src).toEqual('/assets/files/dummy.pdf')
+  expect(data.testPost.url).toEqual('https://www.gridsome.org')
+  expect(data.testPost.url2).toEqual('https://www.gridsome.com')
   expect(data.testPost.text).toEqual('pdf')
 })
 

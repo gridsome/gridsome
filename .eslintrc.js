@@ -10,6 +10,14 @@ module.exports = {
   overrides: [
     {
       files: [
+        'gridsome.client.js'
+      ],
+      rules: {
+        'node/no-unsupported-features/es-syntax': 'off'
+      }
+    },
+    {
+      files: [
         'scripts/**/*.js',
         '**/__tests__/**/*.js'
       ],
