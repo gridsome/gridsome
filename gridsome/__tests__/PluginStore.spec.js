@@ -148,18 +148,22 @@ test('add type with custom fields in route', () => {
 
   const contentType = api.store.addContentType({
     typeName: 'TestPost',
-    route: '/:test/:test_raw/:test2/:slug'
+    route: '/:test/:test_raw/:numeric/:author/:slug'
   })
 
   const node = contentType.addNode({
     title: 'Lorem ipsum',
     fields: {
       test: 'My value',
-      test2: 10
+      numeric: 10,
+      author: {
+        typeName: 'Author',
+        id: '2'
+      }
     }
   })
 
-  expect(node.path).toEqual('/my-value/My%20value/10/lorem-ipsum')
+  expect(node.path).toEqual('/my-value/My%20value/10/2/lorem-ipsum')
 })
 
 test('transform node', () => {
