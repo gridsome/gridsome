@@ -150,21 +150,31 @@ function createObjectType (obj, fieldName, typeName, nodeTypes) {
 }
 
 function createRefType (ref, fieldName, fieldTypeName, nodeTypes) {
+  const typeName = Array.isArray(ref.typeName)
+    ? ref.typeName.filter(typeName => nodeTypes.hasOwnProperty(typeName))
+    : ref.typeName
+
   const res = {
-    resolve: createRefResolver(ref)
+    resolve: createRefResolver({ ...ref, typeName })
   }
 
-  if (Array.isArray(ref.typeName)) {
-    res.type = ref.typeName.length > 1
-      ? new GraphQLUnionType({
+  if (Array.isArray(typeName)) {
+    if (typeName.length > 1) {
+      res.type = new GraphQLUnionType({
         interfaces: [nodeInterface],
         name: createTypeName(fieldTypeName, fieldName + 'Ref'),
         description: `Reference to ${ref.typeName.join(', ')} nodes`,
-        types: () => ref.typeName.map(typeName => nodeTypes[typeName])
+        types: () => typeName.map(typeName => nodeTypes[typeName])
       })
-      : nodeTypes[ref.typeName[0]]
+    } else if (typeName.length === 1) {
+      res.type = nodeTypes[typeName[0]]
+    } else {
+      throw new Error(`No reference found for ${fieldName}.`)
+    }
+  } else if (nodeTypes.hasOwnProperty(typeName)) {
+    res.type = nodeTypes[typeName]
   } else {
-    res.type = nodeTypes[ref.typeName]
+    throw new Error(`No reference found for ${fieldName}.`)
   }
 
   if (ref.isList) {
