@@ -1,5 +1,5 @@
 const axios = require('axios')
-const { forEach } = require('lodash')
+const { forEach, uniq } = require('lodash')
 const { cullByWordCount } = require('./utils')
 const { DEFAULT_ENTITIES, DEFAULT_EXCLUDES } = require('./constants')
 const Entity = require('./entities/Entity')
@@ -13,6 +13,7 @@ class DrupalSource {
       apiBase: 'jsonapi',
       views: [], // deprecated
       entities: [],
+      excludes: [],
       format: 'json'
     }
   }
@@ -82,13 +83,17 @@ class DrupalSource {
    * Once each entityType is processed, loop through again and buildRelationships()
    */
   async processEntities () {
+    const { excludes: userExcludes = [] } = this.options
+
     try {
       const capturedEntities = []
+      // create unique array of user passed entities and defaultEntities
+      const excludes = uniq(this.defaultExcludes.concat(userExcludes))
 
       // loop through all the properties in apiSchema and create Entity instances
       // excluding any property with a key that is in DEFAULT_EXCLUDES
       forEach(this.apiSchema, (url, entityType) => {
-        if (!this.defaultExcludes.includes(entityType)) {
+        if (!excludes.includes(entityType)) {
           // creating an instance of the entity class, see ./entities/*
           this.entities[entityType] = new Entity(this, { entityType, url })
 
