@@ -12,7 +12,6 @@ class DrupalSource {
       baseUrl: '',
       apiBase: 'jsonapi',
       views: [], // deprecated
-      entities: [],
       excludes: [],
       format: 'json'
     }
