@@ -21,7 +21,7 @@ module.exports = {
     // 'file--file',
     'filter_format--filter_format',
     // 'image_style--image_style',
-    'node_type--node_type',
+    // 'node_type--node_type',
     // 'node--article',
     // 'node--page',
     'rdf_mapping--rdf_mapping',
