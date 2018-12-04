@@ -4,8 +4,11 @@ const EventEmitter = require('events')
 const camelCase = require('camelcase')
 const dateFormat = require('dateformat')
 const slugify = require('@sindresorhus/slugify')
-const { mapKeys, cloneDeep } = require('lodash')
+const { cloneDeep } = require('lodash')
 const { warn } = require('../utils/log')
+
+const nonValidCharsRE = new RegExp('[^a-zA-Z0-9_]', 'g')
+const leadingNumberRE = new RegExp('^([0-9])')
 
 class ContentTypeCollection extends EventEmitter {
   constructor (store, pluginStore, options) {
@@ -79,9 +82,7 @@ class ContentTypeCollection extends EventEmitter {
       this.transformNodeOptions(options, internal)
     }
 
-    const fields = mapKeys(options.fields || {}, (v, key) => {
-      return key.startsWith('__') ? key : camelCase(key)
-    })
+    const { fields = {}} = options
 
     node.title = options.title || fields.title || node.title
     node.date = options.date || fields.date || node.date
@@ -121,9 +122,7 @@ class ContentTypeCollection extends EventEmitter {
       this.transformNodeOptions(options, internal)
     }
 
-    const fields = mapKeys(options.fields, (v, key) => {
-      return key.startsWith('__') ? key : camelCase(key)
-    })
+    const { fields = {}} = options
 
     node.uid = hash.update(typeName + node.id).digest('hex')
     node.title = options.title || fields.title || node.id
@@ -177,12 +176,27 @@ class ContentTypeCollection extends EventEmitter {
       return field
     }
 
+    const createKey = key => {
+      key = key.replace(nonValidCharsRE, '_')
+      key = camelCase(key)
+      key = key.replace(leadingNumberRE, '_$1')
+
+      return key
+    }
+
     const processFields = fields => {
       const res = {}
 
       for (const key in fields) {
-        res[key] = Array.isArray(fields[key])
-          ? fields[key].map(v => processField(v))
+        if (key.startsWith('__')) {
+          // don't touch keys which starts with __ because they are
+          // meant for internal use and will not be part of the schema
+          res[key] = fields[key]
+          continue
+        }
+
+        res[createKey(key)] = Array.isArray(fields[key])
+          ? fields[key].map(processField)
           : processField(fields[key])
       }
 

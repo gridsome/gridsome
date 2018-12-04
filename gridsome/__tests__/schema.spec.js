@@ -118,6 +118,21 @@ test('get node by path', async () => {
   expect(data.testPost.id).toEqual('1')
 })
 
+test('get node by id', async () => {
+  const contentType = api.store.addContentType({
+    typeName: 'TestPost'
+  })
+
+  contentType.addNode({ id: '20', title: 'Test' })
+
+  const query = '{ testPost (id: "20") { id title }}'
+  const { errors, data } = await createSchemaAndExecute(query)
+
+  expect(errors).toBeUndefined()
+  expect(data.testPost.id).toEqual('20')
+  expect(data.testPost.title).toEqual('Test')
+})
+
 test('fail if node with given ID is missing', async () => {
   const posts = api.store.addContentType({
     typeName: 'TestPost'
@@ -548,6 +563,85 @@ test('should get values from object fields', async () => {
   expect(errors).toBeUndefined()
   expect(data.testPost.myObject.value).toEqual('test1')
   expect(data.testPost.myObject.otherObject.value).toEqual('test2')
+})
+
+test('should convert keys to valid field names', async () => {
+  const contentType = api.store.addContentType({
+    typeName: 'TestPost'
+  })
+
+  const node = contentType.addNode({
+    id: '1',
+    fields: {
+      'my-object': {
+        '2value': 'test',
+        ':value': 'test',
+        'test:value': 'test',
+        'other-object': {
+          value: 'test'
+        }
+      }
+    }
+  })
+
+  const { errors, data } = await createSchemaAndExecute(`{
+    testPost (id: "1") {
+      myObject {
+        _2value
+        value
+        testValue
+        otherObject {
+          value
+        }
+      }
+    }
+  }`)
+
+  expect(errors).toBeUndefined()
+  expect(data.testPost).toMatchObject({
+    myObject: {
+      _2value: 'test',
+      value: 'test',
+      testValue: 'test',
+      otherObject: {
+        value: 'test'
+      }
+    }
+  })
+})
+
+test('preserve internal custom fields', async () => {
+  const contentType = api.store.addContentType({
+    typeName: 'TestPost'
+  })
+
+  const node = contentType.addNode({
+    id: '1',
+    fields: {
+      __hidden: true,
+      nested: {
+        value: 'test',
+        '__nested-hidden': true
+      }
+    }
+  })
+
+  const { errors, data } = await createSchemaAndExecute(`{
+    testPost (id: "1") {
+      __hidden
+      nested {
+        value
+        __nested_hidden
+      }
+    }
+  }`)
+
+  expect(data).toBeUndefined()
+  expect(errors).toHaveLength(2)
+  expect(errors[0].message).toEqual('Cannot query field "__hidden" on type "TestPost".')
+  expect(errors[1].message).toEqual('Cannot query field "__nested_hidden" on type "TestPostNested".')
+  expect(node.fields.__hidden).toBeTruthy()
+  expect(node.fields.nested['__nested-hidden']).toBeTruthy()
 })
 
 test('should format dates from schema', async () => {
