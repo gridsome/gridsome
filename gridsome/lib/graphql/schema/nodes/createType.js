@@ -1,6 +1,4 @@
-const camelCase = require('camelcase')
 const graphql = require('../../graphql')
-const inferTypes = require('../infer-types')
 const { dateType } = require('../types/date')
 const { mapValues, isEmpty } = require('lodash')
 const { nodeInterface } = require('../interfaces')
