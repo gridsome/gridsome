@@ -16,7 +16,9 @@ export default {
 
   props: {
     to: { type: [Object, String] },
-    page: { type: Number }
+    page: { type: Number },
+    activeClass: { type: String },
+    exactActiveClass: { type: String }
   },
 
   render: (h, { data, props, parent, children, ...res }) => {
@@ -29,6 +31,8 @@ export default {
     const to = typeof props.to === 'string'
       ? { path: props.to, params: {}}
       : { params: {}, ...props.to }
+    let activeClass = typeof props.activeClass === 'string' ? props.activeClass : 'active'
+    let exactActiveClass = typeof props.exactActiveClass === 'string' ? props.exactActiveClass : 'active--exact'
 
     if (props.page) {
       to.params.page = props.page > 1 ? props.page : null
@@ -54,8 +58,8 @@ export default {
       ref,
       attrs: {
         to,
-        activeClass: 'active',
-        exactActiveClass: 'active--exact',
+        activeClass: activeClass,
+        exactActiveClass: exactActiveClass,
         ...data.attrs
       },
       domProps: {
