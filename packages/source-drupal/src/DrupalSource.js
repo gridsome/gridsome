@@ -86,8 +86,8 @@ class DrupalSource {
 
     try {
       const capturedEntities = []
-      // create unique array of user passed entities and defaultEntities
-      const excludes = uniq(this.defaultExcludes.concat(userExcludes))
+      // create unique array of user passed excludes and defaultExcludes
+      const excludes = userExcludes.length ? uniq(userExcludes) : DEFAULT_EXCLUDES
 
       // loop through all the properties in apiSchema and create Entity instances
       // excluding any property with a key that is in DEFAULT_EXCLUDES

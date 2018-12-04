@@ -1,3 +1,5 @@
-const DrupalSource = require('./src/DrupalSource')
+const { DEFAULT_EXCLUDES } = require('./src/constants')
 
-module.exports = DrupalSource
+module.exports = {
+  excludes: DEFAULT_EXCLUDES.slice()
+}
