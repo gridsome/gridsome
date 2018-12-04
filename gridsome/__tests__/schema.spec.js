@@ -116,6 +116,21 @@ test('get node by path', async () => {
   expect(data.testPost.id).toEqual('1')
 })
 
+test('get node by id', async () => {
+  const contentType = api.store.addContentType({
+    typeName: 'TestPost'
+  })
+
+  contentType.addNode({ id: '20', title: 'Test' })
+
+  const query = '{ testPost (id: "20") { id title }}'
+  const { errors, data } = await createSchemaAndExecute(query)
+
+  expect(errors).toBeUndefined()
+  expect(data.testPost.id).toEqual('20')
+  expect(data.testPost.title).toEqual('Test')
+})
+
 test('fail if node with given ID is missing', async () => {
   const contentType = api.store.addContentType({
     typeName: 'TestPost'
