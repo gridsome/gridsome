@@ -41,7 +41,7 @@ class Entity {
       console.log(`Intializing ${this.getEntityTypeName}...`)
 
       await this.fetchData()
-      
+
       // don't build the graphQl if there is no response
       if (this.response.length) await this.buildGraphQl()
       else console.log(`${this.getEntityTypeName} has no values in response`)
@@ -87,6 +87,7 @@ class Entity {
       return fetchRecurse(this.url)
     } catch ({ message }) {
       // should catch 403s and 405
+      // throw Error stops process from running
       console.error(`fetchData(): ${this.getEntityTypeName} ${message}`)
     }
   }

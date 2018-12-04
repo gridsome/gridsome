@@ -1,8 +1,8 @@
 const axios = require('axios')
 const { forEach, uniq } = require('lodash')
 const { cullByWordCount } = require('./utils')
-const { DEFAULT_ENTITIES, DEFAULT_EXCLUDES } = require('./constants')
-const Entity = require('./entities/Entity')
+const { DEFAULT_EXCLUDES } = require('./constants')
+const Entity = require('./Entity')
 
 class DrupalSource {
   // defaultOptions merged with this.options in App.vue
@@ -21,7 +21,6 @@ class DrupalSource {
     if (!options.baseUrl) throw new Error('baseUrl option is required')
 
     this.options = options
-    this.defaultEntities = DEFAULT_ENTITIES
     this.defaultExcludes = DEFAULT_EXCLUDES
     this.entities = {}
     this.apiSchema = {}
