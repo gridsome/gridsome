@@ -424,8 +424,7 @@ test('should convert keys to valid field names', async () => {
     }
   }`)
 
-  expect(errors).toBeUndefined()
-  expect(data.testPost).toMatchObject({
+  const obj = {
     myObject: {
       _2value: 'test',
       value: 'test',
@@ -434,7 +433,11 @@ test('should convert keys to valid field names', async () => {
         value: 'test'
       }
     }
-  })
+  }
+
+  expect(errors).toBeUndefined()
+  expect(data.testPost).toMatchObject(obj)
+  expect(node.fields).toMatchObject(obj)
 })
 
 test('preserve internal custom fields', async () => {
