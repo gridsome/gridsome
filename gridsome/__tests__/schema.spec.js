@@ -599,7 +599,7 @@ test('process image types in schema', async () => {
         image: '/assets/350x250.png',
         image2: 'https://www.example.com/images/image.png',
         image3: './350x250.png',
-        image4: './1000x600.png'
+        image4: '1000x600.png'
       })
     }
   })

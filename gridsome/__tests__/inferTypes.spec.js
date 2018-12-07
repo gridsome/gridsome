@@ -110,7 +110,7 @@ test('infer image fields', () => {
     }
   ], 'TestPost')
 
-  expect(types.image1.type).toEqual(imageType.type)
+  expect(types.image1.type).toEqual(GraphQLString)
   expect(types.image2.type).toEqual(imageType.type)
   expect(types.image3.type).toEqual(imageType.type)
   expect(types.image4.type).toEqual(imageType.type)
