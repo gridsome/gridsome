@@ -103,8 +103,8 @@ class PluginAPI {
     this._on('beforeRenderHTML', fn)
   }
 
-  beforeProcessImages (fn) {
-    this._on('beforeProcessImages', fn)
+  beforeProcessAssets (fn) {
+    this._on('beforeProcessAssets', fn)
   }
 
   afterBuild (fn) {

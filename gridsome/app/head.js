@@ -30,10 +30,10 @@ const head = {
   link: []
 }
 
-icons.favicons.forEach(({ type, width, height, src: href }) => {
+icons.favicons.forEach(({ width, height, src: href }) => {
   head.link.push({
     rel: 'icon',
-    type: `image/${type}`,
+    type: icons.faviconMimeType,
     sizes: `${width}x${height}`,
     href
   })
@@ -42,6 +42,7 @@ icons.favicons.forEach(({ type, width, height, src: href }) => {
 icons.touchicons.forEach(({ width, height, src: href }) => {
   head.link.push({
     rel: `apple-touch-icon${icons.precomposed ? '-precomposed' : ''}`,
+    type: icons.touchiconMimeType,
     sizes: `${width}x${height}`,
     href
   })
