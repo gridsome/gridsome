@@ -18,10 +18,9 @@ exports.processImage = async function ({
   resizeImage = false
 }) {
   if (cachePath && await fs.exists(cachePath)) {
-    fs.copy(cachePath, destPath)
-    return
+    return fs.copy(cachePath, destPath)
   } else if (await fs.exists(destPath)) {
-    return
+    return // image is already processed
   }
 
   const { ext } = path.parse(filePath)
