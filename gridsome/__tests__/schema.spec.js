@@ -43,7 +43,9 @@ afterAll(() => {
 
 test('add meta data', async () => {
   api.store.addMetaData('myValue', {
-    test: 'Test Value'
+    test: 'Test Value',
+    image: path.join(context, 'assets', '350x250.png'),
+    file: path.join(context, 'assets', 'dummy.pdf')
   })
 
   api.store.addMetaData('myValue', {
@@ -77,6 +79,8 @@ test('add meta data', async () => {
     metaData {
       myValue {
         test
+        image
+        file
         object {
           list
           value
@@ -94,6 +98,8 @@ test('add meta data', async () => {
 
   expect(errors).toBeUndefined()
   expect(data.metaData.myValue.test).toEqual('Test Value')
+  expect(data.metaData.myValue.image.src).toEqual('/assets/static/350x250-w350.test.png')
+  expect(data.metaData.myValue.file.src).toEqual('/assets/files/dummy.pdf')
   expect(data.metaData.myValue.object.list).toHaveLength(3)
   expect(data.metaData.myValue.object.value).toEqual(1000)
   expect(data.metaData.myOtherValue).toEqual('Value')
