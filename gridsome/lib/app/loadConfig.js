@@ -205,7 +205,7 @@ function normalizeIconsConfig (config = {}) {
     })
 
   res.touchicon = typeof icon.touchicon === 'string'
-    ? { src: icon.touchicon, sizes: faviconSizes, precomposed: false }
+    ? { src: icon.touchicon, sizes: touchiconSizes, precomposed: false }
     : Object.assign({}, icon.touchicon, {
       sizes: touchiconSizes,
       src: res.favicon.src,
