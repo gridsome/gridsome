@@ -4,8 +4,11 @@ const EventEmitter = require('events')
 const camelCase = require('camelcase')
 const dateFormat = require('dateformat')
 const slugify = require('@sindresorhus/slugify')
-const { mapKeys, cloneDeep, isObject } = require('lodash')
+const { cloneDeep, isObject } = require('lodash')
 const { warn } = require('../utils/log')
+
+const nonValidCharsRE = new RegExp('[^a-zA-Z0-9_]', 'g')
+const leadingNumberRE = new RegExp('^([0-9])')
 
 class ContentTypeCollection extends EventEmitter {
   constructor (store, pluginStore, options) {
@@ -68,9 +71,7 @@ class ContentTypeCollection extends EventEmitter {
       this.transformNodeOptions(options, internal)
     }
 
-    const fields = mapKeys(options.fields || {}, (v, key) => {
-      return key.startsWith('__') ? key : camelCase(key)
-    })
+    const { fields = {}} = options
 
     node.title = options.title || fields.title || node.title
     node.date = options.date || fields.date || node.date
@@ -96,7 +97,7 @@ class ContentTypeCollection extends EventEmitter {
     const { typeName } = this.options
     const internal = this.createInternals(options.internal)
     const id = options.id || options._id || this.makeUid(JSON.stringify(options))
-    let node = { id, typeName, internal }
+    const node = { id, typeName, internal }
 
     // TODO: remove before 1.0
     node._id = id
@@ -106,9 +107,7 @@ class ContentTypeCollection extends EventEmitter {
       this.transformNodeOptions(options, internal)
     }
 
-    const fields = mapKeys(options.fields, (v, key) => {
-      return key.startsWith('__') ? key : camelCase(key)
-    })
+    const { fields = {}} = options
 
     node.title = options.title || fields.title || node.id
     node.date = options.date || fields.date || new Date().toISOString()
@@ -134,7 +133,7 @@ class ContentTypeCollection extends EventEmitter {
 
   transformNodeOptions (options, internal) {
     const result = this.transform(internal)
-      
+
     if (result.title) options.title = result.title
     if (result.slug) options.slug = result.slug
     if (result.path) options.path = result.path
@@ -143,7 +142,7 @@ class ContentTypeCollection extends EventEmitter {
     if (result.excerpt) options.excerpt = result.excerpt
 
     if (result.fields) {
-      options.fields = Object.assign(options.fields || {}, result.fields)
+      options.fields = Object.assign(options.fields || {}, result.fields)
     }
   }
 
@@ -156,16 +155,31 @@ class ContentTypeCollection extends EventEmitter {
           if (path.extname(field).length > 1) {
             return this.resolveFilePath(origin, field)
           }
-        default:
-          return field
       }
+
+      return field
+    }
+
+    const createKey = key => {
+      key = key.replace(nonValidCharsRE, '_')
+      key = camelCase(key)
+      key = key.replace(leadingNumberRE, '_$1')
+
+      return key
     }
 
     const processFields = fields => {
       const res = {}
 
       for (const key in fields) {
-        res[key] = Array.isArray(fields[key])
+        if (key.startsWith('__')) {
+          // don't touch keys which starts with __ because they are
+          // meant for internal use and will not be part of the schema
+          res[key] = fields[key]
+          continue
+        }
+
+        res[createKey(key)] = Array.isArray(fields[key])
           ? fields[key].map(processField)
           : processField(fields[key])
       }

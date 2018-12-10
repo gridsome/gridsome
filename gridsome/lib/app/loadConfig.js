@@ -63,6 +63,12 @@ module.exports = (context, options = {}, pkg = {}) => {
   config.maxImageWidth = localConfig.maxImageWidth || 1920
   config.imageExtensions = SUPPORTED_IMAGE_TYPES
 
+  config.runtimeCompiler = localConfig.runtimeCompiler || false
+
+  config.transpileDependencies = Array.isArray(localConfig.transpileDependencies)
+    ? localConfig.transpileDependencies.slice()
+    : []
+
   // max cache age for html markup in serve mode
   config.maxCacheAge = localConfig.maxCacheAge || 1000
 
@@ -201,7 +207,7 @@ function normalizeIconsConfig (config = {}) {
     })
 
   res.touchicon = typeof icon.touchicon === 'string'
-    ? { src: icon.touchicon, sizes: faviconSizes, precomposed: false }
+    ? { src: icon.touchicon, sizes: touchiconSizes, precomposed: false }
     : Object.assign({}, icon.touchicon, {
       sizes: touchiconSizes,
       src: res.favicon.src,

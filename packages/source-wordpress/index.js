@@ -96,6 +96,10 @@ class WordPressSource {
         const postTypeName = makeTypeName(type)
         const collection = getContentType(postTypeName)
 
+        if (!collection) {
+          continue
+        }
+
         collection.addReference(options.rest_base, { typeName, key: '_id' })
       }
 
@@ -116,7 +120,7 @@ class WordPressSource {
       }
 
       for (const post of posts) {
-        let fields = {}
+        const fields = {}
 
         if (post.type === 'attachment') {
           fields.url = post.source_url
@@ -129,7 +133,7 @@ class WordPressSource {
           fields.excerpt = post.excerpt ? post.excerpt.rendered : ''
           fields.featuredMedia = post.featured_media
         }
-        
+
         // add references if post has any taxonomy rest bases as properties
         for (const type in restBases.taxonomies) {
           const propName = restBases.taxonomies[type]

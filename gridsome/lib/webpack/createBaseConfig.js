@@ -28,27 +28,31 @@ module.exports = (app, { isProd, isServer }) => {
   config.resolve
     .set('symlinks', true)
     .alias
-      .set('~', resolve('src', app.context))
-      .set('@', resolve('src', app.context))
-      .set('gridsome$', path.resolve(projectConfig.appPath, 'index.js'))
-      .end()
+    .set('~', resolve('src', app.context))
+    .set('@', resolve('src', app.context))
+    .set('gridsome$', path.resolve(projectConfig.appPath, 'index.js'))
+    .end()
     .extensions
-      .merge(['.js', '.vue'])
-      .end()
+    .merge(['.js', '.vue'])
+    .end()
     .modules
-      .add(resolve('../../node_modules'))
-      .add(resolve('../../../packages'))
-      .add('node_modules')
+    .add(resolve('../../node_modules'))
+    .add(resolve('../../../packages'))
+    .add('node_modules')
 
   config.resolveLoader
     .set('symlinks', true)
     .modules
-      .add(resolve('./loaders'))
-      .add(resolve('../../node_modules'))
-      .add(resolve('../../../packages'))
-      .add('node_modules')
+    .add(resolve('./loaders'))
+    .add(resolve('../../node_modules'))
+    .add(resolve('../../../packages'))
+    .add('node_modules')
 
   config.module.noParse(/^(vue|vue-router)$/)
+
+  if (app.config.runtimeCompiler) {
+    config.resolve.alias.set('vue$', 'vue/dist/vue.esm.js')
+  }
 
   if (!isProd) {
     config.devtool('cheap-module-eval-source-map')
@@ -59,57 +63,64 @@ module.exports = (app, { isProd, isServer }) => {
   config.module.rule('vue')
     .test(/\.vue$/)
     .use('cache-loader')
-      .loader('cache-loader')
-      .options({
-        cacheDirectory,
-        cacheIdentifier
-      })
-      .end()
+    .loader('cache-loader')
+    .options({
+      cacheDirectory,
+      cacheIdentifier
+    })
+    .end()
     .use('vue-loader')
-      .loader('vue-loader')
-      .options({
-        compilerOptions: {
-          preserveWhitespace: false,
-          modules: [
-            require('./modules/assets')()
-          ]
-        },
-        cacheDirectory,
-        cacheIdentifier
-      })
+    .loader('vue-loader')
+    .options({
+      compilerOptions: {
+        preserveWhitespace: false,
+        modules: [
+          require('./modules/assets')()
+        ]
+      },
+      cacheDirectory,
+      cacheIdentifier
+    })
 
   // js
 
   config.module.rule('js')
     .test(/\.jsx?$/)
     .exclude
-      .add(filepath => {
-        if (/\.vue\.jsx?$/.test(filepath)) {
-          return false
-        }
-        if (/gridsome\.client\.js$/.test(filepath)) {
-          return false
-        }
-        if (filepath.startsWith(projectConfig.appPath)) {
-          return false
-        }
-        return /node_modules/.test(filepath)
-      })
-      .end()
+    .add(filepath => {
+      if (/\.vue\.jsx?$/.test(filepath)) {
+        return false
+      }
+      if (/gridsome\.client\.js$/.test(filepath)) {
+        return false
+      }
+      if (app.config.transpileDependencies.some(dep => {
+        return typeof dep === 'string'
+          ? filepath.includes(path.normalize(dep))
+          : filepath.match(dep)
+      })) {
+        return false
+      }
+      if (filepath.startsWith(projectConfig.appPath)) {
+        return false
+      }
+      return /node_modules/.test(filepath)
+    })
+    .end()
     .use('cache-loader')
-      .loader('cache-loader')
-      .options({
-        cacheDirectory,
-        cacheIdentifier
-      })
-      .end()
+    .loader('cache-loader')
+    .options({
+      cacheDirectory,
+      cacheIdentifier
+    })
+    .end()
     .use('babel-loader')
-      .loader('babel-loader')
-      .options({
-        presets: [
-          require.resolve('./babel-preset')
-        ]
-      })
+    .loader('babel-loader')
+    .options({
+      presets: [
+        require.resolve('./babel-preset')
+      ]
+    })
 
   // css
 
@@ -127,47 +138,47 @@ module.exports = (app, { isProd, isServer }) => {
   config.module.rule('images')
     .test(/\.(png|jpe?g|gif)(\?.*)?$/)
     .use('url-loader')
-      .loader('url-loader')
-      .options({
-        limit: inlineLimit,
-        name: `${assetsDir}/img/[name].[hash:8].[ext]`
-      })
+    .loader('url-loader')
+    .options({
+      limit: inlineLimit,
+      name: `${assetsDir}/img/[name].[hash:8].[ext]`
+    })
 
   config.module.rule('svg')
     .test(/\.(svg)(\?.*)?$/)
     .use('file-loader')
-      .loader('file-loader')
-      .options({
-        name: `${assetsDir}/img/[name].[hash:8].[ext]`
-      })
+    .loader('file-loader')
+    .options({
+      name: `${assetsDir}/img/[name].[hash:8].[ext]`
+    })
 
   config.module.rule('media')
     .test(/\.(mp4|webm|ogg|mp3|wav|flac|aac)(\?.*)?$/)
     .use('url-loader')
-      .loader('url-loader')
-      .options({
-        limit: inlineLimit,
-        name: `${assetsDir}/media/[name].[hash:8].[ext]`
-      })
+    .loader('url-loader')
+    .options({
+      limit: inlineLimit,
+      name: `${assetsDir}/media/[name].[hash:8].[ext]`
+    })
 
   config.module.rule('fonts')
     .test(/\.(woff2?|eot|ttf|otf)(\?.*)?$/i)
     .use('url-loader')
-      .loader('url-loader')
-      .options({
-        limit: inlineLimit,
-        name: `${assetsDir}/fonts/[name].[hash:8].[ext]`
-      })
+    .loader('url-loader')
+    .options({
+      limit: inlineLimit,
+      name: `${assetsDir}/fonts/[name].[hash:8].[ext]`
+    })
 
   // data
 
   config.module.rule('yaml')
     .test(/\.ya?ml$/)
     .use('json-loader')
-      .loader('json-loader')
-      .end()
+    .loader('json-loader')
+    .end()
     .use('yaml-loader')
-      .loader('yaml-loader')
+    .loader('yaml-loader')
 
   // graphql
 
@@ -175,12 +186,12 @@ module.exports = (app, { isProd, isServer }) => {
   config.module.rule('graphql')
     .resourceQuery(/blockType=(graphql|page-query)/)
     .use('page-query')
-      .loader(require.resolve('./loaders/page-query'))
+    .loader(require.resolve('./loaders/page-query'))
 
   config.module.rule('static-graphql')
     .resourceQuery(/blockType=static-query/)
     .use('static-query')
-      .loader(require.resolve('./loaders/static-query'))
+    .loader(require.resolve('./loaders/static-query'))
 
   // plugins
 

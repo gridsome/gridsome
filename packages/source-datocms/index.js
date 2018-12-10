@@ -24,7 +24,7 @@ const withNoEmptyValues = (object) => {
 }
 
 class DatoCmsSource {
-  static defaultOptions() {
+  static defaultOptions () {
     return {
       typeName: 'DatoCms',
       apiToken: undefined,
@@ -41,16 +41,16 @@ class DatoCmsSource {
 
   async fetchContent (store) {
     const { addContentType, getContentType, makeTypeName, slugify } = store
-    const { apiToken, apiUrl, previewMode, typeName, routes } = this.options
+    const { apiToken, apiUrl, previewMode, routes } = this.options
 
     const clientHeaders = {
       'X-Reason': 'dump',
-      'X-SSG': 'gridsome',
+      'X-SSG': 'gridsome'
     }
 
-    const client = apiUrl ?
-      new SiteClient(apiToken, clientHeaders, apiUrl) :
-      new SiteClient(apiToken, clientHeaders)
+    const client = apiUrl
+      ? new SiteClient(apiToken, clientHeaders, apiUrl)
+      : new SiteClient(apiToken, clientHeaders)
 
     const loader = new Loader(client, previewMode)
     await loader.load()
@@ -68,7 +68,7 @@ class DatoCmsSource {
 
       const contentType = {
         typeName: makeTypeName(itemType.name),
-        route: routes[itemType.name] || `/${slugify(itemType.name)}/:slug`,
+        route: routes[itemType.name] || `/${slugify(itemType.name)}/:slug`
       }
 
       const collection = addContentType(contentType)
@@ -119,10 +119,9 @@ class DatoCmsSource {
 
             return fields
           } else {
-
-            fields[camelize(field.apiKey)] = val && val.toMap ?
-              withNoEmptyValues(val.toMap()) :
-              withNoEmptyValues(val)
+            fields[camelize(field.apiKey)] = val && val.toMap
+              ? withNoEmptyValues(val.toMap())
+              : withNoEmptyValues(val)
 
             return fields
           }

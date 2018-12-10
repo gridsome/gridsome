@@ -28,7 +28,7 @@ class Source extends EventEmitter {
         nodeCache
       })
     })
-    
+
     this.context = app.context
     this.store = app.store
     this.mime = mime
