@@ -1,5 +1,5 @@
 const { isEmpty } = require('lodash')
-const inferTypes = require('../infer-types')
+const { inferTypes } = require('../infer-types')
 const { GraphQLObjectType } = require('../../graphql')
 
 module.exports = (store, nodeTypes) => {

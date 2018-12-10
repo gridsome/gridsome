@@ -648,7 +648,7 @@ test('should convert keys to valid field names', async () => {
     typeName: 'TestPost'
   })
 
-  contentType.addNode({
+  const node = contentType.addNode({
     id: '1',
     fields: {
       'my-object': {
