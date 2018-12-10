@@ -1,18 +1,15 @@
-const camelCase = require('camelcase')
 const graphql = require('../../graphql')
-const inferTypes = require('../infer-types')
 const { dateType } = require('../types/date')
 const { mapValues, isEmpty } = require('lodash')
-const { refResolver } = require('../resolvers')
-
 const { nodeInterface } = require('../interfaces')
+const { createRefResolver } = require('../resolvers')
+const { inferTypes, createRefType } = require('../infer-types')
 
 const {
   GraphQLID,
   GraphQLList,
   GraphQLString,
   GraphQLNonNull,
-  GraphQLUnionType,
   GraphQLObjectType
 } = graphql
 
@@ -106,36 +103,23 @@ function createFields (contentType, customFields) {
 function createRefs (contentType, nodeTypes, fields) {
   if (isEmpty(contentType.options.refs)) return null
 
-  return mapValues(contentType.options.refs, (ref, key) => {
-    const { typeName, description } = ref
+  return mapValues(contentType.options.refs, ({ typeName, fieldName }, key) => {
     const field = fields[key] || { type: GraphQLString }
-
     const isList = field.type instanceof GraphQLList
-    let refType = nodeTypes[typeName]
-
-    if (Array.isArray(typeName)) {
-      // TODO: create union collection
-      const fieldTypeName = camelCase(key, { pascalCase: true })
-      refType = new GraphQLUnionType({
-        name: `${contentType.typeName}${fieldTypeName}Union`,
-        interfaces: [nodeInterface],
-        types: typeName.map(typeName => nodeTypes[typeName])
-      })
-    }
+    const ref = { typeName, isList }
+    const resolve = createRefResolver(ref)
 
     return {
-      description,
-      type: isList ? new GraphQLList(refType) : refType,
+      ...createRefType(ref, key, contentType.typeName, nodeTypes),
       resolve: (obj, args, context, info) => {
         const field = {
-          [info.fieldName]: {
+          [fieldName]: {
             typeName,
-            key: ref.key,
-            value: obj.fields[key]
+            id: obj.fields[key]
           }
         }
 
-        return refResolver(field, args, context, info)
+        return resolve(field, args, context, info)
       }
     }
   })

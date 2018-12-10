@@ -44,14 +44,20 @@ test('add node', () => {
     date: '2018-09-04T23:20:33.918Z'
   })
 
+  const entry = api.store.store.index.findOne({ uid: node.uid })
+
   expect(node).toHaveProperty('$loki')
   expect(node.id).toEqual('test')
+  expect(typeof node.uid).toEqual('string')
   expect(node.typeName).toEqual('TestPost')
   expect(node.title).toEqual('Lorem ipsum dolor sit amet')
   expect(node.slug).toEqual('lorem-ipsum-dolor-sit-amet')
   expect(node.date).toEqual('2018-09-04T23:20:33.918Z')
   expect(node.fields).toMatchObject({})
   expect(emit).toHaveBeenCalledTimes(1)
+  expect(entry.id).toEqual('test')
+  expect(entry.uid).toEqual(node.uid)
+  expect(entry.typeName).toEqual('TestPost')
 
   emit.mockRestore()
 })
@@ -60,7 +66,8 @@ test('update node', () => {
   const api = createPlugin()
 
   const contentType = api.store.addContentType({
-    typeName: 'TestPost'
+    typeName: 'TestPost',
+    route: '/test/:slug'
   })
 
   const emit = jest.spyOn(contentType, 'emit')
@@ -71,18 +78,25 @@ test('update node', () => {
   })
 
   const oldTimestamp = oldNode.internal.timestamp
+  const uid = oldNode.uid
 
   const node = contentType.updateNode('test', {
     title: 'New title'
   })
 
+  const entry = api.store.store.index.findOne({ uid: node.uid })
+
   expect(node.id).toEqual('test')
   expect(node.typeName).toEqual('TestPost')
   expect(node.title).toEqual('New title')
   expect(node.slug).toEqual('new-title')
+  expect(node.path).toEqual('/test/new-title')
   expect(node.date).toEqual('2018-09-04T23:20:33.918Z')
   expect(node.internal.timestamp).not.toEqual(oldTimestamp)
   expect(emit).toHaveBeenCalledTimes(2)
+  expect(entry.id).toEqual('test')
+  expect(entry.uid).toEqual(uid)
+  expect(entry.path).toEqual('/test/new-title')
 
   emit.mockRestore()
 })
@@ -95,12 +109,15 @@ test('remove node', () => {
   })
 
   const emit = jest.spyOn(contentType, 'emit')
+  const node = contentType.addNode({ id: 'test' })
 
-  contentType.addNode({ id: 'test' })
   contentType.removeNode('test')
+
+  const entry = api.store.store.index.findOne({ uid: node.uid })
 
   expect(contentType.getNode('test')).toBeNull()
   expect(emit).toHaveBeenCalledTimes(2)
+  expect(entry).toBeNull()
 
   emit.mockRestore()
 })
@@ -119,10 +136,8 @@ test('add type with ref', () => {
   })
 
   expect(contentType.options.refs.author).toMatchObject({
-    key: 'id',
-    fieldName: 'author',
     typeName: 'TestAuthor',
-    description: 'Reference to TestAuthor'
+    fieldName: 'author'
   })
 })
 

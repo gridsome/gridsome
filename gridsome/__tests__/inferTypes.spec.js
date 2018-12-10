@@ -1,4 +1,4 @@
-const inferTypes = require('../lib/graphql/schema/infer-types')
+const { inferTypes } = require('../lib/graphql/schema/infer-types')
 const { GraphQLDate } = require('../lib/graphql/schema/types/date')
 const { fileType } = require('../lib/graphql/schema/types/file')
 const { imageType } = require('../lib/graphql/schema/types/image')
