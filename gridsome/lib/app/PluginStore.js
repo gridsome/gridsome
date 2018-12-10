@@ -34,6 +34,12 @@ class Source extends EventEmitter {
     this.mime = mime
   }
 
+  // data
+
+  addMetaData (key, data) {
+    return this.store.addMetaData(key, data)
+  }
+
   // nodes
 
   addType (...args) {
