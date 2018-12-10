@@ -131,7 +131,7 @@ test('add type with dynamic route', () => {
 
   const contentType = api.store.addContentType({
     typeName: 'TestPost',
-    route: ':year/:month/:day/:slug'
+    route: '/:year/:month/:day/:slug'
   })
 
   const node = contentType.addNode({
@@ -139,8 +139,31 @@ test('add type with dynamic route', () => {
     date: '2018-09-04T23:20:33.918Z'
   })
 
-  expect(contentType.options.route).toEqual(':year/:month/:day/:slug')
-  expect(node.path).toEqual('2018/09/05/lorem-ipsum-dolor-sit-amet')
+  expect(contentType.options.route).toEqual('/:year/:month/:day/:slug')
+  expect(node.path).toEqual('/2018/09/05/lorem-ipsum-dolor-sit-amet')
+})
+
+test('add type with custom fields in route', () => {
+  const api = createPlugin()
+
+  const contentType = api.store.addContentType({
+    typeName: 'TestPost',
+    route: '/:test/:test_raw/:numeric/:author/:slug'
+  })
+
+  const node = contentType.addNode({
+    title: 'Lorem ipsum',
+    fields: {
+      test: 'My value',
+      numeric: 10,
+      author: {
+        typeName: 'Author',
+        id: '2'
+      }
+    }
+  })
+
+  expect(node.path).toEqual('/my-value/My%20value/10/2/lorem-ipsum')
 })
 
 test('transform node', () => {

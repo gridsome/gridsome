@@ -4,7 +4,7 @@ const EventEmitter = require('events')
 const camelCase = require('camelcase')
 const dateFormat = require('dateformat')
 const slugify = require('@sindresorhus/slugify')
-const { cloneDeep } = require('lodash')
+const { cloneDeep, isObject } = require('lodash')
 const { warn } = require('../utils/log')
 
 const nonValidCharsRE = new RegExp('[^a-zA-Z0-9_]', 'g')
@@ -114,10 +114,10 @@ class ContentTypeCollection extends EventEmitter {
     node.slug = options.slug || fields.slug || this.slugify(node.title)
     node.content = options.content || fields.content || ''
     node.excerpt = options.excerpt || fields.excerpt || ''
-    node.path = options.path || this.makePath(node)
     node.withPath = !!options.path
 
     node.fields = this.processNodeFields(fields, node.internal.origin)
+    node.path = options.path || this.makePath(node)
 
     return node
   }
@@ -194,13 +194,32 @@ class ContentTypeCollection extends EventEmitter {
     return this._pluginStore._app.resolveFilePath(...args, this.resolveAbsolutePaths)
   }
 
-  makePath ({ date, slug }) {
-    const year = date ? dateFormat(date, 'yyyy') : null
-    const month = date ? dateFormat(date, 'mm') : null
-    const day = date ? dateFormat(date, 'dd') : null
-    const params = { year, month, day, slug }
+  makePath (node) {
+    const year = node.date ? dateFormat(node.date, 'yyyy') : null
+    const month = node.date ? dateFormat(node.date, 'mm') : null
+    const day = node.date ? dateFormat(node.date, 'dd') : null
+    const params = { year, month, day, slug: node.slug }
+    const { routeKeys } = this.options
 
-    // TODO: make custom fields available as route params
+    // Use root level fields as route params. Primitive values
+    // are slugified but the original value will be available
+    // with '_raw' suffix.
+    for (let i = 0, l = routeKeys.length; i < l; i++) {
+      const keyName = routeKeys[i]
+      const fieldValue = node.fields[keyName] || keyName
+      
+      if (
+        isObject(fieldValue) &&
+        fieldValue.hasOwnProperty('typeName') &&
+        fieldValue.hasOwnProperty('id') &&
+        !Array.isArray(fieldValue.id)
+      ) {
+        params[keyName] = String(fieldValue.id)
+      } else if (!isObject(fieldValue) && !params[keyName]) {
+        params[keyName] = this.slugify(String(fieldValue))
+        params[keyName + '_raw'] = String(fieldValue)
+      }
+    }
 
     return this.options.makePath(params)
   }

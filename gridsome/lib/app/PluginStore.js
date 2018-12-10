@@ -56,10 +56,13 @@ class Source extends EventEmitter {
       return this.store.getContentType(options.typeName)
     }
 
-    // function for generating paths from routes for this type
-    const makePath = options.route
-      ? pathToRegexp.compile(options.route)
-      : () => null
+    let makePath = () => null
+    let routeKeys = []
+
+    if (typeof options.route === 'string') {
+      makePath = pathToRegexp.compile(options.route)
+      pathToRegexp(options.route, routeKeys)
+    }
 
     // normalize references
     const refs = mapValues(options.refs, (ref, key) => ({
@@ -79,6 +82,7 @@ class Source extends EventEmitter {
       route: options.route,
       fields: options.fields || {},
       typeName: options.typeName,
+      routeKeys: routeKeys.map(key => key.name.replace('_raw', '')),
       resolveAbsolutePaths: options.resolveAbsolutePaths,
       mimeTypes: [],
       belongsTo: {},

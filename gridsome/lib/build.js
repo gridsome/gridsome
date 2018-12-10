@@ -69,8 +69,9 @@ async function createRenderQueue ({ router, config, graphql }) {
     const { route } = router.resolve(fullPath)
     const { query } = page.pageQuery
     const routePath = trim(route.path, '/')
-    const dataPath = !routePath ? 'index.json' : `${routePath}.json`
-    const htmlOutput = path.resolve(config.targetDir, routePath, 'index.html')
+    const filePath = routePath.split('/').map(decodeURIComponent).join('/')
+    const dataPath = !routePath ? 'index.json' : `${filePath}.json`
+    const htmlOutput = path.resolve(config.targetDir, filePath, 'index.html')
     const dataOutput = path.resolve(config.cacheDir, 'data', dataPath)
 
     // TODO: remove this before v1.0
@@ -90,8 +91,9 @@ async function createRenderQueue ({ router, config, graphql }) {
     const { route } = router.resolve(node.path)
     const { query } = page.pageQuery
     const routePath = trim(route.path, '/')
-    const htmlOutput = path.resolve(config.targetDir, routePath, 'index.html')
-    const dataOutput = path.resolve(config.cacheDir, 'data', `${routePath}.json`)
+    const filePath = routePath.split('/').map(decodeURIComponent).join('/')
+    const htmlOutput = path.resolve(config.targetDir, filePath, 'index.html')
+    const dataOutput = path.resolve(config.cacheDir, 'data', `${filePath}.json`)
 
     // TODO: remove this before v1.0
     const output = path.dirname(htmlOutput)
