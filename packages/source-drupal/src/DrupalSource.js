@@ -77,8 +77,6 @@ class DrupalSource {
   /**
    * This method loops over the apiShema created in fetchJsonApiSchema
    * if property key (in the apiScheme object) is not in the exlucdes list, it creates a new instance
-   *
-   * Once each entityType is processed, loop through again and buildRelationships()
    */
   async processEntities () {
     const { excludes: userExcludes = [] } = this.options
@@ -100,13 +98,6 @@ class DrupalSource {
       })
 
       await Promise.all(capturedEntities.map(entity => entity.initialize()))
-
-      // this needs to happen after ALL entities have been processed
-      // so we know which graphQl content types exist
-      // see Entity.buildRelationships() -> this method check if contentType has been added
-      for (const key in this.entities) {
-        this.entities[key].buildRelationships()
-      }
     } catch ({ message }) {
       throw new Error(`processEntities(): ${message}`)
     }

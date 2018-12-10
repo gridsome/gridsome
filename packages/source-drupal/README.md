@@ -7,4 +7,4 @@
 
 This plugin currently works exclusively with [Drupal JSON:API](https://www.drupal.org/project/jsonapi). This module is becoming highly adopted and there are even talks of incorporating it into Drupal core in the future.
 
-A thorough README is coming soon. For the time being please refer to this comment on [the pull request](https://github.com/gridsome/gridsome/pull/41#issuecomment-442551238) to help get you started!
+A thorough README is coming soon. For the time being please refer to this [pull request thread](https://github.com/gridsome/gridsome/pull/41) to help get you started!
