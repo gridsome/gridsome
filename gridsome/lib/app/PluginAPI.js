@@ -75,6 +75,10 @@ class PluginAPI {
     this._entry.clientOptions = options
   }
 
+  transpileDependencies (list) {
+    this._app.config.transpileDependencies.push(...list)
+  }
+
   loadSource (handler) {
     this._on('loadSource', handler)
   }

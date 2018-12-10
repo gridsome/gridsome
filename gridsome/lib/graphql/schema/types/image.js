@@ -13,7 +13,7 @@ exports.isImage = value => {
     const ext = path.extname(value).toLowerCase()
 
     if (SUPPORTED_IMAGE_TYPES.includes(ext)) {
-      return true
+      return path.parse(value).base !== value
     }
   }
 

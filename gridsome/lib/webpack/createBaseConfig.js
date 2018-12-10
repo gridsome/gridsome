@@ -50,6 +50,10 @@ module.exports = (app, { isProd, isServer }) => {
 
   config.module.noParse(/^(vue|vue-router)$/)
 
+  if (app.config.runtimeCompiler) {
+    config.resolve.alias.set('vue$', 'vue/dist/vue.esm.js')
+  }
+
   if (!isProd) {
     config.devtool('cheap-module-eval-source-map')
   }
@@ -88,6 +92,13 @@ module.exports = (app, { isProd, isServer }) => {
         return false
       }
       if (/gridsome\.client\.js$/.test(filepath)) {
+        return false
+      }
+      if (app.config.transpileDependencies.some(dep => {
+        return typeof dep === 'string'
+          ? filepath.includes(path.normalize(dep))
+          : filepath.match(dep)
+      })) {
         return false
       }
       if (filepath.startsWith(projectConfig.appPath)) {

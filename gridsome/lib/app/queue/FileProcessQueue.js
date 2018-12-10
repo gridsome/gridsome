@@ -44,7 +44,7 @@ class FileProcessQueue {
     }
 
     const { targetDir, pathPrefix } = this.config
-    const assetsDir = path.relative(targetDir, this.config.assetsDir)
+    const filesDir = path.relative(targetDir, this.config.filesDir)
     const relPath = path.relative(this.context, filePath)
 
     let filename = ''
@@ -64,7 +64,7 @@ class FileProcessQueue {
     }
 
     return {
-      src: forwardSlash(path.join(pathPrefix, assetsDir, 'files', filename))
+      src: forwardSlash(path.join(pathPrefix, filesDir, filename))
     }
   }
 }
