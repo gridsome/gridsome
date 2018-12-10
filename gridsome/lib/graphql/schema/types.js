@@ -1,6 +1,5 @@
 const {
   GraphQLInt,
-  GraphQLString,
   GraphQLNonNull,
   GraphQLBoolean,
   GraphQLEnumType,
@@ -20,8 +19,16 @@ const pageInfoType = new GraphQLObjectType({
 const sortOrderType = new GraphQLEnumType({
   name: 'SortOrder',
   values: {
-    ASC: { value: 1 },
-    DESC: { value: -1 }
+    ASC: {
+      value: 'ASC',
+      name: 'Ascending',
+      description: 'Sort ascending'
+    },
+    DESC: {
+      value: 'DESC',
+      name: 'Descending',
+      description: 'Sort descending'
+    }
   }
 })
 

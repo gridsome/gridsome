@@ -1,7 +1,8 @@
 const unified = require('unified')
 const parse = require('gray-matter')
 const words = require('lodash.words')
-const markdown = require('remark-parse')
+const remarkParse = require('remark-parse')
+const remarkHtml = require('remark-html')
 const visit = require('unist-util-visit')
 const htmlToText = require('html-to-text')
 const { normalizePlugins } = require('./lib/utils')
@@ -16,7 +17,8 @@ const {
 const {
   GraphQLInt,
   GraphQLList,
-  GraphQLString
+  GraphQLString,
+  GraphQLBoolean
 } = require('gridsome/graphql')
 
 class RemarkTransformer {
@@ -33,7 +35,6 @@ class RemarkTransformer {
 
     this.remarkPlugins = normalizePlugins([
       // built-in plugins
-      'remark-parse',
       'remark-slug',
       'remark-fix-guillemets',
       'remark-squeeze-paragraphs',
@@ -46,12 +47,14 @@ class RemarkTransformer {
           type: 'element',
           tagName: 'span',
           properties: {
-            className: options.anchorClassName || 'icon icon-link'
+            className: options.autolinkClassName || 'icon icon-link'
           }
         },
         linkProperties: {
           'aria-hidden': 'true'
-        }
+        },
+        ...options.autolinkHeadings,
+        ...localOptions.autolinkHeadings
       }],
       // built-in plugins
       imagePlugin,
@@ -87,20 +90,28 @@ class RemarkTransformer {
     return {
       content: {
         type: GraphQLString,
-        resolve: node => this.toHTML(node)
+        resolve: node => this.stringifyNode(node)
       },
       headings: {
         type: new GraphQLList(HeadingType),
         args: {
-          depth: { type: HeadingLevels }
+          depth: { type: HeadingLevels },
+          stripTags: { type: GraphQLBoolean, defaultValue: true }
         },
-        resolve: async (node, { depth }) => {
-          const headings = await this.findHeadings(node, depth)
-          return headings.filter(heading => {
-            return typeof depth === 'number'
-              ? heading.depth === depth
-              : true
-          })
+        resolve: async (node, { depth, stripTags }) => {
+          const headings = await this.findHeadings(node)
+
+          return headings
+            .filter(heading =>
+              typeof depth === 'number' ? heading.depth === depth : true
+            )
+            .map(heading => ({
+              depth: heading.depth,
+              anchor: heading.anchor,
+              value: stripTags
+                ? heading.value.replace(/(<([^>]+)>)/ig, '')
+                : heading.value
+            }))
         }
       },
       timeToRead: {
@@ -113,7 +124,7 @@ class RemarkTransformer {
           }
         },
         resolve: (node, { speed }) => {
-          const html = this.toHTML(node)
+          const html = this.stringifyNode(node)
           const text = htmlToText.fromString(html)
           const count = words(text).length
 
@@ -123,36 +134,53 @@ class RemarkTransformer {
     }
   }
 
-  toAST (node) {
-    return this.nodeCache(node, 'ast', () => {
-      return unified()
-        .use(markdown)
-        .parse(node.fields.__remarkContent)
+  parseNode (node) {
+    const content = node.fields.__remarkContent
+
+    return this.nodeCache(node, 'tree', () => {
+      return unified().use(remarkParse).parse(content)
     })
   }
 
-  toHTML (node) {
-    return this.nodeCache(node, 'html', () => {
+  transformNode (node) {
+    return this.nodeCache(node, 'ast', async () => {
+      const tree = await this.parseNode(node)
+
       return unified()
         .data('node', node)
         .data('queue', this.queue)
         .data('context', this.context)
         .use(this.remarkPlugins)
-        .use(require('remark-html'))
-        .process(node.fields.__remarkContent)
+        .run(tree)
+    })
+  }
+
+  stringifyNode (node) {
+    return this.nodeCache(node, 'html', async () => {
+      const ast = await this.transformNode(node)
+
+      return unified().use(remarkHtml).stringify(ast)
     })
   }
 
   findHeadings (node) {
     return this.nodeCache(node, 'headings', async () => {
-      const ast = await this.toAST(node)
+      const ast = await this.transformNode(node)
       const headings = []
 
       visit(ast, 'heading', node => {
         const heading = { depth: node.depth, value: '', anchor: '' }
+        const children = node.children || []
 
-        visit(node, 'link', link => (heading.anchor = link.url))
-        visit(node, 'text', text => (heading.value = text.value))
+        for (let i = 0, l = children.length; i < l; i++) {
+          const el = children[i]
+
+          if (el.type === 'link') {
+            heading.anchor = el.url
+          } else if (el.value) {
+            heading.value += el.value
+          }
+        }
 
         headings.push(heading)
       })

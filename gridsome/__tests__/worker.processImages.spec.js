@@ -4,12 +4,19 @@ const imageSize = require('probe-image-size')
 const AssetsQueue = require('../lib/app/queue/AssetsQueue')
 const ImageProcessQueue = require('../lib/app/queue/ImageProcessQueue')
 const { process: processImages } = require('../lib/workers/image-processor')
-const targetDir = path.join(__dirname, 'assets', 'static')
-const assetsDir = path.join(targetDir, 'assets')
+const context = __dirname
+const imagesDir = path.join(context, 'assets', 'static')
+const imageCacheDir = path.join(context, 'assets', 'cache')
 const pathPrefix = '/'
 
-beforeEach(() => (ImageProcessQueue.uid = 0))
-afterAll(() => fs.remove(targetDir))
+beforeEach(() => {
+  ImageProcessQueue.uid = 0
+})
+
+afterEach(async () => {
+  await fs.remove(imagesDir)
+  await fs.remove(imageCacheDir)
+})
 
 test('process png image', async () => {
   const files = await process(['1000x600.png'])
@@ -89,28 +96,51 @@ test('do not upscale images', async () => {
   expect(height).toEqual(250)
 })
 
-async function process (filenames, options = {}) {
+test('use cached process results', async () => {
+  await fs.copy(
+    path.join(context, 'assets', '1000x600.png'),
+    path.join(imageCacheDir, '1000x600-w1000.test.png')
+  )
+
+  const files = await process(['1000x600.png'], { width: 1000 }, true)
+  const cacheStats = await fs.stat(files[0].cachePath)
+  const destStats = await fs.stat(files[0].destPath)
+
+  expect(destStats.mtimeMs).toEqual(cacheStats.mtimeMs)
+  expect(destStats.birthtime).toEqual(cacheStats.birthtime)
+  expect(destStats.size).toEqual(cacheStats.size)
+})
+
+async function process (filenames, options = {}, withCache = false) {
   const config = {
     pathPrefix,
-    targetDir,
-    assetsDir,
+    imagesDir,
+    targetDir: context,
     maxImageWidth: 1000,
     imageExtensions: ['.jpg', '.png', '.svg', '.gif', '.webp']
   }
-  const testAssetsDir = path.join(__dirname, 'assets')
-  const processQueue = new AssetsQueue({ context: __dirname, config })
 
-  const files = await Promise.all(filenames.map(async filename => {
-    const filePath = path.join(testAssetsDir, filename)
+  const processQueue = new AssetsQueue({ context, config })
+
+  const assets = await Promise.all(filenames.map(async filename => {
+    const filePath = path.join(context, 'assets', filename)
     return processQueue.add(filePath, options)
   }))
 
-  await processImages({ queue: processQueue.images.queue, outDir: assetsDir })
+  await processImages({
+    queue: processQueue.images.queue,
+    cacheDir: withCache ? imageCacheDir : false,
+    outDir: context
+  })
 
-  return Promise.all(files.map(({ filePath, src }) => {
-    const destPath = path.join(assetsDir, src)
+  return Promise.all(assets.map(({ filePath, src, hash }) => {
+    const imageOptions = processQueue.images.createImageOptions(options)
+    const filename = processQueue.images.createFileName(filePath, imageOptions, hash)
+    const cachePath = path.join(imageCacheDir, filename)
+    const destPath = path.join(context, src)
+
     const buffer = fs.readFileSync(destPath)
 
-    return { filePath, destPath, buffer }
+    return { filePath, destPath, cachePath, buffer }
   }))
 }

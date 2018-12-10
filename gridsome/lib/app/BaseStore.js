@@ -1,5 +1,6 @@
 const Loki = require('lokijs')
 const autoBind = require('auto-bind')
+const { isArray, isPlainObject } = require('lodash')
 const ContentTypeCollection = require('./ContentTypeCollection')
 
 class BaseStore {
@@ -11,11 +12,38 @@ class BaseStore {
 
     autoBind(this)
 
+    this.index = this.data.addCollection('nodeIndex', {
+      indices: ['path', 'typeName', 'id'],
+      unique: ['uid', 'path'],
+      autoupdate: true
+    })
+
     this.pages = this.data.addCollection('Page', {
       indices: ['type'],
       unique: ['path'],
       autoupdate: true
     })
+
+    this.metaData = this.data.addCollection('MetaData', {
+      unique: ['key'],
+      autoupdate: true
+    })
+  }
+
+  // site
+
+  addMetaData (key, data) {
+    let node = this.metaData.findOne({ key })
+
+    if (node && isArray(node.data) && isArray(data)) {
+      node.data = node.data.concat(data)
+    } else if (node && isPlainObject(node.data) && isPlainObject(data)) {
+      Object.assign(node.data, data)
+    } else {
+      node = this.metaData.insert({ key, data })
+    }
+
+    return node
   }
 
   // nodes
@@ -28,6 +56,18 @@ class BaseStore {
 
   getContentType (type) {
     return this.collections[type]
+  }
+
+  getNodeByPath (path) {
+    const entry = this.index.findOne({ path })
+
+    if (!entry) {
+      return null
+    }
+
+    const { collection } = this.getContentType(entry.typeName)
+
+    return collection.getNode(entry.id)
   }
 
   // taxonomies

@@ -16,6 +16,6 @@ module.exports = {
   BOOTSTRAP_FULL: Number.MAX_SAFE_INTEGER,
 
   internalRE: /^internal\:\/\//,
-  transformerRE: /(?:^@?gridsome[/-]|\/)transformer-([\w-]+)/,
+  transformerRE: /(?:^@?gridsome[/-]|\/)transformer-([\w-]+)/
 }
 

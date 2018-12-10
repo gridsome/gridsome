@@ -1,7 +1,6 @@
 const path = require('path')
 const fs = require('fs-extra')
 const sharp = require('sharp')
-const isUrl = require('is-url')
 const crypto = require('crypto')
 const { trim } = require('lodash')
 const mime = require('mime-types')
@@ -34,13 +33,14 @@ class ImageProcessQueue {
       return asset
     }
 
-    asset.sets.forEach(({ src, width }) => {
+    asset.sets.forEach(({ filename, src, width }) => {
       if (!this._queue.has(src + asset.cacheKey)) {
         this._queue.set(src + asset.cacheKey, {
           options: { ...options, width },
           destination: trim(src, '/'),
           cacheKey: asset.cacheKey,
           size: asset.size,
+          filename,
           filePath
         })
       }
@@ -50,8 +50,11 @@ class ImageProcessQueue {
   }
 
   async preProcess (filePath, options = {}) {
-    const { ext } = path.parse(filePath)
-    const { imageExtensions } = this.config
+    const { imageExtensions, targetDir, pathPrefix, maxImageWidth } = this.config
+    const imagesDir = path.relative(targetDir, this.config.imagesDir)
+    const relPath = path.relative(this.context, filePath)
+    const { name, ext } = path.parse(filePath)
+    const mimeType = mime.lookup(filePath)
 
     if (!imageExtensions.includes(ext)) {
       throw new Error(
@@ -61,18 +64,15 @@ class ImageProcessQueue {
     }
 
     if (!await fs.exists(filePath)) {
-      throw new Error(`${filePath} was not found. `)
+      throw new Error(`${filePath} was not found.`)
     }
 
     const hash = await md5File(filePath)
     const buffer = await fs.readFile(filePath)
     const { width, height } = imageSize.sync(buffer)
-    const { targetDir, pathPrefix, maxImageWidth } = this.config
-    const assetsDir = path.relative(targetDir, this.config.assetsDir)
-    const mimeType = mime.lookup(filePath)
 
     const imageWidth = Math.min(
-      parseInt(options.width, 10) || width,
+      parseInt(options.width || width, 10),
       maxImageWidth,
       width
     )
@@ -91,41 +91,22 @@ class ImageProcessQueue {
       }
     }
 
-    const createSrcPath = (srcWidth = maxImageWidth) => {
-      const relPath = path.relative(this.context, filePath)
-      const imageOptions = []
-      let filename = ''
-
-      imageOptions.push({
-        key: 'width',
-        shortKey: 'w',
-        value: srcWidth
-      })
-
-      if (options.quality) {
-        imageOptions.push({
-          key: 'quality',
-          shortKey: 'q',
-          value: options.quality
-        })
-      }
-
+    const createSrcPath = (filename, imageOptions) => {
       if (process.env.GRIDSOME_MODE === 'serve') {
-        const query = createOptionsQuery(imageOptions)
-        filename = `${forwardSlash(relPath)}?${query}`
-      } else {
-        const { name, ext } = path.parse(relPath)
-        const urlHash = !process.env.GRIDSOME_TEST ? hash : 'test'
-        const string = createOptionsString(imageOptions)
-        filename = `${name}-${string}.${urlHash}${ext}`
+        const query = '?' + createOptionsQuery(imageOptions)
+        return path.join('/', imagesDir, forwardSlash(relPath)) + query
       }
 
-      return forwardSlash(path.join(pathPrefix, assetsDir, 'static', filename))
+      return forwardSlash(path.join('/', pathPrefix, imagesDir, filename))
     }
 
-    const sets = imageSizes.map(width => {
+    const sets = imageSizes.map((width = imageWidth) => {
       const height = Math.ceil(imageHeight * (width / imageWidth))
-      return { src: createSrcPath(width), width, height }
+      const imageOptions = this.createImageOptions({ ...options, width })
+      const filename = this.createFileName(filePath, imageOptions, hash)
+      const src = createSrcPath(filename, imageOptions)
+
+      return { filename, src, width, height }
     })
 
     const results = {
@@ -134,6 +115,9 @@ class ImageProcessQueue {
       cacheKey: genHash(filePath + hash + JSON.stringify(options)),
       noscriptHTML: '',
       imageHTML: '',
+      name,
+      ext,
+      hash,
       sets
     }
 
@@ -157,7 +141,7 @@ class ImageProcessQueue {
         (options.height ? ` height="${options.height}"` : '') +
         (options.alt ? ` alt="${options.alt}">` : '>') +
         `</noscript>`
-      
+
       classNames.push('g-image--loading')
     }
 
@@ -172,6 +156,36 @@ class ImageProcessQueue {
       (isLazy && isSrcset ? ` data-src="${results.src}">` : '>')
 
     return results
+  }
+
+  createImageOptions (options) {
+    const imageOptions = []
+
+    if (options.width) {
+      imageOptions.push({
+        key: 'width',
+        shortKey: 'w',
+        value: options.width
+      })
+    }
+
+    if (options.quality) {
+      imageOptions.push({
+        key: 'quality',
+        shortKey: 'q',
+        value: options.quality
+      })
+    }
+
+    return imageOptions
+  }
+
+  createFileName (relPath, options, hash) {
+    const { name, ext } = path.parse(relPath)
+    const string = options.length ? '-' + createOptionsString(options) : ''
+    const urlHash = !process.env.GRIDSOME_TEST ? hash : 'test'
+
+    return `${name}${string}.${urlHash}${ext}`
   }
 }
 

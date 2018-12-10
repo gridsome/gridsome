@@ -44,14 +44,20 @@ test('add node', () => {
     date: '2018-09-04T23:20:33.918Z'
   })
 
+  const entry = api.store.store.index.findOne({ uid: node.uid })
+
   expect(node).toHaveProperty('$loki')
   expect(node.id).toEqual('test')
+  expect(typeof node.uid).toEqual('string')
   expect(node.typeName).toEqual('TestPost')
   expect(node.title).toEqual('Lorem ipsum dolor sit amet')
   expect(node.slug).toEqual('lorem-ipsum-dolor-sit-amet')
   expect(node.date).toEqual('2018-09-04T23:20:33.918Z')
   expect(node.fields).toMatchObject({})
   expect(emit).toHaveBeenCalledTimes(1)
+  expect(entry.id).toEqual('test')
+  expect(entry.uid).toEqual(node.uid)
+  expect(entry.typeName).toEqual('TestPost')
 
   emit.mockRestore()
 })
@@ -60,7 +66,8 @@ test('update node', () => {
   const api = createPlugin()
 
   const contentType = api.store.addContentType({
-    typeName: 'TestPost'
+    typeName: 'TestPost',
+    route: '/test/:slug'
   })
 
   const emit = jest.spyOn(contentType, 'emit')
@@ -71,18 +78,25 @@ test('update node', () => {
   })
 
   const oldTimestamp = oldNode.internal.timestamp
+  const uid = oldNode.uid
 
   const node = contentType.updateNode('test', {
     title: 'New title'
   })
 
+  const entry = api.store.store.index.findOne({ uid: node.uid })
+
   expect(node.id).toEqual('test')
   expect(node.typeName).toEqual('TestPost')
   expect(node.title).toEqual('New title')
   expect(node.slug).toEqual('new-title')
+  expect(node.path).toEqual('/test/new-title')
   expect(node.date).toEqual('2018-09-04T23:20:33.918Z')
   expect(node.internal.timestamp).not.toEqual(oldTimestamp)
   expect(emit).toHaveBeenCalledTimes(2)
+  expect(entry.id).toEqual('test')
+  expect(entry.uid).toEqual(uid)
+  expect(entry.path).toEqual('/test/new-title')
 
   emit.mockRestore()
 })
@@ -95,12 +109,15 @@ test('remove node', () => {
   })
 
   const emit = jest.spyOn(contentType, 'emit')
+  const node = contentType.addNode({ id: 'test' })
 
-  contentType.addNode({ id: 'test' })
   contentType.removeNode('test')
+
+  const entry = api.store.store.index.findOne({ uid: node.uid })
 
   expect(contentType.getNode('test')).toBeNull()
   expect(emit).toHaveBeenCalledTimes(2)
+  expect(entry).toBeNull()
 
   emit.mockRestore()
 })
@@ -119,10 +136,8 @@ test('add type with ref', () => {
   })
 
   expect(contentType.options.refs.author).toMatchObject({
-    key: 'id',
-    fieldName: 'author',
     typeName: 'TestAuthor',
-    description: 'Reference to TestAuthor'
+    fieldName: 'author'
   })
 })
 
@@ -131,7 +146,7 @@ test('add type with dynamic route', () => {
 
   const contentType = api.store.addContentType({
     typeName: 'TestPost',
-    route: ':year/:month/:day/:slug'
+    route: '/:year/:month/:day/:slug'
   })
 
   const node = contentType.addNode({
@@ -139,8 +154,31 @@ test('add type with dynamic route', () => {
     date: '2018-09-04T23:20:33.918Z'
   })
 
-  expect(contentType.options.route).toEqual(':year/:month/:day/:slug')
-  expect(node.path).toEqual('2018/09/05/lorem-ipsum-dolor-sit-amet')
+  expect(contentType.options.route).toEqual('/:year/:month/:day/:slug')
+  expect(node.path).toEqual('/2018/09/05/lorem-ipsum-dolor-sit-amet')
+})
+
+test('add type with custom fields in route', () => {
+  const api = createPlugin()
+
+  const contentType = api.store.addContentType({
+    typeName: 'TestPost',
+    route: '/:test/:test_raw/:numeric/:author/:slug'
+  })
+
+  const node = contentType.addNode({
+    title: 'Lorem ipsum',
+    fields: {
+      test: 'My value',
+      numeric: 10,
+      author: {
+        typeName: 'Author',
+        id: '2'
+      }
+    }
+  })
+
+  expect(node.path).toEqual('/my-value/My%20value/10/2/lorem-ipsum')
 })
 
 test('transform node', () => {
@@ -179,7 +217,8 @@ test('resolve absolute file paths', () => {
       url4: 'ftp://ftp.example.com',
       email: 'email@example.com',
       text: 'Lorem ipsum dolor sit amet.',
-      text2: 'example.com'
+      text2: 'example.com',
+      text3: 'md'
     },
     internal: {
       origin: '/absolute/dir/to/a/file.md'
@@ -191,6 +230,7 @@ test('resolve absolute file paths', () => {
   expect(node.fields.file3).toEqual('/absolute/dir/to/image.png')
   expect(node.fields.text).toEqual('Lorem ipsum dolor sit amet.')
   expect(node.fields.text2).toEqual('example.com')
+  expect(node.fields.text3).toEqual('md')
   expect(node.fields.url).toEqual('https://example.com/image.jpg')
   expect(node.fields.url2).toEqual('//example.com/image.jpg')
   expect(node.fields.url3).toEqual('git@github.com:gridsome/gridsome.git')

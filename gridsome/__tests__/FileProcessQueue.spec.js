@@ -1,16 +1,14 @@
 const path = require('path')
-const fs = require('fs-extra')
 const AssetsQueue = require('../lib/app/queue/AssetsQueue')
 const context = __dirname
-const targetDir = path.join(context, 'assets', 'static')
-const assetsDir = path.join(targetDir, 'assets')
+const filesDir = path.join(context, 'assets', 'files')
 const pathPrefix = '/'
 
 const baseconfig = {
   imageExtensions: ['.png'],
+  targetDir: context,
   pathPrefix,
-  targetDir,
-  assetsDir
+  filesDir
 }
 
 test('generate src for file', async () => {

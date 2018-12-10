@@ -124,7 +124,7 @@ class WordPressSource {
         const fields = {
           author: {
             typeName: makeTypeName('author'),
-            value: post.author || 0
+            id: post.author || 0
           },
           acf: this.createCustomFields(post.acf)
         }
@@ -140,17 +140,17 @@ class WordPressSource {
           fields.excerpt = post.excerpt ? post.excerpt.rendered : ''
           fields.featuredMedia = {
             typeName: makeTypeName('attachment'),
-            value: post.featured_media
+            id: post.featured_media
           }
         }
-        
+
         // add references if post has any taxonomy rest bases as properties
         for (const type in restBases.taxonomies) {
           const propName = restBases.taxonomies[type]
           if (post.hasOwnProperty(propName)) {
             fields[propName] = {
               typeName: makeTypeName(type),
-              value: post[propName]
+              id: post[propName]
             }
           }
         }
@@ -212,7 +212,7 @@ class WordPressSource {
   createCustomField (value) {
     if (value === null) return null
     if (value === undefined) return null
-    
+
     const type = typeof value
     const { makeTypeName } = this.api.store
 
@@ -232,12 +232,12 @@ class WordPressSource {
         if (value.post_type) {
           return {
             typeName: makeTypeName(value.post_type),
-            value: value.ID
+            id: value.ID
           }
         } else if (value.filename) {
           return {
             typeName: makeTypeName('attachment'),
-            value: value.ID
+            id: value.ID
           }
         }
 

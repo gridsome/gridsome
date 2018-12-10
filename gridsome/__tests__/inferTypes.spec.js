@@ -1,10 +1,9 @@
-const inferTypes = require('../lib/graphql/schema/infer-types')
+const { inferTypes } = require('../lib/graphql/schema/infer-types')
 const { GraphQLDate } = require('../lib/graphql/schema/types/date')
 const { fileType } = require('../lib/graphql/schema/types/file')
 const { imageType } = require('../lib/graphql/schema/types/image')
 
 const {
-  graphql,
   GraphQLInt,
   GraphQLList,
   GraphQLFloat,
@@ -39,7 +38,7 @@ test('infer types from node fields', () => {
         string: true,
         falsyBoolean: false,
         booleanList: [false],
-        numberList: [5,30],
+        numberList: [5, 30],
         emptyList: [],
         emptyObj: {},
         emptyString: '',
@@ -89,7 +88,7 @@ test('infer date fields', () => {
         date4: '2018-11-01T19:20+01:00',
         date5: '2018-11-01T19:20:30+01:00'
       }
-    },
+    }
   ], 'TestPost')
 
   expect(types.date1.type).toEqual(GraphQLDate)
@@ -108,10 +107,10 @@ test('infer image fields', () => {
         image3: './image.png',
         image4: 'https://www.example.com/images/image.png'
       }
-    },
+    }
   ], 'TestPost')
 
-  expect(types.image1.type).toEqual(imageType.type)
+  expect(types.image1.type).toEqual(GraphQLString)
   expect(types.image2.type).toEqual(imageType.type)
   expect(types.image3.type).toEqual(imageType.type)
   expect(types.image4.type).toEqual(imageType.type)
@@ -124,7 +123,7 @@ test('infer file fields', () => {
         file1: './document.pdf',
         file2: 'https://www.example.com/files/document.pdf'
       }
-    },
+    }
   ], 'TestPost')
 
   expect(types.file1.type).toEqual(fileType.type)

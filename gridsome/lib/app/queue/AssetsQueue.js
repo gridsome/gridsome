@@ -9,13 +9,15 @@ class AssetsQueue {
     this.app = app
     this.files = new FileProcessQueue(app)
     this.images = new ImageProcessQueue(app)
+
+    this.index = {}
   }
 
   async add (filePath, options) {
     const { config, context } = this.app
     const { ext } = path.parse(filePath)
     const isImage = config.imageExtensions.includes(ext)
-    
+
     const data = {
       type: isImage ? 'image' : 'file',
       mimeType: mime.lookup(filePath),
@@ -31,7 +33,13 @@ class AssetsQueue {
       ? await this.images.add(filePath, options)
       : await this.files.add(filePath, options)
 
-    return { ...data, ...results }
+    this.index[filePath] = { ...data, ...results }
+
+    return this.index[filePath]
+  }
+
+  get (filePath) {
+    return this.index[filePath]
   }
 }
 

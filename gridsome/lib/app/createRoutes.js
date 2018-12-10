@@ -1,3 +1,4 @@
+const path = require('path')
 const camelCase = require('camelcase')
 
 const {
@@ -7,7 +8,7 @@ const {
   DYNAMIC_TEMPLATE_ROUTE
 } = require('../utils/constants')
 
-module.exports = store => {
+module.exports = ({ store, config }) => {
   const pages = store.pages.find({ type: 'page' })
   const templates = store.pages.find({ type: 'template' })
   const notFoundPage = store.pages.findOne({ type: '404' })
@@ -18,7 +19,7 @@ module.exports = store => {
 
   const notFoundComponent = notFoundPage
     ? notFoundPage.component
-    : 'gridsome/app/pages/404.vue'
+    : path.join(config.appPath, 'pages', '404.vue')
 
   pages.forEach(page => {
     const name = camelCase(page.path.replace(/\//g, ' ')) || 'home'

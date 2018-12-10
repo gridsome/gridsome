@@ -19,8 +19,8 @@ module.exports = (context, options = {}, pkg = {}) => {
   const isProd = process.env.NODE_ENV === 'production'
   const configPath = resolve('gridsome.config.js')
   const args = options.args || {}
-  const plugins = []
   const config = {}
+  const plugins = []
 
   const localConfig = fs.existsSync(configPath)
     ? require(configPath)
@@ -36,6 +36,10 @@ module.exports = (context, options = {}, pkg = {}) => {
   // add built-in plugins as default
   if (options.useBuiltIn !== false) {
     plugins.unshift(...builtInPlugins)
+    plugins.unshift({
+      use: path.resolve(__dirname, '../plugins/core'),
+      options: config
+    })
   }
 
   // add project root as plugin
@@ -44,6 +48,8 @@ module.exports = (context, options = {}, pkg = {}) => {
   if (localConfig.pathPrefix && /\/+$/.test(localConfig.pathPrefix)) {
     throw new Error(`pathPrefix must not have a trailing slash`)
   }
+
+  const assetsDir = localConfig.assetsDir || 'assets'
 
   config.pkg = options.pkg || resolvePkg(context)
   config.host = args.host || 'localhost'
@@ -55,13 +61,22 @@ module.exports = (context, options = {}, pkg = {}) => {
   config.staticDir = resolve('static')
   config.outDir = resolve(localConfig.outDir || 'dist')
   config.targetDir = path.join(config.outDir, config.pathPrefix)
-  config.assetsDir = path.join(config.targetDir, localConfig.assetsDir || 'assets')
+  config.assetsDir = path.join(config.targetDir, assetsDir)
+  config.imagesDir = path.join(config.assetsDir, 'static')
+  config.filesDir = path.join(config.assetsDir, 'files')
   config.appPath = path.resolve(__dirname, '../../app')
   config.tmpDir = resolve('src/.temp')
   config.cacheDir = resolve('.cache')
+  config.imageCacheDir = resolve('.cache', assetsDir, 'static')
   config.minProcessImageWidth = 500 // TODO: find a better name for this
   config.maxImageWidth = localConfig.maxImageWidth || 1920
   config.imageExtensions = SUPPORTED_IMAGE_TYPES
+
+  config.runtimeCompiler = localConfig.runtimeCompiler || false
+
+  config.transpileDependencies = Array.isArray(localConfig.transpileDependencies)
+    ? localConfig.transpileDependencies.slice()
+    : []
 
   // max cache age for html markup in serve mode
   config.maxCacheAge = localConfig.maxCacheAge || 1000
@@ -201,7 +216,7 @@ function normalizeIconsConfig (config = {}) {
     })
 
   res.touchicon = typeof icon.touchicon === 'string'
-    ? { src: icon.touchicon, sizes: faviconSizes, precomposed: false }
+    ? { src: icon.touchicon, sizes: touchiconSizes, precomposed: false }
     : Object.assign({}, icon.touchicon, {
       sizes: touchiconSizes,
       src: res.favicon.src,

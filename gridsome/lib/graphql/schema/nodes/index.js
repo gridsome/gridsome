@@ -20,6 +20,7 @@ module.exports = store => {
 
   return {
     queries,
-    connections
+    connections,
+    nodeTypes
   }
 }
