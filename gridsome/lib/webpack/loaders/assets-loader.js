@@ -10,6 +10,7 @@ module.exports = async function (source, map) {
   this.dependency(this.resourcePath)
 
   const res = {
+    type: asset.type,
     mimeType: asset.mimeType,
     src: asset.src
   }
