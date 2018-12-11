@@ -16,6 +16,9 @@
     "setupFiles": [
       "<rootDir>/scripts/testSetup.js"
     ],
+    "testMatch": [
+      "**/__tests__/**/*.spec.js"
+    ],
     "collectCoverageFrom": [
       "gridsome/lib/**/*.js"
     ],
@@ -23,6 +26,10 @@
       "/__fixtures__/",
       "/projects/",
       "/scripts/"
+    ],
+    "watchPathIgnorePatterns": [
+      "/__fixtures__/",
+      "/projects/"
     ]
   },
   "devDependencies": {
