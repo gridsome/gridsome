@@ -8,12 +8,12 @@ class DrupalSource {
   // defaultOptions merged with this.options in App.vue
   static defaultOptions () {
     return {
-      typeName: 'Drupal',
-      baseUrl: '',
       apiBase: 'jsonapi',
-      views: [], // deprecated
+      baseUrl: '',
       excludes: [],
-      format: 'json'
+      format: 'json',
+      requestConfig: {},
+      typeName: 'Drupal',
     }
   }
 
@@ -47,7 +47,7 @@ class DrupalSource {
    * this function pulls the "links" property out of the response
    */
   async fetchJsonApiSchema () {
-    const { typeName, baseUrl, apiBase } = this.options
+    const { typeName, baseUrl, apiBase, requestConfig } = this.options
 
     if (!baseUrl || !typeName) throw new Error('Missing required fields in gridsome.config.js')
 
@@ -56,7 +56,7 @@ class DrupalSource {
       : `${baseUrl}/${apiBase}`
 
     try {
-      const response = await axios.get(fullBaseUrl)
+      const response = await axios.get(fullBaseUrl, requestConfig)
 
       /**
        * response from /jsonapi with axios wrapper is shaped:
@@ -100,65 +100,6 @@ class DrupalSource {
       await Promise.all(capturedEntities.map(entity => entity.initialize()))
     } catch ({ message }) {
       throw new Error(`processEntities(): ${message}`)
-    }
-  }
-
-  // TODO: deprecated
-  async fetchDrupalViews (store) {
-    const { addContentType } = store
-    const { baseUrl, views, format } = this.options
-
-    try {
-      const results = await Promise.all(
-        views.map(({ restPath }) => {
-          if (!restPath) throw new Error('restPath is a required for each type object')
-
-          return axios.get(`${baseUrl}${restPath}/?_format=${format}`)
-        })
-      )
-
-      // loop through each type specified in gridsome.config.js
-      // create GraphQL Type and all the nodes for that type
-      views.forEach(({ name, route }, index) => {
-        const { slugify } = this.store
-        if (!name) throw new Error('name is a required for each type object')
-
-        const type = addContentType({
-          typeName: name,
-          route: route || `/${slugify(name)}/:slug`
-        })
-        const { data = [] } = results[index]
-
-        for (const item of data) {
-          const {
-            id,
-            title,
-            body,
-            content,
-            slug,
-            date,
-            excerpt,
-            ...fields 
-          } = item
-
-          // use body as a fallback
-          const _content = content || body
-
-          type.addNode({
-            id,
-            slug: slug || slugify(title),
-            title,
-            content: _content,
-            date,
-            excerpt: excerpt || cullByWordCount(_content)(20),
-            fields: {
-              ...fields // spreads out any additional properties into fields object
-            }
-          })
-        }
-      })
-    } catch (error) {
-      throw new Error(error)
     }
   }
 }

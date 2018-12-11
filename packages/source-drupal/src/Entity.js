@@ -66,6 +66,11 @@ class Entity {
 
   async fetchData () {
     try {
+      const {
+        options: {
+          requestConfig = {}
+        } = {}
+      } = this.source
       const fetchRecurse = async (url) => {
         url = typeof url === 'object' ? url.href : url
 
@@ -76,7 +81,7 @@ class Entity {
               next
             }
           } = {}
-        } = await axios.get(url)
+        } = await axios.get(url, requestConfig)
 
         this.response = this.response.concat(data)
 
