@@ -62,7 +62,7 @@ class Source extends EventEmitter {
     }
 
     let makePath = () => null
-    let routeKeys = []
+    const routeKeys = []
 
     if (typeof options.route === 'string') {
       makePath = pathToRegexp.compile(options.route)

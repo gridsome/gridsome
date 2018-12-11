@@ -223,7 +223,7 @@ class ContentTypeCollection extends EventEmitter {
     for (let i = 0, l = routeKeys.length; i < l; i++) {
       const keyName = routeKeys[i]
       const fieldValue = node.fields[keyName] || keyName
-      
+
       if (
         isObject(fieldValue) &&
         fieldValue.hasOwnProperty('typeName') &&
