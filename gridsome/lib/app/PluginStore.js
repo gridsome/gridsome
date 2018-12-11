@@ -9,7 +9,7 @@ const slugify = require('@sindresorhus/slugify')
 const parsePageQuery = require('../graphql/parsePageQuery')
 const { mapValues, cloneDeep } = require('lodash')
 const { cache, nodeCache } = require('../utils/cache')
-const { warn } = require('../utils/log')
+const { log, warn } = require('../utils/log')
 
 class Source extends EventEmitter {
   constructor (app, options, { transformers }) {
@@ -44,7 +44,7 @@ class Source extends EventEmitter {
   // nodes
 
   addType (...args) {
-    console.log('!! store.addType is deprectaded, use store.addContentType instead.')
+    log('!! store.addType is deprectaded, use store.addContentType instead.')
     return this.addContentType(...args)
   }
 

@@ -1,6 +1,7 @@
 const path = require('path')
 const fs = require('fs-extra')
 const chalk = require('chalk')
+const { log } = require('../../../utils/log')
 const slugify = require('@sindresorhus/slugify')
 const compiler = require('vue-template-compiler')
 const { parse } = require('@vue/component-compiler-utils')
@@ -24,7 +25,7 @@ exports.parseComponent = function (file) {
   const block = customBlocks.filter(block => {
     // TODO: remove deprecation warning before v1.0
     if (block.type === 'graphql') {
-      console.log(chalk.yellow(
+      log(chalk.yellow(
         `${filename}.vue: The <graphql> block is deprecated. Use <page-query> instead.`
       ))
     }

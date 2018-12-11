@@ -1,6 +1,7 @@
 const chalk = require('chalk')
 const createHTMLRenderer = require('./createHTMLRenderer')
 const { createBundleRenderer } = require('vue-server-renderer')
+const { error } = require('../utils/log')
 
 module.exports = function createRenderFn ({
   htmlTemplate,
@@ -27,7 +28,7 @@ module.exports = function createRenderFn ({
     try {
       app = await renderer.renderToString(context)
     } catch (err) {
-      console.error(chalk.red(`Failed to render ${url}`))
+      error(chalk.red(`Failed to render ${url}`))
       throw err
     }
 

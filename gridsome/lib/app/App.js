@@ -14,6 +14,7 @@ const createRoutes = require('./createRoutes')
 const { execute, graphql } = require('../graphql/graphql')
 const { version } = require('../../package.json')
 const { parseUrl, resolvePath } = require('../utils')
+const { info } = require('../utils/log')
 
 class App {
   constructor (context, options) {
@@ -40,19 +41,18 @@ class App {
       { title: 'Generate code', run: this.generateFiles }
     ]
 
-    console.log(`Gridsome v${version}`)
-    console.log()
+    info(`Gridsome v${version}\n`)
 
     for (const current of phases) {
       if (phases.indexOf(current) <= phase) {
         const timer = hirestime()
         await current.run(this)
 
-        console.info(`${current.title} - ${timer(hirestime.S)}s`)
+        info(`${current.title} - ${timer(hirestime.S)}s`)
       }
     }
 
-    console.info(`Bootstrap finish - ${bootstrapTime(hirestime.S)}s`)
+    info(`Bootstrap finish - ${bootstrapTime(hirestime.S)}s`)
 
     this.isBootstrapped = true
 
