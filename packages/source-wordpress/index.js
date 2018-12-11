@@ -1,7 +1,10 @@
 const axios = require('axios')
 const Queue = require('better-queue')
 const querystring = require('querystring')
-const { camelCase, mapKeys } = require('lodash')
+const { mapKeys, isPlainObject } = require('lodash')
+
+const TYPE_AUTHOR = 'author'
+const TYPE_ATTACHEMENT = 'attachment'
 
 class WordPressSource {
   static defaultOptions () {
@@ -69,7 +72,7 @@ class WordPressSource {
     }
 
     const authors = addContentType({
-      typeName: makeTypeName('author'),
+      typeName: makeTypeName(TYPE_AUTHOR),
       route: routes.author
     })
 
@@ -79,10 +82,8 @@ class WordPressSource {
         title: user.name,
         slug: user.slug,
         fields: {
-          url: user.url,
-          description: user.description,
-          avatars: mapKeys(user.avatar_urls, (v, key) => `avatar${key}`),
-          acf: this.createCustomFields(user.acf)
+          ...this.normalizeFields(user),
+          avatars: mapKeys(user.avatar_urls, (v, key) => `avatar${key}`)
         }
       })
     }
@@ -121,25 +122,16 @@ class WordPressSource {
       }
 
       for (const post of posts) {
-        const fields = {
-          author: {
-            typeName: makeTypeName('author'),
-            id: post.author || 0
-          },
-          acf: this.createCustomFields(post.acf)
+        const fields = this.normalizeFields(post)
+
+        fields.author = {
+          typeName: makeTypeName(TYPE_AUTHOR),
+          id: post.author || 0
         }
 
-        if (post.type === 'attachment') {
-          fields.attachment = post.source_url
-          fields.mediaType = post.media_type
-          fields.mimeType = post.mime_type
-          fields.width = post.media_details.width
-          fields.height = post.media_details.height
-        } else {
-          fields.content = post.content ? post.content.rendered : ''
-          fields.excerpt = post.excerpt ? post.excerpt.rendered : ''
+        if (post.type !== 'attachment') {
           fields.featuredMedia = {
-            typeName: makeTypeName('attachment'),
+            typeName: makeTypeName(TYPE_ATTACHEMENT),
             id: post.featured_media
           }
         }
@@ -159,8 +151,6 @@ class WordPressSource {
           id: post.id,
           title: post.title ? post.title.rendered : '',
           date: post.date ? new Date(post.date) : null,
-          content: post.content ? post.content.rendered : '',
-          excerpt: post.excerpt ? post.excerpt.rendered : '',
           slug: post.slug,
           fields
         })
@@ -193,56 +183,46 @@ class WordPressSource {
     }
   }
 
-  createCustomFields (fields) {
+  normalizeFields (fields) {
     const res = {}
 
-    if (!fields) return fields
-
     for (const key in fields) {
-      const fieldValue = this.createCustomField(fields[key])
-
-      if (fieldValue !== null) {
-        res[camelCase(key)] = fieldValue
-      }
+      if (key.startsWith('_')) continue // skip links and embeds etc
+      res[key] = this.normalizeFieldValue(fields[key])
     }
 
     return res
   }
 
-  createCustomField (value) {
+  normalizeFieldValue (value) {
     if (value === null) return null
     if (value === undefined) return null
 
-    const type = typeof value
     const { makeTypeName } = this.api.store
 
     if (Array.isArray(value)) {
-      return value.map(v => this.createCustomField(v))
+      return value.map(v => this.normalizeFieldValue(v))
     }
 
-    switch (type) {
-      case 'string':
-      case 'boolean':
-      case 'number':
-        return !isNaN(value)
-          ? Number(value)
-          : value
-
-      case 'object':
-        if (value.post_type) {
-          return {
-            typeName: makeTypeName(value.post_type),
-            id: value.ID
-          }
-        } else if (value.filename) {
-          return {
-            typeName: makeTypeName('attachment'),
-            id: value.ID
-          }
+    if (isPlainObject(value)) {
+      if (value.post_type && (value.ID || value.id)) {
+        return {
+          typeName: makeTypeName(value.post_type),
+          id: value.ID
         }
+      } else if (value.filename && (value.ID || value.id)) {
+        return {
+          typeName: makeTypeName(TYPE_ATTACHEMENT),
+          id: value.ID
+        }
+      } else if (value.hasOwnProperty('rendered')) {
+        return value.rendered
+      }
 
-        return this.createCustomFields(value)
+      return this.normalizeFields(value)
     }
+
+    return value
   }
 }
 
