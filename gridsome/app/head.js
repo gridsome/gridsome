@@ -22,7 +22,7 @@ const head = {
     { charset: 'utf-8' },
     { name: 'generator', content: `Gridsome v${config.version}` },
     { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' }
-    { vmid: 'description', name: 'description', content: config.siteDescription }
+    { key: 'description', name: 'description', content: config.siteDescription }
   ],
   base: {},
   noscript: [],
