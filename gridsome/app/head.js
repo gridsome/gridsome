@@ -21,7 +21,7 @@ const head = {
   meta: [
     { charset: 'utf-8' },
     { name: 'generator', content: `Gridsome v${config.version}` },
-    { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' }
+    { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
     { key: 'description', name: 'description', content: config.siteDescription }
   ],
   base: {},
