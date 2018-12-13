@@ -1,6 +1,5 @@
 const axios = require('axios')
 const { forEach, uniq } = require('lodash')
-const { cullByWordCount } = require('./utils')
 const { DEFAULT_EXCLUDES } = require('./constants')
 const Entity = require('./Entity')
 
@@ -13,7 +12,8 @@ class DrupalSource {
       excludes: [],
       format: 'json',
       requestConfig: {},
-      typeName: 'Drupal',
+      routes: {},
+      typeName: 'Drupal'
     }
   }
 
