@@ -26,14 +26,15 @@ module.exports = {
 }
 ```
 Here are all supported options:
-|Property  | Default Value |Notes  |
-|--|--|--|
-| `apiBase` | `jsonapi` | This value is appended to the `baseUrl` to create the root url for your api. The JSON:API default value is `jsonapi` but can be changed using [JSON:API Extras](https://www.drupal.org/project/jsonapi_extras)|
-| `baseUrl` | *none*, **required** |This is the base url of your Drupal instance. (`https://somedrupalsite.pantheon.io`)  |
-| `excludes` | *see src/constants.js* |An array of entity types you want excluded from the [GraphQL conversion](#api-schema-to-graphql-conversion). Any length array will fully override the defaults. [See Excludes](#excludes). |
-| `requestConfig` | `{}` |A config object that is passed directly to `axios` request. [See Auth](#auth).|
-| `routes` | `{}` |An object keyed by entity type that specifies a `path` value override used for dynamic routing. [See Routing](#routing).|
-| `typeName` | `Drupal` |A String value to name space your GraphQL Types during conversion - this prevents collisions with other plugins. [See GraphQL Conversion](#api-schema-to-graphql-conversion).|
+
+Property |Default Value | Notes
+---|---|---
+`apiBase` | `jsonapi` | This value is appended to the `baseUrl` to create the root url for your api. The JSON:API default value is `jsonapi` but can be changed using [JSON:API Extras](https://www.drupal.org/project/jsonapi_extras)
+`baseUrl` | *none*, **required** | This is the base url of your Drupal instance. (`https://somedrupalsite.pantheon.io`)
+| `excludes` | *see src/constants.js* | An array of entity types you want excluded from the [GraphQL conversion](#api-schema-to-graphql-conversion). Any length array will fully override the defaults. [See Excludes](#excludes).
+`requestConfig` | `{}` | A config object that is passed directly to `axios` request. [See Auth](#auth).
+`routes` | `{}`| An object keyed by entity type that specifies a `path` value override used for dynamic routing. [See Routing](#routing).
+`typeName` | `Drupal` | A String value to name space your GraphQL Types during conversion - this prevents collisions with other plugins. [See GraphQL Conversion](#api-schema-to-graphql-conversion).
 
 ### API Schema to GraphQL Conversion
 The first operation this plugin performs is a request to the api root:
