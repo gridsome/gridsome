@@ -164,6 +164,9 @@ class ContentTypeCollection extends EventEmitter {
 
   processNodeFields (fields, origin) {
     const processField = field => {
+      if (field === undefined) return field
+      if (field === null) return field
+
       switch (typeof field) {
         case 'object':
           return processFields(field)
