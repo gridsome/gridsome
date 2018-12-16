@@ -93,10 +93,9 @@ function genConfig ({ config }) {
 }
 
 function genRoutes (app) {
-  const { pages, notFoundComponent } = app.routerData
-  let res = `import NotFound from ${JSON.stringify(notFoundComponent)}\n\n`
+  let res = ''
 
-  res += `export const routes = [${pages.map(page => {
+  res += `export default [${app.routes.map(page => {
     const component = JSON.stringify(page.component)
     const chunkName = JSON.stringify('component--' + slugify(page.name || page.chunkName))
     const props = []
@@ -114,8 +113,6 @@ function genRoutes (app) {
 
     return `\n  {\n${props.join(',\n')}\n  }`
   }).join(',')}\n]\n\n`
-
-  res += `export { NotFound }\n\n`
 
   return res
 }
