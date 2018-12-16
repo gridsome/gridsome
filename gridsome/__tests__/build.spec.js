@@ -33,6 +33,11 @@ test('build basic project', async () => {
   expect(indexHTML).toMatch('<span>test 3</span>')
   expect(indexHTML).toMatch('<a href="/blog">Blog</a>')
 
+  // 404.html
+  expect(exists('dist/404.html')).toBeTruthy()
+  expect(content('dist/404.html')).toMatch('Custom 404 - not found')
+  expect(content('dist/404.html')).toMatch('string from custom schema')
+
   // favicon
   expect(exists('dist/assets/static/favicon-w32.test.png')).toBeTruthy()
 
