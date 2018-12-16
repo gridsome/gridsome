@@ -1,6 +1,8 @@
 const execa = require('execa')
-const args = ['--env', 'node', '--watchAll']
 
-execa('jest', args, {
-  stdio: 'inherit'
+execa('jest', ['--config', 'jest.config.js', '--watchAll'], {
+  stdio: 'inherit',
+  env: {
+    WITH_BUILD: process.argv.some(v => v === '--build')
+  }
 })

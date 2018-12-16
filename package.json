@@ -8,29 +8,9 @@
   "scripts": {
     "bootstrap": "lerna bootstrap",
     "test": "node scripts/test.js",
+    "test:build": "node scripts/test.js --build",
     "changelog": "node scripts/changelog.js",
     "lint": "eslint --fix \"gridsome/**/*.js\" \"packages/**/*.js\""
-  },
-  "jest": {
-    "testEnvironment": "node",
-    "setupFiles": [
-      "<rootDir>/scripts/testSetup.js"
-    ],
-    "testMatch": [
-      "**/__tests__/**/*.spec.js"
-    ],
-    "collectCoverageFrom": [
-      "gridsome/lib/**/*.js"
-    ],
-    "testPathIgnorePatterns": [
-      "/__fixtures__/",
-      "/projects/",
-      "/scripts/"
-    ],
-    "watchPathIgnorePatterns": [
-      "/__fixtures__/",
-      "/projects/"
-    ]
   },
   "devDependencies": {
     "@babel/core": "^7.0.0",

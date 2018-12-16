@@ -3,6 +3,7 @@
     <h1>Gridsome</h1>
     <h2>{{ $page.metaData.myTest.value }}</h2>
     <g-link :to="{ name: 'blog' }">Blog</g-link>
+    <g-link :to="{ name: 'home' }" active-class="test-active">Home</g-link>
     <g-image src="~/assets/test.png" alt="Test image" width="1000" />
     <g-link to="~/assets/dummy.pdf">Download</g-link>
     <span>{{ $page.customRootValue }}</span>
