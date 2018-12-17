@@ -128,9 +128,11 @@ test('create node type with custom fields', async () => {
     id: '1',
     fields: {
       foo: 'bar',
+      emptyString: '',
+      price: '',
       list: ['item'],
       obj: {
-        foo: 'bar'
+        foo: 'foo'
       }
     }
   })
@@ -140,17 +142,29 @@ test('create node type with custom fields', async () => {
     fields: {
       foo: 'bar',
       list: ['item'],
+      price: '198.00',
       obj: {
         foo: 'bar'
       }
     }
   })
 
-  const query = '{ testPost (id: "1") { id foo list obj { foo }}}'
+  const query = `{
+    testPost (id: "2") {
+      foo
+      list
+      price
+      emptyString
+      obj { foo }
+    }
+  }`
+
   const { data } = await createSchemaAndExecute(query)
 
-  expect(data.testPost.id).toEqual('1')
   expect(data.testPost.foo).toEqual('bar')
+  expect(data.testPost.emptyString).toEqual('')
+  expect(data.testPost.price).toEqual('198.00')
+  expect(data.testPost.list).toHaveLength(1)
   expect(data.testPost.list[0]).toEqual('item')
   expect(data.testPost.obj.foo).toEqual('bar')
 })

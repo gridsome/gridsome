@@ -14,7 +14,9 @@ module.exports = (app, { isProd, isServer }) => {
   const pathPrefix = forwardSlash(path.join(projectConfig.pathPrefix, '/'))
   const config = new Config()
 
-  const filename = `${assetsDir}/js/[name]${isProd ? '.[contenthash]' : ''}.js`
+  const useHash = isProd && !process.env.GRIDSOME_TEST
+  const filename = `${assetsDir}/js/[name]${useHash ? '.[contenthash:8]' : ''}.js`
+  const assetname = `[name]${useHash ? '.[hash:8]' : ''}.[ext]`
   const inlineLimit = 10000
 
   config.mode(isProd ? 'production' : 'development')
@@ -141,7 +143,7 @@ module.exports = (app, { isProd, isServer }) => {
     .loader('url-loader')
     .options({
       limit: inlineLimit,
-      name: `${assetsDir}/img/[name].[hash:8].[ext]`
+      name: `${assetsDir}/img/${assetname}`
     })
 
   config.module.rule('svg')
@@ -149,7 +151,7 @@ module.exports = (app, { isProd, isServer }) => {
     .use('file-loader')
     .loader('file-loader')
     .options({
-      name: `${assetsDir}/img/[name].[hash:8].[ext]`
+      name: `${assetsDir}/img/${assetname}`
     })
 
   config.module.rule('media')
@@ -158,7 +160,7 @@ module.exports = (app, { isProd, isServer }) => {
     .loader('url-loader')
     .options({
       limit: inlineLimit,
-      name: `${assetsDir}/media/[name].[hash:8].[ext]`
+      name: `${assetsDir}/media/${assetname}`
     })
 
   config.module.rule('fonts')
@@ -167,7 +169,7 @@ module.exports = (app, { isProd, isServer }) => {
     .loader('url-loader')
     .options({
       limit: inlineLimit,
-      name: `${assetsDir}/fonts/[name].[hash:8].[ext]`
+      name: `${assetsDir}/fonts/${assetname}`
     })
 
   // data
@@ -195,7 +197,7 @@ module.exports = (app, { isProd, isServer }) => {
 
   // plugins
 
-  if (process.stdout.isTTY) {
+  if (process.stdout.isTTY && !process.env.GRIDSOME_TEST) {
     config.plugin('progress')
       .use(require('webpack/lib/ProgressPlugin'))
   }
@@ -234,7 +236,7 @@ module.exports = (app, { isProd, isServer }) => {
   if (isProd && !isServer) {
     config.plugin('extract-css')
       .use(CSSExtractPlugin, [{
-        filename: `${assetsDir}/css/styles.[chunkhash:8].css`
+        filename: `${assetsDir}/css/styles${useHash ? '.[contenthash:8]' : ''}.css`
       }])
 
     config.optimization.splitChunks({

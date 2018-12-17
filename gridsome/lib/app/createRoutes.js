@@ -1,5 +1,6 @@
 const path = require('path')
 const camelCase = require('camelcase')
+const { info } = require('../utils/log')
 
 const {
   PAGED_ROUTE,
@@ -48,7 +49,7 @@ module.exports = ({ store, config }) => {
     const contentType = store.getContentType(typeName)
 
     if (!contentType) {
-      return console.info(
+      return info(
         `No content type was found for ${page.internal.origin}`
       )
     }

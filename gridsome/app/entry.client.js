@@ -28,7 +28,11 @@ document.addEventListener('click', event => {
   ) return
 
   const path = stripPathPrefix($el.pathname)
-  const { location } = router.resolve({ path, hash: $el.hash })
+  const { route, location } = router.resolve({ path, hash: $el.hash })
+
+  if (route.name === '404') {
+    return
+  }
 
   router.push(location)
   event.preventDefault()

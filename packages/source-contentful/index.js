@@ -35,7 +35,7 @@ class ContentfulSource {
     for (const contentType of contentTypes) {
       addContentType({
         typeName: makeTypeName(contentType.name),
-        route: routes[contentType.name] || `${slugify(contentType.name)}/:slug`,
+        route: routes[contentType.name] || `/${slugify(contentType.name)}/:slug`,
         refs: contentType.fields.reduce((refs, { id, items }) => {
           if (items && items.type === 'Link' && items.linkType === 'Entry') {
             refs[id] = {

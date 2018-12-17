@@ -58,6 +58,7 @@ test('infer types from node fields', () => {
   expect(types.string.type).toEqual(GraphQLString)
   expect(types.number.type).toEqual(GraphQLInt)
   expect(types.float.type).toEqual(GraphQLFloat)
+  expect(types.emptyString.type).toEqual(GraphQLString)
   expect(types.falsyBoolean.type).toEqual(GraphQLBoolean)
   expect(types.truthyBoolean.type).toEqual(GraphQLBoolean)
   expect(types.stringList.type).toBeInstanceOf(GraphQLList)
@@ -75,7 +76,6 @@ test('infer types from node fields', () => {
   expect(types.nullValue).toBeUndefined()
   expect(types.emptyList).toBeUndefined()
   expect(types.emptyObj).toBeUndefined()
-  expect(types.emptyString).toBeUndefined()
 })
 
 test('infer date fields', () => {

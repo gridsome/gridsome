@@ -1,10 +1,10 @@
 const camelCase = require('camelcase')
-const { isEmpty } = require('lodash')
 const { sortOrderType } = require('./types')
 const { nodeInterface } = require('./interfaces')
 const { isDate, dateTypeField } = require('./types/date')
 const { isFile, fileType } = require('./types/file')
 const { isImage, imageType } = require('./types/image')
+const { isEmpty, isPlainObject } = require('lodash')
 const { fieldResolver, createRefResolver } = require('./resolvers')
 
 const {
@@ -69,7 +69,7 @@ function getFieldValue (value, currentValue) {
     return value.map((value, index) => {
       return getFieldValue(value, currentValue ? currentValue[index] : undefined)
     })
-  } else if (typeof value === 'object') {
+  } else if (isPlainObject(value)) {
     if (isRefField(value)) {
       const ref = currentValue || { typeName: value.typeName }
       ref.isList = ref.isList || Array.isArray(value.id)
@@ -110,10 +110,10 @@ function inferType (value, key, typeName, nodeTypes) {
       if (isImage(value)) return imageType
       if (isFile(value)) return fileType
 
-      return value ? {
+      return {
         type: GraphQLString,
-        resolve: fieldResolver
-      } : null
+        resolve: (...args) => fieldResolver(...args) || ''
+      }
     case 'boolean':
       return {
         type: GraphQLBoolean,

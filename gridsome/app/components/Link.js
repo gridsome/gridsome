@@ -16,7 +16,9 @@ export default {
 
   props: {
     to: { type: [Object, String] },
-    page: { type: Number }
+    page: { type: Number },
+    activeClass: { type: String, default: 'active' },
+    exactActiveClass: { type: String, default: 'active--exact' }
   },
 
   render: (h, { data, props, parent, children, ...res }) => {
@@ -54,8 +56,8 @@ export default {
       ref,
       attrs: {
         to,
-        activeClass: 'active',
-        exactActiveClass: 'active--exact',
+        activeClass: props.activeClass,
+        exactActiveClass: props.exactActiveClass,
         ...data.attrs
       },
       domProps: {
