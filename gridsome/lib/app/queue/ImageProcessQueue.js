@@ -77,7 +77,10 @@ class ImageProcessQueue {
       width
     )
 
-    const imageHeight = Math.ceil(height * (imageWidth / width))
+    const imageHeight = options.height !== undefined
+      ? parseInt(options.height, 10)
+      : Math.ceil(height * (imageWidth / width))
+
     const imageSizes = (options.sizes || [480, 1024, 1920, 2560]).filter(size => {
       return size <= maxImageWidth && size <= imageWidth
     })
@@ -102,9 +105,15 @@ class ImageProcessQueue {
 
     const sets = imageSizes.map((width = imageWidth) => {
       const height = Math.ceil(imageHeight * (width / imageWidth))
-      const imageOptions = this.createImageOptions({ ...options, width })
-      const filename = this.createFileName(filePath, imageOptions, hash)
-      const src = createSrcPath(filename, imageOptions)
+      const imageOptions = { ...options, width }
+
+      if (options.height !== undefined) {
+        imageOptions.height = height
+      }
+
+      const arr = this.createImageOptions(imageOptions)
+      const filename = this.createFileName(filePath, arr, hash)
+      const src = createSrcPath(filename, arr)
 
       return { filename, src, width, height }
     })
@@ -166,6 +175,14 @@ class ImageProcessQueue {
         key: 'width',
         shortKey: 'w',
         value: options.width
+      })
+    }
+
+    if (options.height) {
+      imageOptions.push({
+        key: 'height',
+        shortKey: 'h',
+        value: options.height
       })
     }
 

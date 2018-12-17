@@ -77,6 +77,19 @@ test('resize image by width attribute', async () => {
   expect(result.srcset[0]).toEqual('/assets/static/1000x600-w300.test.png 300w')
 })
 
+test('resize image by width and height attribute', async () => {
+  const filePath = path.resolve(__dirname, 'assets/1000x600.png')
+  const queue = new AssetsQueue({ context, config: baseconfig })
+
+  const result = await queue.add(filePath, { width: 500, height: 500 })
+
+  expect(queue.images.queue).toHaveLength(2)
+  expect(result.src).toEqual('/assets/static/1000x600-w500-h500.test.png')
+  expect(result.sizes).toEqual('(max-width: 500px) 100vw, 500px')
+  expect(result.sets[0].src).toEqual('/assets/static/1000x600-w480-h480.test.png')
+  expect(result.sets[1].src).toEqual('/assets/static/1000x600-w500-h500.test.png')
+})
+
 test('disable blur filter', async () => {
   const filePath = path.resolve(__dirname, 'assets/1000x600.png')
   const queue = new AssetsQueue({ context, config: baseconfig })

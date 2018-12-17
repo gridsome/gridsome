@@ -14,6 +14,7 @@ export default {
   props: {
     src: { type: [Object, String], required: true },
     width: { type: String },
+    height: { type: String },
     alt: { type: String },
     immediate: { type: true },
     quality: { type: String },

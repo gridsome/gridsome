@@ -87,6 +87,15 @@ test('resize image', async () => {
   expect(height).toEqual(60)
 })
 
+test('crop image', async () => {
+  const files = await process(['1000x600.png'], { width: 500, height: 500 })
+  const { type, width, height } = imageSize.sync(files[0].buffer)
+
+  expect(type).toEqual('png')
+  expect(width).toEqual(500)
+  expect(height).toEqual(500)
+})
+
 test('do not upscale images', async () => {
   const files = await process(['350x250.png'], { width: 500 })
   const { type, width, height } = imageSize.sync(files[0].buffer)
