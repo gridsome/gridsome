@@ -122,6 +122,9 @@ class Entity {
 
         const fields = this.processFields(attributes)
         const relationshipFields = this.processRelationships(relationships)
+        const origin = typeof item.links.self === 'object'
+          ? item.links.self.href
+          : item.links.self
 
         this.graphQlContentType.addNode({
           id,
@@ -130,6 +133,9 @@ class Entity {
           fields: {
             ...fields,
             ...relationshipFields
+          },
+          internal: {
+            origin
           }
         })
       }
