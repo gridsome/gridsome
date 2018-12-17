@@ -122,6 +122,35 @@ test('remove node', () => {
   emit.mockRestore()
 })
 
+test('add nodes with custom fields', () => {
+  const api = createPlugin()
+
+  const contentType = api.store.addContentType({ typeName: 'TestPost' })
+
+  const node = contentType.addNode({
+    title: 'Lorem ipsum',
+    fields: {
+      nullValue: null,
+      undefinedValue: undefined,
+      falseValue: false,
+      test: 'My value',
+      list: ['1', '2', '3'],
+      objectList: [{ test: 1 }, { test: 2 }],
+      number: 24
+    }
+  })
+
+  expect(node.fields.test).toEqual('My value')
+  expect(node.fields.nullValue).toEqual(null)
+  expect(node.fields.undefinedValue).toEqual(undefined)
+  expect(node.fields.falseValue).toEqual(false)
+  expect(node.fields.list).toHaveLength(3)
+  expect(node.fields.objectList).toHaveLength(2)
+  expect(node.fields.objectList[0]).toMatchObject({ test: 1 })
+  expect(node.fields.objectList[1]).toMatchObject({ test: 2 })
+  expect(node.fields.number).toEqual(24)
+})
+
 test('add type with ref', () => {
   const api = createPlugin()
 
