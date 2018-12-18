@@ -83,6 +83,8 @@ test('resize image by width and height attribute', async () => {
 
   const result = await queue.add(filePath, { width: 500, height: 500 })
 
+  console.log(result)
+
   expect(queue.images.queue).toHaveLength(2)
   expect(result.src).toEqual('/assets/static/1000x600-w500-h500.test.png')
   expect(result.sizes).toEqual('(max-width: 500px) 100vw, 500px')

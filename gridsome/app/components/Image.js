@@ -15,6 +15,9 @@ export default {
     src: { type: [Object, String], required: true },
     width: { type: String },
     height: { type: String },
+    fit: { type: String },
+    position: { type: String },
+    background: { type: String },
     alt: { type: String },
     immediate: { type: true },
     quality: { type: String },
@@ -23,7 +26,6 @@ export default {
     // responsive: true
     // grayscale: false
     // duotone: false
-    // focus: center
     // rotate: 0
     // transition-name?
     // transition-duration?

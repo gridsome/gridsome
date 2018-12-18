@@ -43,6 +43,7 @@ function createOptionsQuery (attrs) {
   return attrs
     .filter(attr => attr.name !== 'src')
     .filter(attr => isStatic(attr.value))
-    .map(attr => `${attr.name}=${extractValue(attr.value)}`)
+    .map(attr => ({ name: attr.name, value: extractValue(attr.value) }))
+    .map(attr => `${attr.name}=${encodeURIComponent(attr.value)}`)
     .join('&')
 }

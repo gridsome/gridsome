@@ -217,7 +217,7 @@ async function processFiles (queue, { outDir }) {
   info(`Process files (${totalFiles} files) - ${timer(hirestime.S)}s`)
 }
 
-async function processImages (queue, { outDir, imageCacheDir, minProcessImageWidth }) {
+async function processImages (queue, config) {
   const timer = hirestime()
   const chunks = chunk(queue.queue, 100)
   const worker = createWorker('image-processor')
@@ -227,9 +227,10 @@ async function processImages (queue, { outDir, imageCacheDir, minProcessImageWid
     try {
       await worker.process({
         queue,
-        outDir,
-        cacheDir: imageCacheDir,
-        minWidth: minProcessImageWidth
+        outDir: config.outDir,
+        cacheDir: config.imageCacheDir,
+        minWidth: config.minProcessImageWidth,
+        backgroundColor: config.images.backgroundColor
       })
     } catch (err) {
       worker.end()
