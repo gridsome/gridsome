@@ -208,12 +208,12 @@ class WordPressSource {
       if (value.post_type && (value.ID || value.id)) {
         return {
           typeName: makeTypeName(value.post_type),
-          id: value.ID
+          id: value.ID || value.id
         }
       } else if (value.filename && (value.ID || value.id)) {
         return {
           typeName: makeTypeName(TYPE_ATTACHEMENT),
-          id: value.ID
+          id: value.ID || value.id
         }
       } else if (value.hasOwnProperty('rendered')) {
         return value.rendered
