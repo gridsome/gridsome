@@ -16,7 +16,7 @@ module.exports = async (context, args) => {
 
   const buildTime = hirestime()
   const app = await createApp(context, { args })
-  const { config, graphql } = app
+  const { config, graphql, store } = app
 
   await app.dispatch('beforeBuild', { context, config })
   await fs.ensureDir(config.cacheDir)
@@ -26,7 +26,7 @@ module.exports = async (context, args) => {
 
   // 1. run all GraphQL queries and save results into json files
   await app.dispatch('beforeRenderQueries', () => ({ context, config, queue }))
-  await renderPageQueries(queue, graphql)
+  await renderPageQueries(queue, graphql, store)
 
   // 2. compile assets with webpack
   await compileAssets(app)
@@ -83,6 +83,7 @@ async function createRenderQueue ({ router, config, graphql }) {
     return {
       path: fullPath.replace(/\/+/g, '/'),
       dataOutput: query ? dataOutput : null,
+      node: page,
       htmlOutput,
       output,
       query,
@@ -107,7 +108,8 @@ async function createRenderQueue ({ router, config, graphql }) {
       htmlOutput,
       output,
       query,
-      route
+      route,
+      node
     }
   }
 
@@ -159,13 +161,16 @@ async function createRenderQueue ({ router, config, graphql }) {
   return queue
 }
 
-async function renderPageQueries (queue, graphql) {
+async function renderPageQueries (queue, graphql, store) {
   const timer = hirestime()
   const pages = queue.filter(page => !!page.dataOutput)
 
   await pMap(pages, async page => {
-    const variables = { ...page.route.params, path: page.path }
-    const results = await graphql(page.query, variables)
+    const results = await graphql(page.query, {
+      ...page.node.fields,
+      page: page.route.params.page,
+      path: page.path
+    })
 
     await fs.outputFile(page.dataOutput, JSON.stringify(results))
   }, { concurrency: sysinfo.cpus.logical })
