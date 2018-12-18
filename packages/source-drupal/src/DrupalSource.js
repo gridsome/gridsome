@@ -9,7 +9,7 @@ class DrupalSource {
     return {
       apiBase: 'jsonapi',
       baseUrl: '',
-      excludes: [],
+      exclude: [],
       format: 'json',
       requestConfig: {},
       routes: {},
@@ -29,15 +29,10 @@ class DrupalSource {
   }
 
   async initialize (store) {
-    try {
-      this.store = store
-      this.apiSchema = await this.fetchJsonApiSchema()
+    this.store = store
+    this.apiSchema = await this.fetchJsonApiSchema()
 
-      await this.processEntities()
-    } catch (error) {
-      const { message } = error
-      throw new Error(message)
-    }
+    await this.processEntities()
   }
 
   /**
@@ -79,28 +74,23 @@ class DrupalSource {
    * if property key (in the apiScheme object) is not in the exlucdes list, it creates a new instance
    */
   async processEntities () {
-    const { excludes: userExcludes = [] } = this.options
+    const { exclude: userExclude = [] } = this.options
+    const capturedEntities = []
+    // create unique array of user passed exclude and defaultExcludes
+    const exclude = userExclude.length ? uniq(userExclude) : DEFAULT_EXCLUDES
 
-    try {
-      const capturedEntities = []
-      // create unique array of user passed excludes and defaultExcludes
-      const excludes = userExcludes.length ? uniq(userExcludes) : DEFAULT_EXCLUDES
+    // loop through all the properties in apiSchema and create Entity instances
+    // excluding any property with a key that is in DEFAULT_EXCLUDES
+    forEach(this.apiSchema, (url, entityType) => {
+      if (!exclude.includes(entityType)) {
+        // creating an instance of the entity class, see ./entities/*
+        this.entities[entityType] = new Entity(this, { entityType, url })
 
-      // loop through all the properties in apiSchema and create Entity instances
-      // excluding any property with a key that is in DEFAULT_EXCLUDES
-      forEach(this.apiSchema, (url, entityType) => {
-        if (!excludes.includes(entityType)) {
-          // creating an instance of the entity class, see ./entities/*
-          this.entities[entityType] = new Entity(this, { entityType, url })
+        capturedEntities.push(this.entities[entityType])
+      }
+    })
 
-          capturedEntities.push(this.entities[entityType])
-        }
-      })
-
-      await Promise.all(capturedEntities.map(entity => entity.initialize()))
-    } catch ({ message }) {
-      throw new Error(`processEntities(): ${message}`)
-    }
+    await Promise.all(capturedEntities.map(entity => entity.initialize()))
   }
 }
 

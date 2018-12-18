@@ -1,5 +1,5 @@
 const { DEFAULT_EXCLUDES } = require('./src/constants')
 
 module.exports = {
-  excludes: DEFAULT_EXCLUDES.slice()
+  defaultExcludes: DEFAULT_EXCLUDES.slice()
 }

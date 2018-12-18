@@ -1,5 +1,5 @@
 const axios = require('axios')
-const { reduce, uniqBy } = require('lodash')
+const { reduce } = require('lodash')
 
 class Entity {
   constructor (source, { entityType, url }) {
@@ -31,37 +31,16 @@ class Entity {
 
     const { store } = this.source
 
-    return (innerText.endsWith('s'))
-      ? store.makeTypeName(innerText)
-      : `${store.makeTypeName(innerText)}s`
+    return store.makeTypeName(innerText)
   }
 
   async initialize () {
-    try {
-      console.log(`Intializing ${this.getEntityTypeName}...`)
+    await this.fetchData()
 
-      await this.fetchData()
-
-      // don't build the graphQl if there is no response
-      if (this.response.length) await this.buildGraphQl()
-      else console.log(`${this.getEntityTypeName} has no values in response`)
-
-      console.log(`${this.getEntityTypeName} initialzed...`)
-      return
-    } catch (error) {
-      const {
-        message,
-        response: {
-          status
-        } = {}
-      } = error
-
-      if (String(status).startsWith(4) || String(status).startsWith(5)) {
-        console.error(`initialize(): ${this.getEntityTypeName} ${message}`)
-      } else {
-        throw new Error(`initialize(): ${this.getEntityTypeName} ${message}`)
-      }
-    }
+    // don't build the graphQl if there is no response
+    this.response.length
+      ? await this.buildGraphQl()
+      : console.log(`${this.getEntityTypeName} has no values in response`)
   }
 
   async fetchData () {
@@ -90,72 +69,73 @@ class Entity {
       }
 
       return fetchRecurse(this.url)
-    } catch ({ message }) {
+    } catch (error) {
       // should catch 403s and 405
       // throw Error stops process from running
-      console.error(`fetchData(): ${message}`)
+      const {
+        message,
+        response: {
+          status
+        } = {}
+      } = error
+
+      if (String(status).startsWith(4) || String(status).startsWith(5)) {
+        console.error(`fetchData(): ${message}`)
+      } else {
+        throw new Error(`fetchData(): ${this.getEntityTypeName} ${message}`)
+      }
     }
   }
 
   async buildGraphQl () {
-    console.log('Building GraphQL for: ', this.getEntityTypeName)
+    const { store } = this.source
+    const { addContentType } = store
 
-    try {
-      const { store } = this.source
-      const { addContentType } = store
+    const config = this.createGraphQlType()
+    this.graphQlContentType = addContentType(config)
 
-      const config = this.createGraphQlType()
-      this.graphQlContentType = addContentType(config)
+    for (const item of this.response) {
+      const {
+        id,
+        attributes,
+        attributes: {
+          title,
+          name,
+          created,
+          changed
+        } = {},
+        relationships
+      } = item
 
-      for (const item of this.response) {
-        const {
-          id,
-          attributes,
-          attributes: {
-            title,
-            name,
-            created,
-            changed
-          } = {},
-          relationships
-        } = item
+      const fields = this.processFields(attributes)
+      const relationshipFields = this.processRelationships(relationships)
+      const origin = typeof item.links.self === 'object'
+        ? item.links.self.href
+        : item.links.self
 
-        const fields = this.processFields(attributes)
-        const relationshipFields = this.processRelationships(relationships)
-        const origin = typeof item.links.self === 'object'
-          ? item.links.self.href
-          : item.links.self
-
-        this.graphQlContentType.addNode({
-          id,
-          title: title || name,
-          date: created || changed,
-          fields: {
-            ...fields,
-            ...relationshipFields
-          },
-          internal: {
-            origin
-          }
-        })
-      }
-    } catch ({ message }) {
-      throw new Error(`${this.getEntityTypeName} ${message}`)
+      this.graphQlContentType.addNode({
+        id,
+        title: title || name,
+        date: created || changed,
+        fields: {
+          ...fields,
+          ...relationshipFields
+        },
+        internal: {
+          origin
+        }
+      })
     }
   }
 
   processFields (fields = {}) {
-    try {
-      const processedFields = reduce(fields, (newFields, field, key) => {
-        newFields[key] = (field !== 'null') ? field : ''
+    const processedFields = reduce(fields, (newFields, field, key) => {
+      newFields[key] = (field !== 'null') ? field : ''
 
-        return newFields
-      }, {})
+      return newFields
+    }, {})
 
-      return processedFields
-    } catch ({ message }) {
-      throw new Error(`processFields(): ${message}`)
-    }
+    return processedFields
   }
 
   createGraphQlType (override = {}) {
@@ -186,27 +166,23 @@ class Entity {
   }
 
   processRelationships (relationships) {
-    try {
-      return reduce(relationships, (result, relationship, key) => {
-        const { data } = relationship
+    return reduce(relationships, (result, relationship, key) => {
+      const { data } = relationship
 
-        if (data !== null) {
-          result[key] = Array.isArray(data)
-            ? data.map(relation => ({
-              typeName: this.createTypeName(relation.type),
-              id: relation.id
-            }))
-            : {
-              typeName: this.createTypeName(data.type),
-              id: data.id
-            }
-        }
+      if (data !== null) {
+        result[key] = Array.isArray(data)
+          ? data.map(relation => ({
+            typeName: this.createTypeName(relation.type),
+            id: relation.id
+          }))
+          : {
+            typeName: this.createTypeName(data.type),
+            id: data.id
+          }
+      }
 
-        return result
-      }, {})
-    } catch ({ message }) {
-      throw new Error(`processRelationships(): ${message}`)
-    }
+      return result
+    }, {})
   }
 }
 
