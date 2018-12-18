@@ -6,6 +6,7 @@ const { isFile, fileType } = require('./types/file')
 const { isImage, imageType } = require('./types/image')
 const { isEmpty, isPlainObject } = require('lodash')
 const { fieldResolver, createRefResolver } = require('./resolvers')
+const { warn } = require('../../utils/log')
 
 const {
   GraphQLInt,
@@ -169,12 +170,14 @@ function createRefType (ref, fieldName, fieldTypeName, nodeTypes) {
     } else if (typeName.length === 1) {
       res.type = nodeTypes[typeName[0]]
     } else {
-      throw new Error(`No reference found for ${fieldName}.`)
+      warn(`No reference found for ${fieldName}.`)
+      return null
     }
   } else if (nodeTypes.hasOwnProperty(typeName)) {
     res.type = nodeTypes[typeName]
   } else {
-    throw new Error(`No reference found for ${fieldName}.`)
+    warn(`No reference found for ${fieldName}.`)
+    return null
   }
 
   if (ref.isList) {
