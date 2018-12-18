@@ -29,10 +29,15 @@ exports.imageType = {
   },
   async resolve (obj, args, context, info) {
     const value = fieldResolver(obj, args, context, info)
+    let result
 
     if (!value) return null
 
-    const result = await context.queue.add(value, args)
+    try {
+      result = await context.queue.add(value, args)
+    } catch (err) {
+      return null
+    }
 
     return {
       type: result.type,
