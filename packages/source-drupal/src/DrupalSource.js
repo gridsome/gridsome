@@ -37,7 +37,7 @@ class DrupalSource {
 
   /**
    * fetches /${baseUrl}/${apiBase}
-   * 
+   *
    * this response should be the jsonapi schema
    * this function pulls the "links" property out of the response
    */
@@ -60,7 +60,11 @@ class DrupalSource {
        *  links: {}
        * }
        */
-      const { data: { links } = {} } = response
+      const {
+        data: {
+          links
+        } = {}
+      } = response
 
       return links
     } catch (error) {

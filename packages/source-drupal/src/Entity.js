@@ -139,7 +139,7 @@ class Entity {
   }
 
   createGraphQlType (override = {}) {
-    let {
+    const {
       store,
       options: {
         typeName: prefix,
@@ -147,12 +147,12 @@ class Entity {
       } = {}
     } = this.source
 
-    prefix = store.slugify(prefix)
+    const typeNamePrefix = store.slugify(prefix)
 
     // turn DrupalTaxonomyTermTags into 'taxonomy-term-tags'
     const slug = store.slugify(this.getEntityTypeName)
-    const getRouteSlug = (slug.split(`${prefix}-`)[1])
-      ? slug.split(`${prefix}-`)[1]
+    const getRouteSlug = (slug.split(`${typeNamePrefix}-`)[1])
+      ? slug.split(`${typeNamePrefix}-`)[1]
       : slug
 
     // if user provided custom route in options, use that instead
