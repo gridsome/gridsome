@@ -31,7 +31,7 @@ Property |Default Value | Notes
 ---|---|---
 `apiBase` | `jsonapi` | This value is appended to the `baseUrl` to create the root url for your api. The JSON:API default value is `jsonapi` but can be changed using [JSON:API Extras](https://www.drupal.org/project/jsonapi_extras)
 `baseUrl` | *none*, **required** | This is the base url of your Drupal instance. (`https://somedrupalsite.pantheon.io`)
-| `excludes` | *see src/constants.js* | An array of entity types you want excluded from the [GraphQL conversion](#api-schema-to-graphql-conversion). Any length array will fully override the defaults. [See Excludes](#excludes).
+| `exclude` | *see lib/constants.js* | An array of entity types you want excluded from the [GraphQL conversion](#api-schema-to-graphql-conversion). Any length array will fully override the defaults. [See Excludes](#exclude).
 `requestConfig` | `{}` | A config object that is passed directly to `axios` request. [See Auth](#auth).
 `routes` | `{}`| An object keyed by entity type that specifies a `path` value override used for dynamic routing. [See Routing](#routing).
 `typeName` | `Drupal` | A String value to name space your GraphQL Types during conversion - this prevents collisions with other plugins. [See GraphQL Conversion](#api-schema-to-graphql-conversion).
@@ -69,7 +69,7 @@ The JSON:API returns a manifest of available endpoints for all the entities in D
 ```
 All `keys` in the `links` object of this response become the GraphQL Type prepended by the `typeName` (and with a little bit of clean up):
 ```
-node--article -> DrupalNodeArticles
+node--article -> DrupalNodeArticle
 taxonomy_term--tags -> DrupalTaxonomyTermTags
 user--user -> DrupalUser
 ```
@@ -103,10 +103,13 @@ Path parameters can be any GraphQL field on that node:
 `node--article: 'aritlces/:langcode/:slug' -> /aritcles/en/lorem-ipsum`
 
 ### Excludes
-A majority of the endpoints returned in the api schema are not necessary so `@gridsome/source-drupal` excludes some by default. See those defaults in `src/constants.js`:
+A majority of the endpoints returned in the api schema are not necessary so `@gridsome/source-drupal` exclude some by default. See those defaults in `lib/constants.js`.
+
+> WARNING: A majority of JSON:API endpoints will throw 401/403s unless permissions are granted
+> If you provide your own excludes, the defaults will not be used
 ```
-// default excludes can be imported
-const { excludes } = require('@gridsome/source-drupal')
+// default exclude can be imported
+const { defaultExcludes } = require('@gridsome/source-drupal')
 
 module.exports = {
   plugins: [
@@ -114,7 +117,7 @@ module.exports = {
       use: '@gridsome/source-drupal',
       options: {
         baseUrl: 'https://dev-cctd8.pantheonsite.io',
-        excludes: [...excludes, 'user--user'], // include the defaults
+        exclude: [ ...defaultExcludes, 'user--user' ], // include the defaults
         routes: {
           'node--article': '/articles/:slug',
           'taxonomy_term--tags': '/tags/:slug'
@@ -152,11 +155,11 @@ module.exports = {
 Cookie Auth and OAuth coming soon...
 
 ### Example Page Queries
-List all `DrupalNodeArticles` using `<page-query>` in a Gridsome page:
+List all `DrupalNodeArticle` using `<page-query>` in a Gridsome page:
 ```
 <page-query>
   query Articles {
-    allDrupalNodeArticles (perPage:100) {
+    allDrupalNodeArticle (perPage:100) {
       edges {
         node {
           id,
@@ -168,7 +171,7 @@ List all `DrupalNodeArticles` using `<page-query>` in a Gridsome page:
   }
 </page-query>
 ```
-Get the details of an individual `DrupalNodeArticles` using `<page-query>` in a Gridsome template. GraphQL Connections are named after the relationship `key` in the XHR response:
+Get the details of an individual `DrupalNodeArticle` using `<page-query>` in a Gridsome template. GraphQL Connections are named after the relationship `key` in the XHR response:
 ```
 <page-query>
   query Article ($path: String!) {
