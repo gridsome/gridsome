@@ -99,7 +99,7 @@ test('add meta data', async () => {
 
   expect(errors).toBeUndefined()
   expect(data.metaData.myValue.test).toEqual('Test Value')
-  expect(data.metaData.myValue.image.src).toEqual('/assets/static/350x250-w350.test.png')
+  expect(data.metaData.myValue.image.src).toEqual('/assets/static/350x250.5c1e01e.test.png')
   expect(data.metaData.myValue.file.src).toEqual('/assets/files/dummy.pdf')
   expect(data.metaData.myValue.object.list).toHaveLength(3)
   expect(data.metaData.myValue.object.value).toEqual(1000)
@@ -894,12 +894,12 @@ test('process image types in schema', async () => {
   expect(data.testPost.image2.src).toEqual('https://www.example.com/images/image.png')
   expect(data.testPost.image3.type).toEqual('image')
   expect(data.testPost.image3.mimeType).toEqual('image/png')
-  expect(data.testPost.image3.src).toEqual('/assets/static/350x250-w300-q100.test.png')
+  expect(data.testPost.image3.src).toEqual('/assets/static/350x250.f14e36e.test.png')
   expect(data.testPost.image3.size).toMatchObject({ width: 300, height: 215 })
   expect(data.testPost.image3.sizes).toEqual('(max-width: 300px) 100vw, 300px')
   expect(data.testPost.image3.srcset).toHaveLength(1)
   expect(data.testPost.image4).toBeNull()
-  expect(data.testPost.image5.src).toEqual('/assets/static/350x250-w350.test.png')
+  expect(data.testPost.image5.src).toEqual('/assets/static/350x250.5c1e01e.test.png')
 })
 
 test('process file types in schema', async () => {

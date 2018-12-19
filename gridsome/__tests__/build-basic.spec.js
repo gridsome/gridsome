@@ -37,15 +37,15 @@ test('build basic project', async () => {
   expect(indexHTML).toMatch('Index description')
 
   // favicon
-  expect(exists('dist/assets/static/favicon-w32.test.png')).toBeTruthy()
+  expect(exists('dist/assets/static/favicon.1539b60.test.png')).toBeTruthy()
 
   // g-image
-  expect(exists('dist/assets/static/test-w1000.test.png')).toBeTruthy()
-  expect(exists('dist/assets/static/test-w480.test.png')).toBeTruthy()
+  expect(exists('dist/assets/static/test.82a2fbd.test.png')).toBeTruthy()
+  expect(exists('dist/assets/static/test.97c148e.test.png')).toBeTruthy()
   expect(indexHTML).toMatch('src="data:image/svg+xml')
   expect(indexHTML).toMatch('alt="Test image"')
-  expect(indexHTML).toMatch('data-srcset="/assets/static/test-w480.test.png 480w')
-  expect(indexHTML).toMatch('src="/assets/static/test-w1000.test.png"')
+  expect(indexHTML).toMatch('data-srcset="/assets/static/test.82a2fbd.test.png 480w')
+  expect(indexHTML).toMatch('src="/assets/static/test.97c148e.test.png"')
   expect(indexHTML).toMatch('src="https://www.example.com/assets/image.png"')
   expect(indexHTML).toMatch('alt="External image"')
 

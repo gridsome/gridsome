@@ -108,7 +108,7 @@ test('do not upscale images', async () => {
 test('use cached process results', async () => {
   await fs.copy(
     path.join(context, 'assets', '1000x600.png'),
-    path.join(imageCacheDir, '1000x600-w1000.test.png')
+    path.join(imageCacheDir, '1000x600.97c148e.test.png')
   )
 
   const files = await process(['1000x600.png'], { width: 1000 }, true)

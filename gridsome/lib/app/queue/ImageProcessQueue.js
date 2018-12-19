@@ -209,12 +209,9 @@ class ImageProcessQueue {
     const { name, ext } = path.parse(relPath)
     const string = arr.length ? createOptionsQuery(arr) : ''
 
+    const optionsHash = genHash(string).substr(0, 7)
     const contentHash = !process.env.GRIDSOME_TEST
       ? hash.substr(0, 7)
-      : 'test'
-
-    const optionsHash = !process.env.GRIDSOME_TEST
-      ? genHash(string).substr(0, 7)
       : 'test'
 
     return `${name}.${optionsHash}.${contentHash}${ext}`
