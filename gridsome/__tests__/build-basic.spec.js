@@ -33,6 +33,8 @@ test('build basic project', async () => {
   expect(indexHTML).toMatch('<span>test 3</span>')
   expect(indexHTML).toMatch('<a href="/blog">Blog</a>')
   expect(indexHTML).toMatch('test-active')
+  expect(indexHTML).not.toMatch('Main description')
+  expect(indexHTML).toMatch('Index description')
 
   // favicon
   expect(exists('dist/assets/static/favicon-w32.test.png')).toBeTruthy()

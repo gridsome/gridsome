@@ -44,10 +44,17 @@ export default {
 
   metaInfo () {
     return {
-      meta: [{
-        name: 'og:description',
-        content: this.$page.metaData.myTest.value
-      }]
+      meta: [
+        {
+          name: 'og:description',
+          content: this.$page.metaData.myTest.value
+        },
+        {
+          key: 'description',
+          name: 'description',
+          content: 'Index description'
+        }
+      ]
     }
   }
 }
