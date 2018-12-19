@@ -240,6 +240,7 @@ test('resolve absolute file paths', () => {
       file: 'image.png',
       file2: '/image.png',
       file3: '../image.png',
+      path: 'dir/to/image.png',
       url: 'https://example.com/image.jpg',
       url2: '//example.com/image.jpg',
       url3: 'git@github.com:gridsome/gridsome.git',
@@ -257,6 +258,7 @@ test('resolve absolute file paths', () => {
   expect(node.fields.file).toEqual('/absolute/dir/to/a/image.png')
   expect(node.fields.file2).toEqual('/absolute/dir/to/project/image.png')
   expect(node.fields.file3).toEqual('/absolute/dir/to/image.png')
+  expect(node.fields.path).toEqual('/absolute/dir/to/a/dir/to/image.png')
   expect(node.fields.text).toEqual('Lorem ipsum dolor sit amet.')
   expect(node.fields.text2).toEqual('example.com')
   expect(node.fields.text3).toEqual('md')
@@ -333,8 +335,8 @@ test('resolve paths from external sources', () => {
 
   const node1 = contentType1.addNode({
     fields: {
-      file: '/image.png',
-      file2: 'image.png',
+      filename: 'image.png',
+      file2: '/image.png',
       file3: '../../image.png'
     },
     internal: {
@@ -342,10 +344,14 @@ test('resolve paths from external sources', () => {
     }
   })
 
+  expect(node1.fields.filename).toEqual('https://www.example.com/2018/11/02/image.png')
+  expect(node1.fields.file2).toEqual('/image.png')
+  expect(node1.fields.file3).toEqual('https://www.example.com/2018/image.png')
+
   const node2 = contentType2.addNode({
     fields: {
-      file: '/images/image.png',
-      file2: 'images/image.png',
+      path: 'images/image.png',
+      file2: '/images/image.png',
       file3: './images/image.png'
     },
     internal: {
@@ -353,11 +359,8 @@ test('resolve paths from external sources', () => {
     }
   })
 
-  expect(node1.fields.file).toEqual('/image.png')
-  expect(node1.fields.file2).toEqual('https://www.example.com/2018/11/02/image.png')
-  expect(node1.fields.file3).toEqual('https://www.example.com/2018/image.png')
-  expect(node2.fields.file).toEqual('https://www.example.com/images/image.png')
-  expect(node2.fields.file2).toEqual('https://www.example.com/2018/11/02/another-blog-post/images/image.png')
+  expect(node2.fields.path).toEqual('https://www.example.com/2018/11/02/another-blog-post/images/image.png')
+  expect(node2.fields.file2).toEqual('https://www.example.com/images/image.png')
   expect(node2.fields.file3).toEqual('https://www.example.com/2018/11/02/another-blog-post/images/image.png')
 })
 
@@ -386,6 +389,11 @@ test('resolve paths from external sources with a custom url', () => {
     }
   })
 
+  expect(node.fields.file).toEqual('https://cdn.example.com/assets/image.png')
+  expect(node.fields.file2).toEqual('https://www.example.com/2018/11/02/image.png')
+  expect(node.fields.file3).toEqual('https://www.example.com/2018/11/image.png')
+  expect(node.fields.file4).toEqual('https://subdomain.example.com/images/image.png')
+
   const node2 = contentType2.addNode({
     fields: {
       file: '/image.png',
@@ -398,10 +406,6 @@ test('resolve paths from external sources with a custom url', () => {
     }
   })
 
-  expect(node.fields.file).toEqual('https://cdn.example.com/assets/image.png')
-  expect(node.fields.file2).toEqual('https://www.example.com/2018/11/02/image.png')
-  expect(node.fields.file3).toEqual('https://www.example.com/2018/11/image.png')
-  expect(node.fields.file4).toEqual('https://subdomain.example.com/images/image.png')
   expect(node2.fields.file).toEqual('https://cdn.example.com/assets/images/image.png')
   expect(node2.fields.file2).toEqual('https://www.example.com/2018/11/02/image.png')
   expect(node2.fields.file3).toEqual('https://www.example.com/2018/11/image.png')

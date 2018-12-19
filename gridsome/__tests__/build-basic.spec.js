@@ -44,6 +44,8 @@ test('build basic project', async () => {
   expect(indexHTML).toMatch('alt="Test image"')
   expect(indexHTML).toMatch('data-srcset="/assets/static/test-w480.test.png 480w')
   expect(indexHTML).toMatch('src="/assets/static/test-w1000.test.png"')
+  expect(indexHTML).toMatch('src="https://www.example.com/assets/image.png"')
+  expect(indexHTML).toMatch('alt="External image"')
 
   // g-link (file)
   expect(indexHTML).toMatch('<a href="/blog">Blog</a>')

@@ -105,15 +105,17 @@ test('infer image fields', () => {
         image1: 'image.png',
         image2: '/image.png',
         image3: './image.png',
-        image4: 'https://www.example.com/images/image.png'
+        image4: 'https://www.example.com/images/image.png',
+        image5: 'dir/to/image.png'
       }
     }
   ], 'TestPost')
 
-  expect(types.image1.type).toEqual(GraphQLString)
+  expect(types.image1.type).toEqual(imageType.type)
   expect(types.image2.type).toEqual(imageType.type)
   expect(types.image3.type).toEqual(imageType.type)
   expect(types.image4.type).toEqual(imageType.type)
+  expect(types.image5.type).toEqual(imageType.type)
 })
 
 test('infer file fields', () => {
@@ -121,11 +123,13 @@ test('infer file fields', () => {
     {
       fields: {
         file1: './document.pdf',
-        file2: 'https://www.example.com/files/document.pdf'
+        file2: 'https://www.example.com/files/document.pdf',
+        file3: 'files/document.pdf'
       }
     }
   ], 'TestPost')
 
   expect(types.file1.type).toEqual(fileType.type)
   expect(types.file2.type).toEqual(fileType.type)
+  expect(types.file3.type).toEqual(fileType.type)
 })

@@ -1,3 +1,4 @@
+const url = require('url')
 const path = require('path')
 
 const {
@@ -11,10 +12,13 @@ const { SUPPORTED_IMAGE_TYPES } = require('../../../utils/constants')
 exports.isImage = value => {
   if (typeof value === 'string') {
     const ext = path.extname(value).toLowerCase()
+    const { hostname, pathname } = url.parse(value)
 
-    if (SUPPORTED_IMAGE_TYPES.includes(ext)) {
-      return path.parse(value).base !== value
+    if (hostname && pathname === '/') {
+      return false
     }
+
+    return SUPPORTED_IMAGE_TYPES.includes(ext)
   }
 
   return false
