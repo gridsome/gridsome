@@ -22,10 +22,10 @@ function createFieldTypes (fields, typeName, nodeTypes) {
   const types = {}
 
   for (const key in fields) {
-    const type = createFieldType(fields[key], key, typeName, nodeTypes)
+    const result = createFieldType(fields[key], key, typeName, nodeTypes)
 
-    if (type) {
-      types[key] = type
+    if (result) {
+      types[key] = result
     }
   }
 

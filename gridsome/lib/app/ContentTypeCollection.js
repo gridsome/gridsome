@@ -132,6 +132,8 @@ class ContentTypeCollection extends EventEmitter {
     node.excerpt = options.excerpt || fields.excerpt || ''
     node.withPath = !!options.path
 
+    fields.title = options.title || fields.title
+
     node.fields = this.processNodeFields(fields, node.internal.origin)
     node.path = options.path || this.makePath(node)
 

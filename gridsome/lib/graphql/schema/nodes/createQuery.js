@@ -4,7 +4,7 @@ const {
   GraphQLError
 } = require('../../graphql')
 
-module.exports = nodeType => {
+module.exports = ({ nodeType }) => {
   return {
     type: nodeType,
     args: {

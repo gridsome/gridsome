@@ -1,14 +1,22 @@
+const { isEmpty, reduce } = require('lodash')
+const { pageInfoType, sortOrderType } = require('../types')
+
 const {
   GraphQLInt,
   GraphQLList,
   GraphQLString,
   GraphQLNonNull,
-  GraphQLObjectType
+  GraphQLObjectType,
+  GraphQLInputObjectType
 } = require('../../graphql')
 
-const { pageInfoType, sortOrderType } = require('../types')
+const {
+  createFilterType,
+  createFilterTypes,
+  GraphQLInputFilterObjectType
+} = require('../createFilterTypes')
 
-module.exports = nodeType => {
+module.exports = ({ nodeType, fields }) => {
   const edgeType = new GraphQLObjectType({
     name: `${nodeType.name}Edge`,
     fields: () => ({
@@ -27,18 +35,33 @@ module.exports = nodeType => {
     })
   })
 
+  const args = {
+    sortBy: { type: GraphQLString, defaultValue: 'date' },
+    order: { type: sortOrderType, defaultValue: 'DESC' },
+    perPage: { type: GraphQLInt, defaultValue: 25 },
+    skip: { type: GraphQLInt, defaultValue: 0 },
+    page: { type: GraphQLInt, defaultValue: 1 },
+    regex: { type: GraphQLString }
+  }
+
+  args.filter = {
+    type: new GraphQLInputObjectType({
+      name: `${nodeType.name}Filters`,
+      fields: () => ({
+        title: { type: createFilterType('', 'title', nodeType.name) },
+        ...createFilterTypes(fields, nodeType.name)
+      })
+    })
+  }
+
   return {
     type: connectionType,
     description: `Connection to all ${nodeType.name} nodes`,
-    args: {
-      sortBy: { type: GraphQLString, defaultValue: 'date' },
-      order: { type: sortOrderType, defaultValue: 'DESC' },
-      perPage: { type: GraphQLInt, defaultValue: 25 },
-      skip: { type: GraphQLInt, defaultValue: 0 },
-      page: { type: GraphQLInt, defaultValue: 1 },
-      regex: { type: GraphQLString }
-    },
-    async resolve (_, { sortBy, order, perPage, skip, page, regex }, { store }, info) {
+    args,
+    async resolve (_, input, { store }, info) {
+      const { sortBy, order, skip, regex, filter } = input
+      let { perPage, page } = input
+
       page = Math.max(page, 1) // ensure page higher than 0
       perPage = Math.max(perPage, 1) // ensure page higher than 1
 
@@ -47,6 +70,10 @@ module.exports = nodeType => {
 
       if (regex) {
         query.path = { $regex: new RegExp(regex) }
+      }
+
+      if (filter) {
+        Object.assign(query, toFilterArgs(filter, args.filter, 'fields'))
       }
 
       const results = collection
@@ -84,4 +111,28 @@ module.exports = nodeType => {
       }
     }
   }
+}
+
+function toFilterArgs (input, filters, current) {
+  const fields = filters.type.getFields()
+  const result = {}
+
+  for (const key in input) {
+    const newKey = current ? `${current}.${key}` : key
+
+    if (fields[key].type instanceof GraphQLInputFilterObjectType) {
+      result[newKey] = reduce(input[key], (acc, value, key) => {
+        const lokiKey = `$${key}`
+
+        if (key === 'regex') acc[lokiKey] = new RegExp(value)
+        else acc[lokiKey] = value
+
+        return acc
+      }, {})
+    } else {
+      Object.assign(result, toFilterArgs(input[key], fields[key], newKey))
+    }
+  }
+
+  return result
 }

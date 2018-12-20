@@ -19,8 +19,8 @@ module.exports = store => {
       fields
     })
 
-    queries[camelCase(typeName)] = createQuery(nodeType)
-    connections[`all${typeName}`] = createConnection(nodeType)
+    queries[camelCase(typeName)] = createQuery({ nodeType, fields })
+    connections[`all${typeName}`] = createConnection({ nodeType, fields })
   }
 
   return {
