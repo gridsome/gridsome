@@ -252,6 +252,10 @@ module.exports = (app, { isProd, isServer }) => {
     })
   }
 
+  if (process.env.GRIDSOME_TEST) {
+    config.optimization.minimize(false)
+  }
+
   // helpes
 
   function createCacheOptions () {
