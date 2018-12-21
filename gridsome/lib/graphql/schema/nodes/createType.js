@@ -102,19 +102,19 @@ function createFields (contentType, customFields) {
 function createRefs (contentType, nodeTypes, fields) {
   if (isEmpty(contentType.options.refs)) return null
 
-  return mapValues(contentType.options.refs, ({ typeName, fieldName }, key) => {
-    const field = fields[key] || { type: GraphQLString }
+  return mapValues(contentType.options.refs, ({ typeName }, fieldName) => {
+    const field = fields[fieldName] || { type: GraphQLString }
     const isList = field.type instanceof GraphQLList
     const ref = { typeName, isList }
     const resolve = createRefResolver(ref)
 
     return {
-      ...createRefType(ref, key, contentType.typeName, nodeTypes),
+      ...createRefType(ref, fieldName, contentType.typeName, nodeTypes),
       resolve: (obj, args, context, info) => {
         const field = {
           [fieldName]: {
             typeName,
-            id: obj.fields[key]
+            id: obj.fields[fieldName]
           }
         }
 
