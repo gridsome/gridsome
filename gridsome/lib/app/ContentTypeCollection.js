@@ -88,7 +88,9 @@ class ContentTypeCollection extends EventEmitter {
     node.date = options.date || fields.date || node.date
     node.slug = options.slug || fields.slug || this.slugify(node.title)
     node.internal = Object.assign({}, node.internal, internal)
-    node.path = options.path || this.makePath(node)
+    node.path = typeof options.path === 'string'
+      ? '/' + options.path.replace(/^\/+/g, '')
+      : this.makePath(node)
 
     node.fields = this.processNodeFields(fields, node.internal.origin)
     indexEntry.path = node.path
@@ -130,10 +132,12 @@ class ContentTypeCollection extends EventEmitter {
     node.slug = options.slug || fields.slug || this.slugify(node.title)
     node.content = options.content || fields.content || ''
     node.excerpt = options.excerpt || fields.excerpt || ''
-    node.withPath = !!options.path
+    node.withPath = typeof options.path === 'string'
 
     node.fields = this.processNodeFields(fields, node.internal.origin)
-    node.path = options.path || this.makePath(node)
+    node.path = typeof options.path === 'string'
+      ? '/' + options.path.replace(/^\/+/g, '')
+      : this.makePath(node)
 
     return node
   }
