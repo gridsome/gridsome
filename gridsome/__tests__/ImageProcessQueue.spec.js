@@ -9,7 +9,7 @@ const pathPrefix = '/'
 const baseconfig = {
   pathPrefix,
   imagesDir,
-  targetDir: context,
+  outDir: context,
   imageExtensions: ['.jpg', '.png', '.webp'],
   maxImageWidth: 1000
 }

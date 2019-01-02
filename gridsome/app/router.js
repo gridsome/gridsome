@@ -6,7 +6,7 @@ import { routes, NotFound } from '~/.temp/routes.js'
 Vue.use(Router)
 
 const router = new Router({
-  base: config.pathPrefix,
+  base: process.env.PUBLIC_PATH,
   mode: 'history',
   fallback: false,
   routes: [...routes, {
