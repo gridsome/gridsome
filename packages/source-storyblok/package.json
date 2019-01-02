@@ -1,0 +1,21 @@
+{
+  "version": "0.0.1",
+  "name": "@gridsome/source-storyblok",
+  "description": "StoryBlok source for Gridsome",
+  "main": "index.js",
+  "keywords": [
+    "gridsome",
+    "gridsome-plugin",
+    "gridsome-source",
+    "storyblok"
+  ],
+  "dependencies": {
+    "storyblok-js-client": "^1.0.21"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=8"
+  }
+}
