@@ -40,6 +40,7 @@ test('build basic project', async () => {
   expect(exists('dist/assets/static/test.97c148e.test.png')).toBeTruthy()
   expect(indexHTML).toMatch('src="data:image/svg+xml')
   expect(indexHTML).toMatch('alt="Test image"')
+  expect(indexHTML).toMatch('alt="SVG logo"')
   expect(indexHTML).toMatch('data-srcset="/assets/static/test.82a2fbd.test.png 480w')
   expect(indexHTML).toMatch('src="/assets/static/test.97c148e.test.png"')
   expect(indexHTML).toMatch('src="https://www.example.com/assets/image.png"')
