@@ -16,7 +16,6 @@ module.exports = (context, options = {}, pkg = {}) => {
   }
 
   const resolve = (...p) => path.resolve(context, ...p)
-  const isServing = process.env.GRIDSOME_MODE === 'serve'
   const isProd = process.env.NODE_ENV === 'production'
   const configPath = resolve('gridsome.config.js')
   const args = options.args || {}
