@@ -134,8 +134,6 @@ class ContentTypeCollection extends EventEmitter {
     node.excerpt = options.excerpt || fields.excerpt || ''
     node.withPath = typeof options.path === 'string'
 
-    fields.title = options.title || fields.title
-
     node.fields = this.processNodeFields(fields, node.internal.origin)
     node.path = typeof options.path === 'string'
       ? '/' + options.path.replace(/^\/+/g, '')
