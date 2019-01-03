@@ -45,6 +45,7 @@ module.exports = ({ nodeType, fields }) => {
   }
 
   args.filter = {
+    description: `Filter for ${nodeType.name} nodes.`,
     type: new GraphQLInputObjectType({
       name: `${nodeType.name}Filters`,
       fields: createFilterTypes({

@@ -29,22 +29,25 @@ function createFilterTypes (fields, typeName) {
 }
 
 function createFilterType (value, fieldName, typeName) {
+  const defaultDescription = `Filter ${typeName} nodes by ${fieldName}`
+
   if (isRefField(value)) {
     return new GraphQLInputFilterReferenceType({
       name: createFilterName(typeName, fieldName),
+      description: defaultDescription,
       fields: value.isList
         ? {
-          size: { type: GraphQLInt },
-          contains: { type: new GraphQLList(GraphQLString) },
-          containsAny: { type: new GraphQLList(GraphQLString) },
-          containsNone: { type: new GraphQLList(GraphQLString) }
+          size: { type: GraphQLInt, description: desc.size },
+          contains: { type: new GraphQLList(GraphQLString), description: desc.contains },
+          containsAny: { type: new GraphQLList(GraphQLString), description: desc.containsAny },
+          containsNone: { type: new GraphQLList(GraphQLString), description: desc.containsNone }
         }
         : {
-          eq: { type: GraphQLString },
-          ne: { type: GraphQLString },
-          regex: { type: GraphQLString },
-          in: { type: new GraphQLList(GraphQLString) },
-          nin: { type: new GraphQLList(GraphQLString) }
+          eq: { type: GraphQLString, description: desc.eq },
+          ne: { type: GraphQLString, description: desc.ne },
+          regex: { type: GraphQLString, description: desc.regex },
+          in: { type: new GraphQLList(GraphQLString), description: desc.in },
+          nin: { type: new GraphQLList(GraphQLString), description: desc.nin }
         }
     })
   }
@@ -52,13 +55,14 @@ function createFilterType (value, fieldName, typeName) {
   if (isDate(value)) {
     return new GraphQLInputFilterObjectType({
       name: createFilterName(typeName, fieldName),
+      description: defaultDescription,
       fields: {
-        dteq: { type: GraphQLString },
-        gt: { type: GraphQLString },
-        gte: { type: GraphQLString },
-        lt: { type: GraphQLString },
-        lte: { type: GraphQLString },
-        between: { type: new GraphQLList(GraphQLString) }
+        dteq: { type: GraphQLString, description: desc.dteq },
+        gt: { type: GraphQLString, description: desc.gt },
+        gte: { type: GraphQLString, description: desc.gte },
+        lt: { type: GraphQLString, description: desc.lt },
+        lte: { type: GraphQLString, description: desc.lte },
+        between: { type: new GraphQLList(GraphQLString), description: desc.between }
       }
     })
   }
@@ -68,11 +72,12 @@ function createFilterType (value, fieldName, typeName) {
 
     return valueType ? new GraphQLInputFilterObjectType({
       name: createFilterName(typeName, fieldName),
+      description: defaultDescription,
       fields: {
-        size: { type: GraphQLInt },
-        contains: { type: new GraphQLList(valueType) },
-        containsAny: { type: new GraphQLList(valueType) },
-        containsNone: { type: new GraphQLList(valueType) }
+        size: { type: GraphQLInt, description: desc.size },
+        contains: { type: new GraphQLList(valueType), description: desc.contains },
+        containsAny: { type: new GraphQLList(valueType), description: desc.containsAny },
+        containsNone: { type: new GraphQLList(valueType), description: desc.containsNone }
       }
     }) : null
   }
@@ -81,13 +86,14 @@ function createFilterType (value, fieldName, typeName) {
     case 'string' :
       return new GraphQLInputFilterObjectType({
         name: createFilterName(typeName, fieldName),
+        description: defaultDescription,
         fields: {
-          len: { type: GraphQLInt },
-          eq: { type: GraphQLString },
-          ne: { type: GraphQLString },
-          regex: { type: GraphQLString },
-          in: { type: new GraphQLList(GraphQLString) },
-          nin: { type: new GraphQLList(GraphQLString) }
+          len: { type: GraphQLInt, description: desc.len },
+          eq: { type: GraphQLString, description: desc.eq },
+          ne: { type: GraphQLString, description: desc.ne },
+          regex: { type: GraphQLString, description: desc.regex },
+          in: { type: new GraphQLList(GraphQLString), description: desc.in },
+          nin: { type: new GraphQLList(GraphQLString), description: desc.nin }
         }
       })
 
@@ -95,10 +101,10 @@ function createFilterType (value, fieldName, typeName) {
       return new GraphQLInputFilterObjectType({
         name: createFilterName(typeName, fieldName),
         fields: {
-          eq: { type: GraphQLBoolean },
-          ne: { type: GraphQLBoolean },
-          in: { type: new GraphQLList(GraphQLBoolean) },
-          nin: { type: new GraphQLList(GraphQLBoolean) }
+          eq: { type: GraphQLBoolean, description: desc.eq },
+          ne: { type: GraphQLBoolean, description: desc.ne },
+          in: { type: new GraphQLList(GraphQLBoolean), description: desc.in },
+          nin: { type: new GraphQLList(GraphQLBoolean), description: desc.nin }
         }
       })
 
@@ -107,16 +113,17 @@ function createFilterType (value, fieldName, typeName) {
 
       return new GraphQLInputFilterObjectType({
         name: createFilterName(typeName, fieldName),
+        description: defaultDescription,
         fields: {
-          eq: { type: numberType },
-          ne: { type: numberType },
-          gt: { type: numberType },
-          gte: { type: numberType },
-          lt: { type: numberType },
-          lte: { type: numberType },
-          in: { type: new GraphQLList(numberType) },
-          nin: { type: new GraphQLList(numberType) },
-          between: { type: new GraphQLList(numberType) }
+          eq: { type: numberType, description: desc.eq },
+          ne: { type: numberType, description: desc.ne },
+          gt: { type: numberType, description: desc.gt },
+          gte: { type: numberType, description: desc.gte },
+          lt: { type: numberType, description: desc.lt },
+          lte: { type: numberType, description: desc.lte },
+          in: { type: new GraphQLList(numberType), description: desc.in },
+          nin: { type: new GraphQLList(numberType), description: desc.nin },
+          between: { type: new GraphQLList(numberType), description: desc.between }
         }
       })
 
@@ -171,6 +178,25 @@ function isRefField (field) {
     field.hasOwnProperty('typeName') &&
     field.hasOwnProperty('isList')
   )
+}
+
+const desc = {
+  eq: 'Filter nodes by property of (strict) equality.',
+  ne: 'Filter nodes by property not equal to provided value.',
+  dteq: 'Filter nodes by date property equal to provided date value',
+  gt: 'Filter nodes by property greater than provided value.',
+  gte: 'Filter nodes by property greater or equal to provided value.',
+  lt: 'Filter nodes by property less than provided value.',
+  lte: 'Filter nodes by property less than or equal to provided value.',
+  between: 'Filter nodes by property between provided values.',
+  regex: 'Filter nodes by property matching provided regular expression.',
+  in: 'Filter nodes by property matching any of the provided values.',
+  nin: 'Filter nodes by property not matching any of the provided values.',
+  contains: 'Filter nodes by property containing the provided value.',
+  containsAny: 'Filter nodes by property containing any of the provided values.',
+  containsNone: 'Filter nodes by property containing none of the provided values.',
+  size: 'Filter nodes which have an array property of specified size.',
+  len: 'Filter nodes which have a string property of specified length.'
 }
 
 module.exports = {
