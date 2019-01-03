@@ -12,6 +12,7 @@ const {
 } = require('../graphql')
 
 class GraphQLInputFilterObjectType extends GraphQLInputObjectType {}
+class GraphQLInputFilterReferenceType extends GraphQLInputObjectType {}
 
 function createFilterTypes (fields, typeName) {
   const types = {}
@@ -28,6 +29,26 @@ function createFilterTypes (fields, typeName) {
 }
 
 function createFilterType (value, fieldName, typeName) {
+  if (isRefField(value)) {
+    return new GraphQLInputFilterReferenceType({
+      name: createFilterName(typeName, fieldName),
+      fields: value.isList
+        ? {
+          size: { type: GraphQLInt },
+          contains: { type: new GraphQLList(GraphQLString) },
+          containsAny: { type: new GraphQLList(GraphQLString) },
+          containsNone: { type: new GraphQLList(GraphQLString) }
+        }
+        : {
+          eq: { type: GraphQLString },
+          ne: { type: GraphQLString },
+          regex: { type: GraphQLString },
+          in: { type: new GraphQLList(GraphQLString) },
+          nin: { type: new GraphQLList(GraphQLString) }
+        }
+    })
+  }
+
   if (isDate(value)) {
     return new GraphQLInputFilterObjectType({
       name: createFilterName(typeName, fieldName),
@@ -64,7 +85,6 @@ function createFilterType (value, fieldName, typeName) {
           len: { type: GraphQLInt },
           eq: { type: GraphQLString },
           ne: { type: GraphQLString },
-          glob: { type: GraphQLString },
           regex: { type: GraphQLString },
           in: { type: new GraphQLList(GraphQLString) },
           nin: { type: new GraphQLList(GraphQLString) }
@@ -144,8 +164,18 @@ function is32BitInt (x) {
   return (x | 0) === x
 }
 
+function isRefField (field) {
+  return (
+    typeof field === 'object' &&
+    Object.keys(field).length === 2 &&
+    field.hasOwnProperty('typeName') &&
+    field.hasOwnProperty('isList')
+  )
+}
+
 module.exports = {
   createFilterType,
   createFilterTypes,
-  GraphQLInputFilterObjectType
+  GraphQLInputFilterObjectType,
+  GraphQLInputFilterReferenceType
 }

@@ -173,6 +173,36 @@ test('filter dates by gt', async () => {
   expect(data.allProduct.edges[0].node.id).toEqual('4')
   expect(data.allProduct.edges[1].node.id).toEqual('3')
 })
+
+test('filter by reference id', async () => {
+  const { errors, data } = await createSchemaAndExecute(`{
+    allProduct (filter: { related: { eq: "2" } }) {
+      edges {
+        node { id }
+      }
+    }
+  }`)
+
+  expect(errors).toBeUndefined()
+  expect(data.allProduct.edges).toHaveLength(1)
+  expect(data.allProduct.edges[0].node.id).toEqual('3')
+})
+
+test('filter by multiple reference ids', async () => {
+  const { errors, data } = await createSchemaAndExecute(`{
+    allProduct (filter: { alternatives: { containsAny: ["1", "4"] } }) {
+      edges {
+        node { id }
+      }
+    }
+  }`)
+
+  expect(errors).toBeUndefined()
+  expect(data.allProduct.edges).toHaveLength(2)
+  expect(data.allProduct.edges[0].node.id).toEqual('3')
+  expect(data.allProduct.edges[1].node.id).toEqual('2')
+})
+
 async function createSchemaAndExecute (query) {
   const posts = api.store.addContentType({ typeName: 'Product' })
 
@@ -183,7 +213,10 @@ async function createSchemaAndExecute (query) {
     fields: {
       price: 99,
       featured: false,
-      tags: ['one', 'two', 'four']
+      tags: ['one', 'two', 'four'],
+      alternatives: [
+        { typeName: 'Product', id: '2' }
+      ]
     }
   })
 
@@ -197,7 +230,11 @@ async function createSchemaAndExecute (query) {
       tags: ['two'],
       deep: {
         object: true
-      }
+      },
+      alternatives: [
+        { typeName: 'Product', id: '1' },
+        { typeName: 'Product', id: '3' }
+      ]
     }
   })
 
@@ -208,7 +245,14 @@ async function createSchemaAndExecute (query) {
     fields: {
       price: 149,
       featured: true,
-      tags: ['three', 'four']
+      tags: ['three', 'four'],
+      related: {
+        typeName: 'Product',
+        id: '2'
+      },
+      alternatives: [
+        { typeName: 'Product', id: '4' }
+      ]
     }
   })
 
@@ -219,7 +263,11 @@ async function createSchemaAndExecute (query) {
     fields: {
       price: 119,
       featured: false,
-      tags: ['one', 'two']
+      tags: ['one', 'two'],
+      alternatives: [
+        { typeName: 'Product', id: '2' },
+        { typeName: 'Product', id: '3' }
+      ]
     }
   })
 

@@ -33,8 +33,6 @@ function createFieldTypes (fields, typeName, nodeTypes) {
 }
 
 function createFieldType (value, key, typeName, nodeTypes) {
-  const type = typeof value
-
   if (value === undefined) return null
   if (value === null) return null
 
@@ -54,7 +52,7 @@ function createFieldType (value, key, typeName, nodeTypes) {
     return dateTypeField
   }
 
-  switch (type) {
+  switch (typeof value) {
     case 'string':
       if (isImage(value)) return imageType
       if (isFile(value)) return fileType

@@ -12,7 +12,8 @@ const {
 
 const {
   createFilterTypes,
-  GraphQLInputFilterObjectType
+  GraphQLInputFilterObjectType,
+  GraphQLInputFilterReferenceType
 } = require('../createFilterTypes')
 
 module.exports = ({ nodeType, fields }) => {
@@ -126,22 +127,29 @@ function toFilterArgs (input, filters, current = '') {
 
   for (const key in input) {
     const newKey = current ? `${current}.${key}` : key
+    const value = input[key]
 
-    if (input[key] === undefined) continue
+    if (value === undefined) continue
 
     if (fields[key].type instanceof GraphQLInputFilterObjectType) {
-      result[newKey] = reduce(input[key], (acc, value, key) => {
-        const lokiKey = `$${key}`
-
-        if (key === 'regex') acc[lokiKey] = new RegExp(value)
-        else acc[lokiKey] = value
-
-        return acc
-      }, {})
+      result[newKey] = convertFilterValues(value)
+    } else if (fields[key].type instanceof GraphQLInputFilterReferenceType) {
+      result[`${newKey}.id`] = convertFilterValues(value)
     } else {
-      Object.assign(result, toFilterArgs(input[key], fields[key], newKey))
+      Object.assign(result, toFilterArgs(value, fields[key], newKey))
     }
   }
 
   return result
+}
+
+function convertFilterValues (value) {
+  return reduce(value, (acc, value, key) => {
+    const filterKey = `$${key}`
+
+    if (key === 'regex') acc[filterKey] = new RegExp(value)
+    else acc[filterKey] = value
+
+    return acc
+  }, {})
 }
