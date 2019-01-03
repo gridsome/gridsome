@@ -4,6 +4,7 @@ const fs = require('fs-extra')
 const hirestime = require('hirestime')
 const { trim, chunk } = require('lodash')
 const sysinfo = require('./utils/sysinfo')
+const { log, info } = require('./utils/log')
 
 const createApp = require('./app')
 const { createWorker } = require('./workers')
@@ -41,7 +42,7 @@ module.exports = async (context, args) => {
 
   // 5. copy static files
   if (fs.existsSync(config.staticDir)) {
-    await fs.copy(config.staticDir, config.targetDir)
+    await fs.copy(config.staticDir, config.outDir)
   }
 
   // 6. clean up
@@ -49,9 +50,11 @@ module.exports = async (context, args) => {
   await fs.remove(path.resolve(config.cacheDir, 'data'))
   await fs.remove(config.manifestsDir)
 
-  console.log()
-  console.log(`  Done in ${buildTime(hirestime.S)}s`)
-  console.log()
+  log()
+  log(`  Done in ${buildTime(hirestime.S)}s`)
+  log()
+
+  return app
 }
 
 const {
@@ -71,7 +74,7 @@ async function createRenderQueue ({ router, config, graphql }) {
     const routePath = trim(route.path, '/')
     const filePath = routePath.split('/').map(decodeURIComponent).join('/')
     const dataPath = !routePath ? 'index.json' : `${filePath}.json`
-    const htmlOutput = path.resolve(config.targetDir, filePath, 'index.html')
+    const htmlOutput = path.resolve(config.outDir, filePath, 'index.html')
     const dataOutput = path.resolve(config.cacheDir, 'data', dataPath)
 
     // TODO: remove this before v1.0
@@ -92,7 +95,7 @@ async function createRenderQueue ({ router, config, graphql }) {
     const { query } = page.pageQuery
     const routePath = trim(route.path, '/')
     const filePath = routePath.split('/').map(decodeURIComponent).join('/')
-    const htmlOutput = path.resolve(config.targetDir, filePath, 'index.html')
+    const htmlOutput = path.resolve(config.outDir, filePath, 'index.html')
     const dataOutput = path.resolve(config.cacheDir, 'data', `${filePath}.json`)
 
     // TODO: remove this before v1.0
@@ -167,7 +170,7 @@ async function renderPageQueries (queue, graphql) {
     await fs.outputFile(page.dataOutput, JSON.stringify(results))
   }, { concurrency: sysinfo.cpus.logical })
 
-  console.info(`Run GraphQL (${pages.length} queries) - ${timer(hirestime.S)}s`)
+  info(`Run GraphQL (${pages.length} queries) - ${timer(hirestime.S)}s`)
 }
 
 async function renderHTML (queue, config) {
@@ -200,7 +203,7 @@ async function renderHTML (queue, config) {
 
   worker.end()
 
-  console.info(`Render HTML (${totalPages} pages) - ${timer(hirestime.S)}s`)
+  info(`Render HTML (${totalPages} pages) - ${timer(hirestime.S)}s`)
 }
 
 async function processFiles (queue, { outDir }) {
@@ -211,10 +214,10 @@ async function processFiles (queue, { outDir }) {
     await fs.copy(file.filePath, path.join(outDir, file.destination))
   }
 
-  console.info(`Process files (${totalFiles} files) - ${timer(hirestime.S)}s`)
+  info(`Process files (${totalFiles} files) - ${timer(hirestime.S)}s`)
 }
 
-async function processImages (queue, { outDir, imageCacheDir, minProcessImageWidth }) {
+async function processImages (queue, config) {
   const timer = hirestime()
   const chunks = chunk(queue.queue, 100)
   const worker = createWorker('image-processor')
@@ -224,9 +227,10 @@ async function processImages (queue, { outDir, imageCacheDir, minProcessImageWid
     try {
       await worker.process({
         queue,
-        outDir,
-        cacheDir: imageCacheDir,
-        minWidth: minProcessImageWidth
+        outDir: config.outDir,
+        cacheDir: config.imageCacheDir,
+        minWidth: config.minProcessImageWidth,
+        backgroundColor: config.images.backgroundColor
       })
     } catch (err) {
       worker.end()
@@ -236,5 +240,5 @@ async function processImages (queue, { outDir, imageCacheDir, minProcessImageWid
 
   worker.end()
 
-  console.info(`Process images (${totalAssets} images) - ${timer(hirestime.S)}s`)
+  info(`Process images (${totalAssets} images) - ${timer(hirestime.S)}s`)
 }

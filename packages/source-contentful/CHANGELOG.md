@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+<a name="0.1.2"></a>
+## [0.1.2](https://github.com/gridsome/gridsome/tree/master/packages/source-contentful/compare/@gridsome/source-contentful@0.1.1...@gridsome/source-contentful@0.1.2) (2018-12-19)
+
+
+### Bug Fixes
+
+* **router:** prefix default routes with slash ([cc6286a](https://github.com/gridsome/gridsome/tree/master/packages/source-contentful/commit/cc6286a))
+
+
+
+
+
 <a name="0.1.1"></a>
 ## [0.1.1](https://github.com/gridsome/gridsome/tree/master/packages/source-contentful/compare/@gridsome/source-contentful@0.1.0...@gridsome/source-contentful@0.1.1) (2018-11-22)
 

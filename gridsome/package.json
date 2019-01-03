@@ -1,5 +1,5 @@
 {
-  "version": "0.3.6",
+  "version": "0.4.0",
   "name": "gridsome",
   "description": "A JAMstack framework for building blazing fast websites with Vue.js",
   "homepage": "https://gridsome.org",
@@ -46,6 +46,7 @@
     "case-sensitive-paths-webpack-plugin": "^2.1.2",
     "chalk": "^2.4.1",
     "chokidar": "^2.0.4",
+    "color-string": "^1.5.3",
     "connect-history-api-fallback": "^1.5.0",
     "css-loader": "^1.0.0",
     "dateformat": "^3.0.3",
@@ -88,7 +89,7 @@
     "postcss-loader": "^3.0.0",
     "probe-image-size": "^4.0.0",
     "querystring": "^0.2.0",
-    "sharp": "^0.20.8",
+    "sharp": "^0.21.0",
     "slash": "^2.0.0",
     "sockjs": "^0.3.19",
     "sockjs-client": "^1.1.5",

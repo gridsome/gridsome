@@ -30,7 +30,7 @@ class FileProcessQueue {
 
     if (!this._queue.has(asset.src)) {
       this._queue.set(asset.src, {
-        destination: trim(asset.src, '/'),
+        destination: trim(asset.src, this.config.pathPrefix),
         filePath
       })
     }
@@ -43,8 +43,8 @@ class FileProcessQueue {
       throw new Error(`${filePath} was not found. `)
     }
 
-    const { targetDir, pathPrefix } = this.config
-    const filesDir = path.relative(targetDir, this.config.filesDir)
+    const { outDir, pathPrefix } = this.config
+    const filesDir = path.relative(outDir, this.config.filesDir)
     const relPath = path.relative(this.context, filePath)
 
     let filename = ''

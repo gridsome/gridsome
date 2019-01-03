@@ -19,7 +19,7 @@ beforeEach(() => {
       pathPrefix,
       imagesDir,
       filesDir,
-      targetDir: context,
+      outDir: context,
       imageExtensions: ['.png'],
       maxImageWidth: 1000
     }
@@ -99,7 +99,7 @@ test('add meta data', async () => {
 
   expect(errors).toBeUndefined()
   expect(data.metaData.myValue.test).toEqual('Test Value')
-  expect(data.metaData.myValue.image.src).toEqual('/assets/static/350x250-w350.test.png')
+  expect(data.metaData.myValue.image.src).toEqual('/assets/static/350x250.5c1e01e.test.png')
   expect(data.metaData.myValue.file.src).toEqual('/assets/files/dummy.pdf')
   expect(data.metaData.myValue.object.list).toHaveLength(3)
   expect(data.metaData.myValue.object.value).toEqual(1000)
@@ -128,9 +128,11 @@ test('create node type with custom fields', async () => {
     id: '1',
     fields: {
       foo: 'bar',
+      emptyString: '',
+      price: '',
       list: ['item'],
       obj: {
-        foo: 'bar'
+        foo: 'foo'
       }
     }
   })
@@ -140,17 +142,29 @@ test('create node type with custom fields', async () => {
     fields: {
       foo: 'bar',
       list: ['item'],
+      price: '198.00',
       obj: {
         foo: 'bar'
       }
     }
   })
 
-  const query = '{ testPost (id: "1") { id foo list obj { foo }}}'
+  const query = `{
+    testPost (id: "2") {
+      foo
+      list
+      price
+      emptyString
+      obj { foo }
+    }
+  }`
+
   const { data } = await createSchemaAndExecute(query)
 
-  expect(data.testPost.id).toEqual('1')
   expect(data.testPost.foo).toEqual('bar')
+  expect(data.testPost.emptyString).toEqual('')
+  expect(data.testPost.price).toEqual('198.00')
+  expect(data.testPost.list).toHaveLength(1)
   expect(data.testPost.list[0]).toEqual('item')
   expect(data.testPost.obj.foo).toEqual('bar')
 })
@@ -853,7 +867,8 @@ test('process image types in schema', async () => {
         image: '/assets/350x250.png',
         image2: 'https://www.example.com/images/image.png',
         image3: './350x250.png',
-        image4: '1000x600.png'
+        image4: 'dir/to/350x250.png',
+        image5: '350x250.png'
       })
     }
   })
@@ -862,8 +877,9 @@ test('process image types in schema', async () => {
     testPost (id: "1") {
       image
       image2
-      image3
-      image4 (width: 300, quality: 100, blur: 0)
+      image3 (width: 300, quality: 100, blur: 0)
+      image4
+      image5
     }
   }`)
 
@@ -875,20 +891,15 @@ test('process image types in schema', async () => {
   expect(data.testPost.image.sizes).toBeUndefined()
   expect(data.testPost.image.srcset).toBeUndefined()
   expect(data.testPost.image.dataUri).toBeUndefined()
-  expect(data.testPost.image2.type).toEqual('image')
-  expect(data.testPost.image2.mimeType).toEqual('image/png')
   expect(data.testPost.image2.src).toEqual('https://www.example.com/images/image.png')
   expect(data.testPost.image3.type).toEqual('image')
   expect(data.testPost.image3.mimeType).toEqual('image/png')
-  expect(data.testPost.image3.src).toEqual('/assets/static/350x250-w350.test.png')
-  expect(data.testPost.image3.size).toMatchObject({ width: 350, height: 250 })
-  expect(data.testPost.image3.sizes).toEqual('(max-width: 350px) 100vw, 350px')
+  expect(data.testPost.image3.src).toEqual('/assets/static/350x250.f14e36e.test.png')
+  expect(data.testPost.image3.size).toMatchObject({ width: 300, height: 215 })
+  expect(data.testPost.image3.sizes).toEqual('(max-width: 300px) 100vw, 300px')
   expect(data.testPost.image3.srcset).toHaveLength(1)
-  expect(data.testPost.image3.dataUri).toMatch(/data:image\/png/g)
-  expect(data.testPost.image4.src).toEqual('/assets/static/1000x600-w300-q100.test.png')
-  expect(data.testPost.image4.size).toMatchObject({ width: 300, height: 180 })
-  expect(data.testPost.image4.sizes).toEqual('(max-width: 300px) 100vw, 300px')
-  expect(data.testPost.image4.srcset).toHaveLength(1)
+  expect(data.testPost.image4).toBeNull()
+  expect(data.testPost.image5.src).toEqual('/assets/static/350x250.5c1e01e.test.png')
 })
 
 test('process file types in schema', async () => {
@@ -927,8 +938,6 @@ test('process file types in schema', async () => {
   expect(data.testPost.file.type).toEqual('file')
   expect(data.testPost.file.mimeType).toEqual('application/pdf')
   expect(data.testPost.file.src).toEqual('/assets/document.pdf')
-  expect(data.testPost.file2.type).toEqual('file')
-  expect(data.testPost.file2.mimeType).toEqual('application/pdf')
   expect(data.testPost.file2.src).toEqual('https://www.example.com/assets/document.pdf')
   expect(data.testPost.file3.type).toEqual('file')
   expect(data.testPost.file3.mimeType).toEqual('application/pdf')
