@@ -93,9 +93,11 @@ module.exports = (app, { isProd, isServer }) => {
       if (/\.vue\.jsx?$/.test(filepath)) {
         return false
       }
+
       if (/gridsome\.client\.js$/.test(filepath)) {
         return false
       }
+
       if (app.config.transpileDependencies.some(dep => {
         return typeof dep === 'string'
           ? filepath.includes(path.normalize(dep))
@@ -103,10 +105,16 @@ module.exports = (app, { isProd, isServer }) => {
       })) {
         return false
       }
+
       if (filepath.startsWith(projectConfig.appPath)) {
         return false
       }
-      return /node_modules/.test(filepath)
+
+      if (/node_modules/.test(filepath)) {
+        return true
+      }
+
+      return true
     })
     .end()
     .use('cache-loader')
