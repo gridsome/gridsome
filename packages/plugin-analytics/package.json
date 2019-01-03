@@ -2,7 +2,6 @@
   "name": "@gridsome/plugin-analytics",
   "version": "0.1.0",
   "main": "gridsome.client.js",
-  "author": "EldoranDev",
   "license": "MIT",
   "keywords": [
     "gridsome",
@@ -14,5 +13,8 @@
   },
   "dependencies": {
     "vue-analytics": "^5.16.1"
+  },
+  "engines": {
+    "node": ">=8"
   }
 }
