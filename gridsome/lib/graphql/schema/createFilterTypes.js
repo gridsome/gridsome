@@ -1,5 +1,6 @@
 const { isEmpty } = require('lodash')
 const camelCase = require('camelcase')
+const { isDate } = require('./types/date')
 
 const {
   GraphQLInt,
@@ -27,7 +28,19 @@ function createFilterTypes (fields, typeName) {
 }
 
 function createFilterType (value, fieldName, typeName) {
-  const type = typeof value
+  if (isDate(value)) {
+    return new GraphQLInputFilterObjectType({
+      name: createFilterName(typeName, fieldName),
+      fields: {
+        dteq: { type: GraphQLString },
+        gt: { type: GraphQLString },
+        gte: { type: GraphQLString },
+        lt: { type: GraphQLString },
+        lte: { type: GraphQLString },
+        between: { type: new GraphQLList(GraphQLString) }
+      }
+    })
+  }
 
   if (Array.isArray(value)) {
     const valueType = toGraphQLType(value[0])
@@ -43,7 +56,7 @@ function createFilterType (value, fieldName, typeName) {
     }) : null
   }
 
-  switch (type) {
+  switch (typeof value) {
     case 'string' :
       return new GraphQLInputFilterObjectType({
         name: createFilterName(typeName, fieldName),

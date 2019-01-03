@@ -22,6 +22,19 @@ afterAll(() => {
   api = null
 })
 
+test('filter by multiple ids', async () => {
+  const { errors, data } = await createSchemaAndExecute(`{
+    allProduct (filter: { id: { in: ["2", "3"] } }) {
+      edges { node { id } }
+    }
+  }`)
+
+  expect(errors).toBeUndefined()
+  expect(data.allProduct.edges).toHaveLength(2)
+  expect(data.allProduct.edges[0].node.id).toEqual('3')
+  expect(data.allProduct.edges[1].node.id).toEqual('2')
+})
+
 test('filter number by between', async () => {
   const { errors, data } = await createSchemaAndExecute(`{
     allProduct (filter: { price: { between: [120, 150] } }) {
@@ -105,6 +118,61 @@ test('filter list by boolean', async () => {
   expect(data.allProduct.edges[0].node.id).toEqual('3')
 })
 
+test('filter by deeply nested object', async () => {
+  const { errors, data } = await createSchemaAndExecute(`{
+    allProduct (filter: { deep: { object: { eq: true } } }) {
+      edges { node { id } }
+    }
+  }`)
+
+  expect(errors).toBeUndefined()
+  expect(data.allProduct.edges).toHaveLength(1)
+  expect(data.allProduct.edges[0].node.id).toEqual('2')
+})
+
+test('filter dates by between', async () => {
+  const { errors, data } = await createSchemaAndExecute(`{
+    allProduct (filter: { date: { between: ["2018-03-28", "2018-07-14"] } }) {
+      edges {
+        node { id }
+      }
+    }
+  }`)
+
+  expect(errors).toBeUndefined()
+  expect(data.allProduct.edges).toHaveLength(2)
+  expect(data.allProduct.edges[0].node.id).toEqual('3')
+  expect(data.allProduct.edges[1].node.id).toEqual('2')
+})
+
+test('filter dates by dteq', async () => {
+  const { errors, data } = await createSchemaAndExecute(`{
+    allProduct (filter: { date: { dteq: "2018-03-28" } }) {
+      edges {
+        node { id }
+      }
+    }
+  }`)
+
+  expect(errors).toBeUndefined()
+  expect(data.allProduct.edges).toHaveLength(1)
+  expect(data.allProduct.edges[0].node.id).toEqual('2')
+})
+
+test('filter dates by gt', async () => {
+  const { errors, data } = await createSchemaAndExecute(`{
+    allProduct (filter: { date: { gt: "2018-03-28" } }) {
+      edges {
+        node { id }
+      }
+    }
+  }`)
+
+  expect(errors).toBeUndefined()
+  expect(data.allProduct.edges).toHaveLength(2)
+  expect(data.allProduct.edges[0].node.id).toEqual('4')
+  expect(data.allProduct.edges[1].node.id).toEqual('3')
+})
 async function createSchemaAndExecute (query) {
   const posts = api.store.addContentType({ typeName: 'Product' })
 
@@ -126,7 +194,10 @@ async function createSchemaAndExecute (query) {
     fields: {
       price: 199,
       featured: false,
-      tags: ['two']
+      tags: ['two'],
+      deep: {
+        object: true
+      }
     }
   })
 

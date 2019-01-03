@@ -1,4 +1,4 @@
-const { isEmpty, reduce } = require('lodash')
+const { pick, omit, reduce } = require('lodash')
 const { pageInfoType, sortOrderType } = require('../types')
 
 const {
@@ -11,7 +11,6 @@ const {
 } = require('../../graphql')
 
 const {
-  createFilterType,
   createFilterTypes,
   GraphQLInputFilterObjectType
 } = require('../createFilterTypes')
@@ -47,10 +46,16 @@ module.exports = ({ nodeType, fields }) => {
   args.filter = {
     type: new GraphQLInputObjectType({
       name: `${nodeType.name}Filters`,
-      fields: () => ({
-        title: { type: createFilterType('', 'title', nodeType.name) },
-        ...createFilterTypes(fields, nodeType.name)
-      })
+      fields: createFilterTypes({
+        ...fields,
+        id: '',
+        title: '',
+        slug: '',
+        path: '',
+        content: '',
+        excerpt: '',
+        date: '2019-01-03'
+      }, nodeType.name)
     })
   }
 
@@ -73,7 +78,9 @@ module.exports = ({ nodeType, fields }) => {
       }
 
       if (filter) {
-        Object.assign(query, toFilterArgs(filter, args.filter, 'fields'))
+        const internals = ['id', 'title', 'date', 'slug', 'path', 'content', 'excerpt']
+        Object.assign(query, toFilterArgs(omit(filter, internals), args.filter, 'fields'))
+        Object.assign(query, toFilterArgs(pick(filter, internals), args.filter))
       }
 
       const results = collection
@@ -113,12 +120,14 @@ module.exports = ({ nodeType, fields }) => {
   }
 }
 
-function toFilterArgs (input, filters, current) {
+function toFilterArgs (input, filters, current = '') {
   const fields = filters.type.getFields()
   const result = {}
 
   for (const key in input) {
     const newKey = current ? `${current}.${key}` : key
+
+    if (input[key] === undefined) continue
 
     if (fields[key].type instanceof GraphQLInputFilterObjectType) {
       result[newKey] = reduce(input[key], (acc, value, key) => {
