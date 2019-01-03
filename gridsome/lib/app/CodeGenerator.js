@@ -81,12 +81,11 @@ async function genIcons ({ config, resolve, queue }) {
 
 function genConfig ({ config }) {
   const { version } = require('../../package.json')
-  const { siteUrl, siteName, pathPrefix, titleTemplate } = config
+  const { siteUrl, siteName, titleTemplate } = config
 
   return `export default ${JSON.stringify({
     siteUrl,
     siteName,
-    pathPrefix,
     titleTemplate,
     version
   }, null, 2)}`

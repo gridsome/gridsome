@@ -124,7 +124,7 @@ async function process (filenames, options = {}, withCache = false) {
   const config = {
     pathPrefix,
     imagesDir,
-    targetDir: context,
+    outDir: context,
     maxImageWidth: 1000,
     imageExtensions: ['.jpg', '.png', '.svg', '.gif', '.webp']
   }

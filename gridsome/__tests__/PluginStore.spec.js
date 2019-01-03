@@ -170,10 +170,21 @@ test('add type with ref', () => {
   })
 })
 
-test('add type with dynamic route', () => {
-  const api = createPlugin()
+test('add nodes with custom paths', () => {
+  const contentType = createPlugin().store.addContentType({
+    typeName: 'TestPost'
+  })
 
-  const contentType = api.store.addContentType({
+  const node1 = contentType.addNode({ path: '/lorem-ipsum-dolor-sit-amet' })
+  const node2 = contentType.addNode({ path: 'nibh-fermentum-fringilla' })
+
+  expect(contentType.options.route).toBeUndefined()
+  expect(node1.path).toEqual('/lorem-ipsum-dolor-sit-amet')
+  expect(node2.path).toEqual('/nibh-fermentum-fringilla')
+})
+
+test('add type with dynamic route', () => {
+  const contentType = createPlugin().store.addContentType({
     typeName: 'TestPost',
     route: '/:year/:month/:day/:slug'
   })
@@ -187,10 +198,23 @@ test('add type with dynamic route', () => {
   expect(node.path).toEqual('/2018/09/05/lorem-ipsum-dolor-sit-amet')
 })
 
-test('add type with custom fields in route', () => {
-  const api = createPlugin()
+test('prefix dynamic route with leading slash', () => {
+  const contentType = createPlugin().store.addContentType({
+    typeName: 'TestPost2',
+    route: 'blog/:slug'
+  })
 
-  const contentType = api.store.addContentType({
+  const node = contentType.addNode({
+    title: 'Lorem ipsum dolor sit amet',
+    date: '2018-09-04T23:20:33.918Z'
+  })
+
+  expect(contentType.options.route).toEqual('/blog/:slug')
+  expect(node.path).toEqual('/blog/lorem-ipsum-dolor-sit-amet')
+})
+
+test('add type with custom fields in route', () => {
+  const contentType = createPlugin().store.addContentType({
     typeName: 'TestPost',
     route: '/:test/:test_raw/:numeric/:author/:slug'
   })

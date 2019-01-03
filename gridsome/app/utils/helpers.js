@@ -1,15 +1,15 @@
-import config from '~/.temp/config.js'
+const publicPath = process.env.PUBLIC_PATH
 
 export function unslash (string) {
   return string.replace(/^\/+|\/+$/g, '')
 }
 
 export function url (string) {
-  return `${config.pathPrefix}${string}`.replace(/\/+/g, '/')
+  return `${publicPath}${string}`.replace(/\/+/g, '/')
 }
 
-const re = new RegExp(`^${config.pathPrefix}`)
-const replacement = config.pathPrefix !== '/' ? '' : '/'
+const re = new RegExp(`^${publicPath}`)
+const replacement = publicPath !== '/' ? '' : '/'
 export function stripPathPrefix (string) {
   return string.replace(re, replacement)
 }

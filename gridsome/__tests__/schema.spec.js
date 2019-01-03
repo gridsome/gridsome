@@ -19,7 +19,7 @@ beforeEach(() => {
       pathPrefix,
       imagesDir,
       filesDir,
-      targetDir: context,
+      outDir: context,
       imageExtensions: ['.png'],
       maxImageWidth: 1000
     }

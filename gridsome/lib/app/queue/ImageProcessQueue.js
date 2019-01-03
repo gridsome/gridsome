@@ -37,8 +37,8 @@ class ImageProcessQueue {
     asset.sets.forEach(({ filename, src, width }) => {
       if (!this._queue.has(src + asset.cacheKey)) {
         this._queue.set(src + asset.cacheKey, {
+          destination: trim(src, this.config.pathPrefix),
           options: { ...options, width },
-          destination: trim(src, '/'),
           cacheKey: asset.cacheKey,
           size: asset.size,
           filename,
@@ -51,8 +51,8 @@ class ImageProcessQueue {
   }
 
   async preProcess (filePath, options = {}) {
-    const { imageExtensions, targetDir, pathPrefix, maxImageWidth } = this.config
-    const imagesDir = path.relative(targetDir, this.config.imagesDir)
+    const { imageExtensions, outDir, pathPrefix, maxImageWidth } = this.config
+    const imagesDir = path.relative(outDir, this.config.imagesDir)
     const relPath = path.relative(this.context, filePath)
     const { name, ext } = path.parse(filePath)
     const mimeType = mime.lookup(filePath)
