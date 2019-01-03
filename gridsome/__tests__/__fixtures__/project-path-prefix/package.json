@@ -1,5 +1,5 @@
 {
-  "name": "test-project-basic",
+  "name": "test-project-path-prefix",
   "version": "1.0.0",
   "private": true,
   "scripts": {

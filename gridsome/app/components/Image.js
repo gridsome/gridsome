@@ -6,14 +6,16 @@ const observer = caniuse.IntersectionObserver
   ? createObserver(intersectionHandler)
   : null
 
-let uid = 0
-
 export default {
   functional: true,
 
   props: {
     src: { type: [Object, String], required: true },
     width: { type: String },
+    height: { type: String },
+    fit: { type: String },
+    position: { type: String },
+    background: { type: String },
     alt: { type: String },
     immediate: { type: true },
     quality: { type: String },
@@ -22,7 +24,6 @@ export default {
     // responsive: true
     // grayscale: false
     // duotone: false
-    // focus: center
     // rotate: 0
     // transition-name?
     // transition-duration?
@@ -33,6 +34,8 @@ export default {
     const isLazy = typeof props.immediate === 'undefined'
     const classNames = (data.class || []).concat(['g-image'])
     const noscriptClassNames = classNames.slice()
+    const srcType = typeof props.src
+    const ref = data.ref || data.key
     const res = []
 
     let src = ''
@@ -41,9 +44,9 @@ export default {
     let srcset = []
     let size = { width: props.width }
 
-    if (typeof props.src === 'string') {
+    if (srcType === 'string') {
       src = props.src
-    } else {
+    } else if (srcType === 'object') {
       src = props.src.src
       if (props.src.srcset) srcset = props.src.srcset
       if (props.src.sizes) sizes = props.src.sizes
@@ -51,16 +54,9 @@ export default {
       if (props.src.dataUri) dataUri = props.src.dataUri
     }
 
-    const ref = data.ref || `__image_${uid++}`
-    const key = data.key || isDev ? ref : undefined
-
-    // we set a key to force update image after hot-reload because
-    // the html attributes doesn't re-render after deletion
-
     res.push(h('img', {
       ...data,
       ref,
-      key,
       class: classNames,
       attrs: {
         src: dataUri,

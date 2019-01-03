@@ -21,7 +21,7 @@ module.exports = async app => {
     graphqlHTTP({ schema, context: app.createSchemaContext() })
   )
 
-  const assetsDir = path.relative(config.targetDir, config.assetsDir)
+  const assetsDir = path.relative(config.outDir, config.assetsDir)
   const assetsPath = forwardSlash(path.join(config.pathPrefix, assetsDir))
   const assetsRE = new RegExp(`${assetsPath}/(files|static)/(.*)`)
   server.get(assetsRE, require('./middlewares/assets')(app))
@@ -39,7 +39,7 @@ module.exports = async app => {
       graphql: createUrl(endpoint.graphql),
       explore: createUrl(endpoint.explore),
       websocket: createUrl(endpoint.graphql, 'ws'),
-      site: createUrl(path.join(config.pathPrefix, '/'))
+      site: createUrl('/')
     }
   }
 }

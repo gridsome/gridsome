@@ -10,22 +10,22 @@ const resolve = (p, c) => path.resolve(c || __dirname, p)
 module.exports = (app, { isProd, isServer }) => {
   const { config: projectConfig } = app
   const { cacheDirectory, cacheIdentifier } = createCacheOptions()
-  const assetsDir = path.relative(projectConfig.targetDir, projectConfig.assetsDir)
+  const assetsDir = path.relative(projectConfig.outDir, projectConfig.assetsDir)
   const pathPrefix = forwardSlash(path.join(projectConfig.pathPrefix, '/'))
   const config = new Config()
 
   const useHash = isProd && !process.env.GRIDSOME_TEST
-  const filename = `${assetsDir}/js/[name]${useHash ? '.[contenthash:8]' : ''}.js`
+  const filename = `[name]${useHash ? '.[contenthash:8]' : ''}.js`
   const assetname = `[name]${useHash ? '.[hash:8]' : ''}.[ext]`
   const inlineLimit = 10000
 
   config.mode(isProd ? 'production' : 'development')
 
   config.output
-    .path(projectConfig.targetDir)
-    .publicPath(isProd ? pathPrefix : '/')
-    .chunkFilename(filename)
-    .filename(filename)
+    .publicPath(pathPrefix)
+    .path(projectConfig.outDir)
+    .chunkFilename(`${assetsDir}/js/${filename}`)
+    .filename(`${assetsDir}/js/${filename}`)
 
   config.resolve
     .set('symlinks', true)
@@ -93,9 +93,11 @@ module.exports = (app, { isProd, isServer }) => {
       if (/\.vue\.jsx?$/.test(filepath)) {
         return false
       }
+
       if (/gridsome\.client\.js$/.test(filepath)) {
         return false
       }
+
       if (app.config.transpileDependencies.some(dep => {
         return typeof dep === 'string'
           ? filepath.includes(path.normalize(dep))
@@ -103,10 +105,16 @@ module.exports = (app, { isProd, isServer }) => {
       })) {
         return false
       }
+
       if (filepath.startsWith(projectConfig.appPath)) {
         return false
       }
-      return /node_modules/.test(filepath)
+
+      if (/node_modules/.test(filepath)) {
+        return true
+      }
+
+      return true
     })
     .end()
     .use('cache-loader')
@@ -225,7 +233,7 @@ module.exports = (app, { isProd, isServer }) => {
 
   config.plugin('injections')
     .use(require('webpack/lib/DefinePlugin'), [{
-      'PATH_PREFIX': JSON.stringify(projectConfig.pathPrefix),
+      'process.env.PUBLIC_PATH': JSON.stringify(pathPrefix),
       'GRIDSOME_CACHE_DIR': JSON.stringify(projectConfig.cacheDir),
       'GRIDSOME_DATA_DIR': JSON.stringify(`${projectConfig.cacheDir}/data`),
       'GRIDSOME_MODE': JSON.stringify(process.env.GRIDSOME_MODE || ''),
@@ -250,6 +258,10 @@ module.exports = (app, { isProd, isServer }) => {
         }
       }
     })
+  }
+
+  if (process.env.GRIDSOME_TEST) {
+    config.optimization.minimize(false)
   }
 
   // helpes

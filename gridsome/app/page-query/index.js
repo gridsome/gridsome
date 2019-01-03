@@ -15,7 +15,7 @@ export default ({ options }, query = true) => {
     $page () {
       return process.isServer
         ? this.$ssrContext.pageQuery.data
-        : cache.get(this.$route.fullPath)
+        : cache.get(this.$route.path)
     }
   }, options.computed)
 

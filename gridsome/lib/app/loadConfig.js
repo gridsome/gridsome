@@ -1,6 +1,7 @@
 const path = require('path')
 const fs = require('fs-extra')
 const crypto = require('crypto')
+const colorString = require('color-string')
 const { defaultsDeep, camelCase } = require('lodash')
 const { internalRE, transformerRE, SUPPORTED_IMAGE_TYPES } = require('../utils/constants')
 
@@ -15,7 +16,6 @@ module.exports = (context, options = {}, pkg = {}) => {
   }
 
   const resolve = (...p) => path.resolve(context, ...p)
-  const isServing = process.env.GRIDSOME_MODE === 'serve'
   const isProd = process.env.NODE_ENV === 'production'
   const configPath = resolve('gridsome.config.js')
   const args = options.args || {}
@@ -52,16 +52,15 @@ module.exports = (context, options = {}, pkg = {}) => {
   const assetsDir = localConfig.assetsDir || 'assets'
 
   config.pkg = options.pkg || resolvePkg(context)
-  config.host = args.host || 'localhost'
-  config.port = parseInt(args.port, 10) || 8080
+  config.host = args.host || localConfig.host || 'localhost'
+  config.port = parseInt(args.port || localConfig.port, 10) || 8080
   config.plugins = normalizePlugins(context, plugins)
   config.chainWebpack = localConfig.chainWebpack
   config.transformers = resolveTransformers(config.pkg, localConfig)
-  config.pathPrefix = isProd && isServing ? '/' : localConfig.pathPrefix || '/'
+  config.pathPrefix = isProd ? localConfig.pathPrefix || '/' : '/'
   config.staticDir = resolve('static')
   config.outDir = resolve(localConfig.outDir || 'dist')
-  config.targetDir = path.join(config.outDir, config.pathPrefix)
-  config.assetsDir = path.join(config.targetDir, assetsDir)
+  config.assetsDir = path.join(config.outDir, assetsDir)
   config.imagesDir = path.join(config.assetsDir, 'static')
   config.filesDir = path.join(config.assetsDir, 'files')
   config.appPath = path.resolve(__dirname, '../../app')
@@ -71,6 +70,12 @@ module.exports = (context, options = {}, pkg = {}) => {
   config.minProcessImageWidth = 500 // TODO: find a better name for this
   config.maxImageWidth = localConfig.maxImageWidth || 1920
   config.imageExtensions = SUPPORTED_IMAGE_TYPES
+
+  config.images = { ...localConfig.images }
+
+  if (!colorString.get(config.images.backgroundColor || '')) {
+    config.images.backgroundColor = null
+  }
 
   config.runtimeCompiler = localConfig.runtimeCompiler || false
 

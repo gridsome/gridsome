@@ -3,7 +3,7 @@ const { dateType } = require('../types/date')
 const { mapValues, isEmpty } = require('lodash')
 const { nodeInterface } = require('../interfaces')
 const { createRefResolver } = require('../resolvers')
-const { inferTypes, createRefType } = require('../infer-types')
+const { createFieldTypes, createRefType } = require('../createFieldTypes')
 
 const {
   GraphQLID,
@@ -13,26 +13,25 @@ const {
   GraphQLObjectType
 } = graphql
 
-module.exports = ({ contentType, nodeTypes }) => {
+module.exports = ({ contentType, nodeTypes, fields }) => {
   const nodeType = new GraphQLObjectType({
     name: contentType.typeName,
     description: contentType.description,
     interfaces: [nodeInterface],
     isTypeOf: node => node.typeName === contentType.typeName,
     fields: () => {
-      const nodes = contentType.collection.find()
-      const fields = inferTypes(nodes, contentType.typeName, nodeTypes)
-      const refs = createRefs(contentType, nodeTypes, fields)
+      const fieldTypes = createFieldTypes(fields, contentType.typeName, nodeTypes)
+      const refs = createRefs(contentType, nodeTypes, fieldTypes)
 
       const nodeFields = {
-        ...fields,
+        ...fieldTypes,
         ...refs,
 
         content: { type: GraphQLString },
         excerpt: { type: GraphQLString },
 
         ...extendNodeType(contentType, nodeType, nodeTypes),
-        ...createFields(contentType, fields),
+        ...createFields(contentType, fieldTypes),
 
         id: { type: new GraphQLNonNull(GraphQLID) },
         title: { type: GraphQLString },
@@ -103,19 +102,19 @@ function createFields (contentType, customFields) {
 function createRefs (contentType, nodeTypes, fields) {
   if (isEmpty(contentType.options.refs)) return null
 
-  return mapValues(contentType.options.refs, ({ typeName, fieldName }, key) => {
-    const field = fields[key] || { type: GraphQLString }
+  return mapValues(contentType.options.refs, ({ typeName }, fieldName) => {
+    const field = fields[fieldName] || { type: GraphQLString }
     const isList = field.type instanceof GraphQLList
     const ref = { typeName, isList }
     const resolve = createRefResolver(ref)
 
     return {
-      ...createRefType(ref, key, contentType.typeName, nodeTypes),
+      ...createRefType(ref, fieldName, contentType.typeName, nodeTypes),
       resolve: (obj, args, context, info) => {
         const field = {
           [fieldName]: {
             typeName,
-            id: obj.fields[key]
+            id: obj.fields[fieldName]
           }
         }
 

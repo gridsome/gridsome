@@ -170,10 +170,21 @@ test('add type with ref', () => {
   })
 })
 
-test('add type with dynamic route', () => {
-  const api = createPlugin()
+test('add nodes with custom paths', () => {
+  const contentType = createPlugin().store.addContentType({
+    typeName: 'TestPost'
+  })
 
-  const contentType = api.store.addContentType({
+  const node1 = contentType.addNode({ path: '/lorem-ipsum-dolor-sit-amet' })
+  const node2 = contentType.addNode({ path: 'nibh-fermentum-fringilla' })
+
+  expect(contentType.options.route).toBeUndefined()
+  expect(node1.path).toEqual('/lorem-ipsum-dolor-sit-amet')
+  expect(node2.path).toEqual('/nibh-fermentum-fringilla')
+})
+
+test('add type with dynamic route', () => {
+  const contentType = createPlugin().store.addContentType({
     typeName: 'TestPost',
     route: '/:year/:month/:day/:slug'
   })
@@ -187,10 +198,23 @@ test('add type with dynamic route', () => {
   expect(node.path).toEqual('/2018/09/05/lorem-ipsum-dolor-sit-amet')
 })
 
-test('add type with custom fields in route', () => {
-  const api = createPlugin()
+test('prefix dynamic route with leading slash', () => {
+  const contentType = createPlugin().store.addContentType({
+    typeName: 'TestPost2',
+    route: 'blog/:slug'
+  })
 
-  const contentType = api.store.addContentType({
+  const node = contentType.addNode({
+    title: 'Lorem ipsum dolor sit amet',
+    date: '2018-09-04T23:20:33.918Z'
+  })
+
+  expect(contentType.options.route).toEqual('/blog/:slug')
+  expect(node.path).toEqual('/blog/lorem-ipsum-dolor-sit-amet')
+})
+
+test('add type with custom fields in route', () => {
+  const contentType = createPlugin().store.addContentType({
     typeName: 'TestPost',
     route: '/:test/:test_raw/:numeric/:author/:slug'
   })
@@ -240,6 +264,7 @@ test('resolve absolute file paths', () => {
       file: 'image.png',
       file2: '/image.png',
       file3: '../image.png',
+      path: 'dir/to/image.png',
       url: 'https://example.com/image.jpg',
       url2: '//example.com/image.jpg',
       url3: 'git@github.com:gridsome/gridsome.git',
@@ -257,6 +282,7 @@ test('resolve absolute file paths', () => {
   expect(node.fields.file).toEqual('/absolute/dir/to/a/image.png')
   expect(node.fields.file2).toEqual('/absolute/dir/to/project/image.png')
   expect(node.fields.file3).toEqual('/absolute/dir/to/image.png')
+  expect(node.fields.path).toEqual('/absolute/dir/to/a/dir/to/image.png')
   expect(node.fields.text).toEqual('Lorem ipsum dolor sit amet.')
   expect(node.fields.text2).toEqual('example.com')
   expect(node.fields.text3).toEqual('md')
@@ -333,8 +359,8 @@ test('resolve paths from external sources', () => {
 
   const node1 = contentType1.addNode({
     fields: {
-      file: '/image.png',
-      file2: 'image.png',
+      filename: 'image.png',
+      file2: '/image.png',
       file3: '../../image.png'
     },
     internal: {
@@ -342,10 +368,14 @@ test('resolve paths from external sources', () => {
     }
   })
 
+  expect(node1.fields.filename).toEqual('https://www.example.com/2018/11/02/image.png')
+  expect(node1.fields.file2).toEqual('/image.png')
+  expect(node1.fields.file3).toEqual('https://www.example.com/2018/image.png')
+
   const node2 = contentType2.addNode({
     fields: {
-      file: '/images/image.png',
-      file2: 'images/image.png',
+      path: 'images/image.png',
+      file2: '/images/image.png',
       file3: './images/image.png'
     },
     internal: {
@@ -353,11 +383,8 @@ test('resolve paths from external sources', () => {
     }
   })
 
-  expect(node1.fields.file).toEqual('/image.png')
-  expect(node1.fields.file2).toEqual('https://www.example.com/2018/11/02/image.png')
-  expect(node1.fields.file3).toEqual('https://www.example.com/2018/image.png')
-  expect(node2.fields.file).toEqual('https://www.example.com/images/image.png')
-  expect(node2.fields.file2).toEqual('https://www.example.com/2018/11/02/another-blog-post/images/image.png')
+  expect(node2.fields.path).toEqual('https://www.example.com/2018/11/02/another-blog-post/images/image.png')
+  expect(node2.fields.file2).toEqual('https://www.example.com/images/image.png')
   expect(node2.fields.file3).toEqual('https://www.example.com/2018/11/02/another-blog-post/images/image.png')
 })
 
@@ -386,6 +413,11 @@ test('resolve paths from external sources with a custom url', () => {
     }
   })
 
+  expect(node.fields.file).toEqual('https://cdn.example.com/assets/image.png')
+  expect(node.fields.file2).toEqual('https://www.example.com/2018/11/02/image.png')
+  expect(node.fields.file3).toEqual('https://www.example.com/2018/11/image.png')
+  expect(node.fields.file4).toEqual('https://subdomain.example.com/images/image.png')
+
   const node2 = contentType2.addNode({
     fields: {
       file: '/image.png',
@@ -398,10 +430,6 @@ test('resolve paths from external sources with a custom url', () => {
     }
   })
 
-  expect(node.fields.file).toEqual('https://cdn.example.com/assets/image.png')
-  expect(node.fields.file2).toEqual('https://www.example.com/2018/11/02/image.png')
-  expect(node.fields.file3).toEqual('https://www.example.com/2018/11/image.png')
-  expect(node.fields.file4).toEqual('https://subdomain.example.com/images/image.png')
   expect(node2.fields.file).toEqual('https://cdn.example.com/assets/images/image.png')
   expect(node2.fields.file2).toEqual('https://www.example.com/2018/11/02/image.png')
   expect(node2.fields.file3).toEqual('https://www.example.com/2018/11/image.png')
