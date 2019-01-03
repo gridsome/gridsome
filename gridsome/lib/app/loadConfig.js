@@ -52,8 +52,8 @@ module.exports = (context, options = {}, pkg = {}) => {
   const assetsDir = localConfig.assetsDir || 'assets'
 
   config.pkg = options.pkg || resolvePkg(context)
-  config.host = args.host || 'localhost'
-  config.port = parseInt(args.port, 10) || 8080
+  config.host = args.host || options.host || 'localhost'
+  config.port = parseInt(args.port || options.port, 10) || 8080
   config.plugins = normalizePlugins(context, plugins)
   config.chainWebpack = localConfig.chainWebpack
   config.transformers = resolveTransformers(config.pkg, localConfig)
