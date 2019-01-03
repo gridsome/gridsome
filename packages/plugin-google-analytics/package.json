@@ -1,5 +1,5 @@
 {
-  "name": "@gridsome/plugin-analytics",
+  "name": "@gridsome/plugin-google-analytics",
   "version": "0.1.0",
   "main": "gridsome.client.js",
   "license": "MIT",
