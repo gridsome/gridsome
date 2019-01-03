@@ -1,4 +1,4 @@
-import VueAnalytics from 'vue-analytics';
+import VueAnalytics from 'vue-analytics'
 /**
  * @param Vue                 Vue instance
  * @param options             Plugin options
@@ -9,14 +9,13 @@ import VueAnalytics from 'vue-analytics';
  * @param context.isServer
  */
 export default function (Vue, options, { isServer, router }) {
+  const baseOptions = {
+    disabled: isServer,
+    debug: {
+      sendHitTask: process.env.NODE_ENV === 'production'
+    },
+    router
+  }
 
-    const baseOptions = {
-        disabled: isServer,
-        debug: {
-            sendHitTask: process.env.NODE_ENV === 'production'
-        },
-        router
-    };
-
-    Vue.use(VueAnalytics, { ...baseOptions, ...options });
+  Vue.use(VueAnalytics, { ...baseOptions, ...options })
 }
