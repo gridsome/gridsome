@@ -28,7 +28,7 @@ class ContentfulSource {
     const { items: assets } = await client.getAssets()
 
     const assetCollection = addContentType({
-      typeName: makeTypeName('asset'),
+      typeName: makeTypeName('asset')
     })
 
     for (const asset of assets) {
@@ -36,7 +36,7 @@ class ContentfulSource {
 
       assetCollection.addNode({
         _id: asset.sys.id,
-        fields,
+        fields
       })
     }
 
