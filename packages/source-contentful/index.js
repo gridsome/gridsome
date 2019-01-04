@@ -49,19 +49,18 @@ class ContentfulSource {
     }
 
     for (const contentType of contentTypes) {
-      this.typesIndex[contentType.sys.id] = contentType
-
-      const { name } = contentType
+      const { name, sys: { id }} = contentType
       const typeName = store.makeTypeName(name)
       const route = this.options.routes[name] || `/${store.slugify(name)}/:slug`
 
       store.addContentType({ typeName, route })
+
+      this.typesIndex[id] = { typeName, ...contentType }
     }
 
     for (const entry of entries.items) {
       const id = entry.sys.contentType.sys.id
-      const contentType = this.typesIndex[id]
-      const typeName = store.makeTypeName(contentType.name)
+      const { typeName, displayField } = this.typesIndex[id]
       const collection = store.getContentType(typeName)
       const fields = {}
 
@@ -85,7 +84,7 @@ class ContentfulSource {
 
       collection.addNode({
         id: entry.sys.id,
-        title: entry.fields[contentType.displayField],
+        title: entry.fields[displayField],
         slug: entry.fields.slug || '', // TODO: let user choose which field contains the slug
         date: entry.sys.createdAt,
         fields
