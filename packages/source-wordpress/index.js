@@ -197,16 +197,12 @@ class WordPressSource {
       }
 
       await pMap(queue, async params => {
-        let data
-
         try {
-          const res = await this.fetch(path, params)
-          data = res.data
+          const { data } = await this.fetch(path, params)
+          res.data.push(...ensureArrayData(path, data))
         } catch (err) {
           console.log(err.message)
         }
-
-        res.data.push(...ensureArrayData(path, data))
       }, { concurrency: concurrent })
 
       resolve(res.data)
