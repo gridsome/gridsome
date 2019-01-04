@@ -25,6 +25,21 @@ class ContentfulSource {
       space, accessToken, environment, host
     })
 
+    const { items: assets } = await client.getAssets()
+
+    const assetCollection = addContentType({
+      typeName: makeTypeName('asset')
+    })
+
+    for (const asset of assets) {
+      const fields = asset.fields
+
+      assetCollection.addNode({
+        _id: asset.sys.id,
+        fields
+      })
+    }
+
     const { items: contentTypes } = await client.getContentTypes()
     const cache = { contentTypes: {}}
 
@@ -33,7 +48,7 @@ class ContentfulSource {
     }
 
     for (const contentType of contentTypes) {
-      addContentType({
+      const collection = addContentType({
         typeName: makeTypeName(contentType.name),
         route: routes[contentType.name] || `/${slugify(contentType.name)}/:slug`,
         refs: contentType.fields.reduce((refs, { id, items }) => {
@@ -55,6 +70,15 @@ class ContentfulSource {
           return refs
         }, {})
       })
+
+      for (const field of contentType.fields) {
+        if (field.type === 'Link' && field.linkType === 'Asset') {
+          collection.addReference(field.name, {
+            typeName: makeTypeName('asset'),
+            key: '_id'
+          })
+        }
+      }
     }
 
     const { items: entries } = await client.getEntries()
