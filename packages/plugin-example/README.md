@@ -2,18 +2,19 @@
 
 > An example plugin for Gridsome
 
-Usage: 
+### Usage
+In `gridsome.config.js`:
 
 ```
 module.exports = {
   plugins: [
-  	 {
-      use: '@gridsome/plugin-example',
-      options: {
-      	typeName: 'ExampleData',
-      	route: '/example/:slug'
-      }
+  	{
+	    use: '@gridsome/plugin-example',
+	    options: {
+	    	typeName: 'ExampleData',
+	    	route: '/example/:slug'
+	    }
     },
   ]
 }
-``
+```
