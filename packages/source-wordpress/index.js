@@ -1,6 +1,5 @@
+const pMap = require('p-map')
 const axios = require('axios')
-const Queue = require('better-queue')
-const querystring = require('querystring')
 const { mapKeys, isPlainObject } = require('lodash')
 
 const TYPE_AUTHOR = 'author'
@@ -21,7 +20,10 @@ class WordPressSource {
     this.api = api
     this.options = options
     this.restBases = { posts: {}, taxonomies: {}}
-    this.restUrl = `${options.baseUrl.replace(/\/+$/, '')}/wp-json`
+
+    this.client = axios.create({
+      baseURL: `${options.baseUrl.replace(/\/+$/, '')}/wp-json`
+    })
 
     this.routes = {
       post: '/:year/:month/:day/:slug',
@@ -159,22 +161,20 @@ class WordPressSource {
     }
   }
 
-  async fetch (path) {
-    return axios.get(`${this.restUrl}/${path}`)
+  async fetch (url, params = {}) {
+    return this.client.request({ url, params })
   }
 
   async fetchPaged (path) {
     const { perPage, concurrent } = this.options
 
     return new Promise(async (resolve, reject) => {
-      const query = querystring.stringify({ per_page: perPage })
-      const endpoint = `${this.restUrl}/${path}?${query}`
       let res
 
       try {
-        res = await axios.get(endpoint)
+        res = await this.fetch(path, { per_page: perPage })
       } catch (err) {
-        return reject(new Error(`${err.message}: ${endpoint}`))
+        return reject(err)
       }
 
       const totalItems = parseInt(res.headers['x-wp-total'], 10)
@@ -190,29 +190,26 @@ class WordPressSource {
         return resolve(res.data)
       }
 
-      const queue = new Queue(taskHandler, { concurrent })
+      const queue = []
 
       for (let page = 2; page <= totalPages; page++) {
-        const query = querystring.stringify({ per_page: perPage, page })
-        queue.push({ id: `${this.restUrl}/${path}?${query}` })
+        queue.push({ per_page: perPage, page })
       }
 
-      queue.on('task_failed', (id, err) => {
-        reject(new Error(`${err.message}: ${id}`))
-        queue.destroy()
-      })
+      await pMap(queue, async params => {
+        let data
 
-      queue.on('task_finish', (id, { data }) => {
         try {
-          res.data.push(...ensureArrayData(id, data))
+          const res = await this.fetch(path, params)
+          data = res.data
         } catch (err) {
-          return reject(err)
+          console.log(err.message)
         }
-      })
 
-      queue.on('drain', () => {
-        resolve(res.data)
-      })
+        res.data.push(...ensureArrayData(path, data))
+      }, { concurrency: concurrent })
+
+      resolve(res.data)
     })
   }
 
@@ -256,15 +253,6 @@ class WordPressSource {
     }
 
     return value
-  }
-}
-
-async function taskHandler (task, cb) {
-  try {
-    const response = await axios.get(task.id)
-    cb(null, response)
-  } catch (err) {
-    cb(err)
   }
 }
 
