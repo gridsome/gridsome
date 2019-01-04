@@ -1,32 +1,35 @@
 const contentful = require('contentful')
 
 class ContentfulSource {
-  static defaultOptions () {
+  static defaultOptions() {
     return {
       space: undefined,
       environment: 'master',
       host: 'cdn.contentful.com',
       typeName: 'Contentful',
-      routes: {}
+      routes: {},
     }
   }
 
-  constructor (api, options) {
+  constructor(api, options) {
     this.options = options
 
     api.loadSource(args => this.fetchContentfulContent(args))
   }
 
-  async fetchContentfulContent (store) {
+  async fetchContentfulContent(store) {
     const { addContentType, getContentType, makeTypeName, slugify } = store
     const { space, accessToken, environment, host, routes } = this.options
 
     const client = contentful.createClient({
-      space, accessToken, environment, host
+      space,
+      accessToken,
+      environment,
+      host,
     })
 
     const { items: contentTypes } = await client.getContentTypes()
-    const cache = { contentTypes: {}}
+    const cache = { contentTypes: {} }
 
     for (const contentType of contentTypes) {
       cache.contentTypes[contentType.sys.id] = contentType
@@ -36,24 +39,34 @@ class ContentfulSource {
       addContentType({
         typeName: makeTypeName(contentType.name),
         route: routes[contentType.name] || `/${slugify(contentType.name)}/:slug`,
-        refs: contentType.fields.reduce((refs, { id, items }) => {
-          if (items && items.type === 'Link' && items.linkType === 'Entry') {
-            refs[id] = {
+        refs: contentType.fields.reduce((refs, field) => {
+          if (field.items && field.items.type === 'Link' && field.items.linkType === 'Entry') {
+            refs[field.id] = {
               key: '_id',
-              typeName: items.validations.reduce((types, { linkContentType }) => {
+              typeName: field.items.validations.reduce((types, { linkContentType }) => {
                 linkContentType.forEach(id => {
-                  const contentType = cache.contentTypes[id]
-                  const typeName = makeTypeName(contentType.name)
+                  let contentType = cache.contentTypes[id]
+                  let typeName = makeTypeName(contentType.name)
                   types.push(typeName)
                 })
 
                 return types
-              }, [])
+              }, []),
+            }
+          }
+
+          if (field.type === 'Link' && field.linkType === 'Entry') {
+            let contentType = cache.contentTypes[field.id]
+            let typeName = makeTypeName(contentType.name)
+
+            refs[field.id] = {
+              key: '_id',
+              typeName,
             }
           }
 
           return refs
-        }, {})
+        }, {}),
       })
     }
 
@@ -90,7 +103,7 @@ class ContentfulSource {
         slug: item.fields.slug || '',
         created: new Date(item.sys.createdAt),
         updated: new Date(item.sys.updatedAt),
-        fields
+        fields,
       })
     }
   }
