@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+<a name="0.1.3"></a>
+## [0.1.3](https://github.com/gridsome/gridsome/tree/master/packages/remark-prismjs/compare/@gridsome/transformer-remark@0.1.2...@gridsome/transformer-remark@0.1.3) (2019-01-04)
+
+
+### Bug Fixes
+
+* **remark:** calculate time to read correctly ([4d5801d](https://github.com/gridsome/gridsome/tree/master/packages/remark-prismjs/commit/4d5801d))
+
+
+
+
+
 <a name="0.1.2"></a>
 ## [0.1.2](https://github.com/gridsome/gridsome/tree/master/packages/remark-prismjs/compare/@gridsome/transformer-remark@0.1.1...@gridsome/transformer-remark@0.1.2) (2018-12-05)
 
