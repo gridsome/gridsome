@@ -23,9 +23,11 @@ class ContentfulSource {
       host: options.host
     })
 
-    api.loadSource(this.getContentTypes.bind(this))
-    api.loadSource(this.getAssets.bind(this))
-    api.loadSource(this.getEntries.bind(this))
+    api.loadSource(async store => {
+      await this.getContentTypes(store)
+      await this.getAssets(store)
+      await this.getEntries(store)
+    })
   }
 
   async getContentTypes (store) {
