@@ -11,7 +11,7 @@ Vue.use(Meta, {
 })
 
 const head = {
-  title: config.siteName,
+  title: config.siteTagline,
   titleTemplate: config.titleTemplate,
   __dangerouslyDisableSanitizers: ['style', 'script', 'noscript'],
   __dangerouslyDisableSanitizersByTagID: {},

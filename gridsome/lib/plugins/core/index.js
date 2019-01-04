@@ -2,6 +2,7 @@ function corePlugin (api, options) {
   api.loadSource(store => {
     store.addMetaData('siteName', options.siteName)
     store.addMetaData('siteUrl', options.siteUrl)
+    store.addMetaData('siteTagline', options.siteTagline)
     store.addMetaData('baseUrl', options.baseUrl)
   })
 }

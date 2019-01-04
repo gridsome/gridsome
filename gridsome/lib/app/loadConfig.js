@@ -90,6 +90,7 @@ module.exports = (context, options = {}, pkg = {}) => {
   config.baseUrl = localConfig.baseUrl || '/'
   config.siteName = localConfig.siteName || path.parse(context).name
   config.titleTemplate = localConfig.titleTemplate || `%s - ${config.siteName}`
+  config.siteTagline = localConfig.siteTagline || ''
 
   config.manifestsDir = path.join(config.assetsDir, 'manifest')
   config.clientManifestPath = path.join(config.manifestsDir, 'client.json')
