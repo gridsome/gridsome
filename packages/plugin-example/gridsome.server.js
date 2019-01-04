@@ -34,7 +34,7 @@ class ExamplePlugin {
         content: 'Lorem ipsum dolor sit amet, consectetur...',
       })
 
-  	})
+    })
   }
 }
 module.exports = ExamplePlugin
