@@ -27,6 +27,10 @@ export default {
       return h('a', data, children)
     }
 
+    if(props.to.match(/^(http|https):/) || data.attrs.href.match(/^(http|https):/)){
+      
+    }
+
     const ref = data.ref || `__link_${uid++}`
     const to = typeof props.to === 'string'
       ? { path: props.to, params: {}}
