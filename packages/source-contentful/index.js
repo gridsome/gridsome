@@ -23,30 +23,13 @@ class ContentfulSource {
       host: options.host
     })
 
-    api.loadSource(args => this.fetchContentfulContent(args))
+    api.loadSource(this.getContentTypes.bind(this))
+    api.loadSource(this.getAssets.bind(this))
+    api.loadSource(this.getEntries.bind(this))
   }
 
-  async fetchContentfulContent (store) {
-    const contentTypes = await this.fetchPaged('getContentTypes')
-    const assetData = await this.fetchPaged('getAssets')
-    const entryData = await this.fetchPaged('getEntries')
-
-    const entries = this.client.parseEntries({
-      items: entryData,
-      includes: {
-        Asset: assetData,
-        Entry: entryData
-      }
-    })
-
-    const assets = store.addContentType({
-      typeName: store.makeTypeName('asset'),
-      route: this.options.routes.asset || '/asset/:slug'
-    })
-
-    for (const asset of assetData) {
-      assets.addNode({ id: asset.sys.id, fields: asset.fields })
-    }
+  async getContentTypes (store) {
+    const contentTypes = await this.fetch('getContentTypes')
 
     for (const contentType of contentTypes) {
       const { name, sys: { id }} = contentType
@@ -55,10 +38,26 @@ class ContentfulSource {
 
       store.addContentType({ typeName, route })
 
-      this.typesIndex[id] = { typeName, ...contentType }
+      this.typesIndex[id] = { ...contentType, typeName }
     }
+  }
 
-    for (const entry of entries.items) {
+  async getAssets (store) {
+    const assets = await this.fetch('getAssets')
+    const typeName = store.makeTypeName('asset')
+    const route = this.options.routes.asset || '/asset/:slug'
+
+    const contentType = store.addContentType({ typeName, route })
+
+    for (const asset of assets) {
+      contentType.addNode({ id: asset.sys.id, fields: asset.fields })
+    }
+  }
+
+  async getEntries (store) {
+    const entries = await this.fetch('getEntries')
+
+    for (const entry of entries) {
       const id = entry.sys.contentType.sys.id
       const { typeName, displayField } = this.typesIndex[id]
       const collection = store.getContentType(typeName)
@@ -92,8 +91,8 @@ class ContentfulSource {
     }
   }
 
-  async fetchPaged (method, limit = 1000, order = 'sys.createdAt') {
-    const fetch = skip => this.client[method]({ skip, limit, order, resolveLinks: false })
+  async fetch (method, limit = 1000, order = 'sys.createdAt') {
+    const fetch = skip => this.client[method]({ skip, limit, order })
     const { total, items } = await fetch(0)
     const pages = Math.ceil(total / limit)
 
