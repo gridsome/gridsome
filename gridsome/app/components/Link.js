@@ -18,7 +18,7 @@ export default {
     to: { type: [Object, String] },
     page: { type: Number },
     activeClass: { type: String, default: 'active' },
-    exactActiveClass: { type: String, default: 'active--exact' }
+    exactActiveClass: { type: String, default: 'active--exact' },
   },
 
   render: (h, { data, props, parent, children, ...res }) => {
@@ -27,8 +27,14 @@ export default {
       return h('a', data, children)
     }
 
-    if(props.to.match(/^(http|https):/) || data.attrs.href.match(/^(http|https):/)){
-      
+    
+    const isExternalLinks = string => {
+      const regex = RegExp('^(http:|https:|\/\/)');
+      return regex.test(string)
+    }
+    if(isExternalLinks(data.attrs.href)){
+      data.attrs.target = "_blank"
+      data.attrs.rel = "noopener"
     }
 
     const ref = data.ref || `__link_${uid++}`

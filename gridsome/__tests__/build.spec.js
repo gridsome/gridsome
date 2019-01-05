@@ -53,6 +53,9 @@ test('build basic project', async () => {
 
   // g-link (file)
   expect(indexHTML).toMatch('<a href="/blog">Blog</a>')
+  expect(indexHTML).toMatch('href="http://outsidelink1.com" target="_blank" rel="noopener"')
+  expect(indexHTML).toMatch('href="https://outsidelink2.com" target="_blank" rel="noopener"')
+  expect(indexHTML).toMatch('href="//outsidelink3.com" target="_blank" rel="noopener"')
   expect(indexHTML).toMatch('<a href="/assets/files/dummy.pdf">Download</a>')
   expect(exists('dist/assets/files/dummy.pdf')).toBeTruthy()
 
