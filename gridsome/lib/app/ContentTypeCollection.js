@@ -37,7 +37,7 @@ class ContentTypeCollection extends EventEmitter {
   }
 
   addNode (options) {
-    const node = this.createNode(options)
+    const { node, belongsTo } = this.createNode(options)
 
     // add transformer to content type to let it
     // extend the node type when creating schema
@@ -54,6 +54,7 @@ class ContentTypeCollection extends EventEmitter {
         typeName: node.typeName,
         uid: node.uid,
         id: node.id,
+        belongsTo,
         _id: node.id // TODO: remove this before v1.0
       })
     } catch (err) {
@@ -77,23 +78,25 @@ class ContentTypeCollection extends EventEmitter {
     const indexEntry = this.baseStore.index.findOne({ uid: node.uid })
     const internal = this.createInternals(options.internal)
 
+    Object.assign(node.internal, this.createInternals(options.internal))
+
     // transform content with transformer for given mime type
     if (internal.content && internal.mimeType) {
       this.transformNodeOptions(options, internal)
     }
 
-    const { fields = {}} = options
+    const { fields, belongsTo } = this.processNodeFields(options.fields, node.internal.origin)
 
     node.title = options.title || fields.title || node.title
     node.date = options.date || fields.date || node.date
     node.slug = options.slug || fields.slug || this.slugify(node.title)
-    node.internal = Object.assign({}, node.internal, internal)
     node.path = typeof options.path === 'string'
       ? '/' + options.path.replace(/^\/+/g, '')
       : this.makePath(node)
 
-    node.fields = this.processNodeFields(fields, node.internal.origin)
+    node.fields = fields
     indexEntry.path = node.path
+    indexEntry.belongsTo = belongsTo
 
     this.emit('change', node, oldNode)
 
@@ -124,7 +127,7 @@ class ContentTypeCollection extends EventEmitter {
       this.transformNodeOptions(options, internal)
     }
 
-    const { fields = {}} = options
+    const { fields, belongsTo } = this.processNodeFields(options.fields, node.internal.origin)
 
     node.uid = hash.update(typeName + node.id).digest('hex')
     node.title = options.title || fields.title || node.id
@@ -134,12 +137,12 @@ class ContentTypeCollection extends EventEmitter {
     node.excerpt = options.excerpt || fields.excerpt || ''
     node.withPath = typeof options.path === 'string'
 
-    node.fields = this.processNodeFields(fields, node.internal.origin)
+    node.fields = fields
     node.path = typeof options.path === 'string'
       ? '/' + options.path.replace(/^\/+/g, '')
       : this.makePath(node)
 
-    return node
+    return { node, belongsTo }
   }
 
   createInternals (options = {}) {
@@ -166,13 +169,30 @@ class ContentTypeCollection extends EventEmitter {
     }
   }
 
-  processNodeFields (fields, origin) {
+  processNodeFields (input = {}, origin = '') {
+    const belongsTo = {}
+
+    const processRefField = ({ typeName, id }) => {
+      belongsTo[typeName] = belongsTo[typeName] || []
+      if (Array.isArray(id)) belongsTo[typeName].push(...id)
+      else belongsTo[typeName].push(id)
+    }
+
     const processField = field => {
       if (field === undefined) return field
       if (field === null) return field
 
       switch (typeof field) {
         case 'object':
+          if (isRefField(field)) {
+            if (Array.isArray(field.typeName)) {
+              field.typeName.forEach(typeName => {
+                processRefField({ typeName, id: field.id })
+              })
+            } else {
+              processRefField(field)
+            }
+          }
           return processFields(field)
         case 'string':
           if (path.extname(field).length > 1) {
@@ -203,14 +223,16 @@ class ContentTypeCollection extends EventEmitter {
         }
 
         res[createKey(key)] = Array.isArray(fields[key])
-          ? fields[key].map(processField)
+          ? fields[key].map(value => processField(value))
           : processField(fields[key])
       }
 
       return res
     }
 
-    return processFields(fields)
+    const fields = processFields(input)
+
+    return { fields, belongsTo }
   }
 
   resolveFilePath (...args) {
@@ -264,6 +286,15 @@ class ContentTypeCollection extends EventEmitter {
 
     return transformer.parse(content, options)
   }
+}
+
+function isRefField (field) {
+  return (
+    typeof field === 'object' &&
+    Object.keys(field).length === 2 &&
+    field.hasOwnProperty('typeName') &&
+    field.hasOwnProperty('id')
+  )
 }
 
 module.exports = ContentTypeCollection

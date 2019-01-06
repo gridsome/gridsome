@@ -1,19 +1,28 @@
 const graphql = require('../../graphql')
 const { dateType } = require('../types/date')
-const { mapValues, isEmpty } = require('lodash')
+const { mapValues, isEmpty, uniqBy } = require('lodash')
 const { nodeInterface } = require('../interfaces')
 const { createRefResolver } = require('../resolvers')
+const { sortOrderType } = require('../types')
 const { createFieldTypes, createRefType } = require('../createFieldTypes')
 
 const {
   GraphQLID,
+  GraphQLInt,
   GraphQLList,
   GraphQLString,
   GraphQLNonNull,
+  GraphQLUnionType,
   GraphQLObjectType
 } = graphql
 
 module.exports = ({ contentType, nodeTypes, fields }) => {
+  const belongsToType = new GraphQLUnionType({
+    interfaces: [nodeInterface],
+    name: `${contentType.typeName}BackRefs`,
+    types: () => Object.keys(nodeTypes).map(typeName => nodeTypes[typeName])
+  })
+
   const nodeType = new GraphQLObjectType({
     name: contentType.typeName,
     description: contentType.description,
@@ -38,6 +47,34 @@ module.exports = ({ contentType, nodeTypes, fields }) => {
         slug: { type: GraphQLString },
         path: { type: GraphQLString },
         date: dateType,
+
+        edges: {
+          type: new GraphQLList(belongsToType),
+          args: {
+            sortBy: { type: GraphQLString, defaultValue: 'date' },
+            order: { type: sortOrderType, defaultValue: 'DESC' },
+            perPage: { type: GraphQLInt, defaultValue: 25 },
+            skip: { type: GraphQLInt, defaultValue: 0 },
+            page: { type: GraphQLInt, defaultValue: 1 },
+            regex: { type: GraphQLString }
+          },
+          resolve (node, args, { store }) {
+            let chain = store.index.chain().find({
+              [`belongsTo.${node.typeName}`]: { $in: node.id }
+            })
+
+            const typeNames = uniqBy(chain.data(), 'typeName').map(entry => entry.typeName)
+            const mapper = (left, right) => ({ ...left, ...right })
+            const options = { removeMeta: true }
+
+            for (let i = 0, l = typeNames.length; i < l; i++) {
+              const { collection } = store.getContentType(typeNames[i])
+              chain = chain.eqJoin(collection, 'uid', 'uid', mapper, options)
+            }
+
+            return chain.data()
+          }
+        },
 
         _id: {
           deprecationReason: 'Use node.id instead.',
