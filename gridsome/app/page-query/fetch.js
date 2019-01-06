@@ -27,7 +27,7 @@ export default (route, query) => {
     return new Promise((resolve, reject) => {
       const re = new RegExp(`^${config.pathPrefix}`)
       const routePath = unslash(route.path.replace(re, '/'))
-      const filename = !routePath ? '/index.json' : `/${routePath}/index.json`
+      const filename = !routePath ? '/index.json' : `/${routePath}.json`
 
       import(/* webpackChunkName: "data/" */ `${GRIDSOME_DATA_DIR}${filename}`)
         .then(res => {

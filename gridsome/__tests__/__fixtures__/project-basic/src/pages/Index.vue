@@ -11,6 +11,8 @@
     <g-image src="~/assets/logo.svg" class="g-image-1" alt="SVG logo" width="300" />
     <g-image src="~/assets/test.png" :class="{ 'g-image-2': true, 'g-image-false': false }" alt="Test image" width="1000" />
     <g-image src="https://www.example.com/assets/image.png" :class="['g-image-3']" alt="External image" immediate />
+    <g-image src="~/assets/test.png" alt="Immediate image" immediate/>
+    <g-image src="/uploads/test.png" alt="Static image" width="300" />
     <g-link to="~/assets/dummy.pdf">Download</g-link>
     <span>{{ $page.customRootValue }}</span>
     <span>{{ TEST_1 }}</span>

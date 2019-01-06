@@ -1,4 +1,3 @@
-const path = require('path')
 const crypto = require('crypto')
 const moment = require('moment')
 const EventEmitter = require('events')
@@ -6,6 +5,7 @@ const camelCase = require('camelcase')
 const slugify = require('@sindresorhus/slugify')
 const { cloneDeep, isObject } = require('lodash')
 const { ISO_8601_FORMAT } = require('../utils/constants')
+const { isResolvablePath } = require('../utils')
 const { warn } = require('../utils/log')
 
 const nonValidCharsRE = new RegExp('[^a-zA-Z0-9_]', 'g')
@@ -200,9 +200,9 @@ class ContentTypeCollection extends EventEmitter {
           }
           return processFields(field)
         case 'string':
-          if (path.extname(field).length > 1) {
-            return this.resolveFilePath(origin, field)
-          }
+          return isResolvablePath(field)
+            ? this.resolveFilePath(origin, field)
+            : field
       }
 
       return field

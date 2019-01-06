@@ -17,59 +17,50 @@ export default {
     fit: { type: String },
     position: { type: String },
     background: { type: String },
-    alt: { type: String },
     immediate: { type: true },
     quality: { type: String },
     blur: { type: String }
-
-    // responsive: true
-    // grayscale: false
-    // duotone: false
-    // rotate: 0
-    // transition-name?
-    // transition-duration?
   },
 
   render: (h, { data, props, parent }) => {
-    const isDev = process.env.NODE_ENV === 'development'
     const isLazy = typeof props.immediate === 'undefined'
     const classNames = [data.class, 'g-image']
+    const isImmediate = props.immediate || props.immediate !== undefined
     const noscriptClassNames = classNames.slice()
-    const srcType = typeof props.src
     const ref = data.ref || data.key
+    const attrs = data.attrs
     const res = []
 
-    let src = ''
-    let sizes = ''
-    let dataUri = ''
-    let srcset = []
-    let size = { width: props.width }
+    switch (typeof props.src) {
+      case 'string':
+        attrs.src = props.src
+        attrs.width = props.width
+        
+        break
 
-    if (srcType === 'string') {
-      src = props.src
-    } else if (srcType === 'object') {
-      src = props.src.src
-      if (props.src.srcset) srcset = props.src.srcset
-      if (props.src.sizes) sizes = props.src.sizes
-      if (props.src.size) size = props.src.size
-      if (props.src.dataUri) dataUri = props.src.dataUri
+      case 'object':
+        const { src, srcset, sizes, size, dataUri } = props.src
+        const isLazy = !isImmediate && dataUri
+        
+        attrs.src = isLazy ? dataUri : src
+        attrs.width = size.width
+
+        if (isLazy) attrs['data-src'] = src
+        if (srcset.length) attrs[`${isLazy ? 'data-' : ''}srcset`] = srcset.join(', ')
+        if (sizes) attrs[`${isLazy ? 'data-' : ''}sizes`] = sizes
+        if (size) attrs[`${isLazy ? 'data-' : ''}size`] = size
+
+        break
     }
 
     res.push(h('img', {
       ...data,
-      ref,
       class: classNames,
-      attrs: {
-        src: dataUri,
-        alt: props.alt,
-        width: size.width,
-        [`${isLazy ? 'data-' : ''}srcset`]: srcset.join(', '),
-        [`${isLazy ? 'data-' : ''}sizes`]: sizes,
-        [`${isLazy ? 'data-' : ''}src`]: src
-      }
+      attrs,
+      ref
     }))
 
-    if (isLazy) {
+    if (attrs['data-src']) {
       const onMount = el => {
         if (!el) return
         else if (!observer) loadImage(el)
@@ -92,8 +83,8 @@ export default {
       res.push(h('noscript', {
         domProps: {
           innerHTML: `` + 
-            `<img src="${src}" class="${stringifyClass(noscriptClassNames)}"` +
-            (size.width ? ` width="${size.width}"`: '') +
+            `<img src="${attrs.src}" class="${stringifyClass(noscriptClassNames)}"` +
+            (attrs.width ? ` width="${attrs.width}"`: '') +
             (props.alt ? ` alt="${props.alt}"` : '') +
             `>`
         }

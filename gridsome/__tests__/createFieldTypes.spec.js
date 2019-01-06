@@ -1,5 +1,5 @@
-const { fileType } = require('../lib/graphql/schema/types/file')
-const { imageType } = require('../lib/graphql/schema/types/image')
+const { GraphQLFile } = require('../lib/graphql/schema/types/file')
+const { GraphQLImage } = require('../lib/graphql/schema/types/image')
 const { GraphQLDate } = require('../lib/graphql/schema/types/date')
 const { mergeNodeFields } = require('../lib/graphql/utils/mergeFields')
 const { createFieldTypes } = require('../lib/graphql/schema/createFieldTypes')
@@ -111,38 +111,42 @@ test('infer image fields', () => {
   const fields = mergeNodeFields([
     {
       fields: {
-        image1: 'image.png',
-        image2: '/image.png',
-        image3: './image.png',
-        image4: 'https://www.example.com/images/image.png',
-        image5: 'dir/to/image.png'
+        string: 'image.png',
+        image1: '/image.png',
+        image2: './image.png',
+        url: 'https://www.example.com/images/image.png',
+        path: 'dir/to/image.png'
       }
     }
   ])
 
   const types = createFieldTypes(fields, 'TestPost')
 
-  expect(types.image1.type).toEqual(imageType.type)
-  expect(types.image2.type).toEqual(imageType.type)
-  expect(types.image3.type).toEqual(imageType.type)
-  expect(types.image4.type).toEqual(imageType.type)
-  expect(types.image5.type).toEqual(imageType.type)
+  expect(types.string.type).toEqual(GraphQLString)
+  expect(types.image1.type).toEqual(GraphQLImage)
+  expect(types.image2.type).toEqual(GraphQLImage)
+  expect(types.url.type).toEqual(GraphQLString)
+  expect(types.path.type).toEqual(GraphQLString)
 })
 
 test('infer file fields', () => {
   const fields = mergeNodeFields([
     {
       fields: {
+        name: 'document.pdf',
         file1: './document.pdf',
-        file2: 'https://www.example.com/files/document.pdf',
-        file3: 'files/document.pdf'
+        file2: '/assets/document.pdf',
+        file3: 'https://www.example.com/files/document.pdf',
+        file4: 'files/document.pdf'
       }
     }
   ])
 
   const types = createFieldTypes(fields, 'TestPost')
 
-  expect(types.file1.type).toEqual(fileType.type)
-  expect(types.file2.type).toEqual(fileType.type)
-  expect(types.file3.type).toEqual(fileType.type)
+  expect(types.name.type).toEqual(GraphQLString)
+  expect(types.file1.type).toEqual(GraphQLFile)
+  expect(types.file2.type).toEqual(GraphQLFile)
+  expect(types.file3.type).toEqual(GraphQLString)
+  expect(types.file4.type).toEqual(GraphQLString)
 })
