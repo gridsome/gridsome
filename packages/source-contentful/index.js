@@ -47,7 +47,7 @@ class ContentfulSource {
   async getAssets (store) {
     const assets = await this.fetch('getAssets')
     const typeName = store.makeTypeName('asset')
-    const route = this.options.routes.asset || '/asset/:slug'
+    const route = this.options.routes.asset || '/asset/:id'
 
     const contentType = store.addContentType({ typeName, route })
 
