@@ -74,14 +74,24 @@ test('update node', () => {
 
   const oldNode = contentType.addNode({
     id: 'test',
-    date: '2018-09-04T23:20:33.918Z'
+    date: '2018-09-04T23:20:33.918Z',
+    content: 'Lorem ipsum dolor sit amet',
+    excerpt: 'Lorem ipsum...',
+    fields: {
+      foo: 'bar'
+    }
   })
 
   const oldTimestamp = oldNode.internal.timestamp
   const uid = oldNode.uid
 
   const node = contentType.updateNode('test', {
-    title: 'New title'
+    title: 'New title',
+    content: 'Praesent commodo cursus magna',
+    excerpt: 'Praesent commodo...',
+    fields: {
+      foo: 'foo'
+    }
   })
 
   const entry = api.store.store.index.findOne({ uid: node.uid })
@@ -92,6 +102,9 @@ test('update node', () => {
   expect(node.slug).toEqual('new-title')
   expect(node.path).toEqual('/test/new-title')
   expect(node.date).toEqual('2018-09-04T23:20:33.918Z')
+  expect(node.content).toEqual('Praesent commodo cursus magna')
+  expect(node.excerpt).toEqual('Praesent commodo...')
+  expect(node.fields.foo).toEqual('foo')
   expect(node.internal.timestamp).not.toEqual(oldTimestamp)
   expect(emit).toHaveBeenCalledTimes(2)
   expect(entry.id).toEqual('test')

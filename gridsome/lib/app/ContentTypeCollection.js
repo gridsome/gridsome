@@ -87,6 +87,8 @@ class ContentTypeCollection extends EventEmitter {
     node.title = options.title || fields.title || node.title
     node.date = options.date || fields.date || node.date
     node.slug = options.slug || fields.slug || this.slugify(node.title)
+    node.content = options.content || fields.content || node.content
+    node.excerpt = options.excerpt || fields.excerpt || node.excerpt
     node.internal = Object.assign({}, node.internal, internal)
     node.path = typeof options.path === 'string'
       ? '/' + options.path.replace(/^\/+/g, '')
