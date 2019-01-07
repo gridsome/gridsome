@@ -229,10 +229,11 @@ test('prefix dynamic route with leading slash', () => {
 test('add type with custom fields in route', () => {
   const contentType = createPlugin().store.addContentType({
     typeName: 'TestPost',
-    route: '/:test/:test_raw/:numeric/:author/:slug'
+    route: '/:test/:test_raw/:id/:numeric/:author/:slug'
   })
 
   const node = contentType.addNode({
+    id: '1234',
     title: 'Lorem ipsum',
     fields: {
       test: 'My value',
@@ -244,7 +245,7 @@ test('add type with custom fields in route', () => {
     }
   })
 
-  expect(node.path).toEqual('/my-value/My%20value/10/2/lorem-ipsum')
+  expect(node.path).toEqual('/my-value/My%20value/1234/10/2/lorem-ipsum')
 })
 
 test('transform node', () => {

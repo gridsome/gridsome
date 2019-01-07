@@ -231,7 +231,7 @@ class ContentTypeCollection extends EventEmitter {
     // with '_raw' suffix.
     for (let i = 0, l = routeKeys.length; i < l; i++) {
       const keyName = routeKeys[i]
-      const fieldValue = node.fields[keyName] || keyName
+      const fieldValue = node.fields[keyName] || node[keyName] || keyName
 
       if (
         isObject(fieldValue) &&
