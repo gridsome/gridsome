@@ -13,7 +13,7 @@ test('setup basic config', () => {
   expect(config.chainWebpack).toHaveLength(1)
   expect(config.pathPrefix).toEqual('/')
   expect(config.runtimeCompiler).toEqual(false)
-  expect(config.siteUrl).toEqual('')
+  expect(config.siteUrl).toEqual('https://www.gridsome.org')
   expect(config.baseUrl).toEqual('/')
   expect(config.siteName).toEqual('Gridsome')
   expect(config.titleTemplate).toEqual('%s | Test')

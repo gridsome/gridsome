@@ -1,10 +1,11 @@
 const path = require('path')
 const crypto = require('crypto')
+const moment = require('moment')
 const EventEmitter = require('events')
 const camelCase = require('camelcase')
-const dateFormat = require('dateformat')
 const slugify = require('@sindresorhus/slugify')
 const { cloneDeep, isObject } = require('lodash')
+const { ISO_8601_FORMAT } = require('../utils/constants')
 const { warn } = require('../utils/log')
 
 const nonValidCharsRE = new RegExp('[^a-zA-Z0-9_]', 'g')
@@ -251,11 +252,9 @@ class ContentTypeCollection extends EventEmitter {
   }
 
   makePath (node) {
-    const year = node.date ? dateFormat(node.date, 'yyyy') : null
-    const month = node.date ? dateFormat(node.date, 'mm') : null
-    const day = node.date ? dateFormat(node.date, 'dd') : null
-    const params = { year, month, day, slug: node.slug }
+    const date = moment.utc(node.date, ISO_8601_FORMAT, true)
     const { routeKeys } = this.options
+    const params = {}
 
     // Use root level fields as route params. Primitive values
     // are slugified but the original value will be available
@@ -264,7 +263,10 @@ class ContentTypeCollection extends EventEmitter {
       const keyName = routeKeys[i]
       const fieldValue = node.fields[keyName] || node[keyName] || keyName
 
-      if (
+      if (keyName === 'year') params.year = date.format('YYYY')
+      else if (keyName === 'month') params.month = date.format('MM')
+      else if (keyName === 'day') params.day = date.format('DD')
+      else if (
         isObject(fieldValue) &&
         fieldValue.hasOwnProperty('typeName') &&
         fieldValue.hasOwnProperty('id') &&

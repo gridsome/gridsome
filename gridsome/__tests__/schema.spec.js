@@ -770,8 +770,8 @@ test('should format dates from schema', async () => {
   }`)
 
   expect(errors).toBeUndefined()
-  expect(data.testPostDate.date).toEqual('2018-10-10T00:00:00+02:00')
-  expect(data.testPostDate.customDate).toEqual('2018-10-10T00:00:00+02:00')
+  expect(data.testPostDate.date).toEqual('2018-10-10')
+  expect(data.testPostDate.customDate).toEqual('2018-10-10')
   expect(data.testPostDate.date2).toEqual('2018-10-10')
   expect(data.testPostDate.date3).toEqual('10/10/2018')
   expect(data.testPostDate.dateObject.date).toEqual('10/10/2018')

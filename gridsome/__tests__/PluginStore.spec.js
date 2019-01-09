@@ -209,7 +209,7 @@ test('add type with dynamic route', () => {
   })
 
   expect(contentType.options.route).toEqual('/:year/:month/:day/:slug')
-  expect(node.path).toEqual('/2018/09/05/lorem-ipsum-dolor-sit-amet')
+  expect(node.path).toEqual('/2018/09/04/lorem-ipsum-dolor-sit-amet')
 })
 
 test('prefix dynamic route with leading slash', () => {
