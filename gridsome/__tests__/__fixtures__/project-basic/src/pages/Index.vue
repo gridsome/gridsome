@@ -4,7 +4,9 @@
     <h2>{{ $page.metaData.myTest.value }}</h2>
     <g-link :to="{ name: 'blog' }">Blog</g-link>
     <g-link :to="{ name: 'home' }" active-class="test-active">Home</g-link>
+    <g-image src="~/assets/logo.svg" alt="SVG logo" width="300" />
     <g-image src="~/assets/test.png" alt="Test image" width="1000" />
+    <g-image src="https://www.example.com/assets/image.png" alt="External image" immediate />
     <g-link to="~/assets/dummy.pdf">Download</g-link>
     <span>{{ $page.customRootValue }}</span>
     <span>{{ TEST_1 }}</span>
@@ -43,10 +45,17 @@ export default {
 
   metaInfo () {
     return {
-      meta: [{
-        name: 'og:description',
-        content: this.$page.metaData.myTest.value
-      }]
+      meta: [
+        {
+          name: 'og:description',
+          content: this.$page.metaData.myTest.value
+        },
+        {
+          key: 'description',
+          name: 'description',
+          content: 'Index description'
+        }
+      ]
     }
   }
 }

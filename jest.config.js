@@ -7,9 +7,9 @@ const testPathIgnorePatterns = [
 const testMatch = []
 
 if (process.env.WITH_BUILD === 'false') {
-  testMatch.push('**/__tests__/**/!(build-*).spec.js')
+  testMatch.push('**/__tests__/**/!(build).spec.js')
 } else {
-  testMatch.push('**/__tests__/**/build-*.spec.js')
+  testMatch.push('**/__tests__/**/build.spec.js')
 }
 
 module.exports = {

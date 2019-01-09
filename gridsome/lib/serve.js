@@ -26,7 +26,7 @@ module.exports = async (context, args) => {
     'GRAPHQL_WS_ENDPOINT': JSON.stringify(server.url.websocket)
   })
 
-  server.app.use(express.static(config.targetDir))
+  server.app.use(express.static(config.outDir))
   server.app.use(express.static(config.staticDir))
 
   server.app.get('*', require('./server/middlewares/renderer')(app))

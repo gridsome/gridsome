@@ -87,6 +87,15 @@ test('resize image', async () => {
   expect(height).toEqual(60)
 })
 
+test('crop image', async () => {
+  const files = await process(['1000x600.png'], { width: 500, height: 500 })
+  const { type, width, height } = imageSize.sync(files[0].buffer)
+
+  expect(type).toEqual('png')
+  expect(width).toEqual(500)
+  expect(height).toEqual(500)
+})
+
 test('do not upscale images', async () => {
   const files = await process(['350x250.png'], { width: 500 })
   const { type, width, height } = imageSize.sync(files[0].buffer)
@@ -99,7 +108,7 @@ test('do not upscale images', async () => {
 test('use cached process results', async () => {
   await fs.copy(
     path.join(context, 'assets', '1000x600.png'),
-    path.join(imageCacheDir, '1000x600-w1000.test.png')
+    path.join(imageCacheDir, '1000x600.97c148e.test.png')
   )
 
   const files = await process(['1000x600.png'], { width: 1000 }, true)
@@ -115,7 +124,7 @@ async function process (filenames, options = {}, withCache = false) {
   const config = {
     pathPrefix,
     imagesDir,
-    targetDir: context,
+    outDir: context,
     maxImageWidth: 1000,
     imageExtensions: ['.jpg', '.png', '.svg', '.gif', '.webp']
   }

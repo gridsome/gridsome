@@ -1,10 +1,10 @@
+const { isEmpty } = require('lodash')
 const camelCase = require('camelcase')
 const { sortOrderType } = require('./types')
 const { nodeInterface } = require('./interfaces')
 const { isDate, dateTypeField } = require('./types/date')
 const { isFile, fileType } = require('./types/file')
 const { isImage, imageType } = require('./types/image')
-const { isEmpty, isPlainObject } = require('lodash')
 const { fieldResolver, createRefResolver } = require('./resolvers')
 const { warn } = require('../../utils/log')
 
@@ -18,16 +18,11 @@ const {
   GraphQLObjectType
 } = require('../graphql')
 
-function inferTypes (nodes, typeName, nodeTypes) {
+function createFieldTypes (fields, typeName, nodeTypes) {
   const types = {}
-  let fields = {}
-
-  for (let i = 0, l = nodes.length; i < l; i++) {
-    fields = getFieldValues(nodes[i].fields, fields)
-  }
 
   for (const key in fields) {
-    const type = inferType(fields[key], key, typeName, nodeTypes)
+    const type = createFieldType(fields[key], key, typeName, nodeTypes)
 
     if (type) {
       types[key] = type
@@ -37,61 +32,14 @@ function inferTypes (nodes, typeName, nodeTypes) {
   return types
 }
 
-function getFieldValues (obj, currentObj = {}) {
-  const res = { ...currentObj }
-
-  for (const key in obj) {
-    const value = obj[key]
-
-    if (key.startsWith('__')) continue
-    if (value === undefined) continue
-    if (value === null) continue
-
-    res[key] = getFieldValue(value, currentObj[key])
-  }
-
-  return res
-}
-
-function getFieldValue (value, currentValue) {
-  if (Array.isArray(value)) {
-    if (isRefField(value[0])) {
-      const ref = currentValue || { typeName: [], isList: true }
-
-      for (let i = 0, l = value.length; i < l; i++) {
-        if (!ref.typeName.includes(value[i].typeName)) {
-          ref.typeName.push(value[i].typeName)
-        }
-      }
-
-      return ref
-    }
-
-    return value.map((value, index) => {
-      return getFieldValue(value, currentValue ? currentValue[index] : undefined)
-    })
-  } else if (isPlainObject(value)) {
-    if (isRefField(value)) {
-      const ref = currentValue || { typeName: value.typeName }
-      ref.isList = ref.isList || Array.isArray(value.id)
-
-      return ref
-    }
-
-    return getFieldValues(value, currentValue)
-  }
-
-  return currentValue !== undefined ? currentValue : value
-}
-
-function inferType (value, key, typeName, nodeTypes) {
+function createFieldType (value, key, typeName, nodeTypes) {
   const type = typeof value
 
   if (value === undefined) return null
   if (value === null) return null
 
   if (Array.isArray(value)) {
-    const type = inferType(value[0], key, typeName, nodeTypes)
+    const type = createFieldType(value[0], key, typeName, nodeTypes)
 
     return type !== null ? {
       type: new GraphQLList(type.type),
@@ -137,7 +85,7 @@ function createObjectType (obj, fieldName, typeName, nodeTypes) {
   const fields = {}
 
   for (const key in obj) {
-    const type = inferType(obj[key], key, name, nodeTypes)
+    const type = createFieldType(obj[key], key, name, nodeTypes)
 
     if (type) {
       fields[key] = type
@@ -202,15 +150,6 @@ function is32BitInt (x) {
   return (x | 0) === x
 }
 
-function isRefField (field) {
-  return (
-    typeof field === 'object' &&
-    Object.keys(field).length === 2 &&
-    field.hasOwnProperty('typeName') &&
-    field.hasOwnProperty('id')
-  )
-}
-
 function isRef (obj) {
   return (
     typeof obj === 'object' &&
@@ -221,7 +160,7 @@ function isRef (obj) {
 }
 
 module.exports = {
-  inferTypes,
+  createFieldTypes,
   createObjectType,
   createRefType
 }

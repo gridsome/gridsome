@@ -42,7 +42,7 @@ module.exports = async (context, args) => {
 
   // 5. copy static files
   if (fs.existsSync(config.staticDir)) {
-    await fs.copy(config.staticDir, config.targetDir)
+    await fs.copy(config.staticDir, config.outDir)
   }
 
   // 6. clean up
@@ -74,7 +74,7 @@ async function createRenderQueue ({ router, config, graphql }) {
     const routePath = trim(route.path, '/')
     const filePath = routePath.split('/').map(decodeURIComponent).join('/')
     const dataPath = !routePath ? 'index.json' : `${filePath}.json`
-    const htmlOutput = path.resolve(config.targetDir, filePath, 'index.html')
+    const htmlOutput = path.resolve(config.outDir, filePath, 'index.html')
     const dataOutput = path.resolve(config.cacheDir, 'data', dataPath)
 
     // TODO: remove this before v1.0
@@ -96,7 +96,7 @@ async function createRenderQueue ({ router, config, graphql }) {
     const { query } = page.pageQuery
     const routePath = trim(route.path, '/')
     const filePath = routePath.split('/').map(decodeURIComponent).join('/')
-    const htmlOutput = path.resolve(config.targetDir, filePath, 'index.html')
+    const htmlOutput = path.resolve(config.outDir, filePath, 'index.html')
     const dataOutput = path.resolve(config.cacheDir, 'data', `${filePath}.json`)
 
     // TODO: remove this before v1.0
@@ -222,7 +222,7 @@ async function processFiles (queue, { outDir }) {
   info(`Process files (${totalFiles} files) - ${timer(hirestime.S)}s`)
 }
 
-async function processImages (queue, { outDir, imageCacheDir, minProcessImageWidth }) {
+async function processImages (queue, config) {
   const timer = hirestime()
   const chunks = chunk(queue.queue, 100)
   const worker = createWorker('image-processor')
@@ -232,9 +232,10 @@ async function processImages (queue, { outDir, imageCacheDir, minProcessImageWid
     try {
       await worker.process({
         queue,
-        outDir,
-        cacheDir: imageCacheDir,
-        minWidth: minProcessImageWidth
+        outDir: config.outDir,
+        cacheDir: config.imageCacheDir,
+        minWidth: config.minProcessImageWidth,
+        backgroundColor: config.images.backgroundColor
       })
     } catch (err) {
       worker.end()
