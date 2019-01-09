@@ -56,6 +56,7 @@ test('build basic project', async () => {
   expect(indexHTML).toMatch('href="http://outsidelink1.com" target="_blank" rel="noopener"')
   expect(indexHTML).toMatch('href="https://outsidelink2.com" target="_blank" rel="noopener"')
   expect(indexHTML).toMatch('href="//outsidelink3.com" target="_blank" rel="noopener"')
+  expect(indexHTML).toMatch('href="https://www.gridsome.org"')
   expect(indexHTML).toMatch('<a href="/assets/files/dummy.pdf">Download</a>')
   expect(exists('dist/assets/files/dummy.pdf')).toBeTruthy()
 

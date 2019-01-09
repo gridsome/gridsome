@@ -4,6 +4,7 @@ import router from '../router'
 import caniuse from '../utils/caniuse'
 import { stripPathPrefix } from '../utils/helpers'
 import { createObserver } from '../utils/intersectionObserver'
+import config from '~/.temp/config.js'
 
 const observer = caniuse.IntersectionObserver
   ? createObserver(intersectionHandler)
@@ -29,12 +30,14 @@ export default {
 
     
     const isExternalLinks = string => {
+      if(string === config.siteUrl) return false;
       const regex = RegExp('^(http:|https:|\/\/)');
       return regex.test(string)
     }
     if(isExternalLinks(data.attrs.href)){
       data.attrs.target = "_blank"
       data.attrs.rel = "noopener"
+      return h('a', data, children)
     }
 
     const ref = data.ref || `__link_${uid++}`

@@ -4,9 +4,10 @@
     <h2>{{ $page.metaData.myTest.value }}</h2>
     <g-link :to="{ name: 'blog' }">Blog</g-link>
     <g-link :to="{ name: 'home' }" active-class="test-active">Home</g-link>
-    <g-link href="http://outsidelink1.com">External Links to</g-link>
-    <g-link href="https://outsidelink2.com">External Links to</g-link>
-    <g-link href="//outsidelink3.com">External Links to</g-link>
+    <g-link href="http://outsidelink1.com">External Links</g-link>
+    <g-link href="https://outsidelink2.com">External Links</g-link>
+    <g-link href="//outsidelink3.com">External Links</g-link>
+    <g-link href="https://www.gridsome.org">Internal Links</g-link>
     <g-image src="~/assets/logo.svg" alt="SVG logo" width="300" />
     <g-image src="~/assets/test.png" alt="Test image" width="1000" />
     <g-image src="https://www.example.com/assets/image.png" alt="External image" immediate />
