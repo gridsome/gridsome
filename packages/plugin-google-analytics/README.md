@@ -1,12 +1,12 @@
-# @gridsome/plugin-analytics
+# @gridsome/plugin-google-analytics
 
-> Adds Google Analytics to the Page
+> Google Analytics plugin for Gridsome
 
 See [VueAnalytics](https://github.com/MatteoGabriele/vue-analytics/blob/master/README.md) for possible options.
 
 ## Install
-- `yarn add @gridsome/plugin-analytics`
-- `npm install @gridsome/plugin-analytics`
+- `yarn add @gridsome/plugin-google-analytics`
+- `npm install @gridsome/plugin-google-analytics`
 
 ## Usage
 
