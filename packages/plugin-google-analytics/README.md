@@ -14,7 +14,7 @@ See [VueAnalytics](https://github.com/MatteoGabriele/vue-analytics/blob/master/R
 module.exports = {
   plugins: [
     {
-      use: '@gridsome/plugin-analytics',
+      use: '@gridsome/plugin-google-analytics',
       options: {
         id: 'UA-XXX-XX',
       }
