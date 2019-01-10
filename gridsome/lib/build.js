@@ -8,6 +8,7 @@ const { log, info } = require('./utils/log')
 
 const createApp = require('./app')
 const { createWorker } = require('./workers')
+const { getRootNodeFields } = require('./graphql/utils')
 const compileAssets = require('./webpack/compileAssets')
 
 module.exports = async (context, args) => {
@@ -26,7 +27,7 @@ module.exports = async (context, args) => {
 
   // 1. run all GraphQL queries and save results into json files
   await app.dispatch('beforeRenderQueries', () => ({ context, config, queue }))
-  await renderPageQueries(queue, graphql, store)
+  await renderPageQueries(queue, graphql)
 
   // 2. compile assets with webpack
   await compileAssets(app)
@@ -161,13 +162,14 @@ async function createRenderQueue ({ router, config, graphql }) {
   return queue
 }
 
-async function renderPageQueries (queue, graphql, store) {
+async function renderPageQueries (queue, graphql) {
   const timer = hirestime()
   const pages = queue.filter(page => !!page.dataOutput)
 
   await pMap(pages, async page => {
+    const fields = getRootNodeFields(page.node)
     const results = await graphql(page.query, {
-      ...page.node.fields,
+      ...fields,
       page: page.route.params.page,
       path: page.path
     })
