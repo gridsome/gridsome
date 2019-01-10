@@ -5,6 +5,7 @@
   "homepage": "https://github.com/gridsome/gridsome/tree/master/packages/plugin-sitemap#readme",
   "repository": "https://github.com/gridsome/gridsome/tree/master/packages/plugin-sitemap",
   "main": "index.js",
+  "license": "MIT",
   "keywords": [
     "gridsome",
     "gridsome-plugin",

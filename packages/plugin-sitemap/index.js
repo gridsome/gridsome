@@ -1,4 +1,4 @@
-module.exports = function(api, options) {
+module.exports = function (api, options) {
   const path = require('path')
   const fs = require('fs-extra')
   const micromatch = require('micromatch')
@@ -28,9 +28,9 @@ module.exports = function(api, options) {
         return {
           url: pathPrefix + page.path,
           priority: urlConfig.priority,
-          changefreq: urlConfig.changefreq,
+          changefreq: urlConfig.changefreq
         }
-      }),
+      })
     })
 
     return fs.outputFile(filename, sitemap.toString())
@@ -41,5 +41,5 @@ module.exports.defaultOptions = () => ({
   output: '/sitemap.xml',
   cacheTime: 600000,
   exclude: [],
-  config: {},
+  config: {}
 })
