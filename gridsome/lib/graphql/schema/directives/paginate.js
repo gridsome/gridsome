@@ -1,3 +1,4 @@
+const { trimStart, upperFirst } = require('lodash')
 const { BREAK } = require('graphql')
 
 const {
@@ -16,7 +17,8 @@ exports.PaginateDirective = new GraphQLDirective({
 
 exports.pagingFromAst = ast => {
   const result = {
-    collection: undefined,
+    fieldName: undefined,
+    typeName: undefined,
     perPage: undefined
   }
 
@@ -30,7 +32,8 @@ exports.pagingFromAst = ast => {
         },
         Directive ({ name }) {
           if (name.value === 'paginate') {
-            result.collection = fieldNode.name.value
+            result.fieldName = fieldNode.name.value
+            result.typeName = upperFirst(trimStart(fieldNode.name.value, 'all'))
 
             return BREAK
           }

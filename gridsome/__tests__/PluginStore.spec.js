@@ -504,7 +504,8 @@ test('add page with query', () => {
   expect(page.pageQuery.content).toEqual('query Test { page { id } }')
   expect(page.pageQuery.options).toMatchObject({ foo: 'bar' })
   expect(page.pageQuery.paginate).toMatchObject({
-    collection: undefined,
+    fieldName: undefined,
+    typeName: undefined,
     perPage: undefined
   })
 })

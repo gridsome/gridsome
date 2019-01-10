@@ -64,7 +64,7 @@ const {
   DYNAMIC_TEMPLATE_ROUTE
 } = require('./utils/constants')
 
-async function createRenderQueue ({ router, config, graphql }) {
+async function createRenderQueue ({ router, config, store }) {
   const createPage = (page, currentPage = 1) => {
     const isPager = currentPage > 1
     const pagePath = page.path.replace(/\/+$/, '')
@@ -131,22 +131,10 @@ async function createRenderQueue ({ router, config, graphql }) {
         break
 
       case PAGED_ROUTE:
-        const { collection, perPage } = page.pageQuery.paginate
-        const { data, errors } = await graphql(`
-          query PageInfo ($perPage: Int) {
-            ${collection} (perPage: $perPage) {
-              pageInfo {
-                totalPages
-              }
-            }
-          }
-        `, { perPage })
-
-        if (errors && errors.length) {
-          throw new Error(errors)
-        }
-
-        const { totalPages } = data[collection].pageInfo
+        const { typeName, perPage } = page.pageQuery.paginate
+        const contentType = store.getContentType(typeName)
+        const totalNodes = contentType.collection.count()
+        const totalPages = Math.ceil(totalNodes / perPage)
 
         for (let i = 1; i <= totalPages; i++) {
           queue.push(createPage(page, i))

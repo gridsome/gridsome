@@ -28,7 +28,7 @@ module.exports = ({ store, config }) => {
     let type = STATIC_ROUTE
     let route = page.path
 
-    if (page.pageQuery.paginate.collection) {
+    if (page.pageQuery.paginate.typeName) {
       route = `${page.path === '/' ? '' : page.path}/:page(\\d+)?`
       type = PAGED_ROUTE
       arr = pagedPages
