@@ -21,9 +21,10 @@ class ContentTypeCollection extends EventEmitter {
     this.typeName = options.typeName
     this.description = options.description
     this.resolveAbsolutePaths = options.resolveAbsolutePaths || false
+
     this.collection = store.data.addCollection(options.typeName, {
+      indices: ['id', 'path', 'date'],
       unique: ['id', 'path'],
-      indices: ['date'],
       autoupdate: true
     })
   }

@@ -1,15 +1,9 @@
+const { applyChainArgs } = require('./nodes/utils')
+
 function fieldResolver (obj, args, ctx, { fieldName }) {
   return obj.hasOwnProperty('$loki') // the node object
     ? obj.fields[fieldName]
     : obj[fieldName]
-}
-
-function applyArgs (chain, args) {
-  if (args.sortBy) chain = chain.simplesort(args.sortBy, args.order === -1)
-  if (args.skip) chain = chain.offset(args.skip)
-  if (args.limit) chain = chain.limit(args.limit)
-
-  return chain
 }
 
 function createRefResolver ({ typeName, isList = false }) {
@@ -30,8 +24,7 @@ function createRefResolver ({ typeName, isList = false }) {
     }
 
     if (Array.isArray(typeName)) {
-      // search for multiple node types by filtering the global
-      // node index before joining each node type collections
+      // search for multiple node types by filtering the global index
       chain = context.store.chainNodes(query)
     } else {
       const { collection } = context.store.getContentType(typeName)
@@ -39,7 +32,7 @@ function createRefResolver ({ typeName, isList = false }) {
     }
 
     return isList
-      ? applyArgs(chain, args).data()
+      ? applyChainArgs(chain, args).data()
       : chain.data()[0]
   }
 }

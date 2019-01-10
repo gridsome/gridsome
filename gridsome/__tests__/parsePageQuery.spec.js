@@ -30,9 +30,11 @@ test('parse @paginate directive for single type', () => {
     type: 'TestPage',
     content: `query {
       testPage (perPage: 5) @paginate {
-        edges {
-          node {
-            id
+        belongsTo {
+          edges {
+            node {
+              id
+            }
           }
         }
       }

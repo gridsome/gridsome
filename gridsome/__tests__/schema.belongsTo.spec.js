@@ -61,6 +61,7 @@ test('create node reference', async () => {
 
   posts.addNode({
     id: '1',
+    title: 'Post A',
     fields: {
       author: { typeName: 'Author', id: '2' },
       user: { typeName: 'Author', id: '2' }
@@ -69,6 +70,7 @@ test('create node reference', async () => {
 
   posts.addNode({
     id: '2',
+    title: 'Post B',
     fields: {
       authorRef: '2'
     }
@@ -76,7 +78,7 @@ test('create node reference', async () => {
 
   const query = `query {
     author (id: "2") {
-      belongsTo {
+      belongsTo (sortBy: "title") {
         totalCount
         pageInfo {
           totalPages
@@ -99,11 +101,11 @@ test('create node reference', async () => {
   expect(data.author.belongsTo.edges).toHaveLength(3)
   expect(data.author.belongsTo.totalCount).toEqual(3)
   expect(data.author.belongsTo.pageInfo.totalPages).toEqual(1)
-  expect(data.author.belongsTo.edges[0].node.__typename).toEqual('Author')
+  expect(data.author.belongsTo.edges[0].node.id).toEqual('2')
+  expect(data.author.belongsTo.edges[0].node.__typename).toEqual('Book')
   expect(data.author.belongsTo.edges[1].node.id).toEqual('1')
   expect(data.author.belongsTo.edges[1].node.__typename).toEqual('Book')
-  expect(data.author.belongsTo.edges[2].node.id).toEqual('2')
-  expect(data.author.belongsTo.edges[2].node.__typename).toEqual('Book')
+  expect(data.author.belongsTo.edges[2].node.__typename).toEqual('Author')
 })
 
 async function createSchemaAndExecute (query) {

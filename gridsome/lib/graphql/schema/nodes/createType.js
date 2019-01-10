@@ -1,8 +1,9 @@
 const graphql = require('../../graphql')
 const { dateType } = require('../types/date')
-const { mapValues, isEmpty } = require('lodash')
 const { nodeInterface } = require('../interfaces')
+const { createPagedNodeEdges } = require('./utils')
 const { createRefResolver } = require('../resolvers')
+const { mapValues, isEmpty, values } = require('lodash')
 const { pageInfoType, sortOrderType } = require('../types')
 const { createFieldTypes, createRefType } = require('../createFieldTypes')
 
@@ -19,12 +20,12 @@ const {
 module.exports = ({ contentType, nodeTypes, fields, typeNameEnum }) => {
   const belongsToUnionType = new GraphQLUnionType({
     interfaces: [nodeInterface],
-    name: `${contentType.typeName}BackRefsUnion`,
-    types: () => Object.keys(nodeTypes).map(typeName => nodeTypes[typeName])
+    name: `${contentType.typeName}BelongsToUnion`,
+    types: () => values(nodeTypes)
   })
 
   const belongsToEdgeType = new GraphQLObjectType({
-    name: `${contentType.typeName}BackRefsEdge`,
+    name: `${contentType.typeName}BelongsToEdge`,
     fields: () => ({
       node: { type: belongsToUnionType },
       next: { type: belongsToUnionType },
@@ -33,7 +34,7 @@ module.exports = ({ contentType, nodeTypes, fields, typeNameEnum }) => {
   })
 
   const belongsToType = new GraphQLObjectType({
-    name: `${contentType.typeName}BackRefs`,
+    name: `${contentType.typeName}BelongsTo`,
     fields: () => ({
       totalCount: { type: GraphQLInt },
       pageInfo: { type: new GraphQLNonNull(pageInfoType) },
@@ -105,40 +106,16 @@ module.exports = ({ contentType, nodeTypes, fields, typeNameEnum }) => {
   return nodeType
 }
 
-function belongsToResolver (node, args, { store }) {
+function belongsToResolver (node, { types, regex, ...args }, { store }) {
   const key = `belongsTo.${node.typeName}.${node.id}`
-  const { perPage, skip, page } = args
   const query = { [key]: { $eq: true }}
 
-  if (args.types) {
-    query.typeName = { $in: args.types }
-  }
+  if (types) query.typeName = { $in: types }
+  if (regex) query.path = { $regex: new RegExp(regex) }
 
   const chain = store.chainNodes(query)
-  const nodes = chain.data()
-  const totalNodes = nodes.length
-  const totalCount = Math.max(totalNodes - skip, 0)
 
-  // page info
-  const currentPage = page
-  const totalPages = Math.max(Math.ceil(totalCount / perPage), 1)
-  const isLast = page >= totalPages
-  const isFirst = page <= 1
-
-  return {
-    totalCount,
-    edges: nodes.map((node, index) => ({
-      node,
-      next: nodes[index + 1],
-      previous: nodes[index - 1]
-    })),
-    pageInfo: {
-      currentPage,
-      totalPages,
-      isFirst,
-      isLast
-    }
-  }
+  return createPagedNodeEdges(chain, args)
 }
 
 function extendNodeType (contentType, nodeType, nodeTypes) {
