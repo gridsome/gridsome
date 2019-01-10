@@ -173,9 +173,9 @@ class ContentTypeCollection extends EventEmitter {
     const belongsTo = {}
 
     const processRefField = ({ typeName, id }) => {
-      belongsTo[typeName] = belongsTo[typeName] || []
-      if (Array.isArray(id)) belongsTo[typeName].push(...id)
-      else belongsTo[typeName].push(id)
+      belongsTo[typeName] = belongsTo[typeName] || {}
+      if (Array.isArray(id)) id.forEach(id => (belongsTo[typeName][id] = true))
+      else belongsTo[typeName][id] = true
     }
 
     const processField = field => {
@@ -231,6 +231,13 @@ class ContentTypeCollection extends EventEmitter {
     }
 
     const fields = processFields(input)
+
+    // TODO: this should be removed before 1.0
+    for (const fieldName in this.options.refs) {
+      const id = fields[fieldName]
+      const { typeName } = this.options.refs[fieldName]
+      processRefField({ id, typeName })
+    }
 
     return { fields, belongsTo }
   }

@@ -57,7 +57,7 @@ module.exports = nodeType => {
         .limit(perPage)
 
       const nodes = results.data()
-      const totalNodes = collection.find({}).length
+      const totalNodes = collection.count()
 
       // total items in result
       const totalCount = Math.max(totalNodes - skip, 0)

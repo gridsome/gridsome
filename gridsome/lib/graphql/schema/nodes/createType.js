@@ -1,9 +1,9 @@
 const graphql = require('../../graphql')
 const { dateType } = require('../types/date')
-const { mapValues, isEmpty, uniqBy } = require('lodash')
+const { mapValues, isEmpty } = require('lodash')
 const { nodeInterface } = require('../interfaces')
 const { createRefResolver } = require('../resolvers')
-const { sortOrderType } = require('../types')
+const { pageInfoType, sortOrderType } = require('../types')
 const { createFieldTypes, createRefType } = require('../createFieldTypes')
 
 const {
@@ -16,11 +16,29 @@ const {
   GraphQLObjectType
 } = graphql
 
-module.exports = ({ contentType, nodeTypes, fields }) => {
-  const belongsToType = new GraphQLUnionType({
+module.exports = ({ contentType, nodeTypes, fields, typeNameEnum }) => {
+  const belongsToUnionType = new GraphQLUnionType({
     interfaces: [nodeInterface],
-    name: `${contentType.typeName}BackRefs`,
+    name: `${contentType.typeName}BackRefsUnion`,
     types: () => Object.keys(nodeTypes).map(typeName => nodeTypes[typeName])
+  })
+
+  const belongsToEdgeType = new GraphQLObjectType({
+    name: `${contentType.typeName}BackRefsEdge`,
+    fields: () => ({
+      node: { type: belongsToUnionType },
+      next: { type: belongsToUnionType },
+      previous: { type: belongsToUnionType }
+    })
+  })
+
+  const belongsToType = new GraphQLObjectType({
+    name: `${contentType.typeName}BackRefs`,
+    fields: () => ({
+      totalCount: { type: GraphQLInt },
+      pageInfo: { type: new GraphQLNonNull(pageInfoType) },
+      edges: { type: new GraphQLList(belongsToEdgeType) }
+    })
   })
 
   const nodeType = new GraphQLObjectType({
@@ -48,9 +66,10 @@ module.exports = ({ contentType, nodeTypes, fields }) => {
         path: { type: GraphQLString },
         date: dateType,
 
-        edges: {
-          type: new GraphQLList(belongsToType),
+        belongsTo: {
+          type: belongsToType,
           args: {
+            types: { type: new GraphQLList(typeNameEnum) },
             sortBy: { type: GraphQLString, defaultValue: 'date' },
             order: { type: sortOrderType, defaultValue: 'DESC' },
             perPage: { type: GraphQLInt, defaultValue: 25 },
@@ -58,22 +77,7 @@ module.exports = ({ contentType, nodeTypes, fields }) => {
             page: { type: GraphQLInt, defaultValue: 1 },
             regex: { type: GraphQLString }
           },
-          resolve (node, args, { store }) {
-            let chain = store.index.chain().find({
-              [`belongsTo.${node.typeName}`]: { $in: node.id }
-            })
-
-            const typeNames = uniqBy(chain.data(), 'typeName').map(entry => entry.typeName)
-            const mapper = (left, right) => ({ ...left, ...right })
-            const options = { removeMeta: true }
-
-            for (let i = 0, l = typeNames.length; i < l; i++) {
-              const { collection } = store.getContentType(typeNames[i])
-              chain = chain.eqJoin(collection, 'uid', 'uid', mapper, options)
-            }
-
-            return chain.data()
-          }
+          resolve: belongsToResolver
         },
 
         _id: {
@@ -99,6 +103,42 @@ module.exports = ({ contentType, nodeTypes, fields }) => {
   })
 
   return nodeType
+}
+
+function belongsToResolver (node, args, { store }) {
+  const key = `belongsTo.${node.typeName}.${node.id}`
+  const { perPage, skip, page } = args
+  const query = { [key]: { $eq: true }}
+
+  if (args.types) {
+    query.typeName = { $in: args.types }
+  }
+
+  const chain = store.chainNodes(query)
+  const nodes = chain.data()
+  const totalNodes = nodes.length
+  const totalCount = Math.max(totalNodes - skip, 0)
+
+  // page info
+  const currentPage = page
+  const totalPages = Math.max(Math.ceil(totalCount / perPage), 1)
+  const isLast = page >= totalPages
+  const isFirst = page <= 1
+
+  return {
+    totalCount,
+    edges: nodes.map((node, index) => ({
+      node,
+      next: nodes[index + 1],
+      previous: nodes[index - 1]
+    })),
+    pageInfo: {
+      currentPage,
+      totalPages,
+      isFirst,
+      isLast
+    }
+  }
 }
 
 function extendNodeType (contentType, nodeType, nodeTypes) {
