@@ -230,10 +230,8 @@ class ContentTypeCollection extends EventEmitter {
     // are slugified but the original value will be available
     // with '_raw' suffix.
     for (let i = 0, l = routeKeys.length; i < l; i++) {
-      const keyName = routeKeys[i]
-      const keyNamePath = keyName.split('__')
-
-      const fieldValue = get(node.fields, keyNamePath) || get(node, keyNamePath) || keyName
+      const { key, path } = routeKeys[i]
+      const fieldValue = get(node.fields, path) || get(node, path) || key
 
       if (
         isObject(fieldValue) &&
@@ -241,10 +239,10 @@ class ContentTypeCollection extends EventEmitter {
         fieldValue.hasOwnProperty('id') &&
         !Array.isArray(fieldValue.id)
       ) {
-        params[keyName] = String(fieldValue.id)
-      } else if (!isObject(fieldValue) && !params[keyName]) {
-        params[keyName] = this.slugify(String(fieldValue))
-        params[keyName + '_raw'] = String(fieldValue)
+        params[key] = String(fieldValue.id)
+      } else if (!isObject(fieldValue) && !params[key]) {
+        params[key] = this.slugify(String(fieldValue))
+        params[key + '_raw'] = String(fieldValue)
       }
     }
 

@@ -86,7 +86,13 @@ class Source extends EventEmitter {
       route: options.route,
       fields: options.fields || {},
       typeName: options.typeName,
-      routeKeys: routeKeys.map(key => key.name.replace('_raw', '')),
+      routeKeys: routeKeys.map(key => {
+        key = key.name.replace('_raw', '')
+        return {
+          key,
+          path: key.split('__')
+        }
+      }),
       resolveAbsolutePaths: options.resolveAbsolutePaths,
       mimeTypes: [],
       belongsTo: {},
@@ -116,7 +122,7 @@ class Source extends EventEmitter {
 
     try {
       page.pageQuery = parsePageQuery(options.pageQuery || {})
-    } catch (err) {}
+    } catch (err) { }
 
     page.title = options.title || page.id
     page.slug = options.slug || this.slugify(page.title)
@@ -151,7 +157,7 @@ class Source extends EventEmitter {
       page.pageQuery = options.pageQuery
         ? parsePageQuery(options.pageQuery)
         : page.pageQuery
-    } catch (err) {}
+    } catch (err) { }
 
     page.title = options.title || page.title
     page.slug = options.slug || page.slug
