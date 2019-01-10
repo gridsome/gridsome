@@ -17,7 +17,7 @@ module.exports = async (context, args) => {
 
   const buildTime = hirestime()
   const app = await createApp(context, { args })
-  const { config, graphql, store } = app
+  const { config, graphql } = app
 
   await app.dispatch('beforeBuild', { context, config })
   await fs.ensureDir(config.cacheDir)

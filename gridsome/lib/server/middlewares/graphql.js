@@ -1,5 +1,5 @@
 const { getGraphQLParams } = require('express-graphql')
-const { getRootNodeFields } = require('../../utils')
+const { getRootNodeFields } = require('../../graphql/utils')
 
 module.exports = ({ store }) => {
   return async function (req, res, next) {
