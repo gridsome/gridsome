@@ -429,16 +429,18 @@ test('create node list reference', async () => {
     }
   })
 
-  authors.addNode({ id: '2', title: 'First Author' })
-  authors.addNode({ id: '3', title: 'Second Author' })
-  authors.addNode({ id: '4', title: 'Third Author' })
+  authors.addNode({ id: '1', title: 'A Author' })
+  authors.addNode({ id: '2', title: 'B Author' })
+  authors.addNode({ id: '3', title: 'C Author' })
+  authors.addNode({ id: '4', title: 'D Author' })
 
   posts.addNode({
     id: '1',
     fields: {
-      author: '2',
+      author: '1',
       customRefs: {
         authors: [
+          { typeName: 'TestAuthor', id: '1' },
           { typeName: 'TestAuthor', id: '2' },
           { typeName: 'TestAuthor', id: '3' },
           { typeName: 'TestAuthor', id: '4' }
@@ -462,11 +464,11 @@ test('create node list reference', async () => {
   const { errors, data } = await createSchemaAndExecute(query)
 
   expect(errors).toBeUndefined()
-  expect(data.testPost.author.id).toEqual('2')
-  expect(data.testPost.author.title).toEqual('First Author')
+  expect(data.testPost.author.id).toEqual('1')
+  expect(data.testPost.author.title).toEqual('A Author')
   expect(data.testPost.customRefs.authors).toHaveLength(2)
-  expect(data.testPost.customRefs.authors[0].title).toEqual('Second Author')
-  expect(data.testPost.customRefs.authors[1].title).toEqual('Third Author')
+  expect(data.testPost.customRefs.authors[0].title).toEqual('B Author')
+  expect(data.testPost.customRefs.authors[1].title).toEqual('C Author')
 })
 
 test('create node list reference with missing types', async () => {
