@@ -1,7 +1,13 @@
+const path = require('path')
+
 module.exports = function (api, options) {
   api.setClientOptions({
     ogTitle: options.foo
   })
+
+  api.transpileDependencies([
+    path.join(__dirname, 'test-es6-1.js')
+  ])
 
   api.loadSource(store => {
     store.addMetaData('pluginValue', options.foo)

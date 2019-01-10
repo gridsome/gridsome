@@ -3,16 +3,15 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+
+
 <a name="0.0.7"></a>
-## [0.0.7](https://github.com/gridsome/gridsome/tree/master/packages/cli/compare/@gridsome/cli@0.0.6...@gridsome/cli@0.0.7) (2018-11-22)
+## [0.0.7](https://github.com/gridsome/gridsome/compare/@gridsome/cli@0.0.6...@gridsome/cli@0.0.7) (2018-11-23)
 
 
 ### Bug Fixes
 
-* **cli:** allow any url as starter ([b689dd1](https://github.com/gridsome/gridsome/tree/master/packages/cli/commit/b689dd1))
-
-
-
+* **cli:** allow any url as starter ([b689dd1](https://github.com/gridsome/gridsome/commit/b689dd1))
 
 
 <a name="0.0.6"></a>

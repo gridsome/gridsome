@@ -6,7 +6,9 @@ module.exports = () => {
 
     // workaround until query directives
     // works in mergeSchema from graphql-tools
-    req.body.query = req.body.query.replace(/@paginate/g, '')
+    req.body.query = req.body.query
+      ? req.body.query.replace(/@paginate/g, '')
+      : null
 
     next()
   }

@@ -16,7 +16,7 @@ export default (route, query) => {
       })
         .then(res => res.json())
         .then(res => {
-          cache.set(route.fullPath, res.data)
+          cache.set(route.path, res.data)
           resolve(res)
         })
     })
@@ -27,7 +27,7 @@ export default (route, query) => {
       const filename = !routePath ? '/index.json' : `/${routePath}.json`
 
       import(/* webpackChunkName: "data/" */ `${GRIDSOME_DATA_DIR}${filename}`).then(res => {
-        cache.set(route.fullPath, res.default.data)
+        cache.set(route.path, res.default.data)
         resolve(res)
       })
     })

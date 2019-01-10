@@ -65,6 +65,7 @@ class Source extends EventEmitter {
     const routeKeys = []
 
     if (typeof options.route === 'string') {
+      options.route = '/' + options.route.replace(/^\/+/g, '')
       makePath = pathToRegexp.compile(options.route)
       pathToRegexp(options.route, routeKeys)
     }
