@@ -30,17 +30,9 @@ function createRefResolver ({ typeName, isList = false }) {
     }
 
     if (Array.isArray(typeName)) {
-      const options = { removeMeta: true }
-      const mapper = (left, right) => ({ ...left, ...right })
-
       // search for multiple node types by filtering the global
       // node index before joining each node type collections
-      chain = context.store.index.chain().find(query)
-
-      for (let i = 0, l = typeName.length; i < l; i++) {
-        const { collection } = context.store.getContentType(typeName[i])
-        chain = chain.eqJoin(collection, 'uid', 'uid', mapper, options)
-      }
+      chain = context.store.chainNodes(query)
     } else {
       const { collection } = context.store.getContentType(typeName)
       chain = collection.chain().find(query)

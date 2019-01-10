@@ -1,6 +1,6 @@
 const Loki = require('lokijs')
 const autoBind = require('auto-bind')
-const { isArray, isPlainObject } = require('lodash')
+const { uniqBy, isArray, isPlainObject } = require('lodash')
 const ContentTypeCollection = require('./ContentTypeCollection')
 
 class BaseStore {
@@ -68,6 +68,20 @@ class BaseStore {
     const { collection } = this.getContentType(entry.typeName)
 
     return collection.getNode(entry.id)
+  }
+
+  chainNodes (query = {}) {
+    let chain = this.index.chain().find(query)
+    const typeNames = uniqBy(chain.data(), 'typeName').map(entry => entry.typeName)
+    const joinMapper = (left, right) => ({ ...left, ...right })
+    const joinOptions = { removeMeta: true }
+
+    for (let i = 0, l = typeNames.length; i < l; i++) {
+      const { collection } = this.getContentType(typeNames[i])
+      chain = chain.eqJoin(collection, 'uid', 'uid', joinMapper, joinOptions)
+    }
+
+    return chain
   }
 
   // taxonomies
