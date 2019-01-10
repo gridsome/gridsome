@@ -81,6 +81,7 @@ test('build project with pathPrefix', async () => {
   const appJS = content('dist/assets/js/app.js')
 
   expect(indexHTML).toMatch('<h1>Gridsome</h1>')
+  expect(indexHTML).toMatch('data-key="description" name="description" content="My super site"')
   expect(indexHTML).toMatch('href="/subdir/about"')
   expect(indexHTML).toMatch('href="/subdir/"')
   expect(indexHTML).toMatch('href="/subdir/assets/static/favicon.1539b60.test.png"')
