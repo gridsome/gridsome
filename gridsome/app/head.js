@@ -14,7 +14,7 @@ const head = {
   title: config.siteName,
   titleTemplate: config.titleTemplate,
   __dangerouslyDisableSanitizers: ['style', 'script', 'noscript'],
-  __dangerouslyDisableSanitizersByTagID: { description: ['content'] },
+  __dangerouslyDisableSanitizersByTagID: {},
   htmlAttrs: {
     lang: 'en'
   },
@@ -22,7 +22,7 @@ const head = {
     { charset: 'utf-8' },
     { name: 'generator', content: `Gridsome v${config.version}` },
     { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
-    { key: 'description', name: 'description', content: config.siteDescription }
+    { name: 'description', content: config.siteDescription }
   ],
   base: {},
   noscript: [],
