@@ -4,7 +4,7 @@ const EventEmitter = require('events')
 const camelCase = require('camelcase')
 const dateFormat = require('dateformat')
 const slugify = require('@sindresorhus/slugify')
-const { cloneDeep, isObject } = require('lodash')
+const { cloneDeep, isObject, get } = require('lodash')
 const { warn } = require('../utils/log')
 
 const nonValidCharsRE = new RegExp('[^a-zA-Z0-9_]', 'g')
@@ -231,7 +231,9 @@ class ContentTypeCollection extends EventEmitter {
     // with '_raw' suffix.
     for (let i = 0, l = routeKeys.length; i < l; i++) {
       const keyName = routeKeys[i]
-      const fieldValue = node.fields[keyName] || node[keyName] || keyName
+      const keyNamePath = keyName.split('__')
+
+      const fieldValue = get(node.fields, keyNamePath) || get(node, keyNamePath) || keyName
 
       if (
         isObject(fieldValue) &&
