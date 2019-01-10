@@ -77,7 +77,7 @@ async function createRenderQueue ({ router, config, graphql }) {
     const decodedPath = pathname.split('/').map(decodeURIComponent).join('/')
 
     let dataOutput = path.join(config.cacheDir, 'data', decodedPath, 'index.json')
-    let htmlOutput = path.join(config.targetDir, decodedPath, 'index.html')
+    let htmlOutput = path.join(config.outDir, decodedPath, 'index.html')
 
     if (page.directoryIndex === false && pathname !== '/') {
       dataOutput = `${path.dirname(dataOutput)}.json`
@@ -104,7 +104,7 @@ async function createRenderQueue ({ router, config, graphql }) {
     const decodedPath = pathname.split('/').map(decodeURIComponent).join('/')
 
     let dataOutput = path.join(config.cacheDir, 'data', decodedPath, 'index.json')
-    let htmlOutput = path.join(config.targetDir, decodedPath, 'index.html')
+    let htmlOutput = path.join(config.outDir, decodedPath, 'index.html')
 
     if (page.directoryIndex === false) {
       dataOutput = `${path.dirname(dataOutput)}.json`
