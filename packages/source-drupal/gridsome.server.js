@@ -1,3 +1,3 @@
-const DrupalSource = require('./src/DrupalSource')
+const DrupalSource = require('./lib/DrupalSource')
 
 module.exports = DrupalSource

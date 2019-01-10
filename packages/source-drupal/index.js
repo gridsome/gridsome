@@ -1,4 +1,4 @@
-const { DEFAULT_EXCLUDES } = require('./src/constants')
+const { DEFAULT_EXCLUDES } = require('./lib/constants')
 
 module.exports = {
   defaultExcludes: DEFAULT_EXCLUDES.slice()
