@@ -113,7 +113,7 @@ function belongsToResolver (node, { types, regex, ...args }, { store }) {
   if (types) query.typeName = { $in: types }
   if (regex) query.path = { $regex: new RegExp(regex) }
 
-  const chain = store.chainNodes(query)
+  const chain = store.chainIndex(query)
 
   return createPagedNodeEdges(chain, args)
 }

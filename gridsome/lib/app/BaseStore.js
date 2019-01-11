@@ -70,7 +70,7 @@ class BaseStore {
     return collection.getNode(entry.id)
   }
 
-  chainNodes (query = {}) {
+  chainIndex (query = {}) {
     let chain = this.index.chain().find(query)
     const typeNames = uniqBy(chain.data(), 'typeName').map(entry => entry.typeName)
     const joinMapper = (left, right) => ({ ...left, ...right })

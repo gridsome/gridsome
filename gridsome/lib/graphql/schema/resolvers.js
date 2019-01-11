@@ -25,7 +25,7 @@ function createRefResolver ({ typeName, isList = false }) {
 
     if (Array.isArray(typeName)) {
       // search for multiple node types by filtering the global index
-      chain = context.store.chainNodes(query)
+      chain = context.store.chainIndex(query)
     } else {
       const { collection } = context.store.getContentType(typeName)
       chain = collection.chain().find(query)
