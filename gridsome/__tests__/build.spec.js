@@ -4,9 +4,7 @@ const build = require('../lib/build')
 
 test('build basic project', async () => {
   const context = path.join(__dirname, '__fixtures__', 'project-basic')
-  const {
-    config
-  } = await build(context)
+  const { config } = await build(context)
 
   const content = file => fs.readFileSync(path.join(context, file), 'utf8')
   const exists = file => fs.existsSync(path.join(context, file))
@@ -82,9 +80,7 @@ test('build basic project', async () => {
 
 test('build project with pathPrefix', async () => {
   const context = path.join(__dirname, '__fixtures__', 'project-path-prefix')
-  const {
-    config
-  } = await build(context)
+  const { config } = await build(context)
 
   const content = file => fs.readFileSync(path.join(context, file), 'utf8')
   const exists = file => fs.existsSync(path.join(context, file))
