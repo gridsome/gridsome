@@ -34,7 +34,6 @@ module.exports = (context, options = {}, pkg = {}) => {
     }
   }
 
-
   const localConfig = options.localConfig
     ? options.localConfig
     : fs.existsSync(configPath)

@@ -74,12 +74,15 @@ test('build basic project', async () => {
   expect(indexHTML).toMatch(' src="https://www.example.com/assets/image.png"')
   expect(indexHTML).toMatch('alt="Test image"')
   expect(indexHTML).toMatch('alt="SVG logo"')
+  expect(indexHTML).toMatch('alt="Immediate image"')
   expect(indexHTML).toMatch('alt="External image"')
   expect(indexHTML).toMatch('alt="Static image"')
   expect(indexHTML).toMatch('class="g-image-1 g-image')
   expect(indexHTML).toMatch('class="g-image-2 g-image')
   expect(indexHTML).toMatch('class="g-image-3 g-image')
   expect(indexHTML).not.toMatch('g-image-3-false')
+  expect(indexHTML).not.toMatch('[object Object]')
+  expect(indexHTML).not.toMatch('width=""')
 
   // #163 - remove duplicate style links
   expect(indexHTML.match(/styles\.css/g)).toHaveLength(2)

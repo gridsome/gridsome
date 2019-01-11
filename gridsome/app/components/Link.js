@@ -12,32 +12,28 @@ const observer = caniuse.IntersectionObserver
 
 let uid = 0
 
+// @vue/component
 export default {
   functional: true,
 
   props: {
-    to: { type: [Object, String] },
-    page: { type: Number },
+    to: { type: [Object, String], default: null },
+    page: { type: Number, default: 0 },
     activeClass: { type: String, default: 'active' },
-    exactActiveClass: { type: String, default: 'active--exact' },
+    exactActiveClass: { type: String, default: 'active--exact' }
   },
 
-  render: (h, { data, props, parent, children, ...res }) => {
+  render: (h, { data, props, parent, children }) => {
     if (props.to && props.to.type === 'file') {
       data.attrs.href = props.to.src
+      
       return h('a', data, children)
     }
-    
-    const isExternalLinks = string => {
-      if (String(string).startsWith(config.siteUrl)) return false
-      const regex = RegExp('^(http:|https:|\/\/)');
-      return regex.test(string)
-    }
-    
-    
-    if(isExternalLinks(data.attrs.href)){
-      data.attrs.target = "_blank"
-      data.attrs.rel = "noopener"
+
+    if (isExternalLink(data.attrs.href)){
+      data.attrs.target = '_blank'
+      data.attrs.rel = 'noopener'
+      
       return h('a', data, children)
     }
 
@@ -82,6 +78,12 @@ export default {
 }
 
 const isPreloaded = {}
+const externalRE = new RegExp('^(https?:|//)')
+
+function isExternalLink (string) {
+  if (String(string).startsWith(config.siteUrl)) return false
+  return externalRE.test(string)
+}
 
 function intersectionHandler ({ intersectionRatio, target }) {
   if (process.isClient) {

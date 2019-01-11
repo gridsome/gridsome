@@ -13,8 +13,8 @@ export default {
     nextLabel: { type: String, default: '›' },
     lastLabel: { type: String, default: '»' },
     linkClass: { type: String, default: '' },
-    activeLinkClass: { type: String },
-    exactActiveLinkClass: { type: String },
+    activeLinkClass: { type: String, default: undefined },
+    exactActiveLinkClass: { type: String, default: undefined },
 
     // accessibility
     ariaLabel: { type: String, default: 'Pagination Navigation' },
@@ -33,14 +33,19 @@ export default {
     const renderLink = (page, text = page, ariaLabel = text) => {
       if (page === current) ariaLabel = props.ariaCurrentLabel
 
-      // Build props for Link component
-      const navigationLinkProps = { page }
-      if (props.activeLinkClass != undefined) navigationLinkProps.activeClass = props.activeLinkClass
-      if (props.exactActiveLinkClass != undefined) navigationLinkProps.exactActiveClass = props.exactActiveLinkClass
+      const linkProps = { page }
+      
+      if (props.activeLinkClass) {
+        linkProps.activeClass = props.activeLinkClass
+      }
+
+      if (props.exactActiveLinkClass) {
+        linkProps.exactActiveClass = props.exactActiveLinkClass
+      }
 
       return h(Link, {
         staticClass: props.linkClass,
-        props: navigationLinkProps,
+        props: linkProps,
         attrs: {
           'aria-label': ariaLabel.replace('%n', page),
           'aria-current': current === page
