@@ -122,7 +122,6 @@ async function createRenderQueue ({ router, config, store }) {
         break
       }
 
-      // TODO: STATIC_PAGED_TEMPLATE
       case PAGED_TEMPLATE: {
         const { perPage } = page.pageQuery.paginate
 

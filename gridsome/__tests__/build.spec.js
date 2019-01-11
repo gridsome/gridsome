@@ -71,7 +71,7 @@ test('build basic project', async () => {
   expect(content('dist/blog/second-post/index.html')).toMatch('<h1>Second post</h1>')
   expect(content('dist/blog/third-post/index.html')).toMatch('<h1>Third post</h1>')
 
-  // await clear(context)
+  await clear(context)
 }, 10000)
 
 test('build project with pathPrefix', async () => {

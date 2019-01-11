@@ -10,6 +10,12 @@ module.exports = function (api) {
       route: '/tag/:slug'
     })
 
+    const categories = store.addContentType({
+      typeName: 'Category'
+    })
+
+    categories.addNode({ id: '1', title: 'First category', path: '/category/first' })
+
     tags.addNode({ id: '1', title: 'First tag' })
     tags.addNode({ id: '2', title: 'Second tag' })
     tags.addNode({ id: '3', title: 'Third tag' })
@@ -24,7 +30,8 @@ module.exports = function (api) {
           { id: '2', typeName: 'Tag' },
           { id: '3', typeName: 'Tag' },
           { id: '4', typeName: 'Tag' }
-        ]
+        ],
+        category: { id: '1', typeName: 'Category' }
       }
     })
 
@@ -37,7 +44,8 @@ module.exports = function (api) {
           { id: '1', typeName: 'Tag' },
           { id: '2', typeName: 'Tag' },
           { id: '4', typeName: 'Tag' }
-        ]
+        ],
+        category: { id: '1', typeName: 'Category' }
       }
     })
 
@@ -50,7 +58,8 @@ module.exports = function (api) {
           { id: '1', typeName: 'Tag' },
           { id: '3', typeName: 'Tag' },
           { id: '4', typeName: 'Tag' }
-        ]
+        ],
+        category: { id: '1', typeName: 'Category' }
       }
     })
 
