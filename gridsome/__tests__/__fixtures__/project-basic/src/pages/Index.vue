@@ -7,7 +7,7 @@
     <g-link href="http://outsidelink1.com">External Links</g-link>
     <g-link href="https://outsidelink2.com">External Links</g-link>
     <g-link href="//outsidelink3.com">External Links</g-link>
-    <g-link href="https://www.gridsome.org">Internal Links</g-link>
+    <g-link href="https://www.gridsome.org/docs">Internal Links</g-link>
     <g-image src="~/assets/logo.svg" alt="SVG logo" width="300" />
     <g-image src="~/assets/test.png" alt="Test image" width="1000" />
     <g-image src="https://www.example.com/assets/image.png" alt="External image" immediate />

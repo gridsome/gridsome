@@ -27,13 +27,15 @@ export default {
       data.attrs.href = props.to.src
       return h('a', data, children)
     }
-
     
     const isExternalLinks = string => {
-      if(string === config.siteUrl) return false;
+      if(new String(string).substring(0, config.siteUrl.length) === config.siteUrl) return false
       const regex = RegExp('^(http:|https:|\/\/)');
       return regex.test(string)
     }
+    console.log(data.attrs.href);
+    
+    
     if(isExternalLinks(data.attrs.href)){
       data.attrs.target = "_blank"
       data.attrs.rel = "noopener"

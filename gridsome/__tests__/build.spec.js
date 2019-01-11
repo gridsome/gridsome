@@ -4,7 +4,9 @@ const build = require('../lib/build')
 
 test('build basic project', async () => {
   const context = path.join(__dirname, '__fixtures__', 'project-basic')
-  const { config } = await build(context)
+  const {
+    config
+  } = await build(context)
 
   const content = file => fs.readFileSync(path.join(context, file), 'utf8')
   const exists = file => fs.existsSync(path.join(context, file))
@@ -56,7 +58,7 @@ test('build basic project', async () => {
   expect(indexHTML).toMatch('href="http://outsidelink1.com" target="_blank" rel="noopener"')
   expect(indexHTML).toMatch('href="https://outsidelink2.com" target="_blank" rel="noopener"')
   expect(indexHTML).toMatch('href="//outsidelink3.com" target="_blank" rel="noopener"')
-  expect(indexHTML).toMatch('href="https://www.gridsome.org"')
+  expect(indexHTML).toMatch('href="https://www.gridsome.org/docs"')
   expect(indexHTML).toMatch('<a href="/assets/files/dummy.pdf">Download</a>')
   expect(exists('dist/assets/files/dummy.pdf')).toBeTruthy()
 
@@ -80,7 +82,9 @@ test('build basic project', async () => {
 
 test('build project with pathPrefix', async () => {
   const context = path.join(__dirname, '__fixtures__', 'project-path-prefix')
-  const { config } = await build(context)
+  const {
+    config
+  } = await build(context)
 
   const content = file => fs.readFileSync(path.join(context, file), 'utf8')
   const exists = file => fs.existsSync(path.join(context, file))
