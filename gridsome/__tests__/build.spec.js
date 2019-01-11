@@ -36,6 +36,7 @@ test('build basic project', async () => {
   // api.transpileDependencies
   expect(appJS).toMatch('testToArray1: function testToArray1()') // transpiled
   expect(appJS).toMatch('testToArray2 (...args)') // not transpiled
+  expect(appJS).toMatch('value: function classTestMethod()') // transpiled
 
   // favicon
   expect(exists('dist/assets/static/favicon.1539b60.test.png')).toBeTruthy()

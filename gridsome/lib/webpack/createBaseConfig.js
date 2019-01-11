@@ -110,11 +110,7 @@ module.exports = (app, { isProd, isServer }) => {
         return false
       }
 
-      if (/node_modules/.test(filepath)) {
-        return true
-      }
-
-      return true
+      return /node_modules/.test(filepath)
     })
     .end()
     .use('cache-loader')
