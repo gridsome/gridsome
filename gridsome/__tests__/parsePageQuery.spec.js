@@ -29,8 +29,8 @@ test('parse @paginate directive for single type', () => {
   const { paginate } = parsePageQuery({
     type: 'TestPage',
     content: `query {
-      testPage (perPage: 5) @paginate {
-        belongsTo {
+      testPage {
+        belongsTo (perPage: 5) @paginate {
           edges {
             node {
               id

@@ -1,8 +1,8 @@
 const path = require('path')
 const pMap = require('p-map')
 const fs = require('fs-extra')
+const { chunk } = require('lodash')
 const hirestime = require('hirestime')
-const { trim, chunk } = require('lodash')
 const sysinfo = require('./utils/sysinfo')
 const { log, info } = require('./utils/log')
 
@@ -60,54 +60,44 @@ module.exports = async (context, args) => {
 const {
   PAGED_ROUTE,
   STATIC_ROUTE,
+  PAGED_TEMPLATE,
   STATIC_TEMPLATE_ROUTE,
   DYNAMIC_TEMPLATE_ROUTE
 } = require('./utils/constants')
 
 async function createRenderQueue ({ router, config, store }) {
-  const createPage = (page, currentPage = 1) => {
-    const isPager = currentPage > 1
-    const pagePath = page.path.replace(/\/+$/, '')
-    const fullPath = isPager ? `${pagePath}/${currentPage}` : page.path
+  const createEntry = (node, page, currentPage = 1) => {
+    const fullPath = currentPage > 1 ? `${node.path}/${currentPage}` : node.path
+    const filePath = fullPath.split('/').map(decodeURIComponent).join('/')
+    const dataPath = fullPath === '/' ? 'index.json' : `${filePath}.json`
     const { route } = router.resolve(fullPath)
     const { query } = page.pageQuery
-    const routePath = trim(route.path, '/')
-    const filePath = routePath.split('/').map(decodeURIComponent).join('/')
-    const dataPath = !routePath ? 'index.json' : `${filePath}.json`
-    const htmlOutput = path.resolve(config.outDir, filePath, 'index.html')
-    const dataOutput = path.resolve(config.cacheDir, 'data', dataPath)
 
-    // TODO: remove this before v1.0
-    const output = path.dirname(htmlOutput)
+    const htmlOutput = path.join(config.outDir, filePath, 'index.html')
+    const dataOutput = query ? path.join(config.cacheDir, 'data', dataPath) : null
+
+    return { query, route, dataOutput, htmlOutput, fullPath }
+  }
+
+  const createPage = (page, currentPage = 1) => {
+    const entry = createEntry(page, page, currentPage)
 
     return {
-      path: fullPath.replace(/\/+/g, '/'),
-      dataOutput: query ? dataOutput : null,
-      htmlOutput,
-      output,
-      query,
-      route
+      ...entry,
+      path: page.path,
+      // TODO: remove this before v1.0
+      output: path.dirname(entry.htmlOutput)
     }
   }
 
-  const createTemplate = (node, page) => {
-    const { route } = router.resolve(node.path)
-    const { query } = page.pageQuery
-    const routePath = trim(route.path, '/')
-    const filePath = routePath.split('/').map(decodeURIComponent).join('/')
-    const htmlOutput = path.resolve(config.outDir, filePath, 'index.html')
-    const dataOutput = path.resolve(config.cacheDir, 'data', `${filePath}.json`)
-
-    // TODO: remove this before v1.0
-    const output = path.dirname(htmlOutput)
+  const createTemplate = (node, page, currentPage = 1) => {
+    const entry = createEntry(node, page, currentPage)
 
     return {
+      ...entry,
       path: node.path,
-      dataOutput: query ? dataOutput : null,
-      htmlOutput,
-      output,
-      query,
-      route
+      // TODO: remove this before v1.0
+      output: path.dirname(entry.htmlOutput)
     }
   }
 
@@ -118,19 +108,38 @@ async function createRenderQueue ({ router, config, store }) {
 
     switch (page.type) {
       case STATIC_ROUTE:
-      case STATIC_TEMPLATE_ROUTE:
+      case STATIC_TEMPLATE_ROUTE: {
         queue.push(createPage(page))
 
         break
+      }
 
-      case DYNAMIC_TEMPLATE_ROUTE:
+      case DYNAMIC_TEMPLATE_ROUTE: {
         page.collection.find().forEach(node => {
           queue.push(createTemplate(node, page))
         })
 
         break
+      }
 
-      case PAGED_ROUTE:
+      // TODO: STATIC_PAGED_TEMPLATE
+      case PAGED_TEMPLATE: {
+        const { perPage } = page.pageQuery.paginate
+
+        page.collection.find().forEach(node => {
+          const key = `belongsTo.${node.typeName}.${node.id}`
+          const totalNodes = store.index.count({ [key]: { $eq: true }})
+          const totalPages = Math.ceil(totalNodes / perPage)
+
+          for (let i = 1; i <= totalPages; i++) {
+            queue.push(createTemplate(node, page, i))
+          }
+        })
+
+        break
+      }
+
+      case PAGED_ROUTE: {
         const { typeName, perPage } = page.pageQuery.paginate
         const contentType = store.getContentType(typeName)
         const totalNodes = contentType.collection.count()
@@ -141,6 +150,7 @@ async function createRenderQueue ({ router, config, store }) {
         }
 
         break
+      }
     }
   }
 
@@ -171,7 +181,7 @@ async function renderHTML (queue, config) {
 
   await Promise.all(chunks.map(async queue => {
     const pages = queue.map(page => ({
-      path: page.path,
+      path: page.fullPath,
       htmlOutput: page.htmlOutput,
       dataOutput: page.dataOutput
     }))

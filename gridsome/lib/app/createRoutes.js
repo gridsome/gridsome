@@ -5,6 +5,8 @@ const { info } = require('../utils/log')
 const {
   PAGED_ROUTE,
   STATIC_ROUTE,
+  PAGED_TEMPLATE,
+  STATIC_PAGED_TEMPLATE,
   STATIC_TEMPLATE_ROUTE,
   DYNAMIC_TEMPLATE_ROUTE
 } = require('../utils/constants')
@@ -15,6 +17,7 @@ module.exports = ({ store, config }) => {
   const notFoundPage = store.pages.findOne({ type: '404' })
   const staticPages = []
   const pagedPages = []
+  const pagedTemplates = []
   const staticTemplates = []
   const dynamicTemplates = []
 
@@ -54,6 +57,8 @@ module.exports = ({ store, config }) => {
       )
     }
 
+    const isPaged = page.pageQuery.paginate.typeName
+    const makePath = path => isPaged ? `${path}/:page(\\d+)?` : path
     const { options, collection } = contentType
     const { component, pageQuery } = page
 
@@ -64,8 +69,8 @@ module.exports = ({ store, config }) => {
 
     if (options.route) {
       dynamicTemplates.push({
-        type: DYNAMIC_TEMPLATE_ROUTE,
-        route: options.route,
+        type: isPaged ? PAGED_TEMPLATE : DYNAMIC_TEMPLATE_ROUTE,
+        route: makePath(options.route),
         name: camelCase(typeName),
         component,
         pageQuery,
@@ -76,8 +81,8 @@ module.exports = ({ store, config }) => {
 
       for (const node of nodes) {
         staticTemplates.push({
-          type: STATIC_TEMPLATE_ROUTE,
-          path: node.path,
+          type: isPaged ? STATIC_PAGED_TEMPLATE : STATIC_TEMPLATE_ROUTE,
+          path: makePath(node.path),
           chunkName: camelCase(typeName),
           component,
           pageQuery,
@@ -92,6 +97,7 @@ module.exports = ({ store, config }) => {
     pages: [
       ...staticPages,
       ...pagedPages,
+      ...pagedTemplates,
       ...staticTemplates,
       ...dynamicTemplates
     ]

@@ -6,14 +6,19 @@
         {{ node.title }}
       </li>
     </ul>
+    <Pager :info="$page.tag.belongsTo.pageInfo"/>
   </div>
 </template>
 
 <page-query>
-query Tag ($path: String!) {
+query Tag ($path: String!, $page: Int) {
   tag (path: $path) {
     title
-    belongsTo (perPage: 2) {
+    belongsTo (perPage: 2, page: $page) @paginate {
+      pageInfo {
+        totalPages
+        currentPage
+      }
       edges {
         node {
           ...on Post {
@@ -27,3 +32,13 @@ query Tag ($path: String!) {
   }
 }
 </page-query>
+
+<script>
+import { Pager } from 'gridsome'
+
+export default {
+  components: {
+    Pager
+  }
+}
+</script>
