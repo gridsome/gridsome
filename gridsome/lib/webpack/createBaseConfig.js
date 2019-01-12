@@ -314,11 +314,13 @@ module.exports = (app, { isProd, isServer }) => {
   function createEnv (projectConfig) {
     const baseEnv = {
       'process.env.PUBLIC_PATH': JSON.stringify(pathPrefix),
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || ''),
       'GRIDSOME_CACHE_DIR': JSON.stringify(projectConfig.cacheDir),
       'GRIDSOME_DATA_DIR': JSON.stringify(`${projectConfig.cacheDir}/data`),
       'GRIDSOME_MODE': JSON.stringify(process.env.GRIDSOME_MODE || ''),
       'process.isClient': !isServer,
-      'process.isServer': isServer
+      'process.isServer': isServer,
+      'process.isProduction': process.env.NODE_ENV === 'production'
     }
 
     // merge variables start with GRIDSOME_ENV to config.env
