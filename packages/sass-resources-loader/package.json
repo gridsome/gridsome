@@ -1,0 +1,25 @@
+{
+  "version": "0.0.0",
+  "name": "@gridsome/sass-resources-loader",
+  "description": "SASS resources (e.g. variables, mixins etc.) module for Gridsome",
+  "homepage": "https://github.com/gridsome/gridsome/tree/master/packages/sass-resources-loader#readme",
+  "repository": "https://github.com/gridsome/gridsome/tree/master/packages/sass-resources-loader",
+  "main": "index.js",
+  "license": "MIT",
+  "keywords": [
+    "gridsome",
+    "gridsome-plugin",
+    "sass",
+    "scss",
+    "sass-resources-loader"
+  ],
+  "dependencies": {
+    "sass-resources-loader": "^2.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=8.3"
+  }
+}
