@@ -1,0 +1,26 @@
+{
+  "version": "0.1.0",
+  "name": "@gridsome/remark-shiki",
+  "description": "Shiki for Gridsome",
+  "homepage": "https://github.com/gridsome/gridsome/tree/master/packages/remark-shiki#readme",
+  "repository": "https://github.com/gridsome/gridsome/tree/master/packages/remark-shiki",
+  "main": "index.js",
+  "keywords": [
+    "gridsome",
+    "gridsome-plugin",
+    "shiki",
+    "remark"
+  ],
+  "dependencies": {
+    "escape-html": "^1.0.3",
+    "shiki": "^0.1.2",
+    "shiki-languages": "^0.1.0",
+    "unist-util-visit": "^1.4.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=8"
+  }
+}

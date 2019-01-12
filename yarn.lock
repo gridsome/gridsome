@@ -9913,6 +9913,13 @@ onetime@^2.0.0:
   dependencies:
     mimic-fn "^1.0.0"
 
+onigasm@^2.2.1:
+  version "2.2.1"
+  resolved "https://registry.yarnpkg.com/onigasm/-/onigasm-2.2.1.tgz#d56da809d63d3bb25510e8b8e447ffe98e56bebb"
+  integrity sha512-pa361CpVfsWOk0MQ1jLuJ1GvEJMHEHgZmaBpOIfBbvbp2crkDHacXB6mA4vgEfO7fL0OEMUSuZjX0Q9yTx6jTg==
+  dependencies:
+    lru-cache "^4.1.1"
+
 ono@^4.0.6:
   version "4.0.10"
   resolved "https://registry.yarnpkg.com/ono/-/ono-4.0.10.tgz#f7f9c6d1b76270a499d8664c95a740d44175134c"
@@ -12092,6 +12099,30 @@ shellwords@^0.1.1:
   resolved "https://registry.yarnpkg.com/shellwords/-/shellwords-0.1.1.tgz#d6b9181c1a48d397324c84871efbcfc73fc0654b"
   integrity sha512-vFwSUfQvqybiICwZY5+DAWIPLKsWO31Q91JSKl3UYv+K5c2QRPzn0qzec6QPu1Qc9eHYItiP3NdJqNVqetYAww==
 
+shiki-languages@^0.1.0:
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/shiki-languages/-/shiki-languages-0.1.0.tgz#ad2688ffc6b0bab5a61c0ad5785fefbdb889d3e2"
+  integrity sha512-cy2ga8WvkOSrWT6xjfM1jSowd0HMDFqAvgDAaRre8fiKXAbVC9aTTICWZrnd8r5eeS4gpPjMIMp9+RUqrAOgMQ==
+  dependencies:
+    vscode-textmate "https://github.com/octref/vscode-textmate"
+
+shiki-themes@^0.1.1:
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/shiki-themes/-/shiki-themes-0.1.1.tgz#d1d35af4b2baf505fc899c957491c538bd061625"
+  integrity sha512-HHDFRbjNirSkG4Em2clni6dWt0kV9MgopUEr+BCTVJcVsUSoarvCog7v8agknc4Ml7FzaOnj0yfPKp1ovWbHIQ==
+  dependencies:
+    vscode-textmate "https://github.com/octref/vscode-textmate"
+
+shiki@^0.1.2:
+  version "0.1.2"
+  resolved "https://registry.yarnpkg.com/shiki/-/shiki-0.1.2.tgz#ce12f70a638d9780945d59d6423b5d606b4a010f"
+  integrity sha512-Pu+AtnETGfuKGxf1F182F3ke15l4l2dI7rmwtYNhLcxjIfwq9Ax/GwMpABZ4o1s8yjHDbVRegyiv2fshAjMMaw==
+  dependencies:
+    onigasm "^2.2.1"
+    shiki-languages "^0.1.0"
+    shiki-themes "^0.1.1"
+    vscode-textmate "https://github.com/octref/vscode-textmate"
+
 signal-exit@^3.0.0, signal-exit@^3.0.2:
   version "3.0.2"
   resolved "https://registry.yarnpkg.com/signal-exit/-/signal-exit-3.0.2.tgz#b5fdc08f1287ea1178628e415e25132b73646c6d"
@@ -13773,6 +13804,10 @@ vm-browserify@0.0.4:
   integrity sha1-XX6kW7755Kb/ZflUOOCofDV9WnM=
   dependencies:
     indexof "0.0.1"
+
+"vscode-textmate@https://github.com/octref/vscode-textmate":
+  version "4.0.1"
+  resolved "https://github.com/octref/vscode-textmate#e65aabe2227febda7beaad31dd0fca1228c5ddf3"
 
 vue-analytics@^5.16.1:
   version "5.16.1"
