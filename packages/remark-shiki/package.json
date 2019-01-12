@@ -12,7 +12,6 @@
     "remark"
   ],
   "dependencies": {
-    "escape-html": "^1.0.3",
     "shiki": "^0.1.2",
     "shiki-languages": "^0.1.0",
     "unist-util-visit": "^1.4.0"
