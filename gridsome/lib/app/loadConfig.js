@@ -54,6 +54,7 @@ module.exports = (context, options = {}, pkg = {}) => {
   config.pkg = options.pkg || resolvePkg(context)
   config.host = args.host || localConfig.host || 'localhost'
   config.port = parseInt(args.port || localConfig.port, 10) || 8080
+  config.env = localConfig.env
   config.plugins = normalizePlugins(context, plugins)
   config.chainWebpack = localConfig.chainWebpack
   config.transformers = resolveTransformers(config.pkg, localConfig)
