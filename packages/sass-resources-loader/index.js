@@ -22,7 +22,9 @@ class SassResourcesLoaderPlugin {
 
       const targets = [
         config.module.rule('scss').oneOf('modules').resourceQuery(/module/),
-        config.module.rule('scss').oneOf('normal')
+        config.module.rule('scss').oneOf('normal'),
+        config.module.rule('sass').oneOf('modules').resourceQuery(/module/),
+        config.module.rule('sass').oneOf('normal')
       ]
 
       targets.forEach(target => this.attachPlugin(target, options.resources))
