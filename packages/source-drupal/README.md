@@ -1,7 +1,6 @@
+# @gridsome/source-drupal
 
-
-## @gridsome/source-drupal
-> Drupal source for Gridsome. This package is under development and API might change before v1 is released. 
+> Drupal source for Gridsome.
 
 ### Quick Overview
 
@@ -13,7 +12,8 @@ This is the source plugin for pulling in data from the Drupal content management
 
 ### Usage
 Depending on your Drupal and JSON:API configuration, you only need to specify `baseUrl` to get up and running:
-```
+
+```js
 module.exports = {
   plugins: [
     {
@@ -25,6 +25,7 @@ module.exports = {
   ]
 }
 ```
+
 Here are all supported options:
 
 Property |Default Value | Notes
@@ -42,7 +43,8 @@ The first operation this plugin performs is a request to the api root:
 axios.get(url, config) // url is baseUrl and apiBase combined
 ```
 The JSON:API returns a manifest of available endpoints for all the entities in Drupal. It typically looks something like this (this is a shortened version):
-```
+
+```json
 {
   "data": [],
   "links": {
@@ -67,7 +69,9 @@ The JSON:API returns a manifest of available endpoints for all the entities in D
   }
 }
 ```
+
 All `keys` in the `links` object of this response become the GraphQL Type prepended by the `typeName` (and with a little bit of clean up):
+
 ```
 node--article -> DrupalNodeArticle
 taxonomy_term--tags -> DrupalTaxonomyTermTags
@@ -83,7 +87,8 @@ Within your Gridsome project, run `gridsome develop` and access `http://localhos
 
 ### Routing
 Use the `routes` option in `gridsome.config.js` to specify the url schema for each entity type individually:
-```
+
+```js
 module.exports = {
   plugins: [
     {
@@ -99,6 +104,7 @@ module.exports = {
   ]
 }
 ```
+
 Path parameters can be any GraphQL field on that node:
 `node--article: 'aritlces/:langcode/:slug' -> /aritcles/en/lorem-ipsum`
 
@@ -107,7 +113,8 @@ A majority of the endpoints returned in the api schema are not necessary so `@gr
 
 > WARNING: A majority of JSON:API endpoints will throw 401/403s unless permissions are granted
 > If you provide your own excludes, the defaults will not be used
-```
+
+```js
 // default exclude can be imported
 const { defaultExcludes } = require('@gridsome/source-drupal')
 
@@ -127,9 +134,11 @@ module.exports = {
   ]
 }
 ```
+
 ### Auth
 Currently `@gridsome/source-drupal` only supports Basic Auth:
-```
+
+```js
 require('dotenv').config() // use dotenv for env variables
 
 // requestConfig is passed directly to axios
@@ -144,7 +153,7 @@ module.exports = {
         requestConfig: {
           auth: {
             username: process.env.BASIC_AUTH_USERNAME,
-			password: process.env.BASIC_AUTH_PASSWORD
+            password: process.env.BASIC_AUTH_PASSWORD
           }
         }
       }
@@ -152,10 +161,12 @@ module.exports = {
   ]
 }
 ```
+
 Cookie Auth and OAuth coming soon...
 
 ### Example Page Queries
 List all `DrupalNodeArticle` using `<page-query>` in a Gridsome page:
+
 ```
 <page-query>
   query Articles {
@@ -171,7 +182,9 @@ List all `DrupalNodeArticle` using `<page-query>` in a Gridsome page:
   }
 </page-query>
 ```
+
 Get the details of an individual `DrupalNodeArticle` using `<page-query>` in a Gridsome template. GraphQL Connections are named after the relationship `key` in the XHR response:
+
 ```
 <page-query>
   query Article ($path: String!) {
@@ -196,4 +209,5 @@ Get the details of an individual `DrupalNodeArticle` using `<page-query>` in a G
 ```
 
 ### Starter project
-coming soon...
+
+Coming soon...
