@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <Layout>
     <h1>Gridsome</h1>
     <h2>{{ $page.metaData.myTest.value }}</h2>
     <g-link :to="{ name: 'blog' }">Blog</g-link>
@@ -12,8 +12,7 @@
     <span>{{ TEST_1 }}</span>
     <span>{{ TEST_2 }}</span>
     <span>{{ TEST_3 }}</span>
-    <Footer />
-  </div>
+  </Layout>
 </template>
 
 <page-query>
@@ -28,13 +27,7 @@ query Home {
 </page-query>
 
 <script>
-import Footer from '~/components/Footer'
-
 export default {
-  components: {
-    Footer
-  },
-
   data () {
     return {
       TEST_1,

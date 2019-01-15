@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <Layout>
     <h1>Blog</h1>
     <ul>
       <li v-for="{ node } in $page.posts.edges" :key="node.id">
@@ -8,7 +8,7 @@
       </li>
     </ul>
     <Pager :info="$page.posts.pageInfo"/>
-  </div>
+  </Layout>
 </template>
 
 <page-query>
