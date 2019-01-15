@@ -1,0 +1,26 @@
+{
+  "version": "0.1.0",
+  "name": "@gridsome/plugin-google-analytics",
+  "description": "Google Analytics plugin for Gridsome",
+  "homepage": "https://github.com/gridsome/gridsome/tree/master/packages/plugin-google-analytics#readme",
+  "repository": "https://github.com/gridsome/gridsome/tree/master/packages/plugin-google-analytics",
+  "main": "gridsome.client.js",
+  "license": "MIT",
+  "files": [
+    "gridsome.client.js"
+  ],
+  "keywords": [
+    "gridsome",
+    "gridsome-plugin",
+    "analytics"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "vue-analytics": "^5.16.1"
+  },
+  "engines": {
+    "node": ">=8"
+  }
+}

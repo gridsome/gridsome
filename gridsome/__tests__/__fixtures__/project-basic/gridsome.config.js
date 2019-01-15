@@ -12,7 +12,7 @@ module.exports = {
 
   plugins: [
     {
-      use: '~/plugin',
+      use: '~/node_modules/plugin',
       options: {
         foo: 'bar'
       }
