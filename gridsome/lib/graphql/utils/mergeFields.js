@@ -29,15 +29,17 @@ function fieldValues (obj, currentObj = {}) {
 function fieldValue (value, currentValue) {
   if (Array.isArray(value)) {
     if (isRefField(value[0])) {
-      const ref = currentValue || { typeName: [], isList: true }
+      if (!isRefValue(currentValue)) {
+        currentValue = { typeName: [], isList: true }
+      }
 
       for (let i = 0, l = value.length; i < l; i++) {
-        if (!ref.typeName.includes(value[i].typeName)) {
-          ref.typeName.push(value[i].typeName)
+        if (!currentValue.typeName.includes(value[i].typeName)) {
+          currentValue.typeName.push(value[i].typeName)
         }
       }
 
-      return ref
+      return currentValue
     }
 
     return value.map((value, index) => {
@@ -55,6 +57,15 @@ function fieldValue (value, currentValue) {
   }
 
   return currentValue !== undefined ? currentValue : value
+}
+
+function isRefValue (value) {
+  return (
+    typeof value === 'object' &&
+    Object.keys(value).length === 2 &&
+    value.hasOwnProperty('typeName') &&
+    value.hasOwnProperty('isList')
+  )
 }
 
 function isRefField (field) {
