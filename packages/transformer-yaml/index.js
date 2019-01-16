@@ -5,7 +5,7 @@ class YamlTransformer {
     return ['text/yaml']
   }
 
-  parse (content, options) {
+  parse (content) {
     const yaml = jsYaml.load(content)
 
     let fields = {}

@@ -1,4 +1,4 @@
-# @gridsome/transformer-remark
+# @gridsome/transformer-yaml
 
 > YAML transformer for Gridsome
 

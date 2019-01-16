@@ -1,6 +1,6 @@
 {
   "version": "0.0.0",
-  "name": "transformer-yaml",
+  "name": "@gridsome/transformer-yaml",
   "description": "Yaml transformer for Gridsome",
   "homepage": "https://github.com/gridsome/gridsome/tree/master/packages/transformer-yaml",
   "repository": "https://github.com/gridsome/gridsome/tree/master/packages/transformer-yaml",
