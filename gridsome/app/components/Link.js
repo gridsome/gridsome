@@ -33,7 +33,6 @@ export default {
       const regex = RegExp('^(http:|https:|\/\/)');
       return regex.test(string)
     }
-    console.log(data.attrs.href);
     
     
     if(isExternalLinks(data.attrs.href)){
