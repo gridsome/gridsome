@@ -30,7 +30,7 @@ module.exports = {
 @gridsome/souce-contentful currently works with all Contentful Content Types except the Rich Text [Beta] type.
 
 ### Location
-Contentful Location data is returned as JSON with `lat:` and `lon`. You will need to query the field name and each field in the GraphQL query
+Contentful Location data is returned as JSON with `lat` and `lon`. You will need to query the field name and each field in the GraphQL query
 ```
 <page-query>
 query Location{

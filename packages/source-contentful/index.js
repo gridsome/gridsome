@@ -74,7 +74,9 @@ class ContentfulSource {
 
         if (Array.isArray(value)) {
           fields[key] = value.map(item =>
-            typeof item === 'object' ? this.createReferenceField(item) : item
+            typeof item === 'object' && typeof value.sys !== 'undefined'
+              ? this.createReferenceField(item)
+              : item
           )
         } else if (typeof value === 'object' && typeof value.sys !== 'undefined') {
           fields[key] = this.createReferenceField(value)
