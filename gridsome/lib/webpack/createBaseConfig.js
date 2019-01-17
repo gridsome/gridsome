@@ -228,6 +228,9 @@ module.exports = (app, { isProd, isServer }) => {
       }])
   }
 
+  config.plugin('dotenv')
+    .use(require('dotenv-webpack'))
+
   config.plugin('injections')
     .use(require('webpack/lib/DefinePlugin'), [createEnv(projectConfig)])
 
