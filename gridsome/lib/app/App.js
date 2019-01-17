@@ -1,8 +1,10 @@
 const path = require('path')
+const fs = require('fs')
 const isUrl = require('is-url')
 const Router = require('vue-router')
 const autoBind = require('auto-bind')
 const hirestime = require('hirestime')
+const dotenv = require('dotenv')
 const BaseStore = require('./BaseStore')
 const PluginAPI = require('./PluginAPI')
 const CodeGenerator = require('./CodeGenerator')
@@ -18,6 +20,7 @@ const { info } = require('../utils/log')
 
 class App {
   constructor (context, options) {
+    this.initProcessEnv()
     process.GRIDSOME = this
 
     this.events = []
@@ -29,6 +32,25 @@ class App {
     this.isBootstrapped = false
 
     autoBind(this)
+  }
+
+  initProcessEnv () {
+    const env = process.env.NODE_ENV || 'development'
+    const envFile = path.join(process.cwd(), `./.env.${env}`)
+
+    let parsed = {}
+    try {
+      parsed = dotenv.parse(fs.readFileSync(envFile, { encoding: `utf8` }))
+    } catch (err) {
+      if (err.code !== `ENOENT`) {
+        console.error(`There was a problem processing the .env file`, err)
+      }
+    }
+
+    process.env = {
+      ...process.env,
+      ...parsed
+    }
   }
 
   async bootstrap (phase) {
