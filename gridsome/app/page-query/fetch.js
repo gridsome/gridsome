@@ -9,7 +9,7 @@ export default (route, query) => {
     const variables = { ...route.params, path: route.path }
 
     return new Promise(resolve => {
-      fetch(GRAPHQL_ENDPOINT, {
+      fetch(process.env.GRAPHQL_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query, variables })
