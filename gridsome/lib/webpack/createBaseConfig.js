@@ -325,7 +325,7 @@ module.exports = (app, { isProd, isServer }) => {
 
     // merge variables start with GRIDSOME_ENV to config.env
     const gridsomeEnv = pick(process.env, Object.keys(process.env).filter(key => key.startsWith('GRIDSOME_')))
-    const mergeEnv = Object.entries(Object.assign({}, projectConfig.env || {}, gridsomeEnv))
+    const mergeEnv = Object.entries(gridsomeEnv)
       .reduce((acc, [key, value]) => {
         acc[`process.env.${key}`] = ['boolean', 'number'].includes(typeof value) ? value : JSON.stringify(value)
         return acc
