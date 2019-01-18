@@ -29,7 +29,7 @@ export default {
     }
     
     const isExternalLinks = string => {
-      if(new String(string).substring(0, config.siteUrl.length) === config.siteUrl) return false
+      if (String(string).startsWith(config.siteUrl)) return false
       const regex = RegExp('^(http:|https:|\/\/)');
       return regex.test(string)
     }
