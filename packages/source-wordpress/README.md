@@ -16,6 +16,7 @@ module.exports = {
       use: '@gridsome/source-wordpress',
       options: {
         baseUrl: 'WEBSITE_URL', // required
+        apiBase: 'wp-json',
         typeName: 'WordPress',
         perPage: 100,
         concurrent: 10,

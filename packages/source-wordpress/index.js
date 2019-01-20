@@ -9,6 +9,7 @@ class WordPressSource {
   static defaultOptions () {
     return {
       baseUrl: '',
+      apiBase: 'wp-json',
       perPage: 100,
       concurrent: 10,
       routes: {},
@@ -26,7 +27,7 @@ class WordPressSource {
     }
 
     this.client = axios.create({
-      baseURL: `${options.baseUrl.replace(/\/+$/, '')}/wp-json`
+      baseURL: `${options.baseUrl.replace(/\/+$/, '')}/${options.apiBase}`
     })
 
     this.routes = {
