@@ -29,6 +29,10 @@ module.exports = (app, { isProd, isServer }) => {
     .chunkFilename(`${assetsDir}/js/${filename}`)
     .filename(`${assetsDir}/js/${filename}`)
 
+  if (process.env.NODE_ENV === 'test') {
+    config.output.pathinfo(true)
+  }
+
   config.resolve
     .set('symlinks', true)
     .alias
@@ -127,7 +131,7 @@ module.exports = (app, { isProd, isServer }) => {
     .loader('babel-loader')
     .options({
       presets: [
-        require.resolve('./babel-preset')
+        require.resolve('@vue/babel-preset-app')
       ]
     })
 
@@ -277,7 +281,7 @@ module.exports = (app, { isProd, isServer }) => {
       .loader('babel-loader')
       .options({
         presets: [
-          require.resolve('./babel-preset')
+          require.resolve('@vue/babel-preset-app')
         ]
       })
       .end()

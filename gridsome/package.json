@@ -34,6 +34,7 @@
     "@babel/runtime": "^7.0.0",
     "@gridsome/cli": "^0.0.7",
     "@sindresorhus/slugify": "^0.3.0",
+    "@vue/babel-preset-app": "^3.3.0",
     "@vue/component-compiler-utils": "^2.1.0",
     "auto-bind": "^1.2.1",
     "autoprefixer": "^9.1.1",

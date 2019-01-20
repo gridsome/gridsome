@@ -31,6 +31,11 @@ test('build basic project', async () => {
   expect(indexHTML).toMatch('<span>test 3</span>')
   expect(indexHTML).toMatch('<a href="/blog" class="g-link-1">Blog</a>')
   expect(indexHTML).toMatch('<a href="/" class="active--exact test-active g-link-2">Home</a>')
+  expect(indexHTML).toMatch('href="http://outsidelink1.com" target="_blank" rel="noopener"')
+  expect(indexHTML).toMatch('href="https://outsidelink2.com" target="_blank" rel="noopener"')
+  expect(indexHTML).toMatch('href="//outsidelink3.com" target="_blank" rel="noopener"')
+  expect(indexHTML).toMatch('href="https://www.gridsome.org/docs"')
+  expect(indexHTML).not.toMatch('href="https://www.gridsome.org/docs" target="_blank" rel="noopener"')
   expect(indexHTML).toMatch('test-active')
   expect(indexHTML).not.toMatch('Main description')
   expect(indexHTML).toMatch('Index description')
@@ -51,6 +56,9 @@ test('build basic project', async () => {
   // transpile custom sfc blocks
   expect(appJS).not.toMatch('Component =>') // static-query
   expect(homeJS).not.toMatch('Component =>') // page-query
+
+  // polyfills
+  expect(appJS).toMatch('// ECMAScript 6 symbols shim')
 
   // favicon
   expect(exists('dist/assets/static/favicon.1539b60.test.png')).toBeTruthy()
@@ -74,12 +82,6 @@ test('build basic project', async () => {
   expect(indexHTML.match(/styles\.css/g)).toHaveLength(2)
 
   // g-link (file)
-  expect(indexHTML).toMatch('<a href="/blog">Blog</a>')
-  expect(indexHTML).toMatch('href="http://outsidelink1.com" target="_blank" rel="noopener"')
-  expect(indexHTML).toMatch('href="https://outsidelink2.com" target="_blank" rel="noopener"')
-  expect(indexHTML).toMatch('href="//outsidelink3.com" target="_blank" rel="noopener"')
-  expect(indexHTML).toMatch('href="https://www.gridsome.org/docs"')
-  expect(indexHTML).not.toMatch('href="https://www.gridsome.org/docs" target="_blank" rel="noopener"')
   expect(indexHTML).toMatch('<a href="/assets/files/dummy.pdf">Download</a>')
   expect(exists('dist/assets/files/dummy.pdf')).toBeTruthy()
 
