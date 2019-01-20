@@ -21,6 +21,10 @@ class WordPressSource {
     this.options = options
     this.restBases = { posts: {}, taxonomies: {}}
 
+    if (options.perPage > 100 || options.perPage < 1) {
+      throw new Error(`${options.typeName}: perPage cannot be more than 100 or less than 1`)
+    }
+
     this.client = axios.create({
       baseURL: `${options.baseUrl.replace(/\/+$/, '')}/wp-json`
     })
@@ -89,13 +93,7 @@ class WordPressSource {
 
       this.restBases.taxonomies[type] = options.rest_base
 
-      let terms = []
-
-      try {
-        terms = await this.fetchPaged(`wp/v2/${options.rest_base}`)
-      } catch (err) {
-        console.error(err.message)
-      }
+      const terms = await this.fetchPaged(`wp/v2/${options.rest_base}`)
 
       for (const term of terms) {
         collection.addNode({
@@ -116,13 +114,8 @@ class WordPressSource {
       const restBase = this.restBases.posts[type]
       const typeName = store.makeTypeName(type)
       const collection = store.getContentType(typeName)
-      let posts = []
 
-      try {
-        posts = await this.fetchPaged(`wp/v2/${restBase}`)
-      } catch (err) {
-        console.error(err.message)
-      }
+      const posts = await this.fetchPaged(`wp/v2/${restBase}`)
 
       for (const post of posts) {
         const fields = this.normalizeFields(post)
@@ -162,7 +155,22 @@ class WordPressSource {
   }
 
   async fetch (url, params = {}) {
-    return this.client.request({ url, params })
+    let res
+
+    try {
+      res = await this.client.request({ url, params })
+    } catch ({ response }) {
+      const { url } = response.config
+      const { message, data } = response.data
+
+      if (data.status === 403) {
+        console.warn(`Permission denied: ${url}`)
+      } else {
+        throw new Error(`Failed to fetch: ${url}, ${message}`)
+      }
+    }
+
+    return res
   }
 
   async fetchPaged (path) {
