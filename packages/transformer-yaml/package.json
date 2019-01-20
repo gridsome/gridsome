@@ -1,0 +1,23 @@
+{
+  "version": "0.0.0",
+  "name": "@gridsome/transformer-yaml",
+  "description": "Yaml transformer for Gridsome",
+  "homepage": "https://github.com/gridsome/gridsome/tree/master/packages/transformer-yaml",
+  "repository": "https://github.com/gridsome/gridsome/tree/master/packages/transformer-yaml",
+  "main": "index.js",
+  "keywords": [
+    "gridsome",
+    "gridsome-plugin",
+    "gridsome-transformer",
+    "yaml"
+  ],
+  "dependencies": {
+    "js-yaml": "^3.12.1"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=8"
+  }
+}
