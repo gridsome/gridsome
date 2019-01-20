@@ -6,14 +6,11 @@ class YamlTransformer {
   }
 
   parse (content) {
-    const yaml = jsYaml.load(content)
+    const data = jsYaml.load(content)
 
-    let fields = {}
-    if (Array.isArray(yaml)) {
-      fields = { data: yaml }
-    } else {
-      fields = yaml
-    }
+    const fields = typeof data !== 'object' || Array.isArray(data)
+      ? { data }
+      : data
 
     return { fields }
   }
