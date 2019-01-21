@@ -36,7 +36,7 @@ class App {
 
   initProcessEnv () {
     const env = process.env.NODE_ENV || 'development'
-    const envFile = path.join(process.cwd(), `./.env.${env}`)
+    const envFile = this.resolve(`./.env.${env}`)
 
     let parsed = {}
     try {
@@ -47,10 +47,7 @@ class App {
       }
     }
 
-    process.env = {
-      ...process.env,
-      ...parsed
-    }
+    Object.assign(process.env, parsed)
   }
 
   async bootstrap (phase) {
