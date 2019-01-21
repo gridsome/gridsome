@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+<a name="0.2.1"></a>
+## [0.2.1](https://github.com/gridsome/gridsome/tree/master/packages/source-contentful/compare/@gridsome/source-contentful@0.2.0...@gridsome/source-contentful@0.2.1) (2019-01-21)
+
+
+### Bug Fixes
+
+* **contentful:** support location fields ([#132](https://github.com/gridsome/gridsome/tree/master/packages/source-contentful/issues/132)) ([c394474](https://github.com/gridsome/gridsome/tree/master/packages/source-contentful/commit/c394474)), closes [#129](https://github.com/gridsome/gridsome/tree/master/packages/source-contentful/issues/129)
+
+
+
 
 
 <a name="0.2.0"></a>
