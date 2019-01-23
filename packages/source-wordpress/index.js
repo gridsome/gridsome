@@ -49,7 +49,7 @@ class WordPressSource {
   }
 
   async getPostTypes (store) {
-    const { data } = await this.fetch('wp/v2/types')
+    const { data } = await this.fetch('wp/v2/types', {}, {})
 
     for (const type in data) {
       const options = data[type]
@@ -84,7 +84,7 @@ class WordPressSource {
   }
 
   async getTaxonomies (store) {
-    const { data } = await this.fetch('wp/v2/taxonomies')
+    const { data } = await this.fetch('wp/v2/taxonomies', {}, {})
 
     for (const type in data) {
       const options = data[type]
@@ -155,19 +155,20 @@ class WordPressSource {
     }
   }
 
-  async fetch (url, params = {}) {
+  async fetch (url, params = {}, fallbackData = []) {
     let res
 
     try {
       res = await this.client.request({ url, params })
     } catch ({ response }) {
       const { url } = response.config
-      const { message, data } = response.data
+      const { status } = response.data.data
 
-      if (data.status === 403) {
-        console.warn(`Permission denied: ${url}`)
+      if ([401, 403].includes(status)) {
+        console.warn(`Error: Status ${status} - ${url}`)
+        return { ...response, data: fallbackData }
       } else {
-        throw new Error(`Failed to fetch: ${url}, ${message}`)
+        throw new Error(`Status ${status} - ${url}`)
       }
     }
 
