@@ -126,12 +126,12 @@ module.exports = (app, { isProd, isServer }) => {
 
   // css
 
-  createCSSRule(config, 'css', /\.css$/, null, projectConfig.css.loaderConfig.css)
-  createCSSRule(config, 'postcss', /\.p(ost)?css$/, null, projectConfig.css.loaderConfig.postcss)
-  createCSSRule(config, 'scss', /\.scss$/, 'sass-loader', projectConfig.css.loaderConfig.scss)
-  createCSSRule(config, 'sass', /\.sass$/, 'sass-loader', projectConfig.css.loaderConfig.sass)
-  createCSSRule(config, 'less', /\.less$/, 'less-loader', projectConfig.css.loaderConfig.less)
-  createCSSRule(config, 'stylus', /\.styl(us)?$/, 'stylus-loader', projectConfig.css.loaderConfig.stylus)
+  createCSSRule(config, 'css', /\.css$/, null, projectConfig.css.loaderOptions.css)
+  createCSSRule(config, 'postcss', /\.p(ost)?css$/, null, projectConfig.css.loaderOptions.postcss)
+  createCSSRule(config, 'scss', /\.scss$/, 'sass-loader', projectConfig.css.loaderOptions.scss)
+  createCSSRule(config, 'sass', /\.sass$/, 'sass-loader', projectConfig.css.loaderOptions.sass)
+  createCSSRule(config, 'less', /\.less$/, 'less-loader', projectConfig.css.loaderOptions.less)
+  createCSSRule(config, 'stylus', /\.styl(us)?$/, 'stylus-loader', projectConfig.css.loaderOptions.stylus)
 
   // assets
 
