@@ -273,6 +273,7 @@ module.exports = (app, { isProd, isServer }) => {
   }
 
   function createCSSRule (config, lang, test, loader = null, options = {}) {
+    const { css = {}, postcss = {}} = projectConfig.css.loaderOptions
     const baseRule = config.module.rule(lang).test(test)
     const modulesRule = baseRule.oneOf('modules').resourceQuery(/module/)
     const normalRule = baseRule.oneOf('normal')
@@ -296,14 +297,15 @@ module.exports = (app, { isProd, isServer }) => {
           localIdentName: `[local]_[hash:base64:8]`,
           importLoaders: 1,
           sourceMap: !isProd
-        }, lang === 'css' && options))
+        }, css))
 
       rule.use('postcss-loader')
         .loader('postcss-loader')
         .options(Object.assign({
-          plugins: [require('autoprefixer')],
           sourceMap: !isProd
-        }, lang === 'postcss' ? options : options.postcss))
+        }, postcss, {
+          plugins: (postcss.plugins || []).concat(require('autoprefixer'))
+        }))
 
       if (loader) {
         rule.use(loader).loader(loader).options(options)
