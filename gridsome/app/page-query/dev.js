@@ -1,8 +1,11 @@
+/* global SOCKJS_ENDPOINT */
+
 import Vue from 'vue'
-import sock from './sock'
 import fetch from './fetch'
+import SockJS from 'sockjs-client'
 import { unobserve, observe } from '../components/Image'
 
+const sock = new SockJS(SOCKJS_ENDPOINT)
 const active = {}
 
 sock.onmessage = message => {
@@ -20,9 +23,10 @@ sock.onmessage = message => {
   for (const file in active) {
     const { options, vm } = active[file]
     unobserve(undefined, vm.$el)
-    fetch(vm.$route, options.__pageQuery).then(() => {
-      Vue.nextTick(() => observe(undefined, vm.$el))
-    })
+    
+    fetch(vm.$route, options.__pageQuery)
+      .then(() => Vue.nextTick(() => observe(undefined, vm.$el)))
+      .catch(err => console.error(err.message))
   }
 }
 
