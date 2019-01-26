@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+<a name="0.2.1"></a>
+## [0.2.1](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/compare/@gridsome/source-wordpress@0.2.0...@gridsome/source-wordpress@0.2.1) (2019-01-26)
+
+
+### Bug Fixes
+
+* **wordpress:** don’t throw error for 401 requests ([#146](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/issues/146)) ([ef84ca5](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/commit/ef84ca5))
+
+
+
+
+
 <a name="0.2.0"></a>
 # [0.2.0](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/compare/@gridsome/source-wordpress@0.1.1...@gridsome/source-wordpress@0.2.0) (2019-01-21)
 
