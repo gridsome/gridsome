@@ -2,11 +2,11 @@
   <Layout>
     <h1>Gridsome</h1>
     <h2>{{ $page.metaData.myTest.value }}</h2>
-    <g-link :to="{ name: 'blog' }">Blog</g-link>
-    <g-link :to="{ name: 'home' }" active-class="test-active">Home</g-link>
-    <g-image src="~/assets/logo.svg" alt="SVG logo" width="300" />
-    <g-image src="~/assets/test.png" alt="Test image" width="1000" />
-    <g-image src="https://www.example.com/assets/image.png" alt="External image" immediate />
+    <g-link class="g-link-1" :to="{ name: 'blog' }">Blog</g-link>
+    <g-link :class="{ 'g-link-2': true }" :to="{ name: 'home' }" active-class="test-active">Home</g-link>
+    <g-image src="~/assets/logo.svg" class="g-image-1" alt="SVG logo" width="300" />
+    <g-image src="~/assets/test.png" :class="{ 'g-image-2': true, 'g-image-false': false }" alt="Test image" width="1000" />
+    <g-image src="https://www.example.com/assets/image.png" :class="['g-image-3']" alt="External image" immediate />
     <g-link to="~/assets/dummy.pdf">Download</g-link>
     <span>{{ $page.customRootValue }}</span>
     <span>{{ TEST_1 }}</span>

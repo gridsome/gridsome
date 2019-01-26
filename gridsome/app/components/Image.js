@@ -1,5 +1,6 @@
 import Vue from 'vue'
 import caniuse from '../utils/caniuse'
+import { stringifyClass } from '../utils/class'
 import { createObserver } from '../utils/intersectionObserver'
 
 const observer = caniuse.IntersectionObserver
@@ -32,7 +33,7 @@ export default {
   render: (h, { data, props, parent }) => {
     const isDev = process.env.NODE_ENV === 'development'
     const isLazy = typeof props.immediate === 'undefined'
-    const classNames = (data.class || []).concat(['g-image'])
+    const classNames = [data.class, 'g-image']
     const noscriptClassNames = classNames.slice()
     const srcType = typeof props.src
     const ref = data.ref || data.key
@@ -91,7 +92,7 @@ export default {
       res.push(h('noscript', {
         domProps: {
           innerHTML: `` + 
-            `<img src="${src}" class="${noscriptClassNames.join(' ')}"` +
+            `<img src="${src}" class="${stringifyClass(noscriptClassNames)}"` +
             (size.width ? ` width="${size.width}"`: '') +
             (props.alt ? ` alt="${props.alt}"` : '') +
             `>`
