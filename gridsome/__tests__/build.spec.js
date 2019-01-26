@@ -112,6 +112,10 @@ test('build project with pathPrefix', async () => {
   expect(exists('dist/assets/static/favicon.1539b60.test.png')).toEqual(true)
   expect(exists('dist/assets/static/test.97c148e.test.png')).toEqual(true)
 
+  // 404.html
+  expect(exists('dist/404.html')).toBeTruthy()
+  expect(content('dist/404.html')).toMatch('404 - not found')
+
   await clear(context)
 }, 5000)
 

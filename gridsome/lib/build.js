@@ -2,7 +2,7 @@ const path = require('path')
 const pMap = require('p-map')
 const fs = require('fs-extra')
 const hirestime = require('hirestime')
-const { trimEnd, chunk } = require('lodash')
+const { trimEnd, trimStart, chunk } = require('lodash')
 const sysinfo = require('./utils/sysinfo')
 const { log, info } = require('./utils/log')
 
@@ -67,10 +67,10 @@ const {
 
 async function createRenderQueue ({ router, config, graphql }) {
   const createPage = (page, currentPage = 1) => {
-    let pathname = trimEnd(page.path, '/')
+    let pathname = trimEnd(page.path, '/') || '/'
 
     if (page.type === NOT_FOUND_ROUTE) pathname = '/404'
-    if (currentPage > 1) pathname += `/${currentPage}`
+    if (currentPage > 1) pathname = `/${trimStart(pathname, '/')}/${currentPage}`
 
     const { query } = page.pageQuery
     const { route } = router.resolve(pathname)
