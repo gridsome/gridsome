@@ -22,9 +22,11 @@ module.exports = (context, options = {}, pkg = {}) => {
   const config = {}
   const plugins = []
 
-  const localConfig = fs.existsSync(configPath)
-    ? require(configPath)
-    : {}
+  const localConfig = options.localConfig
+    ? options.localConfig
+    : fs.existsSync(configPath)
+      ? require(configPath)
+      : {}
 
   // use provided plugins instaed of local plugins
   if (Array.isArray(options.plugins)) {
