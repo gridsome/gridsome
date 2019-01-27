@@ -28,42 +28,13 @@ class RemarkTransformer {
     return ['text/markdown', 'text/x-markdown']
   }
 
-  constructor (options, { localOptions, context, nodeCache, queue }) {
-    this.options = options
-    this.localOptions = localOptions
-    this.context = context
+  constructor (options, { localOptions, nodeCache, nodeCacheSync, context, queue }) {
+    this.options = defaultsDeep(localOptions, options)
     this.nodeCache = nodeCache
+    this.context = context
     this.queue = queue
 
-    this.remarkPlugins = normalizePlugins([
-      // built-in plugins
-      'remark-slug',
-      'remark-fix-guillemets',
-      'remark-squeeze-paragraphs',
-      ['remark-external-links', {
-        target: options.externalLinksTarget,
-        rel: options.externalLinksRel
-      }],
-      ['remark-autolink-headings', {
-        content: {
-          type: 'element',
-          tagName: 'span',
-          properties: {
-            className: options.autolinkClassName || 'icon icon-link'
-          }
-        },
-        linkProperties: {
-          'aria-hidden': 'true'
-        },
-        ...options.autolinkHeadings,
-        ...localOptions.autolinkHeadings
-      }],
-      // built-in plugins
-      imagePlugin,
-      // user plugins
-      ...options.plugins || [],
-      ...localOptions.plugins || []
-    ])
+    this.plugins = createPlugins(this.options, options.plugins.concat(localOptions.plugins))
     this.toAST = unified().use(remarkParse).parse
     this.applyPlugins = unified().data('transformer', this).use(this.plugins).run
     this.toHTML = unified().use(remarkHtml).stringify

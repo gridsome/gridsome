@@ -37,3 +37,10 @@ module.exports = {
   ]
 }
 ```
+
+## Methods
+
+- `parse` Parse front matter data 
+- `toAST` Parse text to a syntax tree
+- `applyPlugins` Transform a syntax tree by applying plugins to it (async)
+- `toHTML` Compile a syntax tree to HTML
