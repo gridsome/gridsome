@@ -1,9 +1,10 @@
 import Vue from 'vue'
-import caniuse from '../utils/caniuse'
 import { stringifyClass } from '../utils/class'
 import { createObserver } from '../utils/intersectionObserver'
 
-const observer = caniuse.IntersectionObserver
+const observer = process.isClient && (('IntersectionObserver' in window) ||
+    ('IntersectionObserverEntry' in window) ||
+    ('intersectionRatio' in window.IntersectionObserverEntry.prototype))
   ? createObserver(intersectionHandler)
   : null
 
@@ -91,7 +92,7 @@ export default {
       // must render as innerHTML to make hydration work
       res.push(h('noscript', {
         domProps: {
-          innerHTML: `` + 
+          innerHTML: `` +
             `<img src="${src}" class="${stringifyClass(noscriptClassNames)}"` +
             (size.width ? ` width="${size.width}"`: '') +
             (props.alt ? ` alt="${props.alt}"` : '') +
