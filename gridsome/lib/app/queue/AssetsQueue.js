@@ -9,6 +9,8 @@ class AssetsQueue {
     this.app = app
     this.files = new FileProcessQueue(app)
     this.images = new ImageProcessQueue(app)
+
+    this.index = {}
   }
 
   async add (filePath, options) {
@@ -31,7 +33,13 @@ class AssetsQueue {
       ? await this.images.add(filePath, options)
       : await this.files.add(filePath, options)
 
-    return { ...data, ...results }
+    this.index[filePath] = { ...data, ...results }
+
+    return this.index[filePath]
+  }
+
+  get (filePath) {
+    return this.index[filePath]
   }
 }
 

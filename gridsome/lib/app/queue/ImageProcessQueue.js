@@ -4,6 +4,7 @@ const sharp = require('sharp')
 const crypto = require('crypto')
 const { trim } = require('lodash')
 const mime = require('mime-types')
+const colorString = require('color-string')
 const md5File = require('md5-file/promise')
 const imageSize = require('probe-image-size')
 const svgDataUri = require('mini-svg-data-uri')
@@ -33,13 +34,14 @@ class ImageProcessQueue {
       return asset
     }
 
-    asset.sets.forEach(({ src, width }) => {
+    asset.sets.forEach(({ filename, src, width }) => {
       if (!this._queue.has(src + asset.cacheKey)) {
         this._queue.set(src + asset.cacheKey, {
+          destination: trim(src, this.config.pathPrefix),
           options: { ...options, width },
-          destination: trim(src, '/'),
           cacheKey: asset.cacheKey,
           size: asset.size,
+          filename,
           filePath
         })
       }
@@ -49,8 +51,11 @@ class ImageProcessQueue {
   }
 
   async preProcess (filePath, options = {}) {
-    const { ext } = path.parse(filePath)
-    const { imageExtensions } = this.config
+    const { imageExtensions, outDir, pathPrefix, maxImageWidth } = this.config
+    const imagesDir = path.relative(outDir, this.config.imagesDir)
+    const relPath = path.relative(this.context, filePath)
+    const { name, ext } = path.parse(filePath)
+    const mimeType = mime.lookup(filePath)
 
     if (!imageExtensions.includes(ext)) {
       throw new Error(
@@ -60,23 +65,23 @@ class ImageProcessQueue {
     }
 
     if (!await fs.exists(filePath)) {
-      throw new Error(`${filePath} was not found. `)
+      throw new Error(`${filePath} was not found.`)
     }
 
     const hash = await md5File(filePath)
     const buffer = await fs.readFile(filePath)
     const { width, height } = imageSize.sync(buffer)
-    const { targetDir, pathPrefix, maxImageWidth } = this.config
-    const assetsDir = path.relative(targetDir, this.config.assetsDir)
-    const mimeType = mime.lookup(filePath)
 
     const imageWidth = Math.min(
-      parseInt(options.width, 10) || width,
+      parseInt(options.width || width, 10),
       maxImageWidth,
       width
     )
 
-    const imageHeight = Math.ceil(height * (imageWidth / width))
+    const imageHeight = options.height !== undefined
+      ? parseInt(options.height, 10)
+      : Math.ceil(height * (imageWidth / width))
+
     const imageSizes = (options.sizes || [480, 1024, 1920, 2560]).filter(size => {
       return size <= maxImageWidth && size <= imageWidth
     })
@@ -90,41 +95,35 @@ class ImageProcessQueue {
       }
     }
 
-    const createSrcPath = (srcWidth = maxImageWidth) => {
-      const relPath = path.relative(this.context, filePath)
-      const imageOptions = []
-      let filename = ''
-
-      imageOptions.push({
-        key: 'width',
-        shortKey: 'w',
-        value: srcWidth
-      })
-
-      if (options.quality) {
-        imageOptions.push({
-          key: 'quality',
-          shortKey: 'q',
-          value: options.quality
-        })
-      }
-
-      if (process.env.GRIDSOME_MODE === 'serve') {
-        const query = createOptionsQuery(imageOptions)
-        filename = `${forwardSlash(relPath)}?${query}`
-      } else {
-        const { name, ext } = path.parse(relPath)
-        const urlHash = !process.env.GRIDSOME_TEST ? hash : 'test'
-        const string = createOptionsString(imageOptions)
-        filename = `${name}-${string}.${urlHash}${ext}`
-      }
-
-      return forwardSlash(path.join(pathPrefix, assetsDir, 'static', filename))
+    // validate color string
+    if (options.background && !colorString.get(options.background)) {
+      options.background = this.config.imageBackgroundColor
+    } else if (this.config.imageBackgroundColor) {
+      options.background = this.config.imageBackgroundColor
     }
 
-    const sets = imageSizes.map(width => {
+    const createSrcPath = (filename, imageOptions) => {
+      if (process.env.GRIDSOME_MODE === 'serve') {
+        const query = '?' + createOptionsQuery(imageOptions)
+        return path.join('/', imagesDir, forwardSlash(relPath)) + query
+      }
+
+      return forwardSlash(path.join('/', pathPrefix, imagesDir, filename))
+    }
+
+    const sets = imageSizes.map((width = imageWidth) => {
       const height = Math.ceil(imageHeight * (width / imageWidth))
-      return { src: createSrcPath(width), width, height }
+      const imageOptions = { ...options, width }
+
+      if (options.height !== undefined) {
+        imageOptions.height = height
+      }
+
+      const arr = this.createImageOptions(imageOptions)
+      const filename = this.createFileName(filePath, arr, hash)
+      const src = createSrcPath(filename, arr)
+
+      return { filename, src, width, height }
     })
 
     const results = {
@@ -133,6 +132,9 @@ class ImageProcessQueue {
       cacheKey: genHash(filePath + hash + JSON.stringify(options)),
       noscriptHTML: '',
       imageHTML: '',
+      name,
+      ext,
+      hash,
       sets
     }
 
@@ -172,6 +174,48 @@ class ImageProcessQueue {
 
     return results
   }
+
+  createImageOptions (options) {
+    const imageOptions = []
+
+    if (options.width) {
+      imageOptions.push({ key: 'width', shortKey: 'w', value: options.width })
+    }
+
+    if (options.height) {
+      imageOptions.push({ key: 'height', shortKey: 'h', value: options.height })
+    }
+
+    if (options.quality) {
+      imageOptions.push({ key: 'quality', shortKey: 'q', value: options.quality })
+    }
+
+    if (options.fit) {
+      imageOptions.push({ key: 'fit', shortKey: 'f-', value: options.fit })
+    }
+
+    if (options.position) {
+      imageOptions.push({ key: 'position', shortKey: 'p-', value: options.position })
+    }
+
+    if (options.background) {
+      imageOptions.push({ key: 'background', shortKey: 'b-', value: options.background })
+    }
+
+    return imageOptions
+  }
+
+  createFileName (relPath, arr, hash) {
+    const { name, ext } = path.parse(relPath)
+    const string = arr.length ? createOptionsQuery(arr) : ''
+
+    const optionsHash = genHash(string).substr(0, 7)
+    const contentHash = !process.env.GRIDSOME_TEST
+      ? hash.substr(0, 7)
+      : 'test'
+
+    return `${name}.${optionsHash}.${contentHash}${ext}`
+  }
 }
 
 ImageProcessQueue.uid = 0
@@ -180,33 +224,32 @@ function genHash (string) {
   return crypto.createHash('md5').update(string).digest('hex')
 }
 
-function createOptionsQuery (options) {
-  return options.reduce((values, { key, value }) => {
+function createOptionsQuery (arr) {
+  return arr.reduce((values, { key, value }) => {
     return (values.push(`${key}=${encodeURIComponent(value)}`), values)
   }, []).join('&')
 }
 
-function createOptionsString (options) {
-  return options.reduce((values, { shortKey, value }) => {
-    return (values.push(`${shortKey}${encodeURIComponent(value)}`), values)
-  }, []).join('-')
-}
-
 async function createDataUri (buffer, type, width, height, options = {}) {
   const blur = options.blur !== undefined ? parseInt(options.blur, 10) : 40
+  const resizeOptions = {}
+
+  if (options.fit) resizeOptions.fit = sharp.fit[options.fit]
+  if (options.position) resizeOptions.position = sharp.position[options.position]
+  if (options.background) resizeOptions.background = options.background
 
   return svgDataUri(
     `<svg fill="none" viewBox="0 0 ${width} ${height}" ` +
     `xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">` +
-    (blur > 0 ? await createBlurSvg(buffer, type, width, height, blur) : '') +
+    (blur > 0 ? await createBlurSvg(buffer, type, width, height, blur, resizeOptions) : '') +
     `</svg>`
   )
 }
 
-async function createBlurSvg (buffer, mimeType, width, height, blur) {
+async function createBlurSvg (buffer, mimeType, width, height, blur, resize = {}) {
   const blurWidth = 64
   const blurHeight = Math.round(height * (blurWidth / width))
-  const blurBuffer = await sharp(buffer).resize(blurWidth, blurHeight).toBuffer()
+  const blurBuffer = await sharp(buffer).resize(blurWidth, blurHeight, resize).toBuffer()
   const base64 = blurBuffer.toString('base64')
   const id = `__svg-blur-${ImageProcessQueue.uid++}`
 

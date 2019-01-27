@@ -1,6 +1,7 @@
 const path = require('path')
 const fs = require('fs-extra')
 const crypto = require('crypto')
+const colorString = require('color-string')
 const { defaultsDeep, camelCase } = require('lodash')
 const { internalRE, transformerRE, SUPPORTED_IMAGE_TYPES } = require('../utils/constants')
 
@@ -15,16 +16,17 @@ module.exports = (context, options = {}, pkg = {}) => {
   }
 
   const resolve = (...p) => path.resolve(context, ...p)
-  const isServing = process.env.GRIDSOME_MODE === 'serve'
   const isProd = process.env.NODE_ENV === 'production'
   const configPath = resolve('gridsome.config.js')
   const args = options.args || {}
-  const plugins = []
   const config = {}
+  const plugins = []
 
-  const localConfig = fs.existsSync(configPath)
-    ? require(configPath)
-    : {}
+  const localConfig = options.localConfig
+    ? options.localConfig
+    : fs.existsSync(configPath)
+      ? require(configPath)
+      : {}
 
   // use provided plugins instaed of local plugins
   if (Array.isArray(options.plugins)) {
@@ -36,6 +38,10 @@ module.exports = (context, options = {}, pkg = {}) => {
   // add built-in plugins as default
   if (options.useBuiltIn !== false) {
     plugins.unshift(...builtInPlugins)
+    plugins.unshift({
+      use: path.resolve(__dirname, '../plugins/core'),
+      options: config
+    })
   }
 
   // add project root as plugin
@@ -45,23 +51,39 @@ module.exports = (context, options = {}, pkg = {}) => {
     throw new Error(`pathPrefix must not have a trailing slash`)
   }
 
+  const assetsDir = localConfig.assetsDir || 'assets'
+
   config.pkg = options.pkg || resolvePkg(context)
-  config.host = args.host || 'localhost'
-  config.port = parseInt(args.port, 10) || 8080
+  config.host = args.host || localConfig.host || 'localhost'
+  config.port = parseInt(args.port || localConfig.port, 10) || 8080
   config.plugins = normalizePlugins(context, plugins)
   config.chainWebpack = localConfig.chainWebpack
   config.transformers = resolveTransformers(config.pkg, localConfig)
-  config.pathPrefix = isProd && isServing ? '/' : localConfig.pathPrefix || '/'
+  config.pathPrefix = isProd ? localConfig.pathPrefix || '/' : '/'
   config.staticDir = resolve('static')
   config.outDir = resolve(localConfig.outDir || 'dist')
-  config.targetDir = path.join(config.outDir, config.pathPrefix)
-  config.assetsDir = path.join(config.targetDir, localConfig.assetsDir || 'assets')
+  config.assetsDir = path.join(config.outDir, assetsDir)
+  config.imagesDir = path.join(config.assetsDir, 'static')
+  config.filesDir = path.join(config.assetsDir, 'files')
   config.appPath = path.resolve(__dirname, '../../app')
   config.tmpDir = resolve('src/.temp')
   config.cacheDir = resolve('.cache')
+  config.imageCacheDir = resolve('.cache', assetsDir, 'static')
   config.minProcessImageWidth = 500 // TODO: find a better name for this
   config.maxImageWidth = localConfig.maxImageWidth || 1920
   config.imageExtensions = SUPPORTED_IMAGE_TYPES
+
+  config.images = { ...localConfig.images }
+
+  if (!colorString.get(config.images.backgroundColor || '')) {
+    config.images.backgroundColor = null
+  }
+
+  config.runtimeCompiler = localConfig.runtimeCompiler || false
+
+  config.transpileDependencies = Array.isArray(localConfig.transpileDependencies)
+    ? localConfig.transpileDependencies.slice()
+    : []
 
   // max cache age for html markup in serve mode
   config.maxCacheAge = localConfig.maxCacheAge || 1000
@@ -191,7 +213,7 @@ function normalizeIconsConfig (config = {}) {
   const faviconSizes = [16, 32, 96]
   const touchiconSizes = [76, 152, 120, 167, 180]
   const defaultIcon = 'src/favicon.png'
-  const icon = typeof config === 'string' ? { favicon: icon } : (config || {})
+  const icon = typeof config === 'string' ? { favicon: config } : (config || {})
 
   res.favicon = typeof icon.favicon === 'string'
     ? { src: icon.favicon, sizes: faviconSizes }
@@ -201,7 +223,7 @@ function normalizeIconsConfig (config = {}) {
     })
 
   res.touchicon = typeof icon.touchicon === 'string'
-    ? { src: icon.touchicon, sizes: faviconSizes, precomposed: false }
+    ? { src: icon.touchicon, sizes: touchiconSizes, precomposed: false }
     : Object.assign({}, icon.touchicon, {
       sizes: touchiconSizes,
       src: res.favicon.src,

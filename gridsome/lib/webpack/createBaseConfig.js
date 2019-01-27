@@ -10,20 +10,22 @@ const resolve = (p, c) => path.resolve(c || __dirname, p)
 module.exports = (app, { isProd, isServer }) => {
   const { config: projectConfig } = app
   const { cacheDirectory, cacheIdentifier } = createCacheOptions()
-  const assetsDir = path.relative(projectConfig.targetDir, projectConfig.assetsDir)
+  const assetsDir = path.relative(projectConfig.outDir, projectConfig.assetsDir)
   const pathPrefix = forwardSlash(path.join(projectConfig.pathPrefix, '/'))
   const config = new Config()
 
-  const filename = `${assetsDir}/js/[name]${isProd ? '.[contenthash]' : ''}.js`
+  const useHash = isProd && !process.env.GRIDSOME_TEST
+  const filename = `[name]${useHash ? '.[contenthash:8]' : ''}.js`
+  const assetname = `[name]${useHash ? '.[hash:8]' : ''}.[ext]`
   const inlineLimit = 10000
 
   config.mode(isProd ? 'production' : 'development')
 
   config.output
-    .path(projectConfig.targetDir)
-    .publicPath(isProd ? pathPrefix : '/')
-    .chunkFilename(filename)
-    .filename(filename)
+    .publicPath(pathPrefix)
+    .path(projectConfig.outDir)
+    .chunkFilename(`${assetsDir}/js/${filename}`)
+    .filename(`${assetsDir}/js/${filename}`)
 
   config.resolve
     .set('symlinks', true)
@@ -49,6 +51,10 @@ module.exports = (app, { isProd, isServer }) => {
     .add('node_modules')
 
   config.module.noParse(/^(vue|vue-router)$/)
+
+  if (app.config.runtimeCompiler) {
+    config.resolve.alias.set('vue$', 'vue/dist/vue.esm.js')
+  }
 
   if (!isProd) {
     config.devtool('cheap-module-eval-source-map')
@@ -87,12 +93,23 @@ module.exports = (app, { isProd, isServer }) => {
       if (/\.vue\.jsx?$/.test(filepath)) {
         return false
       }
+
       if (/gridsome\.client\.js$/.test(filepath)) {
         return false
       }
+
+      if (app.config.transpileDependencies.some(dep => {
+        return typeof dep === 'string'
+          ? filepath.includes(path.normalize(dep))
+          : filepath.match(dep)
+      })) {
+        return false
+      }
+
       if (filepath.startsWith(projectConfig.appPath)) {
         return false
       }
+
       return /node_modules/.test(filepath)
     })
     .end()
@@ -130,7 +147,7 @@ module.exports = (app, { isProd, isServer }) => {
     .loader('url-loader')
     .options({
       limit: inlineLimit,
-      name: `${assetsDir}/img/[name].[hash:8].[ext]`
+      name: `${assetsDir}/img/${assetname}`
     })
 
   config.module.rule('svg')
@@ -138,7 +155,7 @@ module.exports = (app, { isProd, isServer }) => {
     .use('file-loader')
     .loader('file-loader')
     .options({
-      name: `${assetsDir}/img/[name].[hash:8].[ext]`
+      name: `${assetsDir}/img/${assetname}`
     })
 
   config.module.rule('media')
@@ -147,7 +164,7 @@ module.exports = (app, { isProd, isServer }) => {
     .loader('url-loader')
     .options({
       limit: inlineLimit,
-      name: `${assetsDir}/media/[name].[hash:8].[ext]`
+      name: `${assetsDir}/media/${assetname}`
     })
 
   config.module.rule('fonts')
@@ -156,7 +173,7 @@ module.exports = (app, { isProd, isServer }) => {
     .loader('url-loader')
     .options({
       limit: inlineLimit,
-      name: `${assetsDir}/fonts/[name].[hash:8].[ext]`
+      name: `${assetsDir}/fonts/${assetname}`
     })
 
   // data
@@ -170,21 +187,14 @@ module.exports = (app, { isProd, isServer }) => {
     .loader('yaml-loader')
 
   // graphql
-
   // TODO: remove graphql loader before v1.0
-  config.module.rule('graphql')
-    .resourceQuery(/blockType=(graphql|page-query)/)
-    .use('page-query')
-    .loader(require.resolve('./loaders/page-query'))
-
-  config.module.rule('static-graphql')
-    .resourceQuery(/blockType=static-query/)
-    .use('static-query')
-    .loader(require.resolve('./loaders/static-query'))
+  createGraphQLRule('graphql', './loaders/page-query')
+  createGraphQLRule('page-query', './loaders/page-query')
+  createGraphQLRule('static-query', './loaders/static-query')
 
   // plugins
 
-  if (process.stdout.isTTY) {
+  if (process.stdout.isTTY && !process.env.GRIDSOME_TEST) {
     config.plugin('progress')
       .use(require('webpack/lib/ProgressPlugin'))
   }
@@ -212,7 +222,7 @@ module.exports = (app, { isProd, isServer }) => {
 
   config.plugin('injections')
     .use(require('webpack/lib/DefinePlugin'), [{
-      'PATH_PREFIX': JSON.stringify(projectConfig.pathPrefix),
+      'process.env.PUBLIC_PATH': JSON.stringify(pathPrefix),
       'GRIDSOME_CACHE_DIR': JSON.stringify(projectConfig.cacheDir),
       'GRIDSOME_DATA_DIR': JSON.stringify(`${projectConfig.cacheDir}/data`),
       'GRIDSOME_MODE': JSON.stringify(process.env.GRIDSOME_MODE || ''),
@@ -223,7 +233,7 @@ module.exports = (app, { isProd, isServer }) => {
   if (isProd && !isServer) {
     config.plugin('extract-css')
       .use(CSSExtractPlugin, [{
-        filename: `${assetsDir}/css/styles.[chunkhash:8].css`
+        filename: `${assetsDir}/css/styles${useHash ? '.[contenthash:8]' : ''}.css`
       }])
 
     config.optimization.splitChunks({
@@ -237,6 +247,10 @@ module.exports = (app, { isProd, isServer }) => {
         }
       }
     })
+  }
+
+  if (process.env.GRIDSOME_TEST) {
+    config.optimization.minimize(false)
   }
 
   // helpes
@@ -255,6 +269,30 @@ module.exports = (app, { isProd, isServer }) => {
         )
       })
     }
+  }
+
+  function createGraphQLRule (type, loader) {
+    const re = new RegExp(`blockType=(${type})`)
+
+    config.module.rule(type)
+      .resourceQuery(re)
+      .use('cache-loader')
+      .loader('cache-loader')
+      .options({
+        cacheDirectory,
+        cacheIdentifier
+      })
+      .end()
+      .use('babel-loader')
+      .loader('babel-loader')
+      .options({
+        presets: [
+          require.resolve('./babel-preset')
+        ]
+      })
+      .end()
+      .use(`${type}-loader`)
+      .loader(require.resolve(loader))
   }
 
   function createCSSRule (config, lang, test, loader = null, options = {}) {

@@ -3,20 +3,19 @@ const fs = require('fs-extra')
 const AssetsQueue = require('../lib/app/queue/AssetsQueue')
 const ImageProcessQueue = require('../lib/app/queue/ImageProcessQueue')
 const context = __dirname
-const targetDir = path.join(context, 'assets', 'static')
-const assetsDir = path.join(targetDir, 'assets')
+const imagesDir = path.join(context, 'assets', 'static')
 const pathPrefix = '/'
 
 const baseconfig = {
   pathPrefix,
-  targetDir,
-  assetsDir,
+  imagesDir,
+  outDir: context,
   imageExtensions: ['.jpg', '.png', '.webp'],
   maxImageWidth: 1000
 }
 
 beforeEach(() => (ImageProcessQueue.uid = 0))
-afterAll(() => fs.remove(targetDir))
+afterAll(() => fs.remove(imagesDir))
 
 test('generate srcset for image', async () => {
   const filePath = path.resolve(__dirname, 'assets/1000x600.png')
@@ -28,21 +27,21 @@ test('generate srcset for image', async () => {
   expect(result.type).toEqual('image')
   expect(result.mimeType).toEqual('image/png')
   expect(result.filePath).toEqual(filePath)
-  expect(result.src).toEqual('/assets/static/1000x600-w1000.test.png')
+  expect(result.src).toEqual('/assets/static/1000x600.97c148e.test.png')
   expect(result.sizes).toEqual('(max-width: 1000px) 100vw, 1000px')
   expect(result.dataUri).toMatchSnapshot()
   expect(result.imageHTML).toMatchSnapshot()
   expect(result.noscriptHTML).toMatchSnapshot()
   expect(result.sets).toHaveLength(2)
   expect(result.srcset).toHaveLength(2)
-  expect(result.sets[0].src).toEqual('/assets/static/1000x600-w480.test.png')
+  expect(result.sets[0].src).toEqual('/assets/static/1000x600.82a2fbd.test.png')
   expect(result.sets[0].width).toEqual(480)
   expect(result.sets[0].height).toEqual(288)
-  expect(result.sets[1].src).toEqual('/assets/static/1000x600-w1000.test.png')
+  expect(result.sets[1].src).toEqual('/assets/static/1000x600.97c148e.test.png')
   expect(result.sets[1].width).toEqual(1000)
   expect(result.sets[1].height).toEqual(600)
-  expect(result.srcset[0]).toEqual('/assets/static/1000x600-w480.test.png 480w')
-  expect(result.srcset[1]).toEqual('/assets/static/1000x600-w1000.test.png 1000w')
+  expect(result.srcset[0]).toEqual('/assets/static/1000x600.82a2fbd.test.png 480w')
+  expect(result.srcset[1]).toEqual('/assets/static/1000x600.97c148e.test.png 1000w')
 })
 
 test('generate srcset for image with path prefix', async () => {
@@ -53,11 +52,11 @@ test('generate srcset for image with path prefix', async () => {
   const result = await queue.add(filePath)
 
   expect(queue.images.queue).toHaveLength(2)
-  expect(result.src).toEqual('/base/path/assets/static/1000x600-w1000.test.png')
-  expect(result.sets[0].src).toEqual('/base/path/assets/static/1000x600-w480.test.png')
-  expect(result.sets[1].src).toEqual('/base/path/assets/static/1000x600-w1000.test.png')
-  expect(result.srcset[0]).toEqual('/base/path/assets/static/1000x600-w480.test.png 480w')
-  expect(result.srcset[1]).toEqual('/base/path/assets/static/1000x600-w1000.test.png 1000w')
+  expect(result.src).toEqual('/base/path/assets/static/1000x600.97c148e.test.png')
+  expect(result.sets[0].src).toEqual('/base/path/assets/static/1000x600.82a2fbd.test.png')
+  expect(result.sets[1].src).toEqual('/base/path/assets/static/1000x600.97c148e.test.png')
+  expect(result.srcset[0]).toEqual('/base/path/assets/static/1000x600.82a2fbd.test.png 480w')
+  expect(result.srcset[1]).toEqual('/base/path/assets/static/1000x600.97c148e.test.png 1000w')
 })
 
 test('resize image by width attribute', async () => {
@@ -67,15 +66,28 @@ test('resize image by width attribute', async () => {
   const result = await queue.add(filePath, { width: 300 })
 
   expect(queue.images.queue).toHaveLength(1)
-  expect(result.src).toEqual('/assets/static/1000x600-w300.test.png')
+  expect(result.src).toEqual('/assets/static/1000x600.6b65613.test.png')
   expect(result.sizes).toEqual('(max-width: 300px) 100vw, 300px')
   expect(result.dataUri).toMatchSnapshot()
   expect(result.sets).toHaveLength(1)
   expect(result.srcset).toHaveLength(1)
-  expect(result.sets[0].src).toEqual('/assets/static/1000x600-w300.test.png')
+  expect(result.sets[0].src).toEqual('/assets/static/1000x600.6b65613.test.png')
   expect(result.sets[0].width).toEqual(300)
   expect(result.sets[0].height).toEqual(180)
-  expect(result.srcset[0]).toEqual('/assets/static/1000x600-w300.test.png 300w')
+  expect(result.srcset[0]).toEqual('/assets/static/1000x600.6b65613.test.png 300w')
+})
+
+test('resize image by width and height attribute', async () => {
+  const filePath = path.resolve(__dirname, 'assets/1000x600.png')
+  const queue = new AssetsQueue({ context, config: baseconfig })
+
+  const result = await queue.add(filePath, { width: 500, height: 500 })
+
+  expect(queue.images.queue).toHaveLength(2)
+  expect(result.src).toEqual('/assets/static/1000x600.95a5738.test.png')
+  expect(result.sizes).toEqual('(max-width: 500px) 100vw, 500px')
+  expect(result.sets[0].src).toEqual('/assets/static/1000x600.59e52ae.test.png')
+  expect(result.sets[1].src).toEqual('/assets/static/1000x600.95a5738.test.png')
 })
 
 test('disable blur filter', async () => {
@@ -95,7 +107,7 @@ test('set custom quality', async () => {
   const result = await queue.add(filePath, { quality: 10 })
 
   expect(queue.images.queue).toHaveLength(2)
-  expect(result.src).toEqual('/assets/static/1000x600-w1000-q10.test.png')
+  expect(result.src).toEqual('/assets/static/1000x600.6bbe610.test.png')
 })
 
 test('add custom attributes to markup', async () => {
@@ -129,13 +141,13 @@ test('respect config.maxImageWidth', async () => {
   const result = await queue.add(filePath)
 
   expect(queue.images.queue).toHaveLength(2)
-  expect(result.src).toEqual('/assets/static/1000x600-w600.test.png')
+  expect(result.src).toEqual('/assets/static/1000x600.bd6740a.test.png')
   expect(result.sets).toHaveLength(2)
   expect(result.srcset).toHaveLength(2)
-  expect(result.sets[0].src).toEqual('/assets/static/1000x600-w480.test.png')
-  expect(result.sets[1].src).toEqual('/assets/static/1000x600-w600.test.png')
-  expect(result.srcset[0]).toEqual('/assets/static/1000x600-w480.test.png 480w')
-  expect(result.srcset[1]).toEqual('/assets/static/1000x600-w600.test.png 600w')
+  expect(result.sets[0].src).toEqual('/assets/static/1000x600.82a2fbd.test.png')
+  expect(result.sets[1].src).toEqual('/assets/static/1000x600.bd6740a.test.png')
+  expect(result.srcset[0]).toEqual('/assets/static/1000x600.82a2fbd.test.png 480w')
+  expect(result.srcset[1]).toEqual('/assets/static/1000x600.bd6740a.test.png 600w')
 })
 
 test('do not resize if image is too small', async () => {
@@ -146,7 +158,7 @@ test('do not resize if image is too small', async () => {
   const result = await queue.add(filePath, { width: 600 })
 
   expect(queue.images.queue).toHaveLength(1)
-  expect(result.src).toEqual('/assets/static/350x250-w350.test.png')
+  expect(result.src).toEqual('/assets/static/350x250.096da6d.test.png')
   expect(result.sets).toHaveLength(1)
   expect(result.srcset).toHaveLength(1)
 })

@@ -4,15 +4,18 @@ const EventEmitter = require('events')
 const camelCase = require('camelcase')
 const dateFormat = require('dateformat')
 const slugify = require('@sindresorhus/slugify')
-const { mapKeys, cloneDeep } = require('lodash')
+const { cloneDeep, isObject } = require('lodash')
 const { warn } = require('../utils/log')
+
+const nonValidCharsRE = new RegExp('[^a-zA-Z0-9_]', 'g')
+const leadingNumberRE = new RegExp('^([0-9])')
 
 class ContentTypeCollection extends EventEmitter {
   constructor (store, pluginStore, options) {
     super()
 
-    this._store = store
-    this._pluginStore = pluginStore
+    this.baseStore = store
+    this.pluginStore = pluginStore
 
     this.options = { refs: {}, fields: {}, ...options }
     this.typeName = options.typeName
@@ -41,15 +44,25 @@ class ContentTypeCollection extends EventEmitter {
     const { mimeTypes } = this.options
     const { mimeType } = node.internal
     if (mimeType && !mimeTypes.hasOwnProperty(mimeType)) {
-      mimeTypes[mimeType] = this._pluginStore._transformers[mimeType]
+      mimeTypes[mimeType] = this.pluginStore._transformers[mimeType]
     }
 
     try {
-      this.collection.insert(node)
-      this.emit('change', node)
+      this.baseStore.index.insert({
+        type: 'node',
+        path: node.path,
+        typeName: node.typeName,
+        uid: node.uid,
+        id: node.id,
+        _id: node.id // TODO: remove this before v1.0
+      })
     } catch (err) {
       warn(`Skipping duplicate path for ${node.path}`, this.typeName)
+      return null
     }
+
+    this.collection.insert(node)
+    this.emit('change', node)
 
     return node
   }
@@ -61,6 +74,7 @@ class ContentTypeCollection extends EventEmitter {
   updateNode (id, options) {
     const node = this.getNode(id)
     const oldNode = cloneDeep(node)
+    const indexEntry = this.baseStore.index.findOne({ uid: node.uid })
     const internal = this.createInternals(options.internal)
 
     // transform content with transformer for given mime type
@@ -68,17 +82,20 @@ class ContentTypeCollection extends EventEmitter {
       this.transformNodeOptions(options, internal)
     }
 
-    const fields = mapKeys(options.fields || {}, (v, key) => {
-      return key.startsWith('__') ? key : camelCase(key)
-    })
+    const { fields = {}} = options
 
     node.title = options.title || fields.title || node.title
     node.date = options.date || fields.date || node.date
     node.slug = options.slug || fields.slug || this.slugify(node.title)
+    node.content = options.content || fields.content || node.content
+    node.excerpt = options.excerpt || fields.excerpt || node.excerpt
     node.internal = Object.assign({}, node.internal, internal)
-    node.path = options.path || this.makePath(node)
+    node.path = typeof options.path === 'string'
+      ? '/' + options.path.replace(/^\/+/g, '')
+      : this.makePath(node)
 
     node.fields = this.processNodeFields(fields, node.internal.origin)
+    indexEntry.path = node.path
 
     this.emit('change', node, oldNode)
 
@@ -86,14 +103,17 @@ class ContentTypeCollection extends EventEmitter {
   }
 
   removeNode (id) {
-    const oldNode = this.collection.findOne({ id })
+    const node = this.collection.findOne({ id })
 
+    this.baseStore.index.findAndRemove({ uid: node.uid })
     this.collection.findAndRemove({ id })
-    this.emit('change', undefined, oldNode)
+
+    this.emit('change', undefined, node)
   }
 
   createNode (options = {}) {
     const { typeName } = this.options
+    const hash = crypto.createHash('md5')
     const internal = this.createInternals(options.internal)
     const id = options.id || options._id || this.makeUid(JSON.stringify(options))
     const node = { id, typeName, internal }
@@ -106,19 +126,20 @@ class ContentTypeCollection extends EventEmitter {
       this.transformNodeOptions(options, internal)
     }
 
-    const fields = mapKeys(options.fields, (v, key) => {
-      return key.startsWith('__') ? key : camelCase(key)
-    })
+    const { fields = {}} = options
 
+    node.uid = hash.update(typeName + node.id).digest('hex')
     node.title = options.title || fields.title || node.id
     node.date = options.date || fields.date || new Date().toISOString()
     node.slug = options.slug || fields.slug || this.slugify(node.title)
     node.content = options.content || fields.content || ''
     node.excerpt = options.excerpt || fields.excerpt || ''
-    node.path = options.path || this.makePath(node)
-    node.withPath = !!options.path
+    node.withPath = typeof options.path === 'string'
 
     node.fields = this.processNodeFields(fields, node.internal.origin)
+    node.path = typeof options.path === 'string'
+      ? '/' + options.path.replace(/^\/+/g, '')
+      : this.makePath(node)
 
     return node
   }
@@ -149,6 +170,9 @@ class ContentTypeCollection extends EventEmitter {
 
   processNodeFields (fields, origin) {
     const processField = field => {
+      if (field === undefined) return field
+      if (field === null) return field
+
       switch (typeof field) {
         case 'object':
           return processFields(field)
@@ -161,11 +185,26 @@ class ContentTypeCollection extends EventEmitter {
       return field
     }
 
+    const createKey = key => {
+      key = key.replace(nonValidCharsRE, '_')
+      key = camelCase(key)
+      key = key.replace(leadingNumberRE, '_$1')
+
+      return key
+    }
+
     const processFields = fields => {
       const res = {}
 
       for (const key in fields) {
-        res[key] = Array.isArray(fields[key])
+        if (key.startsWith('__')) {
+          // don't touch keys which starts with __ because they are
+          // meant for internal use and will not be part of the schema
+          res[key] = fields[key]
+          continue
+        }
+
+        res[createKey(key)] = Array.isArray(fields[key])
           ? fields[key].map(processField)
           : processField(fields[key])
       }
@@ -177,16 +216,35 @@ class ContentTypeCollection extends EventEmitter {
   }
 
   resolveFilePath (...args) {
-    return this._pluginStore._app.resolveFilePath(...args, this.resolveAbsolutePaths)
+    return this.pluginStore._app.resolveFilePath(...args, this.resolveAbsolutePaths)
   }
 
-  makePath ({ date, slug }) {
-    const year = date ? dateFormat(date, 'yyyy') : null
-    const month = date ? dateFormat(date, 'mm') : null
-    const day = date ? dateFormat(date, 'dd') : null
-    const params = { year, month, day, slug }
+  makePath (node) {
+    const year = node.date ? dateFormat(node.date, 'yyyy') : null
+    const month = node.date ? dateFormat(node.date, 'mm') : null
+    const day = node.date ? dateFormat(node.date, 'dd') : null
+    const params = { year, month, day, slug: node.slug }
+    const { routeKeys } = this.options
 
-    // TODO: make custom fields available as route params
+    // Use root level fields as route params. Primitive values
+    // are slugified but the original value will be available
+    // with '_raw' suffix.
+    for (let i = 0, l = routeKeys.length; i < l; i++) {
+      const keyName = routeKeys[i]
+      const fieldValue = node.fields[keyName] || node[keyName] || keyName
+
+      if (
+        isObject(fieldValue) &&
+        fieldValue.hasOwnProperty('typeName') &&
+        fieldValue.hasOwnProperty('id') &&
+        !Array.isArray(fieldValue.id)
+      ) {
+        params[keyName] = String(fieldValue.id)
+      } else if (!isObject(fieldValue) && !params[keyName]) {
+        params[keyName] = this.slugify(String(fieldValue))
+        params[keyName + '_raw'] = String(fieldValue)
+      }
+    }
 
     return this.options.makePath(params)
   }
@@ -200,7 +258,7 @@ class ContentTypeCollection extends EventEmitter {
   }
 
   transform ({ mimeType, content }, options) {
-    const transformer = this._pluginStore._transformers[mimeType]
+    const transformer = this.pluginStore._transformers[mimeType]
 
     if (!transformer) {
       throw new Error(`No transformer for ${mimeType} is installed.`)

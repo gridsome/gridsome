@@ -3,6 +3,137 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+<a name="0.4.5"></a>
+## [0.4.5](https://github.com/gridsome/gridsome/compare/gridsome@0.4.4...gridsome@0.4.5) (2019-01-26)
+
+
+### Bug Fixes
+
+* **app:** custom favicon path ([#149](https://github.com/gridsome/gridsome/issues/149)) ([f6b6b3d](https://github.com/gridsome/gridsome/commit/f6b6b3d)), closes [#138](https://github.com/gridsome/gridsome/issues/138)
+* **g-image:** bind custom classes to object ([#151](https://github.com/gridsome/gridsome/issues/151)) ([10150ca](https://github.com/gridsome/gridsome/commit/10150ca))
+
+
+
+
+
+<a name="0.4.4"></a>
+## [0.4.4](https://github.com/gridsome/gridsome/compare/gridsome@0.4.3...gridsome@0.4.4) (2019-01-15)
+
+
+### Bug Fixes
+
+* **graphql:** merge ref fields correctly ([#128](https://github.com/gridsome/gridsome/issues/128), [#129](https://github.com/gridsome/gridsome/issues/129)) ([ffb29ee](https://github.com/gridsome/gridsome/commit/ffb29ee))
+* **webpack:** cache graphql loader results ([6e794ab](https://github.com/gridsome/gridsome/commit/6e794ab))
+* **webpack:** transpile custom blocks ([#130](https://github.com/gridsome/gridsome/issues/130)) ([c81fee4](https://github.com/gridsome/gridsome/commit/c81fee4))
+
+
+
+
+
+<a name="0.4.3"></a>
+## [0.4.3](https://github.com/gridsome/gridsome/compare/gridsome@0.4.2...gridsome@0.4.3) (2019-01-09)
+
+
+### Bug Fixes
+
+* **webpack:** fix config for IE support ([e403f4c](https://github.com/gridsome/gridsome/commit/e403f4c))
+
+
+
+
+
+<a name="0.4.2"></a>
+## [0.4.2](https://github.com/gridsome/gridsome/compare/gridsome@0.4.1...gridsome@0.4.2) (2019-01-07)
+
+
+### Bug Fixes
+
+* **route:** allow node props as route params ([1658fde](https://github.com/gridsome/gridsome/commit/1658fde))
+* **store:** update node content and excerpt ([637e0e4](https://github.com/gridsome/gridsome/commit/637e0e4))
+
+
+
+
+
+<a name="0.4.1"></a>
+## [0.4.1](https://github.com/gridsome/gridsome/compare/gridsome@0.4.0...gridsome@0.4.1) (2019-01-03)
+
+
+### Bug Fixes
+
+* **config:** customizing host and port ([bc44a64](https://github.com/gridsome/gridsome/commit/bc44a64))
+* **config:** use host and port from project config ([7936aa7](https://github.com/gridsome/gridsome/commit/7936aa7))
+* **graphql:** fix deprecated references api ([cb6f245](https://github.com/gridsome/gridsome/commit/cb6f245))
+* **image:** don’t re-render when parent updates ([#93](https://github.com/gridsome/gridsome/issues/93)) ([c813d70](https://github.com/gridsome/gridsome/commit/c813d70))
+* **pathPrefix:** don’t create subfolder ([#85](https://github.com/gridsome/gridsome/issues/85)) ([96bfbed](https://github.com/gridsome/gridsome/commit/96bfbed))
+* **router:** add leading slash to routes ([4024ace](https://github.com/gridsome/gridsome/commit/4024ace))
+
+
+
+
+
+<a name="0.4.0"></a>
+# [0.4.0](https://github.com/gridsome/gridsome/compare/gridsome@0.3.6...gridsome@0.4.0) (2018-12-19)
+
+
+### Bug Fixes
+
+* **app:** use default link behavior if 404 ([f9aeed7](https://github.com/gridsome/gridsome/commit/f9aeed7))
+* **g-link:** customizable active classes ([#65](https://github.com/gridsome/gridsome/issues/65)) ([0ee5273](https://github.com/gridsome/gridsome/commit/0ee5273))
+* **g-link:** link to local files ([ece2de5](https://github.com/gridsome/gridsome/commit/ece2de5))
+* **graphql:** include empty string type in schema ([44b68b2](https://github.com/gridsome/gridsome/commit/44b68b2))
+* **graphql:** return null for missing images ([39c5a92](https://github.com/gridsome/gridsome/commit/39c5a92))
+* **graphql:** warn when missing reference ([a6f7857](https://github.com/gridsome/gridsome/commit/a6f7857))
+* **router:** fetch data for paths with hash ([19a0c78](https://github.com/gridsome/gridsome/commit/19a0c78))
+* **store:** dont process null value as an object ([a05bb5a](https://github.com/gridsome/gridsome/commit/a05bb5a))
+
+
+### Features
+
+* **build:** image processing cache ([#57](https://github.com/gridsome/gridsome/issues/57)) ([0a9e449](https://github.com/gridsome/gridsome/commit/0a9e449))
+* **graphql:** add custom metadata ([#54](https://github.com/gridsome/gridsome/issues/54)) ([7b35378](https://github.com/gridsome/gridsome/commit/7b35378))
+* **graphql:** reference with multiple node types ([#50](https://github.com/gridsome/gridsome/issues/50)) ([185297f](https://github.com/gridsome/gridsome/commit/185297f))
+* **image:** crop by width and height ([#78](https://github.com/gridsome/gridsome/issues/78)) ([001aa0b](https://github.com/gridsome/gridsome/commit/001aa0b))
+* **router:** custom fields as params ([#53](https://github.com/gridsome/gridsome/issues/53)) ([f53f67f](https://github.com/gridsome/gridsome/commit/f53f67f))
+* **webpack:** runtimeCompiler config ([cdb676f](https://github.com/gridsome/gridsome/commit/cdb676f))
+* **webpack:** transpileDependencies config ([36e4932](https://github.com/gridsome/gridsome/commit/36e4932))
+
+
+
+
+
+<a name="0.3.6"></a>
+## [0.3.6](https://github.com/gridsome/gridsome/compare/gridsome@0.3.5...gridsome@0.3.6) (2018-12-10)
+
+
+### Bug Fixes
+
+* **graphql:** dont infer filename as file type ([3a04df9](https://github.com/gridsome/gridsome/commit/3a04df9))
+* **image:** exclude unecessary data ([574928c](https://github.com/gridsome/gridsome/commit/574928c))
+
+
+
+
+
+<a name="0.3.5"></a>
+## [0.3.5](https://github.com/gridsome/gridsome/compare/gridsome@0.3.4...gridsome@0.3.5) (2018-12-05)
+
+
+### Bug Fixes
+
+* **api:** pass graphql object to addSchemaField ([#64](https://github.com/gridsome/gridsome/issues/64)) ([f6fd2a8](https://github.com/gridsome/gridsome/commit/f6fd2a8))
+* **build:** fix beforeProcessAssets hook name ([8eafe68](https://github.com/gridsome/gridsome/commit/8eafe68))
+* **favicon:** set mime type for icons in head ([bface4d](https://github.com/gridsome/gridsome/commit/bface4d))
+* **graphql:** do not use file type for urls ([fd14b44](https://github.com/gridsome/gridsome/commit/fd14b44))
+* **graphql:** fix order argument for collections ([3e6a1fa](https://github.com/gridsome/gridsome/commit/3e6a1fa))
+* **graphql:** get node by id ([ba83545](https://github.com/gridsome/gridsome/commit/ba83545))
+* **graphql:** transform nested invalid field names ([5555354](https://github.com/gridsome/gridsome/commit/5555354))
+* **touchicon:** use correct sizes when custom icon ([db1c349](https://github.com/gridsome/gridsome/commit/db1c349))
+
+
+
+
+
 <a name="0.3.4"></a>
 ## [0.3.4](https://github.com/gridsome/gridsome/compare/gridsome@0.3.3...gridsome@0.3.4) (2018-11-22)
 

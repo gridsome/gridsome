@@ -9,6 +9,7 @@ const slugify = require('@sindresorhus/slugify')
 const parsePageQuery = require('../graphql/parsePageQuery')
 const { mapValues, cloneDeep } = require('lodash')
 const { cache, nodeCache } = require('../utils/cache')
+const { log, warn } = require('../utils/log')
 
 class Source extends EventEmitter {
   constructor (app, options, { transformers }) {
@@ -34,36 +35,48 @@ class Source extends EventEmitter {
     this.mime = mime
   }
 
+  // data
+
+  addMetaData (key, data) {
+    return this.store.addMetaData(key, data)
+  }
+
   // nodes
 
   addType (...args) {
-    console.log('!! store.addType is deprectaded, use store.addContentType instead.')
+    log('!! store.addType is deprectaded, use store.addContentType instead.')
     return this.addContentType(...args)
   }
 
   addContentType (options) {
-    if (!options.typeName) {
+    if (typeof options.typeName !== 'string') {
       throw new Error(`«typeName» option is required.`)
+    }
+
+    if (['page'].includes(options.typeName.toLowerCase())) {
+      throw new Error(`${options.typeName} is a reserved typeName`)
     }
 
     if (this.store.collections.hasOwnProperty(options.typeName)) {
       return this.store.getContentType(options.typeName)
     }
 
-    // function for generating paths from routes for this type
-    const makePath = options.route
-      ? pathToRegexp.compile(options.route)
-      : () => null
+    let makePath = () => null
+    const routeKeys = []
+
+    if (typeof options.route === 'string') {
+      options.route = '/' + options.route.replace(/^\/+/g, '')
+      makePath = pathToRegexp.compile(options.route)
+      pathToRegexp(options.route, routeKeys)
+    }
 
     // normalize references
-    const refs = mapValues(options.refs, (ref, key) => ({
-      fieldName: key,
-      key: ref.key || 'id',
-      typeName: ref.typeName || options.typeName,
-      description: Array.isArray(ref.typeName)
-        ? `Reference to ${ref.typeName.join(', ')}`
-        : `Reference to ${ref.typeName}`
-    }))
+    const refs = mapValues(options.refs, (ref, key) => {
+      return {
+        typeName: ref.typeName || options.typeName,
+        fieldName: key
+      }
+    })
 
     if (typeof options.resolveAbsolutePaths === 'undefined') {
       options.resolveAbsolutePaths = this._resolveAbsolutePaths
@@ -73,6 +86,7 @@ class Source extends EventEmitter {
       route: options.route,
       fields: options.fields || {},
       typeName: options.typeName,
+      routeKeys: routeKeys.map(key => key.name.replace('_raw', '')),
       resolveAbsolutePaths: options.resolveAbsolutePaths,
       mimeTypes: [],
       belongsTo: {},
@@ -104,12 +118,25 @@ class Source extends EventEmitter {
       page.pageQuery = parsePageQuery(options.pageQuery || {})
     } catch (err) {}
 
-    page.title = options.title || page._id
+    page.title = options.title || page.id
     page.slug = options.slug || this.slugify(page.title)
     page.path = options.path || `/${page.slug}`
     page.file = options.file
 
     this.emit('addPage', page)
+
+    try {
+      this.store.index.insert({
+        type: 'page',
+        path: page.path,
+        uid: page.id,
+        id: page.id,
+        _id: page.id // TODO: remove this before v1.0
+      })
+    } catch (err) {
+      warn(`Skipping duplicate path for ${page.path}`)
+      return null
+    }
 
     return this.store.addPage(page)
   }
@@ -118,6 +145,7 @@ class Source extends EventEmitter {
     const page = this.getPage(id)
     const oldPage = cloneDeep(page)
     const internal = this.createInternals(options.internal)
+    const entry = this.store.index.findOne({ uid: page.id })
 
     try {
       page.pageQuery = options.pageQuery
@@ -131,14 +159,17 @@ class Source extends EventEmitter {
     page.file = options.file || page.file
     page.internal = Object.assign({}, page.internal, internal)
 
+    entry.path = page.path
+
     this.emit('updatePage', page, oldPage)
 
     return page
   }
 
-  removePage (_id) {
-    this.store.removePage(_id)
-    this.emit('removePage', _id)
+  removePage (id) {
+    this.store.removePage(id)
+    this.store.index.findAndRemove({ uid: id })
+    this.emit('removePage', id)
   }
 
   getPage (_id) {

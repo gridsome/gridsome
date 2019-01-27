@@ -48,6 +48,8 @@ async function genIcons ({ config, resolve, queue }) {
   const faviconPath = resolve(favicon.src)
 
   const icons = {
+    touchiconMimeType: null,
+    faviconMimeType: null,
     precomposed: false,
     touchicons: [],
     favicons: []
@@ -61,6 +63,7 @@ async function genIcons ({ config, resolve, queue }) {
 
     icons.precomposed = touchicon.precomposed
     icons.touchicons = touchicons.sets
+    icons.touchiconMimeType = touchicons.mimeType
   }
 
   if (await fs.exists(faviconPath)) {
@@ -70,6 +73,7 @@ async function genIcons ({ config, resolve, queue }) {
     })
 
     icons.favicons = favicons.sets
+    icons.faviconMimeType = favicons.mimeType
   }
 
   return `export default ${JSON.stringify(icons, null, 2)}`
@@ -77,12 +81,11 @@ async function genIcons ({ config, resolve, queue }) {
 
 function genConfig ({ config }) {
   const { version } = require('../../package.json')
-  const { siteUrl, siteName, pathPrefix, titleTemplate } = config
+  const { siteUrl, siteName, titleTemplate } = config
 
   return `export default ${JSON.stringify({
     siteUrl,
     siteName,
-    pathPrefix,
     titleTemplate,
     version
   }, null, 2)}`

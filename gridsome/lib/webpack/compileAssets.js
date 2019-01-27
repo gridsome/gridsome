@@ -1,6 +1,7 @@
 const hirestime = require('hirestime')
 const createClientConfig = require('./createClientConfig')
 const createServerConfig = require('./createServerConfig')
+const { info, error } = require('../utils/log')
 
 module.exports = async (app, defines = {}) => {
   const compileTime = hirestime()
@@ -24,7 +25,7 @@ module.exports = async (app, defines = {}) => {
     serverConfig.toConfig()
   ])
 
-  console.info(`Compile assets - ${compileTime(hirestime.S)}s`)
+  info(`Compile assets - ${compileTime(hirestime.S)}s`)
 }
 
 function compile (config) {
@@ -35,7 +36,7 @@ function compile (config) {
       if (err) return reject(err)
 
       if (stats.hasErrors()) {
-        stats.toJson().errors.forEach(err => console.error(err))
+        stats.toJson().errors.forEach(err => error(err))
         return reject(new Error('Failed to compile.'))
       }
 

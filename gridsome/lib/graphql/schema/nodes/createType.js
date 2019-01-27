@@ -1,40 +1,37 @@
-const camelCase = require('camelcase')
-const inferTypes = require('../infer-types')
+const graphql = require('../../graphql')
 const { dateType } = require('../types/date')
 const { mapValues, isEmpty } = require('lodash')
-const { refResolver } = require('../resolvers')
-
 const { nodeInterface } = require('../interfaces')
+const { createRefResolver } = require('../resolvers')
+const { createFieldTypes, createRefType } = require('../createFieldTypes')
 
 const {
   GraphQLID,
   GraphQLList,
   GraphQLString,
   GraphQLNonNull,
-  GraphQLUnionType,
   GraphQLObjectType
-} = require('../../graphql')
+} = graphql
 
-module.exports = ({ contentType, nodeTypes }) => {
+module.exports = ({ contentType, nodeTypes, fields }) => {
   const nodeType = new GraphQLObjectType({
     name: contentType.typeName,
     description: contentType.description,
     interfaces: [nodeInterface],
     isTypeOf: node => node.typeName === contentType.typeName,
     fields: () => {
-      const nodes = contentType.collection.find()
-      const fields = inferTypes(nodes, contentType.typeName, nodeTypes)
-      const refs = createRefs(contentType, nodeTypes, fields)
+      const fieldTypes = createFieldTypes(fields, contentType.typeName, nodeTypes)
+      const refs = createRefs(contentType, nodeTypes, fieldTypes)
 
       const nodeFields = {
-        ...fields,
+        ...fieldTypes,
         ...refs,
 
         content: { type: GraphQLString },
         excerpt: { type: GraphQLString },
 
         ...extendNodeType(contentType, nodeType, nodeTypes),
-        ...createFields(contentType, fields),
+        ...createFields(contentType, fieldTypes),
 
         id: { type: new GraphQLNonNull(GraphQLID) },
         title: { type: GraphQLString },
@@ -68,27 +65,20 @@ module.exports = ({ contentType, nodeTypes }) => {
 }
 
 function extendNodeType (contentType, nodeType, nodeTypes) {
+  const payload = { contentType, nodeTypes, nodeType, graphql }
   const fields = {}
 
   for (const mimeType in contentType.options.mimeTypes) {
     const transformer = contentType.options.mimeTypes[mimeType]
     if (typeof transformer.extendNodeType === 'function') {
-      Object.assign(fields, transformer.extendNodeType({
-        contentType,
-        nodeTypes,
-        nodeType
-      }))
+      Object.assign(fields, transformer.extendNodeType(payload))
     }
   }
 
   for (const fieldName in contentType.options.fields) {
     const field = contentType.options.fields[fieldName]
     if (typeof field === 'function') {
-      fields[fieldName] = field({
-        contentType,
-        nodeTypes,
-        nodeType
-      })
+      fields[fieldName] = field(payload)
     }
   }
 
@@ -112,36 +102,23 @@ function createFields (contentType, customFields) {
 function createRefs (contentType, nodeTypes, fields) {
   if (isEmpty(contentType.options.refs)) return null
 
-  return mapValues(contentType.options.refs, (ref, key) => {
-    const { typeName, description } = ref
-    const field = fields[key] || { type: GraphQLString }
-
+  return mapValues(contentType.options.refs, ({ typeName }, fieldName) => {
+    const field = fields[fieldName] || { type: GraphQLString }
     const isList = field.type instanceof GraphQLList
-    let refType = nodeTypes[typeName]
-
-    if (Array.isArray(typeName)) {
-      // TODO: create union collection
-      const fieldTypeName = camelCase(key, { pascalCase: true })
-      refType = new GraphQLUnionType({
-        name: `${contentType.typeName}${fieldTypeName}Union`,
-        interfaces: [nodeInterface],
-        types: typeName.map(typeName => nodeTypes[typeName])
-      })
-    }
+    const ref = { typeName, isList }
+    const resolve = createRefResolver(ref)
 
     return {
-      description,
-      type: isList ? new GraphQLList(refType) : refType,
+      ...createRefType(ref, fieldName, contentType.typeName, nodeTypes),
       resolve: (obj, args, context, info) => {
         const field = {
-          [info.fieldName]: {
+          [fieldName]: {
             typeName,
-            key: ref.key,
-            value: obj.fields[key]
+            id: obj.fields[fieldName]
           }
         }
 
-        return refResolver(field, args, context, info)
+        return resolve(field, args, context, info)
       }
     }
   })

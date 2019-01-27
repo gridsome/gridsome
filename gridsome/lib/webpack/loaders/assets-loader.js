@@ -5,9 +5,23 @@ module.exports = async function (source, map) {
 
   const { queue } = process.GRIDSOME
   const options = utils.parseQuery(this.query || '?')
-  const res = await queue.add(this.resourcePath, options)
+  const asset = await queue.add(this.resourcePath, options)
 
   this.dependency(this.resourcePath)
+
+  const res = {
+    type: asset.type,
+    mimeType: asset.mimeType,
+    src: asset.src
+  }
+
+  if (asset.type === 'image') {
+    res.sets = asset.sets
+    res.size = asset.size
+    res.sizes = asset.sizes
+    res.srcset = asset.srcset
+    res.dataUri = asset.dataUri
+  }
 
   callback(null, `module.exports = ${JSON.stringify(res)}`)
 }

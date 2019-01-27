@@ -3,28 +3,47 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-<a name="0.1.1"></a>
-## [0.1.1](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/compare/@gridsome/source-wordpress@0.1.0...@gridsome/source-wordpress@0.1.1) (2018-11-22)
+<a name="0.2.1"></a>
+## [0.2.1](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/compare/@gridsome/source-wordpress@0.2.0...@gridsome/source-wordpress@0.2.1) (2019-01-26)
 
 
 ### Bug Fixes
 
-* **wordpress:** skip missing types when referring taxonomies ([#49](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/issues/49)) ([1a72a76](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/commit/1a72a76))
+* **wordpress:** don’t throw error for 401 requests ([#146](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/issues/146)) ([ef84ca5](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/commit/ef84ca5))
 
 
 
 
 
-<a name="0.1.0"></a>
-# [0.1.0](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/compare/@gridsome/source-wordpress@0.0.5...@gridsome/source-wordpress@0.1.0) (2018-11-11)
+<a name="0.2.0"></a>
+# [0.2.0](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/compare/@gridsome/source-wordpress@0.1.1...@gridsome/source-wordpress@0.2.0) (2019-01-21)
 
 
 ### Features
 
-* **wordpress:** use new plugin api ([6cdc37b](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/commit/6cdc37b))
+* **wordpress:** apiBase option for custom rest endpoint ([e2f9a5a](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/commit/e2f9a5a))
+* **wordpress:** basic ACF support ([#45](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/issues/45)) ([0621372](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/commit/0621372))
 
 
 
+
+
+<a name="0.1.1"></a>
+## [0.1.1](https://github.com/gridsome/gridsome/compare/@gridsome/source-wordpress@0.1.0...@gridsome/source-wordpress@0.1.1) (2018-11-23)
+
+
+### Bug Fixes
+
+* **wordpress:** skip missing types when referring taxonomies ([#49](https://github.com/gridsome/gridsome/issues/49)) ([1a72a76](https://github.com/gridsome/gridsome/commit/1a72a76))
+
+
+<a name="0.1.0"></a>
+# [0.1.0](https://github.com/gridsome/gridsome/compare/@gridsome/source-wordpress@0.0.5...@gridsome/source-wordpress@0.1.0) (2018-11-11)
+
+
+### Features
+
+* **wordpress:** use new plugin api ([6cdc37b](https://github.com/gridsome/gridsome/commit/6cdc37b))
 
 
 <a name="0.0.5"></a>

@@ -75,6 +75,10 @@ class PluginAPI {
     this._entry.clientOptions = options
   }
 
+  transpileDependencies (list) {
+    this._app.config.transpileDependencies.push(...list)
+  }
+
   loadSource (handler) {
     this._on('loadSource', handler)
   }
@@ -103,8 +107,8 @@ class PluginAPI {
     this._on('beforeRenderHTML', fn)
   }
 
-  beforeProcessImages (fn) {
-    this._on('beforeProcessImages', fn)
+  beforeProcessAssets (fn) {
+    this._on('beforeProcessAssets', fn)
   }
 
   afterBuild (fn) {
