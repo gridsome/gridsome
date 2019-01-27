@@ -34,6 +34,10 @@ exports.normalizePlugins = function (arr = []) {
 exports.createPlugins = function (options, userPlugins) {
   const plugins = []
 
+  if (options.useBuiltIns === false) {
+    return exports.normalizePlugins(userPlugins || [])
+  }
+
   if (options.slug !== false) {
     plugins.push('remark-slug')
   }
@@ -53,7 +57,7 @@ exports.createPlugins = function (options, userPlugins) {
     }])
   }
 
-  if (options.autolinkHeadings !== false) {
+  if (options.autolinkHeadings !== false && options.slug !== false) {
     plugins.push(['remark-autolink-headings', {
       content: {
         type: 'element',
