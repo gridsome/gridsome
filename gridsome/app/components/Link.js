@@ -1,11 +1,12 @@
 /* global GRIDSOME_MODE */
 
 import router from '../router'
-import caniuse from '../utils/caniuse'
 import { stripPathPrefix } from '../utils/helpers'
 import { createObserver } from '../utils/intersectionObserver'
 
-const observer = caniuse.IntersectionObserver
+const observer = process.isClient && (('IntersectionObserver' in window) ||
+    ('IntersectionObserverEntry' in window) ||
+    ('intersectionRatio' in window.IntersectionObserverEntry.prototype))
   ? createObserver(intersectionHandler)
   : null
 
