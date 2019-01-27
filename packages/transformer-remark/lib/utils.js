@@ -1,5 +1,10 @@
+const hash = require('hash-sum')
 const visit = require('unist-util-visit')
 const imagePlugin = require('./plugins/image')
+
+exports.cacheKey = function (node, key) {
+  return hash({ uid: node.uid, key })
+}
 
 exports.createFile = function (options) {
   const file = {

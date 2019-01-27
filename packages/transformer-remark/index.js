@@ -1,11 +1,15 @@
+const LRU = require('lru-cache')
 const unified = require('unified')
 const parse = require('gray-matter')
-const { words, defaultsDeep } = require('lodash')
-const remarkParse = require('remark-parse')
 const remarkHtml = require('remark-html')
 const htmlToText = require('html-to-text')
+const remarkParse = require('remark-parse')
+const { words, defaultsDeep } = require('lodash')
+
+const cache = new LRU({ max: 1000 })
 
 const {
+  cacheKey,
   createFile,
   findHeadings,
   createPlugins
@@ -28,13 +32,13 @@ class RemarkTransformer {
     return ['text/markdown', 'text/x-markdown']
   }
 
-  constructor (options, { localOptions, nodeCache, nodeCacheSync, context, queue }) {
+  constructor (options, { localOptions, queue }) {
     this.options = defaultsDeep(localOptions, options)
-    this.nodeCache = nodeCache
-    this.context = context
     this.queue = queue
 
-    this.plugins = createPlugins(this.options, options.plugins.concat(localOptions.plugins))
+    const plugins = (options.plugins || []).concat(localOptions.plugins || [])
+
+    this.plugins = createPlugins(this.options, plugins)
     this.toAST = unified().use(remarkParse).parse
     this.applyPlugins = unified().data('transformer', this).use(this.plugins).run
     this.toHTML = unified().use(remarkHtml).stringify
@@ -65,7 +69,7 @@ class RemarkTransformer {
     return {
       content: {
         type: GraphQLString,
-        resolve: node => this._toHTML(node)
+        resolve: node => this._nodeToHTML(node)
       },
       headings: {
         type: new GraphQLList(HeadingType),
@@ -74,10 +78,14 @@ class RemarkTransformer {
           stripTags: { type: GraphQLBoolean, defaultValue: true }
         },
         resolve: async (node, { depth, stripTags }) => {
-          const headings = await this.nodeCache(node, 'headings', async () => {
-            const ast = await this._toAST(node)
-            return findHeadings(ast)
-          })
+          const key = cacheKey(node, 'headings')
+          let headings = cache.get(key)
+
+          if (!headings) {
+            const ast = await this._nodeToAST(node)
+            headings = findHeadings(ast)
+            cache.set(key, headings)
+          }
 
           return headings
             .filter(heading =>
@@ -102,7 +110,7 @@ class RemarkTransformer {
           }
         },
         resolve: async (node, { speed }) => {
-          const html = await this._toHTML(node)
+          const html = await this._nodeToHTML(node)
           const text = htmlToText.fromString(html)
           const count = words(text).length
 
@@ -126,25 +134,40 @@ class RemarkTransformer {
     return processor
   }
 
-  _toAST (node) {
+  async _nodeToAST (node) {
     const file = createFile({
       contents: node.content,
       path: node.internal.origin
     })
 
-    return this.nodeCache(node, 'ast', () => {
-      return this.applyPlugins(this.toAST(file), file)
-    })
+    const key = cacheKey(node, 'ast')
+    let cached = cache.get(key)
+
+    if (!cached) {
+      const ast = this.toAST(file)
+      cached = await this.applyPlugins(ast, file)
+      cache.set(key, cached)
+    }
+
+    return cached
   }
 
-  _toHTML (node) {
-    return this.nodeCache(node, 'html', async () => {
-      const ast = await this._toAST(node)
-      return this.toHTML(ast, createFile({
-        contents: node.content,
-        path: node.internal.origin
-      }))
+  async _nodeToHTML (node) {
+    const file = createFile({
+      contents: node.content,
+      path: node.internal.origin
     })
+
+    const key = cacheKey(node, 'html')
+    let cached = cache.get(key)
+
+    if (!cached) {
+      const ast = await this._nodeToAST(node)
+      cached = this.toHTML(ast, file)
+      cache.set(key, cached)
+    }
+
+    return cached
   }
 }
 
