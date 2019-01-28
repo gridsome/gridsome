@@ -1,8 +1,8 @@
 <template>
-  <div>
+  <Layout>
     <h1>{{ $page.post.title }}</h1>
     <span>{{ $page.post.date }}</span>
-  </div>
+  </Layout>
 </template>
 
 <page-query>

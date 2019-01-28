@@ -1,5 +1,6 @@
 import Vue from 'vue'
 import caniuse from '../utils/caniuse'
+import { stringifyClass } from '../utils/class'
 import { createObserver } from '../utils/intersectionObserver'
 
 const observer = caniuse.IntersectionObserver
@@ -32,7 +33,7 @@ export default {
   render: (h, { data, props, parent }) => {
     const isDev = process.env.NODE_ENV === 'development'
     const isLazy = typeof props.immediate === 'undefined'
-    const classNames = (data.class || []).concat(['g-image'])
+    const classNames = [data.class, 'g-image']
     const noscriptClassNames = classNames.slice()
     const srcType = typeof props.src
     const ref = data.ref || data.key
@@ -91,7 +92,7 @@ export default {
       res.push(h('noscript', {
         domProps: {
           innerHTML: `` + 
-            `<img src="${src}" class="${noscriptClassNames.join(' ')}"` +
+            `<img src="${src}" class="${stringifyClass(noscriptClassNames)}"` +
             (size.width ? ` width="${size.width}"`: '') +
             (props.alt ? ` alt="${props.alt}"` : '') +
             `>`
@@ -142,17 +143,24 @@ function intersectionHandler ({ intersectionRatio, target }) {
 }
 
 function loadImage (el) {
+  const src = el.getAttribute('data-src')
+  const srcset = el.getAttribute('data-srcset')
+  const sizes = el.getAttribute('data-sizes')
+
+  if (!src) return
+
   el.onload = function () {
-    delete el.dataset.src
-    delete el.dataset.srcset
-    delete el.dataset.sizes
-    delete el.onload
+    el.removeAttribute('data-src')
+    el.removeAttribute('data-srcset')
+    el.removeAttribute('data-sizes')
 
     el.classList.remove('g-image--loading')
     el.classList.add('g-image--loaded')
+    
+    delete el.onload
   }
 
-  el.src = el.dataset.src
-  el.srcset = el.dataset.srcset
-  el.sizes = el.dataset.sizes
+  el.src = src
+  el.srcset = srcset
+  el.sizes = sizes
 }
