@@ -41,7 +41,9 @@ module.exports = ({ nodeType, fields }) => {
     perPage: { type: GraphQLInt, defaultValue: 25 },
     skip: { type: GraphQLInt, defaultValue: 0 },
     page: { type: GraphQLInt, defaultValue: 1 },
-    regex: { type: GraphQLString }
+
+    // TODO: remove before 1.0
+    regex: { type: GraphQLString, deprecationReason: 'Use filter argument instead.' }
   }
 
   args.filter = {
@@ -76,6 +78,7 @@ module.exports = ({ nodeType, fields }) => {
       const query = {}
 
       if (regex) {
+        // TODO: remove before 1.0
         query.path = { $regex: new RegExp(regex) }
       }
 
