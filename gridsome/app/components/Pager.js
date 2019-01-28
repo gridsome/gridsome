@@ -12,7 +12,6 @@ export default {
     prevLabel: { type: String, default: '‹' },
     nextLabel: { type: String, default: '›' },
     lastLabel: { type: String, default: '»' },
-    navClass: { type: String, default: '' },
     linkClass: { type: String, default: '' },
     activeLinkClass: { type: String },
     exactActiveLinkClass: { type: String },
@@ -69,7 +68,6 @@ export default {
     return h('nav', {
       ...data,
       attrs: {
-        'class': props.navClass,
         'role': 'navigation',
         'aria-label': ariaLabel
       }
