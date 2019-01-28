@@ -47,7 +47,7 @@ module.exports = ({ store, config }) => {
   })
 
   templates.forEach(page => {
-    const typeName = page.pageQuery.type
+    const { typeName } = page.pageQuery
     const contentType = store.getContentType(typeName)
 
     if (!contentType) {

@@ -1,4 +1,5 @@
 const { createPagedNodeEdges } = require('./utils')
+const { PER_PAGE } = require('../../../utils/constants')
 const { pageInfoType, sortOrderType } = require('../types')
 
 const {
@@ -34,7 +35,7 @@ module.exports = nodeType => {
     args: {
       sortBy: { type: GraphQLString, defaultValue: 'date' },
       order: { type: sortOrderType, defaultValue: 'DESC' },
-      perPage: { type: GraphQLInt, defaultValue: 25 },
+      perPage: { type: GraphQLInt, defaultValue: PER_PAGE },
       skip: { type: GraphQLInt, defaultValue: 0 },
       page: { type: GraphQLInt, defaultValue: 1 },
       regex: { type: GraphQLString }

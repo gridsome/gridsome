@@ -9,6 +9,8 @@ module.exports = {
   SOURCE_PLUGIN: 'source',
   TRANSFORMER_PLUGIN: 'transformer',
 
+  PER_PAGE: 25,
+
   SUPPORTED_IMAGE_TYPES: ['.png', '.jpeg', '.jpg', '.gif', '.svg', '.webp'],
 
   BOOTSTRAP_CONFIG: 0,

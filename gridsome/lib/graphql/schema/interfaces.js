@@ -3,7 +3,7 @@ const {
   GraphQLString,
   GraphQLNonNull,
   GraphQLInterfaceType
-} = require('../graphql')
+} = require('graphql')
 
 const { GraphQLDate } = require('./types/date')
 

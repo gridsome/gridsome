@@ -1,8 +1,4 @@
-const {
-  GraphQLString,
-  GraphQLBoolean,
-  GraphQLError
-} = require('../../graphql')
+const { GraphQLString, GraphQLBoolean, GraphQLError } = require('graphql')
 
 module.exports = nodeType => {
   return {

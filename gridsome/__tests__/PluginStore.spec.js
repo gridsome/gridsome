@@ -1,6 +1,7 @@
 const App = require('../lib/app/App')
 const PluginAPI = require('../lib/app/PluginAPI')
 const JSONTransformer = require('./__fixtures__/JSONTransformer')
+const { PER_PAGE } = require('../lib/utils/constants')
 
 function createPlugin (context = '/') {
   const app = new App(context, { config: { plugins: [] }}).init()
@@ -515,12 +516,12 @@ test('add page with query', () => {
   })
 
   expect(typeof page.pageQuery.query).toEqual('object')
+  expect(page.pageQuery.typeName).toBeUndefined()
   expect(page.pageQuery.content).toEqual('query Test { page { id } }')
   expect(page.pageQuery.options).toMatchObject({ foo: 'bar' })
   expect(page.pageQuery.paginate).toMatchObject({
-    fieldName: undefined,
     typeName: undefined,
-    perPage: undefined
+    perPage: PER_PAGE
   })
 })
 
