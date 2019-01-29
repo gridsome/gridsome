@@ -75,6 +75,7 @@ module.exports = (context, options = {}, pkg = {}) => {
   config.port = parseInt(args.port || localConfig.port, 10) || 8080
   config.plugins = normalizePlugins(context, plugins)
   config.chainWebpack = localConfig.chainWebpack
+  config.configureServer = localConfig.configureServer
   config.transformers = resolveTransformers(config.pkg, localConfig)
   config.pathPrefix = isProd ? localConfig.pathPrefix || '/' : '/'
   config.staticDir = resolve('static')

@@ -15,6 +15,19 @@ module.exports = async app => {
   const { config, schema } = app
   const server = express()
 
+  await app.dispatch('configureServer', null, server, {
+    host: config.host,
+    port
+  })
+
+  if (process.env.NODE_ENV === 'development') {
+    server.use((req, res, next) => {
+      res.header('Access-Control-Allow-Origin', '*')
+      res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept')
+      next()
+    })
+  }
+
   server.use(
     endpoint.graphql,
     graphqlMiddleware(app),

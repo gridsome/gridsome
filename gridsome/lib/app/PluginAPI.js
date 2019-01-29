@@ -7,6 +7,7 @@ class PluginAPI {
     this._entry = entry
     this._app = app
 
+    this.config = app.config
     this.context = app.context
     this.store = new PluginStore(app, entry.options, { transformers })
 
@@ -89,6 +90,10 @@ class PluginAPI {
 
   chainWebpack (fn) {
     this._on('chainWebpack', fn)
+  }
+
+  configureServer (fn) {
+    this._on('configureServer', fn)
   }
 
   //

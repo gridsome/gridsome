@@ -91,9 +91,12 @@ class App {
 
     // run config.chainWebpack after all plugins
     if (typeof this.config.chainWebpack === 'function') {
-      this.on('chainWebpack', {
-        handler: this.config.chainWebpack
-      })
+      this.on('chainWebpack', { handler: this.config.chainWebpack })
+    }
+
+    // run config.configureServer after all plugins
+    if (typeof this.config.configureServer === 'function') {
+      this.on('configureServer', { handler: this.config.configureServer })
     }
 
     this.isInitialized = true
