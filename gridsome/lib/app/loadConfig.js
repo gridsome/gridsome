@@ -21,6 +21,7 @@ module.exports = (context, options = {}, pkg = {}) => {
   const args = options.args || {}
   const config = {}
   const plugins = []
+  const localIndex = resolve('src/index.html')
 
   const localConfig = options.localConfig
     ? options.localConfig
@@ -99,7 +100,7 @@ module.exports = (context, options = {}, pkg = {}) => {
 
   config.icon = normalizeIconsConfig(localConfig.icon)
 
-  config.templatePath = path.resolve(config.appPath, 'index.html')
+  config.templatePath = fs.existsSync(localIndex) ? localIndex : path.resolve(config.appPath, 'index.html')
   config.htmlTemplate = fs.readFileSync(config.templatePath, 'utf-8')
 
   config.scss = {}
