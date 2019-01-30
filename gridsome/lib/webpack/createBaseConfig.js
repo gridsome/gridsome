@@ -1,4 +1,5 @@
 const path = require('path')
+const hash = require('hash-sum')
 const Config = require('webpack-chain')
 const { forwardSlash } = require('../utils')
 const { VueLoaderPlugin } = require('vue-loader')
@@ -257,18 +258,21 @@ module.exports = (app, { isProd, isServer }) => {
   // helpes
 
   function createCacheOptions () {
+    const values = {
+      'gridsome': require('../../package.json').version,
+      'cache-loader': require('cache-loader/package.json').version,
+      'vue-loader': require('vue-loader/package.json').version,
+      context: app.context,
+      isProd,
+      isServer,
+      config: (
+        (projectConfig.chainWebpack || '').toString()
+      )
+    }
+
     return {
-      cacheDirectory: resolve('../../node_modules/.cache/gridsome'),
-      cacheIdentifier: JSON.stringify({
-        'gridsome': require('../../package.json').version,
-        'cache-loader': require('cache-loader').version,
-        'vue-loader': require('vue-loader').version,
-        isProd,
-        isServer,
-        config: (
-          (projectConfig.chainWebpack || '').toString()
-        )
-      })
+      cacheDirectory: app.resolve('node_modules/.cache/gridsome'),
+      cacheIdentifier: hash(values)
     }
   }
 
