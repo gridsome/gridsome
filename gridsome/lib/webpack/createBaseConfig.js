@@ -276,13 +276,6 @@ module.exports = (app, { isProd, isServer }) => {
 
     config.module.rule(type)
       .resourceQuery(re)
-      .use('cache-loader')
-      .loader('cache-loader')
-      .options({
-        cacheDirectory,
-        cacheIdentifier
-      })
-      .end()
       .use('babel-loader')
       .loader('babel-loader')
       .options({
