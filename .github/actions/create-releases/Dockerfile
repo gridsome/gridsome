@@ -6,6 +6,6 @@ LABEL "com.github.actions.icon"="star"
 
 COPY . .
 
-# RUN npm install
+RUN npm install
 
 ENTRYPOINT ["node", "/index.js"]
