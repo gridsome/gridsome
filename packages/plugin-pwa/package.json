@@ -18,7 +18,7 @@
   "dependencies": {
     "fs-extra": "^7.0.0",
     "register-service-worker": "^1.5.2",
-    "workbox-build": "^4.0.0"
+    "workbox-build": "^3.6.0"
   },
   "publishConfig": {
     "access": "public"
