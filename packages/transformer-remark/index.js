@@ -32,8 +32,9 @@ class RemarkTransformer {
     return ['text/markdown', 'text/x-markdown']
   }
 
-  constructor (options, { localOptions, queue }) {
+  constructor (options, { localOptions, resolveNodeFilePath, queue }) {
     this.options = defaultsDeep(localOptions, options)
+    this.resolveNodeFilePath = resolveNodeFilePath
     this.queue = queue
 
     const plugins = (options.plugins || []).concat(localOptions.plugins || [])
@@ -134,40 +135,37 @@ class RemarkTransformer {
     return processor
   }
 
-  async _nodeToAST (node) {
-    const file = createFile({
-      contents: node.content,
-      path: node.internal.origin
-    })
-
+  _nodeToAST (node) {
     const key = cacheKey(node, 'ast')
     let cached = cache.get(key)
 
     if (!cached) {
+      const file = createFile(node)
       const ast = this.toAST(file)
-      cached = await this.applyPlugins(ast, file)
+
+      cached = this.applyPlugins(ast, file)
       cache.set(key, cached)
     }
 
-    return cached
+    return Promise.resolve(cached)
   }
 
   async _nodeToHTML (node) {
-    const file = createFile({
-      contents: node.content,
-      path: node.internal.origin
-    })
-
     const key = cacheKey(node, 'html')
     let cached = cache.get(key)
 
     if (!cached) {
-      const ast = await this._nodeToAST(node)
-      cached = this.toHTML(ast, file)
+      cached = (async () => {
+        const file = createFile(node)
+        const ast = await this._nodeToAST(node)
+
+        return this.toHTML(ast, file)
+      })()
+
       cache.set(key, cached)
     }
 
-    return cached
+    return Promise.resolve(cached)
   }
 }
 

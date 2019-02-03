@@ -1,20 +1,23 @@
+const vfile = require('vfile')
 const hash = require('hash-sum')
 const visit = require('unist-util-visit')
 const imagePlugin = require('./plugins/image')
 
 exports.cacheKey = function (node, key) {
-  return hash({ uid: node.uid, key })
+  return hash({
+    content: node.content,
+    path: node.internal.origin,
+    timestamp: node.internal.timestamp,
+    key
+  })
 }
 
-exports.createFile = function (options) {
-  const file = {
-    contents: options.contents
-  }
-
-  if (options.path) file.path = options.path
-  if (options.data) file.data = options.data
-
-  return file
+exports.createFile = function (node) {
+  return vfile({
+    contents: node.content,
+    path: node.internal.origin,
+    data: { node }
+  })
 }
 
 exports.normalizePlugins = function (arr = []) {
