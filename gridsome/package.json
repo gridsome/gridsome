@@ -37,7 +37,7 @@
     "@vue/component-compiler-utils": "^2.1.0",
     "auto-bind": "^1.2.1",
     "autoprefixer": "^9.1.1",
-    "babel-loader": "8.0.0-beta.4",
+    "babel-loader": "8.0.5",
     "cache-loader": "^1.2.2",
     "calipers": "^2.0.1",
     "calipers-jpeg": "^2.0.0",

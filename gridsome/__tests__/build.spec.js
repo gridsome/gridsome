@@ -62,6 +62,9 @@ test('build basic project', async () => {
   expect(indexHTML).toMatch('class="g-image-3 g-image')
   expect(indexHTML).not.toMatch('g-image-3-false')
 
+  // #163 - remove duplicate style links
+  expect(indexHTML.match(/styles\.css/g)).toHaveLength(2)
+
   // g-link (file)
   expect(indexHTML).toMatch('<a href="/assets/files/dummy.pdf">Download</a>')
   expect(exists('dist/assets/files/dummy.pdf')).toBeTruthy()
