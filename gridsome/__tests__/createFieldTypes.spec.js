@@ -26,6 +26,7 @@ test('infer types from node fields', () => {
         numberList: [10],
         floatList: [1.2],
         extendObj: {},
+        refs: [],
         simpleObj: {
           foo: 'bar'
         },
@@ -43,6 +44,9 @@ test('infer types from node fields', () => {
         emptyList: [],
         emptyObj: {},
         emptyString: '',
+        refs: [
+          { typeName: 'Post', id: '1' } // #128, #129
+        ],
         extendObj: {
           bar: 'foo'
         },
@@ -56,7 +60,7 @@ test('infer types from node fields', () => {
     }
   ])
 
-  const types = createFieldTypes(fields, 'TestPost')
+  const types = createFieldTypes(fields, 'TestPost', {})
 
   expect(types.string.type).toEqual(GraphQLString)
   expect(types.number.type).toEqual(GraphQLInt)

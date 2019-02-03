@@ -123,8 +123,8 @@ class RemarkTransformer {
             defaultValue: 230
           }
         },
-        resolve: (node, { speed }) => {
-          const html = this.stringifyNode(node)
+        resolve: async (node, { speed }) => {
+          const html = await this.stringifyNode(node)
           const text = htmlToText.fromString(html)
           const count = words(text).length
 

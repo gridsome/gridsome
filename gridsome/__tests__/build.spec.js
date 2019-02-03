@@ -12,6 +12,8 @@ test('build basic project', async () => {
   expect(config.siteName).toEqual('Gridsome')
 
   const indexHTML = content('dist/index.html')
+  const appJS = content('dist/assets/js/app.js')
+  const homeJS = content('dist/assets/js/component--home.js')
   const blogIndexHTML = content('dist/blog/index.html')
   const blogPage2HTML = content('dist/blog/2/index.html')
 
@@ -27,10 +29,20 @@ test('build basic project', async () => {
   expect(indexHTML).toMatch('<span>test 1</span>')
   expect(indexHTML).toMatch('<span>test 2</span>')
   expect(indexHTML).toMatch('<span>test 3</span>')
-  expect(indexHTML).toMatch('<a href="/blog">Blog</a>')
+  expect(indexHTML).toMatch('<a href="/blog" class="g-link-1">Blog</a>')
+  expect(indexHTML).toMatch('<a href="/" class="active--exact test-active g-link-2">Home</a>')
   expect(indexHTML).toMatch('test-active')
   expect(indexHTML).not.toMatch('Main description')
   expect(indexHTML).toMatch('Index description')
+
+  // api.transpileDependencies
+  expect(appJS).toMatch('testToArray1: function testToArray1()') // transpiled
+  expect(appJS).toMatch('testToArray2 (...args)') // not transpiled
+  expect(appJS).toMatch('value: function classTestMethod()') // transpiled
+
+  // transpile custom sfc blocks
+  expect(appJS).toMatch('(0, _staticQuery.default)(Component, data)') // static-query loader
+  expect(homeJS).toMatch('(0, _pageQuery.default)(Component, query)') // page-query loader
 
   // favicon
   expect(exists('dist/assets/static/favicon.1539b60.test.png')).toBeTruthy()
@@ -40,13 +52,17 @@ test('build basic project', async () => {
   expect(exists('dist/assets/static/test.97c148e.test.png')).toBeTruthy()
   expect(indexHTML).toMatch('src="data:image/svg+xml')
   expect(indexHTML).toMatch('alt="Test image"')
+  expect(indexHTML).toMatch('alt="SVG logo"')
   expect(indexHTML).toMatch('data-srcset="/assets/static/test.82a2fbd.test.png 480w')
   expect(indexHTML).toMatch('src="/assets/static/test.97c148e.test.png"')
   expect(indexHTML).toMatch('src="https://www.example.com/assets/image.png"')
   expect(indexHTML).toMatch('alt="External image"')
+  expect(indexHTML).toMatch('class="g-image-1 g-image')
+  expect(indexHTML).toMatch('class="g-image-2 g-image')
+  expect(indexHTML).toMatch('class="g-image-3 g-image')
+  expect(indexHTML).not.toMatch('g-image-3-false')
 
   // g-link (file)
-  expect(indexHTML).toMatch('<a href="/blog">Blog</a>')
   expect(indexHTML).toMatch('<a href="/assets/files/dummy.pdf">Download</a>')
   expect(exists('dist/assets/files/dummy.pdf')).toBeTruthy()
 

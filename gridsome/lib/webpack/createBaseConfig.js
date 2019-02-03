@@ -1,4 +1,5 @@
 const path = require('path')
+const hash = require('hash-sum')
 const Config = require('webpack-chain')
 const { forwardSlash } = require('../utils')
 const { VueLoaderPlugin } = require('vue-loader')
@@ -77,6 +78,7 @@ module.exports = (app, { isProd, isServer }) => {
       compilerOptions: {
         preserveWhitespace: false,
         modules: [
+          require('./modules/observe-html')(),
           require('./modules/assets')()
         ]
       },
@@ -93,9 +95,11 @@ module.exports = (app, { isProd, isServer }) => {
       if (/\.vue\.jsx?$/.test(filepath)) {
         return false
       }
+
       if (/gridsome\.client\.js$/.test(filepath)) {
         return false
       }
+
       if (app.config.transpileDependencies.some(dep => {
         return typeof dep === 'string'
           ? filepath.includes(path.normalize(dep))
@@ -103,9 +107,11 @@ module.exports = (app, { isProd, isServer }) => {
       })) {
         return false
       }
+
       if (filepath.startsWith(projectConfig.appPath)) {
         return false
       }
+
       return /node_modules/.test(filepath)
     })
     .end()
@@ -183,17 +189,10 @@ module.exports = (app, { isProd, isServer }) => {
     .loader('yaml-loader')
 
   // graphql
-
   // TODO: remove graphql loader before v1.0
-  config.module.rule('graphql')
-    .resourceQuery(/blockType=(graphql|page-query)/)
-    .use('page-query')
-    .loader(require.resolve('./loaders/page-query'))
-
-  config.module.rule('static-graphql')
-    .resourceQuery(/blockType=static-query/)
-    .use('static-query')
-    .loader(require.resolve('./loaders/static-query'))
+  createGraphQLRule('graphql', './loaders/page-query')
+  createGraphQLRule('page-query', './loaders/page-query')
+  createGraphQLRule('static-query', './loaders/static-query')
 
   // plugins
 
@@ -259,19 +258,39 @@ module.exports = (app, { isProd, isServer }) => {
   // helpes
 
   function createCacheOptions () {
-    return {
-      cacheDirectory: resolve('../../node_modules/.cache/gridsome'),
-      cacheIdentifier: JSON.stringify({
-        'gridsome': require('../../package.json').version,
-        'cache-loader': require('cache-loader').version,
-        'vue-loader': require('vue-loader').version,
-        isProd,
-        isServer,
-        config: (
-          (projectConfig.chainWebpack || '').toString()
-        )
-      })
+    const values = {
+      'gridsome': require('../../package.json').version,
+      'cache-loader': require('cache-loader/package.json').version,
+      'vue-loader': require('vue-loader/package.json').version,
+      context: app.context,
+      isProd,
+      isServer,
+      config: (
+        (projectConfig.chainWebpack || '').toString()
+      )
     }
+
+    return {
+      cacheDirectory: app.resolve('node_modules/.cache/gridsome'),
+      cacheIdentifier: hash(values)
+    }
+  }
+
+  function createGraphQLRule (type, loader) {
+    const re = new RegExp(`blockType=(${type})`)
+
+    config.module.rule(type)
+      .resourceQuery(re)
+      .use('babel-loader')
+      .loader('babel-loader')
+      .options({
+        presets: [
+          require.resolve('./babel-preset')
+        ]
+      })
+      .end()
+      .use(`${type}-loader`)
+      .loader(require.resolve(loader))
   }
 
   function createCSSRule (config, lang, test, loader = null, options = {}) {

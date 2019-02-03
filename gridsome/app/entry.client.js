@@ -1,8 +1,10 @@
 import Vue from 'vue'
 import createApp from './app'
-import plugins from '~/.temp/plugins-client.js'
+import plugins from '~/.temp/plugins-client'
+import observeHtml from './directives/observe-html'
 import { stripPathPrefix } from './utils/helpers'
-import { initImageObserver } from './components/Image'
+
+Vue.directive('observe-html', observeHtml)
 
 const { app, router } = createApp(context => {
   for (const { run, options } of plugins) {
@@ -11,8 +13,6 @@ const { app, router } = createApp(context => {
     }
   }
 })
-
-initImageObserver(router)
 
 // let Vue router handle internal URLs for anchors in innerHTML
 document.addEventListener('click', event => {

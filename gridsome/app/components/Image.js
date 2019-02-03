@@ -1,12 +1,11 @@
 import Vue from 'vue'
 import caniuse from '../utils/caniuse'
+import { stringifyClass } from '../utils/class'
 import { createObserver } from '../utils/intersectionObserver'
 
 const observer = caniuse.IntersectionObserver
   ? createObserver(intersectionHandler)
   : null
-
-let uid = 0
 
 export default {
   functional: true,
@@ -34,8 +33,10 @@ export default {
   render: (h, { data, props, parent }) => {
     const isDev = process.env.NODE_ENV === 'development'
     const isLazy = typeof props.immediate === 'undefined'
-    const classNames = (data.class || []).concat(['g-image'])
+    const classNames = [data.class, 'g-image']
     const noscriptClassNames = classNames.slice()
+    const srcType = typeof props.src
+    const ref = data.ref || data.key
     const res = []
 
     let src = ''
@@ -44,9 +45,9 @@ export default {
     let srcset = []
     let size = { width: props.width }
 
-    if (typeof props.src === 'string') {
+    if (srcType === 'string') {
       src = props.src
-    } else {
+    } else if (srcType === 'object') {
       src = props.src.src
       if (props.src.srcset) srcset = props.src.srcset
       if (props.src.sizes) sizes = props.src.sizes
@@ -54,16 +55,9 @@ export default {
       if (props.src.dataUri) dataUri = props.src.dataUri
     }
 
-    const ref = data.ref || `__image_${uid++}`
-    const key = data.key || isDev ? ref : undefined
-
-    // we set a key to force update image after hot-reload because
-    // the html attributes doesn't re-render after deletion
-
     res.push(h('img', {
       ...data,
       ref,
-      key,
       class: classNames,
       attrs: {
         src: dataUri,
@@ -98,7 +92,7 @@ export default {
       res.push(h('noscript', {
         domProps: {
           innerHTML: `` + 
-            `<img src="${src}" class="${noscriptClassNames.join(' ')}"` +
+            `<img src="${src}" class="${stringifyClass(noscriptClassNames)}"` +
             (size.width ? ` width="${size.width}"`: '') +
             (props.alt ? ` alt="${props.alt}"` : '') +
             `>`
@@ -108,19 +102,6 @@ export default {
 
     return res
   }
-}
-
-export function initImageObserver (router) {
-  if (observer) {
-    router.beforeEach((to, from, next) => {
-      unobserve()
-      next()
-    })
-  }
-
-  router.afterEach((to, from) => {
-    Vue.nextTick(() => observe())
-  })
 }
 
 export function observe (selector = '[data-src]', context = document) {
@@ -149,17 +130,24 @@ function intersectionHandler ({ intersectionRatio, target }) {
 }
 
 function loadImage (el) {
+  const src = el.getAttribute('data-src')
+  const srcset = el.getAttribute('data-srcset')
+  const sizes = el.getAttribute('data-sizes')
+
+  if (!src) return
+
   el.onload = function () {
-    delete el.dataset.src
-    delete el.dataset.srcset
-    delete el.dataset.sizes
-    delete el.onload
+    el.removeAttribute('data-src')
+    el.removeAttribute('data-srcset')
+    el.removeAttribute('data-sizes')
 
     el.classList.remove('g-image--loading')
     el.classList.add('g-image--loaded')
+    
+    delete el.onload
   }
 
-  el.src = el.dataset.src
-  el.srcset = el.dataset.srcset
-  el.sizes = el.dataset.sizes
+  el.src = src
+  el.srcset = srcset
+  el.sizes = sizes
 }

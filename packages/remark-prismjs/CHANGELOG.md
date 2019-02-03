@@ -3,17 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+
+
 <a name="0.0.4"></a>
-## [0.0.4](https://github.com/gridsome/gridsome/tree/master/packages/remark-prismjs/compare/@gridsome/remark-prismjs@0.0.3...@gridsome/remark-prismjs@0.0.4) (2018-11-22)
+## [0.0.4](https://github.com/gridsome/gridsome/compare/@gridsome/remark-prismjs@0.0.3...@gridsome/remark-prismjs@0.0.4) (2018-11-23)
 
 
 ### Bug Fixes
 
-* **prismjs:** improve perf by loading languages once ([baf3634](https://github.com/gridsome/gridsome/tree/master/packages/remark-prismjs/commit/baf3634))
-* **prismjs:** load all languages ([#52](https://github.com/gridsome/gridsome/tree/master/packages/remark-prismjs/issues/52)) ([8617456](https://github.com/gridsome/gridsome/tree/master/packages/remark-prismjs/commit/8617456))
-
-
-
+* **prismjs:** improve perf by loading languages once ([baf3634](https://github.com/gridsome/gridsome/commit/baf3634))
+* **prismjs:** load all languages ([#52](https://github.com/gridsome/gridsome/issues/52)) ([8617456](https://github.com/gridsome/gridsome/commit/8617456))
 
 
 <a name="0.0.3"></a>

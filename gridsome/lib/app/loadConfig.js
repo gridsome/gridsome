@@ -16,16 +16,17 @@ module.exports = (context, options = {}, pkg = {}) => {
   }
 
   const resolve = (...p) => path.resolve(context, ...p)
-  const isServing = process.env.GRIDSOME_MODE === 'serve'
   const isProd = process.env.NODE_ENV === 'production'
   const configPath = resolve('gridsome.config.js')
   const args = options.args || {}
   const config = {}
   const plugins = []
 
-  const localConfig = fs.existsSync(configPath)
-    ? require(configPath)
-    : {}
+  const localConfig = options.localConfig
+    ? options.localConfig
+    : fs.existsSync(configPath)
+      ? require(configPath)
+      : {}
 
   // use provided plugins instaed of local plugins
   if (Array.isArray(options.plugins)) {
@@ -53,8 +54,8 @@ module.exports = (context, options = {}, pkg = {}) => {
   const assetsDir = localConfig.assetsDir || 'assets'
 
   config.pkg = options.pkg || resolvePkg(context)
-  config.host = args.host || 'localhost'
-  config.port = parseInt(args.port, 10) || 8080
+  config.host = args.host || localConfig.host || 'localhost'
+  config.port = parseInt(args.port || localConfig.port, 10) || 8080
   config.plugins = normalizePlugins(context, plugins)
   config.chainWebpack = localConfig.chainWebpack
   config.transformers = resolveTransformers(config.pkg, localConfig)
@@ -213,7 +214,7 @@ function normalizeIconsConfig (config = {}) {
   const faviconSizes = [16, 32, 96]
   const touchiconSizes = [76, 152, 120, 167, 180]
   const defaultIcon = 'src/favicon.png'
-  const icon = typeof config === 'string' ? { favicon: icon } : (config || {})
+  const icon = typeof config === 'string' ? { favicon: config } : (config || {})
 
   res.favicon = typeof icon.favicon === 'string'
     ? { src: icon.favicon, sizes: faviconSizes }
