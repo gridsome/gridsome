@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+<a name="0.4.7"></a>
+## [0.4.7](https://github.com/gridsome/gridsome/compare/gridsome@0.4.6...gridsome@0.4.7) (2019-02-04)
+
+
+### Bug Fixes
+
+* **app:** add key to viewport meta ([#169](https://github.com/gridsome/gridsome/issues/169)) ([c7f6dfa](https://github.com/gridsome/gridsome/commit/c7f6dfa))
+* **store:** pass resolveAbsolutePaths correctly ([6164464](https://github.com/gridsome/gridsome/commit/6164464))
+* **webpack:** remove duplicate style links (163) ([5ce0106](https://github.com/gridsome/gridsome/commit/5ce0106))
+
+
+
+
+
 <a name="0.4.6"></a>
 ## [0.4.6](https://github.com/gridsome/gridsome/compare/gridsome@0.4.5...gridsome@0.4.6) (2019-01-30)
 

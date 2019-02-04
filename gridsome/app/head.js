@@ -21,12 +21,12 @@ const head = {
   meta: [
     { charset: 'utf-8' },
     { name: 'generator', content: `Gridsome v${config.version}` },
-    { key:'viewport', name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
+    { key: 'viewport', name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
     { key: 'description', name: 'description', content: config.siteDescription },
     
     // do not convert telephone numbers
     // into hypertext links because it
-    // will cause hydration failure
+    // will cause hydration errors
     {
       key: 'format-detection',
       name: 'format-detection',

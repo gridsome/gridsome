@@ -1,6 +1,6 @@
 module.exports = {
   siteName: 'Gridsome',
   siteDescription: 'My super site',
-  pathPrefix: '/subdir',
+  pathPrefix: '/sub/-/dir',
   plugins: []
 }
