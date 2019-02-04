@@ -3,6 +3,50 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+<a name="0.4.6"></a>
+## [0.4.6](https://github.com/gridsome/gridsome/compare/gridsome@0.4.5...gridsome@0.4.6) (2019-01-30)
+
+
+### Bug Fixes
+
+* **app:** add format-detection meta tag ([#145](https://github.com/gridsome/gridsome/issues/145)) ([f7f94ae](https://github.com/gridsome/gridsome/commit/f7f94ae))
+* **app:** simplify IntersectionObserver check ([#153](https://github.com/gridsome/gridsome/issues/153)) ([5a0d729](https://github.com/gridsome/gridsome/commit/5a0d729))
+* **build:** throw error if something fails in main.js ([bb62605](https://github.com/gridsome/gridsome/commit/bb62605))
+* **g-image:** observe images in v-html ([#158](https://github.com/gridsome/gridsome/issues/158)) ([07821da](https://github.com/gridsome/gridsome/commit/07821da))
+* **g-image:** run onload event once ([ca6f015](https://github.com/gridsome/gridsome/commit/ca6f015)), closes [#93](https://github.com/gridsome/gridsome/issues/93)
+* **webpack:** don’t cache static-query ([#160](https://github.com/gridsome/gridsome/issues/160)) ([0352f99](https://github.com/gridsome/gridsome/commit/0352f99))
+
+
+
+
+
+<a name="0.4.5"></a>
+## [0.4.5](https://github.com/gridsome/gridsome/compare/gridsome@0.4.4...gridsome@0.4.5) (2019-01-26)
+
+
+### Bug Fixes
+
+* **app:** custom favicon path ([#149](https://github.com/gridsome/gridsome/issues/149)) ([f6b6b3d](https://github.com/gridsome/gridsome/commit/f6b6b3d)), closes [#138](https://github.com/gridsome/gridsome/issues/138)
+* **g-image:** bind custom classes to object ([#151](https://github.com/gridsome/gridsome/issues/151)) ([10150ca](https://github.com/gridsome/gridsome/commit/10150ca))
+
+
+
+
+
+<a name="0.4.4"></a>
+## [0.4.4](https://github.com/gridsome/gridsome/compare/gridsome@0.4.3...gridsome@0.4.4) (2019-01-15)
+
+
+### Bug Fixes
+
+* **graphql:** merge ref fields correctly ([#128](https://github.com/gridsome/gridsome/issues/128), [#129](https://github.com/gridsome/gridsome/issues/129)) ([ffb29ee](https://github.com/gridsome/gridsome/commit/ffb29ee))
+* **webpack:** cache graphql loader results ([6e794ab](https://github.com/gridsome/gridsome/commit/6e794ab))
+* **webpack:** transpile custom blocks ([#130](https://github.com/gridsome/gridsome/issues/130)) ([c81fee4](https://github.com/gridsome/gridsome/commit/c81fee4))
+
+
+
+
+
 <a name="0.4.3"></a>
 ## [0.4.3](https://github.com/gridsome/gridsome/compare/gridsome@0.4.2...gridsome@0.4.3) (2019-01-09)
 
