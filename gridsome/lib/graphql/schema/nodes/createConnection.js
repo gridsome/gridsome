@@ -1,4 +1,6 @@
 const { pick, omit, reduce } = require('lodash')
+const { createPagedNodeEdges } = require('./utils')
+const { PER_PAGE } = require('../../../utils/constants')
 const { pageInfoType, sortOrderType } = require('../types')
 
 const {
@@ -35,10 +37,10 @@ module.exports = ({ nodeType, fields }) => {
     })
   })
 
-  const args = {
+  const connectionArgs = {
     sortBy: { type: GraphQLString, defaultValue: 'date' },
     order: { type: sortOrderType, defaultValue: 'DESC' },
-    perPage: { type: GraphQLInt, defaultValue: 25 },
+    perPage: { type: GraphQLInt, defaultValue: PER_PAGE },
     skip: { type: GraphQLInt, defaultValue: 0 },
     page: { type: GraphQLInt, defaultValue: 1 },
 
@@ -46,7 +48,7 @@ module.exports = ({ nodeType, fields }) => {
     regex: { type: GraphQLString, deprecationReason: 'Use filter argument instead.' }
   }
 
-  args.filter = {
+  connectionArgs.filter = {
     description: `Filter for ${nodeType.name} nodes.`,
     type: new GraphQLInputObjectType({
       name: `${nodeType.name}Filters`,
@@ -65,15 +67,9 @@ module.exports = ({ nodeType, fields }) => {
 
   return {
     type: connectionType,
+    args: connectionArgs,
     description: `Connection to all ${nodeType.name} nodes`,
-    args,
-    async resolve (_, input, { store }, info) {
-      const { sortBy, order, skip, regex, filter } = input
-      let { perPage, page } = input
-
-      page = Math.max(page, 1) // ensure page higher than 0
-      perPage = Math.max(perPage, 1) // ensure page higher than 1
-
+    async resolve (_, { regex, filter, ...args }, { store }, info) {
       const { collection } = store.getContentType(nodeType.name)
       const query = {}
 
@@ -84,43 +80,14 @@ module.exports = ({ nodeType, fields }) => {
 
       if (filter) {
         const internals = ['id', 'title', 'date', 'slug', 'path', 'content', 'excerpt']
-        Object.assign(query, toFilterArgs(omit(filter, internals), args.filter, 'fields'))
-        Object.assign(query, toFilterArgs(pick(filter, internals), args.filter))
+
+        Object.assign(query, toFilterArgs(omit(filter, internals), connectionArgs.filter, 'fields'))
+        Object.assign(query, toFilterArgs(pick(filter, internals), connectionArgs.filter))
       }
 
-      const results = collection
-        .chain()
-        .find(query)
-        .simplesort(sortBy, order === 'DESC')
-        .offset(((page - 1) * perPage) + skip)
-        .limit(perPage)
+      const chain = collection.chain().find(query)
 
-      const nodes = results.data()
-      const totalNodes = collection.find({}).length
-
-      // total items in result
-      const totalCount = Math.max(totalNodes - skip, 0)
-
-      // page info
-      const currentPage = page
-      const totalPages = Math.max(Math.ceil(totalCount / perPage), 1)
-      const isLast = page >= totalPages
-      const isFirst = page <= 1
-
-      return {
-        totalCount,
-        edges: nodes.map((node, index) => ({
-          node,
-          next: nodes[index + 1],
-          previous: nodes[index - 1]
-        })),
-        pageInfo: {
-          currentPage,
-          totalPages,
-          isFirst,
-          isLast
-        }
-      }
+      return createPagedNodeEdges(chain, args)
     }
   }
 }

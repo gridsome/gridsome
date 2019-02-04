@@ -1,3 +1,5 @@
+const { mapValues } = require('lodash')
+
 const {
   GraphQLInt,
   GraphQLNonNull,
@@ -32,7 +34,17 @@ const sortOrderType = new GraphQLEnumType({
   }
 })
 
+function createTypeNamesEnumType (store) {
+  return new GraphQLEnumType({
+    name: 'TypeNames',
+    values: mapValues(store.collections, (_, typeName) => ({
+      value: typeName
+    }))
+  })
+}
+
 module.exports = {
   pageInfoType,
-  sortOrderType
+  sortOrderType,
+  createTypeNamesEnumType
 }

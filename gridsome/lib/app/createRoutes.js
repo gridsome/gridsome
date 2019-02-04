@@ -5,6 +5,7 @@ const { info } = require('../utils/log')
 const {
   PAGED_ROUTE,
   STATIC_ROUTE,
+  PAGED_TEMPLATE,
   NOT_FOUND_ROUTE,
   STATIC_TEMPLATE_ROUTE,
   DYNAMIC_TEMPLATE_ROUTE
@@ -16,6 +17,7 @@ module.exports = ({ store, config }) => {
   const notFoundPage = store.pages.findOne({ type: '404' })
   const staticPages = []
   const pagedPages = []
+  const pagedTemplates = []
   const staticTemplates = []
   const dynamicTemplates = []
   const specialPages = []
@@ -26,7 +28,7 @@ module.exports = ({ store, config }) => {
     let type = STATIC_ROUTE
     let route = page.path
 
-    if (page.pageQuery.paginate.collection) {
+    if (page.pageQuery.paginate.typeName) {
       route = `${page.path === '/' ? '' : page.path}/:page(\\d+)?`
       type = PAGED_ROUTE
       arr = pagedPages
@@ -43,7 +45,7 @@ module.exports = ({ store, config }) => {
   })
 
   templates.forEach(page => {
-    const typeName = page.pageQuery.type
+    const { typeName } = page.pageQuery
     const contentType = store.getContentType(typeName)
 
     if (!contentType) {
@@ -52,6 +54,8 @@ module.exports = ({ store, config }) => {
       )
     }
 
+    const isPaged = page.pageQuery.paginate.typeName
+    const makePath = path => isPaged ? `${path}/:page(\\d+)?` : path
     const { options, collection } = contentType
     const { component, pageQuery } = page
 
@@ -62,8 +66,8 @@ module.exports = ({ store, config }) => {
 
     if (options.route) {
       dynamicTemplates.push({
-        type: DYNAMIC_TEMPLATE_ROUTE,
-        route: options.route,
+        type: isPaged ? PAGED_TEMPLATE : DYNAMIC_TEMPLATE_ROUTE,
+        route: makePath(options.route),
         name: camelCase(typeName),
         component,
         pageQuery,
@@ -74,8 +78,8 @@ module.exports = ({ store, config }) => {
 
       for (const node of nodes) {
         staticTemplates.push({
-          type: STATIC_TEMPLATE_ROUTE,
-          path: node.path,
+          type: isPaged ? PAGED_TEMPLATE : STATIC_TEMPLATE_ROUTE,
+          path: makePath(node.path),
           chunkName: camelCase(typeName),
           component,
           pageQuery,
@@ -101,6 +105,7 @@ module.exports = ({ store, config }) => {
   return [
     ...staticPages,
     ...pagedPages,
+    ...pagedTemplates,
     ...staticTemplates,
     ...dynamicTemplates,
     ...specialPages

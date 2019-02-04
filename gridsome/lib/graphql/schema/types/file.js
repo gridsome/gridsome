@@ -2,7 +2,7 @@ const url = require('url')
 const path = require('path')
 const mime = require('mime-types')
 
-const { GraphQLJSON } = require('../../graphql')
+const GraphQLJSON = require('graphql-type-json')
 const { fieldResolver } = require('../resolvers')
 const { SUPPORTED_IMAGE_TYPES } = require('../../../utils/constants')
 

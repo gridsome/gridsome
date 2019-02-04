@@ -1,4 +1,4 @@
-const { validate, parse } = require('../graphql')
+const { validate, parse } = require('graphql')
 
 const {
   ValuesOfCorrectTypeRule,
