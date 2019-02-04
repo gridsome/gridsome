@@ -133,14 +133,12 @@ module.exports = (app, { isProd, isServer }) => {
 
   // css
 
-  createCSSRule(config, 'css', /\.css$/)
-  createCSSRule(config, 'postcss', /\.p(ost)?css$/)
-  createCSSRule(config, 'scss', /\.scss$/, 'sass-loader', projectConfig.scss)
-  createCSSRule(config, 'sass', /\.sass$/, 'sass-loader', Object.assign({ indentedSyntax: true }, projectConfig.sass))
-  createCSSRule(config, 'less', /\.less$/, 'less-loader', projectConfig.less)
-  createCSSRule(config, 'stylus', /\.styl(us)?$/, 'stylus-loader', Object.assign({
-    preferPathResolver: 'webpack'
-  }, projectConfig.stylus))
+  createCSSRule(config, 'css', /\.css$/, null, projectConfig.css.loaderOptions.css)
+  createCSSRule(config, 'postcss', /\.p(ost)?css$/, null, projectConfig.css.loaderOptions.postcss)
+  createCSSRule(config, 'scss', /\.scss$/, 'sass-loader', projectConfig.css.loaderOptions.scss)
+  createCSSRule(config, 'sass', /\.sass$/, 'sass-loader', projectConfig.css.loaderOptions.sass)
+  createCSSRule(config, 'less', /\.less$/, 'less-loader', projectConfig.css.loaderOptions.less)
+  createCSSRule(config, 'stylus', /\.styl(us)?$/, 'stylus-loader', projectConfig.css.loaderOptions.stylus)
 
   // assets
 
@@ -288,6 +286,7 @@ module.exports = (app, { isProd, isServer }) => {
   }
 
   function createCSSRule (config, lang, test, loader = null, options = {}) {
+    const { css = {}, postcss = {}} = projectConfig.css.loaderOptions
     const baseRule = config.module.rule(lang).test(test)
     const modulesRule = baseRule.oneOf('modules').resourceQuery(/module/)
     const normalRule = baseRule.oneOf('normal')
@@ -306,19 +305,20 @@ module.exports = (app, { isProd, isServer }) => {
 
       rule.use('css-loader')
         .loader(isServer ? 'css-loader/locals' : 'css-loader')
-        .options({
+        .options(Object.assign({
           modules,
           localIdentName: `[local]_[hash:base64:8]`,
           importLoaders: 1,
           sourceMap: !isProd
-        })
+        }, css))
 
       rule.use('postcss-loader')
         .loader('postcss-loader')
         .options(Object.assign({
-          plugins: [require('autoprefixer')],
           sourceMap: !isProd
-        }, options.postcss))
+        }, postcss, {
+          plugins: (postcss.plugins || []).concat(require('autoprefixer'))
+        }))
 
       if (loader) {
         rule.use(loader).loader(loader).options(options)

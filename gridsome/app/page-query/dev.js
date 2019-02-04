@@ -1,7 +1,10 @@
-import Vue from 'vue'
-import sock from './sock'
-import fetch from './fetch'
+/* global SOCKJS_ENDPOINT */
 
+import Vue from 'vue'
+import fetch from './fetch'
+import SockJS from 'sockjs-client'
+
+const sock = new SockJS(process.env.SOCKJS_ENDPOINT)
 const active = {}
 
 sock.onmessage = message => {

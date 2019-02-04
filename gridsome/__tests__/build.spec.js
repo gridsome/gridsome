@@ -35,6 +35,11 @@ test('build basic project', async () => {
   expect(indexHTML).not.toMatch('Main description')
   expect(indexHTML).toMatch('Index description')
 
+  // 404.html
+  expect(exists('dist/404.html')).toBeTruthy()
+  expect(content('dist/404.html')).toMatch('Custom 404 - not found')
+  expect(content('dist/404.html')).toMatch('string from custom schema')
+
   // api.transpileDependencies
   expect(appJS).not.toMatch('testToArray1 (...args)') // transpiled
   expect(appJS).toMatch('testToArray2 (...args)') // not transpiled
@@ -100,6 +105,7 @@ test('build project with pathPrefix', async () => {
   const appJS = content('dist/assets/js/app.js')
 
   expect(indexHTML).toMatch('<h1>Gridsome</h1>')
+  expect(indexHTML).toMatch('data-key="description" name="description" content="My super site"')
   expect(indexHTML).toMatch('href="/sub/-/dir/about"')
   expect(indexHTML).toMatch('href="/sub/-/dir/"')
   expect(indexHTML).toMatch('href="/sub/-/dir/assets/static/favicon.1539b60.test.png"')
@@ -118,6 +124,10 @@ test('build project with pathPrefix', async () => {
   expect(exists('dist/assets/files/dummy.pdf')).toEqual(true)
   expect(exists('dist/assets/static/favicon.1539b60.test.png')).toEqual(true)
   expect(exists('dist/assets/static/test.97c148e.test.png')).toEqual(true)
+
+  // 404.html
+  expect(exists('dist/404.html')).toBeTruthy()
+  expect(content('dist/404.html')).toMatch('404 - not found')
 
   await clear(context)
 }, 5000)

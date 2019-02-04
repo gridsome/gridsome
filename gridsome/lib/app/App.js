@@ -135,13 +135,13 @@ class App {
   }
 
   generateFiles () {
-    this.routerData = createRoutes(this)
+    this.routes = createRoutes(this)
 
     this.router = new Router({
       base: '/',
       mode: 'history',
       fallback: false,
-      routes: this.routerData.pages.map(page => ({
+      routes: this.routes.map(page => ({
         path: page.route || page.path,
         component: () => page
       }))
