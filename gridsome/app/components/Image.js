@@ -104,19 +104,6 @@ export default {
   }
 }
 
-export function initImageObserver (router) {
-  if (observer) {
-    router.beforeEach((to, from, next) => {
-      unobserve()
-      next()
-    })
-  }
-
-  router.afterEach((to, from) => {
-    Vue.nextTick(() => observe())
-  })
-}
-
 export function observe (selector = '[data-src]', context = document) {
   const images = context.querySelectorAll(selector)
 

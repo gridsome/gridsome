@@ -1,4 +1,6 @@
 const path = require('path')
+const hash = require('hash-sum')
+const { pick } = require('lodash')
 const Config = require('webpack-chain')
 const { forwardSlash } = require('../utils')
 const { VueLoaderPlugin } = require('vue-loader')
@@ -77,6 +79,7 @@ module.exports = (app, { isProd, isServer }) => {
       compilerOptions: {
         preserveWhitespace: false,
         modules: [
+          require('./modules/observe-html')(),
           require('./modules/assets')()
         ]
       },
@@ -130,14 +133,12 @@ module.exports = (app, { isProd, isServer }) => {
 
   // css
 
-  createCSSRule(config, 'css', /\.css$/)
-  createCSSRule(config, 'postcss', /\.p(ost)?css$/)
-  createCSSRule(config, 'scss', /\.scss$/, 'sass-loader', projectConfig.scss)
-  createCSSRule(config, 'sass', /\.sass$/, 'sass-loader', Object.assign({ indentedSyntax: true }, projectConfig.sass))
-  createCSSRule(config, 'less', /\.less$/, 'less-loader', projectConfig.less)
-  createCSSRule(config, 'stylus', /\.styl(us)?$/, 'stylus-loader', Object.assign({
-    preferPathResolver: 'webpack'
-  }, projectConfig.stylus))
+  createCSSRule(config, 'css', /\.css$/, null, projectConfig.css.loaderOptions.css)
+  createCSSRule(config, 'postcss', /\.p(ost)?css$/, null, projectConfig.css.loaderOptions.postcss)
+  createCSSRule(config, 'scss', /\.scss$/, 'sass-loader', projectConfig.css.loaderOptions.scss)
+  createCSSRule(config, 'sass', /\.sass$/, 'sass-loader', projectConfig.css.loaderOptions.sass)
+  createCSSRule(config, 'less', /\.less$/, 'less-loader', projectConfig.css.loaderOptions.less)
+  createCSSRule(config, 'stylus', /\.styl(us)?$/, 'stylus-loader', projectConfig.css.loaderOptions.stylus)
 
   // assets
 
@@ -221,14 +222,7 @@ module.exports = (app, { isProd, isServer }) => {
   }
 
   config.plugin('injections')
-    .use(require('webpack/lib/DefinePlugin'), [{
-      'process.env.PUBLIC_PATH': JSON.stringify(pathPrefix),
-      'GRIDSOME_CACHE_DIR': JSON.stringify(projectConfig.cacheDir),
-      'GRIDSOME_DATA_DIR': JSON.stringify(`${projectConfig.cacheDir}/data`),
-      'GRIDSOME_MODE': JSON.stringify(process.env.GRIDSOME_MODE || ''),
-      'process.isClient': !isServer,
-      'process.isServer': isServer
-    }])
+    .use(require('webpack/lib/DefinePlugin'), [createEnv(projectConfig)])
 
   if (isProd && !isServer) {
     config.plugin('extract-css')
@@ -256,18 +250,21 @@ module.exports = (app, { isProd, isServer }) => {
   // helpes
 
   function createCacheOptions () {
+    const values = {
+      'gridsome': require('../../package.json').version,
+      'cache-loader': require('cache-loader/package.json').version,
+      'vue-loader': require('vue-loader/package.json').version,
+      context: app.context,
+      isProd,
+      isServer,
+      config: (
+        (projectConfig.chainWebpack || '').toString()
+      )
+    }
+
     return {
-      cacheDirectory: resolve('../../node_modules/.cache/gridsome'),
-      cacheIdentifier: JSON.stringify({
-        'gridsome': require('../../package.json').version,
-        'cache-loader': require('cache-loader').version,
-        'vue-loader': require('vue-loader').version,
-        isProd,
-        isServer,
-        config: (
-          (projectConfig.chainWebpack || '').toString()
-        )
-      })
+      cacheDirectory: app.resolve('node_modules/.cache/gridsome'),
+      cacheIdentifier: hash(values)
     }
   }
 
@@ -276,13 +273,6 @@ module.exports = (app, { isProd, isServer }) => {
 
     config.module.rule(type)
       .resourceQuery(re)
-      .use('cache-loader')
-      .loader('cache-loader')
-      .options({
-        cacheDirectory,
-        cacheIdentifier
-      })
-      .end()
       .use('babel-loader')
       .loader('babel-loader')
       .options({
@@ -296,6 +286,7 @@ module.exports = (app, { isProd, isServer }) => {
   }
 
   function createCSSRule (config, lang, test, loader = null, options = {}) {
+    const { css = {}, postcss = {}} = projectConfig.css.loaderOptions
     const baseRule = config.module.rule(lang).test(test)
     const modulesRule = baseRule.oneOf('modules').resourceQuery(/module/)
     const normalRule = baseRule.oneOf('normal')
@@ -314,23 +305,50 @@ module.exports = (app, { isProd, isServer }) => {
 
       rule.use('css-loader')
         .loader(isServer ? 'css-loader/locals' : 'css-loader')
-        .options({
+        .options(Object.assign({
           modules,
           localIdentName: `[local]_[hash:base64:8]`,
           importLoaders: 1,
           sourceMap: !isProd
-        })
+        }, css))
 
       rule.use('postcss-loader')
         .loader('postcss-loader')
         .options(Object.assign({
-          plugins: [require('autoprefixer')],
           sourceMap: !isProd
-        }, options.postcss))
+        }, postcss, {
+          plugins: (postcss.plugins || []).concat(require('autoprefixer'))
+        }))
 
       if (loader) {
         rule.use(loader).loader(loader).options(options)
       }
+    }
+  }
+
+  function createEnv (projectConfig) {
+    const baseEnv = {
+      'process.env.PUBLIC_PATH': JSON.stringify(pathPrefix),
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || ''),
+      'GRIDSOME_CACHE_DIR': JSON.stringify(projectConfig.cacheDir),
+      'GRIDSOME_DATA_DIR': JSON.stringify(`${projectConfig.cacheDir}/data`),
+      'GRIDSOME_MODE': JSON.stringify(process.env.GRIDSOME_MODE || ''),
+      'process.isClient': !isServer,
+      'process.isServer': isServer,
+      'process.isProduction': process.env.NODE_ENV === 'production'
+    }
+
+    // merge variables start with GRIDSOME_ENV to config.env
+    const gridsomeEnv = pick(process.env, Object.keys(process.env).filter(key => key.startsWith('GRIDSOME_')))
+    const mergeEnv = Object.entries(gridsomeEnv)
+      .reduce((acc, [key, value]) => {
+        acc[`process.env.${key}`] = ['boolean', 'number'].includes(typeof value) ? value : JSON.stringify(value)
+        return acc
+      }, {})
+
+    return {
+      ...baseEnv,
+      ...mergeEnv
     }
   }
 
