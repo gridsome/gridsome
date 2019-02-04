@@ -35,6 +35,9 @@ test('build basic project', async () => {
   expect(indexHTML).not.toMatch('Main description')
   expect(indexHTML).toMatch('Index description')
 
+  // Custom src/index.html template
+  expect(indexHTML).toMatch('<div>custom html template</div>')
+
   // 404.html
   expect(exists('dist/404.html')).toBeTruthy()
   expect(content('dist/404.html')).toMatch('Custom 404 - not found')
