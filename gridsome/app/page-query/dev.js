@@ -3,7 +3,6 @@
 import Vue from 'vue'
 import fetch from './fetch'
 import SockJS from 'sockjs-client'
-import { unobserve, observe } from '../components/Image'
 
 const sock = new SockJS(SOCKJS_ENDPOINT)
 const active = {}
@@ -22,11 +21,7 @@ sock.onmessage = message => {
 
   for (const file in active) {
     const { options, vm } = active[file]
-    unobserve(undefined, vm.$el)
-    
     fetch(vm.$route, options.__pageQuery)
-      .then(() => Vue.nextTick(() => observe(undefined, vm.$el)))
-      .catch(err => console.error(err.message))
   }
 }
 

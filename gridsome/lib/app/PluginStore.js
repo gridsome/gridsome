@@ -208,12 +208,12 @@ class Source extends EventEmitter {
   }
 
   resolveNodeFilePath (node, toPath) {
-    const { collection } = this.getContentType(node.typeName)
+    const contentType = this.getContentType(node.typeName)
 
     return this._app.resolveFilePath(
       node.internal.origin,
       toPath,
-      collection.resolveAbsolutePaths
+      contentType.resolveAbsolutePaths
     )
   }
 }

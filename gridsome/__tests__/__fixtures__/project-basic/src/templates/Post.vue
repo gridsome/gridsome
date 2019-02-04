@@ -1,7 +1,7 @@
 <template>
-  <div>
+  <Layout>
     <h1>{{ $page.post.title }}</h1>
-  </div>
+  </Layout>
 </template>
 
 <page-query>

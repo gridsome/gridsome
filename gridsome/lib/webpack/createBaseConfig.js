@@ -1,4 +1,5 @@
 const path = require('path')
+const hash = require('hash-sum')
 const Config = require('webpack-chain')
 const { forwardSlash } = require('../utils')
 const { VueLoaderPlugin } = require('vue-loader')
@@ -77,6 +78,7 @@ module.exports = (app, { isProd, isServer }) => {
       compilerOptions: {
         preserveWhitespace: false,
         modules: [
+          require('./modules/observe-html')(),
           require('./modules/assets')()
         ]
       },
@@ -130,14 +132,12 @@ module.exports = (app, { isProd, isServer }) => {
 
   // css
 
-  createCSSRule(config, 'css', /\.css$/)
-  createCSSRule(config, 'postcss', /\.p(ost)?css$/)
-  createCSSRule(config, 'scss', /\.scss$/, 'sass-loader', projectConfig.scss)
-  createCSSRule(config, 'sass', /\.sass$/, 'sass-loader', Object.assign({ indentedSyntax: true }, projectConfig.sass))
-  createCSSRule(config, 'less', /\.less$/, 'less-loader', projectConfig.less)
-  createCSSRule(config, 'stylus', /\.styl(us)?$/, 'stylus-loader', Object.assign({
-    preferPathResolver: 'webpack'
-  }, projectConfig.stylus))
+  createCSSRule(config, 'css', /\.css$/, null, projectConfig.css.loaderOptions.css)
+  createCSSRule(config, 'postcss', /\.p(ost)?css$/, null, projectConfig.css.loaderOptions.postcss)
+  createCSSRule(config, 'scss', /\.scss$/, 'sass-loader', projectConfig.css.loaderOptions.scss)
+  createCSSRule(config, 'sass', /\.sass$/, 'sass-loader', projectConfig.css.loaderOptions.sass)
+  createCSSRule(config, 'less', /\.less$/, 'less-loader', projectConfig.css.loaderOptions.less)
+  createCSSRule(config, 'stylus', /\.styl(us)?$/, 'stylus-loader', projectConfig.css.loaderOptions.stylus)
 
   // assets
 
@@ -187,17 +187,10 @@ module.exports = (app, { isProd, isServer }) => {
     .loader('yaml-loader')
 
   // graphql
-
   // TODO: remove graphql loader before v1.0
-  config.module.rule('graphql')
-    .resourceQuery(/blockType=(graphql|page-query)/)
-    .use('page-query')
-    .loader(require.resolve('./loaders/page-query'))
-
-  config.module.rule('static-graphql')
-    .resourceQuery(/blockType=static-query/)
-    .use('static-query')
-    .loader(require.resolve('./loaders/static-query'))
+  createGraphQLRule('graphql', './loaders/page-query')
+  createGraphQLRule('page-query', './loaders/page-query')
+  createGraphQLRule('static-query', './loaders/static-query')
 
   // plugins
 
@@ -263,22 +256,43 @@ module.exports = (app, { isProd, isServer }) => {
   // helpes
 
   function createCacheOptions () {
+    const values = {
+      'gridsome': require('../../package.json').version,
+      'cache-loader': require('cache-loader/package.json').version,
+      'vue-loader': require('vue-loader/package.json').version,
+      context: app.context,
+      isProd,
+      isServer,
+      config: (
+        (projectConfig.chainWebpack || '').toString()
+      )
+    }
+
     return {
-      cacheDirectory: resolve('../../node_modules/.cache/gridsome'),
-      cacheIdentifier: JSON.stringify({
-        'gridsome': require('../../package.json').version,
-        'cache-loader': require('cache-loader').version,
-        'vue-loader': require('vue-loader').version,
-        isProd,
-        isServer,
-        config: (
-          (projectConfig.chainWebpack || '').toString()
-        )
-      })
+      cacheDirectory: app.resolve('node_modules/.cache/gridsome'),
+      cacheIdentifier: hash(values)
     }
   }
 
+  function createGraphQLRule (type, loader) {
+    const re = new RegExp(`blockType=(${type})`)
+
+    config.module.rule(type)
+      .resourceQuery(re)
+      .use('babel-loader')
+      .loader('babel-loader')
+      .options({
+        presets: [
+          require.resolve('./babel-preset')
+        ]
+      })
+      .end()
+      .use(`${type}-loader`)
+      .loader(require.resolve(loader))
+  }
+
   function createCSSRule (config, lang, test, loader = null, options = {}) {
+    const { css = {}, postcss = {}} = projectConfig.css.loaderOptions
     const baseRule = config.module.rule(lang).test(test)
     const modulesRule = baseRule.oneOf('modules').resourceQuery(/module/)
     const normalRule = baseRule.oneOf('normal')
@@ -297,19 +311,20 @@ module.exports = (app, { isProd, isServer }) => {
 
       rule.use('css-loader')
         .loader(isServer ? 'css-loader/locals' : 'css-loader')
-        .options({
+        .options(Object.assign({
           modules,
           localIdentName: `[local]_[hash:base64:8]`,
           importLoaders: 1,
           sourceMap: !isProd
-        })
+        }, css))
 
       rule.use('postcss-loader')
         .loader('postcss-loader')
         .options(Object.assign({
-          plugins: [require('autoprefixer')],
           sourceMap: !isProd
-        }, options.postcss))
+        }, postcss, {
+          plugins: (postcss.plugins || []).concat(require('autoprefixer'))
+        }))
 
       if (loader) {
         rule.use(loader).loader(loader).options(options)
