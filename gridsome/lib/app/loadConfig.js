@@ -18,9 +18,11 @@ module.exports = (context, options = {}, pkg = {}) => {
   const resolve = (...p) => path.resolve(context, ...p)
   const isProd = process.env.NODE_ENV === 'production'
   const configPath = resolve('gridsome.config.js')
+  const localIndex = resolve('src/index.html')
   const args = options.args || {}
   const config = {}
   const plugins = []
+
   const css = {
     loaderOptions: {
       sass: {
@@ -31,6 +33,7 @@ module.exports = (context, options = {}, pkg = {}) => {
       }
     }
   }
+
 
   const localConfig = options.localConfig
     ? options.localConfig
@@ -110,7 +113,7 @@ module.exports = (context, options = {}, pkg = {}) => {
 
   config.icon = normalizeIconsConfig(localConfig.icon)
 
-  config.templatePath = path.resolve(config.appPath, 'index.html')
+  config.templatePath = fs.existsSync(localIndex) ? localIndex : path.resolve(config.appPath, 'index.html')
   config.htmlTemplate = fs.readFileSync(config.templatePath, 'utf-8')
 
   config.css = defaultsDeep(css, localConfig.css || {})
