@@ -6,7 +6,7 @@ const EventEmitter = require('events')
 const camelCase = require('camelcase')
 const pathToRegexp = require('path-to-regexp')
 const slugify = require('@sindresorhus/slugify')
-const parsePageQuery = require('../graphql/parsePageQuery')
+const parsePageQuery = require('../graphql/utils/parsePageQuery')
 const { mapValues, cloneDeep } = require('lodash')
 const { cache, nodeCache } = require('../utils/cache')
 const { log, warn } = require('../utils/log')
@@ -208,12 +208,12 @@ class Source extends EventEmitter {
   }
 
   resolveNodeFilePath (node, toPath) {
-    const { collection } = this.getContentType(node.typeName)
+    const contentType = this.getContentType(node.typeName)
 
     return this._app.resolveFilePath(
       node.internal.origin,
       toPath,
-      collection.resolveAbsolutePaths
+      contentType.resolveAbsolutePaths
     )
   }
 }

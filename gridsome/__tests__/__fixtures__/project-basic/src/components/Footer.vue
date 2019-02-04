@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="footer">
     <span>{{ $static.metaData.myTest.value }}</span>
     <span>{{ $static.metaData.pluginValue }}</span>
   </div>

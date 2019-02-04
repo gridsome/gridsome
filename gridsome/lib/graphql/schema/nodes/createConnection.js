@@ -1,3 +1,7 @@
+const { createPagedNodeEdges } = require('./utils')
+const { PER_PAGE } = require('../../../utils/constants')
+const { pageInfoType, sortOrderType } = require('../types')
+
 const {
   GraphQLInt,
   GraphQLList,
@@ -5,8 +9,6 @@ const {
   GraphQLNonNull,
   GraphQLObjectType
 } = require('../../graphql')
-
-const { pageInfoType, sortOrderType } = require('../types')
 
 module.exports = nodeType => {
   const edgeType = new GraphQLObjectType({
@@ -33,55 +35,18 @@ module.exports = nodeType => {
     args: {
       sortBy: { type: GraphQLString, defaultValue: 'date' },
       order: { type: sortOrderType, defaultValue: 'DESC' },
-      perPage: { type: GraphQLInt, defaultValue: 25 },
+      perPage: { type: GraphQLInt, defaultValue: PER_PAGE },
       skip: { type: GraphQLInt, defaultValue: 0 },
       page: { type: GraphQLInt, defaultValue: 1 },
       regex: { type: GraphQLString }
     },
-    async resolve (_, { sortBy, order, perPage, skip, page, regex }, { store }, info) {
-      page = Math.max(page, 1) // ensure page higher than 0
-      perPage = Math.max(perPage, 1) // ensure page higher than 1
-
+    async resolve (_, { regex, ...args }, { store }, info) {
       const { collection } = store.getContentType(nodeType.name)
-      const query = {}
+      const query = regex ? { path: { $regex: new RegExp(regex) }} : {}
 
-      if (regex) {
-        query.path = { $regex: new RegExp(regex) }
-      }
+      const chain = collection.chain().find(query)
 
-      const results = collection
-        .chain()
-        .find(query)
-        .simplesort(sortBy, order === 'DESC')
-        .offset(((page - 1) * perPage) + skip)
-        .limit(perPage)
-
-      const nodes = results.data()
-      const totalNodes = collection.find({}).length
-
-      // total items in result
-      const totalCount = Math.max(totalNodes - skip, 0)
-
-      // page info
-      const currentPage = page
-      const totalPages = Math.max(Math.ceil(totalCount / perPage), 1)
-      const isLast = page >= totalPages
-      const isFirst = page <= 1
-
-      return {
-        totalCount,
-        edges: nodes.map((node, index) => ({
-          node,
-          next: nodes[index + 1],
-          previous: nodes[index - 1]
-        })),
-        pageInfo: {
-          currentPage,
-          totalPages,
-          isFirst,
-          isLast
-        }
-      }
+      return createPagedNodeEdges(chain, args)
     }
   }
 }

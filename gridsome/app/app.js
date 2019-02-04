@@ -1,11 +1,14 @@
 import Vue from 'vue'
+import plugins from '~/.temp/plugins-server'
+import main from './main'
+
 import head from './head'
 import router from './router'
+import { url } from './utils/helpers'
+
 import Link from './components/Link'
 import Image from './components/Image'
 import ClientOnly from './components/ClientOnly'
-import plugins from '~/.temp/plugins-server.js'
-import { url } from './utils/helpers'
 
 const isServer = process.isServer
 const isClient = process.isClient
@@ -41,12 +44,9 @@ export default function createApp (callback) {
     }
   }
 
-  try {
-    const main = require('@/main.js')
-    if (typeof main.default === 'function') {
-      main.default(Vue, context)
-    }
-  } catch (err) {}
+  if (typeof main === 'function') {
+    main(Vue, context)
+  }
 
   const app = new Vue(appOptions)
 

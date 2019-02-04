@@ -1,11 +1,7 @@
 const url = require('url')
 const path = require('path')
-
-const {
-  GraphQLInt,
-  GraphQLJSON,
-  GraphQLEnumType
-} = require('../../graphql')
+const GraphQLJSON = require('graphql-type-json')
+const { GraphQLInt, GraphQLEnumType } = require('graphql')
 
 const { fieldResolver } = require('../resolvers')
 const { SUPPORTED_IMAGE_TYPES } = require('../../../utils/constants')

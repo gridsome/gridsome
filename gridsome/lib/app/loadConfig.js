@@ -18,13 +18,28 @@ module.exports = (context, options = {}, pkg = {}) => {
   const resolve = (...p) => path.resolve(context, ...p)
   const isProd = process.env.NODE_ENV === 'production'
   const configPath = resolve('gridsome.config.js')
+  const localIndex = resolve('src/index.html')
   const args = options.args || {}
   const config = {}
   const plugins = []
 
-  const localConfig = fs.existsSync(configPath)
-    ? require(configPath)
-    : {}
+  const css = {
+    loaderOptions: {
+      sass: {
+        indentedSyntax: true
+      },
+      stylus: {
+        preferPathResolver: 'webpack'
+      }
+    }
+  }
+
+
+  const localConfig = options.localConfig
+    ? options.localConfig
+    : fs.existsSync(configPath)
+      ? require(configPath)
+      : {}
 
   // use provided plugins instaed of local plugins
   if (Array.isArray(options.plugins)) {
@@ -90,6 +105,7 @@ module.exports = (context, options = {}, pkg = {}) => {
   config.baseUrl = localConfig.baseUrl || '/'
   config.siteName = localConfig.siteName || path.parse(context).name
   config.titleTemplate = localConfig.titleTemplate || `%s - ${config.siteName}`
+  config.siteDescription = localConfig.siteDescription || ''
 
   config.manifestsDir = path.join(config.assetsDir, 'manifest')
   config.clientManifestPath = path.join(config.manifestsDir, 'client.json')
@@ -97,14 +113,10 @@ module.exports = (context, options = {}, pkg = {}) => {
 
   config.icon = normalizeIconsConfig(localConfig.icon)
 
-  config.templatePath = path.resolve(config.appPath, 'index.html')
+  config.templatePath = fs.existsSync(localIndex) ? localIndex : path.resolve(config.appPath, 'index.html')
   config.htmlTemplate = fs.readFileSync(config.templatePath, 'utf-8')
 
-  config.scss = {}
-  config.sass = {}
-  config.less = {}
-  config.stylus = {}
-  config.postcss = {}
+  config.css = defaultsDeep(css, localConfig.css || {})
 
   return Object.freeze(config)
 }
@@ -211,7 +223,7 @@ function normalizeIconsConfig (config = {}) {
   const faviconSizes = [16, 32, 96]
   const touchiconSizes = [76, 152, 120, 167, 180]
   const defaultIcon = 'src/favicon.png'
-  const icon = typeof config === 'string' ? { favicon: icon } : (config || {})
+  const icon = typeof config === 'string' ? { favicon: config } : (config || {})
 
   res.favicon = typeof icon.favicon === 'string'
     ? { src: icon.favicon, sizes: faviconSizes }
