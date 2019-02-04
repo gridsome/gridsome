@@ -1,6 +1,7 @@
 # @gridsome/source-storyblok
 
 ## Install
+
 - `yarn add @gridsome/source-storyblok`
 - `npm install @gridsome/source-storyblok`
 
@@ -12,13 +13,17 @@ module.exports = {
     {
       use: '@gridsome/source-storyblok',
       options: {
-        token: 'STORYBLOK_SPACE_API_TOKEN', // Storyblok token
-        folder: 'STORYBLOK_FOLDER' // default `blog`
-        version: 'VERSION_OF_CONTENT', // default `published`
         typeName: 'Post', // Required
-        route: '/blog/:slug', // optional
+        route: '/blog/:slug', // Optional
+        queryParams: {
+          token: 'STORYBLOK_SPACE_API_TOKEN', // Required
+          starts_with: 'STORYBLOK_FOLDER' // e.g `blog`
+          version: 'VERSION_OF_CONTENT', // e.g `published`
+        }
       }
     }
   ]
 }
 ```
+
+To see all query parameters visit [this page](https://www.storyblok.com/docs/api/content-delivery#core-resources/stories/retrieve-multiple-stories)
