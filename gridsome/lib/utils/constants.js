@@ -1,6 +1,7 @@
 module.exports = {
   PAGED_ROUTE: 'paged',
   STATIC_ROUTE: 'static',
+  PAGED_TEMPLATE: 'paged_template',
   STATIC_TEMPLATE_ROUTE: 'static_template',
   DYNAMIC_TEMPLATE_ROUTE: 'dynamic_template',
   NOT_FOUND_ROUTE: '404',
@@ -8,6 +9,8 @@ module.exports = {
   NORMAL_PLUGIN: 'plugin',
   SOURCE_PLUGIN: 'source',
   TRANSFORMER_PLUGIN: 'transformer',
+
+  PER_PAGE: 25,
 
   SUPPORTED_IMAGE_TYPES: ['.png', '.jpeg', '.jpg', '.gif', '.svg', '.webp'],
 

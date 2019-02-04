@@ -1,8 +1,4 @@
-const {
-  GraphQLString,
-  GraphQLBoolean,
-  GraphQLError
-} = require('../../graphql')
+const { GraphQLString, GraphQLBoolean, GraphQLError } = require('graphql')
 
 module.exports = nodeType => {
   return {
@@ -19,7 +15,7 @@ module.exports = nodeType => {
     },
     resolve (object, { _id, id = _id, path, nullable }, { store }, { returnType }) {
       const { collection } = store.getContentType(returnType)
-      const node = id ? collection.findOne({ id }) : collection.findOne({ path })
+      const node = id ? collection.by('id', id) : collection.by('path', path)
 
       if (!node && !nullable) {
         const message = path
