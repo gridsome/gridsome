@@ -26,8 +26,20 @@ export default ({ options }, query = true) => {
 
     const createGuardFunc = () => {
       return (to, from, next) => {
+        const error = () => {
+          next({
+            name: '404',
+            params: {
+              0: to.path,
+              route: to
+            }
+          })
+        }
+
         import(/* webpackChunkName: "page-query" */ './fetch').then(m => {
-          m.default(to, options.__pageQuery).then(next)
+          m.default(to, options.__pageQuery)
+            .then(() => next())
+            .catch(() => error())
         })
       }
     }
