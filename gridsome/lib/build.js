@@ -1,8 +1,8 @@
 const path = require('path')
 const pMap = require('p-map')
 const fs = require('fs-extra')
-const { chunk } = require('lodash')
 const hirestime = require('hirestime')
+const { trimEnd, trimStart, chunk } = require('lodash')
 const sysinfo = require('./utils/sysinfo')
 const { log, info } = require('./utils/log')
 
@@ -23,6 +23,8 @@ module.exports = async (context, args) => {
   await fs.remove(config.outDir)
 
   const queue = await createRenderQueue(app)
+
+  // return console.log(queue)
 
   // 1. run all GraphQL queries and save results into json files
   await app.dispatch('beforeRenderQueries', () => ({ context, config, queue }))
@@ -61,13 +63,18 @@ const {
   PAGED_ROUTE,
   STATIC_ROUTE,
   PAGED_TEMPLATE,
+  NOT_FOUND_ROUTE,
   STATIC_TEMPLATE_ROUTE,
   DYNAMIC_TEMPLATE_ROUTE
 } = require('./utils/constants')
 
 async function createRenderQueue ({ router, config, store }) {
   const createEntry = (node, page, currentPage = 1) => {
-    const fullPath = currentPage > 1 ? `${node.path}/${currentPage}` : node.path
+    let fullPath = trimEnd(node.path, '/') || '/'
+
+    if (page.type === NOT_FOUND_ROUTE) fullPath = '/404'
+    if (currentPage > 1) fullPath = `/${trimStart(fullPath, '/')}/${currentPage}`
+
     const filePath = fullPath.split('/').map(decodeURIComponent).join('/')
     const dataPath = fullPath === '/' ? 'index.json' : `${filePath}.json`
     const { route } = router.resolve(fullPath)
@@ -76,29 +83,22 @@ async function createRenderQueue ({ router, config, store }) {
     const htmlOutput = path.join(config.outDir, filePath, 'index.html')
     const dataOutput = query ? path.join(config.cacheDir, 'data', dataPath) : null
 
-    return { query, route, dataOutput, htmlOutput, fullPath }
+    return { query, route, dataOutput, htmlOutput, fullPath, path: node.path }
   }
 
   const createPage = (page, currentPage = 1) => {
     const entry = createEntry(page, page, currentPage)
 
-    return {
-      ...entry,
-      path: page.path,
-      // TODO: remove this before v1.0
-      output: path.dirname(entry.htmlOutput)
+    if (page.directoryIndex === false && page.path !== '/') {
+      entry.dataOutput = entry.dataOutput && `${path.dirname(entry.dataOutput)}.json`
+      entry.htmlOutput = `${path.dirname(entry.htmlOutput)}.html`
     }
+
+    return entry
   }
 
   const createTemplate = (node, page, currentPage = 1) => {
-    const entry = createEntry(node, page, currentPage)
-
-    return {
-      ...entry,
-      path: node.path,
-      // TODO: remove this before v1.0
-      output: path.dirname(entry.htmlOutput)
-    }
+    return createEntry(node, page, currentPage)
   }
 
   const queue = []
@@ -108,6 +108,7 @@ async function createRenderQueue ({ router, config, store }) {
 
     switch (page.type) {
       case STATIC_ROUTE:
+      case NOT_FOUND_ROUTE:
       case STATIC_TEMPLATE_ROUTE: {
         queue.push(createPage(page))
 

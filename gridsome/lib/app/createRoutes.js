@@ -6,6 +6,7 @@ const {
   PAGED_ROUTE,
   STATIC_ROUTE,
   PAGED_TEMPLATE,
+  NOT_FOUND_ROUTE,
   STATIC_TEMPLATE_ROUTE,
   DYNAMIC_TEMPLATE_ROUTE
 } = require('../utils/constants')
@@ -19,10 +20,7 @@ module.exports = ({ store, config }) => {
   const pagedTemplates = []
   const staticTemplates = []
   const dynamicTemplates = []
-
-  const notFoundComponent = notFoundPage
-    ? notFoundPage.component
-    : path.join(config.appPath, 'pages', '404.vue')
+  const specialPages = []
 
   pages.forEach(page => {
     const name = camelCase(page.path.replace(/\//g, ' ')) || 'home'
@@ -91,14 +89,25 @@ module.exports = ({ store, config }) => {
     }
   })
 
-  return {
-    notFoundComponent,
-    pages: [
-      ...staticPages,
-      ...pagedPages,
-      ...pagedTemplates,
-      ...staticTemplates,
-      ...dynamicTemplates
-    ]
-  }
+  specialPages.push({
+    path: '*',
+    name: '404',
+    directoryIndex: false,
+    type: NOT_FOUND_ROUTE,
+    component: notFoundPage
+      ? notFoundPage.component
+      : path.join(config.appPath, 'pages', '404.vue'),
+    pageQuery: notFoundPage
+      ? notFoundPage.pageQuery
+      : {}
+  })
+
+  return [
+    ...staticPages,
+    ...pagedPages,
+    ...pagedTemplates,
+    ...staticTemplates,
+    ...dynamicTemplates,
+    ...specialPages
+  ]
 }

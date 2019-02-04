@@ -13,6 +13,7 @@ test('build basic project', async () => {
 
   const indexHTML = content('dist/index.html')
   const appJS = content('dist/assets/js/app.js')
+  const homeJS = content('dist/assets/js/component--home.js')
   const blogIndexHTML = content('dist/blog/index.html')
   const blogPage2HTML = content('dist/blog/2/index.html')
 
@@ -28,15 +29,28 @@ test('build basic project', async () => {
   expect(indexHTML).toMatch('<span>test 1</span>')
   expect(indexHTML).toMatch('<span>test 2</span>')
   expect(indexHTML).toMatch('<span>test 3</span>')
-  expect(indexHTML).toMatch('<a href="/blog">Blog</a>')
+  expect(indexHTML).toMatch('<a href="/blog" class="g-link-1">Blog</a>')
+  expect(indexHTML).toMatch('<a href="/" class="active--exact test-active g-link-2">Home</a>')
   expect(indexHTML).toMatch('test-active')
   expect(indexHTML).not.toMatch('Main description')
   expect(indexHTML).toMatch('Index description')
 
+  // Custom src/index.html template
+  expect(indexHTML).toMatch('<div>custom html template</div>')
+
+  // 404.html
+  expect(exists('dist/404.html')).toBeTruthy()
+  expect(content('dist/404.html')).toMatch('Custom 404 - not found')
+  expect(content('dist/404.html')).toMatch('string from custom schema')
+
   // api.transpileDependencies
-  expect(appJS).toMatch('testToArray1: function testToArray1()') // transpiled
+  expect(appJS).not.toMatch('testToArray1 (...args)') // transpiled
   expect(appJS).toMatch('testToArray2 (...args)') // not transpiled
-  expect(appJS).toMatch('value: function classTestMethod()') // transpiled
+  expect(appJS).not.toMatch('classTestMethod ()') // transpiled
+
+  // transpile custom sfc blocks
+  expect(appJS).not.toMatch('Component =>') // static-query
+  expect(homeJS).not.toMatch('Component =>') // page-query
 
   // favicon
   expect(exists('dist/assets/static/favicon.1539b60.test.png')).toBeTruthy()
@@ -51,9 +65,15 @@ test('build basic project', async () => {
   expect(indexHTML).toMatch('src="/assets/static/test.97c148e.test.png"')
   expect(indexHTML).toMatch('src="https://www.example.com/assets/image.png"')
   expect(indexHTML).toMatch('alt="External image"')
+  expect(indexHTML).toMatch('class="g-image-1 g-image')
+  expect(indexHTML).toMatch('class="g-image-2 g-image')
+  expect(indexHTML).toMatch('class="g-image-3 g-image')
+  expect(indexHTML).not.toMatch('g-image-3-false')
+
+  // #163 - remove duplicate style links
+  expect(indexHTML.match(/styles\.css/g)).toHaveLength(2)
 
   // g-link (file)
-  expect(indexHTML).toMatch('<a href="/blog">Blog</a>')
   expect(indexHTML).toMatch('<a href="/assets/files/dummy.pdf">Download</a>')
   expect(exists('dist/assets/files/dummy.pdf')).toBeTruthy()
 
@@ -113,24 +133,29 @@ test('build project with pathPrefix', async () => {
   const appJS = content('dist/assets/js/app.js')
 
   expect(indexHTML).toMatch('<h1>Gridsome</h1>')
-  expect(indexHTML).toMatch('href="/subdir/about"')
-  expect(indexHTML).toMatch('href="/subdir/"')
-  expect(indexHTML).toMatch('href="/subdir/assets/static/favicon.1539b60.test.png"')
-  expect(indexHTML).toMatch('src="/subdir/assets/static/test.97c148e.test.png"')
-  expect(indexHTML).toMatch('href="/subdir/assets/files/dummy.pdf"')
-  expect(indexHTML).toMatch('src="/subdir/assets/js/app.js"')
+  expect(indexHTML).toMatch('data-key="description" name="description" content="My super site"')
+  expect(indexHTML).toMatch('href="/sub/-/dir/about"')
+  expect(indexHTML).toMatch('href="/sub/-/dir/"')
+  expect(indexHTML).toMatch('href="/sub/-/dir/assets/static/favicon.1539b60.test.png"')
+  expect(indexHTML).toMatch('src="/sub/-/dir/assets/static/test.97c148e.test.png"')
+  expect(indexHTML).toMatch('href="/sub/-/dir/assets/files/dummy.pdf"')
+  expect(indexHTML).toMatch('src="/sub/-/dir/assets/js/app.js"')
 
   // __webpack_public_path__
-  expect(appJS).toMatch('__webpack_require__.p = "/subdir/"')
+  expect(appJS).toMatch('__webpack_require__.p = "/sub/-/dir/"')
   // stripPathPrefix helper
-  expect(appJS).toMatch('publicPath = "/subdir/"')
+  expect(appJS).toMatch('publicPath = "/sub/-/dir/"')
   // router base
-  expect(appJS).toMatch('base: "/subdir/"')
+  expect(appJS).toMatch('base: "/sub/-/dir/"')
 
   // assets
   expect(exists('dist/assets/files/dummy.pdf')).toEqual(true)
   expect(exists('dist/assets/static/favicon.1539b60.test.png')).toEqual(true)
   expect(exists('dist/assets/static/test.97c148e.test.png')).toEqual(true)
+
+  // 404.html
+  expect(exists('dist/404.html')).toBeTruthy()
+  expect(content('dist/404.html')).toMatch('404 - not found')
 
   await clear(context)
 }, 5000)

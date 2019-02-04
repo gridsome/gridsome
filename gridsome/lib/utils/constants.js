@@ -4,6 +4,7 @@ module.exports = {
   PAGED_TEMPLATE: 'paged_template',
   STATIC_TEMPLATE_ROUTE: 'static_template',
   DYNAMIC_TEMPLATE_ROUTE: 'dynamic_template',
+  NOT_FOUND_ROUTE: '404',
 
   NORMAL_PLUGIN: 'plugin',
   SOURCE_PLUGIN: 'source',
