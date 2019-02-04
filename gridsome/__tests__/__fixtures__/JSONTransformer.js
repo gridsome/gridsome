@@ -24,7 +24,7 @@ class JSONTransformer {
       fileField: {
         type: GraphQLString,
         resolve: node => {
-          return this.resolveNodeFilePath(node, './image.png')
+          return this.resolveNodeFilePath(node, '/assets/image.png')
         }
       }
     }

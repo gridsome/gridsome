@@ -18,10 +18,22 @@ module.exports = (context, options = {}, pkg = {}) => {
   const resolve = (...p) => path.resolve(context, ...p)
   const isProd = process.env.NODE_ENV === 'production'
   const configPath = resolve('gridsome.config.js')
+  const localIndex = resolve('src/index.html')
   const args = options.args || {}
   const config = {}
   const plugins = []
-  const localIndex = resolve('src/index.html')
+
+  const css = {
+    loaderOptions: {
+      sass: {
+        indentedSyntax: true
+      },
+      stylus: {
+        preferPathResolver: 'webpack'
+      }
+    }
+  }
+
 
   const localConfig = options.localConfig
     ? options.localConfig
@@ -93,6 +105,7 @@ module.exports = (context, options = {}, pkg = {}) => {
   config.baseUrl = localConfig.baseUrl || '/'
   config.siteName = localConfig.siteName || path.parse(context).name
   config.titleTemplate = localConfig.titleTemplate || `%s - ${config.siteName}`
+  config.siteDescription = localConfig.siteDescription || ''
 
   config.manifestsDir = path.join(config.assetsDir, 'manifest')
   config.clientManifestPath = path.join(config.manifestsDir, 'client.json')
@@ -103,11 +116,7 @@ module.exports = (context, options = {}, pkg = {}) => {
   config.templatePath = fs.existsSync(localIndex) ? localIndex : path.resolve(config.appPath, 'index.html')
   config.htmlTemplate = fs.readFileSync(config.templatePath, 'utf-8')
 
-  config.scss = {}
-  config.sass = {}
-  config.less = {}
-  config.stylus = {}
-  config.postcss = {}
+  config.css = defaultsDeep(css, localConfig.css || {})
 
   return Object.freeze(config)
 }

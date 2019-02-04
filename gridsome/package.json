@@ -1,5 +1,5 @@
 {
-  "version": "0.4.6",
+  "version": "0.4.7",
   "name": "gridsome",
   "description": "A JAMstack framework for building blazing fast websites with Vue.js",
   "homepage": "https://gridsome.org",
@@ -37,7 +37,7 @@
     "@vue/component-compiler-utils": "^2.1.0",
     "auto-bind": "^1.2.1",
     "autoprefixer": "^9.1.1",
-    "babel-loader": "8.0.0-beta.4",
+    "babel-loader": "8.0.5",
     "cache-loader": "^1.2.2",
     "calipers": "^2.0.1",
     "calipers-jpeg": "^2.0.0",
@@ -50,6 +50,7 @@
     "connect-history-api-fallback": "^1.5.0",
     "css-loader": "^1.0.0",
     "dateformat": "^3.0.3",
+    "dotenv": "^6.2.0",
     "express": "^4.16.3",
     "express-graphql": "^0.6.12",
     "file-loader": "^1.1.11",

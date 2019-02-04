@@ -2,7 +2,7 @@ const path = require('path')
 const pMap = require('p-map')
 const fs = require('fs-extra')
 const hirestime = require('hirestime')
-const { trim, chunk } = require('lodash')
+const { trimEnd, trimStart, chunk } = require('lodash')
 const sysinfo = require('./utils/sysinfo')
 const { log, info } = require('./utils/log')
 
@@ -60,28 +60,35 @@ module.exports = async (context, args) => {
 const {
   PAGED_ROUTE,
   STATIC_ROUTE,
+  NOT_FOUND_ROUTE,
   STATIC_TEMPLATE_ROUTE,
   DYNAMIC_TEMPLATE_ROUTE
 } = require('./utils/constants')
 
 async function createRenderQueue ({ router, config, graphql }) {
   const createPage = (page, currentPage = 1) => {
-    const isPager = currentPage > 1
-    const pagePath = page.path.replace(/\/+$/, '')
-    const fullPath = isPager ? `${pagePath}/${currentPage}` : page.path
-    const { route } = router.resolve(fullPath)
+    let pathname = trimEnd(page.path, '/') || '/'
+
+    if (page.type === NOT_FOUND_ROUTE) pathname = '/404'
+    if (currentPage > 1) pathname = `/${trimStart(pathname, '/')}/${currentPage}`
+
     const { query } = page.pageQuery
-    const routePath = trim(route.path, '/')
-    const filePath = routePath.split('/').map(decodeURIComponent).join('/')
-    const dataPath = !routePath ? 'index.json' : `${filePath}.json`
-    const htmlOutput = path.resolve(config.outDir, filePath, 'index.html')
-    const dataOutput = path.resolve(config.cacheDir, 'data', dataPath)
+    const { route } = router.resolve(pathname)
+    const decodedPath = pathname.split('/').map(decodeURIComponent).join('/')
+
+    let dataOutput = path.join(config.cacheDir, 'data', decodedPath, 'index.json')
+    let htmlOutput = path.join(config.outDir, decodedPath, 'index.html')
+
+    if (page.directoryIndex === false && pathname !== '/') {
+      dataOutput = `${path.dirname(dataOutput)}.json`
+      htmlOutput = `${path.dirname(htmlOutput)}.html`
+    }
 
     // TODO: remove this before v1.0
     const output = path.dirname(htmlOutput)
 
     return {
-      path: fullPath.replace(/\/+/g, '/'),
+      path: pathname,
       dataOutput: query ? dataOutput : null,
       htmlOutput,
       output,
@@ -91,18 +98,24 @@ async function createRenderQueue ({ router, config, graphql }) {
   }
 
   const createTemplate = (node, page) => {
-    const { route } = router.resolve(node.path)
+    const pathname = trimEnd(node.path, '/')
     const { query } = page.pageQuery
-    const routePath = trim(route.path, '/')
-    const filePath = routePath.split('/').map(decodeURIComponent).join('/')
-    const htmlOutput = path.resolve(config.outDir, filePath, 'index.html')
-    const dataOutput = path.resolve(config.cacheDir, 'data', `${filePath}.json`)
+    const { route } = router.resolve(node.path)
+    const decodedPath = pathname.split('/').map(decodeURIComponent).join('/')
+
+    let dataOutput = path.join(config.cacheDir, 'data', decodedPath, 'index.json')
+    let htmlOutput = path.join(config.outDir, decodedPath, 'index.html')
+
+    if (page.directoryIndex === false) {
+      dataOutput = `${path.dirname(dataOutput)}.json`
+      htmlOutput = `${path.dirname(htmlOutput)}.html`
+    }
 
     // TODO: remove this before v1.0
     const output = path.dirname(htmlOutput)
 
     return {
-      path: node.path,
+      path: pathname,
       dataOutput: query ? dataOutput : null,
       htmlOutput,
       output,
@@ -118,6 +131,7 @@ async function createRenderQueue ({ router, config, graphql }) {
 
     switch (page.type) {
       case STATIC_ROUTE:
+      case NOT_FOUND_ROUTE:
       case STATIC_TEMPLATE_ROUTE:
         queue.push(createPage(page))
 
