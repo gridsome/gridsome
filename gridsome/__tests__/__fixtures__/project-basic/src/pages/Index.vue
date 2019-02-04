@@ -2,6 +2,10 @@
   <Layout>
     <h1>Gridsome</h1>
     <h2>{{ $page.metaData.myTest.value }}</h2>
+    <g-link href="http://outsidelink1.com">External Links</g-link>
+    <g-link href="https://outsidelink2.com">External Links</g-link>
+    <g-link href="//outsidelink3.com">External Links</g-link>
+    <g-link href="https://www.gridsome.org/docs">Internal Links</g-link>
     <g-link class="g-link-1" :to="{ name: 'blog' }">Blog</g-link>
     <g-link :class="{ 'g-link-2': true }" :to="{ name: 'home' }" active-class="test-active">Home</g-link>
     <g-image src="~/assets/logo.svg" class="g-image-1" alt="SVG logo" width="300" />

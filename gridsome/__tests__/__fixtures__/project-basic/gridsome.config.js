@@ -1,5 +1,6 @@
 module.exports = {
   siteName: 'Gridsome',
+  siteUrl: 'https://www.gridsome.org',
   titleTemplate: '%s | Test',
 
   chainWebpack: config => {
