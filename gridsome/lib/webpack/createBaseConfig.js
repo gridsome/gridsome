@@ -1,5 +1,6 @@
 const path = require('path')
 const hash = require('hash-sum')
+const { pick } = require('lodash')
 const Config = require('webpack-chain')
 const { forwardSlash } = require('../utils')
 const { VueLoaderPlugin } = require('vue-loader')
@@ -221,14 +222,7 @@ module.exports = (app, { isProd, isServer }) => {
   }
 
   config.plugin('injections')
-    .use(require('webpack/lib/DefinePlugin'), [{
-      'process.env.PUBLIC_PATH': JSON.stringify(pathPrefix),
-      'GRIDSOME_CACHE_DIR': JSON.stringify(projectConfig.cacheDir),
-      'GRIDSOME_DATA_DIR': JSON.stringify(`${projectConfig.cacheDir}/data`),
-      'GRIDSOME_MODE': JSON.stringify(process.env.GRIDSOME_MODE || ''),
-      'process.isClient': !isServer,
-      'process.isServer': isServer
-    }])
+    .use(require('webpack/lib/DefinePlugin'), [createEnv(projectConfig)])
 
   if (isProd && !isServer) {
     config.plugin('extract-css')
@@ -329,6 +323,32 @@ module.exports = (app, { isProd, isServer }) => {
       if (loader) {
         rule.use(loader).loader(loader).options(options)
       }
+    }
+  }
+
+  function createEnv (projectConfig) {
+    const baseEnv = {
+      'process.env.PUBLIC_PATH': JSON.stringify(pathPrefix),
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || ''),
+      'GRIDSOME_CACHE_DIR': JSON.stringify(projectConfig.cacheDir),
+      'GRIDSOME_DATA_DIR': JSON.stringify(`${projectConfig.cacheDir}/data`),
+      'GRIDSOME_MODE': JSON.stringify(process.env.GRIDSOME_MODE || ''),
+      'process.isClient': !isServer,
+      'process.isServer': isServer,
+      'process.isProduction': process.env.NODE_ENV === 'production'
+    }
+
+    // merge variables start with GRIDSOME_ENV to config.env
+    const gridsomeEnv = pick(process.env, Object.keys(process.env).filter(key => key.startsWith('GRIDSOME_')))
+    const mergeEnv = Object.entries(gridsomeEnv)
+      .reduce((acc, [key, value]) => {
+        acc[`process.env.${key}`] = ['boolean', 'number'].includes(typeof value) ? value : JSON.stringify(value)
+        return acc
+      }, {})
+
+    return {
+      ...baseEnv,
+      ...mergeEnv
     }
   }
 

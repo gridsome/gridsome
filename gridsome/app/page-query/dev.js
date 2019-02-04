@@ -4,7 +4,7 @@ import Vue from 'vue'
 import fetch from './fetch'
 import SockJS from 'sockjs-client'
 
-const sock = new SockJS(SOCKJS_ENDPOINT)
+const sock = new SockJS(process.env.SOCKJS_ENDPOINT)
 const active = {}
 
 sock.onmessage = message => {
