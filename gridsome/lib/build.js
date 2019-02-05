@@ -69,7 +69,9 @@ const {
 
 module.exports.createRenderQueue = createRenderQueue
 
-async function createRenderQueue ({ router, config, store }) {
+async function createRenderQueue ({ router, config, store, schema }) {
+  const rootFields = schema.getQueryType().getFields()
+
   const createEntry = (node, page, currentPage = 1) => {
     let fullPath = trimEnd(node.path, '/') || '/'
 
@@ -124,9 +126,9 @@ async function createRenderQueue ({ router, config, store }) {
       }
 
       case PAGED_TEMPLATE: {
-        const { typeName, perPage, filter } = page.pageQuery.paginate
-        const { graphqlType } = store.getContentType(typeName)
-        const filterArg = graphqlType.getFields().belongsTo.args.find(arg => arg.name === 'filter')
+        const { fieldName, perPage, filter } = page.pageQuery.paginate
+        const { belongsTo } = rootFields[fieldName].type.getFields()
+        const filterArg = belongsTo.args.find(arg => arg.name === 'filter')
         const query = filterArg ? createFilterQuery(filter || {}, filterArg.type.getFields()) : {}
 
         page.collection.find().forEach(node => {
@@ -143,10 +145,10 @@ async function createRenderQueue ({ router, config, store }) {
       }
 
       case PAGED_ROUTE: {
-        const { typeName, perPage, filter } = page.pageQuery.paginate
-        const { collection, graphqlConnection } = store.getContentType(typeName)
-        const fields = graphqlConnection.args.filter.type.getFields()
-        const query = filter ? createFilterQuery(filter || {}, fields) : null
+        const { typeName, fieldName, perPage, filter } = page.pageQuery.paginate
+        const filterArg = rootFields[fieldName].args.find(arg => arg.name === 'filter')
+        const query = filterArg ? createFilterQuery(filter || {}, filterArg.type.getFields()) : null
+        const { collection } = store.getContentType(typeName)
         const totalNodes = query ? collection.count(query) : collection.count()
         const totalPages = Math.ceil(totalNodes / perPage)
 

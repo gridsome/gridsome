@@ -13,7 +13,7 @@ module.exports = ({ nodeType }) => {
         description: 'Will return an error if not nullable.'
       }
     },
-    resolve (object, { id, _id = id, path, nullable }, { store }, { returnType }) {
+    resolve (object, { _id, id = _id, path, nullable }, { store }, { returnType }) {
       const { collection } = store.getContentType(returnType)
       let node = null
 
