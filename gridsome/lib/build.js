@@ -67,6 +67,8 @@ const {
   DYNAMIC_TEMPLATE_ROUTE
 } = require('./utils/constants')
 
+module.exports.createRenderQueue = createRenderQueue
+
 async function createRenderQueue ({ router, config, store }) {
   const createEntry = (node, page, currentPage = 1) => {
     let fullPath = trimEnd(node.path, '/') || '/'
@@ -89,7 +91,6 @@ async function createRenderQueue ({ router, config, store }) {
     const entry = createEntry(page, page, currentPage)
 
     if (page.directoryIndex === false && page.path !== '/') {
-      entry.dataOutput = entry.dataOutput && `${path.dirname(entry.dataOutput)}.json`
       entry.htmlOutput = `${path.dirname(entry.htmlOutput)}.html`
     }
 
@@ -123,11 +124,14 @@ async function createRenderQueue ({ router, config, store }) {
       }
 
       case PAGED_TEMPLATE: {
-        const { perPage } = page.pageQuery.paginate
+        const { typeName, perPage, filter } = page.pageQuery.paginate
+        const { graphqlType } = store.getContentType(typeName)
+        const filterArg = graphqlType.getFields().belongsTo.args.find(arg => arg.name === 'filter')
+        const query = filterArg ? createFilterQuery(filter || {}, filterArg.type.getFields()) : {}
 
         page.collection.find().forEach(node => {
           const key = `belongsTo.${node.typeName}.${node.id}`
-          const totalNodes = store.index.count({ [key]: { $eq: true }})
+          const totalNodes = store.index.count({ ...query, [key]: { $eq: true }})
           const totalPages = Math.ceil(totalNodes / perPage)
 
           for (let i = 1; i <= totalPages; i++) {
@@ -143,7 +147,7 @@ async function createRenderQueue ({ router, config, store }) {
         const { collection, graphqlConnection } = store.getContentType(typeName)
         const fields = graphqlConnection.args.filter.type.getFields()
         const query = filter ? createFilterQuery(filter || {}, fields) : null
-        const totalNodes = query ? collection.find(query).length : collection.count()
+        const totalNodes = query ? collection.count(query) : collection.count()
         const totalPages = Math.ceil(totalNodes / perPage)
 
         for (let i = 1; i <= totalPages; i++) {

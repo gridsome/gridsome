@@ -72,11 +72,12 @@ function argToObject (node, vars = {}) {
       return parseFloat(node.value)
     case 'NullValue':
       return null
+    case 'Variable':
+      return vars[node.name.value]
+    case 'EnumValue':
     case 'BooleanValue':
     case 'StringValue':
       return node.value
-    case 'Variable':
-      return vars[node.name.value]
   }
 
   return obj

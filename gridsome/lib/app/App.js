@@ -59,7 +59,8 @@ class App {
       { title: 'Initialize', run: this.init },
       { title: 'Load sources', run: this.loadSources },
       { title: 'Create GraphQL schema', run: this.createSchema },
-      { title: 'Generate code', run: this.generateFiles }
+      { title: 'Set up routes', run: this.createRoutes },
+      { title: 'Generate code', run: this.generateCode }
     ]
 
     info(`Gridsome v${version}\n`)
@@ -134,7 +135,7 @@ class App {
     })
   }
 
-  generateFiles () {
+  createRoutes () {
     this.routes = createRoutes(this)
 
     this.router = new Router({
@@ -146,7 +147,9 @@ class App {
         component: () => page
       }))
     })
+  }
 
+  generateCode () {
     return this.generator.generate()
   }
 

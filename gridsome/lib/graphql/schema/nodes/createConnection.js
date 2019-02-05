@@ -39,7 +39,7 @@ module.exports = ({ nodeType, fields }) => {
     page: { type: GraphQLInt, defaultValue: 1 },
 
     // TODO: remove before 1.0
-    regex: { type: GraphQLString, deprecationReason: 'Use filter argument instead.' }
+    regex: { type: GraphQLString, deprecationReason: 'Use filter instead.' }
   }
 
   connectionArgs.filter = {
@@ -55,7 +55,7 @@ module.exports = ({ nodeType, fields }) => {
         content: '',
         excerpt: '',
         date: '2019-01-03'
-      }, nodeType.name)
+      }, `${nodeType.name}Filter`)
     })
   }
 

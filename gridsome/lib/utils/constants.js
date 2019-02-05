@@ -17,6 +17,7 @@ module.exports = {
   BOOTSTRAP_CONFIG: 0,
   BOOTSTRAP_PLUGINS: 1,
   BOOTSTRAP_GRAPHQL: 2,
+  BOOTSTRAP_ROUTES: 3,
   BOOTSTRAP_FULL: Number.MAX_SAFE_INTEGER,
 
   internalRE: /^internal\:\/\//,

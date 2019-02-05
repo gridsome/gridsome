@@ -1,6 +1,5 @@
 const autoBind = require('auto-bind')
 const PluginStore = require('./PluginStore')
-const createRoutes = require('./createRoutes')
 
 class PluginAPI {
   constructor (app, { entry, transformers }) {
@@ -21,7 +20,7 @@ class PluginAPI {
         clearTimeout(regenerateTimeout)
         regenerateTimeout = setTimeout(() => {
           if (app.isBootstrapped) {
-            app.routerData = createRoutes(app)
+            app.createRoutes()
             app.generator.generate('routes.js')
           }
         }, 20)

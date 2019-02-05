@@ -4,6 +4,8 @@ import cache from './cache'
 import config from '~/.temp/config.js'
 import { unslash } from '../utils/helpers'
 
+const re = new RegExp(`^${config.pathPrefix}`)
+
 export default (route, query) => {
   if (GRIDSOME_MODE === 'serve') {
     const variables = { ...route.params, path: route.path }
@@ -25,9 +27,8 @@ export default (route, query) => {
     })
   } else if (GRIDSOME_MODE === 'static') {
     return new Promise((resolve, reject) => {
-      const re = new RegExp(`^${config.pathPrefix}`)
       const routePath = unslash(route.path.replace(re, '/'))
-      const filename = !routePath ? '/index.json' : `/${routePath}/index.json`
+      const filename = !routePath ? '/index.json' : `/${routePath}.json`
 
       import(/* webpackChunkName: "data/" */ `${GRIDSOME_DATA_DIR}${filename}`)
         .then(res => {

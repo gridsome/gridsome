@@ -11,8 +11,8 @@ const {
   GraphQLInputObjectType
 } = require('../graphql')
 
-class GraphQLInputFilterObjectType extends GraphQLInputObjectType {}
-class GraphQLInputFilterReferenceType extends GraphQLInputObjectType {}
+const OBJ_SUFFIX = '__Object'
+const REF_SUFFIX = '__Reference'
 
 function createFilterTypes (fields, typeName) {
   const types = {}
@@ -32,8 +32,8 @@ function createFilterType (value, fieldName, typeName) {
   const defaultDescription = `Filter ${typeName} nodes by ${fieldName}`
 
   if (isRefField(value)) {
-    return new GraphQLInputFilterReferenceType({
-      name: createFilterName(typeName, fieldName),
+    return new GraphQLInputObjectType({
+      name: createFilterName(typeName, fieldName) + REF_SUFFIX,
       description: defaultDescription,
       fields: value.isList
         ? {
@@ -53,7 +53,7 @@ function createFilterType (value, fieldName, typeName) {
   }
 
   if (isDate(value)) {
-    return new GraphQLInputFilterObjectType({
+    return new GraphQLInputObjectType({
       name: createFilterName(typeName, fieldName),
       description: defaultDescription,
       fields: {
@@ -70,7 +70,7 @@ function createFilterType (value, fieldName, typeName) {
   if (Array.isArray(value)) {
     const valueType = toGraphQLType(value[0])
 
-    return valueType ? new GraphQLInputFilterObjectType({
+    return valueType ? new GraphQLInputObjectType({
       name: createFilterName(typeName, fieldName),
       description: defaultDescription,
       fields: {
@@ -84,7 +84,7 @@ function createFilterType (value, fieldName, typeName) {
 
   switch (typeof value) {
     case 'string' :
-      return new GraphQLInputFilterObjectType({
+      return new GraphQLInputObjectType({
         name: createFilterName(typeName, fieldName),
         description: defaultDescription,
         fields: {
@@ -98,7 +98,7 @@ function createFilterType (value, fieldName, typeName) {
       })
 
     case 'boolean' :
-      return new GraphQLInputFilterObjectType({
+      return new GraphQLInputObjectType({
         name: createFilterName(typeName, fieldName),
         fields: {
           eq: { type: GraphQLBoolean, description: desc.eq },
@@ -111,7 +111,7 @@ function createFilterType (value, fieldName, typeName) {
     case 'number':
       const numberType = toGraphQLType(value)
 
-      return new GraphQLInputFilterObjectType({
+      return new GraphQLInputObjectType({
         name: createFilterName(typeName, fieldName),
         description: defaultDescription,
         fields: {
@@ -133,7 +133,7 @@ function createFilterType (value, fieldName, typeName) {
 }
 
 function createObjectFilter (obj, fieldName, typeName) {
-  const name = createFilterName(typeName, fieldName)
+  const name = createFilterName(typeName, fieldName) + OBJ_SUFFIX
   const fields = {}
 
   for (const key in obj) {
@@ -150,7 +150,7 @@ function createObjectFilter (obj, fieldName, typeName) {
 }
 
 function createFilterName (typeName, key) {
-  return camelCase(`${typeName} ${key} InputFilter`, { pascalCase: true })
+  return camelCase(`${typeName} ${key} Filter`, { pascalCase: true })
 }
 
 function toGraphQLType (value) {
@@ -181,7 +181,7 @@ function isRefField (field) {
 }
 
 function createFilterQuery (filter, fields) {
-  const internals = ['id', 'title', 'date', 'slug', 'path', 'content', 'excerpt']
+  const internals = ['id', 'typeName', 'title', 'date', 'slug', 'path', 'content', 'excerpt']
   const query = {}
 
   Object.assign(query, toFilterArgs(omit(filter, internals), fields, 'fields'))
@@ -199,12 +199,12 @@ function toFilterArgs (filter, fields, current = '') {
 
     if (value === undefined) continue
 
-    if (fields[key].type instanceof GraphQLInputFilterObjectType) {
-      result[newKey] = convertFilterValues(value)
-    } else if (fields[key].type instanceof GraphQLInputFilterReferenceType) {
+    if (fields[key].type.name.endsWith(OBJ_SUFFIX)) {
+      Object.assign(result, toFilterArgs(value, fields[key].type.getFields(), newKey))
+    } else if (fields[key].type.name.endsWith(REF_SUFFIX)) {
       result[`${newKey}.id`] = convertFilterValues(value)
     } else {
-      Object.assign(result, toFilterArgs(value, fields[key].type.getFields(), newKey))
+      result[newKey] = convertFilterValues(value)
     }
   }
 
@@ -244,7 +244,5 @@ const desc = {
 module.exports = {
   createFilterType,
   createFilterTypes,
-  createFilterQuery,
-  GraphQLInputFilterObjectType,
-  GraphQLInputFilterReferenceType
+  createFilterQuery
 }
