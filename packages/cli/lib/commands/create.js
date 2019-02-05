@@ -12,8 +12,13 @@ module.exports = async (name, starter = 'default') => {
   const starters = ['default', 'wordpress']
   const hasYarn = await useYarn()
 
-  if (fs.existsSync(dir)) {
-    return console.log(chalk.red(`Directory «${projectName}» already exists.`))
+  try {
+    const files = fs.readdirSync(dir)
+    if (files.length > 1) {
+      return console.log(chalk.red(`Directory «${projectName}» is not empty.`))
+    }
+  } catch (err) {
+    throw new Error(err.message)
   }
 
   if (starters.includes(starter)) {
