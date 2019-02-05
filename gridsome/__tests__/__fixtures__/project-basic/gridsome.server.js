@@ -14,6 +14,10 @@ module.exports = function (api) {
       typeName: 'Category'
     })
 
+    const other = store.addContentType({
+      typeName: 'Other'
+    })
+
     categories.addNode({ id: '1', title: 'First category', path: '/category/first' })
 
     tags.addNode({ id: '1', title: 'First tag' })
@@ -68,6 +72,16 @@ module.exports = function (api) {
         title: `Post ${i}`,
         fields: {
           excluded: true
+        }
+      })
+    }
+
+    for (let i = 1; i <= 10; i++) {
+      other.addNode({
+        id: String(i),
+        title: `Other ${i}`,
+        fields: {
+          category: { id: '1', typeName: 'Category' }
         }
       })
     }

@@ -39,7 +39,7 @@ test('create node reference', async () => {
     typeName: 'Author'
   })
 
-  const posts = api.store.addContentType({
+  const books = api.store.addContentType({
     typeName: 'Book',
     refs: {
       authorRef: {
@@ -59,7 +59,7 @@ test('create node reference', async () => {
     }
   })
 
-  posts.addNode({
+  books.addNode({
     id: '1',
     title: 'Post A',
     fields: {
@@ -68,7 +68,7 @@ test('create node reference', async () => {
     }
   })
 
-  posts.addNode({
+  books.addNode({
     id: '2',
     title: 'Post B',
     fields: {
@@ -106,6 +106,46 @@ test('create node reference', async () => {
   expect(data.author.belongsTo.edges[1].node.id).toEqual('1')
   expect(data.author.belongsTo.edges[1].node.__typename).toEqual('Book')
   expect(data.author.belongsTo.edges[2].node.__typename).toEqual('Author')
+})
+
+test('handle pagination for filtered belongsTo', async () => {
+  const authors = api.store.addContentType({ typeName: 'Author' })
+  const books = api.store.addContentType({ typeName: 'Book' })
+  const stores = api.store.addContentType({ typeName: 'Store' })
+
+  authors.addNode({ id: '1', title: 'Author 1' })
+
+  for (let i = 1; i <= 10; i++) {
+    books.addNode({ id: String(i), fields: { author: { typeName: 'Author', id: '1' }}})
+  }
+
+  for (let i = 1; i <= 10; i++) {
+    stores.addNode({ id: String(i), fields: { author: { typeName: 'Author', id: '1' }}})
+  }
+
+  const query = `query {
+    author (id: "1") {
+      belongsTo (perPage: 3, filter: { typeName: { eq: Book }}) {
+        totalCount
+        pageInfo {
+          totalPages
+        }
+        edges {
+          node {
+            __typename
+          }
+        }
+      }
+    }
+  }`
+
+  const { errors, data } = await createSchemaAndExecute(query)
+
+  expect(errors).toBeUndefined()
+  expect(data.author.belongsTo.edges).toHaveLength(3)
+  expect(data.author.belongsTo.totalCount).toEqual(10)
+  expect(data.author.belongsTo.pageInfo.totalPages).toEqual(4)
+  expect(data.author.belongsTo.edges[0].node.__typename).toEqual('Book')
 })
 
 async function createSchemaAndExecute (query) {

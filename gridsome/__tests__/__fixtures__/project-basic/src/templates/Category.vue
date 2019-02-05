@@ -14,7 +14,7 @@
 query Tag ($path: String!, $page: Int) {
   category (path: $path) {
     title
-    belongsTo (perPage: 2, page: $page) @paginate {
+    belongsTo (perPage: 2, page: $page, filter: { typeName: { eq: Post }}) @paginate {
       pageInfo {
         totalPages
         currentPage

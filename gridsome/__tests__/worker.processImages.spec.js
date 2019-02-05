@@ -142,13 +142,13 @@ async function process (filenames, options = {}, withCache = false) {
     outDir: context
   })
 
-  return Promise.all(assets.map(({ filePath, src, hash }) => {
+  return Promise.all(assets.map(async ({ filePath, src, hash }) => {
     const imageOptions = processQueue.images.createImageOptions(options)
     const filename = processQueue.images.createFileName(filePath, imageOptions, hash)
     const cachePath = path.join(imageCacheDir, filename)
     const destPath = path.join(context, src)
 
-    const buffer = fs.readFileSync(destPath)
+    const buffer = await fs.readFile(destPath)
 
     return { filePath, destPath, cachePath, buffer }
   }))

@@ -86,6 +86,7 @@ test('build basic project', async () => {
   expect(blogIndexHTML).toMatch('<a href="/blog/second-post">Read more</a>')
   expect(blogPage2HTML).toMatch('<span>First post</span>')
   expect(blogPage2HTML).toMatch('<a href="/blog/first-post">Read more</a>')
+  expect(exists('dist/category/first/3/index.html')).toBeFalsy()
   expect(exists('dist/blog/3/index.html')).toBeFalsy()
 
   // templates
