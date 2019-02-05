@@ -63,6 +63,15 @@ module.exports = function (api) {
       }
     })
 
+    for (let i = 4; i < 14; i++) {
+      posts.addNode({
+        title: `Post ${i}`,
+        fields: {
+          excluded: true
+        }
+      })
+    }
+
     store.addMetaData('myTest', {
       value: 'Test Value'
     })

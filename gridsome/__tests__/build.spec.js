@@ -86,6 +86,7 @@ test('build basic project', async () => {
   expect(blogIndexHTML).toMatch('<a href="/blog/second-post">Read more</a>')
   expect(blogPage2HTML).toMatch('<span>First post</span>')
   expect(blogPage2HTML).toMatch('<a href="/blog/first-post">Read more</a>')
+  expect(exists('dist/blog/3/index.html')).toBeFalsy()
 
   // templates
   expect(content('dist/blog/first-post/index.html')).toMatch('<h1>First post</h1>')
@@ -117,7 +118,7 @@ test('build basic project', async () => {
   expect(categoryFirst2HTML).toMatch('First post')
   expect(categoryFirst2HTML).toMatch('Current page. Page 2')
 
-  await clear(context)
+  // await clear(context)
 }, 10000)
 
 test('build project with pathPrefix', async () => {

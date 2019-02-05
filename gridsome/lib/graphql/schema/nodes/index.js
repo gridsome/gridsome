@@ -23,8 +23,14 @@ module.exports = store => {
       fields
     })
 
-    queries[camelCase(typeName)] = createQuery({ nodeType, fields })
-    connections[`all${typeName}`] = createConnection({ nodeType, fields })
+    const nodeQuery = createQuery({ nodeType, fields })
+    const nodeConnection = createConnection({ nodeType, fields })
+
+    queries[camelCase(typeName)] = nodeQuery
+    connections[`all${typeName}`] = nodeConnection
+
+    contentType.graphqlType = nodeType
+    contentType.graphqlConnection = nodeConnection
   }
 
   return {

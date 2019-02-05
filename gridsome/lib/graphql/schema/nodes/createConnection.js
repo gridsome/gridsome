@@ -1,7 +1,7 @@
-const { pick, omit, reduce } = require('lodash')
 const { createPagedNodeEdges } = require('./utils')
 const { PER_PAGE } = require('../../../utils/constants')
 const { pageInfoType, sortOrderType } = require('../types')
+const { createFilterTypes, createFilterQuery } = require('../createFilterTypes')
 
 const {
   GraphQLInt,
@@ -11,12 +11,6 @@ const {
   GraphQLObjectType,
   GraphQLInputObjectType
 } = require('../../graphql')
-
-const {
-  createFilterTypes,
-  GraphQLInputFilterObjectType,
-  GraphQLInputFilterReferenceType
-} = require('../createFilterTypes')
 
 module.exports = ({ nodeType, fields }) => {
   const edgeType = new GraphQLObjectType({
@@ -79,10 +73,8 @@ module.exports = ({ nodeType, fields }) => {
       }
 
       if (filter) {
-        const internals = ['id', 'title', 'date', 'slug', 'path', 'content', 'excerpt']
-
-        Object.assign(query, toFilterArgs(omit(filter, internals), connectionArgs.filter, 'fields'))
-        Object.assign(query, toFilterArgs(pick(filter, internals), connectionArgs.filter))
+        const fields = connectionArgs.filter.type.getFields()
+        Object.assign(query, createFilterQuery(filter, fields))
       }
 
       const chain = collection.chain().find(query)
@@ -90,37 +82,4 @@ module.exports = ({ nodeType, fields }) => {
       return createPagedNodeEdges(chain, args)
     }
   }
-}
-
-function toFilterArgs (input, filters, current = '') {
-  const fields = filters.type.getFields()
-  const result = {}
-
-  for (const key in input) {
-    const newKey = current ? `${current}.${key}` : key
-    const value = input[key]
-
-    if (value === undefined) continue
-
-    if (fields[key].type instanceof GraphQLInputFilterObjectType) {
-      result[newKey] = convertFilterValues(value)
-    } else if (fields[key].type instanceof GraphQLInputFilterReferenceType) {
-      result[`${newKey}.id`] = convertFilterValues(value)
-    } else {
-      Object.assign(result, toFilterArgs(value, fields[key], newKey))
-    }
-  }
-
-  return result
-}
-
-function convertFilterValues (value) {
-  return reduce(value, (acc, value, key) => {
-    const filterKey = `$${key}`
-
-    if (key === 'regex') acc[filterKey] = new RegExp(value)
-    else acc[filterKey] = value
-
-    return acc
-  }, {})
 }

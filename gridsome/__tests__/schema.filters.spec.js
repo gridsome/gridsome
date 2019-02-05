@@ -203,6 +203,23 @@ test('filter by multiple reference ids', async () => {
   expect(data.allProduct.edges[1].node.id).toEqual('2')
 })
 
+test('handle pagination for filtered nodes', async () => {
+  const { errors, data } = await createSchemaAndExecute(`{
+    allProduct (perPage: 2, filter: { title: { regex: "Do[l|j]or" } }) {
+      totalCount
+      pageInfo {
+       totalPages
+      }
+      edges { node { id } }
+    }
+  }`)
+
+  expect(errors).toBeUndefined()
+  expect(data.allProduct.edges).toHaveLength(2)
+  expect(data.allProduct.totalCount).toEqual(2)
+  expect(data.allProduct.pageInfo.totalPages).toEqual(1)
+})
+
 async function createSchemaAndExecute (query) {
   const posts = api.store.addContentType({ typeName: 'Product' })
 

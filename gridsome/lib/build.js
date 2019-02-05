@@ -9,6 +9,7 @@ const { log, info } = require('./utils/log')
 const createApp = require('./app')
 const { createWorker } = require('./workers')
 const compileAssets = require('./webpack/compileAssets')
+const { createFilterQuery } = require('./graphql/schema/createFilterTypes')
 
 module.exports = async (context, args) => {
   process.env.NODE_ENV = 'production'
@@ -23,8 +24,6 @@ module.exports = async (context, args) => {
   await fs.remove(config.outDir)
 
   const queue = await createRenderQueue(app)
-
-  // return console.log(queue)
 
   // 1. run all GraphQL queries and save results into json files
   await app.dispatch('beforeRenderQueries', () => ({ context, config, queue }))
@@ -140,9 +139,11 @@ async function createRenderQueue ({ router, config, store }) {
       }
 
       case PAGED_ROUTE: {
-        const { typeName, perPage } = page.pageQuery.paginate
-        const contentType = store.getContentType(typeName)
-        const totalNodes = contentType.collection.count()
+        const { typeName, perPage, filter } = page.pageQuery.paginate
+        const { collection, graphqlConnection } = store.getContentType(typeName)
+        const fields = graphqlConnection.args.filter.type.getFields()
+        const query = filter ? createFilterQuery(filter || {}, fields) : null
+        const totalNodes = query ? collection.find(query).length : collection.count()
         const totalPages = Math.ceil(totalNodes / perPage)
 
         for (let i = 1; i <= totalPages; i++) {

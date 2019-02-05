@@ -13,7 +13,15 @@
 
 <page-query>
 query Blog ($page: Int) {
-  posts: allPost (perPage: 2, page: $page) @paginate {
+  posts: allPost (
+    perPage: 2,
+    page: $page,
+    filter: {
+      excluded: {
+        ne: true
+      }
+    }
+  ) @paginate {
     pageInfo {
       totalPages
       currentPage

@@ -1,6 +1,6 @@
-const { isEmpty } = require('lodash')
 const camelCase = require('camelcase')
 const { isDate } = require('./types/date')
+const { isEmpty, pick, omit, reduce } = require('lodash')
 
 const {
   GraphQLInt,
@@ -180,6 +180,48 @@ function isRefField (field) {
   )
 }
 
+function createFilterQuery (filter, fields) {
+  const internals = ['id', 'title', 'date', 'slug', 'path', 'content', 'excerpt']
+  const query = {}
+
+  Object.assign(query, toFilterArgs(omit(filter, internals), fields, 'fields'))
+  Object.assign(query, toFilterArgs(pick(filter, internals), fields))
+
+  return query
+}
+
+function toFilterArgs (filter, fields, current = '') {
+  const result = {}
+
+  for (const key in filter) {
+    const newKey = current ? `${current}.${key}` : key
+    const value = filter[key]
+
+    if (value === undefined) continue
+
+    if (fields[key].type instanceof GraphQLInputFilterObjectType) {
+      result[newKey] = convertFilterValues(value)
+    } else if (fields[key].type instanceof GraphQLInputFilterReferenceType) {
+      result[`${newKey}.id`] = convertFilterValues(value)
+    } else {
+      Object.assign(result, toFilterArgs(value, fields[key].type.getFields(), newKey))
+    }
+  }
+
+  return result
+}
+
+function convertFilterValues (value) {
+  return reduce(value, (acc, value, key) => {
+    const filterKey = `$${key}`
+
+    if (key === 'regex') acc[filterKey] = new RegExp(value)
+    else acc[filterKey] = value
+
+    return acc
+  }, {})
+}
+
 const desc = {
   eq: 'Filter nodes by property of (strict) equality.',
   ne: 'Filter nodes by property not equal to provided value.',
@@ -202,6 +244,7 @@ const desc = {
 module.exports = {
   createFilterType,
   createFilterTypes,
+  createFilterQuery,
   GraphQLInputFilterObjectType,
   GraphQLInputFilterReferenceType
 }
