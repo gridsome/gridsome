@@ -129,7 +129,7 @@ test('build basic project', async () => {
   expect(categoryFirst2HTML).toMatch('Current page. Page 2')
 
   await clear(context)
-}, 10000)
+}, 15000)
 
 test('build project with pathPrefix', async () => {
   const context = path.join(__dirname, '__fixtures__', 'project-path-prefix')

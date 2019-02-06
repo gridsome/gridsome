@@ -757,8 +757,16 @@ test('should format dates from schema', async () => {
     }
   })
 
+  posts.addNode({
+    id: '2',
+    date: new Date('2018-10-10'),
+    fields: {
+      dateType: new Date('2018-10-10')
+    }
+  })
+
   const { errors, data } = await createSchemaAndExecute(`{
-    testPostDate (id: "1") {
+    post1: testPostDate (id: "1") {
       date
       customDate
       date2: date(format: "YYYY-MM-DD")
@@ -767,14 +775,23 @@ test('should format dates from schema', async () => {
         date(format: "DD/MM/YYYY")
       }
     }
+    post2: testPostDate (id: "2") {
+      date
+      dateType(format: "DD/MM/YYYY")
+    }
+    post3: testPostDate (id: "2") {
+      date(format: "DD/MM/YYYY")
+    }
   }`)
 
   expect(errors).toBeUndefined()
-  expect(data.testPostDate.date).toEqual('2018-10-10')
-  expect(data.testPostDate.customDate).toEqual('2018-10-10')
-  expect(data.testPostDate.date2).toEqual('2018-10-10')
-  expect(data.testPostDate.date3).toEqual('10/10/2018')
-  expect(data.testPostDate.dateObject.date).toEqual('10/10/2018')
+  expect(data.post1.date).toEqual('2018-10-10')
+  expect(data.post1.customDate).toEqual('2018-10-10')
+  expect(data.post1.date2).toEqual('2018-10-10')
+  expect(data.post1.date3).toEqual('10/10/2018')
+  expect(data.post2.date).toEqual('2018-10-10T00:00:00.000Z')
+  expect(data.post2.dateType).toEqual('10/10/2018')
+  expect(data.post3.date).toEqual('10/10/2018')
 })
 
 test('add custom schema fields', async () => {

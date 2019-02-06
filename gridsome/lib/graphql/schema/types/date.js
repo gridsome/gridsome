@@ -24,13 +24,7 @@ exports.dateType = {
     locale: { type: GraphQLString, description: 'Locale' }
   },
   resolve: (obj, args, context, { fieldName }) => {
-    const value = obj[fieldName]
-
-    if (Object.keys(args).length) {
-      return formatDate(value, args)
-    }
-
-    return value
+    return formatDate(obj[fieldName], args)
   }
 }
 
@@ -39,20 +33,25 @@ exports.dateTypeField = {
   ...exports.dateType,
   resolve: (obj, args, context, info) => {
     const value = fieldResolver(obj, args, context, info)
-
-    if (Object.keys(args).length) {
-      return formatDate(value, args)
-    }
-
-    return value
+    return formatDate(value, args)
   }
 }
 
 function formatDate (value, args = {}) {
-  const { format, locale = 'en' } = args
+  if (Object.keys(args).length) {
+    const { format, locale = 'en' } = args
 
-  return moment
-    .utc(value, ISO_8601_FORMAT, true)
-    .locale(locale)
-    .format(format)
+    return moment
+      .utc(toString(value), ISO_8601_FORMAT, true)
+      .locale(locale)
+      .format(format)
+  }
+
+  return toString(value)
+}
+
+function toString (value) {
+  return typeof value === 'number'
+    ? new Date(value).toISOString()
+    : value
 }

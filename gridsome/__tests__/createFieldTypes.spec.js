@@ -89,6 +89,7 @@ test('infer date fields', () => {
   const fields = mergeNodeFields([
     {
       fields: {
+        date: new Date(),
         date1: '2018',
         date2: '2018-11',
         date3: '2018-11-01',
@@ -100,6 +101,7 @@ test('infer date fields', () => {
 
   const types = createFieldTypes(fields, 'TestPost')
 
+  expect(types.date.type).toEqual(GraphQLDate)
   expect(types.date1.type).toEqual(GraphQLDate)
   expect(types.date2.type).toEqual(GraphQLDate)
   expect(types.date3.type).toEqual(GraphQLDate)
