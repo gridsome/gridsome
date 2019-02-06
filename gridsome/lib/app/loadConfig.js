@@ -1,6 +1,7 @@
 const path = require('path')
 const fs = require('fs-extra')
 const crypto = require('crypto')
+const dotenv = require('dotenv')
 const colorString = require('color-string')
 const { defaultsDeep, camelCase } = require('lodash')
 const { internalRE, transformerRE, SUPPORTED_IMAGE_TYPES } = require('../utils/constants')
@@ -11,6 +12,10 @@ const builtInPlugins = [
 
 // TODO: use joi to define and validate config schema
 module.exports = (context, options = {}, pkg = {}) => {
+  const env = resolveEnv(context)
+
+  Object.assign(process.env, env)
+
   if (options.config) {
     return options.config
   }
@@ -118,6 +123,24 @@ module.exports = (context, options = {}, pkg = {}) => {
   config.css = defaultsDeep(css, localConfig.css || {})
 
   return Object.freeze(config)
+}
+
+function resolveEnv (context) {
+  const env = process.env.NODE_ENV || 'development'
+  const envPathByMode = path.resolve(context, `./.env.${env}`)
+  const envPath = path.resolve(context, `./.env`)
+  const readPath = fs.existsSync(envPathByMode) ? envPathByMode : envPath
+
+  let parsed = {}
+  try {
+    parsed = dotenv.parse(fs.readFileSync(readPath, 'utf8'))
+  } catch (err) {
+    if (err.code !== 'ENOENT') {
+      console.error('There was a problem processing the .env file', err)
+    }
+  }
+
+  return parsed
 }
 
 function resolvePkg (context) {

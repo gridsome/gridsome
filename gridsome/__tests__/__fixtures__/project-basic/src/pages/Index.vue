@@ -38,7 +38,9 @@ export default {
     return {
       TEST_1,
       TEST_2,
-      TEST_3
+      TEST_3,
+      GRIDSOME_PROD_VARIABLE: process.env.GRIDSOME_PROD_VARIABLE,
+      PROD_VARIABLE: process.env.PROD_VARIABLE
     }
   },
 

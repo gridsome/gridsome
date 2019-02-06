@@ -6,7 +6,7 @@ module.exports = {
   chainWebpack: config => {
     config.plugin('test-injections-1')
       .use(require('webpack/lib/DefinePlugin'), [{
-        'TEST_1': JSON.stringify('test 1')
+        'TEST_1': JSON.stringify(process.env.PROD_VARIABLE)
       }])
   },
 

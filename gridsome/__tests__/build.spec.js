@@ -26,7 +26,7 @@ test('build basic project', async () => {
   expect(indexHTML).toMatch('<span>string from custom schema</span>')
   expect(indexHTML).toMatch('<span>Test Value</span>')
   expect(indexHTML).toMatch('<span>bar</span>')
-  expect(indexHTML).toMatch('<span>test 1</span>')
+  expect(indexHTML).toMatch('<span>PROD_2</span>')
   expect(indexHTML).toMatch('<span>test 2</span>')
   expect(indexHTML).toMatch('<span>test 3</span>')
   expect(indexHTML).toMatch('<a href="/blog" class="g-link-1">Blog</a>')
@@ -56,6 +56,10 @@ test('build basic project', async () => {
   // transpile custom sfc blocks
   expect(appJS).not.toMatch('Component =>') // static-query
   expect(homeJS).not.toMatch('Component =>') // page-query
+
+  // env variables
+  expect(homeJS).toMatch('GRIDSOME_PROD_VARIABLE: "PROD_1"')
+  expect(homeJS).toMatch('PROD_VARIABLE: process.env.PROD_VARIABLE')
 
   // polyfills
   expect(appJS).toMatch('// ECMAScript 6 symbols shim')
