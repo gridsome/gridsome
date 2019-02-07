@@ -1,4 +1,3 @@
-import Vue from 'vue'
 import { observe, unobserve } from '../components/Image'
 
 export default {

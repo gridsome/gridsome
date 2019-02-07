@@ -7,13 +7,23 @@ const { BOOTSTRAP_CONFIG } = require('../lib/utils/constants')
 
 const context = path.join(__dirname, '__fixtures__', 'project-basic')
 
+let originalEnv
+
+beforeAll(() => {
+  originalEnv = { ...process.env }
+})
+
+afterEach(() => {
+  process.env = originalEnv
+})
+
 test('setup basic config', () => {
   const config = loadConfig(context)
 
   expect(config.chainWebpack).toHaveLength(1)
   expect(config.pathPrefix).toEqual('/')
   expect(config.runtimeCompiler).toEqual(false)
-  expect(config.siteUrl).toEqual('')
+  expect(config.siteUrl).toEqual('https://www.gridsome.org')
   expect(config.baseUrl).toEqual('/')
   expect(config.siteName).toEqual('Gridsome')
   expect(config.titleTemplate).toEqual('%s | Test')
@@ -22,6 +32,22 @@ test('setup basic config', () => {
   expect(config.icon.touchicon).toHaveProperty('sizes')
   expect(config.icon.touchicon).toHaveProperty('precomposed')
   expect(config.icon.touchicon).toHaveProperty('src', 'src/favicon.png')
+})
+
+test('load env variables', () => {
+  loadConfig(context)
+
+  expect(process.env.GRIDSOME_TEST_VARIABLE).toEqual('TEST_1')
+  expect(process.env.TEST_VARIABLE).toEqual('TEST_2')
+})
+
+test('load env variables by NODE_ENV', () => {
+  process.env.NODE_ENV = 'production'
+
+  loadConfig(context)
+
+  expect(process.env.GRIDSOME_PROD_VARIABLE).toEqual('PROD_1')
+  expect(process.env.PROD_VARIABLE).toEqual('PROD_2')
 })
 
 test('setup custom favicon and touchicon config', () => {

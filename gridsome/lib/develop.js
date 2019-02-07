@@ -67,12 +67,12 @@ module.exports = async (context, args) => {
 
   async function createWebpackConfig () {
     const clientConfig = await createClientConfig(app)
+    const { SOCKJS_ENDPOINT, GRAPHQL_ENDPOINT, GRAPHQL_WS_ENDPOINT } = process.env
 
     clientConfig
       .plugin('friendly-errors')
       .use(require('friendly-errors-webpack-plugin'))
 
-    const { SOCKJS_ENDPOINT, GRAPHQL_ENDPOINT, GRAPHQL_WS_ENDPOINT } = process.env
     clientConfig
       .plugin('injections')
       .tap(args => {

@@ -26,11 +26,16 @@ test('build basic project', async () => {
   expect(indexHTML).toMatch('<span>string from custom schema</span>')
   expect(indexHTML).toMatch('<span>Test Value</span>')
   expect(indexHTML).toMatch('<span>bar</span>')
-  expect(indexHTML).toMatch('<span>test 1</span>')
+  expect(indexHTML).toMatch('<span>PROD_2</span>')
   expect(indexHTML).toMatch('<span>test 2</span>')
   expect(indexHTML).toMatch('<span>test 3</span>')
   expect(indexHTML).toMatch('<a href="/blog" class="g-link-1">Blog</a>')
   expect(indexHTML).toMatch('<a href="/" class="active--exact test-active g-link-2">Home</a>')
+  expect(indexHTML).toMatch('href="http://outsidelink1.com" target="_blank" rel="noopener"')
+  expect(indexHTML).toMatch('href="https://outsidelink2.com" target="_blank" rel="noopener"')
+  expect(indexHTML).toMatch('href="//outsidelink3.com" target="_blank" rel="noopener"')
+  expect(indexHTML).toMatch('href="https://www.gridsome.org/docs"')
+  expect(indexHTML).not.toMatch('href="https://www.gridsome.org/docs" target="_blank" rel="noopener"')
   expect(indexHTML).toMatch('test-active')
   expect(indexHTML).not.toMatch('Main description')
   expect(indexHTML).toMatch('Index description')
@@ -52,23 +57,36 @@ test('build basic project', async () => {
   expect(appJS).not.toMatch('Component =>') // static-query
   expect(homeJS).not.toMatch('Component =>') // page-query
 
+  // env variables
+  expect(homeJS).toMatch('GRIDSOME_PROD_VARIABLE: "PROD_1"')
+  expect(homeJS).toMatch('PROD_VARIABLE: process.env.PROD_VARIABLE')
+
+  // polyfills
+  expect(appJS).toMatch('// ECMAScript 6 symbols shim')
+
   // favicon
   expect(exists('dist/assets/static/favicon.1539b60.test.png')).toBeTruthy()
 
   // g-image
   expect(exists('dist/assets/static/test.82a2fbd.test.png')).toBeTruthy()
   expect(exists('dist/assets/static/test.97c148e.test.png')).toBeTruthy()
-  expect(indexHTML).toMatch('src="data:image/svg+xml')
+  expect(indexHTML).toMatch(' src="data:image/svg+xml')
+  expect(indexHTML).toMatch('data-srcset="/assets/static/test.82a2fbd.test.png 480w')
+  expect(indexHTML).toMatch('data-src="/assets/static/test.97c148e.test.png"')
+  expect(indexHTML).toMatch(' src="/assets/static/test.cbab2cf.test.png"')
+  expect(indexHTML).toMatch(' src="/uploads/test.png"')
+  expect(indexHTML).toMatch(' src="https://www.example.com/assets/image.png"')
   expect(indexHTML).toMatch('alt="Test image"')
   expect(indexHTML).toMatch('alt="SVG logo"')
-  expect(indexHTML).toMatch('data-srcset="/assets/static/test.82a2fbd.test.png 480w')
-  expect(indexHTML).toMatch('src="/assets/static/test.97c148e.test.png"')
-  expect(indexHTML).toMatch('src="https://www.example.com/assets/image.png"')
+  expect(indexHTML).toMatch('alt="Immediate image"')
   expect(indexHTML).toMatch('alt="External image"')
+  expect(indexHTML).toMatch('alt="Static image"')
   expect(indexHTML).toMatch('class="g-image-1 g-image')
   expect(indexHTML).toMatch('class="g-image-2 g-image')
   expect(indexHTML).toMatch('class="g-image-3 g-image')
   expect(indexHTML).not.toMatch('g-image-3-false')
+  expect(indexHTML).not.toMatch('[object Object]')
+  expect(indexHTML).not.toMatch('width=""')
 
   // #163 - remove duplicate style links
   expect(indexHTML.match(/styles\.css/g)).toHaveLength(2)
@@ -119,8 +137,8 @@ test('build basic project', async () => {
   expect(categoryFirst2HTML).toMatch('First post')
   expect(categoryFirst2HTML).toMatch('Current page. Page 2')
 
-  // await clear(context)
-}, 10000)
+  await clear(context)
+}, 15000)
 
 test('build project with pathPrefix', async () => {
   const context = path.join(__dirname, '__fixtures__', 'project-path-prefix')

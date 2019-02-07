@@ -1,10 +1,11 @@
-const path = require('path')
 const crypto = require('crypto')
+const moment = require('moment')
 const EventEmitter = require('events')
 const camelCase = require('camelcase')
-const dateFormat = require('dateformat')
 const slugify = require('@sindresorhus/slugify')
-const { cloneDeep, isObject } = require('lodash')
+const { cloneDeep, isObject, isDate } = require('lodash')
+const { ISO_8601_FORMAT } = require('../utils/constants')
+const { isResolvablePath } = require('../utils')
 const { warn } = require('../utils/log')
 
 const nonValidCharsRE = new RegExp('[^a-zA-Z0-9_]', 'g')
@@ -176,7 +177,7 @@ class ContentTypeCollection extends EventEmitter {
   processNodeFields (input = {}, origin = '') {
     const belongsTo = {}
 
-    const processRefField = ({ typeName, id }) => {
+    const addBelongsTo = ({ typeName, id }) => {
       belongsTo[typeName] = belongsTo[typeName] || {}
       if (Array.isArray(id)) id.forEach(id => (belongsTo[typeName][id] = true))
       else belongsTo[typeName][id] = true
@@ -188,20 +189,23 @@ class ContentTypeCollection extends EventEmitter {
 
       switch (typeof field) {
         case 'object':
+          if (isDate(field)) {
+            return field
+          }
           if (isRefField(field)) {
             if (Array.isArray(field.typeName)) {
               field.typeName.forEach(typeName => {
-                processRefField({ typeName, id: field.id })
+                addBelongsTo({ typeName, id: field.id })
               })
             } else {
-              processRefField(field)
+              addBelongsTo(field)
             }
           }
           return processFields(field)
         case 'string':
-          if (path.extname(field).length > 1) {
-            return this.resolveFilePath(origin, field)
-          }
+          return isResolvablePath(field)
+            ? this.resolveFilePath(origin, field)
+            : field
       }
 
       return field
@@ -240,7 +244,7 @@ class ContentTypeCollection extends EventEmitter {
     for (const fieldName in this.options.refs) {
       const id = fields[fieldName]
       const { typeName } = this.options.refs[fieldName]
-      processRefField({ id, typeName })
+      addBelongsTo({ id, typeName })
     }
 
     return { fields, belongsTo }
@@ -251,11 +255,9 @@ class ContentTypeCollection extends EventEmitter {
   }
 
   makePath (node) {
-    const year = node.date ? dateFormat(node.date, 'yyyy') : null
-    const month = node.date ? dateFormat(node.date, 'mm') : null
-    const day = node.date ? dateFormat(node.date, 'dd') : null
-    const params = { year, month, day, slug: node.slug }
+    const date = moment.utc(node.date, ISO_8601_FORMAT, true)
     const { routeKeys } = this.options
+    const params = {}
 
     // Use root level fields as route params. Primitive values
     // are slugified but the original value will be available
@@ -264,7 +266,10 @@ class ContentTypeCollection extends EventEmitter {
       const keyName = routeKeys[i]
       const fieldValue = node.fields[keyName] || node[keyName] || keyName
 
-      if (
+      if (keyName === 'year') params.year = date.format('YYYY')
+      else if (keyName === 'month') params.month = date.format('MM')
+      else if (keyName === 'day') params.day = date.format('DD')
+      else if (
         isObject(fieldValue) &&
         fieldValue.hasOwnProperty('typeName') &&
         fieldValue.hasOwnProperty('id') &&

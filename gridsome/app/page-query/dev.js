@@ -1,5 +1,3 @@
-/* global SOCKJS_ENDPOINT */
-
 import Vue from 'vue'
 import fetch from './fetch'
 import SockJS from 'sockjs-client'

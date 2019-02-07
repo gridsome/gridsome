@@ -22,6 +22,14 @@ exports.parseUrl = function (input) {
   }
 }
 
+exports.isResolvablePath = function (value) {
+  return (
+    typeof value === 'string' &&
+    path.extname(value).length > 1 &&
+    (value.startsWith('.') || path.isAbsolute(value))
+  )
+}
+
 exports.resolvePath = function (fromPath, toPath, rootDir) {
   if (typeof toPath !== 'string') return toPath
   if (typeof fromPath !== 'string') return toPath

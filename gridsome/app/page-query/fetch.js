@@ -1,4 +1,4 @@
-/* global GRAPHQL_ENDPOINT, GRIDSOME_MODE, GRIDSOME_DATA_DIR */
+/* global GRIDSOME_MODE, GRIDSOME_DATA_DIR */
 
 import cache from './cache'
 import config from '~/.temp/config.js'

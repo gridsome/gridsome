@@ -757,8 +757,16 @@ test('should format dates from schema', async () => {
     }
   })
 
+  posts.addNode({
+    id: '2',
+    date: new Date('2018-10-10'),
+    fields: {
+      dateType: new Date('2018-10-10')
+    }
+  })
+
   const { errors, data } = await createSchemaAndExecute(`{
-    testPostDate (id: "1") {
+    post1: testPostDate (id: "1") {
       date
       customDate
       date2: date(format: "YYYY-MM-DD")
@@ -767,14 +775,23 @@ test('should format dates from schema', async () => {
         date(format: "DD/MM/YYYY")
       }
     }
+    post2: testPostDate (id: "2") {
+      date
+      dateType(format: "DD/MM/YYYY")
+    }
+    post3: testPostDate (id: "2") {
+      date(format: "DD/MM/YYYY")
+    }
   }`)
 
   expect(errors).toBeUndefined()
-  expect(data.testPostDate.date).toEqual('2018-10-10T00:00:00+02:00')
-  expect(data.testPostDate.customDate).toEqual('2018-10-10T00:00:00+02:00')
-  expect(data.testPostDate.date2).toEqual('2018-10-10')
-  expect(data.testPostDate.date3).toEqual('10/10/2018')
-  expect(data.testPostDate.dateObject.date).toEqual('10/10/2018')
+  expect(data.post1.date).toEqual('2018-10-10')
+  expect(data.post1.customDate).toEqual('2018-10-10')
+  expect(data.post1.date2).toEqual('2018-10-10')
+  expect(data.post1.date3).toEqual('10/10/2018')
+  expect(data.post2.date).toEqual('2018-10-10T00:00:00.000Z')
+  expect(data.post2.dateType).toEqual('10/10/2018')
+  expect(data.post3.date).toEqual('10/10/2018')
 })
 
 test('add custom schema fields', async () => {
@@ -886,22 +903,16 @@ test('process image types in schema', async () => {
   }`)
 
   expect(errors).toBeUndefined()
-  expect(data.testPost.image.type).toEqual('image')
-  expect(data.testPost.image.mimeType).toEqual('image/png')
-  expect(data.testPost.image.src).toEqual('/assets/350x250.png')
-  expect(data.testPost.image.size).toBeUndefined()
-  expect(data.testPost.image.sizes).toBeUndefined()
-  expect(data.testPost.image.srcset).toBeUndefined()
-  expect(data.testPost.image.dataUri).toBeUndefined()
-  expect(data.testPost.image2.src).toEqual('https://www.example.com/images/image.png')
+  expect(data.testPost.image).toEqual('/assets/350x250.png')
+  expect(data.testPost.image2).toEqual('https://www.example.com/images/image.png')
   expect(data.testPost.image3.type).toEqual('image')
   expect(data.testPost.image3.mimeType).toEqual('image/png')
   expect(data.testPost.image3.src).toEqual('/assets/static/350x250.f14e36e.test.png')
   expect(data.testPost.image3.size).toMatchObject({ width: 300, height: 215 })
   expect(data.testPost.image3.sizes).toEqual('(max-width: 300px) 100vw, 300px')
   expect(data.testPost.image3.srcset).toHaveLength(1)
-  expect(data.testPost.image4).toBeNull()
-  expect(data.testPost.image5.src).toEqual('/assets/static/350x250.5c1e01e.test.png')
+  expect(data.testPost.image4).toEqual('dir/to/350x250.png')
+  expect(data.testPost.image5).toEqual('350x250.png')
 })
 
 test('process file types in schema', async () => {
@@ -937,10 +948,8 @@ test('process file types in schema', async () => {
   }`)
 
   expect(errors).toBeUndefined()
-  expect(data.testPost.file.type).toEqual('file')
-  expect(data.testPost.file.mimeType).toEqual('application/pdf')
-  expect(data.testPost.file.src).toEqual('/assets/document.pdf')
-  expect(data.testPost.file2.src).toEqual('https://www.example.com/assets/document.pdf')
+  expect(data.testPost.file).toEqual('/assets/document.pdf')
+  expect(data.testPost.file2).toEqual('https://www.example.com/assets/document.pdf')
   expect(data.testPost.file3.type).toEqual('file')
   expect(data.testPost.file3.mimeType).toEqual('application/pdf')
   expect(data.testPost.file3.src).toEqual('/assets/files/dummy.pdf')

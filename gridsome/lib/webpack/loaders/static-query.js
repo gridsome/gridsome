@@ -6,6 +6,7 @@ const validateQuery = require('../../graphql/utils/validateQuery')
 const cache = new LRU({ max: 1000 })
 
 module.exports = async function (source, map) {
+  const isDev = process.env.NODE_ENV === 'development'
   const { config, schema, graphql } = process.GRIDSOME
   const staticQueryPath = path.join(config.appPath, 'static-query')
   const resourcePath = this.resourcePath
@@ -27,17 +28,26 @@ module.exports = async function (source, map) {
     return
   }
 
-  try {
-    const errors = validateQuery(schema, source)
+  if (isDev || process.env.NODE_ENV === 'test') {
+    try {
+      const errors = validateQuery(schema, source)
 
-    if (errors && errors.length) {
-      return callback(errors, source, map)
+      if (errors && errors.length) {
+        callback(errors, source, map)
+        return
+      }
+    } catch (err) {
+      callback(err, source, map)
+      return
     }
-  } catch (err) {
-    return callback(err, source, map)
   }
 
-  const { data } = await graphql(source)
+  const { errors, data } = await graphql(source)
+
+  if (errors) {
+    callback(errors[0], source, map)
+    return
+  }
 
   const res = `
     import initStaticQuery from ${JSON.stringify(staticQueryPath)}
