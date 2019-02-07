@@ -308,9 +308,10 @@ module.exports = (app, { isProd, isServer }) => {
       }
 
       rule.use('css-loader')
-        .loader(isServer ? 'css-loader/locals' : 'css-loader')
+        .loader('css-loader')
         .options(Object.assign({
           modules,
+          exportOnlyLocals: isServer,
           localIdentName: `[local]_[hash:base64:8]`,
           importLoaders: 1,
           sourceMap: !isProd

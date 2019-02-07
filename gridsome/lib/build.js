@@ -162,8 +162,18 @@ async function renderPageQueries (queue, graphql) {
   const pages = queue.filter(page => !!page.dataOutput)
 
   await pMap(pages, async page => {
-    const variables = { ...page.route.params, path: page.path }
+    const { params } = page.route
+    const variables = { ...params, path: page.path }
+
+    if (params.page) {
+      variables.page = Number(params.page)
+    }
+
     const results = await graphql(page.query, variables)
+
+    if (results.errors) {
+      throw new Error(results.errors)
+    }
 
     await fs.outputFile(page.dataOutput, JSON.stringify(results))
   }, { concurrency: sysinfo.cpus.logical })

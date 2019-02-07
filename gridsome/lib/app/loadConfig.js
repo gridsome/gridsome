@@ -128,8 +128,8 @@ module.exports = (context, options = {}, pkg = {}) => {
 
 function resolveEnv (context) {
   const env = process.env.NODE_ENV || 'development'
-  const envPathByMode = path.resolve(context, `./.env.${env}`)
-  const envPath = path.resolve(context, `./.env`)
+  const envPath = path.resolve(context, '.env')
+  const envPathByMode = path.resolve(context, `.env.${env}`)
   const readPath = fs.existsSync(envPathByMode) ? envPathByMode : envPath
 
   let parsed = {}
