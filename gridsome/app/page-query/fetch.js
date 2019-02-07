@@ -1,12 +1,19 @@
 /* global GRIDSOME_MODE, GRIDSOME_DATA_DIR */
 
 import cache from './cache'
+import router from '../router'
 import config from '~/.temp/config.js'
 import { unslash } from '../utils/helpers'
 
 export default (route, query) => {
   if (GRIDSOME_MODE === 'serve') {
-    const variables = { ...route.params, path: route.path }
+    const { page, ...params } = route.params
+    const { href } = router.resolve({ ...route, params })
+    const variables = { ...params }
+
+    if (page) variables.page = Number(page)
+
+    variables.path = href || route.path
 
     return new Promise((resolve, reject) => {
       fetch(process.env.GRAPHQL_ENDPOINT, {
