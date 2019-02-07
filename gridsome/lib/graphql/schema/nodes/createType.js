@@ -1,4 +1,5 @@
 const graphql = require('graphql')
+const { safeKey } = require('../../../utils')
 const { dateType } = require('../types/date')
 const { nodeInterface } = require('../interfaces')
 const { createPagedNodeEdges } = require('./utils')
@@ -107,7 +108,7 @@ module.exports = ({ contentType, nodeTypes, fields, typeNameEnum }) => {
 }
 
 function belongsToResolver (node, { types, regex, ...args }, { store }) {
-  const key = `belongsTo.${node.typeName}.${node.id}`
+  const key = `belongsTo.${node.typeName}.${safeKey(node.id)}`
   const query = { [key]: { $eq: true }}
 
   if (types) query.typeName = { $in: types }

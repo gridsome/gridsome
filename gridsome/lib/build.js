@@ -2,6 +2,7 @@ const path = require('path')
 const pMap = require('p-map')
 const fs = require('fs-extra')
 const hirestime = require('hirestime')
+const { safeKey } = require('./utils')
 const { trimEnd, trimStart, chunk } = require('lodash')
 const sysinfo = require('./utils/sysinfo')
 const { log, info } = require('./utils/log')
@@ -23,8 +24,6 @@ module.exports = async (context, args) => {
   await fs.remove(config.outDir)
 
   const queue = await createRenderQueue(app)
-
-  // return console.log(queue)
 
   // 1. run all GraphQL queries and save results into json files
   await app.dispatch('beforeRenderQueries', () => ({ context, config, queue }))
@@ -127,7 +126,7 @@ async function createRenderQueue ({ router, config, store }) {
         const { perPage } = page.pageQuery.paginate
 
         page.collection.find().forEach(node => {
-          const key = `belongsTo.${node.typeName}.${node.id}`
+          const key = `belongsTo.${node.typeName}.${safeKey(node.id)}`
           const totalNodes = store.index.count({ [key]: { $eq: true }})
           const totalPages = Math.ceil(totalNodes / perPage)
 

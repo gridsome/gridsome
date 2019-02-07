@@ -2,10 +2,9 @@ const crypto = require('crypto')
 const moment = require('moment')
 const EventEmitter = require('events')
 const camelCase = require('camelcase')
-const slugify = require('@sindresorhus/slugify')
 const { cloneDeep, isObject, isDate } = require('lodash')
 const { ISO_8601_FORMAT } = require('../utils/constants')
-const { isResolvablePath } = require('../utils')
+const { isResolvablePath, slugify, safeKey } = require('../utils')
 const { warn } = require('../utils/log')
 
 const nonValidCharsRE = new RegExp('[^a-zA-Z0-9_]', 'g')
@@ -179,8 +178,13 @@ class ContentTypeCollection extends EventEmitter {
 
     const addBelongsTo = ({ typeName, id }) => {
       belongsTo[typeName] = belongsTo[typeName] || {}
-      if (Array.isArray(id)) id.forEach(id => (belongsTo[typeName][id] = true))
-      else belongsTo[typeName][id] = true
+      if (Array.isArray(id)) {
+        id.forEach(id => {
+          belongsTo[typeName][safeKey(id)] = true
+        })
+      } else {
+        belongsTo[typeName][safeKey(id)] = true
+      }
     }
 
     const processField = field => {
@@ -290,7 +294,6 @@ class ContentTypeCollection extends EventEmitter {
   }
 
   slugify (string = '') {
-    return slugify(string, { separator: '-' })
   }
 
   transform ({ mimeType, content }, options) {
@@ -301,6 +304,7 @@ class ContentTypeCollection extends EventEmitter {
     }
 
     return transformer.parse(content, options)
+    return slugify(string)
   }
 }
 
