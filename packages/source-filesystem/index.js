@@ -61,24 +61,28 @@ class FilesystemSource {
       const options = await this.createNodeOptions(file)
       const node = this.contentType.addNode(options)
 
-      for (const fieldName in this.refs) {
-        if (node.fields[fieldName]) {
-          const ref = this.refs[fieldName]
-          const value = node.fields[fieldName]
-          const typeName = ref.typeName
+      this.createNodeRefs(node)
+    }))
+  }
 
-          if (ref.exists) continue
+  createNodeRefs (node) {
+    for (const fieldName in this.refs) {
+      if (node.fields[fieldName]) {
+        const ref = this.refs[fieldName]
+        const value = node.fields[fieldName]
+        const typeName = ref.typeName
 
-          if (Array.isArray(value)) {
-            value.forEach(value =>
-              this.addRefNode(typeName, fieldName, value)
-            )
-          } else {
+        if (ref.exists) continue
+
+        if (Array.isArray(value)) {
+          value.forEach(value =>
             this.addRefNode(typeName, fieldName, value)
-          }
+          )
+        } else {
+          this.addRefNode(typeName, fieldName, value)
         }
       }
-    }))
+    }
   }
 
   watchFiles () {
@@ -90,25 +94,27 @@ class FilesystemSource {
       ignoreInitial: true
     })
 
-    watcher.on('add', file => {
+    watcher.on('add', async file => {
       const filePath = slash(file)
-      const options = this.createNodeOptions(filePath)
+      const options = await this.createNodeOptions(filePath)
+      const node = this.contentType.addNode(options)
 
-      this.contentType.addNode(options)
+      this.createNodeRefs(node)
     })
 
     watcher.on('unlink', file => {
       const filePath = slash(file)
-      const id = this.store.makeUid(filePath)
+      const id = hash(filePath)
 
       this.contentType.removeNode(id)
     })
 
-    watcher.on('change', file => {
+    watcher.on('change', async file => {
       const filePath = slash(file)
-      const options = this.createNodeOptions(filePath)
+      const options = await this.createNodeOptions(filePath)
+      const node = this.contentType.updateNode(options.id, options)
 
-      this.contentType.updateNode(options.id, options)
+      this.createNodeRefs(node)
     })
   }
 
