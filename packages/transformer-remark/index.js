@@ -150,7 +150,7 @@ class RemarkTransformer {
     return Promise.resolve(cached)
   }
 
-  async _nodeToHTML (node) {
+  _nodeToHTML (node) {
     const key = cacheKey(node, 'html')
     let cached = cache.get(key)
 

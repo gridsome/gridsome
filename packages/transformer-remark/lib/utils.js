@@ -1,7 +1,6 @@
 const vfile = require('vfile')
 const hash = require('hash-sum')
 const visit = require('unist-util-visit')
-const imagePlugin = require('./plugins/image')
 
 exports.cacheKey = function (node, key) {
   return hash({
@@ -41,6 +40,9 @@ exports.createPlugins = function (options, userPlugins) {
     return exports.normalizePlugins(userPlugins || [])
   }
 
+  plugins.push(require('./plugins/file'))
+  plugins.push(require('./plugins/image'))
+
   if (options.slug !== false) {
     plugins.push('remark-slug')
   }
@@ -76,7 +78,6 @@ exports.createPlugins = function (options, userPlugins) {
     }])
   }
 
-  plugins.push(imagePlugin)
   plugins.push(...userPlugins)
 
   return exports.normalizePlugins(plugins)
