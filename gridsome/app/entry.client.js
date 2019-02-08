@@ -1,10 +1,12 @@
 import Vue from 'vue'
 import createApp from './app'
 import plugins from '~/.temp/plugins-client'
-import observeHtml from './directives/observe-html'
+import linkDirective from './directives/link'
+import imageDirective from './directives/image'
 import { stripPathPrefix } from './utils/helpers'
 
-Vue.directive('observe-html', observeHtml)
+Vue.directive('g-link', linkDirective)
+Vue.directive('g-image', imageDirective)
 
 const { app, router } = createApp(context => {
   for (const { run, options } of plugins) {
