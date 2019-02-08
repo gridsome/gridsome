@@ -1,4 +1,4 @@
-const crypto = require('crypto')
+const hash = require('hash-sum')
 const moment = require('moment')
 const EventEmitter = require('events')
 const camelCase = require('camelcase')
@@ -38,7 +38,34 @@ class ContentTypeCollection extends EventEmitter {
   }
 
   addNode (options) {
-    const { node, belongsTo } = this.createNode(options)
+    const { typeName } = this.options
+    const internal = this.pluginStore._createInternals(options.internal)
+
+    // transform content with transformer for given mime type
+    if (internal.content && internal.mimeType) {
+      this._transformNodeOptions(options, internal)
+    }
+
+    const { fields, belongsTo } = this._processNodeFields(options.fields, internal.origin)
+
+    const id = fields.id || options.id || options._id || hash(options)
+    const node = { id, typeName, internal }
+
+    // TODO: remove before 1.0
+    node._id = id
+
+    node.uid = options.uid || this.makeUid(typeName + node.id)
+    node.title = options.title || fields.title || node.id
+    node.date = options.date || fields.date || new Date().toISOString()
+    node.slug = options.slug || fields.slug || this.slugify(node.title)
+    node.content = options.content || fields.content || ''
+    node.excerpt = options.excerpt || fields.excerpt || ''
+    node.withPath = typeof options.path === 'string'
+
+    node.fields = fields
+    node.path = typeof options.path === 'string'
+      ? '/' + options.path.replace(/^\/+/g, '')
+      : this._makePath(node)
 
     // add transformer to content type to let it
     // extend the node type when creating schema
@@ -70,35 +97,63 @@ class ContentTypeCollection extends EventEmitter {
   }
 
   getNode (id) {
-    return this.collection.findOne({ id })
+    const query = typeof id === 'string' ? { id } : id
+    return this.collection.findOne(query)
   }
 
-  updateNode (id, options) {
-    const node = this.getNode(id)
-    const oldNode = cloneDeep(node)
-    const indexEntry = this.baseStore.index.findOne({ uid: node.uid })
-    const internal = this.createInternals(options.internal)
+  removeNode (id) {
+    const query = typeof id === 'string' ? { id } : id
+    const node = this.collection.findOne(query)
 
-    Object.assign(node.internal, this.createInternals(options.internal))
+    this.baseStore.index.findAndRemove({ uid: node.uid })
+    this.collection.findAndRemove({ uid: node.uid })
+
+    this.emit('change', undefined, node)
+  }
+
+  updateNode (options = {}, _options = {}) {
+    // TODO: remove before 1.0
+    if (typeof options === 'string') {
+      _options.id = options
+      options = _options
+    }
+
+    const internal = this.pluginStore._createInternals(options.internal)
 
     // transform content with transformer for given mime type
     if (internal.content && internal.mimeType) {
-      this.transformNodeOptions(options, internal)
+      this._transformNodeOptions(options, internal)
     }
 
-    const { fields, belongsTo } = this.processNodeFields(options.fields, node.internal.origin)
+    const { fields, belongsTo } = this._processNodeFields(options.fields, internal.origin)
+    const id = fields.id || options.id || options._id
+    const query = options.uid ? { uid: options.uid } : { id }
 
+    const node = this.getNode(query)
+
+    if (!node) {
+      throw new Error(`Could not find node to update with id: ${id}`)
+    }
+
+    const oldNode = cloneDeep(node)
+
+    Object.assign(node.internal, this.pluginStore._createInternals(options.internal))
+
+    node.id = id || node.id
     node.title = options.title || fields.title || node.title
     node.date = options.date || fields.date || node.date
     node.slug = options.slug || fields.slug || this.slugify(node.title)
     node.content = options.content || fields.content || node.content
     node.excerpt = options.excerpt || fields.excerpt || node.excerpt
     node.internal = Object.assign({}, node.internal, internal)
-    node.path = typeof options.path === 'string'
-      ? '/' + options.path.replace(/^\/+/g, '')
-      : this.makePath(node)
 
     node.fields = fields
+    node.path = typeof options.path === 'string'
+      ? '/' + options.path.replace(/^\/+/g, '')
+      : this._makePath(node)
+
+    const indexEntry = this.baseStore.index.findOne({ uid: node.uid })
+
     indexEntry.path = node.path
     indexEntry.belongsTo = belongsTo
 
@@ -107,60 +162,17 @@ class ContentTypeCollection extends EventEmitter {
     return node
   }
 
-  removeNode (id) {
-    const node = this.collection.findOne({ id })
+  _transformNodeOptions (options, internal) {
+    const { mimeType, content } = internal
+    const transformer = this.pluginStore._transformers[mimeType]
 
-    this.baseStore.index.findAndRemove({ uid: node.uid })
-    this.collection.findAndRemove({ id })
-
-    this.emit('change', undefined, node)
-  }
-
-  createNode (options = {}) {
-    const { typeName } = this.options
-    const hash = crypto.createHash('md5')
-    const internal = this.createInternals(options.internal)
-    const id = options.id || options._id || this.makeUid(JSON.stringify(options))
-    const node = { id, typeName, internal }
-
-    // TODO: remove before 1.0
-    node._id = id
-
-    // transform content with transformer for given mime type
-    if (internal.content && internal.mimeType) {
-      this.transformNodeOptions(options, internal)
+    if (!transformer) {
+      throw new Error(`No transformer for ${mimeType} is installed.`)
     }
 
-    const { fields, belongsTo } = this.processNodeFields(options.fields, node.internal.origin)
+    const result = transformer.parse(content)
 
-    node.uid = hash.update(typeName + node.id).digest('hex')
-    node.title = options.title || fields.title || node.id
-    node.date = options.date || fields.date || new Date().toISOString()
-    node.slug = options.slug || fields.slug || this.slugify(node.title)
-    node.content = options.content || fields.content || ''
-    node.excerpt = options.excerpt || fields.excerpt || ''
-    node.withPath = typeof options.path === 'string'
-
-    node.fields = fields
-    node.path = typeof options.path === 'string'
-      ? '/' + options.path.replace(/^\/+/g, '')
-      : this.makePath(node)
-
-    return { node, belongsTo }
-  }
-
-  createInternals (options = {}) {
-    return {
-      origin: options.origin,
-      mimeType: options.mimeType,
-      content: options.content,
-      timestamp: Date.now()
-    }
-  }
-
-  transformNodeOptions (options, internal) {
-    const result = this.transform(internal)
-
+    if (result.id) options.id = result.id
     if (result.title) options.title = result.title
     if (result.slug) options.slug = result.slug
     if (result.path) options.path = result.path
@@ -173,7 +185,7 @@ class ContentTypeCollection extends EventEmitter {
     }
   }
 
-  processNodeFields (input = {}, origin = '') {
+  _processNodeFields (input = {}, origin = '') {
     const belongsTo = {}
 
     const addBelongsTo = ({ typeName, id }) => {
@@ -208,7 +220,11 @@ class ContentTypeCollection extends EventEmitter {
           return processFields(field)
         case 'string':
           return isResolvablePath(field)
-            ? this.resolveFilePath(origin, field)
+            ? this.pluginStore._app.resolveFilePath(
+              origin,
+              field,
+              this.resolveAbsolutePaths
+            )
             : field
       }
 
@@ -254,11 +270,7 @@ class ContentTypeCollection extends EventEmitter {
     return { fields, belongsTo }
   }
 
-  resolveFilePath (...args) {
-    return this.pluginStore._app.resolveFilePath(...args, this.resolveAbsolutePaths)
-  }
-
-  makePath (node) {
+  _makePath (node) {
     const date = moment.utc(node.date, ISO_8601_FORMAT, true)
     const { routeKeys } = this.options
     const params = {}
@@ -289,21 +301,15 @@ class ContentTypeCollection extends EventEmitter {
     return this.options.makePath(params)
   }
 
-  makeUid (orgId) {
-    return crypto.createHash('md5').update(orgId).digest('hex')
+  //
+  // utils
+  //
+
+  makeUid (value) {
+    return this.pluginStore.makeUid(value)
   }
 
   slugify (string = '') {
-  }
-
-  transform ({ mimeType, content }, options) {
-    const transformer = this.pluginStore._transformers[mimeType]
-
-    if (!transformer) {
-      throw new Error(`No transformer for ${mimeType} is installed.`)
-    }
-
-    return transformer.parse(content, options)
     return slugify(string)
   }
 }

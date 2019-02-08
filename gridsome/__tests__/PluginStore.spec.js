@@ -23,12 +23,25 @@ test('add type', () => {
   const api = createPlugin()
 
   const contentType = api.store.addContentType({
-    typeName: 'TestPost'
+    typeName: 'TestPost',
+    route: '/path/:foo/:bar'
   })
 
   expect(contentType.typeName).toEqual('TestPost')
   expect(contentType.route).toBeUndefined()
-  expect(typeof contentType.makePath).toBe('function')
+  expect(contentType.options.refs).toMatchObject({})
+  expect(contentType.options.fields).toMatchObject({})
+  expect(contentType.options.belongsTo).toMatchObject({})
+  expect(contentType.options.routeKeys).toEqual(expect.arrayContaining(['foo', 'bar']))
+  expect(contentType.options.resolveAbsolutePaths).toEqual(false)
+
+  expect(contentType.addNode).toBeInstanceOf(Function)
+  expect(contentType.updateNode).toBeInstanceOf(Function)
+  expect(contentType.removeNode).toBeInstanceOf(Function)
+  expect(contentType.addReference).toBeInstanceOf(Function)
+  expect(contentType.addSchemaField).toBeInstanceOf(Function)
+  expect(contentType.makeUid).toBeInstanceOf(Function)
+  expect(contentType.slugify).toBeInstanceOf(Function)
 })
 
 test('add node', () => {
@@ -68,7 +81,7 @@ test('update node', () => {
 
   const contentType = api.store.addContentType({
     typeName: 'TestPost',
-    route: '/test/:slug'
+    route: '/test/:foo/:slug'
   })
 
   const emit = jest.spyOn(contentType, 'emit')
@@ -86,7 +99,8 @@ test('update node', () => {
   const oldTimestamp = oldNode.internal.timestamp
   const uid = oldNode.uid
 
-  const node = contentType.updateNode('test', {
+  const node = contentType.updateNode({
+    id: 'test',
     title: 'New title',
     content: 'Praesent commodo cursus magna',
     excerpt: 'Praesent commodo...',
@@ -101,7 +115,7 @@ test('update node', () => {
   expect(node.typeName).toEqual('TestPost')
   expect(node.title).toEqual('New title')
   expect(node.slug).toEqual('new-title')
-  expect(node.path).toEqual('/test/new-title')
+  expect(node.path).toEqual('/test/foo/new-title')
   expect(node.date).toEqual('2018-09-04T23:20:33.918Z')
   expect(node.content).toEqual('Praesent commodo cursus magna')
   expect(node.excerpt).toEqual('Praesent commodo...')
@@ -110,9 +124,45 @@ test('update node', () => {
   expect(emit).toHaveBeenCalledTimes(2)
   expect(entry.id).toEqual('test')
   expect(entry.uid).toEqual(uid)
-  expect(entry.path).toEqual('/test/new-title')
+  expect(entry.path).toEqual('/test/foo/new-title')
 
   emit.mockRestore()
+})
+
+test('change node id', () => {
+  const { store } = createPlugin()
+
+  const uid = 'test'
+  const contentType = store.addContentType({ typeName: 'TestPost' })
+
+  const node1 = contentType.addNode({ uid, id: 'test' })
+
+  expect(node1.id).toEqual('test')
+
+  const node2 = contentType.updateNode({ uid, id: 'test-2' })
+  const entry = store.store.index.findOne({ uid })
+
+  expect(node2.id).toEqual('test-2')
+  expect(node2.uid).toEqual('test')
+  expect(entry.uid).toEqual('test')
+})
+
+test('change node id from fields', () => {
+  const { store } = createPlugin()
+
+  const uid = 'test'
+  const contentType = store.addContentType({ typeName: 'TestPost' })
+
+  const node1 = contentType.addNode({ uid, fields: { id: 'test' }})
+
+  expect(node1.id).toEqual('test')
+
+  const node2 = contentType.updateNode({ uid, fields: { id: 'test-2' }})
+  const entry = store.store.index.findOne({ uid })
+
+  expect(node2.id).toEqual('test-2')
+  expect(node2.uid).toEqual('test')
+  expect(entry.uid).toEqual('test')
 })
 
 test('remove node', () => {
