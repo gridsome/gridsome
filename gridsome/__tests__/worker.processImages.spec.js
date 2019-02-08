@@ -115,8 +115,11 @@ test('use cached process results', async () => {
   const cacheStats = await fs.stat(files[0].cachePath)
   const destStats = await fs.stat(files[0].destPath)
 
-  expect(destStats.mtimeMs).toEqual(cacheStats.mtimeMs)
-  expect(destStats.birthtime).toEqual(cacheStats.birthtime)
+  const mDiff = cacheStats.mtimeMs - destStats.mtimeMs
+  const bDiff = cacheStats.birthtime - destStats.birthtime
+
+  expect(mDiff).toBeLessThan(32)
+  expect(bDiff).toBeLessThan(32)
   expect(destStats.size).toEqual(cacheStats.size)
 })
 

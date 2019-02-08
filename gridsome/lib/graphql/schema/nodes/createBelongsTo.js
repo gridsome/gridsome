@@ -1,3 +1,4 @@
+const { safeKey } = require('../../../utils')
 const { mapValues, values } = require('lodash')
 const { nodeInterface } = require('../interfaces')
 const { createPagedNodeEdges } = require('./utils')
@@ -91,7 +92,7 @@ module.exports = function createBelongsTo (contentType, nodeTypes) {
     type: belongsToType,
     args: belongsToArgs,
     resolve (node, { filter, ...args }, { store }) {
-      const key = `belongsTo.${node.typeName}.${node.id}`
+      const key = `belongsTo.${node.typeName}.${safeKey(node.id)}`
       const query = { [key]: { $eq: true }}
 
       if (filter) {

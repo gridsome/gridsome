@@ -2,6 +2,7 @@ const path = require('path')
 const pMap = require('p-map')
 const fs = require('fs-extra')
 const hirestime = require('hirestime')
+const { safeKey } = require('./utils')
 const { trimEnd, trimStart, chunk } = require('lodash')
 const sysinfo = require('./utils/sysinfo')
 const { log, info } = require('./utils/log')
@@ -128,11 +129,11 @@ async function createRenderQueue ({ router, config, store, schema }) {
       case PAGED_TEMPLATE: {
         const { fieldName, perPage, filter } = page.pageQuery.paginate
         const { belongsTo } = rootFields[fieldName].type.getFields()
-        const filterArg = belongsTo.args.find(arg => arg.name === 'filter')
+        const filterArg = filter ? belongsTo.args.find(arg => arg.name === 'filter') : null
         const query = filterArg ? createFilterQuery(filter || {}, filterArg.type.getFields()) : {}
 
         page.collection.find().forEach(node => {
-          const key = `belongsTo.${node.typeName}.${node.id}`
+          const key = `belongsTo.${node.typeName}.${safeKey(node.id)}`
           const totalNodes = store.index.count({ ...query, [key]: { $eq: true }})
           const totalPages = Math.ceil(totalNodes / perPage)
 
@@ -146,10 +147,10 @@ async function createRenderQueue ({ router, config, store, schema }) {
 
       case PAGED_ROUTE: {
         const { typeName, fieldName, perPage, filter } = page.pageQuery.paginate
-        const filterArg = rootFields[fieldName].args.find(arg => arg.name === 'filter')
-        const query = filterArg ? createFilterQuery(filter || {}, filterArg.type.getFields()) : null
+        const filterArg = filter ? rootFields[fieldName].args.find(arg => arg.name === 'filter') : null
+        const query = filterArg ? createFilterQuery(filter || {}, filterArg.type.getFields()) : undefined
         const { collection } = store.getContentType(typeName)
-        const totalNodes = query ? collection.count(query) : collection.count()
+        const totalNodes = collection.count(query)
         const totalPages = Math.ceil(totalNodes / perPage)
 
         for (let i = 1; i <= totalPages; i++) {
