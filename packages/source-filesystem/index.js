@@ -1,6 +1,5 @@
 const path = require('path')
 const fs = require('fs-extra')
-const hash = require('hash-sum')
 const { mapValues } = require('lodash')
 
 const isDev = process.env.NODE_ENV === 'development'
@@ -10,9 +9,9 @@ class FilesystemSource {
     return {
       path: undefined,
       route: undefined,
-      refs: {},
       index: ['index'],
-      typeName: 'FileNode'
+      typeName: 'FileNode',
+      refs: {}
     }
   }
 
@@ -43,7 +42,7 @@ class FilesystemSource {
         typeName: ref.typeName
       })
 
-      if (!ref.exists) {
+      if (ref.create) {
         this.store.addContentType({
           typeName: ref.typeName,
           route: ref.route
@@ -67,12 +66,11 @@ class FilesystemSource {
 
   createNodeRefs (node) {
     for (const fieldName in this.refs) {
-      if (node.fields[fieldName]) {
-        const ref = this.refs[fieldName]
+      const ref = this.refs[fieldName]
+
+      if (ref.create && node.fields[fieldName]) {
         const value = node.fields[fieldName]
         const typeName = ref.typeName
-
-        if (ref.exists) continue
 
         if (Array.isArray(value)) {
           value.forEach(value =>
@@ -95,24 +93,23 @@ class FilesystemSource {
     })
 
     watcher.on('add', async file => {
-      const filePath = slash(file)
-      const options = await this.createNodeOptions(filePath)
+      const options = await this.createNodeOptions(slash(file))
       const node = this.contentType.addNode(options)
 
       this.createNodeRefs(node)
     })
 
     watcher.on('unlink', file => {
-      const filePath = slash(file)
-      const id = hash(filePath)
+      const absPath = path.join(this.context, slash(file))
 
-      this.contentType.removeNode(id)
+      this.contentType.removeNode({
+        'internal.origin': absPath
+      })
     })
 
     watcher.on('change', async file => {
-      const filePath = slash(file)
-      const options = await this.createNodeOptions(filePath)
-      const node = this.contentType.updateNode(options.id, options)
+      const options = await this.createNodeOptions(slash(file))
+      const node = this.contentType.updateNode(options)
 
       this.createNodeRefs(node)
     })
@@ -121,17 +118,20 @@ class FilesystemSource {
   // helpers
 
   async createNodeOptions (file) {
-    const filePath = path.join(this.context, file)
+    const absPath = path.join(this.context, file)
+    const relPath = path.relative(this.context, file)
     const mimeType = this.store.mime.lookup(file)
-    const content = await fs.readFile(filePath, 'utf-8')
+    const content = await fs.readFile(absPath, 'utf-8')
+    const uid = this.store.makeUid(relPath)
 
     return {
-      id: hash(file),
+      uid,
+      id: uid,
       path: this.createPath(file),
       internal: {
         mimeType,
         content,
-        origin: filePath
+        origin: absPath
       }
     }
   }
@@ -165,17 +165,22 @@ class FilesystemSource {
     const { slugify } = this.store
 
     return mapValues(refs, (ref, key) => {
-      let typeName = this.options.typeName
-      let route = this.options.route
-
-      if (ref.typeName) {
-        typeName = ref.typeName
-        route = ref.route || `/${slugify(typeName)}/:slug`
+      if (typeof ref === 'string') {
+        ref = { typeName: ref, create: false }
       }
 
-      const exists = !!this.store.getContentType(typeName)
+      if (!ref.typeName) {
+        ref.typeName = this.options.typeName
+      }
 
-      return { route, typeName, exists }
+      if (ref.create) {
+        ref.route = ref.route || `/${slugify(ref.typeName)}/:slug`
+        ref.create = true
+      } else {
+        ref.create = false
+      }
+
+      return ref
     })
   }
 }
