@@ -13,7 +13,7 @@ module.exports = async (name, starter = 'default') => {
   const hasYarn = await useYarn()
 
   try {
-    const files = fs.readdirSync(dir)
+    const files = fs.existsSync(dir) ? fs.readdirSync(dir) : []
     if (files.length > 1) {
       return console.log(chalk.red(`Directory «${projectName}» is not empty.`))
     }
@@ -121,7 +121,9 @@ module.exports = async (name, starter = 'default') => {
   }
 
   console.log()
-  console.log(`  - Enter directory ${chalk.green(`cd ${name}`)}`)
+  if (process.cwd() !== dir) {
+    console.log(`  - Enter directory ${chalk.green(`cd ${name}`)}`)
+  }
   console.log(`  - Run ${chalk.green(developCommand)} to start local development`)
   console.log(`  - Run ${chalk.green(buildCommand)} to build for production`)
   console.log()
