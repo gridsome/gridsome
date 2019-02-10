@@ -4,9 +4,18 @@ const slash = require('slash')
 const isUrl = require('is-url')
 const mime = require('mime-types')
 const isRelative = require('is-relative')
+const slugify = require('@sindresorhus/slugify')
 
 exports.forwardSlash = function (input) {
   return slash(input)
+}
+
+exports.slugify = function (value) {
+  return slugify(String(value), { separator: '-' })
+}
+
+exports.safeKey = function (value) {
+  return String(value).replace(/\./g, '-')
 }
 
 exports.parseUrl = function (input) {
@@ -20,6 +29,14 @@ exports.parseUrl = function (input) {
     basePath,
     fullUrl
   }
+}
+
+exports.isResolvablePath = function (value) {
+  return (
+    typeof value === 'string' &&
+    path.extname(value).length > 1 &&
+    (value.startsWith('.') || path.isAbsolute(value))
+  )
 }
 
 exports.resolvePath = function (fromPath, toPath, rootDir) {

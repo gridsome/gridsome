@@ -1,6 +1,7 @@
 const path = require('path')
 const fs = require('fs-extra')
 const crypto = require('crypto')
+const dotenv = require('dotenv')
 const colorString = require('color-string')
 const { defaultsDeep, camelCase } = require('lodash')
 const { internalRE, transformerRE, SUPPORTED_IMAGE_TYPES } = require('../utils/constants')
@@ -11,6 +12,10 @@ const builtInPlugins = [
 
 // TODO: use joi to define and validate config schema
 module.exports = (context, options = {}, pkg = {}) => {
+  const env = resolveEnv(context)
+
+  Object.assign(process.env, env)
+
   if (options.config) {
     return options.config
   }
@@ -18,9 +23,21 @@ module.exports = (context, options = {}, pkg = {}) => {
   const resolve = (...p) => path.resolve(context, ...p)
   const isProd = process.env.NODE_ENV === 'production'
   const configPath = resolve('gridsome.config.js')
+  const localIndex = resolve('src/index.html')
   const args = options.args || {}
   const config = {}
   const plugins = []
+
+  const css = {
+    loaderOptions: {
+      sass: {
+        indentedSyntax: true
+      },
+      stylus: {
+        preferPathResolver: 'webpack'
+      }
+    }
+  }
 
   const localConfig = options.localConfig
     ? options.localConfig
@@ -58,6 +75,7 @@ module.exports = (context, options = {}, pkg = {}) => {
   config.port = parseInt(args.port || localConfig.port, 10) || 8080
   config.plugins = normalizePlugins(context, plugins)
   config.chainWebpack = localConfig.chainWebpack
+  config.configureServer = localConfig.configureServer
   config.transformers = resolveTransformers(config.pkg, localConfig)
   config.pathPrefix = isProd ? localConfig.pathPrefix || '/' : '/'
   config.staticDir = resolve('static')
@@ -92,6 +110,7 @@ module.exports = (context, options = {}, pkg = {}) => {
   config.baseUrl = localConfig.baseUrl || '/'
   config.siteName = localConfig.siteName || path.parse(context).name
   config.titleTemplate = localConfig.titleTemplate || `%s - ${config.siteName}`
+  config.siteDescription = localConfig.siteDescription || ''
 
   config.manifestsDir = path.join(config.assetsDir, 'manifest')
   config.clientManifestPath = path.join(config.manifestsDir, 'client.json')
@@ -99,16 +118,30 @@ module.exports = (context, options = {}, pkg = {}) => {
 
   config.icon = normalizeIconsConfig(localConfig.icon)
 
-  config.templatePath = path.resolve(config.appPath, 'index.html')
+  config.templatePath = fs.existsSync(localIndex) ? localIndex : path.resolve(config.appPath, 'index.html')
   config.htmlTemplate = fs.readFileSync(config.templatePath, 'utf-8')
 
-  config.scss = {}
-  config.sass = {}
-  config.less = {}
-  config.stylus = {}
-  config.postcss = {}
+  config.css = defaultsDeep(css, localConfig.css || {})
 
   return Object.freeze(config)
+}
+
+function resolveEnv (context) {
+  const env = process.env.NODE_ENV || 'development'
+  const envPath = path.resolve(context, '.env')
+  const envPathByMode = path.resolve(context, `.env.${env}`)
+  const readPath = fs.existsSync(envPathByMode) ? envPathByMode : envPath
+
+  let parsed = {}
+  try {
+    parsed = dotenv.parse(fs.readFileSync(readPath, 'utf8'))
+  } catch (err) {
+    if (err.code !== 'ENOENT') {
+      console.error('There was a problem processing the .env file', err)
+    }
+  }
+
+  return parsed
 }
 
 function resolvePkg (context) {

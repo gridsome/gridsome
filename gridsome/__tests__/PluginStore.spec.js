@@ -1,6 +1,7 @@
 const App = require('../lib/app/App')
 const PluginAPI = require('../lib/app/PluginAPI')
 const JSONTransformer = require('./__fixtures__/JSONTransformer')
+const { PER_PAGE } = require('../lib/utils/constants')
 
 function createPlugin (context = '/') {
   const app = new App(context, { config: { plugins: [] }}).init()
@@ -22,12 +23,25 @@ test('add type', () => {
   const api = createPlugin()
 
   const contentType = api.store.addContentType({
-    typeName: 'TestPost'
+    typeName: 'TestPost',
+    route: '/path/:foo/:bar'
   })
 
   expect(contentType.typeName).toEqual('TestPost')
   expect(contentType.route).toBeUndefined()
-  expect(typeof contentType.makePath).toBe('function')
+  expect(contentType.options.refs).toMatchObject({})
+  expect(contentType.options.fields).toMatchObject({})
+  expect(contentType.options.belongsTo).toMatchObject({})
+  expect(contentType.options.routeKeys).toEqual(expect.arrayContaining(['foo', 'bar']))
+  expect(contentType.options.resolveAbsolutePaths).toEqual(false)
+
+  expect(contentType.addNode).toBeInstanceOf(Function)
+  expect(contentType.updateNode).toBeInstanceOf(Function)
+  expect(contentType.removeNode).toBeInstanceOf(Function)
+  expect(contentType.addReference).toBeInstanceOf(Function)
+  expect(contentType.addSchemaField).toBeInstanceOf(Function)
+  expect(contentType.makeUid).toBeInstanceOf(Function)
+  expect(contentType.slugify).toBeInstanceOf(Function)
 })
 
 test('add node', () => {
@@ -67,7 +81,7 @@ test('update node', () => {
 
   const contentType = api.store.addContentType({
     typeName: 'TestPost',
-    route: '/test/:slug'
+    route: '/test/:foo/:slug'
   })
 
   const emit = jest.spyOn(contentType, 'emit')
@@ -85,7 +99,8 @@ test('update node', () => {
   const oldTimestamp = oldNode.internal.timestamp
   const uid = oldNode.uid
 
-  const node = contentType.updateNode('test', {
+  const node = contentType.updateNode({
+    id: 'test',
     title: 'New title',
     content: 'Praesent commodo cursus magna',
     excerpt: 'Praesent commodo...',
@@ -100,7 +115,7 @@ test('update node', () => {
   expect(node.typeName).toEqual('TestPost')
   expect(node.title).toEqual('New title')
   expect(node.slug).toEqual('new-title')
-  expect(node.path).toEqual('/test/new-title')
+  expect(node.path).toEqual('/test/foo/new-title')
   expect(node.date).toEqual('2018-09-04T23:20:33.918Z')
   expect(node.content).toEqual('Praesent commodo cursus magna')
   expect(node.excerpt).toEqual('Praesent commodo...')
@@ -109,9 +124,45 @@ test('update node', () => {
   expect(emit).toHaveBeenCalledTimes(2)
   expect(entry.id).toEqual('test')
   expect(entry.uid).toEqual(uid)
-  expect(entry.path).toEqual('/test/new-title')
+  expect(entry.path).toEqual('/test/foo/new-title')
 
   emit.mockRestore()
+})
+
+test('change node id', () => {
+  const { store } = createPlugin()
+
+  const uid = 'test'
+  const contentType = store.addContentType({ typeName: 'TestPost' })
+
+  const node1 = contentType.addNode({ uid, id: 'test' })
+
+  expect(node1.id).toEqual('test')
+
+  const node2 = contentType.updateNode({ uid, id: 'test-2' })
+  const entry = store.store.index.findOne({ uid })
+
+  expect(node2.id).toEqual('test-2')
+  expect(node2.uid).toEqual('test')
+  expect(entry.uid).toEqual('test')
+})
+
+test('change node id from fields', () => {
+  const { store } = createPlugin()
+
+  const uid = 'test'
+  const contentType = store.addContentType({ typeName: 'TestPost' })
+
+  const node1 = contentType.addNode({ uid, fields: { id: 'test' }})
+
+  expect(node1.id).toEqual('test')
+
+  const node2 = contentType.updateNode({ uid, fields: { id: 'test-2' }})
+  const entry = store.store.index.findOne({ uid })
+
+  expect(node2.id).toEqual('test-2')
+  expect(node2.uid).toEqual('test')
+  expect(entry.uid).toEqual('test')
 })
 
 test('remove node', () => {
@@ -149,7 +200,9 @@ test('add nodes with custom fields', () => {
       test: 'My value',
       list: ['1', '2', '3'],
       objectList: [{ test: 1 }, { test: 2 }],
-      number: 24
+      number: 24,
+      tags: ['Node.js'],
+      filename: 'image.png'
     }
   })
 
@@ -162,6 +215,8 @@ test('add nodes with custom fields', () => {
   expect(node.fields.objectList[0]).toMatchObject({ test: 1 })
   expect(node.fields.objectList[1]).toMatchObject({ test: 2 })
   expect(node.fields.number).toEqual(24)
+  expect(node.fields.tags[0]).toEqual('Node.js')
+  expect(node.fields.filename).toEqual('image.png')
 })
 
 test('add type with ref', () => {
@@ -208,7 +263,7 @@ test('add type with dynamic route', () => {
   })
 
   expect(contentType.options.route).toEqual('/:year/:month/:day/:slug')
-  expect(node.path).toEqual('/2018/09/05/lorem-ipsum-dolor-sit-amet')
+  expect(node.path).toEqual('/2018/09/04/lorem-ipsum-dolor-sit-amet')
 })
 
 test('prefix dynamic route with leading slash', () => {
@@ -293,18 +348,18 @@ test('resolve absolute file paths', () => {
     }
   })
 
-  expect(node.fields.file).toEqual('/absolute/dir/to/a/image.png')
+  expect(node.fields.file).toEqual('image.png')
   expect(node.fields.file2).toEqual('/absolute/dir/to/project/image.png')
   expect(node.fields.file3).toEqual('/absolute/dir/to/image.png')
-  expect(node.fields.path).toEqual('/absolute/dir/to/a/dir/to/image.png')
-  expect(node.fields.text).toEqual('Lorem ipsum dolor sit amet.')
-  expect(node.fields.text2).toEqual('example.com')
-  expect(node.fields.text3).toEqual('md')
+  expect(node.fields.path).toEqual('dir/to/image.png')
   expect(node.fields.url).toEqual('https://example.com/image.jpg')
   expect(node.fields.url2).toEqual('//example.com/image.jpg')
   expect(node.fields.url3).toEqual('git@github.com:gridsome/gridsome.git')
   expect(node.fields.url4).toEqual('ftp://ftp.example.com')
   expect(node.fields.email).toEqual('email@example.com')
+  expect(node.fields.text).toEqual('Lorem ipsum dolor sit amet.')
+  expect(node.fields.text2).toEqual('example.com')
+  expect(node.fields.text3).toEqual('md')
 })
 
 test('resolve absolute file paths with a custom path', () => {
@@ -334,8 +389,8 @@ test('don\'t touch absolute paths when resolveAbsolutePaths is not set', () => {
 
   const node = contentType.addNode({
     fields: {
-      file: '/image.png',
-      file2: 'image.png',
+      file: 'image.png',
+      file2: '/image.png',
       file3: '../image.png'
     },
     internal: {
@@ -343,8 +398,8 @@ test('don\'t touch absolute paths when resolveAbsolutePaths is not set', () => {
     }
   })
 
-  expect(node.fields.file).toEqual('/image.png')
-  expect(node.fields.file2).toEqual('/absolute/dir/to/a/image.png')
+  expect(node.fields.file).toEqual('image.png')
+  expect(node.fields.file2).toEqual('/image.png')
   expect(node.fields.file3).toEqual('/absolute/dir/to/image.png')
 })
 
@@ -382,7 +437,7 @@ test('resolve paths from external sources', () => {
     }
   })
 
-  expect(node1.fields.filename).toEqual('https://www.example.com/2018/11/02/image.png')
+  expect(node1.fields.filename).toEqual('image.png')
   expect(node1.fields.file2).toEqual('/image.png')
   expect(node1.fields.file3).toEqual('https://www.example.com/2018/image.png')
 
@@ -397,7 +452,7 @@ test('resolve paths from external sources', () => {
     }
   })
 
-  expect(node2.fields.path).toEqual('https://www.example.com/2018/11/02/another-blog-post/images/image.png')
+  expect(node2.fields.path).toEqual('images/image.png')
   expect(node2.fields.file2).toEqual('https://www.example.com/images/image.png')
   expect(node2.fields.file3).toEqual('https://www.example.com/2018/11/02/another-blog-post/images/image.png')
 })
@@ -417,8 +472,8 @@ test('resolve paths from external sources with a custom url', () => {
 
   const node = contentType.addNode({
     fields: {
-      file: '/image.png',
-      file2: 'image.png',
+      file: 'image.png',
+      file2: '/image.png',
       file3: '../image.png',
       file4: 'https://subdomain.example.com/images/image.png'
     },
@@ -427,15 +482,15 @@ test('resolve paths from external sources with a custom url', () => {
     }
   })
 
-  expect(node.fields.file).toEqual('https://cdn.example.com/assets/image.png')
-  expect(node.fields.file2).toEqual('https://www.example.com/2018/11/02/image.png')
+  expect(node.fields.file).toEqual('image.png')
+  expect(node.fields.file2).toEqual('https://cdn.example.com/assets/image.png')
   expect(node.fields.file3).toEqual('https://www.example.com/2018/11/image.png')
   expect(node.fields.file4).toEqual('https://subdomain.example.com/images/image.png')
 
   const node2 = contentType2.addNode({
     fields: {
-      file: '/image.png',
-      file2: 'image.png',
+      file: 'image.png',
+      file2: '/image.png',
       file3: '../image.png',
       file4: 'https://subdomain.example.com/images/image.png'
     },
@@ -444,8 +499,8 @@ test('resolve paths from external sources with a custom url', () => {
     }
   })
 
-  expect(node2.fields.file).toEqual('https://cdn.example.com/assets/images/image.png')
-  expect(node2.fields.file2).toEqual('https://www.example.com/2018/11/02/image.png')
+  expect(node2.fields.file).toEqual('image.png')
+  expect(node2.fields.file2).toEqual('https://cdn.example.com/assets/images/image.png')
   expect(node2.fields.file3).toEqual('https://www.example.com/2018/11/image.png')
   expect(node2.fields.file4).toEqual('https://subdomain.example.com/images/image.png')
 })
@@ -515,11 +570,12 @@ test('add page with query', () => {
   })
 
   expect(typeof page.pageQuery.query).toEqual('object')
+  expect(page.pageQuery.typeName).toBeUndefined()
   expect(page.pageQuery.content).toEqual('query Test { page { id } }')
   expect(page.pageQuery.options).toMatchObject({ foo: 'bar' })
   expect(page.pageQuery.paginate).toMatchObject({
-    collection: undefined,
-    perPage: undefined
+    typeName: undefined,
+    perPage: PER_PAGE
   })
 })
 

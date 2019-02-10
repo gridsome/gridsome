@@ -23,7 +23,7 @@ module.exports = async app => {
   }
 
   if (isProd) {
-    config.plugin('ssr-client')
+    config.plugin('vue-server-renderer')
       .use(require('./plugins/VueSSRClientPlugin'), [{
         filename: path.relative(outDir, clientManifestPath)
       }])

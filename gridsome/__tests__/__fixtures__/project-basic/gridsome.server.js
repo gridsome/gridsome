@@ -5,12 +5,34 @@ module.exports = function (api) {
       route: '/blog/:slug'
     })
 
+    const tags = store.addContentType({
+      typeName: 'Tag',
+      route: '/tag/:slug'
+    })
+
+    const categories = store.addContentType({
+      typeName: 'Category'
+    })
+
+    categories.addNode({ id: '1', title: 'First category', path: '/category/first' })
+
+    tags.addNode({ id: '1', title: 'First tag' })
+    tags.addNode({ id: '2', title: 'Second tag' })
+    tags.addNode({ id: '3', title: 'Third tag' })
+    tags.addNode({ id: '4', title: 'Fourth tag' })
+
     posts.addNode({
       id: '1',
       title: 'First post',
       date: '2017-05-23',
       fields: {
         dateFormat: 'YYYY'
+        tags: [
+          { id: '2', typeName: 'Tag' },
+          { id: '3', typeName: 'Tag' },
+          { id: '4', typeName: 'Tag' }
+        ],
+        category: { id: '1', typeName: 'Category' }
       }
     })
 
@@ -20,6 +42,12 @@ module.exports = function (api) {
       date: '2018-03-18',
       fields: {
         dateFormat: 'YYYY'
+        tags: [
+          { id: '1', typeName: 'Tag' },
+          { id: '2', typeName: 'Tag' },
+          { id: '4', typeName: 'Tag' }
+        ],
+        category: { id: '1', typeName: 'Category' }
       }
     })
 
@@ -29,6 +57,12 @@ module.exports = function (api) {
       date: '2018-11-12',
       fields: {
         dateFormat: 'YYYY'
+        tags: [
+          { id: '1', typeName: 'Tag' },
+          { id: '3', typeName: 'Tag' },
+          { id: '4', typeName: 'Tag' }
+        ],
+        category: { id: '1', typeName: 'Category' }
       }
     })
 

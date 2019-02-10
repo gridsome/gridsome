@@ -1,18 +1,17 @@
 const path = require('path')
 const fs = require('fs-extra')
-const glob = require('globby')
-const slash = require('slash')
-const chokidar = require('chokidar')
 const { mapValues } = require('lodash')
+
+const isDev = process.env.NODE_ENV === 'development'
 
 class FilesystemSource {
   static defaultOptions () {
     return {
       path: undefined,
       route: undefined,
-      refs: {},
       index: ['index'],
-      typeName: 'FileNode'
+      typeName: 'FileNode',
+      refs: {}
     }
   }
 
@@ -21,131 +20,135 @@ class FilesystemSource {
     this.options = options
     this.context = api.context
     this.store = api.store
-    this.nodesCache = {}
+    this.refsCache = {}
 
-    // TODO: remove this before v1.0
-    if (options.type) {
-      if (options.typeName === 'FileNode') {
-        api.source.typeName = 'Filesystem'
-        options.typeName = 'Filesystem'
-      }
-
-      const typeName = api.source.makeTypeName(options.type)
-
-      console.log(
-        `The 'type' option for @gridsome/source-filesystem is ` +
-        `deprecated. Use the 'typeName' option to set the GrahpQL ` +
-        `node type and template name instead. Change 'typeName' from ` +
-        `'${options.typeName}' to '${typeName}' in your ` +
-        `gridsome.config.js\n`
-      )
-    } else {
-      options.type = ''
-    }
-
-    api.loadSource(args => this.addNodes(args))
+    api.loadSource(async () => {
+      await this.createContentTypes()
+      await this.createNodes()
+      if (isDev) this.watchFiles()
+    })
   }
 
-  async addNodes () {
-    const { options } = this
+  createContentTypes () {
+    this.refs = this.normalizeRefs(this.options.refs)
 
-    const refs = this.normalizeRefs(options.refs)
-    const files = await glob(options.path, { cwd: this.context })
-
-    const contentType = this.store.addContentType({
-      typeName: options.typeName,
-      route: options.route,
-      refs: mapValues(refs, ref => ({
-        typeName: ref.typeName,
-        key: ref.key
-      }))
+    this.contentType = this.store.addContentType({
+      typeName: this.options.typeName,
+      route: this.options.route
     })
 
-    mapValues(refs, ref => {
-      this.store.addContentType({
-        typeName: ref.typeName,
-        route: ref.route
+    mapValues(this.refs, (ref, key) => {
+      this.contentType.addReference(key, {
+        typeName: ref.typeName
       })
+
+      if (ref.create) {
+        this.store.addContentType({
+          typeName: ref.typeName,
+          route: ref.route
+        })
+      }
     })
+  }
 
-    files.map(file => {
-      const node = this.createNode(file)
+  async createNodes () {
+    const glob = require('globby')
 
-      // create simple references
-      for (const fieldName in node.fields) {
-        if (options.refs.hasOwnProperty(fieldName)) {
-          const value = node.fields[fieldName]
-          const typeName = options.refs[fieldName].typeName
+    const files = await glob(this.options.path, { cwd: this.context })
 
-          node.refs[fieldName] = value
+    await Promise.all(files.map(async file => {
+      const options = await this.createNodeOptions(file)
+      const node = this.contentType.addNode(options)
 
-          if (Array.isArray(value)) {
-            value.forEach(v => this.addRefNode(typeName, fieldName, v))
-          } else {
+      this.createNodeRefs(node)
+    }))
+  }
+
+  createNodeRefs (node) {
+    for (const fieldName in this.refs) {
+      const ref = this.refs[fieldName]
+
+      if (ref.create && node.fields[fieldName]) {
+        const value = node.fields[fieldName]
+        const typeName = ref.typeName
+
+        if (Array.isArray(value)) {
+          value.forEach(value =>
             this.addRefNode(typeName, fieldName, value)
-          }
+          )
+        } else {
+          this.addRefNode(typeName, fieldName, value)
         }
       }
+    }
+  }
 
-      contentType.addNode(node)
+  watchFiles () {
+    const slash = require('slash')
+    const chokidar = require('chokidar')
+
+    const watcher = chokidar.watch(this.options.path, {
+      cwd: this.context,
+      ignoreInitial: true
     })
 
-    if (process.env.NODE_ENV === 'development') {
-      const watcher = chokidar.watch(this.options.path, {
-        cwd: this.context,
-        ignoreInitial: true
-      })
+    watcher.on('add', async file => {
+      const options = await this.createNodeOptions(slash(file))
+      const node = this.contentType.addNode(options)
 
-      // TODO: update nodes when changed
-      watcher.on('add', file => {
-        const node = this.createNode(slash(file))
-        contentType.addNode(node)
-      })
+      this.createNodeRefs(node)
+    })
 
-      watcher.on('unlink', file => {
-        const id = this.store.makeUid(slash(file))
-        contentType.removeNode(id)
-      })
+    watcher.on('unlink', file => {
+      const absPath = path.join(this.context, slash(file))
 
-      watcher.on('change', file => {
-        const node = this.createNode(slash(file))
-        contentType.updateNode(node._id, node)
+      this.contentType.removeNode({
+        'internal.origin': absPath
       })
-    }
+    })
+
+    watcher.on('change', async file => {
+      const options = await this.createNodeOptions(slash(file))
+      const node = this.contentType.updateNode(options)
+
+      this.createNodeRefs(node)
+    })
   }
 
   // helpers
 
-  createNode (file) {
-    const filePath = this.store.resolve(file)
+  async createNodeOptions (file) {
+    const absPath = path.join(this.context, file)
+    const relPath = path.relative(this.context, file)
     const mimeType = this.store.mime.lookup(file)
-    const content = fs.readFileSync(filePath, 'utf-8')
+    const content = await fs.readFile(absPath, 'utf-8')
+    const uid = this.store.makeUid(relPath)
 
-    const node = {
-      _id: this.store.makeUid(file),
-      path: this.normalizePath(file),
+    return {
+      uid,
+      id: uid,
+      path: this.createPath(file),
       internal: {
         mimeType,
         content,
-        origin: filePath
+        origin: absPath
       }
     }
-
-    return node
   }
 
   addRefNode (typeName, fieldName, value) {
     const cacheKey = `${typeName}-${fieldName}-${value}`
-    const contentType = this.store.getContentType(typeName)
 
-    if (!this.nodesCache[cacheKey] && value) {
-      contentType.addNode({ title: value, slug: value })
-      this.nodesCache[cacheKey] = true
+    if (!this.refsCache[cacheKey] && value) {
+      this.refsCache[cacheKey] = true
+
+      this.store
+        .getContentType(typeName)
+        .addNode({ id: value, title: value })
     }
   }
 
-  normalizePath (file) {
-    // dont generate path for dynamic routes
+  createPath (file) {
     if (this.options.route) return
 
     const { dir, name } = path.parse(file)
@@ -159,11 +162,26 @@ class FilesystemSource {
   }
 
   normalizeRefs (refs) {
-    return mapValues(refs, (ref, key) => ({
-      route: ref.route || `/${this.store.slugify(ref.typeName)}/:slug`,
-      typeName: ref.typeName || this.options.typeName,
-      key: ref.key
-    }))
+    const { slugify } = this.store
+
+    return mapValues(refs, (ref, key) => {
+      if (typeof ref === 'string') {
+        ref = { typeName: ref, create: false }
+      }
+
+      if (!ref.typeName) {
+        ref.typeName = this.options.typeName
+      }
+
+      if (ref.create) {
+        ref.route = ref.route || `/${slugify(ref.typeName)}/:slug`
+        ref.create = true
+      } else {
+        ref.create = false
+      }
+
+      return ref
+    })
   }
 }
 

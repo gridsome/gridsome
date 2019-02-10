@@ -28,12 +28,15 @@ function fieldValues (obj, currentObj = {}) {
 
 function fieldValue (value, currentValue) {
   if (Array.isArray(value)) {
+    const arr = Array.isArray(currentValue) ? currentValue : []
+    const length = value.length
+
     if (isRefField(value[0])) {
       if (!isRefValue(currentValue)) {
         currentValue = { typeName: [], isList: true }
       }
 
-      for (let i = 0, l = value.length; i < l; i++) {
+      for (let i = 0; i < length; i++) {
         if (!currentValue.typeName.includes(value[i].typeName)) {
           currentValue.typeName.push(value[i].typeName)
         }
@@ -42,9 +45,11 @@ function fieldValue (value, currentValue) {
       return currentValue
     }
 
-    return value.map((value, index) => {
-      return fieldValue(value, currentValue ? currentValue[index] : undefined)
-    })
+    for (let i = 0; i < length; i++) {
+      arr[0] = fieldValue(value[i], arr[0])
+    }
+
+    return arr
   } else if (isPlainObject(value)) {
     if (isRefField(value)) {
       const ref = currentValue || { typeName: value.typeName }

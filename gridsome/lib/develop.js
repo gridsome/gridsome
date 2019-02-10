@@ -67,18 +67,24 @@ module.exports = async (context, args) => {
 
   async function createWebpackConfig () {
     const clientConfig = await createClientConfig(app)
+    const { SOCKJS_ENDPOINT, GRAPHQL_ENDPOINT, GRAPHQL_WS_ENDPOINT } = process.env
 
     clientConfig
       .plugin('friendly-errors')
       .use(require('friendly-errors-webpack-plugin'))
 
     clientConfig
-      .plugin('dev-endpoints')
-      .use(require('webpack/lib/DefinePlugin'), [{
-        'SOCKJS_ENDPOINT': JSON.stringify(sock.url),
-        'GRAPHQL_ENDPOINT': JSON.stringify(server.url.graphql),
-        'GRAPHQL_WS_ENDPOINT': JSON.stringify(server.url.websocket)
-      }])
+      .plugin('injections')
+      .tap(args => {
+        const definitions = args[0]
+        args[0] = {
+          ...definitions,
+          'process.env.SOCKJS_ENDPOINT': JSON.stringify(SOCKJS_ENDPOINT || sock.url),
+          'process.env.GRAPHQL_ENDPOINT': JSON.stringify(GRAPHQL_ENDPOINT || server.url.graphql),
+          'process.env.GRAPHQL_WS_ENDPOINT': JSON.stringify(GRAPHQL_WS_ENDPOINT || server.url.websocket)
+        }
+        return args
+      })
 
     clientConfig.entryPoints.store.forEach((entry, name) => {
       clientConfig.entry(name)

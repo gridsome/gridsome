@@ -202,6 +202,10 @@ class ImageProcessQueue {
       imageOptions.push({ key: 'background', shortKey: 'b-', value: options.background })
     }
 
+    if (options.blur) {
+      imageOptions.push({ key: 'blur', shortKey: 'bl-', value: options.blur })
+    }
+
     return imageOptions
   }
 
