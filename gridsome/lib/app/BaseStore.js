@@ -69,7 +69,7 @@ class BaseStore {
       return this.pages.findOne({ id: entry.id })
     }
 
-    return this.getContentType(entry.typeName).getNode(entry.id)
+    return this.getContentType(entry.typeName).getNode({ uid: entry.uid })
   }
 
   chainIndex (query = {}) {

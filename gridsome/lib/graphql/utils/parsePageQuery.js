@@ -19,6 +19,7 @@ function parsePageQuery (pageQuery) {
   result.query = ast && visit(ast, {
     Variable ({ name: { value: name }}) {
       if (name === 'page') return
+      if (name === 'path') return
 
       const path = !NODE_FIELDS.includes(name)
         ? ['fields'].concat(name.split('__'))

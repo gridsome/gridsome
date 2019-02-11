@@ -66,6 +66,7 @@ test('parse query variables', () => {
   const { variables } = parsePageQuery({
     content: `query (
       $page: Int
+      $path: String
       $title: String
       $custom: String
       $deep__value: String
