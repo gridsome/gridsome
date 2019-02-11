@@ -1,22 +1,38 @@
 const { visit, parse, BREAK } = require('graphql')
-const { trimStart, upperFirst } = require('lodash')
+const { get, trimStart, upperFirst } = require('lodash')
 const { PER_PAGE, NODE_FIELDS } = require('../../utils/constants')
 
-function parsePageQuery (pageQuery) {
+function parsePageQuery (query = '') {
+  const result = { query: null, paginate: false }
+
+  if (query) {
+    result.query = query.trim()
+
+    visit(parse(query), {
+      Directive (node) {
+        if (node.name.value === 'paginate') {
+          result.paginate = true
+        }
+      }
+    })
+  }
+
+  return result
+}
+
+function processPageQuery (pageQuery, variables) {
   const result = {
-    content: pageQuery.content || '',
-    options: pageQuery.options || {},
-    typeName: pageQuery.typeName,
+    query: undefined,
     variables: [],
     paginate: {
       fieldName: undefined,
-      typeName: undefined,
-      createFilters: () => {},
-      perPage: () => PER_PAGE
-    }
+      typeName: undefined
+    },
+    getFilters: () => {},
+    getPerPage: () => PER_PAGE
   }
 
-  const ast = result.content ? parse(result.content) : null
+  const ast = pageQuery.query ? parse(pageQuery.query) : null
 
   result.query = ast && visit(ast, {
     Variable ({ name: { value: name }}) {
@@ -46,13 +62,13 @@ function parsePageQuery (pageQuery) {
             result.paginate.fieldName = fieldNode.name.value
 
             if (perPageArg) {
-              result.paginate.perPage = (vars = {}) => {
+              result.getPerPage = (vars = {}) => {
                 return vars.perPage || Number(perPageArg.value.value)
               }
             }
 
             if (filterArg) {
-              result.paginate.createFilters = (vars = {}) => {
+              result.getFilters = (vars = {}) => {
                 return argToObject(filterArg.value, vars)
               }
             }
@@ -98,4 +114,31 @@ function argToObject (node, vars = {}) {
   return obj
 }
 
-module.exports = parsePageQuery
+function contextValues (context, variables = []) {
+  return variables.reduce((acc, { name, path }) => {
+    let value = get(context, path) || null
+
+    if (value && isRef(value)) {
+      value = value.id
+    }
+
+    acc[name] = value
+
+    return acc
+  }, {})
+}
+
+function isRef (obj) {
+  return (
+    typeof obj === 'object' &&
+    Object.keys(obj).length === 2 &&
+    obj.hasOwnProperty('typeName') &&
+    obj.hasOwnProperty('id')
+  )
+}
+
+module.exports = {
+  parsePageQuery,
+  processPageQuery,
+  contextValues
+}

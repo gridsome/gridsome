@@ -1,16 +1,19 @@
 const { print } = require('graphql')
 const { getGraphQLParams } = require('express-graphql')
-const queryVariables = require('../../graphql/utils/queryVariables')
-const parsePageQuery = require('../../graphql/utils/parsePageQuery')
+
+const {
+  contextValues,
+  processPageQuery
+} = require('../../graphql/utils/page-query')
 
 module.exports = ({ store }) => {
   return async function (req, res, next) {
     const { query, variables, ...body } = await getGraphQLParams(req)
-    const result = parsePageQuery({ content: query })
+    const result = processPageQuery({ query })
 
     if (variables.path) {
       const node = store.getNodeByPath(variables.path)
-      const values = queryVariables(node, result.variables)
+      const values = contextValues(node, result.variables)
 
       Object.assign(variables, values)
     }
