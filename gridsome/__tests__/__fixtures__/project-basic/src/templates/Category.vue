@@ -11,10 +11,16 @@
 </template>
 
 <page-query>
-query Tag ($path: String!, $page: Int) {
+query Tag ($path: String!, $page: Int, $showType: String) {
   category (path: $path) {
     title
-    belongsTo (perPage: 2, page: $page, filter: { typeName: { eq: Post }}) @paginate {
+    belongsTo (
+      perPage: 2,
+      page: $page,
+      filter: {
+        typeName: { regex: $showType }
+      }
+    ) @paginate {
       pageInfo {
         totalPages
         currentPage

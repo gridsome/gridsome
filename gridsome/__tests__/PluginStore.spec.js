@@ -573,10 +573,8 @@ test('add page with query', () => {
   expect(page.pageQuery.typeName).toBeUndefined()
   expect(page.pageQuery.content).toEqual('query Test { page { id } }')
   expect(page.pageQuery.options).toMatchObject({ foo: 'bar' })
-  expect(page.pageQuery.paginate).toMatchObject({
-    typeName: undefined,
-    perPage: PER_PAGE
-  })
+  expect(page.pageQuery.paginate.typeName).toBeUndefined()
+  expect(page.pageQuery.paginate.perPage()).toEqual(PER_PAGE)
 })
 
 test('update page', () => {

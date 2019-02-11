@@ -11,8 +11,8 @@ function parsePageQuery (pageQuery) {
     paginate: {
       fieldName: undefined,
       typeName: undefined,
-      filter: undefined,
-      perPage: PER_PAGE
+      createFilters: () => {},
+      perPage: () => PER_PAGE
     }
   }
 
@@ -46,11 +46,15 @@ function parsePageQuery (pageQuery) {
             result.paginate.fieldName = fieldNode.name.value
 
             if (perPageArg) {
-              result.paginate.perPage = Number(perPageArg.value.value)
+              result.paginate.perPage = (vars = {}) => {
+                return vars.perPage || Number(perPageArg.value.value)
+              }
             }
 
             if (filterArg) {
-              result.paginate.filter = argToObject(filterArg.value)
+              result.paginate.createFilters = (vars = {}) => {
+                return argToObject(filterArg.value, vars)
+              }
             }
 
             return null

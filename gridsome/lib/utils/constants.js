@@ -23,7 +23,7 @@ module.exports = {
   internalRE: /^internal\:\/\//,
   transformerRE: /(?:^@?gridsome[/-]|\/)transformer-([\w-]+)/,
 
-  NODE_FIELDS: ['id', 'title', 'slug', 'path', 'date', 'content', 'excerpt'],
+  NODE_FIELDS: ['id', 'typeName', 'title', 'slug', 'path', 'date', 'content', 'excerpt'],
 
   ISO_8601_FORMAT: [
     'YYYY',

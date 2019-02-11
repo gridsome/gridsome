@@ -1,5 +1,6 @@
 const camelCase = require('camelcase')
 const { isDate } = require('./types/date')
+const { NODE_FIELDS } = require('../../utils/constants')
 const { isEmpty, pick, omit, reduce } = require('lodash')
 
 const {
@@ -181,11 +182,10 @@ function isRefField (field) {
 }
 
 function createFilterQuery (filter, fields) {
-  const internals = ['id', 'typeName', 'title', 'date', 'slug', 'path', 'content', 'excerpt']
   const query = {}
 
-  Object.assign(query, toFilterArgs(omit(filter, internals), fields, 'fields'))
-  Object.assign(query, toFilterArgs(pick(filter, internals), fields))
+  Object.assign(query, toFilterArgs(omit(filter, NODE_FIELDS), fields, 'fields'))
+  Object.assign(query, toFilterArgs(pick(filter, NODE_FIELDS), fields))
 
   return query
 }

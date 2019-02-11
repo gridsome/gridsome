@@ -1,6 +1,5 @@
 const path = require('path')
 const isUrl = require('is-url')
-const Router = require('vue-router')
 const autoBind = require('auto-bind')
 const hirestime = require('hirestime')
 const BaseStore = require('./BaseStore')
@@ -119,16 +118,6 @@ class App {
 
   createRoutes () {
     this.routes = createRoutes(this)
-
-    this.router = new Router({
-      base: '/',
-      mode: 'history',
-      fallback: false,
-      routes: this.routes.map(page => ({
-        path: page.route || page.path,
-        component: () => page
-      }))
-    })
   }
 
   generateCode () {

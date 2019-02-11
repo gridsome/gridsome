@@ -18,12 +18,19 @@ module.exports = function (api) {
       typeName: 'Other'
     })
 
-    categories.addNode({ id: '1', title: 'First category', path: '/category/first' })
+    categories.addNode({
+      id: '1',
+      title: 'First category',
+      path: '/category/first',
+      fields: {
+        showType: 'Post'
+      }
+    })
 
-    tags.addNode({ id: '1', title: 'First tag' })
-    tags.addNode({ id: '2', title: 'Second tag' })
-    tags.addNode({ id: '3', title: 'Third tag' })
-    tags.addNode({ id: '4', title: 'Fourth tag' })
+    tags.addNode({ id: '1', title: 'First tag', fields: { perPage: 2 }})
+    tags.addNode({ id: '2', title: 'Second tag', fields: { perPage: 2 } })
+    tags.addNode({ id: '3', title: 'Third tag', fields: { perPage: 2 } })
+    tags.addNode({ id: '4', title: 'Fourth tag', fields: { perPage: 2 } })
 
     posts.addNode({
       id: '1',
@@ -45,7 +52,7 @@ module.exports = function (api) {
       title: 'Second post',
       date: '2018-03-18',
       fields: {
-        dateFormat: 'YYYY',
+        dateFormat: 'YYYY-MM',
         tags: [
           posts.createReference('1', 'Tag'),
           posts.createReference('2', 'Tag'),
@@ -60,7 +67,7 @@ module.exports = function (api) {
       title: 'Third post',
       date: '2018-11-12',
       fields: {
-        dateFormat: 'YYYY',
+        dateFormat: 'YYYY-MM-DD',
         tags: [
           posts.createReference('1', 'Tag'),
           posts.createReference('3', 'Tag'),

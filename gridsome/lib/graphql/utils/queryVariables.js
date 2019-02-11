@@ -4,7 +4,7 @@ function queryVariables (node, variables = []) {
   return variables.reduce((acc, { name, path }) => {
     let value = get(node, path) || null
 
-    if (isRef(value)) {
+    if (value && isRef(value)) {
       value = value.id
     }
 

@@ -114,9 +114,9 @@ test('build basic project', async () => {
   expect(firstPost).toMatch('<h1>First post</h1>')
   expect(firstPost).toMatch('<span>2017</span>')
   expect(secondPost).toMatch('<h1>Second post</h1>')
-  expect(secondPost).toMatch('<span>2018</span>')
+  expect(secondPost).toMatch('<span>2018-03</span>')
   expect(thirdPost).toMatch('<h1>Third post</h1>')
-  expect(thirdPost).toMatch('<span>2018</span>')
+  expect(thirdPost).toMatch('<span>2018-11-12</span>')
 
   // belongsTo with pagination
   const firstTagHTML = content('dist/tag/first-tag/index.html')

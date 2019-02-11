@@ -8,7 +8,7 @@ test('create render queue', async () => {
   const app = await createApp(context, undefined, BOOTSTRAP_ROUTES)
   const queue = await createRenderQueue(app)
 
-  const renderPaths = queue.map(page => page.fullPath)
+  const renderPaths = queue.map(page => page.path)
   const htmlOutputs = queue.map(page => page.htmlOutput)
   const dataOutputs = queue.map(page => page.dataOutput)
 

@@ -2,6 +2,26 @@ const { print } = require('graphql')
 const queryVariables = require('../lib/graphql/utils/queryVariables')
 const parsePageQuery = require('../lib/graphql/utils/parsePageQuery')
 
+test('parse page query', () => {
+  const parsed = parsePageQuery({
+    content: `query {
+      allTestAuthors {
+        edges {
+          node {
+            id
+          }
+        }
+      }
+    }`
+  })
+
+  expect(parsed.variables).toHaveLength(0)
+  expect(parsed.paginate.typeName).toBeUndefined()
+  expect(parsed.paginate.fieldName).toBeUndefined()
+  expect(parsed.paginate.perPage).toBeInstanceOf(Function)
+  expect(parsed.paginate.createFilters).toBeInstanceOf(Function)
+})
+
 test('parse @paginate directive for connection', () => {
   const { paginate } = parsePageQuery({
     content: `query {
@@ -24,7 +44,8 @@ test('parse @paginate directive for connection', () => {
 
   expect(paginate.typeName).toEqual('TestPost')
   expect(paginate.fieldName).toEqual('allTestPost')
-  expect(paginate.perPage).toEqual(5)
+  expect(paginate.perPage).toBeInstanceOf(Function)
+  expect(paginate.perPage()).toEqual(5)
 })
 
 test('parse @paginate directive from belongsTo field', () => {
@@ -45,13 +66,18 @@ test('parse @paginate directive from belongsTo field', () => {
 
   expect(paginate.typeName).toEqual('TestPage')
   expect(paginate.fieldName).toEqual('testPage')
-  expect(paginate.perPage).toEqual(5)
+  expect(paginate.perPage()).toEqual(5)
 })
 
 test('parse filters from @paginate field', () => {
   const { paginate } = parsePageQuery({
-    content: `query {
-      pages: allTestPost (filter: { num: { gt: 2 }}) @paginate {
+    content: `query ($customVar: String) {
+      pages: allTestPost (
+        filter: {
+          myField: { eq: $customVar }
+          num: { gt: 2 }
+        }
+      ) @paginate {
         edges {
           node {
             id
@@ -61,7 +87,16 @@ test('parse filters from @paginate field', () => {
     }`
   })
 
-  expect(paginate.filter).toMatchObject({ num: { gt: 2 }})
+  expect(paginate.createFilters).toBeInstanceOf(Function)
+
+  const filters = paginate.createFilters({
+    customVar: 'custom var'
+  })
+
+  expect(filters).toMatchObject({
+    myField: { eq: 'custom var' },
+    num: { gt: 2 }
+  })
 })
 
 test('remove @paginate directive from ast', () => {

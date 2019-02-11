@@ -11,10 +11,10 @@
 </template>
 
 <page-query>
-query Tag ($path: String!, $page: Int) {
+query Tag ($path: String!, $page: Int, $perPage: Int = 2) {
   tag (path: $path) {
     title
-    belongsTo (perPage: 2, page: $page) @paginate {
+    belongsTo (perPage: $perPage, page: $page) @paginate {
       pageInfo {
         totalPages
         currentPage
