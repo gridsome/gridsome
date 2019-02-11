@@ -138,8 +138,8 @@ async function createRenderQueue ({ routes, config, store, schema }) {
 
         page.collection.find().forEach(node => {
           const variables = contextValues(node, pageQuery.variables)
-          const filers = pageQuery.getFilters(variables)
-          const query = filers ? createFilterQuery(filers, fields) : {}
+          const filters = pageQuery.getFilters(variables)
+          const query = filters ? createFilterQuery(filters, fields) : {}
 
           const key = `belongsTo.${node.typeName}.${safeKey(node.id)}`
           const perPage = pageQuery.getPerPage(variables)
@@ -157,12 +157,12 @@ async function createRenderQueue ({ routes, config, store, schema }) {
       case PAGED_ROUTE: {
         const { args } = rootFields[fieldName]
         const filter = args.find(arg => arg.name === 'filter')
-        const filers = pageQuery.getFilters()
+        const filters = pageQuery.getFilters()
         const perPage = pageQuery.getPerPage()
-        const fields = filter ? filter.type.getFields() : {}
-        const query = filter ? createFilterQuery(filers, fields) : undefined
+        const fields = filters ? filter.type.getFields() : {}
+        const query = filters ? createFilterQuery(filters, fields) : undefined
         const { collection } = store.getContentType(typeName)
-        const totalNodes = collection.count(query)
+        const totalNodes = collection.find(query).length
         const totalPages = Math.ceil(totalNodes / perPage) || 1
 
         for (let i = 1; i <= totalPages; i++) {
