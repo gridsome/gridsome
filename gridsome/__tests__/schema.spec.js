@@ -335,10 +335,7 @@ test('create node reference', async () => {
     fields: {
       author: '2',
       customRefs: {
-        author: {
-          typeName: 'TestAuthor',
-          id: '2'
-        }
+        author: posts.createReference('2', 'TestAuthor')
       }
     }
   })
@@ -359,6 +356,43 @@ test('create node reference', async () => {
   expect(data.testPost.author.title).toEqual('Test Author')
   expect(data.testPost.customRefs.author.id).toEqual('2')
   expect(data.testPost.customRefs.author.title).toEqual('Test Author')
+})
+
+test('create node reference to same typeName', async () => {
+  const { addNode, createReference } = api.store.addContentType({
+    typeName: 'TestPost'
+  })
+
+  const post = addNode({ id: '1' })
+
+  addNode({
+    id: '2',
+    fields: {
+      rel: createReference('1')
+    }
+  })
+
+  addNode({
+    id: '3',
+    fields: {
+      rel: createReference(post)
+    }
+  })
+
+  const query = `{
+    post1: testPost (id: "2") {
+      rel { id title }
+    }
+    post2: testPost (id: "3") {
+      rel { id title }
+    }
+  }`
+
+  const { errors, data } = await createSchemaAndExecute(query)
+
+  expect(errors).toBeUndefined()
+  expect(data.post1.rel.id).toEqual('1')
+  expect(data.post1.rel.id).toEqual('1')
 })
 
 // TODO: remove this test before 1.0
@@ -489,9 +523,9 @@ test('create node list reference with missing types', async () => {
     fields: {
       customRefs: {
         authors: [
-          { typeName: 'TestUser', id: '1' },
-          { typeName: 'TestAuthor', id: '2' },
-          { typeName: 'TestUser', id: '3' }
+          posts.createReference('1', 'TestUser'),
+          posts.createReference('2', 'TestAuthor'),
+          posts.createReference('3', 'TestUser')
         ]
       }
     }
@@ -520,13 +554,7 @@ test('create node list reference with id as array', async () => {
   })
 
   const posts = api.store.addContentType({
-    typeName: 'TestPost',
-    refs: {
-      author: {
-        key: 'id',
-        typeName: 'TestAuthor'
-      }
-    }
+    typeName: 'TestPost'
   })
 
   authors.addNode({ id: '2', title: 'First Author' })
@@ -536,10 +564,7 @@ test('create node list reference with id as array', async () => {
   posts.addNode({
     id: '1',
     fields: {
-      authors: {
-        typeName: 'TestAuthor',
-        id: ['2', '3', '4']
-      }
+      authors: posts.createReference(['2', '3', '4'], 'TestAuthor')
     }
   })
 
@@ -594,8 +619,8 @@ test('create reference with multiple node types', async () => {
     id: '3',
     fields: {
       people: [
-        { typeName: 'TestAuthor', id: '1' },
-        { typeName: 'TestUser', id: '1' }
+        posts.createReference('1', 'TestAuthor'),
+        posts.createReference('1', 'TestUser')
       ]
     }
   })
