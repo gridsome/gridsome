@@ -13,53 +13,89 @@ const {
   GraphQLObjectType
 } = require('../graphql')
 
-test('infer types from node fields', () => {
-  const fields = mergeNodeFields([
-    {
-      fields: {
-        string: 'bar',
-        number: 10,
-        float: 1.2,
-        nullValue: null,
-        truthyBoolean: true,
-        stringList: ['item'],
-        numberList: [10],
-        floatList: [1.2],
-        extendObj: {},
-        refs: [],
-        simpleObj: {
-          foo: 'bar'
-        },
-        obj: {
-          foo: 'bar'
-        }
+const nodes = [
+  {
+    fields: {
+      string: 'bar',
+      number: 10,
+      float: 1.2,
+      nullValue: null,
+      truthyBoolean: true,
+      stringList: ['item'],
+      numberList: [10],
+      floatList: [1.2],
+      objList: [
+        { a: 'a' },
+        { b: 'b' } // #184
+      ],
+      extendObj: {},
+      refs: [],
+      refList: [
+        { typeName: 'Post1', id: '1' },
+        { typeName: 'Post2', id: '1' },
+        { typeName: 'Post3', id: '1' }
+      ],
+      simpleObj: {
+        foo: 'bar'
+      },
+      obj: {
+        foo: 'bar'
       }
-    },
-    {
-      fields: {
-        string: true,
-        falsyBoolean: false,
-        booleanList: [false],
-        numberList: [5, 30],
-        emptyList: [],
-        emptyObj: {},
-        emptyString: '',
-        refs: [
-          { typeName: 'Post', id: '1' } // #128, #129
-        ],
-        extendObj: {
-          bar: 'foo'
-        },
-        obj: {
-          bar: 'foo',
-          test: {
-            foo: 'bar'
-          }
+    }
+  },
+  {
+    fields: {
+      string: true,
+      falsyBoolean: false,
+      booleanList: [false],
+      numberList: [5, 30],
+      emptyList: [],
+      objList: [
+        { c: 'c' }
+      ],
+      emptyObj: {},
+      emptyString: '',
+      refs: [
+        { typeName: 'Post', id: '1' } // #128, #129
+      ],
+      ref: { typeName: 'Post', id: '1' },
+      extendObj: {
+        bar: 'foo'
+      },
+      obj: {
+        bar: 'foo',
+        test: {
+          foo: 'bar'
         }
       }
     }
-  ])
+  }
+]
 
+test('merge node fields', () => {
+  const fields = mergeNodeFields(nodes)
+
+  expect(fields.emptyString).toEqual('')
+  expect(fields.numberList).toHaveLength(1)
+  expect(fields.floatList).toHaveLength(1)
+  expect(fields.objList).toHaveLength(1)
+  expect(fields.emptyList).toHaveLength(0)
+  expect(fields.objList[0]).toMatchObject({ a: 'a', b: 'b', c: 'c' })
+  expect(fields.refs.typeName).toHaveLength(1)
+  expect(fields.refs.typeName[0]).toEqual('Post')
+  expect(fields.refs.isList).toEqual(true)
+  expect(fields.refList.typeName).toHaveLength(3)
+  expect(fields.refList.typeName).toEqual(expect.arrayContaining(['Post1', 'Post2', 'Post3']))
+  expect(fields.refList.isList).toEqual(true)
+  expect(fields.ref).toMatchObject({ typeName: 'Post', isList: false })
+  expect(fields.emptyObj).toMatchObject({})
+  expect(fields.simpleObj).toMatchObject({ foo: 'bar' })
+  expect(fields.extendObj).toMatchObject({ bar: 'foo' })
+  expect(fields.obj).toMatchObject({ foo: 'bar', bar: 'foo', test: { foo: 'bar' }})
+})
+
+test('create graphql types from node fields', () => {
+  const fields = mergeNodeFields(nodes)
   const types = createFieldTypes(fields, 'TestPost', {})
 
   expect(types.string.type).toEqual(GraphQLString)

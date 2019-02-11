@@ -110,6 +110,16 @@ test('set custom quality', async () => {
   expect(result.src).toEqual('/assets/static/1000x600.6bbe610.test.png')
 })
 
+test('set custom blur', async () => {
+  const filePath = path.resolve(__dirname, 'assets/1000x600.png')
+  const queue = new AssetsQueue({ context, config: baseconfig })
+
+  const result = await queue.add(filePath, { blur: 10 })
+
+  expect(queue.images.queue).toHaveLength(2)
+  expect(result.src).toEqual('/assets/static/1000x600.248ba3a.test.png')
+})
+
 test('add custom attributes to markup', async () => {
   const filePath = path.resolve(__dirname, 'assets/1000x600.png')
   const queue = new AssetsQueue({ context, config: baseconfig })

@@ -30,12 +30,13 @@ module.exports = function (api) {
       title: 'First post',
       date: '2017-05-23',
       fields: {
+        dateFormat: 'YYYY',
         tags: [
-          { id: '2', typeName: 'Tag' },
-          { id: '3', typeName: 'Tag' },
-          { id: '4', typeName: 'Tag' }
+          posts.createReference('2', 'Tag'),
+          posts.createReference('3', 'Tag'),
+          posts.createReference('4', 'Tag')
         ],
-        category: { id: '1', typeName: 'Category' }
+        category: posts.createReference('1', 'Category')
       }
     })
 
@@ -44,12 +45,13 @@ module.exports = function (api) {
       title: 'Second post',
       date: '2018-03-18',
       fields: {
+        dateFormat: 'YYYY',
         tags: [
-          { id: '1', typeName: 'Tag' },
-          { id: '2', typeName: 'Tag' },
-          { id: '4', typeName: 'Tag' }
+          posts.createReference('1', 'Tag'),
+          posts.createReference('2', 'Tag'),
+          posts.createReference('4', 'Tag')
         ],
-        category: { id: '1', typeName: 'Category' }
+        category: posts.createReference('1', 'Category')
       }
     })
 
@@ -58,12 +60,13 @@ module.exports = function (api) {
       title: 'Third post',
       date: '2018-11-12',
       fields: {
+        dateFormat: 'YYYY',
         tags: [
-          { id: '1', typeName: 'Tag' },
-          { id: '3', typeName: 'Tag' },
-          { id: '4', typeName: 'Tag' }
+          posts.createReference('1', 'Tag'),
+          posts.createReference('3', 'Tag'),
+          posts.createReference('4', 'Tag')
         ],
-        category: { id: '1', typeName: 'Category' }
+        category: posts.createReference('1', 'Category')
       }
     })
 

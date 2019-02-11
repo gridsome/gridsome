@@ -65,9 +65,11 @@ class BaseStore {
       return null
     }
 
-    const { collection } = this.getContentType(entry.typeName)
+    if (entry.type === 'page') {
+      return this.pages.findOne({ id: entry.id })
+    }
 
-    return collection.getNode(entry.id)
+    return this.getContentType(entry.typeName).getNode({ uid: entry.uid })
   }
 
   chainIndex (query = {}) {

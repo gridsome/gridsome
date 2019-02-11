@@ -83,7 +83,7 @@ module.exports = (app, { isProd, isServer }) => {
       compilerOptions: {
         preserveWhitespace: false,
         modules: [
-          require('./modules/observe-html')(),
+          require('./modules/html')(),
           require('./modules/assets')()
         ]
       },

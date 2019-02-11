@@ -1,12 +1,13 @@
 const { visit, parse, BREAK } = require('graphql')
 const { trimStart, upperFirst } = require('lodash')
-const { PER_PAGE } = require('../../utils/constants')
+const { PER_PAGE, NODE_FIELDS } = require('../../utils/constants')
 
 function parsePageQuery (pageQuery) {
   const result = {
     content: pageQuery.content || '',
     options: pageQuery.options || {},
     typeName: pageQuery.typeName,
+    variables: [],
     paginate: {
       fieldName: undefined,
       typeName: undefined,
@@ -18,6 +19,16 @@ function parsePageQuery (pageQuery) {
   const ast = result.content ? parse(result.content) : null
 
   result.query = ast && visit(ast, {
+    Variable ({ name: { value: name }}) {
+      if (name === 'page') return
+      if (name === 'path') return
+
+      const path = !NODE_FIELDS.includes(name)
+        ? ['fields'].concat(name.split('__'))
+        : [name]
+
+      result.variables.push({ name, path })
+    },
     Field (fieldNode) {
       return visit(fieldNode, {
         Directive (node, key, parent, path, ancestors) {

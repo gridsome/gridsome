@@ -1,10 +1,4 @@
-import caniuse from '../utils/caniuse'
 import { stringifyClass } from '../utils/class'
-import { createObserver } from '../utils/intersectionObserver'
-
-const observer = caniuse.IntersectionObserver
-  ? createObserver(intersectionHandler)
-  : null
 
 // @vue/component
 export default {
@@ -12,21 +6,22 @@ export default {
 
   props: {
     src: { type: [Object, String], required: true },
+    width: { type: String, default: '' },
     height: { type: String, default: '' },
+    quality: { type: String, default: '' },
     fit: { type: String, default: '' },
     position: { type: String, default: '' },
     background: { type: String, default: '' },
-    immediate: { type: true, default: undefined },
-    quality: { type: String, default: '' },
-    blur: { type: String, default: '' }
+    blur: { type: String, default: '' },
+    immediate: { type: true, default: undefined }
   },
 
-  render: (h, { data, props, parent }) => {
+  render: (h, { data, props }) => {
     const classNames = [data.class, 'g-image']
     const isImmediate = props.immediate || props.immediate !== undefined
     const noscriptClassNames = classNames.slice()
-    const ref = data.ref || data.key
-    const attrs = data.attrs
+    const directives = data.directives || []
+    const attrs = data.attrs || {}
     const res = []
 
     switch (typeof props.src) {
@@ -50,31 +45,20 @@ export default {
       }
     }
 
+    directives.push({ name: 'g-image' })
+    
     res.push(h('img', {
       ...data,
       class: classNames,
-      attrs,
-      ref
+      directives,
+      props,
+      attrs
     }))
 
     if (attrs['data-src']) {
-      const onMount = el => {
-        if (!el) return
-        else if (!observer) loadImage(el)
-        else observer.observe(el)
-      }
-
-      const onDestroy = el => {
-        if (el && observer) observer.unobserve(el)
-      }
-
       classNames.push('g-image--lazy')
       classNames.push('g-image--loading')
       noscriptClassNames.push('g-image--loaded')
-
-      parent.$once('hook:mounted', () => onMount(parent.$refs[ref]))
-      parent.$once('hook:updated', () => onMount(parent.$refs[ref]))
-      parent.$once('hook:beforeDestroy', () => onDestroy(parent.$refs[ref]))
 
       // must render as innerHTML to make hydration work
       res.push(h('noscript', {
@@ -90,52 +74,4 @@ export default {
 
     return res
   }
-}
-
-export function observe (selector = '[data-src]', context = document) {
-  const images = context.querySelectorAll(selector)
-
-  if (observer) {
-    images.forEach(el => !el.__vue__ && observer.observe(el))
-  } else {
-    Array.from(images).forEach(el => !el.__vue__ && loadImage(el))
-  }
-}
-
-export function unobserve (selector = '[data-src]', context = document) {
-  if (observer) {
-    context.querySelectorAll(selector).forEach(el => {
-      if (!el.__vue__) observer.unobserve(el)
-    })
-  }
-}
-
-function intersectionHandler ({ intersectionRatio, target }) {
-  if (intersectionRatio > 0 && target.dataset.src) {
-    observer.unobserve(target)
-    loadImage(target)
-  }
-}
-
-function loadImage (el) {
-  const src = el.getAttribute('data-src')
-  const srcset = el.getAttribute('data-srcset')
-  const sizes = el.getAttribute('data-sizes')
-
-  if (!src) return
-
-  el.onload = function () {
-    el.removeAttribute('data-src')
-    el.removeAttribute('data-srcset')
-    el.removeAttribute('data-sizes')
-
-    el.classList.remove('g-image--loading')
-    el.classList.add('g-image--loaded')
-    
-    delete el.onload
-  }
-
-  el.src = src
-  el.srcset = srcset
-  el.sizes = sizes
 }

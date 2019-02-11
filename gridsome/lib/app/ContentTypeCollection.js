@@ -1,5 +1,6 @@
 const hash = require('hash-sum')
 const moment = require('moment')
+const autoBind = require('auto-bind')
 const EventEmitter = require('events')
 const camelCase = require('camelcase')
 const { cloneDeep, isObject, isDate } = require('lodash')
@@ -27,6 +28,8 @@ class ContentTypeCollection extends EventEmitter {
       unique: ['id', 'path'],
       autoupdate: true
     })
+
+    autoBind(this)
   }
 
   addReference (fieldName, options) {
@@ -307,6 +310,14 @@ class ContentTypeCollection extends EventEmitter {
 
   makeUid (value) {
     return this.pluginStore.makeUid(value)
+  }
+
+  createReference (id, typeName = this.typeName) {
+    if (typeof id === 'object' && id.id) {
+      return { id: id.id, typeName: id.typeName }
+    }
+
+    return { id, typeName }
   }
 
   slugify (string = '') {
