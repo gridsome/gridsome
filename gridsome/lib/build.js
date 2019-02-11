@@ -10,6 +10,7 @@ const { log, info } = require('./utils/log')
 const createApp = require('./app')
 const { createWorker } = require('./workers')
 const compileAssets = require('./webpack/compileAssets')
+const queryVariables = require('./graphql/utils/queryVariables')
 
 module.exports = async (context, args) => {
   process.env.NODE_ENV = 'production'
@@ -76,13 +77,29 @@ async function createRenderQueue ({ router, config, store }) {
 
     const filePath = fullPath.split('/').map(decodeURIComponent).join('/')
     const dataPath = fullPath === '/' ? 'index.json' : `${filePath}.json`
-    const { route } = router.resolve(fullPath)
+    const { route: { params }} = router.resolve(fullPath)
     const { query } = page.pageQuery
 
     const htmlOutput = path.join(config.outDir, filePath, 'index.html')
     const dataOutput = query ? path.join(config.cacheDir, 'data', dataPath) : null
 
-    return { query, route, dataOutput, htmlOutput, fullPath, path: node.path }
+    const variables = queryVariables(node, page.pageQuery.variables)
+
+    if (params.page) {
+      variables.page = Number(params.page)
+    }
+
+    variables.path = node.path
+
+    return {
+      dataOutput,
+      htmlOutput,
+      path: fullPath,
+      pageQuery: {
+        query,
+        variables
+      }
+    }
   }
 
   const createPage = (page, currentPage = 1) => {
@@ -94,10 +111,6 @@ async function createRenderQueue ({ router, config, store }) {
     }
 
     return entry
-  }
-
-  const createTemplate = (node, page, currentPage = 1) => {
-    return createEntry(node, page, currentPage)
   }
 
   const queue = []
@@ -116,7 +129,7 @@ async function createRenderQueue ({ router, config, store }) {
 
       case DYNAMIC_TEMPLATE_ROUTE: {
         page.collection.find().forEach(node => {
-          queue.push(createTemplate(node, page))
+          queue.push(createEntry(node, page))
         })
 
         break
@@ -131,7 +144,7 @@ async function createRenderQueue ({ router, config, store }) {
           const totalPages = Math.ceil(totalNodes / perPage)
 
           for (let i = 1; i <= totalPages; i++) {
-            queue.push(createTemplate(node, page, i))
+            queue.push(createEntry(node, page, i))
           }
         })
 
@@ -161,20 +174,14 @@ async function renderPageQueries (queue, graphql) {
   const pages = queue.filter(page => !!page.dataOutput)
 
   await pMap(pages, async page => {
-    const { params } = page.route
-    const variables = { ...params, path: page.path }
-
-    if (params.page) {
-      variables.page = Number(params.page)
-    }
-
-    const results = await graphql(page.query, variables)
+    const { dataOutput, pageQuery: { query, variables }} = page
+    const results = await graphql(query, variables)
 
     if (results.errors) {
       throw new Error(results.errors)
     }
 
-    await fs.outputFile(page.dataOutput, JSON.stringify(results))
+    await fs.outputFile(dataOutput, JSON.stringify(results))
   }, { concurrency: sysinfo.cpus.logical })
 
   info(`Run GraphQL (${pages.length} queries) - ${timer(hirestime.S)}s`)
@@ -190,7 +197,7 @@ async function renderHTML (queue, config) {
 
   await Promise.all(chunks.map(async queue => {
     const pages = queue.map(page => ({
-      path: page.fullPath,
+      path: page.path,
       htmlOutput: page.htmlOutput,
       dataOutput: page.dataOutput
     }))

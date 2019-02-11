@@ -106,9 +106,15 @@ test('build basic project', async () => {
   expect(blogPage2HTML).toMatch('<a href="/blog/first-post">Read more</a>')
 
   // templates
-  expect(content('dist/blog/first-post/index.html')).toMatch('<h1>First post</h1>')
-  expect(content('dist/blog/second-post/index.html')).toMatch('<h1>Second post</h1>')
-  expect(content('dist/blog/third-post/index.html')).toMatch('<h1>Third post</h1>')
+  const firstPost = content('dist/blog/first-post/index.html')
+  const secondPost = content('dist/blog/second-post/index.html')
+  const thirdPost = content('dist/blog/third-post/index.html')
+  expect(firstPost).toMatch('<h1>First post</h1>')
+  expect(firstPost).toMatch('<span>2017</span>')
+  expect(secondPost).toMatch('<h1>Second post</h1>')
+  expect(secondPost).toMatch('<span>2018</span>')
+  expect(thirdPost).toMatch('<h1>Third post</h1>')
+  expect(thirdPost).toMatch('<span>2018</span>')
 
   // belongsTo with pagination
   const firstTagHTML = content('dist/tag/first-tag/index.html')

@@ -1,14 +1,23 @@
+const { print } = require('graphql')
 const { getGraphQLParams } = require('express-graphql')
+const queryVariables = require('../../graphql/utils/queryVariables')
+const parsePageQuery = require('../../graphql/utils/parsePageQuery')
 
-module.exports = () => {
+module.exports = ({ store }) => {
   return async function (req, res, next) {
-    req.body = await getGraphQLParams(req)
+    const { query, variables, ...body } = await getGraphQLParams(req)
+    const result = parsePageQuery({ content: query })
 
-    // workaround until query directives
-    // works in mergeSchema from graphql-tools
-    req.body.query = req.body.query
-      ? req.body.query.replace(/@paginate/g, '')
-      : null
+    if (variables.path) {
+      const node = store.getNodeByPath(variables.path)
+      const values = queryVariables(node, result.variables)
+
+      Object.assign(variables, values)
+    }
+
+    req.body = body
+    req.body.query = print(result.query)
+    req.body.variables = variables
 
     next()
   }

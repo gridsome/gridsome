@@ -5,7 +5,15 @@ module.exports = async function (source, map) {
 
   const { queue } = process.GRIDSOME
   const options = utils.parseQuery(this.query || '?')
-  const asset = await queue.add(this.resourcePath, options)
+
+  let asset
+
+  try {
+    asset = await queue.add(this.resourcePath, options)
+  } catch (err) {
+    callback(err, source, map)
+    return
+  }
 
   this.dependency(this.resourcePath)
 

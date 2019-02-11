@@ -26,6 +26,7 @@ module.exports = function (api) {
       title: 'First post',
       date: '2017-05-23',
       fields: {
+        dateFormat: 'YYYY',
         tags: [
           { id: '2', typeName: 'Tag' },
           { id: '3', typeName: 'Tag' },
@@ -40,6 +41,7 @@ module.exports = function (api) {
       title: 'Second post',
       date: '2018-03-18',
       fields: {
+        dateFormat: 'YYYY',
         tags: [
           { id: '1', typeName: 'Tag' },
           { id: '2', typeName: 'Tag' },
@@ -54,6 +56,7 @@ module.exports = function (api) {
       title: 'Third post',
       date: '2018-11-12',
       fields: {
+        dateFormat: 'YYYY',
         tags: [
           { id: '1', typeName: 'Tag' },
           { id: '3', typeName: 'Tag' },

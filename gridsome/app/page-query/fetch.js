@@ -9,17 +9,18 @@ export default (route, query) => {
   if (GRIDSOME_MODE === 'serve') {
     const { page, ...params } = route.params
     const { href } = router.resolve({ ...route, params })
-    const variables = { ...params }
-
-    if (page) variables.page = Number(page)
-
-    variables.path = href || route.path
 
     return new Promise((resolve, reject) => {
       fetch(process.env.GRAPHQL_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query, variables })
+        body: JSON.stringify({
+          variables: {
+            page: page ? Number(page) : null,
+            path: href || route.path
+          },
+          query
+        })
       })
         .then(res => res.json())
         .then(res => {
