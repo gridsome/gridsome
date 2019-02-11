@@ -28,21 +28,28 @@ function fieldValues (obj, currentObj = {}) {
 
 function fieldValue (value, currentValue) {
   if (Array.isArray(value)) {
-    if (isRefField(value[0])) {
-      const ref = currentValue || { typeName: [], isList: true }
+    const arr = Array.isArray(currentValue) ? currentValue : []
+    const length = value.length
 
-      for (let i = 0, l = value.length; i < l; i++) {
-        if (!ref.typeName.includes(value[i].typeName)) {
-          ref.typeName.push(value[i].typeName)
+    if (isRefField(value[0])) {
+      if (!isRefValue(currentValue)) {
+        currentValue = { typeName: [], isList: true }
+      }
+
+      for (let i = 0; i < length; i++) {
+        if (!currentValue.typeName.includes(value[i].typeName)) {
+          currentValue.typeName.push(value[i].typeName)
         }
       }
 
-      return ref
+      return currentValue
     }
 
-    return value.map((value, index) => {
-      return fieldValue(value, currentValue ? currentValue[index] : undefined)
-    })
+    for (let i = 0; i < length; i++) {
+      arr[0] = fieldValue(value[i], arr[0])
+    }
+
+    return arr
   } else if (isPlainObject(value)) {
     if (isRefField(value)) {
       const ref = currentValue || { typeName: value.typeName }
@@ -55,6 +62,15 @@ function fieldValue (value, currentValue) {
   }
 
   return currentValue !== undefined ? currentValue : value
+}
+
+function isRefValue (value) {
+  return (
+    typeof value === 'object' &&
+    Object.keys(value).length === 2 &&
+    value.hasOwnProperty('typeName') &&
+    value.hasOwnProperty('isList')
+  )
 }
 
 function isRefField (field) {

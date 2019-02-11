@@ -1,19 +1,48 @@
-const graphql = require('../../graphql')
+const graphql = require('graphql')
+const { safeKey } = require('../../../utils')
 const { dateType } = require('../types/date')
-const { mapValues, isEmpty } = require('lodash')
 const { nodeInterface } = require('../interfaces')
+const { createPagedNodeEdges } = require('./utils')
 const { createRefResolver } = require('../resolvers')
+const { mapValues, isEmpty, values } = require('lodash')
+const { pageInfoType, sortOrderType } = require('../types')
 const { createFieldTypes, createRefType } = require('../createFieldTypes')
 
 const {
   GraphQLID,
+  GraphQLInt,
   GraphQLList,
   GraphQLString,
   GraphQLNonNull,
+  GraphQLUnionType,
   GraphQLObjectType
 } = graphql
 
-module.exports = ({ contentType, nodeTypes, fields }) => {
+module.exports = ({ contentType, nodeTypes, fields, typeNameEnum }) => {
+  const belongsToUnionType = new GraphQLUnionType({
+    interfaces: [nodeInterface],
+    name: `${contentType.typeName}BelongsToUnion`,
+    types: () => values(nodeTypes)
+  })
+
+  const belongsToEdgeType = new GraphQLObjectType({
+    name: `${contentType.typeName}BelongsToEdge`,
+    fields: () => ({
+      node: { type: belongsToUnionType },
+      next: { type: belongsToUnionType },
+      previous: { type: belongsToUnionType }
+    })
+  })
+
+  const belongsToType = new GraphQLObjectType({
+    name: `${contentType.typeName}BelongsTo`,
+    fields: () => ({
+      totalCount: { type: GraphQLInt },
+      pageInfo: { type: new GraphQLNonNull(pageInfoType) },
+      edges: { type: new GraphQLList(belongsToEdgeType) }
+    })
+  })
+
   const nodeType = new GraphQLObjectType({
     name: contentType.typeName,
     description: contentType.description,
@@ -39,6 +68,20 @@ module.exports = ({ contentType, nodeTypes, fields }) => {
         path: { type: GraphQLString },
         date: dateType,
 
+        belongsTo: {
+          type: belongsToType,
+          args: {
+            types: { type: new GraphQLList(typeNameEnum) },
+            sortBy: { type: GraphQLString, defaultValue: 'date' },
+            order: { type: sortOrderType, defaultValue: 'DESC' },
+            perPage: { type: GraphQLInt, defaultValue: 25 },
+            skip: { type: GraphQLInt, defaultValue: 0 },
+            page: { type: GraphQLInt, defaultValue: 1 },
+            regex: { type: GraphQLString }
+          },
+          resolve: belongsToResolver
+        },
+
         _id: {
           deprecationReason: 'Use node.id instead.',
           type: new GraphQLNonNull(GraphQLID),
@@ -62,6 +105,18 @@ module.exports = ({ contentType, nodeTypes, fields }) => {
   })
 
   return nodeType
+}
+
+function belongsToResolver (node, { types, regex, ...args }, { store }) {
+  const key = `belongsTo.${node.typeName}.${safeKey(node.id)}`
+  const query = { [key]: { $eq: true }}
+
+  if (types) query.typeName = { $in: types }
+  if (regex) query.path = { $regex: new RegExp(regex) }
+
+  const chain = store.chainIndex(query)
+
+  return createPagedNodeEdges(chain, args)
 }
 
 function extendNodeType (contentType, nodeType, nodeTypes) {

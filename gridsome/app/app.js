@@ -1,11 +1,15 @@
 import Vue from 'vue'
+import plugins from '~/.temp/plugins-server'
+import routes from '~/.temp/routes.js'
+import main from './main'
+
 import head from './head'
 import router from './router'
+import { url } from './utils/helpers'
+
 import Link from './components/Link'
 import Image from './components/Image'
 import ClientOnly from './components/ClientOnly'
-import plugins from '~/.temp/plugins-server.js'
-import { url } from './utils/helpers'
 
 const isServer = process.isServer
 const isClient = process.isClient
@@ -15,6 +19,8 @@ Vue.component('g-image', Image)
 Vue.component('ClientOnly', ClientOnly)
 
 Vue.prototype.$url = url
+
+router.addRoutes(routes)
 
 export default function createApp (callback) {
   const appOptions = {
@@ -41,12 +47,9 @@ export default function createApp (callback) {
     }
   }
 
-  try {
-    const main = require('@/main.js')
-    if (typeof main.default === 'function') {
-      main.default(Vue, context)
-    }
-  } catch (err) {}
+  if (typeof main === 'function') {
+    main(Vue, context)
+  }
 
   const app = new Vue(appOptions)
 

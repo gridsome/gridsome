@@ -1,8 +1,5 @@
 const IntersectionObserver = (
-  'document' in global &&
-  'IntersectionObserver' in global &&
-  'IntersectionObserverEntry' in global &&
-  'intersectionRatio' in global.IntersectionObserverEntry.prototype
+  typeof global.IntersectionObserver !== 'undefined'
 )
 
 const prefetch = (

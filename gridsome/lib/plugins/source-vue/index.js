@@ -76,7 +76,7 @@ function createPage (source, file) {
 
   if (/^src\/templates\//.test(file)) {
     type = 'template'
-    options.pageQuery.type = path.parse(file).name
+    options.pageQuery.typeName = path.parse(file).name
   }
 
   return { type, options }

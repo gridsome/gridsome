@@ -1,5 +1,9 @@
 const path = require('path')
+const LRU = require('lru-cache')
+const hash = require('hash-sum')
 const validateQuery = require('../../graphql/utils/validateQuery')
+
+const cache = new LRU({ max: 1000 })
 
 module.exports = function (source, map) {
   const isDev = process.env.NODE_ENV === 'development'
@@ -7,21 +11,34 @@ module.exports = function (source, map) {
   const { schema, config } = process.GRIDSOME
   const pageQueryPath = path.join(config.appPath, 'page-query')
   const pageQueryDevPath = path.join(pageQueryPath, 'dev')
+  const resourcePath = this.resourcePath
 
-  try {
-    const errors = validateQuery(schema, source)
+  const cacheKey = hash({ source, resourcePath })
+  const cached = cache.get(cacheKey)
 
-    if (errors && errors.length) {
-      return this.callback(errors, source, map)
+  if (cached) {
+    this.callback(null, cached, map)
+    return
+  }
+
+  if (isDev || process.env.NODE_ENV === 'test') {
+    try {
+      const errors = validateQuery(schema, source)
+
+      if (errors && errors.length) {
+        this.callback(errors, source, map)
+        return
+      }
+    } catch (err) {
+      this.callback(err, source, map)
+      return
     }
-  } catch (err) {
-    return this.callback(err, source, map)
   }
 
   this.dependency(path.join(config.appPath, 'page-query', 'index.js'))
   this.dependency(path.join(config.appPath, 'page-query', 'dev.js'))
 
-  this.callback(null, `
+  const res = `
     import initPageQuery from ${JSON.stringify(pageQueryPath)}
     ${isDev && `import initDevQuery from ${JSON.stringify(pageQueryDevPath)}`}
 
@@ -31,5 +48,9 @@ module.exports = function (source, map) {
       initPageQuery(Component, query)
       ${isDev && 'initDevQuery(Component)'}
     }
-  `, map)
+  `
+
+  cache.set(cacheKey, res)
+
+  this.callback(null, res, map)
 }

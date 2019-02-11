@@ -2,13 +2,15 @@ const path = require('path')
 const pMap = require('p-map')
 const fs = require('fs-extra')
 const hirestime = require('hirestime')
-const { trim, chunk } = require('lodash')
+const { safeKey } = require('./utils')
+const { trimEnd, trimStart, chunk } = require('lodash')
 const sysinfo = require('./utils/sysinfo')
 const { log, info } = require('./utils/log')
 
 const createApp = require('./app')
 const { createWorker } = require('./workers')
 const compileAssets = require('./webpack/compileAssets')
+const queryVariables = require('./graphql/utils/queryVariables')
 
 module.exports = async (context, args) => {
   process.env.NODE_ENV = 'production'
@@ -60,55 +62,55 @@ module.exports = async (context, args) => {
 const {
   PAGED_ROUTE,
   STATIC_ROUTE,
+  PAGED_TEMPLATE,
+  NOT_FOUND_ROUTE,
   STATIC_TEMPLATE_ROUTE,
   DYNAMIC_TEMPLATE_ROUTE
 } = require('./utils/constants')
 
-async function createRenderQueue ({ router, config, graphql }) {
-  const createPage = (page, currentPage = 1) => {
-    const isPager = currentPage > 1
-    const pagePath = page.path.replace(/\/+$/, '')
-    const fullPath = isPager ? `${pagePath}/${currentPage}` : page.path
-    const { route } = router.resolve(fullPath)
-    const { query } = page.pageQuery
-    const routePath = trim(route.path, '/')
-    const filePath = routePath.split('/').map(decodeURIComponent).join('/')
-    const dataPath = !routePath ? 'index.json' : `${filePath}.json`
-    const htmlOutput = path.resolve(config.outDir, filePath, 'index.html')
-    const dataOutput = path.resolve(config.cacheDir, 'data', dataPath)
+async function createRenderQueue ({ router, config, store }) {
+  const createEntry = (node, page, currentPage = 1) => {
+    let fullPath = trimEnd(node.path, '/') || '/'
 
-    // TODO: remove this before v1.0
-    const output = path.dirname(htmlOutput)
+    if (page.type === NOT_FOUND_ROUTE) fullPath = '/404'
+    if (currentPage > 1) fullPath = `/${trimStart(fullPath, '/')}/${currentPage}`
+
+    const filePath = fullPath.split('/').map(decodeURIComponent).join('/')
+    const dataPath = fullPath === '/' ? 'index.json' : `${filePath}.json`
+    const { route: { params }} = router.resolve(fullPath)
+    const { query } = page.pageQuery
+
+    const htmlOutput = path.join(config.outDir, filePath, 'index.html')
+    const dataOutput = query ? path.join(config.cacheDir, 'data', dataPath) : null
+
+    const variables = queryVariables(node, page.pageQuery.variables)
+
+    if (params.page) {
+      variables.page = Number(params.page)
+    }
+
+    variables.path = node.path
 
     return {
-      path: fullPath.replace(/\/+/g, '/'),
-      dataOutput: query ? dataOutput : null,
+      dataOutput,
       htmlOutput,
-      output,
-      query,
-      route
+      path: fullPath,
+      pageQuery: {
+        query,
+        variables
+      }
     }
   }
 
-  const createTemplate = (node, page) => {
-    const { route } = router.resolve(node.path)
-    const { query } = page.pageQuery
-    const routePath = trim(route.path, '/')
-    const filePath = routePath.split('/').map(decodeURIComponent).join('/')
-    const htmlOutput = path.resolve(config.outDir, filePath, 'index.html')
-    const dataOutput = path.resolve(config.cacheDir, 'data', `${filePath}.json`)
+  const createPage = (page, currentPage = 1) => {
+    const entry = createEntry(page, page, currentPage)
 
-    // TODO: remove this before v1.0
-    const output = path.dirname(htmlOutput)
-
-    return {
-      path: node.path,
-      dataOutput: query ? dataOutput : null,
-      htmlOutput,
-      output,
-      query,
-      route
+    if (page.directoryIndex === false && page.path !== '/') {
+      entry.dataOutput = entry.dataOutput && `${path.dirname(entry.dataOutput)}.json`
+      entry.htmlOutput = `${path.dirname(entry.htmlOutput)}.html`
     }
+
+    return entry
   }
 
   const queue = []
@@ -118,41 +120,49 @@ async function createRenderQueue ({ router, config, graphql }) {
 
     switch (page.type) {
       case STATIC_ROUTE:
-      case STATIC_TEMPLATE_ROUTE:
+      case NOT_FOUND_ROUTE:
+      case STATIC_TEMPLATE_ROUTE: {
         queue.push(createPage(page))
 
         break
+      }
 
-      case DYNAMIC_TEMPLATE_ROUTE:
+      case DYNAMIC_TEMPLATE_ROUTE: {
         page.collection.find().forEach(node => {
-          queue.push(createTemplate(node, page))
+          queue.push(createEntry(node, page))
         })
 
         break
+      }
 
-      case PAGED_ROUTE:
-        const { collection, perPage } = page.pageQuery.paginate
-        const { data, errors } = await graphql(`
-          query PageInfo ($perPage: Int) {
-            ${collection} (perPage: $perPage) {
-              pageInfo {
-                totalPages
-              }
-            }
+      case PAGED_TEMPLATE: {
+        const { perPage } = page.pageQuery.paginate
+
+        page.collection.find().forEach(node => {
+          const key = `belongsTo.${node.typeName}.${safeKey(node.id)}`
+          const totalNodes = store.index.count({ [key]: { $eq: true }})
+          const totalPages = Math.ceil(totalNodes / perPage)
+
+          for (let i = 1; i <= totalPages; i++) {
+            queue.push(createEntry(node, page, i))
           }
-        `, { perPage })
+        })
 
-        if (errors && errors.length) {
-          throw new Error(errors)
-        }
+        break
+      }
 
-        const { totalPages } = data[collection].pageInfo
+      case PAGED_ROUTE: {
+        const { typeName, perPage } = page.pageQuery.paginate
+        const contentType = store.getContentType(typeName)
+        const totalNodes = contentType.collection.count()
+        const totalPages = Math.ceil(totalNodes / perPage)
 
         for (let i = 1; i <= totalPages; i++) {
           queue.push(createPage(page, i))
         }
 
         break
+      }
     }
   }
 
@@ -164,10 +174,14 @@ async function renderPageQueries (queue, graphql) {
   const pages = queue.filter(page => !!page.dataOutput)
 
   await pMap(pages, async page => {
-    const variables = { ...page.route.params, path: page.path }
-    const results = await graphql(page.query, variables)
+    const { dataOutput, pageQuery: { query, variables }} = page
+    const results = await graphql(query, variables)
 
-    await fs.outputFile(page.dataOutput, JSON.stringify(results))
+    if (results.errors) {
+      throw new Error(results.errors)
+    }
+
+    await fs.outputFile(dataOutput, JSON.stringify(results))
   }, { concurrency: sysinfo.cpus.logical })
 
   info(`Run GraphQL (${pages.length} queries) - ${timer(hirestime.S)}s`)

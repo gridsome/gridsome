@@ -335,10 +335,7 @@ test('create node reference', async () => {
     fields: {
       author: '2',
       customRefs: {
-        author: {
-          typeName: 'TestAuthor',
-          id: '2'
-        }
+        author: posts.createReference('2', 'TestAuthor')
       }
     }
   })
@@ -359,6 +356,43 @@ test('create node reference', async () => {
   expect(data.testPost.author.title).toEqual('Test Author')
   expect(data.testPost.customRefs.author.id).toEqual('2')
   expect(data.testPost.customRefs.author.title).toEqual('Test Author')
+})
+
+test('create node reference to same typeName', async () => {
+  const { addNode, createReference } = api.store.addContentType({
+    typeName: 'TestPost'
+  })
+
+  const post = addNode({ id: '1' })
+
+  addNode({
+    id: '2',
+    fields: {
+      rel: createReference('1')
+    }
+  })
+
+  addNode({
+    id: '3',
+    fields: {
+      rel: createReference(post)
+    }
+  })
+
+  const query = `{
+    post1: testPost (id: "2") {
+      rel { id title }
+    }
+    post2: testPost (id: "3") {
+      rel { id title }
+    }
+  }`
+
+  const { errors, data } = await createSchemaAndExecute(query)
+
+  expect(errors).toBeUndefined()
+  expect(data.post1.rel.id).toEqual('1')
+  expect(data.post1.rel.id).toEqual('1')
 })
 
 // TODO: remove this test before 1.0
@@ -429,16 +463,18 @@ test('create node list reference', async () => {
     }
   })
 
-  authors.addNode({ id: '2', title: 'First Author' })
-  authors.addNode({ id: '3', title: 'Second Author' })
-  authors.addNode({ id: '4', title: 'Third Author' })
+  authors.addNode({ id: '1', title: 'A Author' })
+  authors.addNode({ id: '2', title: 'B Author' })
+  authors.addNode({ id: '3', title: 'C Author' })
+  authors.addNode({ id: '4', title: 'D Author' })
 
   posts.addNode({
     id: '1',
     fields: {
-      author: '2',
+      author: '1',
       customRefs: {
         authors: [
+          { typeName: 'TestAuthor', id: '1' },
           { typeName: 'TestAuthor', id: '2' },
           { typeName: 'TestAuthor', id: '3' },
           { typeName: 'TestAuthor', id: '4' }
@@ -462,11 +498,11 @@ test('create node list reference', async () => {
   const { errors, data } = await createSchemaAndExecute(query)
 
   expect(errors).toBeUndefined()
-  expect(data.testPost.author.id).toEqual('2')
-  expect(data.testPost.author.title).toEqual('First Author')
+  expect(data.testPost.author.id).toEqual('1')
+  expect(data.testPost.author.title).toEqual('A Author')
   expect(data.testPost.customRefs.authors).toHaveLength(2)
-  expect(data.testPost.customRefs.authors[0].title).toEqual('Second Author')
-  expect(data.testPost.customRefs.authors[1].title).toEqual('Third Author')
+  expect(data.testPost.customRefs.authors[0].title).toEqual('B Author')
+  expect(data.testPost.customRefs.authors[1].title).toEqual('C Author')
 })
 
 test('create node list reference with missing types', async () => {
@@ -487,9 +523,9 @@ test('create node list reference with missing types', async () => {
     fields: {
       customRefs: {
         authors: [
-          { typeName: 'TestUser', id: '1' },
-          { typeName: 'TestAuthor', id: '2' },
-          { typeName: 'TestUser', id: '3' }
+          posts.createReference('1', 'TestUser'),
+          posts.createReference('2', 'TestAuthor'),
+          posts.createReference('3', 'TestUser')
         ]
       }
     }
@@ -518,13 +554,7 @@ test('create node list reference with id as array', async () => {
   })
 
   const posts = api.store.addContentType({
-    typeName: 'TestPost',
-    refs: {
-      author: {
-        key: 'id',
-        typeName: 'TestAuthor'
-      }
-    }
+    typeName: 'TestPost'
   })
 
   authors.addNode({ id: '2', title: 'First Author' })
@@ -534,10 +564,7 @@ test('create node list reference with id as array', async () => {
   posts.addNode({
     id: '1',
     fields: {
-      authors: {
-        typeName: 'TestAuthor',
-        id: ['2', '3', '4']
-      }
+      authors: posts.createReference(['2', '3', '4'], 'TestAuthor')
     }
   })
 
@@ -592,8 +619,8 @@ test('create reference with multiple node types', async () => {
     id: '3',
     fields: {
       people: [
-        { typeName: 'TestAuthor', id: '1' },
-        { typeName: 'TestUser', id: '1' }
+        posts.createReference('1', 'TestAuthor'),
+        posts.createReference('1', 'TestUser')
       ]
     }
   })
@@ -755,8 +782,16 @@ test('should format dates from schema', async () => {
     }
   })
 
+  posts.addNode({
+    id: '2',
+    date: new Date('2018-10-10'),
+    fields: {
+      dateType: new Date('2018-10-10')
+    }
+  })
+
   const { errors, data } = await createSchemaAndExecute(`{
-    testPostDate (id: "1") {
+    post1: testPostDate (id: "1") {
       date
       customDate
       date2: date(format: "YYYY-MM-DD")
@@ -765,14 +800,23 @@ test('should format dates from schema', async () => {
         date(format: "DD/MM/YYYY")
       }
     }
+    post2: testPostDate (id: "2") {
+      date
+      dateType(format: "DD/MM/YYYY")
+    }
+    post3: testPostDate (id: "2") {
+      date(format: "DD/MM/YYYY")
+    }
   }`)
 
   expect(errors).toBeUndefined()
-  expect(data.testPostDate.date).toEqual('2018-10-10T00:00:00+02:00')
-  expect(data.testPostDate.customDate).toEqual('2018-10-10T00:00:00+02:00')
-  expect(data.testPostDate.date2).toEqual('2018-10-10')
-  expect(data.testPostDate.date3).toEqual('10/10/2018')
-  expect(data.testPostDate.dateObject.date).toEqual('10/10/2018')
+  expect(data.post1.date).toEqual('2018-10-10')
+  expect(data.post1.customDate).toEqual('2018-10-10')
+  expect(data.post1.date2).toEqual('2018-10-10')
+  expect(data.post1.date3).toEqual('10/10/2018')
+  expect(data.post2.date).toEqual('2018-10-10T00:00:00.000Z')
+  expect(data.post2.dateType).toEqual('10/10/2018')
+  expect(data.post3.date).toEqual('10/10/2018')
 })
 
 test('add custom schema fields', async () => {
@@ -884,22 +928,16 @@ test('process image types in schema', async () => {
   }`)
 
   expect(errors).toBeUndefined()
-  expect(data.testPost.image.type).toEqual('image')
-  expect(data.testPost.image.mimeType).toEqual('image/png')
-  expect(data.testPost.image.src).toEqual('/assets/350x250.png')
-  expect(data.testPost.image.size).toBeUndefined()
-  expect(data.testPost.image.sizes).toBeUndefined()
-  expect(data.testPost.image.srcset).toBeUndefined()
-  expect(data.testPost.image.dataUri).toBeUndefined()
-  expect(data.testPost.image2.src).toEqual('https://www.example.com/images/image.png')
+  expect(data.testPost.image).toEqual('/assets/350x250.png')
+  expect(data.testPost.image2).toEqual('https://www.example.com/images/image.png')
   expect(data.testPost.image3.type).toEqual('image')
   expect(data.testPost.image3.mimeType).toEqual('image/png')
   expect(data.testPost.image3.src).toEqual('/assets/static/350x250.f14e36e.test.png')
   expect(data.testPost.image3.size).toMatchObject({ width: 300, height: 215 })
   expect(data.testPost.image3.sizes).toEqual('(max-width: 300px) 100vw, 300px')
   expect(data.testPost.image3.srcset).toHaveLength(1)
-  expect(data.testPost.image4).toBeNull()
-  expect(data.testPost.image5.src).toEqual('/assets/static/350x250.5c1e01e.test.png')
+  expect(data.testPost.image4).toEqual('dir/to/350x250.png')
+  expect(data.testPost.image5).toEqual('350x250.png')
 })
 
 test('process file types in schema', async () => {
@@ -935,10 +973,8 @@ test('process file types in schema', async () => {
   }`)
 
   expect(errors).toBeUndefined()
-  expect(data.testPost.file.type).toEqual('file')
-  expect(data.testPost.file.mimeType).toEqual('application/pdf')
-  expect(data.testPost.file.src).toEqual('/assets/document.pdf')
-  expect(data.testPost.file2.src).toEqual('https://www.example.com/assets/document.pdf')
+  expect(data.testPost.file).toEqual('/assets/document.pdf')
+  expect(data.testPost.file2).toEqual('https://www.example.com/assets/document.pdf')
   expect(data.testPost.file3.type).toEqual('file')
   expect(data.testPost.file3.mimeType).toEqual('application/pdf')
   expect(data.testPost.file3.src).toEqual('/assets/files/dummy.pdf')

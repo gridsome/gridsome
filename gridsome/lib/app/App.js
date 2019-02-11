@@ -91,9 +91,12 @@ class App {
 
     // run config.chainWebpack after all plugins
     if (typeof this.config.chainWebpack === 'function') {
-      this.on('chainWebpack', {
-        handler: this.config.chainWebpack
-      })
+      this.on('chainWebpack', { handler: this.config.chainWebpack })
+    }
+
+    // run config.configureServer after all plugins
+    if (typeof this.config.configureServer === 'function') {
+      this.on('configureServer', { handler: this.config.configureServer })
     }
 
     this.isInitialized = true
@@ -114,13 +117,13 @@ class App {
   }
 
   generateFiles () {
-    this.routerData = createRoutes(this)
+    this.routes = createRoutes(this)
 
     this.router = new Router({
       base: '/',
       mode: 'history',
       fallback: false,
-      routes: this.routerData.pages.map(page => ({
+      routes: this.routes.map(page => ({
         path: page.route || page.path,
         component: () => page
       }))

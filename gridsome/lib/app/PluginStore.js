@@ -6,7 +6,7 @@ const EventEmitter = require('events')
 const camelCase = require('camelcase')
 const pathToRegexp = require('path-to-regexp')
 const slugify = require('@sindresorhus/slugify')
-const parsePageQuery = require('../graphql/parsePageQuery')
+const parsePageQuery = require('../graphql/utils/parsePageQuery')
 const { mapValues, cloneDeep } = require('lodash')
 const { cache, nodeCache } = require('../utils/cache')
 const { log, warn } = require('../utils/log')
@@ -22,7 +22,7 @@ class Source extends EventEmitter {
     this._transformers = mapValues(transformers || app.config.transformers, transformer => {
       return new transformer.TransformerClass(transformer.options, {
         localOptions: options[transformer.name] || {},
-        resolveNodeFilePath: this.resolveNodeFilePath,
+        resolveNodeFilePath: this._resolveNodeFilePath,
         context: app.context,
         queue: app.queue,
         cache,
@@ -114,7 +114,7 @@ class Source extends EventEmitter {
       id: options.id || options._id,
       type: type || 'page',
       component: options.component,
-      internal: this.createInternals(options.internal)
+      internal: this._createInternals(options.internal)
     }
 
     // TODO: remove before 1.0
@@ -150,7 +150,7 @@ class Source extends EventEmitter {
   updatePage (id, options) {
     const page = this.getPage(id)
     const oldPage = cloneDeep(page)
-    const internal = this.createInternals(options.internal)
+    const internal = this._createInternals(options.internal)
     const entry = this.store.index.findOne({ uid: page.id })
 
     try {
@@ -182,9 +182,11 @@ class Source extends EventEmitter {
     return this.store.getPage(_id)
   }
 
+  //
   // misc
+  //
 
-  createInternals (options = {}) {
+  _createInternals (options = {}) {
     return {
       origin: options.origin,
       mimeType: options.mimeType,
@@ -192,6 +194,20 @@ class Source extends EventEmitter {
       timestamp: Date.now()
     }
   }
+
+  _resolveNodeFilePath (node, toPath) {
+    const contentType = this.getContentType(node.typeName)
+
+    return this._app.resolveFilePath(
+      node.internal.origin,
+      toPath,
+      contentType.resolveAbsolutePaths
+    )
+  }
+
+  //
+  // utils
+  //
 
   makeUid (orgId) {
     return crypto.createHash('md5').update(orgId).digest('hex')
@@ -211,16 +227,6 @@ class Source extends EventEmitter {
 
   resolve (p) {
     return path.resolve(this.context, p)
-  }
-
-  resolveNodeFilePath (node, toPath) {
-    const { collection } = this.getContentType(node.typeName)
-
-    return this._app.resolveFilePath(
-      node.internal.origin,
-      toPath,
-      collection.resolveAbsolutePaths
-    )
   }
 }
 

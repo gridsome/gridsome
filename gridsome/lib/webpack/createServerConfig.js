@@ -17,8 +17,8 @@ module.exports = async app => {
   config.optimization.minimize(false)
   config.output.libraryTarget('commonjs2')
 
-  config.plugin('ssr-server')
-    .use(require('./plugins/VueSSRServerPlugin'), [{
+  config.plugin('vue-server-renderer')
+    .use(require('vue-server-renderer/server-plugin'), [{
       filename: path.relative(outDir, serverBundlePath)
     }])
 

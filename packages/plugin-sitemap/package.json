@@ -1,0 +1,26 @@
+{
+  "version": "0.1.0",
+  "name": "@gridsome/plugin-sitemap",
+  "description": "Generate sitemap for Gridsome sites",
+  "homepage": "https://github.com/gridsome/gridsome/tree/master/packages/plugin-sitemap#readme",
+  "repository": "https://github.com/gridsome/gridsome/tree/master/packages/plugin-sitemap",
+  "main": "index.js",
+  "license": "MIT",
+  "keywords": [
+    "gridsome",
+    "gridsome-plugin",
+    "sitemap",
+    "seo"
+  ],
+  "dependencies": {
+    "fs-extra": "^7.0.0",
+    "micromatch": "^3.1.10",
+    "sitemap": "^2.1.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=8.3"
+  }
+}

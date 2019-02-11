@@ -13,7 +13,8 @@ var onEmit = function (compiler, name, hook) {
 }
 
 var hash = require('hash-sum')
-var uniq = require('lodash.uniq')
+var { uniq } = require('lodash')
+
 var VueSSRClientPlugin = function VueSSRClientPlugin (options) {
   if (options === void 0) options = {}
 

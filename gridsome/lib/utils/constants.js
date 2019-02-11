@@ -1,12 +1,16 @@
 module.exports = {
   PAGED_ROUTE: 'paged',
   STATIC_ROUTE: 'static',
+  PAGED_TEMPLATE: 'paged_template',
   STATIC_TEMPLATE_ROUTE: 'static_template',
   DYNAMIC_TEMPLATE_ROUTE: 'dynamic_template',
+  NOT_FOUND_ROUTE: '404',
 
   NORMAL_PLUGIN: 'plugin',
   SOURCE_PLUGIN: 'source',
   TRANSFORMER_PLUGIN: 'transformer',
+
+  PER_PAGE: 25,
 
   SUPPORTED_IMAGE_TYPES: ['.png', '.jpeg', '.jpg', '.gif', '.svg', '.webp'],
 
@@ -16,6 +20,40 @@ module.exports = {
   BOOTSTRAP_FULL: Number.MAX_SAFE_INTEGER,
 
   internalRE: /^internal\:\/\//,
-  transformerRE: /(?:^@?gridsome[/-]|\/)transformer-([\w-]+)/
+  transformerRE: /(?:^@?gridsome[/-]|\/)transformer-([\w-]+)/,
+
+  NODE_FIELDS: ['id', 'title', 'slug', 'path', 'date', 'content', 'excerpt'],
+
+  ISO_8601_FORMAT: [
+    'YYYY',
+    'YYYY-MM',
+    'YYYY-MM-DD',
+    'YYYYMMDD',
+
+    // Local Time
+    'YYYY-MM-DDTHH',
+    'YYYY-MM-DDTHH:mm',
+    'YYYY-MM-DDTHHmm',
+    'YYYY-MM-DDTHH:mm:ss',
+    'YYYY-MM-DDTHHmmss',
+    'YYYY-MM-DDTHH:mm:ss.SSS',
+    'YYYY-MM-DDTHHmmss.SSS',
+
+    // Coordinated Universal Time (UTC)
+    'YYYY-MM-DDTHHZ',
+    'YYYY-MM-DDTHH:mmZ',
+    'YYYY-MM-DDTHHmmZ',
+    'YYYY-MM-DDTHH:mm:ssZ',
+    'YYYY-MM-DDTHHmmssZ',
+    'YYYY-MM-DDTHH:mm:ss.SSSZ',
+    'YYYY-MM-DDTHHmmss.SSSZ',
+
+    'YYYY-[W]WW',
+    'YYYY[W]WW',
+    'YYYY-[W]WW-E',
+    'YYYY[W]WWE',
+    'YYYY-DDDD',
+    'YYYYDDDD'
+  ]
 }
 

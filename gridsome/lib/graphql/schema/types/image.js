@@ -1,11 +1,12 @@
 const url = require('url')
 const path = require('path')
+const { isResolvablePath } = require('../../../utils')
 
 const {
   GraphQLInt,
-  GraphQLJSON,
-  GraphQLEnumType
-} = require('../../graphql')
+  GraphQLEnumType,
+  GraphQLScalarType
+} = require('graphql')
 
 const { fieldResolver } = require('../resolvers')
 const { SUPPORTED_IMAGE_TYPES } = require('../../../utils/constants')
@@ -41,6 +42,11 @@ const imageFitType = new GraphQLEnumType({
   }
 })
 
+exports.GraphQLImage = new GraphQLScalarType({
+  name: 'Image',
+  serialize: value => value
+})
+
 exports.isImage = value => {
   if (typeof value === 'string') {
     const ext = path.extname(value).toLowerCase()
@@ -50,14 +56,17 @@ exports.isImage = value => {
       return false
     }
 
-    return SUPPORTED_IMAGE_TYPES.includes(ext)
+    return (
+      SUPPORTED_IMAGE_TYPES.includes(ext) &&
+      isResolvablePath(value)
+    )
   }
 
   return false
 }
 
 exports.imageType = {
-  type: GraphQLJSON,
+  type: exports.GraphQLImage,
   args: {
     width: { type: GraphQLInt, description: 'Width' },
     height: { type: GraphQLInt, description: 'Height' },
@@ -75,6 +84,10 @@ exports.imageType = {
       result = await context.queue.add(value, args)
     } catch (err) {
       return null
+    }
+
+    if (result.isUrl) {
+      return result.src
     }
 
     return {

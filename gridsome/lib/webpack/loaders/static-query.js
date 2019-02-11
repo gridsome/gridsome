@@ -1,10 +1,15 @@
 const path = require('path')
+const LRU = require('lru-cache')
+const hash = require('hash-sum')
 const validateQuery = require('../../graphql/utils/validateQuery')
 
+const cache = new LRU({ max: 1000 })
+
 module.exports = async function (source, map) {
+  const isDev = process.env.NODE_ENV === 'development'
   const { config, schema, graphql } = process.GRIDSOME
   const staticQueryPath = path.join(config.appPath, 'static-query')
-  const callback = this.async()
+  const resourcePath = this.resourcePath
 
   this.dependency(path.join(config.appPath, 'static-query', 'index.js'))
 
@@ -14,19 +19,37 @@ module.exports = async function (source, map) {
     this.dependency(path.join(config.tmpDir, 'now.js'))
   }
 
-  try {
-    const errors = validateQuery(schema, source)
+  const callback = this.async()
+  const cacheKey = hash({ source, resourcePath })
+  const cached = cache.get(cacheKey)
 
-    if (errors && errors.length) {
-      return callback(errors, source, map)
-    }
-  } catch (err) {
-    return callback(err, source, map)
+  if (cached) {
+    callback(null, cached, map)
+    return
   }
 
-  const { data } = await graphql(source)
+  if (isDev || process.env.NODE_ENV === 'test') {
+    try {
+      const errors = validateQuery(schema, source)
 
-  callback(null, `
+      if (errors && errors.length) {
+        callback(errors, source, map)
+        return
+      }
+    } catch (err) {
+      callback(err, source, map)
+      return
+    }
+  }
+
+  const { errors, data } = await graphql(source)
+
+  if (errors) {
+    callback(errors[0], source, map)
+    return
+  }
+
+  const res = `
     import initStaticQuery from ${JSON.stringify(staticQueryPath)}
 
     const data = ${JSON.stringify(data)}
@@ -34,5 +57,9 @@ module.exports = async function (source, map) {
     export default Component => {
       initStaticQuery(Component, data)
     }
-  `, map)
+  `
+
+  cache.set(cacheKey, res)
+
+  callback(null, res, map)
 }
