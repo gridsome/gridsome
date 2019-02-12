@@ -225,7 +225,7 @@ function convertFilterValues (value) {
 const desc = {
   eq: 'Filter nodes by property of (strict) equality.',
   ne: 'Filter nodes by property not equal to provided value.',
-  dteq: 'Filter nodes by date property equal to provided date value',
+  dteq: 'Filter nodes by date property equal to provided date value.',
   gt: 'Filter nodes by property greater than provided value.',
   gte: 'Filter nodes by property greater or equal to provided value.',
   lt: 'Filter nodes by property less than provided value.',
