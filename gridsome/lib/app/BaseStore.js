@@ -12,19 +12,19 @@ class BaseStore {
 
     autoBind(this)
 
-    this.index = this.data.addCollection('nodeIndex', {
+    this.index = this.data.addCollection('core/nodeIndex', {
       indices: ['path', 'typeName', 'id'],
       unique: ['uid', 'path'],
       autoupdate: true
     })
 
-    this.pages = this.data.addCollection('Page', {
+    this.pages = this.data.addCollection('core/page', {
       indices: ['type'],
       unique: ['path'],
       autoupdate: true
     })
 
-    this.metaData = this.data.addCollection('MetaData', {
+    this.metaData = this.data.addCollection('core/metaData', {
       unique: ['key'],
       autoupdate: true
     })
