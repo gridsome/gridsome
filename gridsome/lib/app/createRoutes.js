@@ -71,7 +71,7 @@ module.exports = ({ store, config }) => {
         name: camelCase(typeName),
         component,
         pageQuery,
-        collection
+        typeName
       })
     } else {
       const nodes = collection.find()
@@ -83,7 +83,7 @@ module.exports = ({ store, config }) => {
           chunkName: camelCase(typeName),
           component,
           pageQuery,
-          collection
+          typeName
         })
       }
     }

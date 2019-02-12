@@ -61,12 +61,8 @@ class BaseStore {
   getNodeByPath (path) {
     const entry = this.index.findOne({ path })
 
-    if (!entry) {
+    if (!entry || entry.type === 'page') {
       return null
-    }
-
-    if (entry.type === 'page') {
-      return this.pages.findOne({ id: entry.id })
     }
 
     return this.getContentType(entry.typeName).getNode({ uid: entry.uid })

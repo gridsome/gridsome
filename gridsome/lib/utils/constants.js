@@ -24,6 +24,7 @@ module.exports = {
   transformerRE: /(?:^@?gridsome[/-]|\/)transformer-([\w-]+)/,
 
   NODE_FIELDS: ['id', 'typeName', 'title', 'slug', 'path', 'date', 'content', 'excerpt'],
+  PAGE_FIELDS: ['id', 'typeName', 'path', 'slug'],
 
   ISO_8601_FORMAT: [
     'YYYY',

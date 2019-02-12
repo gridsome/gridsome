@@ -168,8 +168,8 @@ class Source extends EventEmitter {
     this.emit('removePage', id)
   }
 
-  getPage (_id) {
-    return this.store.getPage(_id)
+  getPage (id) {
+    return this.store.getPage(id)
   }
 
   //

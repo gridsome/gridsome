@@ -9,17 +9,17 @@ const {
 module.exports = ({ store }) => {
   return async function (req, res, next) {
     const { query, variables, ...body } = await getGraphQLParams(req)
-    const result = processPageQuery({ query })
+    const pageQuery = processPageQuery({ query })
 
     if (variables.path) {
       const node = store.getNodeByPath(variables.path)
-      const values = contextValues(node, result.variables)
+      const values = node ? contextValues(node, pageQuery.variables) : {}
 
       Object.assign(variables, values)
     }
 
     req.body = body
-    req.body.query = print(result.query)
+    req.body.query = print(pageQuery.query)
     req.body.variables = variables
 
     next()

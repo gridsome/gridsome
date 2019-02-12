@@ -112,6 +112,7 @@ test('parse query variables', () => {
   const { variables } = parseAndProcess(`query (
     $page: Int
     $path: String
+    $id: String
     $title: String
     $custom: String
     $deep__value: String
@@ -125,6 +126,7 @@ test('parse query variables', () => {
   }`)
 
   const values = contextValues({
+    id: '1',
     title: 'title',
     fields: {
       custom: 'custom value',
@@ -140,7 +142,8 @@ test('parse query variables', () => {
     }
   }, variables)
 
-  expect(variables).toHaveLength(6)
+  expect(variables).toHaveLength(7)
+  expect(values.id).toEqual('1')
   expect(values.title).toEqual('title')
   expect(values.custom).toEqual('custom value')
   expect(values.deep__value).toEqual('deep value')

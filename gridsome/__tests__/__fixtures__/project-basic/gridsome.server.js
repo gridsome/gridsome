@@ -27,6 +27,12 @@ module.exports = function (api) {
       }
     })
 
+    categories.addNode({
+      id: '2',
+      title: 'Second category',
+      path: '/category/second'
+    })
+
     tags.addNode({ id: '1', title: 'First tag', fields: { perPage: 2 }})
     tags.addNode({ id: '2', title: 'Second tag', fields: { perPage: 2 } })
     tags.addNode({ id: '3', title: 'Third tag', fields: { perPage: 2 } })

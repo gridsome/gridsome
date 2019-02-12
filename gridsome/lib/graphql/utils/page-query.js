@@ -3,7 +3,10 @@ const { get, trimStart, upperFirst } = require('lodash')
 const { PER_PAGE, NODE_FIELDS } = require('../../utils/constants')
 
 function parsePageQuery (query = '') {
-  const result = { query: null, paginate: false }
+  const result = {
+    query: null,
+    paginate: false
+  }
 
   if (query) {
     result.query = query.trim()
@@ -20,7 +23,7 @@ function parsePageQuery (query = '') {
   return result
 }
 
-function processPageQuery (pageQuery, variables) {
+function processPageQuery (pageQuery) {
   const result = {
     query: undefined,
     variables: [],

@@ -52,15 +52,14 @@ class PluginAPI {
         const { pageQuery: { paginate: oldPaginate }} = oldPage
         const { pageQuery: { paginate }} = page
 
-        // regenerate route.js whenever paging options changes
-        if (paginate.collection !== oldPaginate.collection) {
+        if (paginate !== oldPaginate) {
           return regenerateRoutes()
         }
 
         // send query to front-end for re-fetch
         app.broadcast({
           type: 'updateQuery',
-          query: page.pageQuery.content,
+          query: page.pageQuery.query,
           file: page.internal.origin
         })
       })
