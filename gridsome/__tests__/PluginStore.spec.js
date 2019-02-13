@@ -23,7 +23,7 @@ test('add type', () => {
 
   const contentType = api.store.addContentType({
     typeName: 'TestPost',
-    route: '/path/:foo/:bar'
+    route: '/path/:id/:bar/:foo_raw'
   })
 
   expect(contentType.typeName).toEqual('TestPost')
@@ -31,7 +31,9 @@ test('add type', () => {
   expect(contentType.options.refs).toMatchObject({})
   expect(contentType.options.fields).toMatchObject({})
   expect(contentType.options.belongsTo).toMatchObject({})
-  expect(contentType.options.routeKeys).toEqual(expect.arrayContaining(['foo', 'bar']))
+  expect(contentType.options.routeKeys[0]).toMatchObject({ name: 'id', path: ['id'] })
+  expect(contentType.options.routeKeys[1]).toMatchObject({ name: 'bar', path: ['fields', 'bar'] })
+  expect(contentType.options.routeKeys[2]).toMatchObject({ name: 'foo', path: ['fields', 'foo'] })
   expect(contentType.options.resolveAbsolutePaths).toEqual(false)
 
   expect(contentType.addNode).toBeInstanceOf(Function)
@@ -283,7 +285,7 @@ test('prefix dynamic route with leading slash', () => {
 test('add type with custom fields in route', () => {
   const contentType = createPlugin().store.addContentType({
     typeName: 'TestPost',
-    route: '/:test/:test_raw/:id/:numeric/:author/:genre__name/:slug'
+    route: '/:test/:test_raw/:id/:numeric/:author/:genre__name/:arr__1/:missing/:slug'
   })
 
   const node = contentType.addNode({
@@ -295,6 +297,7 @@ test('add type with custom fields in route', () => {
         popularity: 0.8,
         name: 'Thriller'
       },
+      arr: [0, 1, 2],
       numeric: 10,
       author: {
         typeName: 'Author',
@@ -303,7 +306,7 @@ test('add type with custom fields in route', () => {
     }
   })
 
-  expect(node.path).toEqual('/my-value/My%20value/1234/10/2/thriller/lorem-ipsum')
+  expect(node.path).toEqual('/my-value/My%20value/1234/10/2/thriller/1/missing/lorem-ipsum')
 })
 
 test('transform node', () => {

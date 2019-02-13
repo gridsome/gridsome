@@ -6,6 +6,7 @@ const EventEmitter = require('events')
 const camelCase = require('camelcase')
 const pathToRegexp = require('path-to-regexp')
 const slugify = require('@sindresorhus/slugify')
+const { NODE_FIELDS } = require('../utils/constants')
 const { parsePageQuery } = require('../graphql/utils/page-query')
 const { mapValues, cloneDeep } = require('lodash')
 const { cache, nodeCache } = require('../utils/cache')
@@ -61,12 +62,12 @@ class Source extends EventEmitter {
       return this.store.getContentType(options.typeName)
     }
 
-    let makePath = () => null
+    let createPath = () => null
     const routeKeys = []
 
     if (typeof options.route === 'string') {
       options.route = '/' + options.route.replace(/^\/+/g, '')
-      makePath = pathToRegexp.compile(options.route)
+      createPath = pathToRegexp.compile(options.route)
       pathToRegexp(options.route, routeKeys)
     }
 
@@ -87,16 +88,17 @@ class Source extends EventEmitter {
       fields: options.fields || {},
       typeName: options.typeName,
       routeKeys: routeKeys.map(key => {
-        key = key.name.replace('_raw', '')
-        return {
-          key,
-          path: key.split('__')
-        }
+        const name = key.name.replace('_raw', '')
+        const path = !NODE_FIELDS.includes(name)
+          ? ['fields'].concat(name.split('__'))
+          : [name]
+
+        return { name, path }
       }),
       resolveAbsolutePaths: options.resolveAbsolutePaths,
       mimeTypes: [],
       belongsTo: {},
-      makePath,
+      createPath,
       refs
     }).on('change', (node, oldNode) => {
       this.emit('change', node, oldNode)

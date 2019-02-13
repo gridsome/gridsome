@@ -392,7 +392,7 @@ test('create node reference to same typeName', async () => {
 
   expect(errors).toBeUndefined()
   expect(data.post1.rel.id).toEqual('1')
-  expect(data.post1.rel.id).toEqual('1')
+  expect(data.post2.rel.id).toEqual('1')
 })
 
 // TODO: remove this test before 1.0
