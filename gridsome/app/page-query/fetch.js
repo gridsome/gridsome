@@ -10,7 +10,7 @@ const re = new RegExp(`^${config.pathPrefix}`)
 export default (route, query) => {
   if (GRIDSOME_MODE === 'serve') {
     const { page, ...params } = route.params
-    const { href } = router.resolve({ ...route, params })
+    const { location } = router.resolve({ ...route, params })
 
     return new Promise((resolve, reject) => {
       fetch(process.env.GRAPHQL_ENDPOINT, {
@@ -19,7 +19,7 @@ export default (route, query) => {
         body: JSON.stringify({
           variables: {
             page: page ? Number(page) : null,
-            path: href || route.path
+            path: location.path || route.path
           },
           query
         })
