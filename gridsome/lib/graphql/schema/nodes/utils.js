@@ -1,9 +1,15 @@
+const { safeKey } = require('../../../utils')
+
 exports.applyChainArgs = function (chain, args) {
   if (args.sortBy) chain = chain.simplesort(args.sortBy, args.order === -1)
   if (args.skip) chain = chain.offset(args.skip)
   if (args.limit) chain = chain.limit(args.limit)
 
   return chain
+}
+
+exports.createBelongsToKey = function (node) {
+  return `belongsTo.${node.typeName}.${safeKey(node.id)}`
 }
 
 exports.createPagedNodeEdges = function (chain, args) {

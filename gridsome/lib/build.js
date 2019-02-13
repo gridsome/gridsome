@@ -2,14 +2,14 @@ const path = require('path')
 const pMap = require('p-map')
 const fs = require('fs-extra')
 const hirestime = require('hirestime')
-const { safeKey } = require('./utils')
-const { trimEnd, trimStart, chunk } = require('lodash')
 const sysinfo = require('./utils/sysinfo')
 const { log, info } = require('./utils/log')
+const { trimEnd, trimStart, chunk } = require('lodash')
 
 const createApp = require('./app')
 const { createWorker } = require('./workers')
 const compileAssets = require('./webpack/compileAssets')
+const { createBelongsToKey } = require('./graphql/schema/nodes/utils')
 const { createFilterQuery } = require('./graphql/schema/createFilterTypes')
 const { processPageQuery, contextValues } = require('./graphql/utils/page-query')
 
@@ -153,7 +153,7 @@ async function createRenderQueue ({ routes, config, store, schema }) {
           const perPage = pageQuery.getPerPage(variables)
           const query = filters ? createFilterQuery(filters, fields) : {}
 
-          const key = `belongsTo.${node.typeName}.${safeKey(node.id)}`
+          const key = createBelongsToKey(node)
           const totalNodes = store.index.count({ ...query, [key]: { $eq: true }})
           const totalPages = Math.ceil(totalNodes / perPage) || 1
 
