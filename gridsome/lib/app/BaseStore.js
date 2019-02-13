@@ -98,12 +98,12 @@ class BaseStore {
     return this.pages.insert(options)
   }
 
-  getPage (_id) {
-    return this.pages.findOne({ _id })
+  getPage (id) {
+    return this.pages.findOne({ id })
   }
 
-  removePage (_id) {
-    return this.pages.findAndRemove({ _id })
+  removePage (id) {
+    return this.pages.findAndRemove({ id })
   }
 }
 

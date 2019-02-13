@@ -90,7 +90,7 @@ module.exports = ({ store, config }) => {
   })
 
   specialPages.push({
-    path: '*',
+    path: '(.*)',
     name: '404',
     directoryIndex: false,
     type: NOT_FOUND_ROUTE,
