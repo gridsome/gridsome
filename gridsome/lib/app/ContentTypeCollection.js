@@ -3,7 +3,7 @@ const moment = require('moment')
 const autoBind = require('auto-bind')
 const EventEmitter = require('events')
 const camelCase = require('camelcase')
-const { cloneDeep, isObject, isDate } = require('lodash')
+const { cloneDeep, isObject, isDate, get } = require('lodash')
 const { ISO_8601_FORMAT } = require('../utils/constants')
 const { isResolvablePath, slugify, safeKey } = require('../utils')
 const { warn } = require('../utils/log')
@@ -282,8 +282,8 @@ class ContentTypeCollection extends EventEmitter {
     // are slugified but the original value will be available
     // with '_raw' suffix.
     for (let i = 0, l = routeKeys.length; i < l; i++) {
-      const keyName = routeKeys[i]
-      const fieldValue = node.fields[keyName] || node[keyName] || keyName
+      const { key, path } = routeKeys[i]
+      const fieldValue = get(node.fields, path) || get(node, path) || key
 
       if (keyName === 'year') params.year = date.format('YYYY')
       else if (keyName === 'month') params.month = date.format('MM')
@@ -294,10 +294,10 @@ class ContentTypeCollection extends EventEmitter {
         fieldValue.hasOwnProperty('id') &&
         !Array.isArray(fieldValue.id)
       ) {
-        params[keyName] = String(fieldValue.id)
-      } else if (!isObject(fieldValue) && !params[keyName]) {
-        params[keyName] = this.slugify(String(fieldValue))
-        params[keyName + '_raw'] = String(fieldValue)
+        params[key] = String(fieldValue.id)
+      } else if (!isObject(fieldValue) && !params[key]) {
+        params[key] = this.slugify(String(fieldValue))
+        params[key + '_raw'] = String(fieldValue)
       }
     }
 

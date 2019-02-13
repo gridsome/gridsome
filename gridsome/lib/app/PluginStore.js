@@ -86,7 +86,13 @@ class Source extends EventEmitter {
       route: options.route,
       fields: options.fields || {},
       typeName: options.typeName,
-      routeKeys: routeKeys.map(key => key.name.replace('_raw', '')),
+      routeKeys: routeKeys.map(key => {
+        key = key.name.replace('_raw', '')
+        return {
+          key,
+          path: key.split('__')
+        }
+      }),
       resolveAbsolutePaths: options.resolveAbsolutePaths,
       mimeTypes: [],
       belongsTo: {},
