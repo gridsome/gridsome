@@ -11,7 +11,7 @@ const { createWorker } = require('./workers')
 const compileAssets = require('./webpack/compileAssets')
 const { createBelongsToKey } = require('./graphql/nodes/utils')
 const { createFilterQuery } = require('./graphql/createFilterTypes')
-const { processPageQuery, contextValues } = require('./graphql/parse')
+const { processPageQuery, contextValues } = require('./graphql/page-query')
 
 module.exports = async (context, args) => {
   process.env.NODE_ENV = 'production'

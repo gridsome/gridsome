@@ -5,7 +5,7 @@ const {
   contextValues,
   parsePageQuery,
   processPageQuery
-} = require('../parse')
+} = require('../page-query')
 
 test('parse page query', () => {
   const query = `query {

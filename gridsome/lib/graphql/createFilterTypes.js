@@ -230,7 +230,6 @@ const desc = {
 }
 
 module.exports = {
-  createFilterType,
   createFilterTypes,
   createFilterQuery
 }

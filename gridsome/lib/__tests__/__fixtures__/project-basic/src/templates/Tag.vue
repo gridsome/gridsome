@@ -11,7 +11,7 @@
 </template>
 
 <page-query>
-query Tag ($path: String!, $page: Int, $perPage: Int = 2) {
+query Tag ($path: String!, $page: Int, $perPage: Int = 5) {
   tag (path: $path) {
     title
     belongsTo (perPage: $perPage, page: $page) @paginate {

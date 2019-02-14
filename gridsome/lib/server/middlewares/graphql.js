@@ -4,7 +4,7 @@ const { getGraphQLParams } = require('express-graphql')
 const {
   contextValues,
   processPageQuery
-} = require('../../graphql/parse')
+} = require('../../graphql/page-query')
 
 module.exports = ({ store }) => {
   return async function (req, res, next) {

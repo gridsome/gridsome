@@ -142,6 +142,5 @@ function createRefType (ref, fieldName, fieldTypeName, nodeTypes) {
 
 module.exports = {
   createFieldTypes,
-  createObjectType,
   createRefType
 }
