@@ -10,13 +10,9 @@
     "test": "node scripts/test.js",
     "test:build": "node scripts/test.js --build",
     "changelog": "node scripts/changelog.js",
-    "lint": "eslint --fix \"gridsome/**/*.js\" \"packages/**/*.js\""
+    "lint": "eslint \"gridsome/**/*.js\" \"packages/**/*.js\""
   },
   "devDependencies": {
-    "@babel/core": "^7.0.0",
-    "@babel/plugin-transform-runtime": "^7.0.0",
-    "@babel/preset-env": "^7.0.0",
-    "@babel/runtime": "^7.0.0",
     "@lerna/conventional-commits": "^3.4.1",
     "babel-eslint": "^10.0.1",
     "conventional-changelog": "^2.0.3",
@@ -25,11 +21,9 @@
     "eslint-plugin-vue": "^4.7.1",
     "eslint-plugin-vue-libs": "^3.0.0",
     "execa": "^1.0.0",
-    "inquirer": "^6.2.0",
     "jest": "^23.1.0",
     "lerna": "^3.4.0",
-    "memfs": "^2.9.4",
-    "semver": "^5.5.1"
+    "memfs": "^2.9.4"
   },
   "engines": {
     "node": ">=8.3",

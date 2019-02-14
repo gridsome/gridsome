@@ -6,10 +6,10 @@ const testPathIgnorePatterns = [
 
 const testMatch = []
 
-if (process.env.WITH_BUILD === 'false') {
-  testMatch.push('**/__tests__/**/!(build).spec.js')
-} else {
+if (process.argv.some(v => v === '--build')) {
   testMatch.push('**/__tests__/**/build.spec.js')
+} else {
+  testMatch.push('**/__tests__/**/!(build).spec.js')
 }
 
 module.exports = {

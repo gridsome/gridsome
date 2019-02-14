@@ -1,8 +1,7 @@
-const execa = require('execa')
+const args = ['--config', 'jest.config.js']
 
-execa('jest', ['--config', 'jest.config.js', '--watchAll'], {
-  stdio: 'inherit',
-  env: {
-    WITH_BUILD: process.argv.some(v => v === '--build')
-  }
-})
+if (process.argv.some(v => v === '--watch')) {
+  args.push('--watchAll')
+}
+
+require('jest').run(args)
