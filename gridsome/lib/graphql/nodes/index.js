@@ -2,7 +2,7 @@ const camelCase = require('camelcase')
 const createType = require('./createType')
 const createQuery = require('./createQuery')
 const createConnection = require('./createConnection')
-const { mergeNodeFields } = require('../../utils/mergeFields')
+const createFieldDefinitions = require('../createFieldDefinitions')
 
 module.exports = store => {
   const connections = {}
@@ -11,7 +11,7 @@ module.exports = store => {
 
   for (const typeName in store.collections) {
     const contentType = store.getContentType(typeName)
-    const fields = mergeNodeFields(contentType.collection.find())
+    const fields = createFieldDefinitions(contentType.collection.find())
 
     const nodeType = nodeTypes[typeName] = createType({
       contentType,

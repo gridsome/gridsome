@@ -1,7 +1,8 @@
 const camelCase = require('camelcase')
 const { isDate } = require('./types/date')
-const { NODE_FIELDS } = require('../../utils/constants')
+const { NODE_FIELDS } = require('../utils/constants')
 const { isEmpty, pick, omit, reduce } = require('lodash')
+const { is32BitInt, isRefFieldDefinition } = require('./utils')
 
 const {
   GraphQLInt,
@@ -10,7 +11,7 @@ const {
   GraphQLString,
   GraphQLBoolean,
   GraphQLInputObjectType
-} = require('../graphql')
+} = require('graphql')
 
 const OBJ_SUFFIX = '__Object'
 const REF_SUFFIX = '__Reference'
@@ -32,7 +33,7 @@ function createFilterTypes (fields, typeName) {
 function createFilterType (value, fieldName, typeName) {
   const defaultDescription = `Filter ${typeName} nodes by ${fieldName}`
 
-  if (isRefField(value)) {
+  if (isRefFieldDefinition(value)) {
     return new GraphQLInputObjectType({
       name: createFilterName(typeName, fieldName) + REF_SUFFIX,
       description: defaultDescription,
@@ -166,19 +167,6 @@ function toGraphQLType (value) {
     case 'boolean' : return GraphQLBoolean
     case 'number' : return is32BitInt(value) ? GraphQLInt : GraphQLFloat
   }
-}
-
-function is32BitInt (x) {
-  return (x | 0) === x
-}
-
-function isRefField (field) {
-  return (
-    typeof field === 'object' &&
-    Object.keys(field).length === 2 &&
-    field.hasOwnProperty('typeName') &&
-    field.hasOwnProperty('isList')
-  )
 }
 
 function createFilterQuery (filter, fields) {

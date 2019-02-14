@@ -1,4 +1,4 @@
-const { safeKey } = require('../../../utils')
+const { safeKey } = require('../../utils')
 
 exports.applyChainArgs = function (chain, args) {
   if (args.sortBy) chain = chain.simplesort(args.sortBy, args.order === -1)

@@ -1,9 +1,4 @@
-const {
-  parse,
-  visit,
-  validate,
-  specifiedRules
-} = require('graphql')
+const { parse, visit, validate, specifiedRules } = require('graphql')
 
 module.exports = (schema, query) => {
   return validate(schema, parseQuery(query), specifiedRules)

@@ -1,13 +1,13 @@
 const { dateType } = require('../types/date')
+const GraphQLJSON = require('graphql-type-json')
 
 const {
   GraphQLID,
-  GraphQLJSON,
   GraphQLList,
   GraphQLString,
   GraphQLNonNull,
   GraphQLObjectType
-} = require('../../graphql')
+} = require('graphql')
 
 const pageQuery = new GraphQLObjectType({
   name: 'PageQuery',

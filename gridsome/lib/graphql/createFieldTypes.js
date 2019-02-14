@@ -1,12 +1,12 @@
 const { isEmpty } = require('lodash')
-const camelCase = require('camelcase')
 const { sortOrderType } = require('./types')
 const { nodeInterface } = require('./interfaces')
-const { isDate, dateTypeField } = require('./types/date')
 const { isFile, fileType } = require('./types/file')
 const { isImage, imageType } = require('./types/image')
+const { isDate, dateTypeField } = require('./types/date')
 const { fieldResolver, createRefResolver } = require('./resolvers')
-const { warn } = require('../../utils/log')
+const { is32BitInt, isRefFieldDefinition, createTypeName } = require('./utils')
+const { warn } = require('../utils/log')
 
 const {
   GraphQLInt,
@@ -16,7 +16,7 @@ const {
   GraphQLBoolean,
   GraphQLUnionType,
   GraphQLObjectType
-} = require('../graphql')
+} = require('graphql')
 
 function createFieldTypes (fields, typeName, nodeTypes) {
   const types = {}
@@ -72,7 +72,7 @@ function createFieldType (value, key, typeName, nodeTypes) {
         resolve: fieldResolver
       }
     case 'object':
-      return isRef(value)
+      return isRefFieldDefinition(value)
         ? createRefType(value, key, typeName, nodeTypes)
         : createObjectType(value, key, typeName, nodeTypes)
   }
@@ -138,23 +138,6 @@ function createRefType (ref, fieldName, fieldTypeName, nodeTypes) {
   }
 
   return res
-}
-
-function createTypeName (typeName, key) {
-  return camelCase(`${typeName} ${key}`, { pascalCase: true })
-}
-
-function is32BitInt (x) {
-  return (x | 0) === x
-}
-
-function isRef (obj) {
-  return (
-    typeof obj === 'object' &&
-    Object.keys(obj).length === 2 &&
-    obj.hasOwnProperty('typeName') &&
-    obj.hasOwnProperty('isList')
-  )
 }
 
 module.exports = {

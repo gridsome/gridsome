@@ -4,7 +4,7 @@ const {
   GraphQLBoolean,
   GraphQLEnumType,
   GraphQLObjectType
-} = require('../graphql')
+} = require('graphql')
 
 const pageInfoType = new GraphQLObjectType({
   name: 'PageInfo',

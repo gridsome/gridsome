@@ -9,9 +9,9 @@ const { trimEnd, trimStart, chunk } = require('lodash')
 const createApp = require('./app')
 const { createWorker } = require('./workers')
 const compileAssets = require('./webpack/compileAssets')
-const { createBelongsToKey } = require('./graphql/schema/nodes/utils')
-const { createFilterQuery } = require('./graphql/schema/createFilterTypes')
-const { processPageQuery, contextValues } = require('./graphql/utils/page-query')
+const { createBelongsToKey } = require('./graphql/nodes/utils')
+const { createFilterQuery } = require('./graphql/createFilterTypes')
+const { processPageQuery, contextValues } = require('./graphql/pageQuery')
 
 module.exports = async (context, args) => {
   process.env.NODE_ENV = 'production'

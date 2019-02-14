@@ -1,6 +1,6 @@
 const moment = require('moment')
 const { fieldResolver } = require('../resolvers')
-const { ISO_8601_FORMAT } = require('../../../utils/constants')
+const { ISO_8601_FORMAT } = require('../../utils/constants')
 const { GraphQLString, GraphQLScalarType, Kind } = require('graphql')
 
 exports.GraphQLDate = new GraphQLScalarType({

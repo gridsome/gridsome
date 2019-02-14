@@ -1,5 +1,5 @@
 const { createPagedNodeEdges } = require('./utils')
-const { PER_PAGE } = require('../../../utils/constants')
+const { PER_PAGE } = require('../../utils/constants')
 const { pageInfoType, sortOrderType } = require('../types')
 const { createFilterTypes, createFilterQuery } = require('../createFilterTypes')
 
@@ -10,7 +10,7 @@ const {
   GraphQLNonNull,
   GraphQLObjectType,
   GraphQLInputObjectType
-} = require('../../graphql')
+} = require('graphql')
 
 module.exports = ({ nodeType, fields }) => {
   const edgeType = new GraphQLObjectType({

@@ -1,6 +1,7 @@
 const { isPlainObject } = require('lodash')
+const { isRefField, isRefFieldDefinition } = require('./utils')
 
-function mergeNodeFields (nodes) {
+module.exports = function createFieldDefinitions (nodes) {
   let fields = {}
 
   for (let i = 0, l = nodes.length; i < l; i++) {
@@ -32,7 +33,7 @@ function fieldValue (value, currentValue) {
     const length = value.length
 
     if (isRefField(value[0])) {
-      if (!isRefValue(currentValue)) {
+      if (!isRefFieldDefinition(currentValue)) {
         currentValue = { typeName: [], isList: true }
       }
 
@@ -62,26 +63,4 @@ function fieldValue (value, currentValue) {
   }
 
   return currentValue !== undefined ? currentValue : value
-}
-
-function isRefValue (value) {
-  return (
-    typeof value === 'object' &&
-    Object.keys(value).length === 2 &&
-    value.hasOwnProperty('typeName') &&
-    value.hasOwnProperty('isList')
-  )
-}
-
-function isRefField (field) {
-  return (
-    typeof field === 'object' &&
-    Object.keys(field).length === 2 &&
-    field.hasOwnProperty('typeName') &&
-    field.hasOwnProperty('id')
-  )
-}
-
-module.exports = {
-  mergeNodeFields
 }

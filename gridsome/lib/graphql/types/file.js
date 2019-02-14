@@ -1,10 +1,10 @@
 const url = require('url')
 const path = require('path')
 const mime = require('mime-types')
-const { isResolvablePath } = require('../../../utils')
+const { GraphQLScalarType } = require('graphql')
 const { fieldResolver } = require('../resolvers')
-const { GraphQLScalarType } = require('../../graphql')
-const { SUPPORTED_IMAGE_TYPES } = require('../../../utils/constants')
+const { isResolvablePath } = require('../../utils')
+const { SUPPORTED_IMAGE_TYPES } = require('../../utils/constants')
 
 exports.isFile = value => {
   if (typeof value === 'string') {

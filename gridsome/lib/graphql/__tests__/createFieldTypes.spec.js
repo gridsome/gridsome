@@ -1,8 +1,8 @@
-const { GraphQLFile } = require('../lib/graphql/schema/types/file')
-const { GraphQLImage } = require('../lib/graphql/schema/types/image')
-const { GraphQLDate } = require('../lib/graphql/schema/types/date')
-const { mergeNodeFields } = require('../lib/graphql/utils/mergeFields')
-const { createFieldTypes } = require('../lib/graphql/schema/createFieldTypes')
+const { GraphQLFile } = require('../types/file')
+const { GraphQLDate } = require('../types/date')
+const { GraphQLImage } = require('../types/image')
+const { createFieldTypes } = require('../createFieldTypes')
+const createFieldDefinitions = require('../createFieldDefinitions')
 
 const {
   GraphQLInt,
@@ -73,7 +73,7 @@ const nodes = [
 ]
 
 test('merge node fields', () => {
-  const fields = mergeNodeFields(nodes)
+  const fields = createFieldDefinitions(nodes)
 
   expect(fields.emptyString).toEqual('')
   expect(fields.numberList).toHaveLength(1)
@@ -95,7 +95,7 @@ test('merge node fields', () => {
 })
 
 test('create graphql types from node fields', () => {
-  const fields = mergeNodeFields(nodes)
+  const fields = createFieldDefinitions(nodes)
   const types = createFieldTypes(fields, 'TestPost', {})
 
   expect(types.string.type).toEqual(GraphQLString)
@@ -122,7 +122,7 @@ test('create graphql types from node fields', () => {
 })
 
 test('infer date fields', () => {
-  const fields = mergeNodeFields([
+  const fields = createFieldDefinitions([
     {
       fields: {
         date: new Date(),
@@ -146,7 +146,7 @@ test('infer date fields', () => {
 })
 
 test('infer image fields', () => {
-  const fields = mergeNodeFields([
+  const fields = createFieldDefinitions([
     {
       fields: {
         string: 'image.png',
@@ -168,7 +168,7 @@ test('infer image fields', () => {
 })
 
 test('infer file fields', () => {
-  const fields = mergeNodeFields([
+  const fields = createFieldDefinitions([
     {
       fields: {
         name: 'document.pdf',

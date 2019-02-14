@@ -1,6 +1,7 @@
 const { visit, parse, BREAK } = require('graphql')
 const { get, trimStart, upperFirst } = require('lodash')
-const { PER_PAGE, NODE_FIELDS } = require('../../utils/constants')
+const { PER_PAGE, NODE_FIELDS } = require('../utils/constants')
+const { isRefField } = require('./utils')
 
 function parsePageQuery (query = '') {
   const result = {
@@ -121,7 +122,7 @@ function contextValues (context, variables = []) {
   return variables.reduce((acc, { name, path }) => {
     let value = get(context, path) || null
 
-    if (value && isRef(value)) {
+    if (value && isRefField(value)) {
       value = value.id
     }
 
@@ -129,15 +130,6 @@ function contextValues (context, variables = []) {
 
     return acc
   }, {})
-}
-
-function isRef (obj) {
-  return (
-    typeof obj === 'object' &&
-    Object.keys(obj).length === 2 &&
-    obj.hasOwnProperty('typeName') &&
-    obj.hasOwnProperty('id')
-  )
 }
 
 module.exports = {

@@ -1,11 +1,11 @@
 const { print } = require('graphql')
-const { PER_PAGE } = require('../../../utils/constants')
+const { PER_PAGE } = require('../../utils/constants')
 
 const {
   contextValues,
   parsePageQuery,
   processPageQuery
-} = require('../page-query')
+} = require('../pageQuery')
 
 test('parse page query', () => {
   const query = `query {

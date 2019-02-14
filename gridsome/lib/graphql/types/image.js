@@ -1,15 +1,14 @@
 const url = require('url')
 const path = require('path')
-const { isResolvablePath } = require('../../../utils')
+const { fieldResolver } = require('../resolvers')
+const { isResolvablePath } = require('../../utils')
+const { SUPPORTED_IMAGE_TYPES } = require('../../utils/constants')
 
 const {
   GraphQLInt,
   GraphQLEnumType,
   GraphQLScalarType
 } = require('graphql')
-
-const { fieldResolver } = require('../resolvers')
-const { SUPPORTED_IMAGE_TYPES } = require('../../../utils/constants')
 
 const imageFitType = new GraphQLEnumType({
   name: 'ImageFit',
