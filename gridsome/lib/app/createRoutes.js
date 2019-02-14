@@ -28,7 +28,7 @@ module.exports = ({ store, config }) => {
     let type = STATIC_ROUTE
     let route = page.path
 
-    if (page.pageQuery.paginate.typeName) {
+    if (page.pageQuery.paginate) {
       route = `${page.path === '/' ? '' : page.path}/:page(\\d+)?`
       type = PAGED_ROUTE
       arr = pagedPages
@@ -45,7 +45,7 @@ module.exports = ({ store, config }) => {
   })
 
   templates.forEach(page => {
-    const { typeName } = page.pageQuery
+    const { typeName } = page
     const contentType = store.getContentType(typeName)
 
     if (!contentType) {
@@ -54,7 +54,7 @@ module.exports = ({ store, config }) => {
       )
     }
 
-    const isPaged = page.pageQuery.paginate.typeName
+    const isPaged = page.pageQuery.paginate
     const makePath = path => isPaged ? `${path}/:page(\\d+)?` : path
     const { options, collection } = contentType
     const { component, pageQuery } = page
@@ -71,7 +71,7 @@ module.exports = ({ store, config }) => {
         name: camelCase(typeName),
         component,
         pageQuery,
-        collection
+        typeName
       })
     } else {
       const nodes = collection.find()
@@ -83,14 +83,14 @@ module.exports = ({ store, config }) => {
           chunkName: camelCase(typeName),
           component,
           pageQuery,
-          collection
+          typeName
         })
       }
     }
   })
 
   specialPages.push({
-    path: '*',
+    path: '(.*)',
     name: '404',
     directoryIndex: false,
     type: NOT_FOUND_ROUTE,

@@ -1,6 +1,5 @@
 const autoBind = require('auto-bind')
 const PluginStore = require('./PluginStore')
-const createRoutes = require('./createRoutes')
 
 class PluginAPI {
   constructor (app, { entry, transformers }) {
@@ -22,7 +21,7 @@ class PluginAPI {
         clearTimeout(regenerateTimeout)
         regenerateTimeout = setTimeout(() => {
           if (app.isBootstrapped) {
-            app.routerData = createRoutes(app)
+            app.createRoutes()
             app.generator.generate('routes.js')
           }
         }, 20)
@@ -53,15 +52,14 @@ class PluginAPI {
         const { pageQuery: { paginate: oldPaginate }} = oldPage
         const { pageQuery: { paginate }} = page
 
-        // regenerate route.js whenever paging options changes
-        if (paginate.collection !== oldPaginate.collection) {
+        if (paginate !== oldPaginate) {
           return regenerateRoutes()
         }
 
         // send query to front-end for re-fetch
         app.broadcast({
           type: 'updateQuery',
-          query: page.pageQuery.content,
+          query: page.pageQuery.query,
           file: page.internal.origin
         })
       })

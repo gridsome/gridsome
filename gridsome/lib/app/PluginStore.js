@@ -6,7 +6,8 @@ const EventEmitter = require('events')
 const camelCase = require('camelcase')
 const pathToRegexp = require('path-to-regexp')
 const slugify = require('@sindresorhus/slugify')
-const parsePageQuery = require('../graphql/utils/parsePageQuery')
+const { NODE_FIELDS } = require('../utils/constants')
+const { parsePageQuery } = require('../graphql/page-query')
 const { mapValues, cloneDeep } = require('lodash')
 const { cache, nodeCache } = require('../utils/cache')
 const { log, warn } = require('../utils/log')
@@ -61,12 +62,12 @@ class Source extends EventEmitter {
       return this.store.getContentType(options.typeName)
     }
 
-    let makePath = () => null
+    let createPath = () => null
     const routeKeys = []
 
     if (typeof options.route === 'string') {
       options.route = '/' + options.route.replace(/^\/+/g, '')
-      makePath = pathToRegexp.compile(options.route)
+      createPath = pathToRegexp.compile(options.route)
       pathToRegexp(options.route, routeKeys)
     }
 
@@ -87,16 +88,17 @@ class Source extends EventEmitter {
       fields: options.fields || {},
       typeName: options.typeName,
       routeKeys: routeKeys.map(key => {
-        key = key.name.replace('_raw', '')
-        return {
-          key,
-          path: key.split('__')
-        }
+        const name = key.name.replace('_raw', '')
+        const path = !NODE_FIELDS.includes(name)
+          ? ['fields'].concat(name.split('__'))
+          : [name]
+
+        return { name, path }
       }),
       resolveAbsolutePaths: options.resolveAbsolutePaths,
       mimeTypes: [],
       belongsTo: {},
-      makePath,
+      createPath,
       refs
     }).on('change', (node, oldNode) => {
       this.emit('change', node, oldNode)
@@ -114,16 +116,14 @@ class Source extends EventEmitter {
       id: options.id || options._id,
       type: type || 'page',
       component: options.component,
+      typeName: options.typeName,
       internal: this._createInternals(options.internal)
     }
 
     // TODO: remove before 1.0
     page._id = page.id
 
-    try {
-      page.pageQuery = parsePageQuery(options.pageQuery || {})
-    } catch (err) { }
-
+    page.pageQuery = parsePageQuery(options.pageQuery)
     page.title = options.title || page.id
     page.slug = options.slug || this.slugify(page.title)
     page.path = options.path || `/${page.slug}`
@@ -153,11 +153,9 @@ class Source extends EventEmitter {
     const internal = this._createInternals(options.internal)
     const entry = this.store.index.findOne({ uid: page.id })
 
-    try {
-      page.pageQuery = options.pageQuery
-        ? parsePageQuery(options.pageQuery)
-        : page.pageQuery
-    } catch (err) { }
+    page.pageQuery = options.pageQuery
+      ? parsePageQuery(options.pageQuery)
+      : page.pageQuery
 
     page.title = options.title || page.title
     page.slug = options.slug || page.slug
@@ -178,8 +176,8 @@ class Source extends EventEmitter {
     this.emit('removePage', id)
   }
 
-  getPage (_id) {
-    return this.store.getPage(_id)
+  getPage (id) {
+    return this.store.getPage(id)
   }
 
   //

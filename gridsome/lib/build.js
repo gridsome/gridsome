@@ -2,15 +2,16 @@ const path = require('path')
 const pMap = require('p-map')
 const fs = require('fs-extra')
 const hirestime = require('hirestime')
-const { safeKey } = require('./utils')
-const { trimEnd, trimStart, chunk } = require('lodash')
 const sysinfo = require('./utils/sysinfo')
 const { log, info } = require('./utils/log')
+const { trimEnd, trimStart, chunk } = require('lodash')
 
 const createApp = require('./app')
 const { createWorker } = require('./workers')
 const compileAssets = require('./webpack/compileAssets')
-const queryVariables = require('./graphql/utils/queryVariables')
+const { createBelongsToKey } = require('./graphql/nodes/utils')
+const { createFilterQuery } = require('./graphql/createFilterTypes')
+const { processPageQuery, contextValues } = require('./graphql/page-query')
 
 module.exports = async (context, args) => {
   process.env.NODE_ENV = 'production'
@@ -68,26 +69,22 @@ const {
   DYNAMIC_TEMPLATE_ROUTE
 } = require('./utils/constants')
 
-async function createRenderQueue ({ router, config, store }) {
-  const createEntry = (node, page, currentPage = 1) => {
+module.exports.createRenderQueue = createRenderQueue
+
+async function createRenderQueue ({ routes, config, store, schema }) {
+  const rootFields = schema.getQueryType().getFields()
+
+  const createEntry = (node, page, query, variables = { page: 1 }) => {
     let fullPath = trimEnd(node.path, '/') || '/'
 
     if (page.type === NOT_FOUND_ROUTE) fullPath = '/404'
-    if (currentPage > 1) fullPath = `/${trimStart(fullPath, '/')}/${currentPage}`
+    if (variables.page > 1) fullPath = `/${trimStart(fullPath, '/')}/${variables.page}`
 
     const filePath = fullPath.split('/').map(decodeURIComponent).join('/')
     const dataPath = fullPath === '/' ? 'index.json' : `${filePath}.json`
-    const { route: { params }} = router.resolve(fullPath)
-    const { query } = page.pageQuery
 
     const htmlOutput = path.join(config.outDir, filePath, 'index.html')
     const dataOutput = query ? path.join(config.cacheDir, 'data', dataPath) : null
-
-    const variables = queryVariables(node, page.pageQuery.variables)
-
-    if (params.page) {
-      variables.page = Number(params.page)
-    }
 
     variables.path = node.path
 
@@ -95,18 +92,15 @@ async function createRenderQueue ({ router, config, store }) {
       dataOutput,
       htmlOutput,
       path: fullPath,
-      pageQuery: {
-        query,
-        variables
-      }
+      query,
+      variables
     }
   }
 
-  const createPage = (page, currentPage = 1) => {
-    const entry = createEntry(page, page, currentPage)
+  const createPage = (page, query, vars) => {
+    const entry = createEntry(page, page, query, vars)
 
     if (page.directoryIndex === false && page.path !== '/') {
-      entry.dataOutput = entry.dataOutput && `${path.dirname(entry.dataOutput)}.json`
       entry.htmlOutput = `${path.dirname(entry.htmlOutput)}.html`
     }
 
@@ -114,37 +108,57 @@ async function createRenderQueue ({ router, config, store }) {
   }
 
   const queue = []
+  const queries = {}
 
-  for (const route of router.options.routes) {
-    const page = route.component()
+  for (const page of routes) {
+    const key = page.component
+    let pageQuery = null
+
+    if (!queries[key]) {
+      queries[key] = processPageQuery(page.pageQuery)
+    }
+
+    pageQuery = queries[key]
 
     switch (page.type) {
       case STATIC_ROUTE:
       case NOT_FOUND_ROUTE:
       case STATIC_TEMPLATE_ROUTE: {
-        queue.push(createPage(page))
+        queue.push(createPage(page, pageQuery.query))
 
         break
       }
 
       case DYNAMIC_TEMPLATE_ROUTE: {
-        page.collection.find().forEach(node => {
-          queue.push(createEntry(node, page))
+        const { collection } = store.getContentType(page.typeName)
+
+        collection.find().forEach(node => {
+          const variables = contextValues(node, pageQuery.variables)
+          queue.push(createEntry(node, page, pageQuery.query, variables))
         })
 
         break
       }
 
       case PAGED_TEMPLATE: {
-        const { perPage } = page.pageQuery.paginate
+        const { fieldName } = pageQuery.paginate
+        const { belongsTo } = rootFields[fieldName].type.getFields()
+        const filter = belongsTo.args.find(arg => arg.name === 'filter')
+        const fields = filter.type.getFields()
+        const { collection } = store.getContentType(page.typeName)
 
-        page.collection.find().forEach(node => {
-          const key = `belongsTo.${node.typeName}.${safeKey(node.id)}`
-          const totalNodes = store.index.count({ [key]: { $eq: true }})
-          const totalPages = Math.ceil(totalNodes / perPage)
+        collection.find().forEach(node => {
+          const variables = contextValues(node, pageQuery.variables)
+          const filters = pageQuery.getFilters(variables)
+          const perPage = pageQuery.getPerPage(variables)
+          const query = createFilterQuery(filters, fields)
+
+          const key = createBelongsToKey(node)
+          const totalNodes = store.index.count({ ...query, [key]: { $eq: true }})
+          const totalPages = Math.ceil(totalNodes / perPage) || 1
 
           for (let i = 1; i <= totalPages; i++) {
-            queue.push(createEntry(node, page, i))
+            queue.push(createEntry(node, page, pageQuery.query, { ...variables, page: i }))
           }
         })
 
@@ -152,13 +166,19 @@ async function createRenderQueue ({ router, config, store }) {
       }
 
       case PAGED_ROUTE: {
-        const { typeName, perPage } = page.pageQuery.paginate
-        const contentType = store.getContentType(typeName)
-        const totalNodes = contentType.collection.count()
-        const totalPages = Math.ceil(totalNodes / perPage)
+        const { typeName, fieldName } = pageQuery.paginate
+        const { args } = rootFields[fieldName]
+        const { collection } = store.getContentType(typeName)
+        const filter = args.find(arg => arg.name === 'filter')
+        const fields = filter.type.getFields()
+        const filters = pageQuery.getFilters()
+        const perPage = pageQuery.getPerPage()
+        const query = createFilterQuery(filters, fields)
+        const totalNodes = collection.find(query).length
+        const totalPages = Math.ceil(totalNodes / perPage) || 1
 
         for (let i = 1; i <= totalPages; i++) {
-          queue.push(createPage(page, i))
+          queue.push(createPage(page, pageQuery.query, { page: i }))
         }
 
         break
@@ -173,8 +193,7 @@ async function renderPageQueries (queue, graphql) {
   const timer = hirestime()
   const pages = queue.filter(page => !!page.dataOutput)
 
-  await pMap(pages, async page => {
-    const { dataOutput, pageQuery: { query, variables }} = page
+  await pMap(pages, async ({ dataOutput, query, variables }) => {
     const results = await graphql(query, variables)
 
     if (results.errors) {

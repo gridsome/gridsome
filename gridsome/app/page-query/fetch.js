@@ -5,10 +5,12 @@ import router from '../router'
 import config from '~/.temp/config.js'
 import { unslash } from '../utils/helpers'
 
+const re = new RegExp(`^${config.pathPrefix}`)
+
 export default (route, query) => {
   if (GRIDSOME_MODE === 'serve') {
     const { page, ...params } = route.params
-    const { href } = router.resolve({ ...route, params })
+    const { location } = router.resolve({ ...route, params })
 
     return new Promise((resolve, reject) => {
       fetch(process.env.GRAPHQL_ENDPOINT, {
@@ -17,7 +19,7 @@ export default (route, query) => {
         body: JSON.stringify({
           variables: {
             page: page ? Number(page) : null,
-            path: href || route.path
+            path: location.path || route.path
           },
           query
         })
@@ -33,7 +35,6 @@ export default (route, query) => {
     })
   } else if (GRIDSOME_MODE === 'static') {
     return new Promise((resolve, reject) => {
-      const re = new RegExp(`^${config.pathPrefix}`)
       const routePath = unslash(route.path.replace(re, '/'))
       const filename = !routePath ? '/index.json' : `/${routePath}.json`
 

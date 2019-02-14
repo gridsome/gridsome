@@ -17,12 +17,14 @@ module.exports = {
   BOOTSTRAP_CONFIG: 0,
   BOOTSTRAP_PLUGINS: 1,
   BOOTSTRAP_GRAPHQL: 2,
+  BOOTSTRAP_ROUTES: 3,
   BOOTSTRAP_FULL: Number.MAX_SAFE_INTEGER,
 
   internalRE: /^internal\:\/\//,
   transformerRE: /(?:^@?gridsome[/-]|\/)transformer-([\w-]+)/,
 
-  NODE_FIELDS: ['id', 'title', 'slug', 'path', 'date', 'content', 'excerpt'],
+  NODE_FIELDS: ['id', 'typeName', 'title', 'slug', 'path', 'date', 'content', 'excerpt'],
+  PAGE_FIELDS: ['id', 'typeName', 'path', 'slug'],
 
   ISO_8601_FORMAT: [
     'YYYY',

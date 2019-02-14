@@ -3,10 +3,10 @@ const moment = require('moment')
 const autoBind = require('auto-bind')
 const EventEmitter = require('events')
 const camelCase = require('camelcase')
-const { cloneDeep, isObject, isDate, get } = require('lodash')
-const { ISO_8601_FORMAT } = require('../utils/constants')
-const { isResolvablePath, slugify, safeKey } = require('../utils')
 const { warn } = require('../utils/log')
+const { ISO_8601_FORMAT } = require('../utils/constants')
+const { cloneDeep, isPlainObject, isDate, get } = require('lodash')
+const { isResolvablePath, slugify, safeKey } = require('../utils')
 
 const nonValidCharsRE = new RegExp('[^a-zA-Z0-9_]', 'g')
 const leadingNumberRE = new RegExp('^([0-9])')
@@ -68,7 +68,7 @@ class ContentTypeCollection extends EventEmitter {
     node.fields = fields
     node.path = typeof options.path === 'string'
       ? '/' + options.path.replace(/^\/+/g, '')
-      : this._makePath(node)
+      : this._createPath(node)
 
     // add transformer to content type to let it
     // extend the node type when creating schema
@@ -153,7 +153,7 @@ class ContentTypeCollection extends EventEmitter {
     node.fields = fields
     node.path = typeof options.path === 'string'
       ? '/' + options.path.replace(/^\/+/g, '')
-      : this._makePath(node)
+      : this._createPath(node)
 
     const indexEntry = this.baseStore.index.findOne({ uid: node.uid })
 
@@ -273,35 +273,35 @@ class ContentTypeCollection extends EventEmitter {
     return { fields, belongsTo }
   }
 
-  _makePath (node) {
+  _createPath (node) {
     const date = moment.utc(node.date, ISO_8601_FORMAT, true)
     const { routeKeys } = this.options
+    const length = routeKeys.length
     const params = {}
 
-    // Use root level fields as route params. Primitive values
-    // are slugified but the original value will be available
-    // with '_raw' suffix.
-    for (let i = 0, l = routeKeys.length; i < l; i++) {
-      const { key, path } = routeKeys[i]
-      const fieldValue = get(node.fields, path) || get(node, path) || key
+    // Param values are slugified but the original
+    // value will be available with '_raw' suffix.
+    for (let i = 0; i < length; i++) {
+      const { name, path } = routeKeys[i]
+      const value = get(node, path, name)
 
-      if (keyName === 'year') params.year = date.format('YYYY')
-      else if (keyName === 'month') params.month = date.format('MM')
-      else if (keyName === 'day') params.day = date.format('DD')
+      if (name === 'year') params.year = date.format('YYYY')
+      else if (name === 'month') params.month = date.format('MM')
+      else if (name === 'day') params.day = date.format('DD')
       else if (
-        isObject(fieldValue) &&
-        fieldValue.hasOwnProperty('typeName') &&
-        fieldValue.hasOwnProperty('id') &&
-        !Array.isArray(fieldValue.id)
+        isPlainObject(value) &&
+        value.hasOwnProperty('typeName') &&
+        value.hasOwnProperty('id') &&
+        !Array.isArray(value.id)
       ) {
-        params[key] = String(fieldValue.id)
-      } else if (!isObject(fieldValue) && !params[key]) {
-        params[key] = this.slugify(String(fieldValue))
-        params[key + '_raw'] = String(fieldValue)
+        params[name] = String(value.id)
+      } else if (!isPlainObject(value) && !params[name]) {
+        params[name] = this.slugify(String(value))
+        params[name + '_raw'] = String(value)
       }
     }
 
-    return this.options.makePath(params)
+    return this.options.createPath(params)
   }
 
   //
@@ -313,8 +313,8 @@ class ContentTypeCollection extends EventEmitter {
   }
 
   createReference (id, typeName = this.typeName) {
-    if (typeof id === 'object' && id.id) {
-      return { id: id.id, typeName: id.typeName }
+    if (isPlainObject(id)) {
+      return { id: id.id, typeName: id.typeName || typeName }
     }
 
     return { id, typeName }

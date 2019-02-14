@@ -1,17 +1,16 @@
 const path = require('path')
 const isUrl = require('is-url')
-const Router = require('vue-router')
 const autoBind = require('auto-bind')
 const hirestime = require('hirestime')
 const BaseStore = require('./BaseStore')
 const PluginAPI = require('./PluginAPI')
+const { execute, graphql } = require('graphql')
 const CodeGenerator = require('./CodeGenerator')
 const AssetsQueue = require('./queue/AssetsQueue')
 const createSchema = require('../graphql/createSchema')
 const loadConfig = require('./loadConfig')
 const { defaultsDeep } = require('lodash')
 const createRoutes = require('./createRoutes')
-const { execute, graphql } = require('../graphql/graphql')
 const { version } = require('../../package.json')
 const { parseUrl, resolvePath } = require('../utils')
 const { info } = require('../utils/log')
@@ -38,7 +37,8 @@ class App {
       { title: 'Initialize', run: this.init },
       { title: 'Load sources', run: this.loadSources },
       { title: 'Create GraphQL schema', run: this.createSchema },
-      { title: 'Generate code', run: this.generateFiles }
+      { title: 'Set up routes', run: this.createRoutes },
+      { title: 'Generate code', run: this.generateCode }
     ]
 
     info(`Gridsome v${version}\n`)
@@ -116,19 +116,11 @@ class App {
     })
   }
 
-  generateFiles () {
+  createRoutes () {
     this.routes = createRoutes(this)
+  }
 
-    this.router = new Router({
-      base: '/',
-      mode: 'history',
-      fallback: false,
-      routes: this.routes.map(page => ({
-        path: page.route || page.path,
-        component: () => page
-      }))
-    })
-
+  generateCode () {
     return this.generator.generate()
   }
 
@@ -198,18 +190,6 @@ class App {
     }
 
     return func(this.schema, docOrQuery, undefined, context, variables)
-  }
-
-  queryRouteData (route, docOrQuery) {
-    const emptyData = { data: {}}
-    if (!route.matched.length) return emptyData
-
-    const { pageQuery } = route.matched[0].components.default()
-    const variables = { ...route.params, path: route.path }
-
-    return pageQuery.query
-      ? this.graphql(pageQuery.query, variables)
-      : emptyData
   }
 
   broadcast (message, hotReload = true) {
