@@ -1,6 +1,6 @@
 const path = require('path')
-const AssetsQueue = require('../lib/app/queue/AssetsQueue')
-const context = __dirname
+const AssetsQueue = require('../queue/AssetsQueue')
+const context = path.resolve(__dirname, '../../__tests__')
 const filesDir = path.join(context, 'assets', 'files')
 const pathPrefix = '/'
 
@@ -12,7 +12,7 @@ const baseconfig = {
 }
 
 test('generate src for file', async () => {
-  const filePath = path.resolve(__dirname, 'assets/dummy.pdf')
+  const filePath = path.resolve(context, 'assets/dummy.pdf')
   const queue = new AssetsQueue({ context, config: baseconfig })
 
   const result = await queue.add(filePath)
@@ -25,7 +25,7 @@ test('generate src for file', async () => {
 })
 
 test('generate src for file with base path', async () => {
-  const filePath = path.resolve(__dirname, 'assets/dummy.pdf')
+  const filePath = path.resolve(context, 'assets/dummy.pdf')
   const config = { ...baseconfig, pathPrefix: '/base/path' }
   const queue = new AssetsQueue({ context, config })
 
@@ -36,7 +36,7 @@ test('generate src for file with base path', async () => {
 })
 
 test('generate src with hash', async () => {
-  const filePath = path.resolve(__dirname, 'assets/dummy.pdf')
+  const filePath = path.resolve(context, 'assets/dummy.pdf')
   const queue = new AssetsQueue({ context, config: baseconfig })
 
   const result = await queue.add(filePath, { hash: true })

@@ -1,8 +1,8 @@
 const path = require('path')
 const fs = require('fs-extra')
-const AssetsQueue = require('../lib/app/queue/AssetsQueue')
-const ImageProcessQueue = require('../lib/app/queue/ImageProcessQueue')
-const context = __dirname
+const AssetsQueue = require('../queue/AssetsQueue')
+const ImageProcessQueue = require('../queue/ImageProcessQueue')
+const context = path.resolve(__dirname, '../../__tests__')
 const imagesDir = path.join(context, 'assets', 'static')
 const pathPrefix = '/'
 
@@ -18,7 +18,7 @@ beforeEach(() => (ImageProcessQueue.uid = 0))
 afterAll(() => fs.remove(imagesDir))
 
 test('generate srcset for image', async () => {
-  const filePath = path.resolve(__dirname, 'assets/1000x600.png')
+  const filePath = path.resolve(context, 'assets/1000x600.png')
   const queue = new AssetsQueue({ context, config: baseconfig })
 
   const result = await queue.add(filePath)
@@ -45,7 +45,7 @@ test('generate srcset for image', async () => {
 })
 
 test('generate srcset for image with path prefix', async () => {
-  const filePath = path.resolve(__dirname, 'assets/1000x600.png')
+  const filePath = path.resolve(context, 'assets/1000x600.png')
   const config = { ...baseconfig, pathPrefix: '/base/path' }
   const queue = new AssetsQueue({ context, config })
 
@@ -60,7 +60,7 @@ test('generate srcset for image with path prefix', async () => {
 })
 
 test('resize image by width attribute', async () => {
-  const filePath = path.resolve(__dirname, 'assets/1000x600.png')
+  const filePath = path.resolve(context, 'assets/1000x600.png')
   const queue = new AssetsQueue({ context, config: baseconfig })
 
   const result = await queue.add(filePath, { width: 300 })
@@ -78,7 +78,7 @@ test('resize image by width attribute', async () => {
 })
 
 test('resize image by width and height attribute', async () => {
-  const filePath = path.resolve(__dirname, 'assets/1000x600.png')
+  const filePath = path.resolve(context, 'assets/1000x600.png')
   const queue = new AssetsQueue({ context, config: baseconfig })
 
   const result = await queue.add(filePath, { width: 500, height: 500 })
@@ -91,7 +91,7 @@ test('resize image by width and height attribute', async () => {
 })
 
 test('disable blur filter', async () => {
-  const filePath = path.resolve(__dirname, 'assets/1000x600.png')
+  const filePath = path.resolve(context, 'assets/1000x600.png')
   const queue = new AssetsQueue({ context, config: baseconfig })
 
   const result = await queue.add(filePath, { blur: '0' })
@@ -101,7 +101,7 @@ test('disable blur filter', async () => {
 })
 
 test('set custom quality', async () => {
-  const filePath = path.resolve(__dirname, 'assets/1000x600.png')
+  const filePath = path.resolve(context, 'assets/1000x600.png')
   const queue = new AssetsQueue({ context, config: baseconfig })
 
   const result = await queue.add(filePath, { quality: 10 })
@@ -111,7 +111,7 @@ test('set custom quality', async () => {
 })
 
 test('set custom blur', async () => {
-  const filePath = path.resolve(__dirname, 'assets/1000x600.png')
+  const filePath = path.resolve(context, 'assets/1000x600.png')
   const queue = new AssetsQueue({ context, config: baseconfig })
 
   const result = await queue.add(filePath, { blur: 10 })
@@ -121,7 +121,7 @@ test('set custom blur', async () => {
 })
 
 test('add custom attributes to markup', async () => {
-  const filePath = path.resolve(__dirname, 'assets/1000x600.png')
+  const filePath = path.resolve(context, 'assets/1000x600.png')
   const queue = new AssetsQueue({ context, config: baseconfig })
 
   const result = await queue.add(filePath, {
@@ -144,7 +144,7 @@ test('add custom attributes to markup', async () => {
 })
 
 test('respect config.maxImageWidth', async () => {
-  const filePath = path.resolve(__dirname, 'assets/1000x600.png')
+  const filePath = path.resolve(context, 'assets/1000x600.png')
   const config = { ...baseconfig, maxImageWidth: 600 }
   const queue = new AssetsQueue({ context, config })
 
@@ -161,7 +161,7 @@ test('respect config.maxImageWidth', async () => {
 })
 
 test('do not resize if image is too small', async () => {
-  const filePath = path.resolve(__dirname, 'assets/350x250.png')
+  const filePath = path.resolve(context, 'assets/350x250.png')
   const config = { ...baseconfig, maxImageWidth: 600 }
   const queue = new AssetsQueue({ context, config })
 
@@ -175,9 +175,9 @@ test('do not resize if image is too small', async () => {
 
 test('get url for server in serve mode', async () => {
   const relPath = 'assets/1000x600.png'
-  const absPath = path.resolve(__dirname, relPath)
+  const absPath = path.resolve(context, relPath)
   const config = { ...baseconfig, maxImageWidth: 500 }
-  const queue = new AssetsQueue({ config, context: __dirname })
+  const queue = new AssetsQueue({ config, context: context })
   const mode = process.env.GRIDSOME_MODE
 
   process.env.GRIDSOME_MODE = 'serve'
@@ -193,7 +193,7 @@ test('get url for server in serve mode', async () => {
 })
 
 test('get queue values', async () => {
-  const filePath = path.resolve(__dirname, 'assets/1000x600.png')
+  const filePath = path.resolve(context, 'assets/1000x600.png')
   const queue = new AssetsQueue({ context, config: baseconfig })
 
   await queue.add(filePath)
@@ -202,7 +202,7 @@ test('get queue values', async () => {
 })
 
 test('disable lazy loading', async () => {
-  const filePath = path.resolve(__dirname, 'assets/1000x600.png')
+  const filePath = path.resolve(context, 'assets/1000x600.png')
   const queue = new AssetsQueue({ context, config: baseconfig })
 
   const result = await queue.add(filePath, { immediate: true })
@@ -213,7 +213,7 @@ test('disable lazy loading', async () => {
 })
 
 test('skip srcset and dataUri', async () => {
-  const filePath = path.resolve(__dirname, 'assets/1000x600.png')
+  const filePath = path.resolve(context, 'assets/1000x600.png')
   const queue = new AssetsQueue({ context, config: baseconfig })
 
   const result = await queue.add(filePath, { srcset: false })
@@ -252,7 +252,7 @@ test('handle absolute image paths outside context', async () => {
 })
 
 test('fail if file is missing', async () => {
-  const filePath = path.resolve(__dirname, 'assets/1000x600-missing.png')
+  const filePath = path.resolve(context, 'assets/1000x600-missing.png')
   const queue = new AssetsQueue({ context, config: baseconfig })
 
   expect(queue.add(filePath, { srcset: false })).rejects.toThrow(/was not found/)

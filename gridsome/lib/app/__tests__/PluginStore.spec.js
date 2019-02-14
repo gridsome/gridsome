@@ -1,5 +1,5 @@
-const App = require('../lib/app/App')
-const PluginAPI = require('../lib/app/PluginAPI')
+const App = require('../App')
+const PluginAPI = require('../PluginAPI')
 const JSONTransformer = require('./__fixtures__/JSONTransformer')
 
 function createPlugin (context = '/') {

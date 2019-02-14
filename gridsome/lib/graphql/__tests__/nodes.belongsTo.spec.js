@@ -1,37 +1,20 @@
-const path = require('path')
-const App = require('../lib/app/App')
-const { graphql } = require('../graphql')
-const PluginAPI = require('../lib/app/PluginAPI')
-const createSchema = require('../lib/graphql/createSchema')
-
-const context = __dirname
-const imagesDir = path.join(context, 'assets', 'static')
-const filesDir = path.join(context, 'assets', 'files')
-const pathPrefix = '/'
+const App = require('../../app/App')
+const { graphql } = require('graphql')
+const PluginAPI = require('../../app/PluginAPI')
+const createSchema = require('../createSchema')
 
 let app, api
 
 beforeEach(() => {
-  app = new App(context, {
+  app = new App(__dirname, {
     config: {
-      plugins: [],
-      pathPrefix,
-      imagesDir,
-      filesDir,
-      outDir: context,
-      imageExtensions: ['.png'],
-      maxImageWidth: 1000
+      plugins: []
     }
   }).init()
 
   api = new PluginAPI(app, {
     entry: { options: {}, clientOptions: undefined }
   })
-})
-
-afterAll(() => {
-  app = null
-  api = null
 })
 
 test('create node reference', async () => {

@@ -1,10 +1,10 @@
 const path = require('path')
 const fs = require('fs-extra')
 const imageSize = require('probe-image-size')
-const AssetsQueue = require('../lib/app/queue/AssetsQueue')
-const ImageProcessQueue = require('../lib/app/queue/ImageProcessQueue')
-const { process: processImages } = require('../lib/workers/image-processor')
-const context = __dirname
+const AssetsQueue = require('../../app/queue/AssetsQueue')
+const ImageProcessQueue = require('../../app/queue/ImageProcessQueue')
+const { process: processImages } = require('../image-processor')
+const context = path.resolve(__dirname, '../../__tests__')
 const imagesDir = path.join(context, 'assets', 'static')
 const imageCacheDir = path.join(context, 'assets', 'cache')
 const pathPrefix = '/'

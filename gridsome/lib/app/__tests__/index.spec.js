@@ -1,11 +1,11 @@
 const path = require('path')
-const createApp = require('../lib/app')
-const loadConfig = require('../lib/app/loadConfig')
-const createClientConfig = require('../lib/webpack/createClientConfig')
-const createServerConfig = require('../lib/webpack/createServerConfig')
-const { BOOTSTRAP_CONFIG } = require('../lib/utils/constants')
+const createApp = require('../index')
+const loadConfig = require('../loadConfig')
+const createClientConfig = require('../../webpack/createClientConfig')
+const createServerConfig = require('../../webpack/createServerConfig')
+const { BOOTSTRAP_CONFIG } = require('../../utils/constants')
 
-const context = path.join(__dirname, '__fixtures__', 'project-basic')
+const context = path.join(__dirname, '../../__tests__/__fixtures__/project-basic')
 
 let originalEnv
 
@@ -75,7 +75,7 @@ test('setup webpack client config', async () => {
   expect(config.entry.app[0]).toMatch(/entry\.client\.js$/)
   expect(config.resolve.alias['~']).toEqual(path.join(context, 'src'))
   expect(config.resolve.alias['@']).toEqual(path.join(context, 'src'))
-  expect(config.resolve.alias['gridsome$']).toEqual(path.resolve(__dirname, '../app/index.js'))
+  expect(config.resolve.alias['gridsome$']).toEqual(path.resolve(__dirname, '../../../app/index.js'))
 
   const postcss = chain.module.rule('postcss').oneOf('normal').use('postcss-loader').toConfig()
   expect(postcss.options.plugins).toHaveLength(1)
@@ -94,7 +94,7 @@ test('setup webpack server config', async () => {
   expect(config.entry.app[0]).toMatch(/entry\.server\.js$/)
   expect(config.resolve.alias['~']).toEqual(path.join(context, 'src'))
   expect(config.resolve.alias['@']).toEqual(path.join(context, 'src'))
-  expect(config.resolve.alias['gridsome$']).toEqual(path.resolve(__dirname, '../app/index.js'))
+  expect(config.resolve.alias['gridsome$']).toEqual(path.resolve(__dirname, '../../../app/index.js'))
 })
 
 test('setup style loader options', async () => {

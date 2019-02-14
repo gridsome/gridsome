@@ -5,7 +5,7 @@ const createRenderFn = require('../createRenderFn')
 const {
   contextValues,
   processPageQuery
-} = require('../../graphql/utils/page-query')
+} = require('../../graphql/parse')
 
 module.exports = (app, routes) => {
   const render = createRenderFn({

@@ -1,7 +1,7 @@
 const path = require('path')
 const LRU = require('lru-cache')
 const hash = require('hash-sum')
-const validateQuery = require('../../graphql/validateQuery')
+const validateQuery = require('../../graphql/validate')
 
 const cache = new LRU({ max: 1000 })
 

@@ -1,5 +1,6 @@
 const { mapValues, values } = require('lodash')
 const { nodeInterface } = require('../interfaces')
+const { PER_PAGE } = require('../../utils/constants')
 const { pageInfoType, sortOrderType } = require('../types')
 const { createPagedNodeEdges, createBelongsToKey } = require('./utils')
 
@@ -56,7 +57,7 @@ module.exports = function createBelongsTo (contentType, nodeTypes) {
   const belongsToArgs = {
     sortBy: { type: GraphQLString, defaultValue: 'date' },
     order: { type: sortOrderType, defaultValue: 'DESC' },
-    perPage: { type: GraphQLInt, defaultValue: 25 },
+    perPage: { type: GraphQLInt, defaultValue: PER_PAGE },
     skip: { type: GraphQLInt, defaultValue: 0 },
     page: { type: GraphQLInt, defaultValue: 1 }
   }

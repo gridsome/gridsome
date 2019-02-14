@@ -1,6 +1,6 @@
 const fs = require('fs-extra')
 const path = require('path')
-const build = require('../lib/build')
+const build = require('../build')
 
 test('build basic project', async () => {
   const context = path.join(__dirname, '__fixtures__', 'project-basic')

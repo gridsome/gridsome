@@ -1,7 +1,7 @@
 const path = require('path')
-const createApp = require('../lib/app')
-const { createRenderQueue } = require('../lib/build')
-const { BOOTSTRAP_ROUTES } = require('../lib/utils/constants')
+const createApp = require('../app')
+const { createRenderQueue } = require('../build')
+const { BOOTSTRAP_ROUTES } = require('../utils/constants')
 
 test('create render queue', async () => {
   const context = path.join(__dirname, '__fixtures__', 'project-basic')

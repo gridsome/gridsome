@@ -1,7 +1,7 @@
-const App = require('../lib/app/App')
-const { graphql } = require('../graphql')
-const PluginAPI = require('../lib/app/PluginAPI')
-const createSchema = require('../lib/graphql/createSchema')
+const App = require('../../app/App')
+const { graphql } = require('graphql')
+const PluginAPI = require('../../app/PluginAPI')
+const createSchema = require('../createSchema')
 
 let app, api
 
