@@ -3,6 +3,7 @@ const express = require('express')
 const resolvePort = require('./resolvePort')
 const graphqlHTTP = require('express-graphql')
 const graphqlMiddleware = require('./middlewares/graphql')
+const { default: playground } = require('graphql-playground-middleware-express')
 const { forwardSlash } = require('../utils')
 
 const endpoint = {
@@ -10,7 +11,7 @@ const endpoint = {
   explore: '/___explore'
 }
 
-module.exports = async app => {
+module.exports = async (app, options = {}) => {
   const port = await resolvePort(app.config.port)
   const { config, schema } = app
   const server = express()
@@ -33,6 +34,17 @@ module.exports = async app => {
     graphqlMiddleware(app),
     graphqlHTTP({ schema, context: app.createSchemaContext() })
   )
+
+  if (options.withExplorer) {
+    server.get(
+      endpoint.explore,
+      playground({
+        endpoint: endpoint.graphql,
+        title: 'Gridsome GraphQL Explorer',
+        faviconUrl: 'https://avatars0.githubusercontent.com/u/17981963?s=200&v=4'
+      })
+    )
+  }
 
   const assetsDir = path.relative(config.outDir, config.assetsDir)
   const assetsPath = forwardSlash(path.join(config.pathPrefix, assetsDir))
