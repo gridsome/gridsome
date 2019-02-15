@@ -217,6 +217,32 @@ test('sort nodes collection', async () => {
   expect(data.allTestPost.edges[2].node.title).toEqual('c')
 })
 
+test('sort nodes collection by custom field', async () => {
+  const contentType = api.store.addContentType({
+    typeName: 'TestPost'
+  })
+
+  contentType.addNode({ id: '1', fields: { value: 'c' }})
+  contentType.addNode({ id: '2', fields: { value: 'b' }})
+  contentType.addNode({ id: '3', fields: { value: 'a' }})
+
+  const query = `{
+    allTestPost (sortBy: "value", order: ASC) {
+      edges {
+        node { value }
+      }
+    }
+  }`
+
+  const { errors, data } = await createSchemaAndExecute(query)
+
+  expect(errors).toBeUndefined()
+  expect(data.allTestPost.edges.length).toEqual(3)
+  expect(data.allTestPost.edges[0].node.value).toEqual('a')
+  expect(data.allTestPost.edges[1].node.value).toEqual('b')
+  expect(data.allTestPost.edges[2].node.value).toEqual('c')
+})
+
 test('get nodes by path regex', async () => {
   const posts = api.store.addContentType({
     typeName: 'TestPost'
