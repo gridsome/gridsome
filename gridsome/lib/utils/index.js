@@ -47,37 +47,38 @@ exports.resolvePath = function (fromPath, toPath, rootDir) {
   if (mime.lookup(toPath) === 'application/x-msdownload') return toPath
   if (!mime.lookup(toPath)) return toPath
 
-  const parse = string => {
-    let rootPath = ''
-    let basePath = string
-
-    if (isUrl(string)) {
-      const info = exports.parseUrl(string)
-      rootPath = info.baseUrl
-      basePath = info.basePath
-    } else {
-      if (path.extname(basePath).length) {
-        basePath = path.join(path.dirname(basePath), '/')
-      } else {
-        basePath = path.join(basePath, '/')
-      }
-    }
-
-    return {
-      rootPath,
-      basePath
-    }
-  }
-
   if (isRelative(toPath)) {
-    const { rootPath, basePath } = parse(fromPath)
+    if (!fromPath) return toPath
+    const { rootPath, basePath } = parsePath(fromPath)
     return rootPath + path.resolve(basePath, toPath)
   }
 
   if (rootDir) {
-    const { rootPath, basePath } = parse(rootDir)
+    const { rootPath, basePath } = parsePath(rootDir)
     return rootPath + path.join(basePath, toPath)
   }
 
   return toPath
+}
+
+function parsePath (string) {
+  let rootPath = ''
+  let basePath = string
+
+  if (isUrl(string)) {
+    const info = exports.parseUrl(string)
+    rootPath = info.baseUrl
+    basePath = info.basePath
+  } else {
+    if (path.extname(basePath).length) {
+      basePath = path.join(path.dirname(basePath), '/')
+    } else {
+      basePath = path.join(basePath, '/')
+    }
+  }
+
+  return {
+    rootPath,
+    basePath
+  }
 }

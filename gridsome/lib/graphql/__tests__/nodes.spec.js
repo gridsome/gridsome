@@ -866,8 +866,29 @@ test('process image types in schema', async () => {
     }
   })
 
+  posts.addNode({
+    id: '2',
+    internal: {
+      mimeType: 'application/json',
+      content: JSON.stringify({
+        image: '/assets/350x250.png',
+        image2: 'https://www.example.com/images/image.png',
+        image3: './350x250.png',
+        image4: 'dir/to/350x250.png',
+        image5: '350x250.png'
+      })
+    }
+  })
+
   const { errors, data } = await createSchemaAndExecute(`{
     testPost (id: "1") {
+      image
+      image2
+      image3 (width: 300, quality: 100, blur: 0)
+      image4
+      image5
+    }
+    testPost2: testPost (id: "2") {
       image
       image2
       image3 (width: 300, quality: 100, blur: 0)
@@ -887,6 +908,11 @@ test('process image types in schema', async () => {
   expect(data.testPost.image3.srcset).toHaveLength(1)
   expect(data.testPost.image4).toEqual('dir/to/350x250.png')
   expect(data.testPost.image5).toEqual('350x250.png')
+  expect(data.testPost2.image).toEqual('/assets/350x250.png')
+  expect(data.testPost2.image2).toEqual('https://www.example.com/images/image.png')
+  expect(data.testPost2.image3).toEqual('./350x250.png')
+  expect(data.testPost2.image4).toEqual('dir/to/350x250.png')
+  expect(data.testPost2.image5).toEqual('350x250.png')
 })
 
 test('process file types in schema', async () => {

@@ -41,11 +41,11 @@ export default {
         if (srcset.length) attrs[`${isLazy ? 'data-' : ''}srcset`] = srcset.join(', ')
         if (sizes) attrs[`${isLazy ? 'data-' : ''}sizes`] = sizes
 
+        directives.push({ name: 'g-image' })
+
         break
       }
     }
-
-    directives.push({ name: 'g-image' })
     
     res.push(h('img', {
       ...data,
