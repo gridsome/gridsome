@@ -55,12 +55,14 @@ exports.processImage = async function ({
     }
 
     if (/\.png$/.test(ext)) {
+      const quality = config.quality / 100
+
       pipeline = pipeline.png({
         compressionLevel: config.pngCompressionLevel,
         adaptiveFiltering: false
       })
       plugins.push(imageminPngquant({
-        quality: config.quality
+        quality: [quality, quality]
       }))
     }
 
