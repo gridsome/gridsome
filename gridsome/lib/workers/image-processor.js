@@ -4,8 +4,8 @@ const sharp = require('sharp')
 const imagemin = require('imagemin')
 const colorString = require('color-string')
 const imageminWebp = require('imagemin-webp')
+const imageminMozjpeg = require('imagemin-mozjpeg')
 const imageminPngquant = require('imagemin-pngquant')
-const imageminJpegoptim = require('imagemin-jpegoptim')
 
 sharp.simd(true)
 
@@ -69,8 +69,9 @@ exports.processImage = async function ({
         progressive: config.jpegProgressive,
         quality: config.quality
       })
-      plugins.push(imageminJpegoptim({
-        max: config.quality
+      plugins.push(imageminMozjpeg({
+        progressive: config.jpegProgressive,
+        quality: config.quality
       }))
     }
 
