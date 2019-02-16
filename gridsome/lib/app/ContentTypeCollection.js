@@ -34,6 +34,10 @@ class ContentTypeCollection extends EventEmitter {
   }
 
   addReference (fieldName, options) {
+    if (typeof options === 'string') {
+      options = { typeName: options }
+    }
+
     this.options.refs[camelCase(fieldName)] = options
   }
 
@@ -311,14 +315,6 @@ class ContentTypeCollection extends EventEmitter {
 
   makeUid (value) {
     return this.pluginStore.makeUid(value)
-  }
-
-  createReference (id, typeName = this.typeName) {
-    if (isPlainObject(id)) {
-      return { id: id.id, typeName: id.typeName || typeName }
-    }
-
-    return { id, typeName }
   }
 
   slugify (string = '') {

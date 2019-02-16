@@ -8,7 +8,7 @@ const pathToRegexp = require('path-to-regexp')
 const slugify = require('@sindresorhus/slugify')
 const { NODE_FIELDS } = require('../utils/constants')
 const { parsePageQuery } = require('../graphql/page-query')
-const { mapValues, cloneDeep } = require('lodash')
+const { mapValues, cloneDeep, isPlainObject } = require('lodash')
 const { cache, nodeCache } = require('../utils/cache')
 const { log, warn } = require('../utils/log')
 
@@ -50,6 +50,10 @@ class Source extends EventEmitter {
   }
 
   addContentType (options) {
+    if (typeof options === 'string') {
+      options = { typeName: options }
+    }
+
     if (typeof options.typeName !== 'string') {
       throw new Error(`«typeName» option is required.`)
     }
@@ -217,6 +221,14 @@ class Source extends EventEmitter {
     }
 
     return camelCase(`${this._typeName} ${name}`, { pascalCase: true })
+  }
+
+  createReference (typeName, id) {
+    if (isPlainObject(typeName)) {
+      return { typeName: typeName.typeName, id: typeName.id }
+    }
+
+    return { typeName, id }
   }
 
   slugify (string = '') {
