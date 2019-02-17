@@ -38,11 +38,11 @@ class ContentTypeCollection extends EventEmitter {
       options = { typeName: options }
     }
 
-    this.options.refs[camelCase(fieldName)] = options
+    this.options.refs[fieldName] = options
   }
 
   addSchemaField (fieldName, options) {
-    this.options.fields[camelCase(fieldName)] = options
+    this.options.fields[fieldName] = options
   }
 
   addNode (options) {

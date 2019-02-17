@@ -1,11 +1,11 @@
 const path = require('path')
 const isUrl = require('is-url')
+const Codegen = require('./codegen')
 const autoBind = require('auto-bind')
 const hirestime = require('hirestime')
 const BaseStore = require('./BaseStore')
 const PluginAPI = require('./PluginAPI')
 const { execute, graphql } = require('graphql')
-const CodeGenerator = require('./CodeGenerator')
 const AssetsQueue = require('./queue/AssetsQueue')
 const createSchema = require('../graphql/createSchema')
 const loadConfig = require('./loadConfig')
@@ -66,7 +66,7 @@ class App {
   init () {
     this.store = new BaseStore(this)
     this.queue = new AssetsQueue(this)
-    this.generator = new CodeGenerator(this)
+    this.codegen = new Codegen(this)
 
     this.config.plugins.map(entry => {
       const Plugin = entry.entries.serverEntry
@@ -121,7 +121,7 @@ class App {
   }
 
   generateCode () {
-    return this.generator.generate()
+    return this.codegen.generate()
   }
 
   //
@@ -198,7 +198,7 @@ class App {
     }
 
     return hotReload
-      ? this.generator.generate('now.js')
+      ? this.codegen.generate('now.js')
       : undefined
   }
 
