@@ -9,7 +9,8 @@ function genRoutes (app) {
     const props = []
 
     props.push(`    path: ${JSON.stringify(page.route || page.path)}`)
-    props.push(`    component: () => import(/* webpackChunkName: ${chunkName} */ ${component})`)
+    // use require for server-renderer as a workaround for wrong resolved route in some odd scenarios.
+    props.push(`    component: process.isServer ? require(${component}).default : () => import(/* webpackChunkName: ${chunkName} */ ${component})`)
 
     if (page.pageQuery.query) {
       props.push(`    meta: { data: true }`)

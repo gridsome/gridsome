@@ -11,9 +11,6 @@ import Link from './components/Link'
 import Image from './components/Image'
 import ClientOnly from './components/ClientOnly'
 
-const isServer = process.isServer
-const isClient = process.isClient
-
 Vue.component('g-link', Link)
 Vue.component('g-image', Image)
 Vue.component('ClientOnly', ClientOnly)
@@ -22,36 +19,39 @@ Vue.prototype.$url = url
 
 router.addRoutes(routes)
 
-export default function createApp (callback) {
-  const appOptions = {
+const context = {
+  appOptions: {
     render: h => h('router-view', { attrs: { id: 'app' }}),
     metaInfo: head,
     methods: {},
     data: {},
     router
-  }
+  },
+  isServer: process.isServer,
+  isClient: process.isClient,
+  router,
+  head
+}
 
-  const context = {
-    appOptions,
-    isServer,
-    isClient,
-    router,
-    head
-  }
+runPlugins(plugins)
 
-  if (callback) callback(context)
-
+export function runPlugins (plugins) {
   for (const { run, options } of plugins) {
     if (typeof run === 'function') {
       run(Vue, options, context)
     }
   }
+}
 
+export function runMain () {
   if (typeof main === 'function') {
     main(Vue, context)
   }
+}
 
-  const app = new Vue(appOptions)
-
-  return { app, router }
+export default function createApp () {
+  return {
+    app: new Vue(context.appOptions),
+    router
+  }
 }

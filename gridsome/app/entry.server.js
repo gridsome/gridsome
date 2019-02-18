@@ -1,11 +1,12 @@
-import createApp from './app'
+import createApp, { runMain } from './app'
 
-const { app, router } = createApp()
-const meta = app.$meta()
+runMain()
 
 export default context => new Promise((resolve, reject) => {
+  const { app, router } = createApp()
+  
+  context.meta = app.$meta()
   router.push(context.url)
-  context.meta = meta
 
   router.onReady(() => {
     resolve(app)

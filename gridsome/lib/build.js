@@ -201,7 +201,7 @@ async function renderPageQueries (queue, graphql) {
     }
 
     await fs.outputFile(dataOutput, JSON.stringify(results))
-  }, { concurrency: sysinfo.cpus.logical })
+  }, { concurrency: sysinfo.cpus.physical })
 
   info(`Run GraphQL (${pages.length} queries) - ${timer(hirestime.S)}s`)
 }
@@ -209,7 +209,7 @@ async function renderPageQueries (queue, graphql) {
 async function renderHTML (queue, config) {
   const timer = hirestime()
   const totalPages = queue.length
-  const chunks = chunk(queue, 50)
+  const chunks = chunk(queue, 350)
   const worker = createWorker('html-writer')
 
   const { htmlTemplate, clientManifestPath, serverBundlePath } = config
