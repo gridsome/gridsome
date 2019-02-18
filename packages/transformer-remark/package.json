@@ -25,6 +25,7 @@
     "remark-parse": "^6.0.0",
     "remark-slug": "^4.2.3",
     "remark-squeeze-paragraphs": "^3.0.2",
+    "sanitize-html": "^1.20.0",
     "unified": "^7.0.0",
     "unist-util-visit": "^1.4.0",
     "vfile": "^4.0.0"

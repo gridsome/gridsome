@@ -2,8 +2,8 @@ const LRU = require('lru-cache')
 const unified = require('unified')
 const parse = require('gray-matter')
 const remarkHtml = require('remark-html')
-const htmlToText = require('html-to-text')
 const remarkParse = require('remark-parse')
+const sanitizeHTML = require('sanitize-html')
 const { words, defaultsDeep } = require('lodash')
 
 const cache = new LRU({ max: 1000 })
@@ -111,11 +111,22 @@ class RemarkTransformer {
           }
         },
         resolve: async (node, { speed }) => {
-          const html = await this._nodeToHTML(node)
-          const text = htmlToText.fromString(html)
-          const count = words(text).length
+          const key = cacheKey(node, 'timeToRead')
+          let cached = cache.get(key)
 
-          return Math.round(count / speed) || 1
+          if (!cached) {
+            const html = await this._nodeToHTML(node)
+            const text = sanitizeHTML(html, {
+              allowedAttributes: {},
+              allowedTags: []
+            })
+
+            const count = words(text).length
+            cached = Math.round(count / speed) || 1
+            cache.set(key, cached)
+          }
+
+          return cached
         }
       }
     }
