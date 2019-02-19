@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+<a name="0.0.8"></a>
+## [0.0.8](https://github.com/gridsome/gridsome/tree/master/packages/cli/compare/@gridsome/cli@0.0.7...@gridsome/cli@0.0.8) (2019-02-19)
+
+
+### Bug Fixes
+
+* **cli:** create project in current directory ([#179](https://github.com/gridsome/gridsome/tree/master/packages/cli/issues/179)) ([efb7b06](https://github.com/gridsome/gridsome/tree/master/packages/cli/commit/efb7b06))
+* **cli:** include package name in version ([#176](https://github.com/gridsome/gridsome/tree/master/packages/cli/issues/176)) ([e90538c](https://github.com/gridsome/gridsome/tree/master/packages/cli/commit/e90538c))
+
+
+
 
 
 <a name="0.0.7"></a>
