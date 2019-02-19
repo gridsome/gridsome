@@ -23,7 +23,7 @@ test('add type', () => {
 
   const contentType = api.store.addContentType({
     typeName: 'TestPost',
-    route: '/path/:id/:bar/:foo_raw'
+    route: '/path/:id/:bar/:foo_raw/(.*)?'
   })
 
   expect(contentType.typeName).toEqual('TestPost')

@@ -91,14 +91,16 @@ class Source extends EventEmitter {
       route: options.route,
       fields: options.fields || {},
       typeName: options.typeName,
-      routeKeys: routeKeys.map(key => {
-        const name = key.name.replace('_raw', '')
-        const path = !NODE_FIELDS.includes(name)
-          ? ['fields'].concat(name.split('__'))
-          : [name]
+      routeKeys: routeKeys
+        .filter(key => typeof key.name === 'string')
+        .map(key => {
+          const name = key.name.replace('_raw', '')
+          const path = !NODE_FIELDS.includes(name)
+            ? ['fields'].concat(name.split('__'))
+            : [name]
 
-        return { name, path }
-      }),
+          return { name, path }
+        }),
       resolveAbsolutePaths: options.resolveAbsolutePaths,
       mimeTypes: [],
       belongsTo: {},
