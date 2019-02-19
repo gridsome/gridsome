@@ -21,18 +21,21 @@ module.exports = function (source, map) {
     return
   }
 
-  if (isDev || process.env.NODE_ENV === 'test') {
-    try {
-      const errors = validateQuery(schema, source)
+  if (!source.trim()) {
+    this.callback(null, '', map)
+    return
+  }
 
-      if (errors && errors.length) {
-        this.callback(errors, source, map)
-        return
-      }
-    } catch (err) {
-      this.callback(err, source, map)
+  try {
+    const errors = validateQuery(schema, source)
+
+    if (errors && errors.length) {
+      this.callback(errors[0], source, map)
       return
     }
+  } catch (err) {
+    this.callback(err, source, map)
+    return
   }
 
   this.dependency(path.join(config.appPath, 'page-query', 'index.js'))

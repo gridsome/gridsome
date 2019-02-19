@@ -7,6 +7,7 @@ const { log, info } = require('./utils/log')
 const { trimEnd, trimStart, chunk } = require('lodash')
 
 const createApp = require('./app')
+const { execute } = require('graphql')
 const { createWorker } = require('./workers')
 const compileAssets = require('./webpack/compileAssets')
 const { createBelongsToKey } = require('./graphql/nodes/utils')
@@ -19,7 +20,7 @@ module.exports = async (context, args) => {
 
   const buildTime = hirestime()
   const app = await createApp(context, { args })
-  const { config, graphql } = app
+  const { config } = app
 
   await app.dispatch('beforeBuild', { context, config })
   await fs.ensureDir(config.cacheDir)
@@ -29,7 +30,7 @@ module.exports = async (context, args) => {
 
   // 1. run all GraphQL queries and save results into json files
   await app.dispatch('beforeRenderQueries', () => ({ context, config, queue }))
-  await renderPageQueries(queue, graphql)
+  await renderPageQueries(queue, app)
 
   // 2. compile assets with webpack
   await compileAssets(app)
@@ -189,15 +190,16 @@ async function createRenderQueue ({ routes, config, store, schema }) {
   return queue
 }
 
-async function renderPageQueries (queue, graphql) {
+async function renderPageQueries (queue, app) {
   const timer = hirestime()
+  const context = app.createSchemaContext()
   const pages = queue.filter(page => !!page.dataOutput)
 
-  await pMap(pages, async ({ dataOutput, query, variables }) => {
-    const results = await graphql(query, variables)
+  await pMap(pages, async ({ dataOutput, query, variables, path }) => {
+    const results = await execute(app.schema, query, undefined, context, variables)
 
     if (results.errors) {
-      throw new Error(results.errors)
+      throw results.errors[0]
     }
 
     await fs.outputFile(dataOutput, JSON.stringify(results))

@@ -1,13 +1,11 @@
 const path = require('path')
 const LRU = require('lru-cache')
 const hash = require('hash-sum')
-const validateQuery = require('../../graphql/validate')
 
 const cache = new LRU({ max: 1000 })
 
 module.exports = async function (source, map) {
-  const isDev = process.env.NODE_ENV === 'development'
-  const { config, schema, graphql } = process.GRIDSOME
+  const { config, graphql } = process.GRIDSOME
   const staticQueryPath = path.join(config.appPath, 'static-query')
   const resourcePath = this.resourcePath
 
@@ -28,23 +26,14 @@ module.exports = async function (source, map) {
     return
   }
 
-  if (isDev || process.env.NODE_ENV === 'test') {
-    try {
-      const errors = validateQuery(schema, source)
-
-      if (errors && errors.length) {
-        callback(errors, source, map)
-        return
-      }
-    } catch (err) {
-      callback(err, source, map)
-      return
-    }
+  if (!source.trim()) {
+    callback(null, '', map)
+    return
   }
 
   const { errors, data } = await graphql(source)
 
-  if (errors) {
+  if (errors && errors.length) {
     callback(errors[0], source, map)
     return
   }
