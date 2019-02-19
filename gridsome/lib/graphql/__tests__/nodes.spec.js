@@ -260,9 +260,7 @@ test('get nodes by path regex', async () => {
 })
 
 test('create node reference', async () => {
-  const authors = api.store.addContentType({
-    typeName: 'TestAuthor'
-  })
+  const authors = api.store.addContentType('TestAuthor')
 
   const posts = api.store.addContentType({
     typeName: 'TestPost',
@@ -275,36 +273,49 @@ test('create node reference', async () => {
   })
 
   authors.addNode({
-    id: '2',
-    title: 'Test Author'
+    id: '2'
   })
 
   posts.addNode({
     id: '1',
     fields: {
       author: '2',
-      customRefs: {
-        author: api.store.createReference('TestAuthor', '2')
-      }
+      customRefs: [
+        api.store.createReference('TestAuthor', '2')
+      ]
+    }
+  })
+
+  posts.addNode({
+    id: '2',
+    fields: {
+      customRef: api.store.createReference('TestAuthor', '2')
     }
   })
 
   const query = `{
-    testPost (id: "1") {
-      author { id title }
-      customRefs {
-        author { id title }
-      }
+    post1: testPost (id: "1") {
+      author { id }
+      customRef { id }
+      customRefs { id }
+    }
+    post2: testPost (id: "2") {
+      author { id }
+      customRef { id }
+      customRefs { id }
     }
   }`
 
   const { errors, data } = await createSchemaAndExecute(query)
 
   expect(errors).toBeUndefined()
-  expect(data.testPost.author.id).toEqual('2')
-  expect(data.testPost.author.title).toEqual('Test Author')
-  expect(data.testPost.customRefs.author.id).toEqual('2')
-  expect(data.testPost.customRefs.author.title).toEqual('Test Author')
+  expect(data.post1.author.id).toEqual('2')
+  expect(data.post1.customRef).toEqual(null)
+  expect(data.post1.customRefs).toHaveLength(1)
+  expect(data.post1.customRefs[0].id).toEqual('2')
+  expect(data.post2.author).toEqual(null)
+  expect(data.post2.customRef.id).toEqual('2')
+  expect(data.post2.customRefs).toHaveLength(0)
 })
 
 test('create node reference to same typeName', async () => {

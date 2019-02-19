@@ -21,6 +21,8 @@ function createRefResolver ({ typeName, isList = false }) {
       query.typeName = Array.isArray(typeName) ? { $in: typeName } : typeName
     } else if (Array.isArray(fieldValue)) {
       query.$or = fieldValue
+    } else {
+      return isList ? [] : null
     }
 
     if (Array.isArray(typeName)) {
