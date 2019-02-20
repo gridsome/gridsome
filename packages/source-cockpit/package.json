@@ -1,5 +1,5 @@
 {
-  "version": "0.1.0",
+  "version": "0.0.0",
   "name": "@gridsome/source-cockpit",
   "description": "Cockpit source for Gridsome",
   "homepage": "https://github.com/gridsome/gridsome/tree/master/packages/source-cockpit#readme",
@@ -12,8 +12,7 @@
     "cockpit"
   ],
   "dependencies": {
-    "cockpit-sdk": "^0.15.1",
-    "dotenv": "^6.2.0"
+    "cockpit-sdk": "^0.15.1"
   },
   "publishConfig": {
     "access": "public"
