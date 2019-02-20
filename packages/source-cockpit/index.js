@@ -1,4 +1,5 @@
-const CockpitSDK = require('cockpit-sdk').default;
+const CockpitSDK = require('cockpit-sdk').default
+const { GraphQLJSON } = require('gridsome/graphql')
 
 class CockpitSource {
   static defaultOptions () {
@@ -34,7 +35,12 @@ class CockpitSource {
       const typeName = store.makeTypeName(collectionType)
       const route = this.options.routes[name] || `/${store.slugify(name)}/:slug`
 
-      store.addContentType({ typeName, route })
+      const collection = store.addContentType({ typeName, route })
+
+      collection.addSchemaField('cockpitContent', () => ({
+        type: GraphQLJSON,
+        resolve: node => node.fields.cockpitContent
+      }))
 
       this.typesIndex[typeName] = { collectionType, typeName }
     }
@@ -48,64 +54,36 @@ class CockpitSource {
     const contentType = store.addContentType({ typeName, route })
 
     for (const asset of assets.assets) {
-      const {
-        _id,
-        title,
-        created,
-        modified,
-        ...fields
-      } = asset
+      const { _id: id, title, created: date, ...fields } = asset
 
-      contentType.addNode({
-        id: _id,
-        title: title,
-        date: created,
-        fields: {
-          ...fields
-        }
-      })
-
+      contentType.addNode({ id, date, title, fields })
     }
   }
 
   async getEntries (store) {
     for (const key in this.typesIndex) {
-     
       const collectionType = this.typesIndex[key].collectionType
       const data = await this.fetch('collectionGet', collectionType)
       const typeName = store.makeTypeName(collectionType)
 
-      const fieldDefinitions = data.fields
-      
-      data.entries.forEach(i => {
-
+      data.entries.forEach(entry => {
         const collection = store.getContentType(typeName)
 
-        const entry = Object.keys(data.fields)
-         .map(f => data.fields[f].name)
-         .reduce((x, y) => ({ ...x, [y]: i[y] }), {});
+        const fields = Object.keys(data.fields)
+          .map(f => data.fields[f].name)
+          .reduce((x, y) => ({ ...x, [y]: entry[y] }), {})
 
-        // 'content' is a reserved key in Gridsome so rename.
-        if ('content' in entry) {
-          Object.defineProperty(entry, 'field_content',
-            Object.getOwnPropertyDescriptor(entry, 'content'));
-          delete entry['content'];
-        }
+        // workaround for the reserved content type (will change that in core)
+        fields.cockpitContent = fields.content
+        delete fields.content
 
-        const node = {
-          id: i._id,
-          title: i.title || '',
-          slug: i.slug || '',
-          date: new Date(i._created * 1000),
-        };
-
-        // Process fields.
-        Object.keys(data.fields).forEach(async f => {
+        collection.addNode({
+          id: entry._id,
+          title: entry.title || '',
+          slug: entry.slug || '',
+          date: new Date(entry._created * 1000),
+          fields
         })
-
-        node.fields = { ...entry }
-
-        collection.addNode(node)
       })
     }
   }
@@ -115,7 +93,6 @@ class CockpitSource {
     const result = await fetch(0)
     return result
   }
-
 }
 
 module.exports = CockpitSource
