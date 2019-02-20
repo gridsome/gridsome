@@ -1,11 +1,17 @@
-import createApp from './app'
+import createApp, { runMain } from './app'
 
-const { app, router } = createApp()
-const meta = app.$meta()
+runMain()
 
 export default context => new Promise((resolve, reject) => {
-  router.push(context.url)
-  context.meta = meta
+  const { app, router } = createApp()
+  let { url } = context
+
+  if (url === '/404') {
+    url = { name: '404' }
+  }
+  
+  context.meta = app.$meta()
+  router.push(url)
 
   router.onReady(() => {
     resolve(app)

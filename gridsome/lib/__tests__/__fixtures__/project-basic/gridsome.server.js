@@ -45,11 +45,11 @@ module.exports = function (api) {
       fields: {
         dateFormat: 'YYYY',
         tags: [
-          posts.createReference('2', 'Tag'),
-          posts.createReference('3', 'Tag'),
-          posts.createReference('4', 'Tag')
+          store.createReference('Tag', '2'),
+          store.createReference('Tag', '3'),
+          store.createReference('Tag', '4')
         ],
-        category: posts.createReference('1', 'Category')
+        category: store.createReference('Category', '1')
       }
     })
 
@@ -60,11 +60,11 @@ module.exports = function (api) {
       fields: {
         dateFormat: 'YYYY-MM',
         tags: [
-          posts.createReference('1', 'Tag'),
-          posts.createReference('2', 'Tag'),
-          posts.createReference('4', 'Tag')
+          store.createReference('Tag', '1'),
+          store.createReference('Tag', '2'),
+          store.createReference('Tag', '4')
         ],
-        category: posts.createReference('1', 'Category')
+        category: store.createReference('Category', '1')
       }
     })
 
@@ -75,11 +75,11 @@ module.exports = function (api) {
       fields: {
         dateFormat: 'YYYY-MM-DD',
         tags: [
-          posts.createReference('1', 'Tag'),
-          posts.createReference('3', 'Tag'),
-          posts.createReference('4', 'Tag')
+          store.createReference('Tag', '1'),
+          store.createReference('Tag', '3'),
+          store.createReference('Tag', '4')
         ],
-        category: posts.createReference('1', 'Category')
+        category: store.createReference('Category', '1')
       }
     })
 
@@ -97,7 +97,7 @@ module.exports = function (api) {
         id: String(i),
         title: `Other ${i}`,
         fields: {
-          category: { id: '1', typeName: 'Category' }
+          category: store.createReference('Category', '1')
         }
       })
     }

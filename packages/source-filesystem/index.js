@@ -121,13 +121,23 @@ class FilesystemSource {
     const absPath = path.join(this.context, file)
     const relPath = path.relative(this.context, file)
     const mimeType = this.store.mime.lookup(file)
-    const content = await fs.readFile(absPath, 'utf-8')
+    const content = await fs.readFile(absPath, 'utf8')
     const uid = this.store.makeUid(relPath)
+    const { dir, name, ext = '' } = path.parse(file)
+    const routePath = this.createPath({ dir, name })
 
     return {
       uid,
       id: uid,
-      path: this.createPath(file),
+      path: routePath,
+      fields: {
+        fileInfo: {
+          extension: ext,
+          directory: dir,
+          path: file,
+          name
+        }
+      },
       internal: {
         mimeType,
         content,
@@ -148,10 +158,9 @@ class FilesystemSource {
     }
   }
 
-  createPath (file) {
+  createPath ({ dir, name }) {
     if (this.options.route) return
 
-    const { dir, name } = path.parse(file)
     const segments = dir.split('/').map(s => this.store.slugify(s))
 
     if (!this.options.index.includes(name)) {

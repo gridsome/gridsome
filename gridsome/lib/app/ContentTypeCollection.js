@@ -4,6 +4,7 @@ const autoBind = require('auto-bind')
 const EventEmitter = require('events')
 const camelCase = require('camelcase')
 const { warn } = require('../utils/log')
+const { isRefField } = require('../graphql/utils')
 const { ISO_8601_FORMAT } = require('../utils/constants')
 const { cloneDeep, isPlainObject, isDate, get } = require('lodash')
 const { isResolvablePath, slugify, safeKey } = require('../utils')
@@ -33,11 +34,15 @@ class ContentTypeCollection extends EventEmitter {
   }
 
   addReference (fieldName, options) {
-    this.options.refs[camelCase(fieldName)] = options
+    if (typeof options === 'string') {
+      options = { typeName: options }
+    }
+
+    this.options.refs[fieldName] = options
   }
 
   addSchemaField (fieldName, options) {
-    this.options.fields[camelCase(fieldName)] = options
+    this.options.fields[fieldName] = options
   }
 
   addNode (options) {
@@ -312,26 +317,9 @@ class ContentTypeCollection extends EventEmitter {
     return this.pluginStore.makeUid(value)
   }
 
-  createReference (id, typeName = this.typeName) {
-    if (isPlainObject(id)) {
-      return { id: id.id, typeName: id.typeName || typeName }
-    }
-
-    return { id, typeName }
-  }
-
   slugify (string = '') {
     return slugify(string)
   }
-}
-
-function isRefField (field) {
-  return (
-    typeof field === 'object' &&
-    Object.keys(field).length === 2 &&
-    field.hasOwnProperty('typeName') &&
-    field.hasOwnProperty('id')
-  )
 }
 
 module.exports = ContentTypeCollection

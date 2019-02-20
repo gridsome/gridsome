@@ -5,7 +5,6 @@ const createApp = require('./app')
 const createExpressServer = require('./server/createExpressServer')
 const createSockJsServer = require('./server/createSockJsServer')
 const createClientConfig = require('./webpack/createClientConfig')
-const { default: playground } = require('graphql-playground-middleware-express')
 
 module.exports = async (context, args) => {
   process.env.NODE_ENV = 'development'
@@ -14,16 +13,11 @@ module.exports = async (context, args) => {
   const app = await createApp(context, { args })
   const { config } = app
 
-  const server = await createExpressServer(app)
+  const server = await createExpressServer(app, { withExplorer: true })
   const sock = await createSockJsServer(app)
 
   await fs.remove(config.cacheDir)
   await fs.ensureDir(config.cacheDir)
-
-  server.app.get(
-    server.endpoint.explore,
-    playground({ endpoint: server.endpoint.graphql })
-  )
 
   server.app.use(config.pathPrefix, express.static(config.staticDir))
   server.app.use(require('connect-history-api-fallback')())

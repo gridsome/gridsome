@@ -1,5 +1,5 @@
 import Vue from 'vue'
-import createApp from './app'
+import createApp, { runPlugins, runMain } from './app'
 import plugins from '~/.temp/plugins-client'
 import linkDirective from './directives/link'
 import imageDirective from './directives/image'
@@ -8,13 +8,10 @@ import { stripPathPrefix } from './utils/helpers'
 Vue.directive('g-link', linkDirective)
 Vue.directive('g-image', imageDirective)
 
-const { app, router } = createApp(context => {
-  for (const { run, options } of plugins) {
-    if (typeof run === 'function') {
-      run(Vue, options, context)
-    }
-  }
-})
+runPlugins(plugins)
+runMain()
+
+const { app, router } = createApp()
 
 // let Vue router handle internal URLs for anchors in innerHTML
 document.addEventListener('click', event => {
@@ -42,6 +39,4 @@ document.addEventListener('click', event => {
 
 router.onReady(() => {
   app.$mount('#app')
-
-  // TODO: register service worker
 })

@@ -3,6 +3,50 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+<a name="0.5.0"></a>
+# [0.5.0](https://github.com/gridsome/gridsome/compare/gridsome@0.4.7...gridsome@0.5.0) (2019-02-19)
+
+
+### Bug Fixes
+
+* **app:** fix cyclic dependency when importing Pager ([#109](https://github.com/gridsome/gridsome/issues/109)) ([b8247af](https://github.com/gridsome/gridsome/commit/b8247af))
+* **app:** parse dates as UTC ([bb1972d](https://github.com/gridsome/gridsome/commit/bb1972d))
+* **build:** create new Vue instance before each route ([424e678](https://github.com/gridsome/gridsome/commit/424e678))
+* **build:** ensure 404 route for /404 page ([70698e0](https://github.com/gridsome/gridsome/commit/70698e0))
+* **g-image:** behave properly inside v-for ([#185](https://github.com/gridsome/gridsome/issues/185)) ([e3c2aba](https://github.com/gridsome/gridsome/commit/e3c2aba))
+* **g-image:** pass custom blur to asset queue ([1f9ce9a](https://github.com/gridsome/gridsome/commit/1f9ce9a))
+* **graphql:** do not send page param in path ([61cdf9c](https://github.com/gridsome/gridsome/commit/61cdf9c))
+* **graphql:** don’t convert URLs or filenames to object ([be08c52](https://github.com/gridsome/gridsome/commit/be08c52))
+* **graphql:** handle date types correctly ([53f963d](https://github.com/gridsome/gridsome/commit/53f963d))
+* **graphql:** improved error handling ([0dad580](https://github.com/gridsome/gridsome/commit/0dad580))
+* **graphql:** merge all entries in arrays ([#184](https://github.com/gridsome/gridsome/issues/184)) ([80952d6](https://github.com/gridsome/gridsome/commit/80952d6))
+* **graphql:** return null for missing references ([8d920fc](https://github.com/gridsome/gridsome/commit/8d920fc))
+* **graphql:** sort by custom field value ([cfcefaf](https://github.com/gridsome/gridsome/commit/cfcefaf))
+* **store:** allow regex wildcard route param ([f283526](https://github.com/gridsome/gridsome/commit/f283526))
+
+
+### Features
+
+* **app:** override active link classes for Pager ([#143](https://github.com/gridsome/gridsome/issues/143)) ([6a5159d](https://github.com/gridsome/gridsome/commit/6a5159d))
+* **app:** override default index.html template ([#162](https://github.com/gridsome/gridsome/issues/162)) ([4cdd326](https://github.com/gridsome/gridsome/commit/4cdd326))
+* **app:** siteDescription as description meta tag ([#70](https://github.com/gridsome/gridsome/issues/70)) ([6fa118c](https://github.com/gridsome/gridsome/commit/6fa118c))
+* **app:** upgrade to Vue 2.6 ([f1ab4e1](https://github.com/gridsome/gridsome/commit/f1ab4e1))
+* **build:** generate 404.html file ([#75](https://github.com/gridsome/gridsome/issues/75)) ([59988e5](https://github.com/gridsome/gridsome/commit/59988e5))
+* **develop:** configureServer hook ([029e431](https://github.com/gridsome/gridsome/commit/029e431))
+* **g-link:** rel noopener for external links ([#104](https://github.com/gridsome/gridsome/issues/104)) ([9f11efb](https://github.com/gridsome/gridsome/commit/9f11efb))
+* **graphql:** belongsTo field for listing references ([#119](https://github.com/gridsome/gridsome/issues/119)) ([2ef275f](https://github.com/gridsome/gridsome/commit/2ef275f))
+* **graphql:** current node as query variables ([#77](https://github.com/gridsome/gridsome/issues/77)) ([1beece4](https://github.com/gridsome/gridsome/commit/1beece4))
+* **graphql:** filter argument ([#84](https://github.com/gridsome/gridsome/issues/84)) ([692f6cb](https://github.com/gridsome/gridsome/commit/692f6cb))
+* **router:** deep node fields as route params ([#115](https://github.com/gridsome/gridsome/issues/115)) ([2d2ec44](https://github.com/gridsome/gridsome/commit/2d2ec44))
+* **store:** helper for creating refs in sub fields ([b9d7add](https://github.com/gridsome/gridsome/commit/b9d7add))
+* **webpack:** add custom css loader options ([#46](https://github.com/gridsome/gridsome/issues/46)) ([cf7a505](https://github.com/gridsome/gridsome/commit/cf7a505))
+* **webpack:** enviroment variables and support for dotenv files ([#123](https://github.com/gridsome/gridsome/issues/123)) ([c236d8b](https://github.com/gridsome/gridsome/commit/c236d8b))
+* **webpack:** use [@vue](https://github.com/vue)/babel-preset-app ([e51e363](https://github.com/gridsome/gridsome/commit/e51e363))
+
+
+
+
+
 <a name="0.4.7"></a>
 ## [0.4.7](https://github.com/gridsome/gridsome/compare/gridsome@0.4.6...gridsome@0.4.7) (2019-02-04)
 

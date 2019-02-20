@@ -55,6 +55,10 @@ export default {
           key: 'description',
           name: 'description',
           content: 'Index description'
+        },
+        {
+          name: 'test',
+          content: 'test-meta'
         }
       ]
     }

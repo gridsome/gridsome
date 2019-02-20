@@ -1,7 +1,11 @@
-const args = ['--config', 'jest.config.js']
+const minimist = require('minimist')
+const argv = minimist(process.argv.slice(2))
+const options = []
 
-if (process.argv.some(v => v === '--watch')) {
-  args.push('--watchAll')
-}
+options.push('--config', 'jest.config.js')
+options.push('--runInBand')
 
-require('jest').run(args)
+if (argv.watch) options.push('--watchAll')
+if (argv.regex) options.push('--testPathPattern', argv.regex)
+
+require('jest').run(options)

@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+<a name="0.2.0"></a>
+# [0.2.0](https://github.com/gridsome/gridsome/tree/master/packages/remark-prismjs/compare/@gridsome/transformer-remark@0.1.3...@gridsome/transformer-remark@0.2.0) (2019-02-19)
+
+
+### Bug Fixes
+
+* **remark:** improve time to read calculation ([48bf600](https://github.com/gridsome/gridsome/tree/master/packages/remark-prismjs/commit/48bf600))
+* **remark:** resolve image urls like front matter paths ([db7dde1](https://github.com/gridsome/gridsome/tree/master/packages/remark-prismjs/commit/db7dde1))
+
+
+### Features
+
+* **remark:** option for disabling all built-in plugins ([6336590](https://github.com/gridsome/gridsome/tree/master/packages/remark-prismjs/commit/6336590))
+* **remark:** optionally disable built-in plugins ([fc1e2c2](https://github.com/gridsome/gridsome/tree/master/packages/remark-prismjs/commit/fc1e2c2))
+* **remark:** resolve local file links in content ([3ffc066](https://github.com/gridsome/gridsome/tree/master/packages/remark-prismjs/commit/3ffc066))
+* **remark:** simple api for other pugins ([760d1bc](https://github.com/gridsome/gridsome/tree/master/packages/remark-prismjs/commit/760d1bc))
+
+
+
 
 
 <a name="0.1.3"></a>

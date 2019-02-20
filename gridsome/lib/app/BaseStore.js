@@ -82,16 +82,6 @@ class BaseStore {
     return chain
   }
 
-  // taxonomies
-
-  addTaxonomy (pluginStore, options) {
-    // TODO: implement taxonomies
-  }
-
-  getTaxonomy (type) {
-    // TODO: implement taxonomies
-  }
-
   // pages
 
   addPage (options) {

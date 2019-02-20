@@ -70,6 +70,7 @@ test('build basic project', async () => {
   // g-image
   expect(exists('dist/assets/static/test.82a2fbd.test.png')).toBeTruthy()
   expect(exists('dist/assets/static/test.97c148e.test.png')).toBeTruthy()
+  expect(indexHTML).toMatch('name="test" content="test-meta"')
   expect(indexHTML).toMatch(' src="data:image/svg+xml')
   expect(indexHTML).toMatch('data-srcset="/assets/static/test.82a2fbd.test.png 480w')
   expect(indexHTML).toMatch('data-src="/assets/static/test.97c148e.test.png"')
@@ -96,6 +97,7 @@ test('build basic project', async () => {
   expect(exists('dist/assets/files/dummy.pdf')).toBeTruthy()
 
   // pagination
+  expect(blogIndexHTML).not.toMatch('name="test" content="test-meta"')
   expect(blogIndexHTML).toMatch('href="/blog"')
   expect(blogIndexHTML).toMatch('href="/blog/2"')
   expect(blogIndexHTML).toMatch('<span>Third post</span>')

@@ -14,8 +14,9 @@ exports.render = async function ({
   })
 
   let page, html
+  const length = pages.length
 
-  for (let i = 0, l = pages.length; i < l; i++) {
+  for (let i = 0; i < length; i++) {
     page = pages[i]
 
     const { data } = page.dataOutput

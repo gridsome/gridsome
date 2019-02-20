@@ -44,7 +44,28 @@ The GraphQL type and template name. A `.vue` file in `src/templates` must match 
 
 - Type: `string`
 
-Define a dynamic route if your source is able to have a certain pathname structure. This will generate only a single route for all nodes from this source. Possible url params are `year`, `month`, `day` and `slug`. If omitted, a route for each file will be generated based on their path and filename.
+Define a dynamic route if your source is able to have a certain pathname structure. This will generate a single route for all nodes from this source. Possible path params are `year`, `month`, `day`, `slug` or any custom field value. If omitted, a route for each file will be generated based on their path and filename. Read more about [route params](https://gridsome.org/docs/routing#route-params).
+
+#### refs
+
+- Type: `object`
+
+Define fields that will have a reference to another node. The referenced `typeName` is expected to exist. But a content type can also be created autmatically if you set `create: true`. Read more about [references](https://gridsome.org/docs/data-store-api#collectionaddreferencefieldname-typename).
+
+```js
+{
+  refs: {
+    // Reference to existing authors by id.
+    author: 'Author',
+    // Create a Tag content type and its nodes automatically.
+    tags: {
+      typeName: 'Tag',
+      route: '/tag/:id',
+      create: true
+    }
+  }
+}
+```
 
 #### index
 

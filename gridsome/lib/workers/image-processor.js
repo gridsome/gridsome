@@ -4,8 +4,8 @@ const sharp = require('sharp')
 const imagemin = require('imagemin')
 const colorString = require('color-string')
 const imageminWebp = require('imagemin-webp')
+const imageminMozjpeg = require('imagemin-mozjpeg')
 const imageminPngquant = require('imagemin-pngquant')
-const imageminJpegoptim = require('imagemin-jpegoptim')
 
 sharp.simd(true)
 
@@ -55,12 +55,14 @@ exports.processImage = async function ({
     }
 
     if (/\.png$/.test(ext)) {
+      const quality = config.quality / 100
+
       pipeline = pipeline.png({
         compressionLevel: config.pngCompressionLevel,
         adaptiveFiltering: false
       })
       plugins.push(imageminPngquant({
-        quality: config.quality
+        quality: [quality, quality]
       }))
     }
 
@@ -69,8 +71,9 @@ exports.processImage = async function ({
         progressive: config.jpegProgressive,
         quality: config.quality
       })
-      plugins.push(imageminJpegoptim({
-        max: config.quality
+      plugins.push(imageminMozjpeg({
+        progressive: config.jpegProgressive,
+        quality: config.quality
       }))
     }
 

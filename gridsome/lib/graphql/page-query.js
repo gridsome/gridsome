@@ -10,15 +10,17 @@ function parsePageQuery (query = '') {
   }
 
   if (query) {
-    result.query = query.trim()
+    result.query = query.trim() || null
 
-    visit(parse(query), {
-      Directive (node) {
-        if (node.name.value === 'paginate') {
-          result.paginate = true
+    if (result.query) {
+      visit(parse(result.query), {
+        Directive (node) {
+          if (node.name.value === 'paginate') {
+            result.paginate = true
+          }
         }
-      }
-    })
+      })
+    }
   }
 
   return result

@@ -7,7 +7,7 @@ const {
   processPageQuery
 } = require('../page-query')
 
-test('parse page query', () => {
+test('parse page-query', () => {
   const query = `query {
     allTestAuthors {
       edges {
@@ -21,6 +21,13 @@ test('parse page query', () => {
   const parsed = parsePageQuery(query)
 
   expect(parsed.query).toEqual(query)
+  expect(parsed.paginate).toEqual(false)
+})
+
+test('parse empty page-query', () => {
+  const parsed = parsePageQuery('  \n  ')
+
+  expect(parsed.query).toEqual(null)
   expect(parsed.paginate).toEqual(false)
 })
 
@@ -108,7 +115,7 @@ test('remove @paginate directive from ast', () => {
   expect(print(processed.query)).not.toMatch('@paginate')
 })
 
-test('parse query variables', () => {
+test('parse page-query variables', () => {
   const { variables } = parseAndProcess(`query (
     $page: Int
     $path: String
