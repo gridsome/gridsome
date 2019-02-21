@@ -1,5 +1,6 @@
 const CockpitSDK = require('cockpit-sdk').default
 const { GraphQLJSON } = require('gridsome/graphql')
+const { camelize } = require('humps')
 
 class CockpitSource {
   static defaultOptions () {
@@ -37,11 +38,6 @@ class CockpitSource {
 
       const collection = store.addContentType({ typeName, route })
 
-      collection.addSchemaField('cockpitContent', () => ({
-        type: GraphQLJSON,
-        resolve: node => node.fields.cockpitContent
-      }))
-
       this.typesIndex[typeName] = { collectionType, typeName }
     }
   }
@@ -73,10 +69,6 @@ class CockpitSource {
           .map(f => data.fields[f].name)
           .reduce((x, y) => ({ ...x, [y]: entry[y] }), {})
 
-        // workaround for the reserved content type (will change that in core)
-        fields.cockpitContent = fields.content
-        delete fields.content
-
         collection.addNode({
           id: entry._id,
           title: entry.title || '',
@@ -84,6 +76,17 @@ class CockpitSource {
           date: new Date(entry._created * 1000),
           fields
         })
+
+        // Process fields.
+	      Object.keys(data.fields).forEach(async f => {
+          const fieldDefinition = data.fields[f]
+          if (fieldDefinition.type === 'repeater') {
+            collection.addSchemaField(fieldDefinition.name, () => ({
+              type: GraphQLJSON,
+              resolve: node => node.fields[camelize(fieldDefinition.name)]
+            }))
+          }
+	      })
       })
     }
   }
