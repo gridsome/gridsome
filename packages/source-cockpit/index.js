@@ -78,7 +78,7 @@ class CockpitSource {
         })
 
         // Process fields.
-	      Object.keys(data.fields).forEach(async f => {
+        Object.keys(data.fields).forEach(async f => {
           const fieldDefinition = data.fields[f]
           if (fieldDefinition.type === 'repeater') {
             collection.addSchemaField(fieldDefinition.name, () => ({
@@ -86,7 +86,7 @@ class CockpitSource {
               resolve: node => node.fields[camelize(fieldDefinition.name)]
             }))
           }
-	      })
+        })
       })
     }
   }
