@@ -83,3 +83,9 @@ If you get an access denied message you'll need to check your configuration.
 
 - Repeater fields are added to Gridsome as JSON fields. This provides the full tree of information under a repeater field. Without it being a JSON field only repeater fields composed of a single field type would be pulled into GraphQL properly.
 - Only repeater fields at the top level are added as JSON fields. If there is a nested repeater field inside a `set` field this may be added properly but only if the repeater is composed of instances of a single field type.
+- Only reference fields at the top level will work as Gridsome references. If a reference field is nested inside a repeater or set field it won't work in Gridsome as a reference, although its original subfields will be available.
+
+## Future enhancements
+
+- Deeper field processing: Walk the entire entry tree processing deeper fields than just the top level ones to get nested `reference`, `repeater` and `set` fields fully working.
+- Support singletons: Currently `singletons` are not processed by this source plugin
