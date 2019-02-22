@@ -12,7 +12,8 @@
     "cockpit"
   ],
   "dependencies": {
-    "cockpit-sdk": "^0.15.1"
+    "cockpit-sdk": "^0.15.1",
+    "humps": "^2.0.1"
   },
   "publishConfig": {
     "access": "public"
