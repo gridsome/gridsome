@@ -15,16 +15,17 @@ export default {
 
   render: (h, { data, props, children }) => {
     const directives = data.directives || []
+    const attrs = data.attrs || {}
 
     if (props.to && props.to.type === 'file') {
-      data.attrs.href = props.to.src
+      attrs.href = props.to.src
       
       return h('a', data, children)
     }
 
-    if (isExternalLink(data.attrs.href)){
-      data.attrs.target = data.attrs.target || '_blank'
-      data.attrs.rel = data.attrs.rel || 'noopener'
+    if (isExternalLink(attrs.href)){
+      attrs.target = attrs.target || '_blank'
+      attrs.rel = attrs.rel || 'noopener'
       
       return h('a', data, children)
     }
@@ -35,19 +36,20 @@ export default {
 
     if (props.page) {
       to.params.page = props.page > 1 ? props.page : null
-      data.attrs.exact = true
+      attrs.exact = true
     }
 
     if (GRIDSOME_MODE === 'static' && process.isClient) {
       directives.push({ name: 'g-link' })
     }
 
-    data.attrs.to = to
-    data.attrs.activeClass = props.activeClass
-    data.attrs.exactActiveClass = props.exactActiveClass
+    attrs.to = to
+    attrs.activeClass = props.activeClass
+    attrs.exactActiveClass = props.exactActiveClass
 
     return h('router-link', {
       ...data,
+      attrs,
       directives,
       domProps: {
         __gLink__: true

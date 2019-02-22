@@ -18,6 +18,9 @@
     <span>{{ TEST_1 }}</span>
     <span>{{ TEST_2 }}</span>
     <span>{{ TEST_3 }}</span>
+
+    <g-image />
+    <g-link />
   </Layout>
 </template>
 
