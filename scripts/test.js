@@ -5,7 +5,8 @@ const options = []
 options.push('--config', 'jest.config.js')
 options.push('--runInBand')
 
+if (argv.path) options.push('--testPathPattern', argv.path)
+if (argv.name) options.push('--testNamePattern', argv.name)
 if (argv.watch) options.push('--watchAll')
-if (argv.regex) options.push('--testPathPattern', argv.regex)
 
 require('jest').run(options)
