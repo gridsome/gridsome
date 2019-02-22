@@ -1,6 +1,5 @@
 const CockpitSDK = require('cockpit-sdk').default
 const { GraphQLJSON } = require('gridsome/graphql')
-const { camelize } = require('humps')
 
 class CockpitSource {
   static defaultOptions () {
@@ -69,23 +68,24 @@ class CockpitSource {
           .map(f => data.fields[f].name)
           .reduce((x, y) => ({ ...x, [y]: entry[y] }), {})
 
-        collection.addNode({
-          id: entry._id,
-          title: entry.title || '',
-          slug: entry.slug || '',
-          date: new Date(entry._created * 1000),
-          fields
-        })
-
         // Process fields.
         Object.keys(data.fields).forEach(async f => {
           const fieldDefinition = data.fields[f]
           if (fieldDefinition.type === 'repeater') {
             collection.addSchemaField(fieldDefinition.name, () => ({
               type: GraphQLJSON,
-              resolve: node => node.fields[camelize(fieldDefinition.name)]
+              resolve: node => entry[fieldDefinition.name]
             }))
+            delete fields[fieldDefinition.name]
           }
+        })
+
+        collection.addNode({
+          id: entry._id,
+          title: entry.title || '',
+          slug: entry.slug || '',
+          date: new Date(entry._created * 1000),
+          fields
         })
       })
     }
