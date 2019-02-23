@@ -95,7 +95,7 @@ Yarn will add dependencies from your test projects to the root `yarn.lock` file.
 - [x] Lazy-loading images and pages
 - [x] Pagination
 - [x] Plugin API
-- [ ] Taxonomies
+- [x] Taxonomies
 - [ ] Download external assets
 - [ ] Service Worker
 - [ ] Documentation
