@@ -80,7 +80,7 @@ Install [Node.js 8.3](https://nodejs.org/en/download/) or higher and [Yarn](http
 3. Enter the new project folder and run `yarn` (or `lerna bootstrap` if installed).
 4. The project will now use the local packages when you run `gridsome develop`.
 
-Make sure your test poject has a version number in its `package.json` if you use an existing project.
+Make sure your test project has a version number in its `package.json` if you use an existing project.
 
 To use the local version of `@gridsome/cli` as the global command, enter the `~/packages/cli` folder and run `npm link`.
 
