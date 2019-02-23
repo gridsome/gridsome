@@ -10,10 +10,10 @@ module.exports = async ({ apiURL, contentType, jwtToken, queryLimit }) => {
   const apiEndpoint = `${apiURL}/${pluralize(contentType)}?_limit=${queryLimit}`
 
   // Set authorization token
-  let fetchRequestConfig = {}
+  const fetchRequestConfig = {}
   if (jwtToken !== null) {
     fetchRequestConfig.headers = {
-      Authorization: `Bearer ${jwtToken}`,
+      Authorization: `Bearer ${jwtToken}`
     }
   }
 
@@ -23,6 +23,6 @@ module.exports = async ({ apiURL, contentType, jwtToken, queryLimit }) => {
     .then(data => data.map(item => clean(item)))
     .then(docs => {
       console.timeEnd('Fetch Strapi data')
-      return docs;
+      return docs
     })
 }

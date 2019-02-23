@@ -50,8 +50,8 @@ module.exports = function (api, options) {
       contentType = addContentType({ typeName: `Strapi${typeName}` })
       return query({ apiURL, contentType: typeName, jwtToken, queryLimit })
         .then(docs => docs.map(doc => {
-          let content = {}
-          let fields = {}
+          const content = {}
+          const fields = {}
           Object.entries(doc).map(([name, val]) => {
             if (val instanceof Object) {
               val = JSON.stringify(val) // TODO: Look into making this easier to access
