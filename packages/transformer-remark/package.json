@@ -2,13 +2,14 @@
   "version": "0.2.0",
   "name": "@gridsome/transformer-remark",
   "description": "Markdown transformer for Gridsome",
-  "homepage": "https://github.com/gridsome/gridsome/tree/master/packages/remark-prismjs#readme",
-  "repository": "https://github.com/gridsome/gridsome/tree/master/packages/remark-prismjs",
+  "homepage": "https://github.com/gridsome/gridsome/tree/master/packages/transformer-remark#readme",
+  "repository": "https://github.com/gridsome/gridsome/tree/master/packages/transformer-remark",
   "main": "index.js",
   "keywords": [
     "gridsome",
     "gridsome-plugin",
     "gridsome-transformer",
+    "markdown",
     "remark"
   ],
   "dependencies": {
@@ -31,7 +32,7 @@
     "vfile": "^4.0.0"
   },
   "peerDependencies": {
-    "gridsome": "latest"
+    "gridsome": "0.x"
   },
   "publishConfig": {
     "access": "public"
