@@ -34,7 +34,7 @@ module.exports = async function (source, map) {
   const { errors, data } = await graphql(source)
 
   if (errors && errors.length) {
-    callback(errors[0], source, map)
+    callback(new Error(errors[0]), source, map)
     return
   }
 

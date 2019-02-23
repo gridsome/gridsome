@@ -1,8 +1,8 @@
 /* global GRIDSOME_MODE, GRIDSOME_DATA_DIR */
 
-import cache from './cache'
 import router from '../router'
-import config from '~/.temp/config.js'
+import config from '~/.temp/config'
+import { setResults } from './shared'
 import { unslash } from '../utils/helpers'
 
 const re = new RegExp(`^${config.pathPrefix}`)
@@ -27,7 +27,7 @@ export default (route, query) => {
         .then(res => res.json())
         .then(res => {
           if (res.errors) reject(res.errors[0])
-          else cache.set(route.path, res.data) && resolve(res)
+          else setResults(route.path, res.data) && resolve(res)
         })
         .catch(err => {
           reject(err)
@@ -41,7 +41,7 @@ export default (route, query) => {
       import(/* webpackChunkName: "data/" */ `${GRIDSOME_DATA_DIR}${filename}`)
         .then(res => {
           if (res.errors) reject(res.errors[0])
-          else cache.set(route.path, res.data) && resolve(res)
+          else (setResults(route.path, res.data), resolve(res))
         })
         .catch(err => {
           reject(err)
