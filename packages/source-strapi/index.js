@@ -1,5 +1,6 @@
-const query = require('./helpers/query')
+const axios = require('axios')
 const { pascalCase } = require('change-case')
+const query = require('./helpers/query')
 
 module.exports = function (api, options) {
   const coreProperties = [
@@ -12,8 +13,8 @@ module.exports = function (api, options) {
     'excerpt'
   ]
 
-  api.loadSource(({ addContentType, slugify }) => {
-    const { apiURL, queryLimit, contentTypes, loginData } = options;
+  api.loadSource(async ({ addContentType, slugify }) => {
+    const { apiURL, queryLimit, contentTypes, loginData } = options
     let jwtToken = null
 
     // Check if loginData is set.
@@ -31,7 +32,7 @@ module.exports = function (api, options) {
 
       // Make API request.
       try {
-        // const loginResponse = await axios.post(loginEndpoint, loginData)
+        const loginResponse = await axios.post(loginEndpoint, loginData)
 
         if (loginResponse.hasOwnProperty('data')) {
           jwtToken = loginResponse.data.jwt
