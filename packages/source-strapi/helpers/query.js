@@ -25,4 +25,7 @@ module.exports = async ({ apiURL, contentType, jwtToken, queryLimit }) => {
       console.timeEnd('Fetch Strapi data')
       return docs
     })
+    .catch(e => {
+      throw new Error(`Unable to get content type (${contentType}). Did you enable permissions in the Strapi admin for this?`)
+    })
 }
