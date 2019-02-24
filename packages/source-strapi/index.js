@@ -44,10 +44,9 @@ module.exports = function (api, options) {
       console.timeEnd('Authenticate Strapi user')
     }
 
-    let contentType = null
     return Promise.all(contentTypes.map(resourceName => {
       const typeName = pascalCase(resourceName)
-      contentType = addContentType({ typeName: `Strapi${typeName}` })
+      var contentType = addContentType({ typeName: `Strapi${typeName}` })
       return query({ apiURL, contentType: typeName, jwtToken, queryLimit })
         .then(docs => docs.map(doc => {
           const content = {}
