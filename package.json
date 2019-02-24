@@ -21,7 +21,7 @@
     "eslint-plugin-vue": "^4.7.1",
     "eslint-plugin-vue-libs": "^3.0.0",
     "execa": "^1.0.0",
-    "jest": "^23.1.0",
+    "jest": "^24.1.0",
     "lerna": "^3.4.0",
     "memfs": "^2.9.4",
     "minimist": "^1.2.0"

@@ -3,7 +3,7 @@ const createApp = require('../app')
 const { createRenderQueue } = require('../build')
 const { BOOTSTRAP_ROUTES } = require('../utils/constants')
 
-test('create render queue', async () => {
+test('create render queue for basic project', async () => {
   const context = path.join(__dirname, '__fixtures__', 'project-basic')
   const app = await createApp(context, undefined, BOOTSTRAP_ROUTES)
   const queue = await createRenderQueue(app)
@@ -29,5 +29,24 @@ test('create render queue', async () => {
 
   for (let i = 4; i <= 13; i++) {
     expect(renderPaths).toContain(`/blog/post-${i}`)
+  }
+})
+
+test('create render queue for blog project', async () => {
+  const context = path.join(__dirname, '__fixtures__', 'project-blog')
+  const app = await createApp(context, undefined, BOOTSTRAP_ROUTES)
+  const queue = await createRenderQueue(app)
+
+  const renderPaths = queue.map(page => page.path)
+
+  expect(renderPaths).toContain('/')
+  expect(renderPaths).not.toContain('/1')
+
+  for (let i = 2; i <= 5; i++) {
+    expect(renderPaths).toContain(`/${i}`)
+  }
+
+  for (let i = 1; i <= 50; i++) {
+    expect(renderPaths).toContain(`/post-${i}`)
   }
 })

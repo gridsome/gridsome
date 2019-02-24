@@ -1,4 +1,4 @@
-const graphql = require('graphql')
+const graphql = require('../graphql')
 const { dateType } = require('../types/date')
 const { nodeInterface } = require('../interfaces')
 const createBelongsTo = require('./createBelongsTo')

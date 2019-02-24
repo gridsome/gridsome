@@ -803,7 +803,7 @@ test('should format dates from schema', async () => {
   expect(data.post3.date).toEqual('10/10/2018')
 })
 
-test('add custom schema fields', async () => {
+test('collection.addSchemaField', async () => {
   const contentType = api.store.addContentType({
     typeName: 'TestPost'
   })
@@ -822,6 +822,16 @@ test('add custom schema fields', async () => {
     expect(nodeTypes).toHaveProperty('TestPost')
     expect(nodeTypes['TestPost']).toEqual(nodeType)
     expect(graphql).toHaveProperty('graphql')
+    expect(graphql).toHaveProperty('GraphQLID')
+    expect(graphql).toHaveProperty('GraphQLInt')
+    expect(graphql).toHaveProperty('GraphQLList')
+    expect(graphql).toHaveProperty('GraphQLJSON')
+    expect(graphql).toHaveProperty('GraphQLFloat')
+    expect(graphql).toHaveProperty('GraphQLString')
+    expect(graphql).toHaveProperty('GraphQLBoolean')
+    expect(graphql).toHaveProperty('GraphQLNonNull')
+    expect(graphql).toHaveProperty('GraphQLUnionType')
+    expect(graphql).toHaveProperty('GraphQLObjectType')
 
     return {
       type: graphql.GraphQLString,

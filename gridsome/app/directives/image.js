@@ -18,7 +18,7 @@ export default {
 }
 
 function intersectionHandler ({ intersectionRatio, target }) {
-  if (intersectionRatio > 0 && target.dataset.src) {
+  if (intersectionRatio > 0) {
     observer.unobserve(target)
     loadImage(target)
   }
@@ -36,8 +36,8 @@ function observe (el) {
 function unobserve (el) {
   if (el.tagName !== 'IMG') {
     unobserveHtml(el)
-  } else {
-    observer && observer.unobserve(el)
+  } else if (observer) {
+    observer.unobserve(el)
   }
 }
 
@@ -61,23 +61,26 @@ function unobserveHtml (context = document) {
 
 function loadImage (el) {
   const src = el.getAttribute('data-src')
-  const srcset = el.getAttribute('data-srcset')
   const sizes = el.getAttribute('data-sizes')
+  const srcset = el.getAttribute('data-srcset')
 
-  if (!src) return
+  if (!src || el.src.endsWith(src)) {
+    return // src is already switched
+  }
 
-  el.onload = function () {
-    el.removeAttribute('data-src')
-    el.removeAttribute('data-srcset')
-    el.removeAttribute('data-sizes')
+  const image = new Image()
 
+  image.onload = function () {
     el.classList.remove('g-image--loading')
     el.classList.add('g-image--loaded')
     
-    delete el.onload
+    el.src = src
+    el.sizes = sizes
+    el.srcset = srcset
   }
 
-  el.src = src
-  el.srcset = srcset
-  el.sizes = sizes
+  image.src = src
+
+  el.classList.add('g-image--loading')
+  el.classList.remove('g-image--loaded')
 }

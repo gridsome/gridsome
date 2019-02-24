@@ -22,6 +22,7 @@ export default {
     const noscriptClassNames = classNames.slice()
     const directives = data.directives || []
     const attrs = data.attrs || {}
+    const hook = data.hook || {}
     const res = []
 
     switch (typeof props.src) {
@@ -41,18 +42,32 @@ export default {
         if (srcset.length) attrs[`${isLazy ? 'data-' : ''}srcset`] = srcset.join(', ')
         if (sizes) attrs[`${isLazy ? 'data-' : ''}sizes`] = sizes
 
-        directives.push({ name: 'g-image' })
+        if (isLazy) {
+          directives.push({ name: 'g-image' })
+        }
 
         break
       }
     }
-    
+
+    hook.update = (oldVnode, vnode) => {
+      const { attrs: oldAttrs = {}} = oldVnode.data
+      const { attrs = {}} = vnode.data
+
+      if (attrs['data-src'] && attrs.src !== oldAttrs.src) {
+        // clear srcset and sizes to show the dataUri image
+        vnode.elm.srcset = ''
+        vnode.elm.sizes = ''
+      }
+    }
+
     res.push(h('img', {
       ...data,
       class: classNames,
       directives,
       props,
-      attrs
+      attrs,
+      hook
     }))
 
     if (attrs['data-src']) {
@@ -61,6 +76,7 @@ export default {
       noscriptClassNames.push('g-image--loaded')
 
       // must render as innerHTML to make hydration work
+
       res.push(h('noscript', {
         domProps: {
           innerHTML: `` + 

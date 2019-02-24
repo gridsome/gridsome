@@ -188,6 +188,23 @@ test('build project with pathPrefix', async () => {
   await clear(context)
 }, 5000)
 
+test('build blog project', async () => {
+  const context = path.join(__dirname, '__fixtures__', 'project-blog')
+
+  await build(context)
+
+  const content = file => fs.readFileSync(path.join(context, file), 'utf8')
+
+  expect(content('dist/index.html')).toMatch('(page: 1)')
+  expect(content('dist/2/index.html')).toMatch('(page: 2)')
+  expect(content('dist/3/index.html')).toMatch('(page: 3)')
+  expect(content('dist/4/index.html')).toMatch('(page: 4)')
+  expect(content('dist/5/index.html')).toMatch('(page: 5)')
+  expect(content('dist/404.html')).toMatch('404 - not found')
+
+  await clear(context)
+}, 10000)
+
 async function clear (context) {
   await fs.remove(path.join(context, 'dist'))
   await fs.remove(path.join(context, 'src', '.temp'))

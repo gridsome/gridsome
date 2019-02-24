@@ -14,6 +14,8 @@ module.exports = () => ({
 })
 
 function transformNodeAttr (node, attrName) {
+  if (!Array.isArray(node.attrs)) return
+
   for (const attr of node.attrs) {
     if (attr.name === attrName) {
       if (isStatic(attr.value)) {

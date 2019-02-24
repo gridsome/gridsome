@@ -79,7 +79,10 @@ async function createRenderQueue ({ routes, config, store, schema }) {
     let fullPath = trimEnd(node.path, '/') || '/'
 
     if (page.type === NOT_FOUND_ROUTE) fullPath = '/404'
-    if (variables.page > 1) fullPath = `/${trimStart(fullPath, '/')}/${variables.page}`
+
+    if (variables.page > 1) {
+      fullPath = `/${trimStart(`${fullPath}/${variables.page}`, '/')}`
+    }
 
     const filePath = fullPath.split('/').map(decodeURIComponent).join('/')
     const dataPath = fullPath === '/' ? 'index.json' : `${filePath}.json`
