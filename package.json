@@ -15,6 +15,7 @@
   "devDependencies": {
     "@lerna/conventional-commits": "^3.4.1",
     "babel-eslint": "^10.0.1",
+    "cheerio": "^1.0.0-rc.2",
     "conventional-changelog": "^2.0.3",
     "eslint": "^5.2.0",
     "eslint-plugin-node": "^7.0.1",

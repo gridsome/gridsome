@@ -1,7 +1,9 @@
 <template>
   <div>
     <h1>Custom 404 - not found</h1>
-    <span>{{ $page.customRootValue }}</span>
+    <span class="page-query-value">
+      {{ $page.customRootValue }}
+    </span>
   </div>
 </template>
 

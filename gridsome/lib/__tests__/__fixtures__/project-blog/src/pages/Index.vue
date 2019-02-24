@@ -1,6 +1,7 @@
 <template>
   <div>
-    <h1>Welcome to my blog (page: {{ $page.posts.pageInfo.currentPage }})</h1>
+    <h1>Welcome to my blog</h1>
+    <span class="current-page">{{ $page.posts.pageInfo.currentPage }}</span>
     <Pager :info="$page.posts.pageInfo"/>
     <ul>
       <li v-for="{ node } in $page.posts.edges" :key="node.id">

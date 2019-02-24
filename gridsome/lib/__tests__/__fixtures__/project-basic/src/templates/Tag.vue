@@ -1,9 +1,9 @@
 <template>
   <div>
-    <h1>{{ $page.tag.title }}</h1>
+    <h1 class="tag-title">{{ $page.tag.title }}</h1>
     <ul>
-      <li v-for="{ node } in $page.tag.belongsTo.edges" :key="node.id">
-        {{ node.title }}
+      <li v-for="{ node } in $page.tag.belongsTo.edges" :key="node.id" :class="`post-${node.id}`">
+        <span>{{ node.title }}</span>
       </li>
     </ul>
     <Pager :info="$page.tag.belongsTo.pageInfo"/>

@@ -1,7 +1,7 @@
 <template>
   <Layout>
-    <h1>{{ $page.post.title }}</h1>
-    <span>{{ $page.post.date }}</span>
+    <h1 class="post-title">{{ $page.post.title }}</h1>
+    <span class="post-date">{{ $page.post.date }}</span>
   </Layout>
 </template>
 
