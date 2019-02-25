@@ -12,9 +12,6 @@ const {
 } = require('../utils/constants')
 
 module.exports = ({ store, config }) => {
-  const pages = store.pages.find({ type: 'page' })
-  const templates = store.pages.find({ type: 'template' })
-  const notFoundPage = store.pages.findOne({ type: '404' })
   const staticPages = []
   const pagedPages = []
   const pagedTemplates = []
@@ -22,7 +19,7 @@ module.exports = ({ store, config }) => {
   const dynamicTemplates = []
   const specialPages = []
 
-  pages.forEach(page => {
+  store.pages.find({ type: 'page' }).forEach(page => {
     const name = camelCase(page.path.replace(/\//g, ' ')) || 'home'
     let arr = staticPages
     let type = STATIC_ROUTE
@@ -44,7 +41,9 @@ module.exports = ({ store, config }) => {
     })
   })
 
-  templates.forEach(page => {
+  // TODO: go through collections in store instead and have a template
+  // property for each of them that defaults to /templates/{typeName}.vue
+  store.pages.find({ type: 'template' }).forEach(page => {
     const { typeName } = page
     const contentType = store.getContentType(typeName)
 
@@ -60,7 +59,7 @@ module.exports = ({ store, config }) => {
     const { component, pageQuery } = page
 
     // Add a dynamic route for this template if a route is
-    // specified. Or we'll create a route for each node. The only
+    // specified. Or else create a route for each node. The only
     // difference here is that dynamic routes has route and name
     // while static routes has path and chunkName.
 
@@ -89,18 +88,22 @@ module.exports = ({ store, config }) => {
     }
   })
 
-  specialPages.push({
-    path: '*',
-    name: '404',
-    directoryIndex: false,
+  const notFoundPage = store.pages.findOne({ type: '404' })
+  const notFoundRoute = {
+    component: path.join(config.appPath, 'pages', '404.vue'),
     type: NOT_FOUND_ROUTE,
-    component: notFoundPage
-      ? notFoundPage.component
-      : path.join(config.appPath, 'pages', '404.vue'),
-    pageQuery: notFoundPage
-      ? notFoundPage.pageQuery
-      : {}
-  })
+    directoryIndex: false,
+    pageQuery: {},
+    path: '/404',
+    name: '404'
+  }
+
+  if (notFoundPage) {
+    notFoundRoute.component = notFoundPage.component
+    notFoundRoute.pageQuery = notFoundPage.pageQuery
+  }
+
+  staticPages.push(notFoundRoute)
 
   return [
     ...staticPages,

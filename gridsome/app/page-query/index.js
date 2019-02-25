@@ -29,7 +29,14 @@ export default ({ options }, query = true) => {
         import(/* webpackChunkName: "page-query" */ './fetch').then(m => {
           m.default(to, options.__pageQuery)
             .then(() => next())
-            .catch(err => formatError(err, to))
+            .catch(err => {
+              if (err.code === 'MODULE_NOT_FOUND') {
+                console.error(err) // eslint-disable-line
+                next({ name: '*', params: { 0: to.path }})
+              } else {
+                formatError(err, to)
+              }
+            })
         })
       }
     }

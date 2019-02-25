@@ -3,14 +3,25 @@ const slugify = require('@sindresorhus/slugify')
 function genRoutes (app) {
   let res = ''
 
-  res += `export default [${app.routes.map(page => {
+  const routes = app.routes.slice()
+  const notFound = routes.find(route => route.name === '404')
+
+  // use the /404 page as fallback route
+  routes.push({
+    pageQuery: notFound.pageQuery,
+    component: notFound.component,
+    chunkName: notFound.name,
+    name: '*',
+    path: '*'
+  })
+
+  res += `export default [${routes.map(page => {
     const component = JSON.stringify(page.component)
-    const chunkName = JSON.stringify('component--' + slugify(page.name || page.chunkName))
+    const chunkName = JSON.stringify('component--' + slugify(page.chunkName || page.name))
     const props = []
 
     props.push(`    path: ${JSON.stringify(page.route || page.path)}`)
-    // use require for server-renderer as a workaround for wrong resolved route in some odd scenarios.
-    props.push(`    component: process.isServer ? require(${component}).default : () => import(/* webpackChunkName: ${chunkName} */ ${component})`)
+    props.push(`    component: () => import(/* webpackChunkName: ${chunkName} */ ${component})`)
 
     if (page.pageQuery.query) {
       props.push(`    meta: { data: true }`)
