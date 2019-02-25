@@ -126,9 +126,16 @@ async function createRenderQueue ({ routes, config, store, schema }) {
 
     switch (page.type) {
       case STATIC_ROUTE:
-      case NOT_FOUND_ROUTE:
-      case STATIC_TEMPLATE_ROUTE: {
+      case NOT_FOUND_ROUTE: {
         queue.push(createPage(page, pageQuery.query))
+
+        break
+      }
+
+      case STATIC_TEMPLATE_ROUTE: {
+        const node = store.getNodeByPath(page.path)
+        const variables = contextValues(node, pageQuery.variables)
+        queue.push(createEntry(node, page, pageQuery.query, variables))
 
         break
       }
