@@ -7,7 +7,6 @@
     <g-link href="https://outsidelink2.com">External Links</g-link>
     <g-link href="//outsidelink3.com">External Links</g-link>
     <g-link href="https://www.gridsome.org/docs">Internal Links</g-link>
-    <g-link class="g-link-1" :to="{ name: 'blog' }">Blog</g-link>
     <g-link :class="{ 'g-link-2': true }" :to="{ name: 'home' }" active-class="test-active">Home</g-link>
     <g-link class="g-link-file" to="~/assets/dummy.pdf">Download</g-link>
     

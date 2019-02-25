@@ -6,7 +6,7 @@
 </template>
 
 <static-query>
-query Home {
+query Footer {
   metaData {
     myTest {
       value

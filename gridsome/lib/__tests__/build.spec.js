@@ -40,7 +40,6 @@ test('build basic project', async () => {
 
   // g-link
 
-  expect($home('a.g-link-1').attr('href')).toEqual('/blog')
   expect($home('a.g-link-2.test-active.active--exact').attr('href')).toEqual('/')
 
   expect($home('a[href="http://outsidelink1.com"]').attr('target')).toEqual('_blank')
@@ -63,6 +62,25 @@ test('build basic project', async () => {
   // Custom src/index.html template
 
   expect($home('div.custom-html-template').text().trim()).toEqual('custom html template')
+
+  // template with static routes
+
+  const $page1 = load('dist/pages/1/index.html')
+  const $page2 = load('dist/pages/2/index.html')
+  expect($page1('h1').text()).toEqual('Page 1')
+  expect($page1('h2').text()).toEqual('Doc 4')
+  expect($page2('h1').text()).toEqual('Page 2')
+  expect($page2('h2').text()).toEqual('Doc 3')
+
+  // template with static routes and pagination
+
+  expect(load('dist/docs/1/index.html')('h1').text()).toEqual('Doc 1')
+  expect(load('dist/docs/2/index.html')('h1').text()).toEqual('Doc 2')
+  expect(load('dist/docs/2/2/index.html')('h1').text()).toEqual('Doc 2')
+  expect(load('dist/docs/2/3/index.html')('h1').text()).toEqual('Doc 2')
+  expect(exists('dist/docs/1/2/index.html')).toBeFalsy()
+  expect(exists('dist/docs/2/4/index.html')).toBeFalsy()
+  expect(exists('dist/docs/3/2/index.html')).toBeFalsy()
 
   // 404.html
 
@@ -120,64 +138,6 @@ test('build basic project', async () => {
   const classes = $home('img.g-image-1').attr('class').split(' ')
   expect(uniq(classes).length - classes.length).toEqual(0)
 
-  const $blog = load('dist/blog/index.html')
-  const $blog2 = load('dist/blog/2/index.html')
-
-  // pagination
-  expect($blog('nav[role="navigation"] a').get().length).toEqual(3)
-  expect($blog('a.active--exact.active').attr('href')).toEqual('/blog')
-  expect($blog('a.active--exact.active').attr('aria-current')).toEqual('true')
-
-  expect($blog('.post-3 span').text()).toEqual('Third post')
-  expect($blog('.post-3 a').attr('href')).toEqual('/blog/third-post')
-  expect($blog('.post-2 span').text()).toEqual('Second post')
-  expect($blog('.post-2 a').attr('href')).toEqual('/blog/second-post')
-  expect($blog2('.post-1 span').text()).toEqual('First post')
-  expect($blog2('.post-1 a').attr('href')).toEqual('/blog/first-post')
-
-  expect(exists('dist/category/first/3/index.html')).toBeFalsy()
-  expect(exists('dist/blog/3/index.html')).toBeFalsy()
-
-  // templates
-
-  const $post1 = load('dist/blog/first-post/index.html')
-  const $post2 = load('dist/blog/second-post/index.html')
-  const $post3 = load('dist/blog/third-post/index.html')
-
-  expect($post1('.post-title').text()).toEqual('First post')
-  expect($post1('.post-date').text()).toEqual('2017')
-  expect($post2('.post-title').text()).toEqual('Second post')
-  expect($post2('.post-date').text()).toEqual('2018-03')
-  expect($post3('.post-title').text()).toEqual('Third post')
-  expect($post3('.post-date').text()).toEqual('2018-11-12')
-
-  // belongsTo with pagination
-
-  const $tag1 = load('dist/tag/first-tag/index.html')
-  const $tag2 = load('dist/tag/second-tag/index.html')
-  const $tag3 = load('dist/tag/third-tag/index.html')
-  const $tag4 = load('dist/tag/fourth-tag/index.html')
-  const $tag4page2 = load('dist/tag/fourth-tag/2/index.html')
-  const $category1 = load('dist/category/first/index.html')
-  const $category1page2 = load('dist/category/first/2/index.html')
-
-  expect($tag1('.post-3 span').text()).toEqual('Third post')
-  expect($tag1('.post-2 span').text()).toEqual('Second post')
-  expect($tag2('.post-2 span').text()).toEqual('Second post')
-  expect($tag2('.post-1 span').text()).toEqual('First post')
-  expect($tag3('.post-1 span').text()).toEqual('First post')
-  expect($tag3('.post-3 span').text()).toEqual('Third post')
-  expect($tag4('.post-3 span').text()).toEqual('Third post')
-  expect($tag4('.post-2 span').text()).toEqual('Second post')
-  expect($tag4('a[href="/tag/fourth-tag"]').attr('aria-label')).toEqual('Current page. Page 1')
-  expect($tag4page2('.post-1 span').text()).toEqual('First post')
-  expect($tag4page2('a[href="/tag/fourth-tag/2"]').attr('aria-label')).toEqual('Current page. Page 2')
-  expect($category1('.post-3 span').text()).toEqual('Third post')
-  expect($category1('.post-2 span').text()).toEqual('Second post')
-  expect($category1('a[href="/category/first"]').attr('aria-label')).toEqual('Current page. Page 1')
-  expect($category1page2('.post-1 span').text()).toEqual('First post')
-  expect($category1page2('a[href="/category/first/2"]').attr('aria-label')).toEqual('Current page. Page 2')
-
   await clear(context)
 }, 15000)
 
@@ -226,21 +186,72 @@ test('build blog project', async () => {
   await build(context)
 
   const content = file => fs.readFileSync(path.join(context, file), 'utf8')
+  const exists = file => fs.existsSync(path.join(context, file))
   const load = file => cheerio.load(content(file))
 
-  const $home = load('dist/index.html')
-  const $home2 = load('dist/2/index.html')
-  const $home3 = load('dist/3/index.html')
-  const $home4 = load('dist/4/index.html')
-  const $home5 = load('dist/5/index.html')
   const $404 = load('dist/404.html')
 
-  expect($home('.current-page').text()).toEqual('1')
-  expect($home2('.current-page').text()).toEqual('2')
-  expect($home3('.current-page').text()).toEqual('3')
-  expect($home4('.current-page').text()).toEqual('4')
-  expect($home5('.current-page').text()).toEqual('5')
   expect($404('h1').text()).toEqual('404 - not found')
+
+  const $blog = load('dist/index.html')
+  const $blog2 = load('dist/2/index.html')
+
+  // pagination
+  expect($blog('.current-page').text()).toEqual('1')
+  expect($blog2('.current-page').text()).toEqual('2')
+  expect($blog('nav[role="navigation"] a').get().length).toEqual(3)
+  expect($blog('a.active--exact.active').attr('href')).toEqual('/')
+  expect($blog('a.active--exact.active').attr('aria-current')).toEqual('true')
+
+  expect($blog('.post-3 span').text()).toEqual('Third post')
+  expect($blog('.post-3 a').attr('href')).toEqual('/third-post')
+  expect($blog('.post-2 span').text()).toEqual('Second post')
+  expect($blog('.post-2 a').attr('href')).toEqual('/second-post')
+  expect($blog2('.post-1 span').text()).toEqual('First post')
+  expect($blog2('.post-1 a').attr('href')).toEqual('/first-post')
+
+  expect(exists('dist/category/first/3/index.html')).toBeFalsy()
+  expect(exists('dist/3/index.html')).toBeFalsy()
+
+  // templates
+
+  const $post1 = load('dist/first-post/index.html')
+  const $post2 = load('dist/second-post/index.html')
+  const $post3 = load('dist/third-post/index.html')
+
+  expect($post1('.post-title').text()).toEqual('First post')
+  expect($post1('.post-date').text()).toEqual('2017')
+  expect($post2('.post-title').text()).toEqual('Second post')
+  expect($post2('.post-date').text()).toEqual('2018-03')
+  expect($post3('.post-title').text()).toEqual('Third post')
+  expect($post3('.post-date').text()).toEqual('2018-11-12')
+
+  // belongsTo with pagination
+
+  const $tag1 = load('dist/tag/first-tag/index.html')
+  const $tag2 = load('dist/tag/second-tag/index.html')
+  const $tag3 = load('dist/tag/third-tag/index.html')
+  const $tag4 = load('dist/tag/fourth-tag/index.html')
+  const $tag4page2 = load('dist/tag/fourth-tag/2/index.html')
+  const $category1 = load('dist/category/first/index.html')
+  const $category1page2 = load('dist/category/first/2/index.html')
+
+  expect($tag1('.post-3 span').text()).toEqual('Third post')
+  expect($tag1('.post-2 span').text()).toEqual('Second post')
+  expect($tag2('.post-2 span').text()).toEqual('Second post')
+  expect($tag2('.post-1 span').text()).toEqual('First post')
+  expect($tag3('.post-1 span').text()).toEqual('First post')
+  expect($tag3('.post-3 span').text()).toEqual('Third post')
+  expect($tag4('.post-3 span').text()).toEqual('Third post')
+  expect($tag4('.post-2 span').text()).toEqual('Second post')
+  expect($tag4('a[href="/tag/fourth-tag"]').attr('aria-label')).toEqual('Current page. Page 1')
+  expect($tag4page2('.post-1 span').text()).toEqual('First post')
+  expect($tag4page2('a[href="/tag/fourth-tag/2"]').attr('aria-label')).toEqual('Current page. Page 2')
+  expect($category1('.post-3 span').text()).toEqual('Third post')
+  expect($category1('.post-2 span').text()).toEqual('Second post')
+  expect($category1('a[href="/category/first"]').attr('aria-label')).toEqual('Current page. Page 1')
+  expect($category1page2('.post-1 span').text()).toEqual('First post')
+  expect($category1page2('a[href="/category/first/2"]').attr('aria-label')).toEqual('Current page. Page 2')
 
   await clear(context)
 }, 10000)

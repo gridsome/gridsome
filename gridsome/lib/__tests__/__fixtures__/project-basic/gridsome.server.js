@@ -1,110 +1,20 @@
 module.exports = function (api) {
   api.loadSource(store => {
-    const posts = store.addContentType({
-      typeName: 'Post',
-      route: '/blog/:slug'
-    })
-
-    const tags = store.addContentType({
-      typeName: 'Tag',
-      route: '/tag/:slug'
-    })
-
-    const categories = store.addContentType({
-      typeName: 'Category'
-    })
-
-    const other = store.addContentType({
-      typeName: 'Other'
-    })
-
-    categories.addNode({
-      id: '1',
-      title: 'First category',
-      path: '/category/first',
-      fields: {
-        showType: 'Post'
-      }
-    })
-
-    categories.addNode({
-      id: '2',
-      title: 'Second category',
-      path: '/category/second'
-    })
-
-    tags.addNode({ id: '1', title: 'First tag', fields: { perPage: 2 }})
-    tags.addNode({ id: '2', title: 'Second tag', fields: { perPage: 2 } })
-    tags.addNode({ id: '3', title: 'Third tag', fields: { perPage: 2 } })
-    tags.addNode({ id: '4', title: 'Fourth tag', fields: { perPage: 2 } })
-
-    posts.addNode({
-      id: '1',
-      title: 'First post',
-      date: '2017-05-23',
-      fields: {
-        dateFormat: 'YYYY',
-        tags: [
-          store.createReference('Tag', '2'),
-          store.createReference('Tag', '3'),
-          store.createReference('Tag', '4')
-        ],
-        category: store.createReference('Category', '1')
-      }
-    })
-
-    posts.addNode({
-      id: '2',
-      title: 'Second post',
-      date: '2018-03-18',
-      fields: {
-        dateFormat: 'YYYY-MM',
-        tags: [
-          store.createReference('Tag', '1'),
-          store.createReference('Tag', '2'),
-          store.createReference('Tag', '4')
-        ],
-        category: store.createReference('Category', '1')
-      }
-    })
-
-    posts.addNode({
-      id: '3',
-      title: 'Third post',
-      date: '2018-11-12',
-      fields: {
-        dateFormat: 'YYYY-MM-DD',
-        tags: [
-          store.createReference('Tag', '1'),
-          store.createReference('Tag', '3'),
-          store.createReference('Tag', '4')
-        ],
-        category: store.createReference('Category', '1')
-      }
-    })
-
-    for (let i = 4; i < 14; i++) {
-      posts.addNode({
-        title: `Post ${i}`,
-        fields: {
-          excluded: true
-        }
-      })
-    }
-
-    for (let i = 1; i <= 10; i++) {
-      other.addNode({
-        id: String(i),
-        title: `Other ${i}`,
-        fields: {
-          category: store.createReference('Category', '1')
-        }
-      })
-    }
-
     store.addMetaData('myTest', {
       value: 'Test Value'
     })
+
+    const docs = store.addContentType('TestDoc')
+    const fields = { rel: store.createReference('TestDoc', '2'), perPage: 2 }
+    docs.addNode({ id: '1', title: 'Doc 1', path: '/docs/1', fields })
+    docs.addNode({ id: '2', title: 'Doc 2', path: '/docs/2', fields })
+    docs.addNode({ id: '3', title: 'Doc 3', path: '/docs/3', fields })
+    docs.addNode({ id: '4', title: 'Doc 4', path: '/docs/4', fields })
+    docs.addNode({ id: '5', title: 'Doc 5', path: '/docs/5', fields })
+
+    const pages = store.addContentType('TestPage')
+    pages.addNode({ id: '1', title: 'Page 1', path: '/pages/1', fields: { doc: '4' } })
+    pages.addNode({ id: '2', title: 'Page 2', path: '/pages/2', fields: { doc: '3' } })
   })
 
   api.chainWebpack(config => {
