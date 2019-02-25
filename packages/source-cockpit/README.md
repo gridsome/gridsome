@@ -32,6 +32,33 @@ APIHOST=https://my-cockpit-cms.com
 ACCESSTOKEN=b90d9080711bab6e9af34fbea754c5
 ```
 
+## API limit
+
+You can also set a limit per request if you have thousands of collections or assets and want to pull in a paged set of results. To do this set the `APILIMIT` environment variable, for example:                                      │
+
+```
+APILIMIT=100
+```
+
+You will also need to add a config option in your `gridsome.config.js` file:
+
+```js
+module.exports = {
+  plugins: [
+    {
+      use: '@gridsome/source-cockpit',
+      options: {
+        options: {
+          accessToken: process.env.ACCESSTOKEN,
+          host: process.env.APIHOST
+          apiLimit: process.env.APILIMIT
+        }
+      }
+    }
+  ]
+}
+```
+
 ## Routes
 
 You can configure a route per collection type by defining them in `gridsome.config.js`. The key is the name of the collection and the value is the path you'd like for that collection. For example:

@@ -1,11 +1,12 @@
 const CockpitSDK = require('cockpit-sdk').default
 const { GraphQLJSON } = require('gridsome/graphql')
 const { camelize } = require('humps')
+const deepmerge = require('deepmerge')
 
 class CockpitSource {
   static defaultOptions () {
     return {
-      token: undefined,
+      accessToken: undefined,
       typeName: 'Cockpit',
       routes: {}
     }
@@ -36,7 +37,7 @@ class CockpitSource {
       const typeName = store.makeTypeName(collectionType)
       const route = this.options.routes[name] || `/${store.slugify(name)}/:slug`
 
-      const collection = store.addContentType({ typeName, route })
+      store.addContentType({ typeName, route })
 
       this.typesIndex[typeName] = { collectionType, typeName }
     }
@@ -50,7 +51,8 @@ class CockpitSource {
     const contentType = store.addContentType({ typeName, route })
 
     for (const asset of assets.assets) {
-      const { _id: id, title, created: date, ...fields } = asset
+      const { _id: id, title, created, ...fields } = asset
+      const date = new Date(created * 1000)
 
       contentType.addNode({ id, date, title, fields })
     }
@@ -72,19 +74,21 @@ class CockpitSource {
         // Process fields.
         Object.keys(data.fields).forEach(async f => {
           const fieldDefinition = data.fields[f]
-          if (fieldDefinition.type === 'repeater') {
-            collection.addSchemaField(camelize(fieldDefinition.name), () => ({
-              type: GraphQLJSON,
-              resolve: node => entry[fieldDefinition.name]
-            }))
-            delete fields[fieldDefinition.name]
-          }
-          if (fieldDefinition.type === 'collectionlink') {
-            Object.keys(fields[fieldDefinition.name]).forEach(async r => {
-              const instance = fields[fieldDefinition.name][r]
-              const typeName = this.store.makeTypeName(instance.link)
-              fields[fieldDefinition.name][r] = this.store.createReference(typeName, instance._id)
-            })
+          switch (fieldDefinition.type) {
+            case 'repeater':
+              collection.addSchemaField(camelize(fieldDefinition.name), () => ({
+                type: GraphQLJSON,
+                resolve: node => entry[fieldDefinition.name]
+              }))
+              delete fields[fieldDefinition.name]
+              break
+            case 'collectionlink':
+              Object.keys(fields[fieldDefinition.name]).forEach(async r => {
+                const instance = fields[fieldDefinition.name][r]
+                const typeName = this.store.makeTypeName(instance.link)
+                fields[fieldDefinition.name][r] = this.store.createReference(typeName, instance._id)
+              })
+              break
           }
         })
 
@@ -95,14 +99,19 @@ class CockpitSource {
           date: new Date(entry._created * 1000),
           fields
         })
-
       })
     }
   }
 
-  async fetch (method, type = '', limit = 1000, order = { _created: -1 }) {
-    const fetch = skip => this.client[method](type, { skip, limit: limit })
-    const result = await fetch(0)
+  async fetch (method, type = '', limit = 1, sort = { _created: -1 }) {
+    const fetch = skip => this.client[method](type, { skip, limit, sort })
+    let result = await fetch(0)
+    const pages = Math.ceil(result.total / limit)
+
+    for (let i = 1; i < pages; i++) {
+      const res = await fetch(limit * i)
+      result = deepmerge(result, res)
+    }
     return result
   }
 }

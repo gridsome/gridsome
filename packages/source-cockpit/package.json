@@ -13,6 +13,7 @@
   ],
   "dependencies": {
     "cockpit-sdk": "^0.15.1",
+    "deepmerge": "^3.2.0",
     "humps": "^2.0.1"
   },
   "publishConfig": {
