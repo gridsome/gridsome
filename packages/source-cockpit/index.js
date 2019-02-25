@@ -8,7 +8,8 @@ class CockpitSource {
     return {
       accessToken: undefined,
       typeName: 'Cockpit',
-      routes: {}
+      routes: {},
+      apiLimit: 1000
     }
   }
 
@@ -103,7 +104,7 @@ class CockpitSource {
     }
   }
 
-  async fetch (method, type = '', limit = 1, sort = { _created: -1 }) {
+  async fetch (method, type = '', limit = this.options.apiLimit, sort = { _created: -1 }) {
     const fetch = skip => this.client[method](type, { skip, limit, sort })
     let result = await fetch(0)
     const pages = Math.ceil(result.total / limit)
