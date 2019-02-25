@@ -94,6 +94,10 @@ test('build basic project', async () => {
   const appJS = content('dist/assets/js/app.js')
   const homeJS = content('dist/assets/js/component--home.js')
 
+  // never include the context path
+  expect(appJS).not.toMatch(context)
+  expect(homeJS).not.toMatch(context)
+
   // api.transpileDependencies
   expect(appJS).not.toMatch('testToArray1 (...args)') // transpiled
   expect(appJS).toMatch('testToArray2 (...args)') // not transpiled

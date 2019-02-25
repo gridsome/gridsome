@@ -93,15 +93,14 @@ exports.processImage = async function ({
   await fs.outputFile(destPath, buffer)
 }
 
-exports.process = async function ({ queue, outDir, cacheDir, minWidth, backgroundColor }) {
+exports.process = async function ({ queue, cacheDir, minWidth, backgroundColor }) {
   return Promise.all(queue.map(set => {
     const cachePath = cacheDir ? path.join(cacheDir, set.filename) : null
-    const destPath = path.join(outDir, set.destination)
 
     return exports.processImage({
+      destPath: set.destPath,
       backgroundColor,
       cachePath,
-      destPath,
       minWidth,
       ...set
     })

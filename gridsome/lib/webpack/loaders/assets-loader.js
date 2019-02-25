@@ -23,8 +23,8 @@ module.exports = async function (source, map) {
     src: asset.src
   }
 
+  // required properties for g-image
   if (asset.type === 'image') {
-    res.sets = asset.sets
     res.size = asset.size
     res.sizes = asset.sizes
     res.srcset = asset.srcset

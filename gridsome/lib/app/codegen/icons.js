@@ -20,7 +20,7 @@ async function genIcons ({ config, resolve, queue }) {
     })
 
     icons.precomposed = touchicon.precomposed
-    icons.touchicons = touchicons.sets
+    icons.touchicons = touchicons.sets.map(iconData)
     icons.touchiconMimeType = touchicons.mimeType
   }
 
@@ -30,11 +30,19 @@ async function genIcons ({ config, resolve, queue }) {
       srcset: false
     })
 
-    icons.favicons = favicons.sets
+    icons.favicons = favicons.sets.map(iconData)
     icons.faviconMimeType = favicons.mimeType
   }
 
   return `export default ${JSON.stringify(icons, null, 2)}`
+}
+
+function iconData (set) {
+  return {
+    width: set.width,
+    height: set.height,
+    src: set.src
+  }
 }
 
 module.exports = genIcons

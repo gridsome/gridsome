@@ -2,7 +2,6 @@ const path = require('path')
 const fs = require('fs-extra')
 const sharp = require('sharp')
 const crypto = require('crypto')
-const { trim } = require('lodash')
 const mime = require('mime-types')
 const colorString = require('color-string')
 const md5File = require('md5-file/promise')
@@ -34,13 +33,13 @@ class ImageProcessQueue {
       return asset
     }
 
-    asset.sets.forEach(({ filename, src, width }) => {
-      if (!this._queue.has(src + asset.cacheKey)) {
-        this._queue.set(src + asset.cacheKey, {
-          destination: trim(src, this.config.pathPrefix),
+    asset.sets.forEach(({ filename, destPath, src, width }) => {
+      if (!this._queue.has(destPath + asset.cacheKey)) {
+        this._queue.set(destPath + asset.cacheKey, {
           options: { ...options, width },
           cacheKey: asset.cacheKey,
           size: asset.size,
+          destPath,
           filename,
           filePath
         })
@@ -102,13 +101,13 @@ class ImageProcessQueue {
       options.background = this.config.imageBackgroundColor
     }
 
-    const createSrcPath = (filename, imageOptions) => {
+    const createDestPath = (filename, imageOptions) => {
       if (process.env.GRIDSOME_MODE === 'serve') {
         const query = '?' + createOptionsQuery(imageOptions)
         return path.join('/', imagesDir, forwardSlash(relPath)) + query
       }
 
-      return forwardSlash(path.join('/', pathPrefix, imagesDir, filename))
+      return path.join(imagesDir, filename)
     }
 
     const sets = imageSizes.map((width = imageWidth) => {
@@ -121,9 +120,11 @@ class ImageProcessQueue {
 
       const arr = this.createImageOptions(imageOptions)
       const filename = this.createFileName(filePath, arr, hash)
-      const src = createSrcPath(filename, arr)
+      const relPath = createDestPath(filename, arr)
+      const destPath = path.join(this.config.outDir, relPath)
+      const src = forwardSlash(path.join(pathPrefix, relPath))
 
-      return { filename, src, width, height }
+      return { filename, destPath, src, width, height }
     })
 
     const results = {
