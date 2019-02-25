@@ -2,30 +2,26 @@ module.exports = {
   root: true,
   extends: [
     'plugin:node/recommended',
-    'plugin:vue-libs/recommended'
+    'plugin:vue-libs/recommended',
+    'eslint-config-prettier',
   ],
   env: {
-    jest: true
+    jest: true,
   },
   rules: {},
   overrides: [
     {
-      files: [
-        'gridsome.client.js'
-      ],
+      files: ['gridsome.client.js'],
       rules: {
-        'node/no-unsupported-features/es-syntax': 'off'
-      }
+        'node/no-unsupported-features/es-syntax': 'off',
+      },
     },
     {
-      files: [
-        'scripts/**/*.js',
-        '**/__tests__/**/*.js'
-      ],
+      files: ['scripts/**/*.js', '**/__tests__/**/*.js'],
       rules: {
         'node/no-unpublished-require': 'off',
-        'node/no-extraneous-require': 'off'
-      }
-    }
-  ]
-}
+        'node/no-extraneous-require': 'off',
+      },
+    },
+  ],
+};
