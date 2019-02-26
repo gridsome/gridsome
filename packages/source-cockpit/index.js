@@ -1,6 +1,6 @@
 const CockpitSDK = require('cockpit-sdk').default
 const { GraphQLJSON } = require('gridsome/graphql')
-const { camelize } = require('humps')
+const camelCase = require('camelcase')
 const deepmerge = require('deepmerge')
 
 class CockpitSource {
@@ -77,7 +77,7 @@ class CockpitSource {
           const fieldDefinition = data.fields[f]
           switch (fieldDefinition.type) {
             case 'repeater':
-              collection.addSchemaField(camelize(fieldDefinition.name), () => ({
+              collection.addSchemaField(camelCase(fieldDefinition.name), () => ({
                 type: GraphQLJSON,
                 resolve: node => entry[fieldDefinition.name]
               }))
