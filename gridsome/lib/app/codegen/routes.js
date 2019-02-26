@@ -23,7 +23,9 @@ function genRoutes (app) {
     props.push(`    path: ${JSON.stringify(page.route || page.path)}`)
     props.push(`    component: () => import(/* webpackChunkName: ${chunkName} */ ${component})`)
 
+    if (page.pageQuery.query === null) metas.push('isStatic: true')
     if (page.isIndex === false) metas.push('isIndex: false')
+
     if (metas.length) props.push(`    meta: { ${metas.join(', ')} }`)
 
     if (page.name) {
