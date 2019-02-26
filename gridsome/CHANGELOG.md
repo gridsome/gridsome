@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+<a name="0.5.2"></a>
+## [0.5.2](https://github.com/gridsome/gridsome/compare/gridsome@0.5.1...gridsome@0.5.2) (2019-02-26)
+
+
+### Bug Fixes
+
+* **app:** preload data for links in view ([35411aa](https://github.com/gridsome/gridsome/commit/35411aa))
+* **app:** unslash path before fetching data ([7c086a7](https://github.com/gridsome/gridsome/commit/7c086a7))
+
+
+
+
+
 <a name="0.5.1"></a>
 ## [0.5.1](https://github.com/gridsome/gridsome/compare/gridsome@0.5.0...gridsome@0.5.1) (2019-02-26)
 
