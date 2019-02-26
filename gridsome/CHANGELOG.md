@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+<a name="0.5.3"></a>
+## [0.5.3](https://github.com/gridsome/gridsome/compare/gridsome@0.5.2...gridsome@0.5.3) (2019-02-26)
+
+
+### Bug Fixes
+
+* **app:** fetch data properly for homepage ([#218](https://github.com/gridsome/gridsome/issues/218)) ([fd72abc](https://github.com/gridsome/gridsome/commit/fd72abc))
+
+
+
+
+
 <a name="0.5.2"></a>
 ## [0.5.2](https://github.com/gridsome/gridsome/compare/gridsome@0.5.1...gridsome@0.5.2) (2019-02-26)
 
