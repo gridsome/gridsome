@@ -8,8 +8,7 @@ function genRoutes (app) {
 
   // use the /404 page as fallback route
   routes.push({
-    pageQuery: notFound.pageQuery,
-    component: notFound.component,
+    ...notFound,
     chunkName: notFound.name,
     name: '*',
     path: '*'
@@ -19,13 +18,13 @@ function genRoutes (app) {
     const component = JSON.stringify(page.component)
     const chunkName = JSON.stringify('component--' + slugify(page.chunkName || page.name))
     const props = []
+    const metas = []
 
     props.push(`    path: ${JSON.stringify(page.route || page.path)}`)
     props.push(`    component: () => import(/* webpackChunkName: ${chunkName} */ ${component})`)
 
-    if (page.pageQuery.query) {
-      props.push(`    meta: { data: true }`)
-    }
+    if (page.isIndex === false) metas.push('isIndex: false')
+    if (metas.length) props.push(`    meta: { ${metas.join(', ')} }`)
 
     if (page.name) {
       props.unshift(`    name: ${JSON.stringify(page.name)}`)

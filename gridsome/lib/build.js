@@ -1,10 +1,11 @@
 const path = require('path')
 const pMap = require('p-map')
 const fs = require('fs-extra')
+const { chunk } = require('lodash')
 const hirestime = require('hirestime')
+const { createPath } = require('./utils')
 const sysinfo = require('./utils/sysinfo')
 const { log, error, info } = require('./utils/log')
-const { trimEnd, trimStart, chunk } = require('lodash')
 
 const createApp = require('./app')
 const { execute } = require('graphql')
@@ -73,42 +74,19 @@ module.exports.createRenderQueue = createRenderQueue
 
 async function createRenderQueue ({ routes, config, store, schema }) {
   const rootFields = schema.getQueryType().getFields()
+  const dataDir = path.join(config.cacheDir, 'data')
 
   const createEntry = (node, page, query, variables = { page: 1 }) => {
-    let fullPath = trimEnd(node.path, '/') || '/'
-
-    if (page.type === NOT_FOUND_ROUTE) fullPath = '/404'
-
-    if (variables.page > 1) {
-      fullPath = `/${trimStart(`${fullPath}/${variables.page}`, '/')}`
-    }
-
-    const filePath = fullPath.split('/').map(decodeURIComponent).join('/')
-    const dataPath = fullPath === '/' ? 'index.json' : `${filePath}.json`
-
-    const htmlOutput = path.join(config.outDir, filePath, 'index.html')
-    const dataOutput = query ? path.join(config.cacheDir, 'data', dataPath) : null
-
-    variables.path = node.path
+    const path = createPath(node.path, variables.page, page.isIndex)
 
     return {
-      dataOutput,
-      htmlOutput,
-      path: fullPath,
+      path: path.toUrlPath(),
+      htmlOutput: path.toFilePath(config.outDir, 'html'),
+      dataOutput: query ? path.toFilePath(dataDir, 'json') : null,
+      variables: { ...variables, path: node.path },
       component: page.component,
-      variables,
       query
     }
-  }
-
-  const createPage = (page, query, vars) => {
-    const entry = createEntry(page, page, query, vars)
-
-    if (page.directoryIndex === false && page.path !== '/') {
-      entry.htmlOutput = `${path.dirname(entry.htmlOutput)}.html`
-    }
-
-    return entry
   }
 
   const queue = []
@@ -127,7 +105,7 @@ async function createRenderQueue ({ routes, config, store, schema }) {
     switch (page.type) {
       case STATIC_ROUTE:
       case NOT_FOUND_ROUTE: {
-        queue.push(createPage(page, pageQuery.query))
+        queue.push(createEntry(page, page, pageQuery.query))
 
         break
       }
@@ -142,11 +120,13 @@ async function createRenderQueue ({ routes, config, store, schema }) {
 
       case DYNAMIC_TEMPLATE_ROUTE: {
         const { collection } = store.getContentType(page.typeName)
+        const nodes = collection.find()
+        const length = nodes.length
 
-        collection.find().forEach(node => {
-          const variables = contextValues(node, pageQuery.variables)
-          queue.push(createEntry(node, page, pageQuery.query, variables))
-        })
+        for (let i = 0; i < length; i++) {
+          const variables = contextValues(nodes[i], pageQuery.variables)
+          queue.push(createEntry(nodes[i], page, pageQuery.query, variables))
+        }
 
         break
       }
@@ -157,8 +137,11 @@ async function createRenderQueue ({ routes, config, store, schema }) {
         const filter = belongsTo.args.find(arg => arg.name === 'filter')
         const fields = filter.type.getFields()
         const { collection } = store.getContentType(page.typeName)
+        const nodes = collection.find()
+        const length = nodes.length
 
-        collection.find().forEach(node => {
+        for (let i = 0; i < length; i++) {
+          const node = nodes[i]
           const variables = contextValues(node, pageQuery.variables)
           const filters = pageQuery.getFilters(variables)
           const perPage = pageQuery.getPerPage(variables)
@@ -171,7 +154,7 @@ async function createRenderQueue ({ routes, config, store, schema }) {
           for (let i = 1; i <= totalPages; i++) {
             queue.push(createEntry(node, page, pageQuery.query, { ...variables, page: i }))
           }
-        })
+        }
 
         break
       }
@@ -189,7 +172,7 @@ async function createRenderQueue ({ routes, config, store, schema }) {
         const totalPages = Math.ceil(totalNodes / perPage) || 1
 
         for (let i = 1; i <= totalPages; i++) {
-          queue.push(createPage(page, pageQuery.query, { page: i }))
+          queue.push(createEntry(page, page, pageQuery.query, { page: i }))
         }
 
         break

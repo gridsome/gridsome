@@ -1,11 +1,8 @@
 /* global GRIDSOME_MODE, GRIDSOME_DATA_DIR */
 
 import router from '../router'
-import config from '~/.temp/config'
 import { setResults } from './shared'
 import { unslash } from '../utils/helpers'
-
-const re = new RegExp(`^${config.pathPrefix}`)
 
 export default (route, query) => {
   if (GRIDSOME_MODE === 'serve') {
@@ -35,10 +32,11 @@ export default (route, query) => {
     })
   } else if (GRIDSOME_MODE === 'static') {
     return new Promise((resolve, reject) => {
-      const routePath = unslash(route.path.replace(re, '/'))
-      const filename = !routePath ? '/index.json' : `/${routePath}.json`
+      const { name, meta: { isIndex }} = route
+      const path = name === '*' ? '/404' : route.path
+      const jsonPath = unslash(isIndex === false ? `${path}.json` : `${path}/index.json`)
 
-      import(/* webpackChunkName: "data/" */ `${GRIDSOME_DATA_DIR}${filename}`)
+      import(/* webpackChunkName: "data/" */ `${GRIDSOME_DATA_DIR}/${jsonPath}`)
         .then(res => {
           if (res.errors) reject(res.errors[0])
           else (setResults(route.path, res.data), resolve(res))

@@ -11,6 +11,8 @@ const {
   DYNAMIC_TEMPLATE_ROUTE
 } = require('../utils/constants')
 
+const PAGE_PARAM = ':page(\\d+)?'
+
 module.exports = ({ store, config }) => {
   const staticPages = []
   const pagedPages = []
@@ -26,7 +28,7 @@ module.exports = ({ store, config }) => {
     let route = page.path
 
     if (page.pageQuery.paginate) {
-      route = `${page.path === '/' ? '' : page.path}/:page(\\d+)?`
+      route = `${page.path === '/' ? '' : page.path}/${PAGE_PARAM}`
       type = PAGED_ROUTE
       arr = pagedPages
     }
@@ -35,6 +37,7 @@ module.exports = ({ store, config }) => {
       name,
       type,
       route,
+      isIndex: true,
       path: page.path,
       component: page.component,
       pageQuery: page.pageQuery
@@ -54,7 +57,7 @@ module.exports = ({ store, config }) => {
     }
 
     const isPaged = page.pageQuery.paginate
-    const makePath = path => isPaged ? `${path}/:page(\\d+)?` : path
+    const makePath = path => isPaged ? `${path}/${PAGE_PARAM}` : path
     const { options, collection } = contentType
     const { component, pageQuery } = page
 
@@ -68,18 +71,21 @@ module.exports = ({ store, config }) => {
         type: isPaged ? PAGED_TEMPLATE : DYNAMIC_TEMPLATE_ROUTE,
         route: makePath(options.route),
         name: camelCase(typeName),
+        isIndex: true,
         component,
         pageQuery,
         typeName
       })
     } else {
       const nodes = collection.find()
+      const length = nodes.length
 
-      for (const node of nodes) {
+      for (let i = 0; i < length; i++) {
         staticTemplates.push({
           type: isPaged ? PAGED_TEMPLATE : STATIC_TEMPLATE_ROUTE,
-          path: makePath(node.path),
+          path: makePath(nodes[i].path),
           chunkName: camelCase(typeName),
+          isIndex: true,
           component,
           pageQuery,
           typeName
@@ -92,7 +98,7 @@ module.exports = ({ store, config }) => {
   const notFoundRoute = {
     component: path.join(config.appPath, 'pages', '404.vue'),
     type: NOT_FOUND_ROUTE,
-    directoryIndex: false,
+    isIndex: false,
     pageQuery: {},
     path: '/404',
     name: '404'
