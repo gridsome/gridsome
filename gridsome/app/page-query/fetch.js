@@ -33,8 +33,8 @@ export default (route, query) => {
   } else if (GRIDSOME_MODE === 'static') {
     return new Promise((resolve, reject) => {
       const { name, meta: { isIndex }} = route
-      const path = name === '*' ? '404' : unslash(route.path)
-      const jsonPath = isIndex === false ? `${path}.json` : `${path}/index.json`
+      const path = unslash(name === '*' ? '404' : route.path)
+      const jsonPath = unslash(isIndex === false ? `${path}.json` : `${path}/index.json`)
 
       import(/* webpackChunkName: "data/" */ `${GRIDSOME_DATA_DIR}/${jsonPath}`)
         .then(res => {
