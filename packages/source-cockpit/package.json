@@ -14,11 +14,10 @@
   "dependencies": {
     "cockpit-sdk": "^0.15.1",
     "deepmerge": "^3.2.0",
-    "humps": "^2.0.1"
+    "camelcase": "^5.0.0"
   },
   "peerDependencies": {
-    "gridsome": "0.x",
-    "camelcase": "5.x"
+    "gridsome": "0.x"
   },
   "publishConfig": {
     "access": "public"
