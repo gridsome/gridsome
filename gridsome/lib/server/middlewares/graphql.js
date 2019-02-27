@@ -9,6 +9,11 @@ const {
 module.exports = ({ store }) => {
   return async function (req, res, next) {
     const { query, variables, ...body } = await getGraphQLParams(req)
+
+    if (!query || !variables) {
+      return next()
+    }
+
     const pageQuery = processPageQuery({ query })
 
     if (variables.path) {
