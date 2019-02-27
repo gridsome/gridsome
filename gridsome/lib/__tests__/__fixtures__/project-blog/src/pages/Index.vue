@@ -1,11 +1,11 @@
 <template>
-  <Layout>
+  <Layout :class="`home-${$page.posts.pageInfo.currentPage}`">
     <h1>Blog</h1>
     <span class="current-page">{{ $page.posts.pageInfo.currentPage }}</span>
     <ul>
       <li v-for="{ node } in $page.posts.edges" :key="node.id" :class="`post-${node.id}`">
         <span>{{ node.title }}</span>
-        <g-link :to="node.path">Read more</g-link>
+        <g-link :class="`post-link-${node.id}`" :to="node.path">Read more</g-link>
       </li>
     </ul>
     <Pager :info="$page.posts.pageInfo"/>

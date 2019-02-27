@@ -1,5 +1,5 @@
 <template>
-  <Layout>
+  <Layout class="home">
     <h1>Gridsome</h1>
     <h2 class="meta-data">{{ $page.metaData.myTest.value }}</h2>
     
@@ -21,6 +21,14 @@
     <span class="from-plugin">{{ TEST_2 }}</span>
     <span class="from-chain-webpack">{{ TEST_3 }}</span>
 
+    <ul>
+      <li v-for="edge in $page.allTestDoc.edges" :key="edge.node.id">
+        <g-link :to="edge.node.path" :class="`doc-link-${edge.node.id}`">
+          {{ edge.node.title }}
+        </g-link>
+      </li>
+    </ul>
+
     <g-image />
     <g-link />
   </Layout>
@@ -32,6 +40,15 @@ query Home {
   metaData {
     myTest {
       value
+    }
+  }
+  allTestDoc {
+    edges {
+      node {
+        id
+        title
+        path
+      }
     }
   }
 }

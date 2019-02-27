@@ -43,7 +43,7 @@ jobs:
           at: ~/
       - run:
           name: Run unit tests
-          command: yarn run test
+          command: yarn run test:unit
 
 workflows:
   version: 2

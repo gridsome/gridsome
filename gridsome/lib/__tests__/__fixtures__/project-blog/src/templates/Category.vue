@@ -1,18 +1,19 @@
 <template>
-  <div>
+  <Layout :class="[`category-${$page.category.id}`, `category-page-${$page.category.belongsTo.pageInfo.currentPage}`]">
     <h1 class="category-title">{{ $page.category.title }}</h1>
     <ul>
       <li v-for="{ node } in $page.category.belongsTo.edges" :key="node.id" :class="`post-${node.id}`">
-        <span>{{ node.title }}</span>
+        <g-link :class="`post-link-${node.id}`" :to="node.path">{{ node.title }}</span>
       </li>
     </ul>
     <Pager :info="$page.category.belongsTo.pageInfo"/>
-  </div>
+  </Layout>
 </template>
 
 <page-query>
 query Tag ($id: String!, $page: Int, $showType: String) {
   category (id: $id) {
+    id
     title
     belongsTo (
       perPage: 2,
