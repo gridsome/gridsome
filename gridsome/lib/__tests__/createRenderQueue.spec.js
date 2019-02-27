@@ -14,11 +14,11 @@ test('create render queue for basic project', async () => {
 
   expect(renderPaths).toContain('/')
   expect(htmlOutputs).toContain(path.join(app.config.outDir, 'index.html'))
-  expect(dataOutputs).toContain(path.join(app.config.cacheDir, 'data', 'index.json'))
+  expect(dataOutputs).toContain(path.join(app.config.dataDir, 'index.json'))
 
   expect(renderPaths).toContain('/404')
   expect(htmlOutputs).toContain(path.join(app.config.outDir, '404.html'))
-  expect(dataOutputs).toContain(path.join(app.config.cacheDir, 'data', '404.json'))
+  expect(dataOutputs).toContain(path.join(app.config.dataDir, '404.json'))
 })
 
 test('create render queue for blog project', async () => {

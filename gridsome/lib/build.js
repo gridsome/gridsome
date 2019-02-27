@@ -23,7 +23,7 @@ module.exports = async (context, args) => {
   const { config } = app
 
   await app.dispatch('beforeBuild', { context, config })
-  await fs.ensureDir(config.cacheDir)
+  await fs.ensureDir(config.dataDir)
   await fs.remove(config.outDir)
 
   const queue = await createRenderQueue(app)
@@ -51,8 +51,8 @@ module.exports = async (context, args) => {
 
   // 6. clean up
   await app.dispatch('afterBuild', () => ({ context, config, queue }))
-  await fs.remove(path.resolve(config.cacheDir, 'data'))
   await fs.remove(config.manifestsDir)
+  await fs.remove(config.dataDir)
 
   log()
   log(`  Done in ${buildTime(hirestime.S)}s`)
@@ -74,7 +74,6 @@ module.exports.createRenderQueue = createRenderQueue
 
 async function createRenderQueue ({ routes, config, store, schema }) {
   const rootFields = schema.getQueryType().getFields()
-  const dataDir = path.join(config.cacheDir, 'data')
 
   const createEntry = (node, page, query, variables = { page: 1 }) => {
     const path = createPath(node.path, variables.page, page.isIndex)
@@ -82,7 +81,7 @@ async function createRenderQueue ({ routes, config, store, schema }) {
     return {
       path: path.toUrlPath(),
       htmlOutput: path.toFilePath(config.outDir, 'html'),
-      dataOutput: query ? path.toFilePath(dataDir, 'json') : null,
+      dataOutput: query ? path.toFilePath(config.dataDir, 'json') : null,
       variables: { ...variables, path: node.path },
       component: page.component,
       query

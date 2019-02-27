@@ -336,7 +336,7 @@ module.exports = (app, { isProd, isServer }) => {
       'process.env.PUBLIC_PATH': JSON.stringify(pathPrefix),
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || ''),
       'GRIDSOME_CACHE_DIR': JSON.stringify(projectConfig.cacheDir),
-      'GRIDSOME_DATA_DIR': JSON.stringify(`${projectConfig.cacheDir}/data`),
+      'GRIDSOME_DATA_DIR': JSON.stringify(projectConfig.dataDir),
       'GRIDSOME_MODE': JSON.stringify(process.env.GRIDSOME_MODE || ''),
       'process.isClient': !isServer,
       'process.isServer': isServer,

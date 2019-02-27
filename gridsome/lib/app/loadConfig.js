@@ -86,6 +86,7 @@ module.exports = (context, options = {}, pkg = {}) => {
   config.appPath = path.resolve(__dirname, '../../app')
   config.tmpDir = resolve('src/.temp')
   config.cacheDir = resolve('.cache')
+  config.dataDir = path.join(config.cacheDir, 'data')
   config.imageCacheDir = resolve('.cache', assetsDir, 'static')
   config.minProcessImageWidth = 500 // TODO: find a better name for this
   config.maxImageWidth = localConfig.maxImageWidth || 1920
