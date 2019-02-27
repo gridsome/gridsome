@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+<a name="0.5.4"></a>
+## [0.5.4](https://github.com/gridsome/gridsome/compare/gridsome@0.5.3...gridsome@0.5.4) (2019-02-27)
+
+
+### Bug Fixes
+
+* **build:** ensure data directory exists before building ([#93](https://github.com/gridsome/gridsome/issues/93)) ([3453aff](https://github.com/gridsome/gridsome/commit/3453aff))
+* **graphql:** don’t process non graphql requests ([#220](https://github.com/gridsome/gridsome/issues/220)) ([c276b98](https://github.com/gridsome/gridsome/commit/c276b98))
+
+
+
+
+
 <a name="0.5.3"></a>
 ## [0.5.3](https://github.com/gridsome/gridsome/compare/gridsome@0.5.2...gridsome@0.5.3) (2019-02-26)
 
