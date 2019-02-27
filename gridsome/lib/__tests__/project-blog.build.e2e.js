@@ -152,6 +152,16 @@ test('navigate to /', async () => {
   await page.waitForSelector('#app.home-1')
 })
 
+test('navigate to /asdf', async () => {
+  await page.click('.not-found-link')
+  await page.waitForSelector('#app.not-found')
+})
+
+test('navigate to /', async () => {
+  await page.click('.home-link')
+  await page.waitForSelector('#app.home-1')
+})
+
 test('open /2/ directly', async () => {
   await page.goto('http://localhost:8080/2/', { waitUntil: 'networkidle2' })
   await page.waitForSelector('#app.is-mounted')

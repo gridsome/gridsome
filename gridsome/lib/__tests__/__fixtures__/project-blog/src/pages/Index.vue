@@ -2,6 +2,7 @@
   <Layout :class="`home-${$page.posts.pageInfo.currentPage}`">
     <h1>Blog</h1>
     <span class="current-page">{{ $page.posts.pageInfo.currentPage }}</span>
+    <g-link class="not-found-link" to="/asdf">Show /404</g-link>
     <ul>
       <li v-for="{ node } in $page.posts.edges" :key="node.id" :class="`post-${node.id}`">
         <span>{{ node.title }}</span>

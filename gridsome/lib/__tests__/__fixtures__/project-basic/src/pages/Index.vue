@@ -8,6 +8,7 @@
     <g-link href="//outsidelink3.com">External Links</g-link>
     <g-link href="https://www.gridsome.org/docs">Internal Links</g-link>
     <g-link :class="{ 'g-link-2': true }" :to="{ name: 'home' }" active-class="test-active">Home</g-link>
+    <g-link class="not-found-link" to="/asdf">Show /404</g-link>
     <g-link class="g-link-file" to="~/assets/dummy.pdf">Download</g-link>
     
     <g-image class="g-image-1" src="~/assets/logo.svg" alt="SVG logo" width="300" />

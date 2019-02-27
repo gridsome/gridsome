@@ -1,5 +1,6 @@
 import Vue from 'vue'
 import { getResults, formatError } from './shared'
+import { NOT_FOUND_NAME, MODULE_NOT_FOUND } from '../utils/constants'
 
 const merge = Vue.config.optionMergeStrategies
 
@@ -28,11 +29,17 @@ export default ({ options }, query = true) => {
       return (to, from, next) => {
         import(/* webpackChunkName: "page-query" */ './fetch').then(m => {
           m.default(to, options.__pageQuery)
-            .then(() => next())
+            .then(res => {
+              if (res.code === 404) {
+                next({ name: NOT_FOUND_NAME, params: { 0: to.path }})
+              } else {
+                next()
+              }
+            })
             .catch(err => {
-              if (err.code === 'MODULE_NOT_FOUND') {
+              if (err.code === MODULE_NOT_FOUND || err.code === 404) {
                 console.error(err) // eslint-disable-line
-                next({ name: '*', params: { 0: to.path }})
+                next({ name: NOT_FOUND_NAME, params: { 0: to.path }})
               } else {
                 formatError(err, to)
               }
