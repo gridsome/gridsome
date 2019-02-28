@@ -46,6 +46,10 @@ function fieldValue (value, currentValue) {
       return currentValue
     }
 
+    if (isRefFieldDefinition(currentValue)) {
+      return currentValue
+    }
+
     for (let i = 0; i < length; i++) {
       arr[0] = fieldValue(value[i], arr[0])
     }

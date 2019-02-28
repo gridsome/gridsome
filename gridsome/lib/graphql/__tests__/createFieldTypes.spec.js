@@ -69,6 +69,14 @@ const nodes = [
         }
       }
     }
+  },
+  {
+    fields: {
+      ref: null,
+      refs: [],
+      objList: [],
+      numberList: []
+    }
   }
 ]
 
