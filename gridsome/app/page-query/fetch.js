@@ -2,10 +2,11 @@
 
 import router from '../router'
 import { setResults } from './shared'
-import { unslash } from '../utils/helpers'
+import prefetch from '../utils/prefetch'
+import { unslashEnd } from '../utils/helpers'
 import { NOT_FOUND_NAME, NOT_FOUND_PATH } from '../utils/constants'
 
-export default (route, query) => {
+export default (route, query, shouldPrefetch = false) => {
   if (GRIDSOME_MODE === 'serve') {
     const { page, ...params } = route.params
     const { location } = router.resolve({ ...route, params })
@@ -36,15 +37,39 @@ export default (route, query) => {
         })
     })
   } else if (GRIDSOME_MODE === 'static') {
+    const isPrefetched = {}
+
     return new Promise((resolve, reject) => {
       const { name, meta: { isIndex }} = route
-      const path = unslash(name === NOT_FOUND_NAME ? NOT_FOUND_PATH : route.path)
-      const jsonPath = unslash(isIndex === false ? `${path}.json` : `${path}/index.json`)
+      const path = unslashEnd(name === NOT_FOUND_NAME ? NOT_FOUND_PATH : route.path)
 
-      import(/* webpackChunkName: "data/" */ `${GRIDSOME_DATA_DIR}/${jsonPath}`)
+      import(`${GRIDSOME_DATA_DIR}/index.json`)
         .then(res => {
-          if (res.errors) reject(res.errors[0])
-          else (setResults(route.path, res.data), resolve(res))
+          const jsonPath = isIndex === false
+            ? `${path}.${res[path]}.json`
+            : `${path}/index.${res[path]}.json`
+
+          if (shouldPrefetch) {
+            if (!isPrefetched[jsonPath]) {
+              isPrefetched[jsonPath] = prefetch(jsonPath)
+            }
+
+            return isPrefetched[jsonPath]
+              .then(resolve)
+              .catch(reject)
+          }
+
+          fetch(jsonPath, {
+            headers: { 'Content-Type': 'application/json' }
+          })
+            .then(res => res.json())
+            .then(res => {
+              if (res.errors) reject(res.errors[0])
+              else (setResults(route.path, res.data), resolve(res))
+            })
+            .catch(err => {
+              reject(err)
+            })
         })
         .catch(err => {
           reject(err)

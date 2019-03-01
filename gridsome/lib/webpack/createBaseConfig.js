@@ -234,15 +234,7 @@ module.exports = (app, { isProd, isServer }) => {
         filename: `${assetsDir}/css/styles${useHash ? '.[contenthash:8]' : ''}.css`
       }])
 
-    const cacheGroups = {
-      data: {
-        test: m => m.resource && m.request.startsWith(`${projectConfig.cacheDir}/data`),
-        name: false,
-        chunks: 'all',
-        maxSize: 60000,
-        minSize: 5000
-      }
-    }
+    const cacheGroups = {}
 
     if (projectConfig.css.split !== true) {
       cacheGroups.styles = {

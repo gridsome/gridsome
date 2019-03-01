@@ -36,7 +36,7 @@ function intersectionHandler ({ intersectionRatio, target }) {
         const fetchComponentData = options => {
           setTimeout(() => {
             import(/* webpackChunkName: "page-query" */ '../page-query/fetch').then(m => {
-              m.default(route, options.__pageQuery)
+              m.default(route, options.__pageQuery, true)
             })
           }, 250)
         }

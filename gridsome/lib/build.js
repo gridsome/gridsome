@@ -79,11 +79,13 @@ async function createRenderQueue ({ routes, config, store, schema }) {
     const path = createPath(node.path, variables.page, page.isIndex)
 
     return {
+      pathFn: path,
       path: path.toUrlPath(),
       htmlOutput: path.toFilePath(config.outDir, 'html'),
-      dataOutput: query ? path.toFilePath(config.dataDir, 'json') : null,
       variables: { ...variables, path: node.path },
       component: page.component,
+      dataHashSum: null,
+      dataOutput: null,
       query
     }
   }
@@ -200,11 +202,14 @@ async function runWebpack (app) {
 
 async function renderPageQueries (queue, app) {
   const timer = hirestime()
+  const hashSum = require('hash-sum')
   const context = app.createSchemaContext()
-  const pages = queue.filter(page => !!page.dataOutput)
+  const pages = queue.filter(page => !!page.query)
+  const { schema, config: { outDir, dataDir }} = app
 
-  await pMap(pages, async ({ dataOutput, query, variables, component }) => {
-    const results = await execute(app.schema, query, undefined, context, variables)
+  await pMap(pages, async page => {
+    const { query, variables, component, pathFn } = page
+    const results = await execute(schema, query, undefined, context, variables)
 
     if (results.errors) {
       const relPath = path.relative(app.context, component)
@@ -212,8 +217,20 @@ async function renderPageQueries (queue, app) {
       throw new Error(results.errors[0])
     }
 
-    await fs.outputFile(dataOutput, JSON.stringify(results))
+    page.dataHashSum = hashSum(results)
+    page.dataOutput = pathFn.toFilePath(outDir, `${page.dataHashSum}.json`)
+
+    await fs.outputFile(page.dataOutput, JSON.stringify(results))
   }, { concurrency: sysinfo.cpus.physical })
+
+  const hashIndex = {}
+  const hashIndexPath = path.join(dataDir, 'index.json')
+
+  for (const page of pages) {
+    hashIndex[page.path] = page.dataHashSum
+  }
+
+  await fs.outputFile(hashIndexPath, JSON.stringify(hashIndex, null, 2))
 
   info(`Run GraphQL (${pages.length} queries) - ${timer(hirestime.S)}s`)
 }
