@@ -183,11 +183,19 @@ async function createRenderQueue ({ routes, config, store, schema }) {
 }
 
 async function runWebpack (app) {
+  const compileTime = hirestime()
+
   if (!process.stdout.isTTY) {
     info(`Compiling assets...`)
   }
 
-  return require('./webpack/compileAssets')(app)
+  const stats = await require('./webpack/compileAssets')(app)
+
+  if (app.config.css.split !== true) {
+    await removeStylesJsChunk(stats, app.config.outDir)
+  }
+
+  info(`Compile assets - ${compileTime(hirestime.S)}s`)
 }
 
 async function renderPageQueries (queue, app) {
@@ -278,4 +286,23 @@ async function processImages (queue, config) {
   worker.end()
 
   info(`Process images (${totalAssets} images) - ${timer(hirestime.S)}s`)
+}
+
+// borrowed from vuepress/core/lib/build.js
+// webpack fails silently in some cases, appends styles.js to app.js to fix it
+// https://github.com/webpack-contrib/mini-css-extract-plugin/issues/85
+async function removeStylesJsChunk (stats, outDir) {
+  const { children: [child] } = stats
+  const styleChunk = child.assets.find(a => /styles(\.\w{8})?\.js$/.test(a.name))
+  const appChunk = child.assets.find(a => /app(\.\w{8})?\.js$/.test(a.name))
+
+  if (!styleChunk) return
+
+  const styleChunkPath = path.join(outDir, styleChunk.name)
+  const styleChunkContent = await fs.readFile(styleChunkPath, 'utf-8')
+  const appChunkPath = path.join(outDir, appChunk.name)
+  const appChunkContent = await fs.readFile(appChunkPath, 'utf-8')
+
+  await fs.remove(styleChunkPath)
+  await fs.writeFile(appChunkPath, styleChunkContent + appChunkContent)
 }

@@ -29,6 +29,7 @@ module.exports = (context, options = {}, pkg = {}) => {
   const plugins = []
 
   const css = {
+    split: false,
     loaderOptions: {
       sass: {
         indentedSyntax: true

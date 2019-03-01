@@ -234,17 +234,26 @@ module.exports = (app, { isProd, isServer }) => {
         filename: `${assetsDir}/css/styles${useHash ? '.[contenthash:8]' : ''}.css`
       }])
 
-    config.optimization.splitChunks({
-      cacheGroups: {
-        data: {
-          test: m => m.resource && m.request.startsWith(`${projectConfig.cacheDir}/data`),
-          name: false,
-          chunks: 'all',
-          maxSize: 60000,
-          minSize: 5000
-        }
+    const cacheGroups = {
+      data: {
+        test: m => m.resource && m.request.startsWith(`${projectConfig.cacheDir}/data`),
+        name: false,
+        chunks: 'all',
+        maxSize: 60000,
+        minSize: 5000
       }
-    })
+    }
+
+    if (projectConfig.css.split !== true) {
+      cacheGroups.styles = {
+        name: 'styles',
+        test: m => /css\/mini-extract/.test(m.type),
+        chunks: 'all',
+        enforce: true
+      }
+    }
+
+    config.optimization.splitChunks({ cacheGroups })
   }
 
   if (process.env.GRIDSOME_TEST) {

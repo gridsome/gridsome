@@ -169,9 +169,24 @@ test('compile scripts correctly', () => {
   expect(appJS).toMatch('// ECMAScript 6 symbols shim')
 })
 
+test('compile a single css file', () => {
+  const files = fs.readdirSync(path.join(context, 'dist/assets/css'))
+  expect(files.length).toEqual(1)
+})
+
+test('remove the styles.js chunk', () => {
+  const files = fs.readdirSync(path.join(context, 'dist/assets/js'))
+  const chunk = files.find(file => file === 'styles.js')
+  expect(chunk).toBeUndefined()
+})
+
 test('open homepage in browser', async () => {
   await page.goto('http://localhost:8080/', { waitUntil: 'networkidle2' })
   await page.waitForSelector('#app.is-mounted')
+})
+
+test('load .g-image', async () => {
+  await page.waitForSelector('.g-image--loaded')
 })
 
 test('navigate to /docs/1', async () => {

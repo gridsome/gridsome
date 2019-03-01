@@ -22,3 +22,9 @@ export default {
   }
 }
 </script>
+
+<style>
+.is-mounted {
+  background: #f2f2f2;
+}
+</style>

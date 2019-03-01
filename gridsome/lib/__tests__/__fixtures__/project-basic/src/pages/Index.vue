@@ -88,3 +88,9 @@ export default {
   }
 }
 </script>
+
+<style>
+.is-mounted {
+  background-color: #f2f2f2;
+}
+</style>
