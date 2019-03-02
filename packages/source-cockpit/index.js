@@ -9,7 +9,8 @@ class CockpitSource {
       accessToken: undefined,
       typeName: 'Cockpit',
       routes: {},
-      apiLimit: 1000
+      apiLimit: 1000,
+      languages: [],
     }
   }
 
@@ -67,14 +68,31 @@ class CockpitSource {
 
       data.entries.forEach(entry => {
         const collection = store.getContentType(typeName)
+        const fieldsSpec = {}
 
-        const fields = Object.keys(data.fields)
-          .map(f => data.fields[f].name)
+        // Prepare the fields specifications and clone any fields
+        // which can be localized for each given language code.
+        Object.keys(data.fields).forEach(fieldname => {
+          const spec = data.fields[fieldname]
+          fieldsSpec[fieldname] = spec
+          if (spec.localize) {
+            for (const code of this.options.languages) {
+              const fieldLocalized = { ...spec }
+              fieldLocalized.name = `${spec.name}_${code}`
+              fieldsSpec[fieldLocalized.name] = fieldLocalized
+            }
+          }
+        })
+
+        // Prepare a fields object from the field spec mapped to
+        // the entry's field content.
+        const fields = Object.keys(fieldsSpec)
+          .map(f => fieldsSpec[f].name)
           .reduce((x, y) => ({ ...x, [y]: entry[y] }), {})
 
-        // Process fields.
-        Object.keys(data.fields).forEach(async f => {
-          const fieldDefinition = data.fields[f]
+        // Process fields to prepare them for Gridsome.
+        Object.keys(fieldsSpec).forEach(async f => {
+          const fieldDefinition = fieldsSpec[f]
           switch (fieldDefinition.type) {
             case 'repeater':
               collection.addSchemaField(camelCase(fieldDefinition.name), () => ({

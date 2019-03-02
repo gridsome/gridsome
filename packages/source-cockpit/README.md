@@ -82,6 +82,30 @@ module.exports = {
 
 ```
 
+## i18n
+
+Fields in Cockpit can be localized into different languages. This plugin is able to import localized versions of fields. To import each language you need to specify the language code in a `languages` array in the plugin options, something like this:
+
+```
+module.exports = {
+  plugins: [
+    {
+      use: '@gridsome/source-cockpit',
+      options: {
+        accessToken: process.env.ACCESSTOKEN,
+        host: process.env.APIHOST
+        languages: [
+          'it',
+          'de'
+        ]
+      }
+    }
+  ]
+}
+```
+
+In the example above, this plugin will add fields (if they exist and are localized) to GraphQL. Each localized field will have the two letter code appended, for example, if you have a field called `intro` which is localized and you have `it` and `de` as your languages you will see three fields added to GraphQL called `intro`, `introIt` and `introDe`
+
 ## Cockpit API configuration
 
 Cockpit CMS must be configured to allow access to the API using a token. To set this up visit `/restadmin/index` and configure the `Custom keys` section. You may need to generate a key and also allow access to specific api paths, for example:
