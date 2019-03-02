@@ -10,8 +10,6 @@ module.exports = {
   SOURCE_PLUGIN: 'source',
   TRANSFORMER_PLUGIN: 'transformer',
 
-  PER_PAGE: 25,
-
   SUPPORTED_IMAGE_TYPES: ['.png', '.jpeg', '.jpg', '.gif', '.svg', '.webp'],
 
   BOOTSTRAP_CONFIG: 0,
@@ -25,6 +23,8 @@ module.exports = {
 
   NODE_FIELDS: ['id', 'typeName', 'title', 'slug', 'path', 'date', 'content', 'excerpt'],
   PAGE_FIELDS: ['id', 'typeName', 'path', 'slug'],
+  SORT_ORDER: 'DESC',
+  PER_PAGE: 25,
 
   ISO_8601_FORMAT: [
     'YYYY',
