@@ -10,7 +10,7 @@ class CockpitSource {
       typeName: 'Cockpit',
       routes: {},
       apiLimit: 1000,
-      languages: [],
+      languages: []
     }
   }
 
