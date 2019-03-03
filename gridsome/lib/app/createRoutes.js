@@ -1,6 +1,7 @@
 const path = require('path')
 const camelCase = require('camelcase')
 const { info } = require('../utils/log')
+const { parsePageQuery } = require('../graphql/page-query')
 
 const {
   PAGED_ROUTE,
@@ -97,9 +98,9 @@ module.exports = ({ store, config }) => {
   const notFoundPage = store.pages.findOne({ type: '404' })
   const notFoundRoute = {
     component: path.join(config.appPath, 'pages', '404.vue'),
+    pageQuery: parsePageQuery(),
     type: NOT_FOUND_ROUTE,
     isIndex: false,
-    pageQuery: {},
     path: '/404',
     name: '404'
   }
