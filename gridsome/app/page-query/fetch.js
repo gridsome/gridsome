@@ -1,4 +1,4 @@
-/* global GRIDSOME_MODE, GRIDSOME_DATA_DIR */
+/* global GRIDSOME_MODE */
 
 import router from '../router'
 import { setResults } from './shared'
@@ -37,43 +37,48 @@ export default (route, query, shouldPrefetch = false) => {
         })
     })
   } else if (GRIDSOME_MODE === 'static') {
+    const publicPath = process.env.PUBLIC_PATH
     const isPrefetched = {}
 
     return new Promise((resolve, reject) => {
-      const { name, meta: { isIndex }} = route
-      const path = unslashEnd(name === NOT_FOUND_NAME ? NOT_FOUND_PATH : route.path)
+      const { name, meta: { isIndex, hash }} = route
+      const usePath = name === NOT_FOUND_NAME ? NOT_FOUND_PATH : route.path
+      const path = unslashEnd(usePath) || '/'
 
-      import(`${GRIDSOME_DATA_DIR}/index.json`)
-        .then(res => {
-          const jsonPath = isIndex === false
-            ? `${path}.${res[path]}.json`
-            : `${path}/index.${res[path]}.json`
+      const load = hash => {
+        const segments = path.split('/').filter(s => !!s)
+        const filename = isIndex === false ? segments.pop() : 'data'
+        const jsonPath = publicPath + segments.concat(`${filename}.${hash}.json`).join('/') 
 
-          if (shouldPrefetch) {
-            if (!isPrefetched[jsonPath]) {
-              isPrefetched[jsonPath] = prefetch(jsonPath)
-            }
-
-            return isPrefetched[jsonPath]
-              .then(resolve)
-              .catch(reject)
+        if (shouldPrefetch) {
+          if (!isPrefetched[jsonPath]) {
+            isPrefetched[jsonPath] = prefetch(jsonPath)
           }
 
-          fetch(jsonPath, {
-            headers: { 'Content-Type': 'application/json' }
+          return isPrefetched[jsonPath]
+            .then(resolve)
+            .catch(reject)
+        }
+
+        fetch(jsonPath, {
+          headers: { 'Content-Type': 'application/json' }
+        })
+          .then(res => res.json())
+          .then(res => {
+            if (res.errors) reject(res.errors[0])
+            else (setResults(route.path, res.data), resolve(res))
           })
-            .then(res => res.json())
-            .then(res => {
-              if (res.errors) reject(res.errors[0])
-              else (setResults(route.path, res.data), resolve(res))
-            })
-            .catch(err => {
-              reject(err)
-            })
-        })
-        .catch(err => {
-          reject(err)
-        })
+          .catch(reject)
+      }
+
+      if (typeof hash === 'function') {
+        hash().then(hashIndex => {
+          if (hashIndex[path]) load(hashIndex[path])
+          else resolve({ code: 404 })
+        }).catch(reject)
+      } else {
+        load(hash)
+      }
     })
   }
 }

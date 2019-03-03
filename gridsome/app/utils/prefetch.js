@@ -10,9 +10,17 @@ export default function prefetch (url) {
   return new Promise((resolve, reject) => {
     if (isSupported) {
       const link = document.createElement('link')
+      const removeLink = () => document.head.removeChild(link)
       
-      link.onload = resolve
-      link.onerror = reject
+      link.onerror = err => {
+        removeLink()
+        reject(err)
+      }
+
+      link.onload = () => {
+        removeLink()
+        resolve()
+      }
       
       link.setAttribute('rel', 'prefetch')
       link.setAttribute('href', url)

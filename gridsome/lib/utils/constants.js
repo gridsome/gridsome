@@ -1,10 +1,10 @@
 module.exports = {
-  PAGED_ROUTE: 'paged',
-  STATIC_ROUTE: 'static',
-  PAGED_TEMPLATE: 'paged_template',
-  STATIC_TEMPLATE_ROUTE: 'static_template',
-  DYNAMIC_TEMPLATE_ROUTE: 'dynamic_template',
-  NOT_FOUND_ROUTE: '404',
+  STATIC_ROUTE: 1,
+  PAGED_ROUTE: 2,
+  PAGED_TEMPLATE: 3,
+  STATIC_TEMPLATE_ROUTE: 4,
+  DYNAMIC_TEMPLATE_ROUTE: 5,
+  NOT_FOUND_ROUTE: 1,
 
   NORMAL_PLUGIN: 'plugin',
   SOURCE_PLUGIN: 'source',

@@ -1,5 +1,6 @@
 import router from '../router'
 import caniuse from '../utils/caniuse'
+import fetch from '../page-query/fetch'
 import { stripPathPrefix } from '../utils/helpers'
 import { createObserver } from '../utils/intersectionObserver'
 
@@ -31,13 +32,11 @@ function intersectionHandler ({ intersectionRatio, target }) {
         const { route } = router.resolve({ path })
         const options = route.matched[0].components.default
         
-        if (route.meta.isStatic) return
+        if (!route.meta.hash) return
 
         const fetchComponentData = options => {
           setTimeout(() => {
-            import(/* webpackChunkName: "page-query" */ '../page-query/fetch').then(m => {
-              m.default(route, options.__pageQuery, true)
-            })
+            fetch(route, options.__pageQuery, true)
           }, 250)
         }
 

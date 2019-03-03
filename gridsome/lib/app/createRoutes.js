@@ -1,7 +1,7 @@
 const path = require('path')
 const camelCase = require('camelcase')
 const { info } = require('../utils/log')
-const { parsePageQuery } = require('../graphql/page-query')
+const { parsePageQuery, processPageQuery } = require('../graphql/page-query')
 
 const {
   PAGED_ROUTE,
@@ -14,27 +14,141 @@ const {
 
 const PAGE_PARAM = ':page(\\d+)?'
 
+class Routes {
+  constructor ({ outDir, dataDir }) {
+    this.outDir = outDir
+    this.dataDir = dataDir
+    this.routes = []
+  }
+
+  addRoute (options) {
+    const route = new Route(options, this)
+    this.routes.push(route)
+    return route
+  }
+
+  get sortedRoutes () {
+    return this.routes.slice().sort((a, b) => a.type - b.type)
+  }
+
+  get renderQueue () {
+    const res = []
+
+    for (const route of this.sortedRoutes) {
+      route.renderQueue.forEach(entry => {
+        res.push(entry)
+      })
+    }
+
+    return res
+  }
+}
+
+const pageQueryCache = {}
+
+class Route {
+  constructor (options, routes) {
+    this.type = options.type
+    this.name = options.name
+    this.path = options.path
+    this.route = options.route
+    this.isIndex = options.isIndex
+    this.pageQuery = options.pageQuery
+    this.component = options.component
+    this.chunkName = options.chunkName
+    this.typeName = options.typeName
+    this.routes = routes
+
+    this.renderQueue = []
+  }
+
+  get metaDataPath () {
+    const name = this.chunkName || this.name
+    return path.join(this.routes.dataDir, 'routes-meta', `${name}.json`)
+  }
+
+  addRenderPath (path, variables = {}) {
+    const renderItem = new RenderItem(path, {
+      variables: { page: 1, ...variables, path }
+    }, this)
+
+    this.renderQueue.push(renderItem)
+
+    return renderItem
+  }
+
+  processPageQuery () {
+    if (!pageQueryCache[this.component]) {
+      pageQueryCache[this.component] = processPageQuery(this.pageQuery)
+    }
+
+    return pageQueryCache[this.component]
+  }
+}
+
+class RenderItem {
+  constructor (path, options, route) {
+    this.variables = options.variables || {}
+    this.segments = path.split('/').filter(v => !!v)
+    this.route = route
+
+    if (this.variables.page > 1) {
+      this.segments.push(this.variables.page)
+    }
+
+    this.hashSum = null
+  }
+
+  get path () {
+    return `/${this.segments.join('/')}`
+  }
+
+  get pageQuery () {
+    return this.route.processPageQuery()
+  }
+
+  get hasPageQuery () {
+    return this.pageQuery.query !== null
+  }
+
+  get htmlOutput () {
+    return this.createFilePath(this.route.routes.outDir, 'index', 'html')
+  }
+
+  get dataOutput () {
+    if (this.hasPageQuery) {
+      const ext = this.hashSum ? `${this.hashSum}.json` : 'json'
+      return this.createFilePath(this.route.routes.outDir, 'data', ext)
+    }
+
+    return null
+  }
+
+  setHashSum (hash) {
+    this.hashSum = hash
+  }
+
+  createFilePath (context, name, ext) {
+    const segments = this.segments.map(s => decodeURIComponent(s))
+    const fileName = this.route.isIndex ? `${name}.${ext}` : `${segments.pop() || name}.${ext}`
+    return path.join(context, ...segments, fileName)
+  }
+}
+
 module.exports = ({ store, config }) => {
-  const staticPages = []
-  const pagedPages = []
-  const pagedTemplates = []
-  const staticTemplates = []
-  const dynamicTemplates = []
-  const specialPages = []
+  const routes = new Routes(config)
 
   store.pages.find({ type: 'page' }).forEach(page => {
     const name = camelCase(page.path.replace(/\//g, ' ')) || 'home'
-    let arr = staticPages
     let type = STATIC_ROUTE
     let route = page.path
 
     if (page.pageQuery.paginate) {
       route = `${page.path === '/' ? '' : page.path}/${PAGE_PARAM}`
       type = PAGED_ROUTE
-      arr = pagedPages
     }
 
-    arr.push({
+    routes.addRoute({
       name,
       type,
       route,
@@ -68,7 +182,7 @@ module.exports = ({ store, config }) => {
     // while static routes has path and chunkName.
 
     if (options.route) {
-      dynamicTemplates.push({
+      routes.addRoute({
         type: isPaged ? PAGED_TEMPLATE : DYNAMIC_TEMPLATE_ROUTE,
         route: makePath(options.route),
         name: camelCase(typeName),
@@ -82,7 +196,7 @@ module.exports = ({ store, config }) => {
       const length = nodes.length
 
       for (let i = 0; i < length; i++) {
-        staticTemplates.push({
+        routes.addRoute({
           type: isPaged ? PAGED_TEMPLATE : STATIC_TEMPLATE_ROUTE,
           path: makePath(nodes[i].path),
           chunkName: camelCase(typeName),
@@ -95,6 +209,12 @@ module.exports = ({ store, config }) => {
     }
   })
 
+  routes.addRoute(createNotFoundRoute(store, config))
+
+  return routes
+}
+
+function createNotFoundRoute (store, config) {
   const notFoundPage = store.pages.findOne({ type: '404' })
   const notFoundRoute = {
     component: path.join(config.appPath, 'pages', '404.vue'),
@@ -110,14 +230,5 @@ module.exports = ({ store, config }) => {
     notFoundRoute.pageQuery = notFoundPage.pageQuery
   }
 
-  staticPages.push(notFoundRoute)
-
-  return [
-    ...staticPages,
-    ...pagedPages,
-    ...pagedTemplates,
-    ...staticTemplates,
-    ...dynamicTemplates,
-    ...specialPages
-  ]
+  return notFoundRoute
 }
