@@ -56,6 +56,9 @@ class CockpitSource {
       const { _id: id, title, created, ...fields } = asset
       const date = new Date(created * 1000)
 
+      // Path is reserved for use by Gridsome.
+      fields.assetPath = fields.path
+
       contentType.addNode({ id, date, title, fields })
     }
   }
