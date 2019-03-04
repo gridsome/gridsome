@@ -5,11 +5,20 @@
 ## Install
 - `yarn add @gridsome/remark-prismjs`
 - `npm install @gridsome/remark-prismjs`
-- In your `main.js` file, import a Prism css theme, for example: `import 'prismjs/themes/prism.css'`
 
 ## Usage
 
-Add syntax highlighter to a single markdown source:
+In your `main.js` file, import a Prism css theme
+
+```js
+import 'prismjs/themes/prism.css'
+
+export default function (Vue) {
+  // ...
+}
+```
+
+In `gridsome.config.js`, add syntax highlighter to a single markdown source:
 
 ```js
 module.exports = {
@@ -30,7 +39,7 @@ module.exports = {
 }
 ```
 
-Add syntax highlighter to all markdown sources:
+Or add syntax highlighter to all markdown sources:
 
 ```js
 module.exports = {
