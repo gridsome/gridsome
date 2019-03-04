@@ -5,6 +5,7 @@
 ## Install
 - `yarn add @gridsome/remark-prismjs`
 - `npm install @gridsome/remark-prismjs`
+- In your `main.js` file, import a Prism css theme, for example: `import 'prismjs/themes/prism.css'`
 
 ## Usage
 
