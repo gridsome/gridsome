@@ -116,9 +116,9 @@ test('sort belongsTo by multiple fields', async () => {
   const { errors, data } = await createSchemaAndExecute(query)
 
   expect(errors).toBeUndefined()
-  // expect(data.author.belongsTo.edges[0].node.id).toEqual('2')
-  // expect(data.author.belongsTo.edges[1].node.id).toEqual('1')
-  // expect(data.author.belongsTo.edges[2].node.id).toEqual('3')
+  expect(data.author.belongsTo.edges[0].node.id).toEqual('2')
+  expect(data.author.belongsTo.edges[1].node.id).toEqual('1')
+  expect(data.author.belongsTo.edges[2].node.id).toEqual('3')
 })
 
 test('handle pagination for filtered belongsTo', async () => {
