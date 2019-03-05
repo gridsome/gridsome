@@ -191,11 +191,36 @@ test('load .g-image', async () => {
 
 test('navigate to /docs/1', async () => {
   await page.click('.doc-link-1')
-  await page.waitForSelector('#app.doc-template')
+  await page.waitForSelector('#app.doc-template-1')
 })
 
 test('navigate to /pages/2', async () => {
   await page.click('.page-link-2')
+  await page.waitForSelector('#app.page-template')
+})
+
+test('navigate to /', async () => {
+  await page.click('.home-link')
+  await page.waitForSelector('#app.home')
+})
+
+test('navigate to /docs/2', async () => {
+  await page.click('.doc-link-2')
+  await page.waitForSelector('#app.doc-template-2.page-1')
+})
+
+test('navigate to /docs/2/2', async () => {
+  await page.click('nav[role="navigation"] a.active + a')
+  await page.waitForSelector('#app.doc-template-2.page-2')
+})
+
+test('navigate to /docs/2/3', async () => {
+  await page.click('nav[role="navigation"] a.active + a')
+  await page.waitForSelector('#app.doc-template-2.page-3')
+})
+
+test('navigate to /pages/1', async () => {
+  await page.click('.page-link-1')
   await page.waitForSelector('#app.page-template')
 })
 

@@ -71,6 +71,7 @@ const {
   STATIC_ROUTE,
   PAGED_TEMPLATE,
   NOT_FOUND_ROUTE,
+  PAGED_STATIC_TEMPLATE,
   STATIC_TEMPLATE_ROUTE,
   DYNAMIC_TEMPLATE_ROUTE
 } = require('./utils/constants')
@@ -107,6 +108,27 @@ async function createRenderQueue ({ routes, store, schema }) {
         for (let i = 0; i < length; i++) {
           const variables = contextValues(nodes[i], pageQuery.variables)
           route.addRenderPath(nodes[i].path, variables)
+        }
+
+        break
+      }
+
+      case PAGED_STATIC_TEMPLATE: {
+        const { fieldName } = pageQuery.paginate
+        const { belongsTo } = rootFields[fieldName].type.getFields()
+        const filter = belongsTo.args.find(arg => arg.name === 'filter')
+        const fields = filter.type.getFields()
+        const node = store.getNodeByPath(route.path)
+        const variables = contextValues(node, pageQuery.variables)
+        const filters = pageQuery.getFilters(variables)
+        const perPage = pageQuery.getPerPage(variables)
+        const query = createFilterQuery(filters, fields)
+        const key = createBelongsToKey(node)
+        const totalNodes = store.index.count({ ...query, [key]: { $eq: true }})
+        const totalPages = Math.ceil(totalNodes / perPage) || 1
+
+        for (let i = 1; i <= totalPages; i++) {
+          route.addRenderPath(node.path, { ...variables, page: i })
         }
 
         break

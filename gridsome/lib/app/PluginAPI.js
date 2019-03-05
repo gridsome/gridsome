@@ -22,6 +22,7 @@ class PluginAPI {
         regenerateTimeout = setTimeout(() => {
           if (app.isBootstrapped) {
             app.createRoutes()
+            app.store.setUpdateTime()
             app.codegen.generate('routes.js')
           }
         }, 20)
@@ -32,6 +33,8 @@ class PluginAPI {
 
       this.store.on('change', (node, oldNode = node) => {
         if (!app.isBootstrapped) return
+
+        app.store.setUpdateTime()
 
         if (
           (node && node.withPath && node === oldNode) ||
