@@ -43,6 +43,7 @@
     "*.{js,json,css}": [
       "prettier --write",
       "git add"
-    ]
+    ],
+    "*.{js,vue}": "eslint --fix"
   }
 }
