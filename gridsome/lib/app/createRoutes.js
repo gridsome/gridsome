@@ -1,4 +1,5 @@
 const path = require('path')
+const hashSum = require('hash-sum')
 const camelCase = require('camelcase')
 const { info } = require('../utils/log')
 const { parsePageQuery, processPageQuery } = require('../graphql/page-query')
@@ -15,9 +16,10 @@ const {
 const PAGE_PARAM = ':page(\\d+)?'
 
 class Routes {
-  constructor ({ outDir, dataDir }) {
+  constructor ({ outDir, dataDir, assetsDir }) {
     this.outDir = outDir
     this.dataDir = dataDir
+    this.assetsDir = assetsDir
     this.routes = []
   }
 
@@ -90,6 +92,7 @@ class RenderItem {
   constructor (path, options, route) {
     this.variables = options.variables || {}
     this.segments = path.split('/').filter(v => !!v)
+    this.urlSegments = this.segments.map(s => decodeURIComponent(s))
     this.route = route
 
     if (this.variables.page > 1) {
@@ -97,6 +100,8 @@ class RenderItem {
     }
 
     this.hashSum = null
+    this.data = null
+    this.group = null
   }
 
   get path () {
@@ -112,26 +117,27 @@ class RenderItem {
   }
 
   get htmlOutput () {
-    return this.createFilePath(this.route.routes.outDir, 'index', 'html')
+    const segments = this.urlSegments.slice()
+    const fileName = this.route.isIndex ? 'index.html' : `${segments.pop()}.html`
+    return path.join(this.route.routes.outDir, ...segments, fileName)
   }
 
   get dataOutput () {
-    if (this.hasPageQuery) {
-      const ext = this.hashSum ? `${this.hashSum}.json` : 'json'
-      return this.createFilePath(this.route.routes.outDir, 'data', ext)
-    }
-
-    return null
+    return this.data
+      ? path.join(this.route.routes.assetsDir, 'data', `${this.group}/${this.hashSum}.json`)
+      : null
   }
 
-  setHashSum (hash) {
-    this.hashSum = hash
+  get metaData () {
+    return this.data ? [this.group, this.hashSum] : null
   }
 
-  createFilePath (context, name, ext) {
-    const segments = this.segments.map(s => decodeURIComponent(s))
-    const fileName = this.route.isIndex ? `${name}.${ext}` : `${segments.pop() || name}.${ext}`
-    return path.join(context, ...segments, fileName)
+  setData (data, group = 1) {
+    this.data = data
+    this.group = group
+    this.hashSum = hashSum(data)
+
+    return this.dataOutput
   }
 }
 

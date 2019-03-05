@@ -10,15 +10,15 @@ test('create render queue for basic project', async () => {
 
   const renderPaths = queue.map(entry => entry.path)
   const htmlOutputs = queue.map(entry => entry.htmlOutput)
-  const dataOutputs = queue.map(entry => entry.dataOutput)
+  const dataOutputs = queue.map(entry => entry.setData({ path: entry.path }))
 
   expect(renderPaths).toContain('/')
   expect(htmlOutputs).toContain(path.join(app.config.outDir, 'index.html'))
-  expect(dataOutputs).toContain(path.join(app.config.outDir, 'data.json'))
+  expect(dataOutputs).toContain(path.join(app.config.assetsDir, 'data', '1', '6d4ad46e.json'))
 
   expect(renderPaths).toContain('/404')
   expect(htmlOutputs).toContain(path.join(app.config.outDir, '404.html'))
-  expect(dataOutputs).toContain(path.join(app.config.outDir, '404.json'))
+  expect(dataOutputs).toContain(path.join(app.config.assetsDir, 'data', '1', '77051a62.json'))
 })
 
 test('create render queue for blog project', async () => {

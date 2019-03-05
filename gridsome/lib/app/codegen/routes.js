@@ -24,6 +24,7 @@ function genRoutes (app) {
     const chunkName = JSON.stringify('component--' + slugify(route.chunkName || route.name))
     const hasData = !!route.pageQuery.query
     const isIndex = route.isIndex === true
+    const queue = route.renderQueue
     const props = []
     const metas = []
 
@@ -32,13 +33,12 @@ function genRoutes (app) {
 
     if (!isIndex) metas.push('isIndex: false')
 
-    if (hasData && route.renderQueue.length) {
+    if (hasData && queue.length) {
       if ([STATIC_ROUTE, STATIC_TEMPLATE_ROUTE].includes(route.type)) {
-        const [entry] = route.renderQueue
-        metas.push(`hash: ${JSON.stringify(entry.hashSum)}`)
+        metas.push(`data: ${JSON.stringify(queue[0].metaData)}`)
       } else {
         const metaDataPath = JSON.stringify(route.metaDataPath)
-        metas.push(`hash: () => import(/* webpackChunkName: ${chunkName} */ ${metaDataPath})`)
+        metas.push(`data: () => import(/* webpackChunkName: ${chunkName} */ ${metaDataPath})`)
       }
     }
 

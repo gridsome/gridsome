@@ -171,11 +171,12 @@ async function writeRoutesMeta (app) {
   for (let i = 0; i < length; i++) {
     const route = routes[i]
     const hasData = !!route.pageQuery.query
+    const queue = route.renderQueue
 
-    if (hasData && route.renderQueue.length) {
+    if (hasData && queue.length) {
       if (![STATIC_ROUTE, STATIC_TEMPLATE_ROUTE].includes(route.type)) {
-        files[route.metaDataPath] = route.renderQueue.reduce((acc, entry) => {
-          acc[entry.path] = entry.hashSum
+        files[route.metaDataPath] = queue.reduce((acc, entry) => {
+          acc[entry.path] = entry.metaData
           return acc
         }, {})
       }
@@ -205,11 +206,17 @@ async function runWebpack (app) {
 
 async function renderPageQueries (renderQueue, app) {
   const timer = hirestime()
-  const hashSum = require('hash-sum')
   const context = app.createSchemaContext()
   const queue = renderQueue.filter(entry => entry.hasPageQuery)
+  const groupSize = 500
+
+  let count = 0
+  let group = 0
 
   await pMap(queue, async entry => {
+    if (count % (groupSize - 1) === 0) group++
+    count++
+
     const results = await execute(
       app.schema,
       entry.pageQuery.query,
@@ -224,9 +231,9 @@ async function renderPageQueries (renderQueue, app) {
       throw new Error(results.errors[0])
     }
 
-    entry.setHashSum(hashSum(results))
+    entry.setData(results, group)
 
-    await fs.outputFile(entry.dataOutput, JSON.stringify(results))
+    await fs.outputFile(entry.dataOutput, JSON.stringify(entry.data))
   }, { concurrency: sysinfo.cpus.physical })
 
   info(`Run GraphQL (${queue.length} queries) - ${timer(hirestime.S)}s`)
@@ -306,9 +313,9 @@ async function processImages (queue, config) {
 // webpack fails silently in some cases, appends styles.js to app.js to fix it
 // https://github.com/webpack-contrib/mini-css-extract-plugin/issues/85
 async function removeStylesJsChunk (stats, outDir) {
-  const { children: [child] } = stats
-  const styleChunk = child.assets.find(a => /styles(\.\w{8})?\.js$/.test(a.name))
-  const appChunk = child.assets.find(a => /app(\.\w{8})?\.js$/.test(a.name))
+  const { children: [clientStats] } = stats
+  const styleChunk = clientStats.assets.find(a => /styles(\.\w{8})?\.js$/.test(a.name))
+  const appChunk = clientStats.assets.find(a => /app(\.\w{8})?\.js$/.test(a.name))
 
   if (!styleChunk) return
 

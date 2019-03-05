@@ -32,7 +32,7 @@ function intersectionHandler ({ intersectionRatio, target }) {
         const { route } = router.resolve({ path })
         const options = route.matched[0].components.default
         
-        if (!route.meta.hash) return
+        if (!route.meta.data) return
 
         const fetchComponentData = options => {
           setTimeout(() => {
