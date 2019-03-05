@@ -5,7 +5,7 @@ const hash = require('hash-sum')
 const cache = new LRU({ max: 1000 })
 
 module.exports = async function (source, map) {
-  const { config, graphql } = process.GRIDSOME
+  const { config, graphql, store } = process.GRIDSOME
   const staticQueryPath = path.join(config.appPath, 'static-query')
   const resourcePath = this.resourcePath
 
@@ -18,7 +18,7 @@ module.exports = async function (source, map) {
   }
 
   const callback = this.async()
-  const cacheKey = hash({ source, resourcePath })
+  const cacheKey = hash({ source, resourcePath, lastUpdate: store.lastUpdate })
   const cached = cache.get(cacheKey)
 
   if (cached) {
@@ -41,10 +41,8 @@ module.exports = async function (source, map) {
   const res = `
     import initStaticQuery from ${JSON.stringify(staticQueryPath)}
 
-    const data = ${JSON.stringify(data)}
-
     export default Component => {
-      initStaticQuery(Component, data)
+      initStaticQuery(Component, ${JSON.stringify(data)})
     }
   `
 

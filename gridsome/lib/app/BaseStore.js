@@ -9,6 +9,9 @@ class BaseStore {
     this.data = new Loki()
     this.collections = {}
     this.taxonomies = {}
+    this.lastUpdate = null
+
+    this.setUpdateTime()
 
     autoBind(this)
 
@@ -88,6 +91,12 @@ class BaseStore {
 
   removePage (id) {
     return this.pages.findAndRemove({ id })
+  }
+
+  // utils
+
+  setUpdateTime () {
+    this.lastUpdate = Date.now()
   }
 }
 

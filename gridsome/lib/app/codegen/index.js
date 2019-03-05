@@ -17,7 +17,7 @@ class Codegen {
       'routes.js': () => genRoutes(app),
       'plugins-server.js': () => genPlugins(app, true),
       'plugins-client.js': () => genPlugins(app, false),
-      'now.js': () => `export default ${Date.now()}`
+      'now.js': () => `export default ${app.store.lastUpdate}`
     }
   }
 
