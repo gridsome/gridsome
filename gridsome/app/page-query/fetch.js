@@ -43,7 +43,7 @@ export default (route, query, prefetchOnly = false) => {
 
   return new Promise((resolve, reject) => {
     const load = ([ group, hash ]) => {
-      const jsonPath = `${dataUrl}/${group}/${hash}.json` 
+      const jsonPath = dataUrl + `${group}/${hash}.json` 
 
       if (prefetchOnly) {
         if (!isPrefetched[jsonPath]) {

@@ -15,6 +15,7 @@ function genRoutes (app) {
   routes.push({
     ...notFound,
     chunkName: notFound.name,
+    metaDataPath: notFound.metaDataPath,
     name: '*',
     path: '*'
   })
@@ -23,15 +24,12 @@ function genRoutes (app) {
     const component = JSON.stringify(route.component)
     const chunkName = JSON.stringify('component--' + slugify(route.chunkName || route.name))
     const hasData = !!route.pageQuery.query
-    const isIndex = route.isIndex === true
     const queue = route.renderQueue
     const props = []
     const metas = []
 
     props.push(`    path: ${JSON.stringify(route.route || route.path)}`)
     props.push(`    component: () => import(/* webpackChunkName: ${chunkName} */ ${component})`)
-
-    if (!isIndex) metas.push('isIndex: false')
 
     if (hasData && queue.length) {
       if ([STATIC_ROUTE, STATIC_TEMPLATE_ROUTE].includes(route.type)) {

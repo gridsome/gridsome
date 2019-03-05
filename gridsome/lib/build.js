@@ -191,16 +191,15 @@ async function writeRoutesMeta (app) {
   const files = {}
 
   for (let i = 0; i < length; i++) {
-    const route = routes[i]
-    const hasData = !!route.pageQuery.query
-    const queue = route.renderQueue
+    const { type, pageQuery, renderQueue, metaDataPath } = routes[i]
 
-    if (hasData && queue.length) {
-      if (![STATIC_ROUTE, STATIC_TEMPLATE_ROUTE].includes(route.type)) {
-        files[route.metaDataPath] = queue.reduce((acc, entry) => {
+    if (!!pageQuery.query && renderQueue.length) {
+      if (![STATIC_ROUTE, STATIC_TEMPLATE_ROUTE].includes(type)) {
+        const metaData = files[metaDataPath] || (files[metaDataPath] = {})
+        Object.assign(metaData, renderQueue.reduce((acc, entry) => {
           acc[entry.path] = entry.metaData
           return acc
-        }, {})
+        }, {}))
       }
     }
   }

@@ -93,7 +93,6 @@ class RenderItem {
   constructor (path, options, route) {
     this.variables = options.variables || {}
     this.segments = path.split('/').filter(v => !!v)
-    this.urlSegments = this.segments.map(s => decodeURIComponent(s))
     this.route = route
 
     if (this.variables.page > 1) {
@@ -118,7 +117,7 @@ class RenderItem {
   }
 
   get htmlOutput () {
-    const segments = this.urlSegments.slice()
+    const segments = this.segments.map(s => decodeURIComponent(s))
     const fileName = this.route.isIndex ? 'index.html' : `${segments.pop()}.html`
     return path.join(this.route.routes.outDir, ...segments, fileName)
   }
