@@ -8,6 +8,7 @@ const {
   STATIC_ROUTE,
   PAGED_TEMPLATE,
   NOT_FOUND_ROUTE,
+  PAGED_STATIC_TEMPLATE,
   STATIC_TEMPLATE_ROUTE,
   DYNAMIC_TEMPLATE_ROUTE
 } = require('../utils/constants')
@@ -83,8 +84,9 @@ module.exports = ({ store, config }) => {
 
       for (let i = 0; i < length; i++) {
         staticTemplates.push({
-          type: isPaged ? PAGED_TEMPLATE : STATIC_TEMPLATE_ROUTE,
-          path: makePath(nodes[i].path),
+          type: isPaged ? PAGED_STATIC_TEMPLATE : STATIC_TEMPLATE_ROUTE,
+          route: makePath(nodes[i].path),
+          path: nodes[i].path,
           chunkName: camelCase(typeName),
           isIndex: true,
           component,

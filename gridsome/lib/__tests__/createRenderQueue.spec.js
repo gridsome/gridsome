@@ -12,6 +12,8 @@ test('create render queue for basic project', async () => {
   const htmlOutputs = queue.map(page => page.htmlOutput)
   const dataOutputs = queue.map(page => page.dataOutput)
 
+  expect(queue).toHaveLength(11)
+
   expect(renderPaths).toContain('/')
   expect(htmlOutputs).toContain(path.join(app.config.outDir, 'index.html'))
   expect(dataOutputs).toContain(path.join(app.config.dataDir, 'index.json'))

@@ -2,6 +2,7 @@ module.exports = {
   PAGED_ROUTE: 'paged',
   STATIC_ROUTE: 'static',
   PAGED_TEMPLATE: 'paged_template',
+  PAGED_STATIC_TEMPLATE: 'paged_static_template',
   STATIC_TEMPLATE_ROUTE: 'static_template',
   DYNAMIC_TEMPLATE_ROUTE: 'dynamic_template',
   NOT_FOUND_ROUTE: '404',
