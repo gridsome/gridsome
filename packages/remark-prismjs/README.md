@@ -8,7 +8,7 @@
 
 ## Usage
 
-In your `main.js` file, import a Prism css theme
+In your `main.js` file, import a Prism CSS theme:
 
 ```js
 import 'prismjs/themes/prism.css'
