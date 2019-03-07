@@ -123,7 +123,7 @@ module.exports = (context, options = {}, pkg = {}) => {
   config.templatePath = fs.existsSync(localIndex) ? localIndex : path.resolve(config.appPath, 'index.html')
   config.htmlTemplate = fs.readFileSync(config.templatePath, 'utf-8')
 
-  config.css = defaultsDeep(css, localConfig.css || {})
+  config.css = defaultsDeep(localConfig.css || {}, css)
 
   return Object.freeze(config)
 }
