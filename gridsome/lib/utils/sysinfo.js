@@ -6,6 +6,6 @@ module.exports = {
   cpus: {
     model: cpus.length ? cpus[0].model : '',
     logical: cpus.length,
-    physical
+    physical: physical || 1
   }
 }
