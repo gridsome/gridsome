@@ -68,6 +68,9 @@ test('add meta data', async () => {
 
   api.store.addMetaData('myOtherValue', 'Value')
 
+  api.store.addMetaData('overrideValue', 'Value 1')
+  api.store.addMetaData('overrideValue', 'Value 2')
+
   const query = `{
     metaData {
       myValue {
@@ -80,6 +83,7 @@ test('add meta data', async () => {
         }
       }
       myOtherValue
+      overrideValue
       myList {
         name
         description
@@ -96,6 +100,7 @@ test('add meta data', async () => {
   expect(data.metaData.myValue.object.list).toHaveLength(3)
   expect(data.metaData.myValue.object.value).toEqual(1000)
   expect(data.metaData.myOtherValue).toEqual('Value')
+  expect(data.metaData.overrideValue).toEqual('Value 2')
   expect(data.metaData.myList).toHaveLength(3)
   expect(data.metaData.myList[0]).toMatchObject({
     name: 'Etiam Nibh',
