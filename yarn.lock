@@ -7423,7 +7423,7 @@ jest-watcher@^24.0.0:
     jest-util "^24.0.0"
     string-length "^2.0.0"
 
-jest-worker@^24.0.0:
+jest-worker@24.0.0, jest-worker@^24.0.0:
   version "24.0.0"
   resolved "https://registry.yarnpkg.com/jest-worker/-/jest-worker-24.0.0.tgz#3d3483b077bf04f412f47654a27bba7e947f8b6d"
   integrity sha512-s64/OThpfQvoCeHG963MiEZOAAxu8kHsaL/rCMF7lpdzo7vgF0CtPml9hfguOMgykgH/eOm4jFP4ibfHLruytg==
