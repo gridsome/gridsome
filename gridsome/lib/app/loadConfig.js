@@ -92,6 +92,9 @@ module.exports = (context, options = {}, pkg = {}) => {
   config.minProcessImageWidth = 500 // TODO: find a better name for this
   config.maxImageWidth = localConfig.maxImageWidth || 1920
   config.imageExtensions = SUPPORTED_IMAGE_TYPES
+  config.pagesDir = resolve('src/pages')
+  config.templatesDir = resolve('src/templates')
+  config.componentParsers = []
 
   config.images = { ...localConfig.images }
 

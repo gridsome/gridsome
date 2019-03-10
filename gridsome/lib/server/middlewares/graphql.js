@@ -1,5 +1,4 @@
 const { print } = require('graphql')
-const { trimEnd } = require('lodash')
 const { getGraphQLParams } = require('express-graphql')
 
 const {
@@ -7,7 +6,7 @@ const {
   processPageQuery
 } = require('../../graphql/page-query')
 
-module.exports = ({ store }) => {
+module.exports = ({ store, pages }) => {
   return async function (req, res, next) {
     const { query, variables, ...body } = await getGraphQLParams(req)
 
@@ -18,24 +17,19 @@ module.exports = ({ store }) => {
     const pageQuery = processPageQuery({ query })
     const { path } = variables
 
-    if (variables.path) {
-      const entry = store.index.findOne({
-        path: { $in: [path, trimEnd(path, '/')] }
-      })
+    if (path) {
+      const context = findContext(path, { store, pages, pageQuery })
 
-      if (!entry) {
+      if (!context) {
         return res
           .status(404)
           .send({
             code: 404,
-            message: `Could not find ${variables.path}`
+            message: `Could not find ${path}`
           })
       }
 
-      const node = store.getNodeByPath(entry.path)
-      const values = node ? contextValues(node, pageQuery.variables) : null
-
-      Object.assign(variables, values, { path: entry.path })
+      Object.assign(variables, context, { path })
     }
 
     req.body = body
@@ -43,5 +37,14 @@ module.exports = ({ store }) => {
     req.body.variables = variables
 
     next()
+  }
+}
+
+function findContext (path, { store, pages, pageQuery }) {
+  if (pages.hasPage(path)) {
+    return pages.getPage(path).context
+  } else if (store.index.findOne({ path })) {
+    const node = store.getNodeByPath(path)
+    return contextValues(node, pageQuery.variables)
   }
 }

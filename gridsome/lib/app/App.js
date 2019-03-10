@@ -10,10 +10,10 @@ const AssetsQueue = require('./queue/AssetsQueue')
 const createSchema = require('../graphql/createSchema')
 const loadConfig = require('./loadConfig')
 const { defaultsDeep } = require('lodash')
-const createRoutes = require('./createRoutes')
 const { version } = require('../../package.json')
 const { parseUrl, resolvePath } = require('../utils')
 const { info } = require('../utils/log')
+const Pages = require('./pages')
 
 class App {
   constructor (context, options) {
@@ -37,7 +37,7 @@ class App {
       { title: 'Initialize', run: this.init },
       { title: 'Load sources', run: this.loadSources },
       { title: 'Create GraphQL schema', run: this.createSchema },
-      { title: 'Set up routes', run: this.createRoutes },
+      { title: 'Create pages and templates', run: this.createPages },
       { title: 'Generate code', run: this.generateCode }
     ]
 
@@ -67,6 +67,7 @@ class App {
     this.store = new BaseStore(this)
     this.queue = new AssetsQueue(this)
     this.codegen = new Codegen(this)
+    this.pages = new Pages(this)
 
     this.config.plugins.map(entry => {
       const Plugin = entry.entries.serverEntry
@@ -116,8 +117,19 @@ class App {
     })
   }
 
-  createRoutes () {
-    this.routes = createRoutes(this)
+  async createPages () {
+    await this.dispatch('createPages', api => ({
+      graphql: this.graphql,
+      ...api.pages
+    }))
+
+    // ensure a /404 page exists
+    if (!this.pages.hasPage('/404')) {
+      this.pages.addPage({
+        path: '/404',
+        component: path.join(this.config.appPath, 'pages', '404.vue')
+      })
+    }
   }
 
   generateCode () {

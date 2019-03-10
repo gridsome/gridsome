@@ -7,7 +7,6 @@ const { parse } = require('@vue/component-compiler-utils')
 exports.createPagePath = function (filePath) {
   const path = filePath
     .split('/')
-    .slice(2)
     .filter(s => !/^[iI]ndex\.vue$/.test(s))
     .map(s => s.replace(/\.vue$/, ''))
     .map(s => slugify(s))

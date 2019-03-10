@@ -1,12 +1,11 @@
 const path = require('path')
 const createApp = require('../app')
-const { createRenderQueue } = require('../build')
 const { BOOTSTRAP_ROUTES } = require('../utils/constants')
 
 test('create render queue for basic project', async () => {
   const context = path.join(__dirname, '__fixtures__', 'project-basic')
   const app = await createApp(context, undefined, BOOTSTRAP_ROUTES)
-  const queue = await createRenderQueue(app)
+  const queue = app.pages.genRenderQueue()
 
   const renderPaths = queue.map(entry => entry.path)
   const htmlOutputs = queue.map(entry => entry.htmlOutput)
@@ -26,7 +25,7 @@ test('create render queue for basic project', async () => {
 test('create render queue for blog project', async () => {
   const context = path.join(__dirname, '__fixtures__', 'project-blog')
   const app = await createApp(context, undefined, BOOTSTRAP_ROUTES)
-  const queue = await createRenderQueue(app)
+  const queue = app.pages.genRenderQueue()
 
   const renderPaths = queue.map(entry => entry.path)
 

@@ -8,6 +8,16 @@ class PluginAPI {
 
     this.config = app.config
     this.context = app.context
+
+    this.pages = {
+      addPage (options) {
+        return app.pages.addPage(options)
+      },
+      addTemplate (options) {
+        return app.pages.addTemplate(options)
+      }
+    }
+
     this.store = new PluginStore(app, entry.options, { transformers })
 
     autoBind(this)
@@ -81,12 +91,20 @@ class PluginAPI {
     this._app.config.transpileDependencies.push(...list)
   }
 
+  registerComponentParser (options) {
+    this._app.config.componentParsers.push(options)
+  }
+
   loadSource (handler) {
     this._on('loadSource', handler)
   }
 
   createSchema (handler) {
     this._on('createSchema', handler)
+  }
+
+  createPages (handler) {
+    this._on('createPages', handler)
   }
 
   chainWebpack (fn) {

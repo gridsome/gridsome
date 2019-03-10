@@ -8,7 +8,7 @@ const {
 function genRoutes (app) {
   let res = ''
 
-  const routes = app.routes.sortedRoutes
+  const routes = app.pages.routes
   const notFound = routes.find(route => route.name === '404')
 
   // use the /404 page as fallback route
@@ -28,7 +28,7 @@ function genRoutes (app) {
     const props = []
     const metas = []
 
-    props.push(`    path: ${JSON.stringify(route.route || route.path)}`)
+    props.push(`    path: ${JSON.stringify(route.path)}`)
     props.push(`    component: () => import(/* webpackChunkName: ${chunkName} */ ${component})`)
 
     if (hasData && queue.length) {
