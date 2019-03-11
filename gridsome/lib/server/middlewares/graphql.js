@@ -9,6 +9,11 @@ const {
 
 module.exports = ({ store }) => {
   return async function (req, res, next) {
+    // allow OPTIONS method for cors
+    if (req.method === 'OPTIONS') {
+      return res.sendStatus(200)
+    }
+
     const { query, variables, ...body } = await getGraphQLParams(req)
 
     if (!query || !variables) {
