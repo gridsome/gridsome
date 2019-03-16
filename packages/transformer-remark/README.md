@@ -15,6 +15,7 @@ module.exports = {
       externalLinksTarget: '_blank',
       externalLinksRel: ['nofollow', 'noopener', 'noreferrer'],
       anchorClassName: 'icon icon-link',
+      grayMatter: {},
       plugins: [
         // ...global plugins
       ]
@@ -52,9 +53,17 @@ Add additional plugins to the parser.
 
 Set this option to `false` to disable all built-in plugins.
 
+### grayMatter
+
+- Type: `object` Default: `{}`
+
+Options to pass through to [gray-matter][] for parsing front matter.
+
 ## API
 
 - `parse` Parse front matter data 
 - `toAST` Parse markdown into a syntax tree
 - `applyPlugins` Transform a syntax tree by applying plugins to it (async)
 - `toHTML` Compile a syntax tree into HTML
+
+[gray-matter]: https://github.com/jonschlinkert/gray-matter#options
