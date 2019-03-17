@@ -296,7 +296,6 @@ async function processImages (queue, config) {
         queue,
         outDir: config.outDir,
         cacheDir: config.imageCacheDir,
-        minWidth: config.minProcessImageWidth,
         backgroundColor: config.images.backgroundColor
       })
     } catch (err) {

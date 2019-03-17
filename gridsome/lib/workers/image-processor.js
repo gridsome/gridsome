@@ -10,13 +10,11 @@ const imageminPngquant = require('imagemin-pngquant')
 sharp.simd(true)
 
 exports.processImage = async function ({
+  size,
   filePath,
   destPath,
   cachePath,
-  size,
   options = {},
-  minWidth = 500,
-  resizeImage = false,
   backgroundColor = null
 }) {
   if (cachePath && await fs.exists(cachePath)) {
@@ -93,7 +91,7 @@ exports.processImage = async function ({
   await fs.outputFile(destPath, buffer)
 }
 
-exports.process = async function ({ queue, cacheDir, minWidth, backgroundColor }) {
+exports.process = async function ({ queue, cacheDir, backgroundColor }) {
   return Promise.all(queue.map(set => {
     const cachePath = cacheDir ? path.join(cacheDir, set.filename) : null
 
@@ -101,7 +99,6 @@ exports.process = async function ({ queue, cacheDir, minWidth, backgroundColor }
       destPath: set.destPath,
       backgroundColor,
       cachePath,
-      minWidth,
       ...set
     })
   }))
