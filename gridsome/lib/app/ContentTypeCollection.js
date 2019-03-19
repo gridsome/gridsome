@@ -287,7 +287,7 @@ class ContentTypeCollection extends EventEmitter {
     // Param values are slugified but the original
     // value will be available with '_raw' suffix.
     for (let i = 0; i < length; i++) {
-      const { name, path, fieldName, repeat } = routeKeys[i]
+      const { name, path, fieldName, repeat, suffix } = routeKeys[i]
       const field = get(node, path, fieldName)
 
       if (fieldName === 'year') params.year = date.format('YYYY')
@@ -306,7 +306,7 @@ class ContentTypeCollection extends EventEmitter {
           ) {
             return String(value.id)
           } else if (!isPlainObject(value)) {
-            return name.endsWith('_raw')
+            return suffix === 'raw'
               ? String(value)
               : this.slugify(String(value))
           } else {
