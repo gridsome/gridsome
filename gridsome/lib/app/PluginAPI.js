@@ -9,16 +9,19 @@ class PluginAPI {
     this.config = app.config
     this.context = app.context
 
+    this.store = new PluginStore(app, entry.options, { transformers })
+
     this.pages = {
       addPage (options) {
         return app.pages.addPage(options)
       },
-      addTemplate (options) {
-        return app.pages.addTemplate(options)
+      removePage (path) {
+        return app.pages.removePage(path)
+      },
+      _addTemplate (options) {
+        return app.pages._addTemplate(options)
       }
     }
-
-    this.store = new PluginStore(app, entry.options, { transformers })
 
     autoBind(this)
 
@@ -38,9 +41,6 @@ class PluginAPI {
         }, 20)
       }
 
-      this.store.on('removePage', regenerateRoutes)
-      this.store.on('addPage', regenerateRoutes)
-
       this.store.on('change', (node, oldNode = node) => {
         if (!app.isBootstrapped) return
 
@@ -58,6 +58,9 @@ class PluginAPI {
           type: 'updateAllQueries'
         })
       })
+
+      this.store.on('removePage', regenerateRoutes)
+      this.store.on('addPage', regenerateRoutes)
 
       this.store.on('updatePage', async (page, oldPage) => {
         if (!app.isBootstrapped) return

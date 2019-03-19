@@ -158,7 +158,10 @@ function resolvePkg (context) {
     pkg = Object.assign(pkg, JSON.parse(content))
   } catch (err) {}
 
-  if (!Object.keys(pkg.dependencies).includes('gridsome')) {
+  if (
+    !Object.keys(pkg.dependencies).includes('gridsome') &&
+    !process.env.GRIDSOME_TEST
+  ) {
     throw new Error('This is not a Gridsome project.')
   }
 

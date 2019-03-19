@@ -120,6 +120,7 @@ class App {
   async createPages () {
     await this.dispatch('createPages', api => ({
       graphql: this.graphql,
+      store: this.store,
       ...api.pages
     }))
 

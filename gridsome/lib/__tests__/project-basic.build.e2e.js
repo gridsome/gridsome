@@ -194,6 +194,13 @@ test('navigate to /docs/1', async () => {
   await page.waitForSelector('#app.doc-template-1')
 })
 
+test('navigate to /docs/1/extra', async () => {
+  await page.click('.doc-extra-link')
+  await page.waitForSelector('#app.doc-extra-template-1')
+  await page.click('.doc-link')
+  await page.waitForSelector('#app.doc-template-1')
+})
+
 test('navigate to /pages/2', async () => {
   await page.click('.page-link-2')
   await page.waitForSelector('#app.page-template')
@@ -219,6 +226,13 @@ test('navigate to /docs/2/3', async () => {
   await page.waitForSelector('#app.doc-template-2.page-3')
 })
 
+test('navigate to /docs/2/extra', async () => {
+  await page.click('.doc-extra-link')
+  await page.waitForSelector('#app.doc-extra-template-2')
+  await page.click('.doc-link')
+  await page.waitForSelector('#app.doc-template-2')
+})
+
 test('navigate to /pages/1', async () => {
   await page.click('.page-link-1')
   await page.waitForSelector('#app.page-template')
@@ -241,6 +255,11 @@ test('navigate to /', async () => {
 
 test('open /docs/1/ directly', async () => {
   await page.goto('http://localhost:8080/docs/1/', { waitUntil: 'networkidle2' })
+  await page.waitForSelector('#app.is-mounted')
+})
+
+test('open /docs/1/extra/ directly', async () => {
+  await page.goto('http://localhost:8080/docs/1/extra/', { waitUntil: 'networkidle2' })
   await page.waitForSelector('#app.is-mounted')
 })
 

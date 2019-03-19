@@ -1,6 +1,8 @@
 const path = require('path')
 const hashSum = require('hash-sum')
 const camelCase = require('camelcase')
+const EventEmitter = require('events')
+const { Collection } = require('lokijs')
 const { createBelongsToKey } = require('../graphql/nodes/utils')
 const { createFilterQuery } = require('../graphql/createFilterTypes')
 const { parsePageQuery, processPageQuery, contextValues } = require('../graphql/page-query')
@@ -16,8 +18,10 @@ const {
   DYNAMIC_TEMPLATE_ROUTE
 } = require('../utils/constants')
 
-class Pages {
+class Pages extends EventEmitter {
   constructor (app) {
+    super()
+
     this._app = app
     this._outDir = app.config.outDir
     this._dataDir = app.config.dataDir
@@ -26,6 +30,12 @@ class Pages {
     this._parsers = app.config.componentParsers
     this._templates = []
     this._pages = []
+
+    this._collection = new Collection({
+      indices: ['path', 'type'],
+      unique: ['path'],
+      autoupdate: true
+    })
   }
 
   getPage (path) {
@@ -37,9 +47,10 @@ class Pages {
   }
 
   removePage (path) {
-    this._pages = this._pages.filter(page => {
-      return page.path !== path
-    })
+    const page = this.getPage(path)
+    this._pages = this._pages.filter(p => p !== page)
+
+    this.emit('removePage', page)
   }
 
   addPage ({ path, component, context, name }) {
@@ -48,8 +59,14 @@ class Pages {
     const page = new Page({ path, component, context, name, pageQuery }, this)
 
     this._pages.push(page)
+    this.emit('addPage', page)
 
     return page
+  }
+
+  updatePage ({ path, component, context, name }) {
+    const page = this.getPage(path)
+    this.emit('updatePage', page)
   }
 
   _addTemplate ({ name, typeName, route, component }) {
@@ -101,13 +118,14 @@ class Page {
   }
 
   genRoute () {
+    const { name: fileName } = path.parse(this.component)
     const pageQuery = processPageQuery(this.pageQuery)
     const paginate = !!pageQuery.paginate.typeName
 
     const name = this.name
       ? camelCase(this.name)
       : this.path
-        ? camelCase(this.path.replace(/\//g, ' '))
+        ? camelCase(fileName)
         : null
 
     return new Route({
@@ -202,7 +220,7 @@ class Route {
 
     switch (this.type) {
       case STATIC_ROUTE: {
-        this.addRenderPath(this.path)
+        this.addRenderPath(this.path, this.page.context)
 
         break
       }

@@ -17,6 +17,21 @@ module.exports = function (api) {
     pages.addNode({ id: '2', title: 'Page 2', path: '/pages/2', fields: { doc: '3' } })
   })
 
+  api.createPages(({ addPage, store }) => {
+    const path = require('path')
+    const docs = store.getContentType('TestDoc')
+
+    docs.collection.find({}).forEach(node => {
+      addPage({
+        path: `${node.path}/extra`,
+        component: path.join(__dirname, 'src/templates/TestDocExtra.vue'),
+        context: {
+          id: node.id
+        }
+      })
+    })
+  })
+
   api.chainWebpack(config => {
     config.plugin('test-injections-3')
       .use(require('webpack/lib/DefinePlugin'), [{

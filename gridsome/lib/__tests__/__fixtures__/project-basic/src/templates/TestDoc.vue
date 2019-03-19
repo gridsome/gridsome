@@ -1,6 +1,7 @@
 <template>
   <Layout :class="['doc-template', `doc-template-${$page.testDoc.id}`, `page-${$page.testDoc.belongsTo.pageInfo.currentPage}`]">
     <h1>{{ $page.testDoc.title }}</h1>
+    <g-link class="doc-extra-link" :to="`${$page.testDoc.path}/extra`">Extra</g-link>
     <g-link class="page-link-1" to="/pages/1">Page 1</g-link>
     <g-link class="page-link-2" to="/pages/2">Page 2</g-link>
     <ul>
@@ -18,6 +19,7 @@
 query TestDoc($id: String!, $page: Int, $perPage: Int) {
   testDoc(id: $id) {
     id
+    path
     title
     belongsTo(page: $page, perPage: $perPage) @paginate {
       pageInfo {
