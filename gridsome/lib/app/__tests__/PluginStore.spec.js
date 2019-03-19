@@ -309,6 +309,40 @@ test('add type with custom fields in route', () => {
   expect(node.path).toEqual('/my-value/My%20value/1234/10/2/thriller/1/missing/lorem-ipsum')
 })
 
+test('deeply nested field starting with `raw`', () => {
+  const contentType = createPlugin().store.addContentType({
+    typeName: 'TestPost',
+    route: '/:foo__rawValue'
+  })
+
+  const node = contentType.addNode({
+    fields: {
+      foo: {
+        rawValue: 'BAR'
+      }
+    }
+  })
+
+  expect(node.path).toEqual('/bar')
+})
+
+test('raw version of deeply nested field starting with `raw`', () => {
+  const contentType = createPlugin().store.addContentType({
+    typeName: 'TestPost',
+    route: '/:foo__rawValue_raw'
+  })
+
+  const node = contentType.addNode({
+    fields: {
+      foo: {
+        rawValue: 'BAR'
+      }
+    }
+  })
+
+  expect(node.path).toEqual('/BAR')
+})
+
 test.each([
   [
     '/:segments+',
