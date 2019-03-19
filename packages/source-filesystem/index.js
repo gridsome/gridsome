@@ -9,6 +9,7 @@ class FilesystemSource {
     return {
       path: undefined,
       route: undefined,
+      root: undefined,
       index: ['index'],
       typeName: 'FileNode',
       refs: {}
@@ -160,6 +161,10 @@ class FilesystemSource {
 
   createPath ({ dir, name }) {
     if (this.options.route) return
+
+    if (this.options.root) {
+      dir = dir.replace(this.options.root, '')
+    }
 
     const segments = dir.split('/').map(s => this.store.slugify(s))
 
