@@ -49,6 +49,11 @@ class ContentTypeCollection extends EventEmitter {
     const { typeName } = this.options
     const internal = this.pluginStore._createInternals(options.internal)
 
+    // prioritize node.id over node.fields.id
+    if (options.id && options.fields && options.fields.id) {
+      delete options.fields.id
+    }
+
     // transform content with transformer for given mime type
     if (internal.content && internal.mimeType) {
       this._transformNodeOptions(options, internal)
@@ -127,6 +132,11 @@ class ContentTypeCollection extends EventEmitter {
     }
 
     const internal = this.pluginStore._createInternals(options.internal)
+
+    // prioritize node.id over node.fields.id
+    if (options.id && options.fields && options.fields.id) {
+      delete options.fields.id
+    }
 
     // transform content with transformer for given mime type
     if (internal.content && internal.mimeType) {

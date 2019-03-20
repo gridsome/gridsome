@@ -166,6 +166,19 @@ test('change node id from fields', () => {
   expect(entry.uid).toEqual('test')
 })
 
+test('prioritize node.id over node.fields.id', () => {
+  const contentType = createPlugin().store.addContentType('Test')
+
+  const node = contentType.addNode({
+    id: 'foo',
+    fields: {
+      id: 'bar'
+    }
+  })
+
+  expect(node.id).toEqual('foo')
+})
+
 test('remove node', () => {
   const api = createPlugin()
 
