@@ -15,6 +15,7 @@ module.exports = {
       externalLinksTarget: '_blank',
       externalLinksRel: ['nofollow', 'noopener', 'noreferrer'],
       anchorClassName: 'icon icon-link',
+      createExcerpt: rawContent => rawContent.split('\n')[0],
       plugins: [
         // ...global plugins
       ]
@@ -45,6 +46,11 @@ module.exports = {
 - Type: `array` Default: `[]`
 
 Add additional plugins to the parser.
+
+#### createExcerpt
+- Type: `function` Default: `undefined`
+
+Creates an excerpt from the raw markdown content.
 
 #### useBuiltIns
 

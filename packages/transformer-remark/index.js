@@ -43,10 +43,16 @@ class RemarkTransformer {
     this.toAST = unified().use(remarkParse).parse
     this.applyPlugins = unified().data('transformer', this).use(this.plugins).run
     this.toHTML = unified().use(remarkHtml).stringify
+    this.grayMatterOptions = {}
+    if ('createExcerpt' in this.options) {
+      this.grayMatterOptions.excerpt = file => {
+        file.excerpt = this.options.createExcerpt(file.content)
+      }
+    }
   }
 
   parse (source) {
-    const { data: fields, content, excerpt } = parse(source)
+    const { data: fields, content, excerpt } = parse(source, this.grayMatterOptions)
 
     // if no title was found by gray-matter,
     // try to find the first one in the content
