@@ -15,11 +15,11 @@ module.exports = {
 
   SUPPORTED_IMAGE_TYPES: ['.png', '.jpeg', '.jpg', '.gif', '.svg', '.webp'],
 
-  BOOTSTRAP_CONFIG: 0,
-  BOOTSTRAP_PLUGINS: 1,
-  BOOTSTRAP_GRAPHQL: 2,
-  BOOTSTRAP_ROUTES: 3,
-  BOOTSTRAP_FULL: Number.MAX_SAFE_INTEGER,
+  BOOTSTRAP_CONFIG: 'config',
+  BOOTSTRAP_SOURCES: 'sources',
+  BOOTSTRAP_GRAPHQL: 'graphql',
+  BOOTSTRAP_PAGES: 'pages',
+  BOOTSTRAP_CODE: 'code',
 
   internalRE: /^internal\:\/\//,
   transformerRE: /(?:^@?gridsome[/-]|\/)transformer-([\w-]+)/,

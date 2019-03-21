@@ -15,6 +15,14 @@ const { parseUrl, resolvePath } = require('../utils')
 const { info } = require('../utils/log')
 const Pages = require('./pages')
 
+const {
+  BOOTSTRAP_CONFIG,
+  BOOTSTRAP_SOURCES,
+  BOOTSTRAP_GRAPHQL,
+  BOOTSTRAP_PAGES,
+  BOOTSTRAP_CODE
+} = require('../utils/constants')
+
 class App {
   constructor (context, options) {
     process.GRIDSOME = this
@@ -34,22 +42,22 @@ class App {
     const bootstrapTime = hirestime()
 
     const phases = [
-      { title: 'Initialize', run: this.init },
-      { title: 'Load sources', run: this.loadSources },
-      { title: 'Create GraphQL schema', run: this.createSchema },
-      { title: 'Create pages and templates', run: this.createPages },
-      { title: 'Generate code', run: this.generateCode }
+      { phase: BOOTSTRAP_CONFIG, title: 'Initialize', run: this.init },
+      { phase: BOOTSTRAP_SOURCES, title: 'Load sources', run: this.loadSources },
+      { phase: BOOTSTRAP_GRAPHQL, title: 'Create GraphQL schema', run: this.createSchema },
+      { phase: BOOTSTRAP_PAGES, title: 'Create pages and templates', run: this.createPages },
+      { phase: BOOTSTRAP_CODE, title: 'Generate code', run: this.generateCode }
     ]
 
     info(`Gridsome v${version}\n`)
 
     for (const current of phases) {
-      if (phases.indexOf(current) <= phase) {
-        const timer = hirestime()
-        await current.run(this)
+      const timer = hirestime()
+      await current.run(this)
 
-        info(`${current.title} - ${timer(hirestime.S)}s`)
-      }
+      info(`${current.title} - ${timer(hirestime.S)}s`)
+
+      if (current.phase === phase) break
     }
 
     info(`Bootstrap finish - ${bootstrapTime(hirestime.S)}s`)
