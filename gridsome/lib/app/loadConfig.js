@@ -170,7 +170,7 @@ function resolvePkg (context) {
 
 function normalizePlugins (context, plugins) {
   return plugins.map((plugin, index) => {
-    if (typeof plugin === 'string') {
+    if (typeof plugin !== 'object') {
       plugin = { use: plugin }
     }
 
@@ -192,7 +192,12 @@ function normalizePlugins (context, plugins) {
 function resolvePluginEntries (id, context) {
   let dirName = ''
 
-  if (path.isAbsolute(id)) {
+  if (typeof id === 'function') {
+    return {
+      clientEntry: null,
+      serverEntry: id
+    }
+  } else if (path.isAbsolute(id)) {
     dirName = id
   } else if (id.startsWith('~/')) {
     dirName = path.join(context, id.replace(/^~\//, ''))

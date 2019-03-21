@@ -78,9 +78,12 @@ class App {
     this.pages = new Pages(this)
 
     this.config.plugins.map(entry => {
-      const Plugin = entry.entries.serverEntry
+      const { serverEntry } = entry.entries
+      const Plugin = typeof serverEntry === 'string'
         ? require(entry.entries.serverEntry)
-        : null
+        : typeof serverEntry === 'function'
+          ? serverEntry
+          : null
 
       if (typeof Plugin !== 'function') return
       if (!Plugin.prototype) return
