@@ -1,5 +1,6 @@
 const Loki = require('lokijs')
 const autoBind = require('auto-bind')
+const EventEmitter = require('eventemitter3')
 const { omit, isArray, isPlainObject } = require('lodash')
 const ContentTypeCollection = require('./ContentTypeCollection')
 
@@ -10,6 +11,7 @@ class BaseStore {
     this.collections = {}
     this.taxonomies = {}
     this.lastUpdate = null
+    this._events = new EventEmitter()
 
     this.setUpdateTime()
 
@@ -31,6 +33,14 @@ class BaseStore {
       unique: ['key'],
       autoupdate: true
     })
+  }
+
+  on (eventName, fn, ctx) {
+    return this._events.on(eventName, fn, ctx)
+  }
+
+  off (eventName, fn, ctx) {
+    return this._events.removeListener(eventName, fn, ctx)
   }
 
   // site
@@ -62,13 +72,11 @@ class BaseStore {
   }
 
   getNodeByPath (path) {
-    const entry = this.index.findOne({ path })
+    const node = this.index.findOne({ path })
 
-    if (!entry || entry.type === 'page') {
-      return null
-    }
+    if (!node) return null
 
-    return this.getContentType(entry.typeName).getNode({ uid: entry.uid })
+    return this.getContentType(node.typeName).getNode({ uid: node.uid })
   }
 
   chainIndex (query = {}) {
@@ -79,24 +87,14 @@ class BaseStore {
     })
   }
 
-  // pages
-
-  addPage (options) {
-    return this.pages.insert(options)
-  }
-
-  getPage (id) {
-    return this.pages.findOne({ id })
-  }
-
-  removePage (id) {
-    return this.pages.findAndRemove({ id })
-  }
-
   // utils
 
   setUpdateTime () {
     this.lastUpdate = Date.now()
+
+    if (this.app.isBootstrapped) {
+      this._events.emit('change')
+    }
   }
 }
 

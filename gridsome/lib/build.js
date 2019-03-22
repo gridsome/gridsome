@@ -1,14 +1,16 @@
 const path = require('path')
 const pMap = require('p-map')
 const fs = require('fs-extra')
-const { chunk } = require('lodash')
+const hashSum = require('hash-sum')
 const hirestime = require('hirestime')
 const sysinfo = require('./utils/sysinfo')
+const { chunk, pick, groupBy } = require('lodash')
 const { log, error, info } = require('./utils/log')
 
 const createApp = require('./app')
 const { execute } = require('graphql')
 const { createWorker } = require('./workers')
+const { createRenderQueue } = require('./app/pages')
 
 module.exports = async (context, args) => {
   process.env.NODE_ENV = 'production'
@@ -22,24 +24,21 @@ module.exports = async (context, args) => {
   await fs.ensureDir(config.dataDir)
   await fs.remove(config.outDir)
 
-  const queue = app.pages.genRenderQueue()
+  let queue = createRenderQueue(app)
 
   // run all GraphQL queries and save results into json files
   await app.dispatch('beforeRenderQueries', () => ({ context, config, queue }))
-  await renderPageQueries(queue, app)
+  queue = await renderPageQueries(queue, app)
 
-  // write out route metas
-  await writeRoutesMeta(app)
-
-  // re-generate routes.js with updated data
-  await app.codegen.generate('routes.js')
+  // write out route metas and new routes
+  await createRoutesMeta(app, queue)
 
   // compile assets with webpack
   await runWebpack(app)
 
   // render a static index.html file for each possible route
   await app.dispatch('beforeRenderHTML', () => ({ context, config, queue }))
-  await renderHTML(queue, config)
+  queue = await renderHTML(queue, config)
 
   // process queued images
   await app.dispatch('beforeProcessAssets', () => ({ context, config, queue: app.queue }))
@@ -63,33 +62,74 @@ module.exports = async (context, args) => {
   return app
 }
 
-const {
-  STATIC_ROUTE,
-  STATIC_TEMPLATE_ROUTE
-} = require('./utils/constants')
+async function renderPageQueries (renderQueue, app) {
+  const timer = hirestime()
+  const context = app.createSchemaContext()
+  const groupSize = 500
 
-async function writeRoutesMeta (app) {
-  const routes = app.pages.routes
-  const length = routes.length
-  const files = {}
+  let count = 0
+  let group = 0
 
-  for (let i = 0; i < length; i++) {
-    const { type, withPageQuery, renderQueue, metaDataPath } = routes[i]
+  const res = await pMap(renderQueue, async entry => {
+    if (!entry.query) return entry
 
-    if (withPageQuery && renderQueue.length) {
-      if (![STATIC_ROUTE, STATIC_TEMPLATE_ROUTE].includes(type)) {
-        const metaData = files[metaDataPath] || (files[metaDataPath] = {})
-        Object.assign(metaData, renderQueue.reduce((acc, entry) => {
-          acc[entry.path] = entry.metaData
-          return acc
-        }, {}))
-      }
+    if (count % (groupSize - 1) === 0) group++
+    count++
+
+    const results = await execute(
+      app.schema,
+      entry.query,
+      undefined,
+      context,
+      entry.context
+    )
+
+    if (results.errors) {
+      const relPath = path.relative(app.context, entry.component)
+      error(`An error occurred while executing page-query for ${relPath}\n`)
+      throw new Error(results.errors[0])
+    }
+
+    const hash = hashSum(results)
+    const dataOutput = path.join(app.config.assetsDir, 'data', `${group}/${hash}.json`)
+    const dataMeta = { group, hash }
+
+    await fs.outputFile(dataOutput, JSON.stringify(results))
+
+    return { ...entry, dataMeta, dataOutput }
+  }, { concurrency: sysinfo.cpus.physical })
+
+  info(`Run GraphQL (${count} queries) - ${timer(hirestime.S)}s`)
+
+  return res
+}
+
+async function createRoutesMeta (app, renderQueue) {
+  const data = renderQueue
+    .filter(entry => entry.dataMeta)
+    .map(entry => pick(entry, ['route', 'path', 'dataMeta']))
+
+  const routeMeta = groupBy(data, entry => entry.route)
+  let num = 1
+
+  for (const route in routeMeta) {
+    const entries = routeMeta[route]
+    const content = entries.reduce((acc, { path, dataMeta }) => {
+      acc[path] = [dataMeta.group, dataMeta.hash]
+      return acc
+    }, {})
+
+    if (entries.length > 1) {
+      const output = path.join(app.config.dataDir, 'route-meta', `${num++}.json`)
+      await fs.outputFile(output, JSON.stringify(content))
+      routeMeta[route] = output
+    } else {
+      routeMeta[route] = content[entries[0].path]
     }
   }
 
-  for (const output in files) {
-    await fs.outputFile(output, JSON.stringify(files[output]))
-  }
+  // re-generate routes with new page query meta
+  await app.codegen.generate('routes.js', routeMeta)
 }
 
 async function runWebpack (app) {
@@ -108,56 +148,24 @@ async function runWebpack (app) {
   info(`Compile assets - ${compileTime(hirestime.S)}s`)
 }
 
-async function renderPageQueries (renderQueue, app) {
-  const timer = hirestime()
-  const context = app.createSchemaContext()
-  const queue = renderQueue.filter(entry => entry.withPageQuery)
-  const groupSize = 500
-
-  let count = 0
-  let group = 0
-
-  await pMap(queue, async entry => {
-    if (count % (groupSize - 1) === 0) group++
-    count++
-
-    const results = await execute(
-      app.schema,
-      entry.pageQuery.query,
-      undefined,
-      context,
-      entry.variables
-    )
-
-    if (results.errors) {
-      const relPath = path.relative(app.context, entry.route.component)
-      error(`An error occurred while executing page-query for ${relPath}\n`)
-      throw new Error(results.errors[0])
-    }
-
-    entry.setData(results, group)
-
-    await fs.outputFile(entry.dataOutput, JSON.stringify(entry.data))
-  }, { concurrency: sysinfo.cpus.physical })
-
-  info(`Run GraphQL (${queue.length} queries) - ${timer(hirestime.S)}s`)
-}
-
 async function renderHTML (renderQueue, config) {
   const timer = hirestime()
-  const totalPages = renderQueue.length
-  const chunks = chunk(renderQueue, 350)
-  const worker = createWorker('html-writer')
-
   const { htmlTemplate, clientManifestPath, serverBundlePath } = config
 
-  await Promise.all(chunks.map(async queue => {
-    const pages = queue.map(entry => ({
-      path: entry.path,
-      htmlOutput: entry.htmlOutput,
-      dataOutput: entry.dataOutput
-    }))
+  const htmlQueue = renderQueue.map(entry => {
+    const segments = entry.segments.map(segment => decodeURIComponent(segment))
+    const fileName = entry.isIndex ? 'index.html' : `${segments.pop()}.html`
 
+    return {
+      path: entry.path,
+      dataOutput: entry.dataOutput,
+      htmlOutput: path.join(config.outDir, ...segments, fileName)
+    }
+  })
+
+  const worker = createWorker('html-writer')
+
+  await Promise.all(chunk(htmlQueue, 350).map(async pages => {
     try {
       await worker.render({
         pages,
@@ -173,7 +181,9 @@ async function renderHTML (renderQueue, config) {
 
   worker.end()
 
-  info(`Render HTML (${totalPages} pages) - ${timer(hirestime.S)}s`)
+  info(`Render HTML (${htmlQueue.length} pages) - ${timer(hirestime.S)}s`)
+
+  return htmlQueue
 }
 
 async function processFiles (queue, { outDir }) {

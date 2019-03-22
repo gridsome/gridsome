@@ -11,8 +11,8 @@ sock.onmessage = message => {
 
   switch (data.type) {
     case 'updateQuery':
-      if (active.hasOwnProperty(data.file)) {
-        active[data.file].options.__pageQuery = data.query
+      if (active.hasOwnProperty(data.component)) {
+        active[data.component].options.__pageQuery = data.query
       }
 
       break

@@ -2,7 +2,6 @@ const path = require('path')
 const crypto = require('crypto')
 const mime = require('mime-types')
 const autoBind = require('auto-bind')
-const EventEmitter = require('events')
 const camelCase = require('camelcase')
 const pathToRegexp = require('path-to-regexp')
 const slugify = require('@sindresorhus/slugify')
@@ -11,9 +10,8 @@ const { mapValues, isPlainObject } = require('lodash')
 const { cache, nodeCache } = require('../utils/cache')
 const { log } = require('../utils/log')
 
-class Source extends EventEmitter {
+class Source {
   constructor (app, options, { transformers }) {
-    super()
     autoBind(this)
 
     this._app = app
@@ -105,8 +103,6 @@ class Source extends EventEmitter {
       belongsTo: {},
       createPath,
       refs
-    }).on('change', (node, oldNode) => {
-      this.emit('change', node, oldNode)
     })
   }
 

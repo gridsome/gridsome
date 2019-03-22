@@ -36,10 +36,12 @@ function parsePageQuery (query = '') {
 function processPageQuery (pageQuery) {
   const result = {
     query: undefined,
+    source: undefined,
     variables: [],
     paginate: {
       fieldName: undefined,
-      typeName: undefined
+      typeName: undefined,
+      belongsTo: false
     },
     getFilters: () => {},
     getPerPage: () => PER_PAGE
@@ -47,14 +49,14 @@ function processPageQuery (pageQuery) {
 
   const ast = pageQuery.query ? parse(pageQuery.query) : null
 
+  result.source = ast ? pageQuery.query : null
+
   result.query = ast && visit(ast, {
     Variable ({ name: { value: name }}) {
       if (name === 'page') return
       if (name === 'path') return
 
-      const path = !NODE_FIELDS.includes(name)
-        ? ['fields'].concat(name.split('__'))
-        : [name]
+      const path = name.split('__')
 
       result.variables.push({ name, path })
     },
@@ -72,6 +74,7 @@ function processPageQuery (pageQuery) {
 
             // guess content type by converting root field value into a camel cased string
             result.paginate.typeName = upperFirst(trimStart(fieldNode.name.value, 'all'))
+            result.paginate.belongsTo = parentNode.name.value === 'belongsTo'
             result.paginate.fieldName = fieldNode.name.value
 
             if (perPageArg) {
@@ -129,7 +132,11 @@ function argToObject (node, vars = {}) {
 
 function contextValues (context, variables = []) {
   return variables.reduce((acc, { name, path }) => {
-    let value = get(context, path) || null
+    const getPath = context.typeName && !NODE_FIELDS.includes(path[0])
+      ? ['fields', ...path]
+      : path
+
+    let value = get(context, getPath) || null
 
     if (value && isRefField(value)) {
       value = value.id

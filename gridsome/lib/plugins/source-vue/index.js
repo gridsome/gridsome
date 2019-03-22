@@ -30,17 +30,6 @@ class VueSource {
     if (fs.existsSync(this.templatesDir)) {
       api.createPages(args => this.createTemplates(args))
     }
-
-    // if (process.env.NODE_ENV === 'development') {
-    //   const watcher = chokidar.watch(options.path, {
-    //     ignoreInitial: true,
-    //     cwd: api.context
-    //   })
-
-    //   watcher.on('add', file => this.addPage(slash(file)))
-    //   watcher.on('unlink', file => api.store.removePage(createId(slash(file))))
-    //   watcher.on('change', file => this.updatePage(slash(file)))
-    // }
   }
 
   async createPages () {
@@ -49,13 +38,16 @@ class VueSource {
     for (const file of files) {
       this.createPage(file)
     }
-  }
 
-  async createTemplates () {
-    const files = await glob('*.vue', { cwd: this.templatesDir })
+    if (process.env.NODE_ENV === 'development') {
+      const watcher = chokidar.watch('**/*.vue', {
+        ignoreInitial: true,
+        cwd: this.pagesDir
+      })
 
-    for (const file of files) {
-      this.createTemplate(file)
+      watcher.on('add', file => this.createPage(slash(file)))
+      watcher.on('unlink', file => this.removePage(slash(file)))
+      watcher.on('change', file => this.createPage(slash(file)))
     }
   }
 
@@ -64,20 +56,100 @@ class VueSource {
     const name = path === '/' ? 'home' : undefined
     const component = join(this.pagesDir, file)
 
-    return this.pages.addPage({ path, name, component })
+    return this.pages.createPage({ path, name, component, autoCreated: true })
+  }
+
+  removePage (file) {
+    const component = join(this.pagesDir, file)
+    return this.pages.removePage({ component })
+  }
+
+  async createTemplates () {
+    const files = await glob('*.vue', { cwd: this.templatesDir })
+
+    for (const file of files) {
+      this.createTemplate(file)
+    }
+
+    if (process.env.NODE_ENV === 'development') {
+      const watcher = chokidar.watch('*.vue', {
+        ignoreInitial: true,
+        cwd: this.templatesDir
+      })
+
+      watcher.on('add', file => this.createTemplate(slash(file)))
+      watcher.on('unlink', file => this.removeTemplate(slash(file)))
+      watcher.on('change', file => this.createTemplate(slash(file)))
+    }
   }
 
   createTemplate (file) {
     const { name: typeName } = parse(file)
-    const collection = this.store.getContentType(typeName)
+    const contentType = this.store.getContentType(typeName)
 
-    if (!collection) return
+    if (!contentType) return
 
-    return this.pages._addTemplate({
-      typeName,
-      route: collection.options.route,
-      component: join(this.templatesDir, file)
+    contentType.collection.find().forEach(node => {
+      this.createNodePage(node)
     })
+
+    if (process.env.NODE_ENV === 'development') {
+      contentType.on('add', this.createNodePage, this)
+      contentType.on('remove', this.removeNodePage, this)
+      contentType.on('update', this.updateNodePage, this)
+    }
+  }
+
+  removeTemplate (file) {
+    const { name: typeName } = parse(file)
+    const contentType = this.store.getContentType(typeName)
+    const component = join(this.templatesDir, file)
+
+    if (!contentType) return
+
+    this.pages.removePage({ component })
+
+    if (process.env.NODE_ENV === 'development') {
+      contentType.off('add', this.createNodePage, this)
+      contentType.off('remove', this.removeNodePage, this)
+      contentType.off('update', this.updateNodePage, this)
+    }
+  }
+
+  createNodePage (node) {
+    const contentType = this.store.getContentType(node.typeName)
+    const component = join(this.templatesDir, `${node.typeName}.vue`)
+    const { route } = contentType.options
+
+    return this.pages.createPage({
+      autoCreated: true,
+      queryContext: node,
+      path: node.path,
+      component,
+      route
+    })
+  }
+
+  updateNodePage (node, oldNode) {
+    const contentType = this.store.getContentType(node.typeName)
+    const component = join(this.templatesDir, `${node.typeName}.vue`)
+    const { route } = contentType.options
+
+    if (node.path !== oldNode.path && !route) {
+      this.removeNodePage(oldNode)
+      return this.createNodePage(node)
+    }
+
+    return this.pages.createPage({
+      queryContext: node,
+      path: node.path,
+      component,
+      route
+    })
+  }
+
+  removeNodePage (node) {
+    return this.pages.removePage({ path: node.path })
   }
 }
 

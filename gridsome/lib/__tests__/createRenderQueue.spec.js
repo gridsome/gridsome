@@ -1,31 +1,24 @@
 const path = require('path')
 const createApp = require('../app')
+const { createRenderQueue } = require('../app/pages')
 const { BOOTSTRAP_CODE } = require('../utils/constants')
 
 test('create render queue for basic project', async () => {
   const context = path.join(__dirname, '__fixtures__', 'project-basic')
   const app = await createApp(context, undefined, BOOTSTRAP_CODE)
-  const queue = app.pages.genRenderQueue()
+  const queue = createRenderQueue(app)
 
   const renderPaths = queue.map(entry => entry.path)
-  const htmlOutputs = queue.map(entry => entry.htmlOutput)
-  const dataOutputs = queue.map(entry => entry.setData({ path: entry.path }))
 
-  expect(queue).toHaveLength(11)
-
+  expect(renderPaths).toHaveLength(16)
   expect(renderPaths).toContain('/')
-  expect(htmlOutputs).toContain(path.join(app.config.outDir, 'index.html'))
-  expect(dataOutputs).toContain(path.join(app.config.assetsDir, 'data', '1', '6d4ad46e.json'))
-
   expect(renderPaths).toContain('/404')
-  expect(htmlOutputs).toContain(path.join(app.config.outDir, '404.html'))
-  expect(dataOutputs).toContain(path.join(app.config.assetsDir, 'data', '1', '77051a62.json'))
 })
 
 test('create render queue for blog project', async () => {
   const context = path.join(__dirname, '__fixtures__', 'project-blog')
   const app = await createApp(context, undefined, BOOTSTRAP_CODE)
-  const queue = app.pages.genRenderQueue()
+  const queue = createRenderQueue(app)
 
   const renderPaths = queue.map(entry => entry.path)
 

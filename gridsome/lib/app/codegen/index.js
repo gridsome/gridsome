@@ -12,26 +12,26 @@ class Codegen {
     this.app = app
 
     this.files = {
-      'icons.js': () => genIcons(app),
-      'config.js': () => genConfig(app),
-      'routes.js': () => genRoutes(app),
+      'icons.js': genIcons,
+      'config.js': genConfig,
+      'routes.js': genRoutes,
       'plugins-server.js': () => genPlugins(app, true),
       'plugins-client.js': () => genPlugins(app, false),
       'now.js': () => `export default ${app.store.lastUpdate}`
     }
   }
 
-  async generate (filename = null) {
+  async generate (filename = null, ...args) {
     const outDir = this.app.config.tmpDir
 
-    const outputFile = async filename => {
-      const content = await this.files[filename]()
+    const outputFile = async (filename, ...args) => {
+      const content = await this.files[filename](this.app, ...args)
       const filepath = path.join(outDir, filename)
       await fs.outputFile(filepath, content)
     }
 
     if (filename) {
-      await outputFile(filename)
+      await outputFile(filename, ...args)
     } else {
       await fs.remove(outDir)
 

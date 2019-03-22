@@ -1,61 +1,202 @@
 const path = require('path')
 const App = require('../App')
-const { STATIC_ROUTE } = require('../../utils/constants')
+const { createRenderQueue } = require('../pages')
+const { BOOTSTRAP_PAGES } = require('../../utils/constants')
 
-test('add page', () => {
-  const { app, api } = createApi()
-  const component = path.join(__dirname, '__fixtures__', 'Page.vue')
+test('create page', async () => {
+  const { pages, pages: { createPage }} = await createApp()
+  const emit = jest.spyOn(pages, 'emit')
 
-  api.pages.addPage({
+  const page = createPage({
     path: '/page',
-    component
+    component: './__fixtures__/DefaultPage.vue'
   })
 
-  expect(app.pages._pages).toHaveLength(1)
-  expect(app.pages._pages[0].name).toBeUndefined()
-  expect(app.pages._pages[0].path).toEqual('/page')
-  expect(app.pages._pages[0].component).toEqual(component)
-  expect(app.pages._pages[0].pageQuery).toMatchObject({ query: null, paginate: false })
-  expect(app.pages._pages[0].context).toEqual({})
+  expect(page.path).toEqual('/page')
+  expect(page.route).toEqual('/page')
+  expect(page.chunkName).toBeUndefined()
+  expect(page.component).toEqual(path.join(__dirname, '__fixtures__', 'DefaultPage.vue'))
+  expect(emit).toHaveBeenCalledTimes(1)
 
-  expect(app.pages._pages[0].route.type).toEqual(STATIC_ROUTE)
-  expect(app.pages._pages[0].route.name).toEqual('page')
-  expect(app.pages._pages[0].route.path).toEqual('/page')
-  expect(app.pages._pages[0].route.originalPath).toEqual('/page')
-  expect(app.pages._pages[0].route.component).toEqual(component)
-  expect(app.pages._pages[0].route.isIndex).toEqual(true)
-  expect(app.pages._pages[0].route.chunkName).toBeUndefined()
-  expect(app.pages._pages[0].route.renderQueue).toHaveLength(0)
+  emit.mockRestore()
 })
 
-test('add page with context', () => {
-  const { app, api } = createApi()
+test('create home page', async () => {
+  const { pages: { createPage }} = await createApp()
 
-  api.pages.addPage({
-    path: '/page',
-    component: path.join(__dirname, '__fixtures__', 'Page.vue'),
-    context: {
-      id: '1'
-    }
+  const page = createPage({
+    path: '/',
+    component: './__fixtures__/DefaultPage.vue'
   })
 
-  expect(app.pages._pages[0].context).toMatchObject({ id: '1' })
+  expect(page.path).toEqual('/')
+  expect(page.route).toEqual('/')
+  expect(page.chunkName).toEqual('home')
 })
 
-test('remove page', () => {
-  const { app, api } = createApi()
+test('create page with pagination', async () => {
+  const { pages: { createPage }} = await createApp()
 
-  api.pages.addPage({
+  const page = createPage({
     path: '/page',
-    component: path.join(__dirname, '__fixtures__', 'Page.vue')
+    component: './__fixtures__/PagedPage.vue'
   })
 
-  api.pages.removePage('/page')
-
-  expect(app.pages._pages).toHaveLength(0)
+  expect(page.path).toEqual('/page')
+  expect(page.route).toEqual('/page/:page(\\d+)?')
 })
 
-function createApi (context = '/') {
-  const app = new App(context).init()
-  return { app, api: app.plugins[0].api }
+test('upate page', async () => {
+  const { pages, pages: { createPage, updatePage }} = await createApp()
+  const emit = jest.spyOn(pages, 'emit')
+
+  const page1 = createPage({
+    path: '/page',
+    component: './__fixtures__/DefaultPage.vue'
+  })
+
+  expect(page1.path).toEqual('/page')
+  expect(page1.route).toEqual('/page')
+  expect(page1.chunkName).toBeUndefined()
+  expect(page1.component).toEqual(path.join(__dirname, '__fixtures__', 'DefaultPage.vue'))
+
+  const page2 = updatePage({
+    path: '/page',
+    chunkName: 'page',
+    component: './__fixtures__/PagedPage.vue'
+  })
+
+  expect(page2.path).toEqual('/page')
+  expect(page2.route).toEqual('/page/:page(\\d+)?')
+  expect(page2.chunkName).toEqual('page')
+  expect(page2.component).toEqual(path.join(__dirname, '__fixtures__', 'PagedPage.vue'))
+  expect(pages.allPages()).toHaveLength(2) // includes /404
+  expect(emit).toHaveBeenCalledTimes(2)
+
+  emit.mockRestore()
+})
+
+test('override page with equal path', async () => {
+  const { pages, pages: { createPage }} = await createApp()
+
+  createPage({
+    path: '/page',
+    component: './__fixtures__/DefaultPage.vue'
+  })
+
+  createPage({
+    path: '/page',
+    chunkName: 'page',
+    component: './__fixtures__/PagedPage.vue'
+  })
+
+  expect(pages.allPages()).toHaveLength(2) // includes /404
+})
+
+test('allways include a /404 page', async () => {
+  const app = await createApp()
+  const notFound = app.pages.findPage({ path: '/404' })
+
+  expect(notFound.path).toEqual('/404')
+})
+
+test('generate render queue', async () => {
+  const app = await createApp(function plugin (api) {
+    api.loadSource(async store => {
+      const posts = api.store.addContentType({ typeName: 'Post', route: '/post/:id' })
+      const movies = api.store.addContentType({ typeName: 'Movie' })
+
+      for (let i = 1; i <= 3; i++) {
+        posts.addNode({ id: String(i), fields: { author: '2' }})
+      }
+
+      movies.addNode({
+        id: '1',
+        path: '/movie/one',
+        fields: {
+          posts: [
+            store.createReference('Post', '1')
+          ]
+        }
+      })
+
+      movies.addNode({
+        id: '2',
+        path: '/movie/two',
+        fields: {
+          posts: [
+            store.createReference('Post', '1'),
+            store.createReference('Post', '2')
+          ]
+        }
+      })
+
+      movies.addNode({
+        id: '3',
+        path: '/movie/three',
+        fields: {
+          posts: [
+            store.createReference('Post', '1')
+          ]
+        }
+      })
+    })
+
+    api.createPages(async ({ store, createPage, graphql }) => {
+      const posts = store.getContentType('Post')
+
+      createPage({
+        path: '/about',
+        component: './__fixtures__/DefaultPage.vue'
+      })
+
+      createPage({
+        path: '/blog',
+        component: './__fixtures__/PagedPage.vue',
+        context: { perPage: 2 }
+      })
+
+      for (let i = 1; i <= 3; i++) {
+        const node = posts.getNode(String(i))
+
+        createPage({
+          route: '/post/:id',
+          path: node.path,
+          component: './__fixtures__/DefaultTemplate.vue',
+          context: node
+        })
+      }
+
+      const movies = await graphql(`query {
+        allMovie {
+          edges {
+            node {
+              id
+              path
+            }
+          }
+        }
+      }`)
+
+      for (const edge of movies.data.allMovie.edges) {
+        createPage({
+          path: edge.node.path,
+          component: './__fixtures__/MovieTemplate.vue',
+          context: edge.node
+        })
+      }
+    })
+  })
+
+  const queue = createRenderQueue(app)
+
+  expect(queue).toHaveLength(11)
+})
+
+async function createApp (plugin) {
+  const app = await new App(__dirname, {
+    localConfig: { plugins: plugin ? [plugin] : [] }
+  })
+
+  return app.bootstrap(BOOTSTRAP_PAGES)
 }

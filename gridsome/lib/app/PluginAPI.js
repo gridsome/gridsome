@@ -10,76 +10,9 @@ class PluginAPI {
     this.context = app.context
 
     this.store = new PluginStore(app, entry.options, { transformers })
-
-    this.pages = {
-      addPage (options) {
-        return app.pages.addPage(options)
-      },
-      removePage (path) {
-        return app.pages.removePage(path)
-      },
-      _addTemplate (options) {
-        return app.pages._addTemplate(options)
-      }
-    }
+    this.pages = createPagesAPI(app)
 
     autoBind(this)
-
-    if (process.env.NODE_ENV === 'development') {
-      let regenerateTimeout = null
-
-      // use timeout as a workaround for when files are renamed,
-      // which triggers both addPage and removePage events...
-      const regenerateRoutes = () => {
-        clearTimeout(regenerateTimeout)
-        regenerateTimeout = setTimeout(() => {
-          if (app.isBootstrapped) {
-            app.createRoutes()
-            app.store.setUpdateTime()
-            app.codegen.generate('routes.js')
-          }
-        }, 20)
-      }
-
-      this.store.on('change', (node, oldNode = node) => {
-        if (!app.isBootstrapped) return
-
-        app.store.setUpdateTime()
-
-        if (
-          (node && node.withPath && node === oldNode) ||
-          (node && node.withPath && node.path !== oldNode.path) ||
-          (!node && oldNode.withPath)
-        ) {
-          return regenerateRoutes()
-        }
-
-        app.broadcast({
-          type: 'updateAllQueries'
-        })
-      })
-
-      this.store.on('removePage', regenerateRoutes)
-      this.store.on('addPage', regenerateRoutes)
-
-      this.store.on('updatePage', async (page, oldPage) => {
-        if (!app.isBootstrapped) return
-
-        const { pageQuery: { paginate: oldPaginate }} = oldPage
-        const { pageQuery: { paginate }} = page
-
-        if (paginate !== oldPaginate) {
-          return regenerateRoutes()
-        }
-
-        // send query to front-end for re-fetch
-        app.broadcast({
-          type: 'updateQuery',
-          query: page.pageQuery.query,
-          file: page.internal.origin
-        })
-      })
-    }
   }
 
   _on (eventName, handler) {
@@ -140,6 +73,20 @@ class PluginAPI {
 
   afterBuild (fn) {
     this._on('afterBuild', fn)
+  }
+}
+
+function createPagesAPI (app) {
+  return {
+    createPage (options) {
+      return app.pages.createPage(options)
+    },
+    updatePage (options) {
+      return app.pages.updatePage(options)
+    },
+    removePage (query) {
+      return app.pages.removePage(query)
+    }
   }
 }
 

@@ -1,4 +1,4 @@
-const { print } = require('graphql')
+const { print, Kind } = require('graphql')
 const { PER_PAGE } = require('../../utils/constants')
 
 const {
@@ -36,6 +36,28 @@ test('parse invalid page-query', () => {
 
   expect(parsed.query).toEqual(null)
   expect(parsed.paginate).toEqual(false)
+})
+
+test('process parsed page-query', () => {
+  const query = `query {
+    allTestAuthors {
+      edges {
+        node {
+          id
+        }
+      }
+    }
+  }`
+
+  const parsed = parsePageQuery(query)
+  const processed = processPageQuery(parsed)
+
+  expect(processed.query.kind).toEqual(Kind.DOCUMENT)
+  expect(processed.source).toEqual(query)
+  expect(processed.variables).toHaveLength(0)
+  expect(processed.paginate.fieldName).toBeUndefined()
+  expect(processed.paginate.typeName).toBeUndefined()
+  expect(processed.paginate.belongsTo).toEqual(false)
 })
 
 test('parse @paginate directive for connection', () => {
@@ -140,6 +162,7 @@ test('parse page-query variables', () => {
   }`)
 
   const values = contextValues({
+    typeName: 'Test',
     id: '1',
     title: 'title',
     fields: {

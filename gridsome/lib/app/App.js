@@ -13,7 +13,7 @@ const { defaultsDeep } = require('lodash')
 const { version } = require('../../package.json')
 const { parseUrl, resolvePath } = require('../utils')
 const { info } = require('../utils/log')
-const Pages = require('./pages')
+const { Pages } = require('./pages')
 
 const {
   BOOTSTRAP_CONFIG,
@@ -136,16 +136,29 @@ class App {
     }))
 
     // ensure a /404 page exists
-    if (!this.pages.hasPage('/404')) {
-      this.pages.addPage({
+    if (!this.pages.findPage({ path: '/404' })) {
+      this.pages.createPage({
         path: '/404',
         component: path.join(this.config.appPath, 'pages', '404.vue')
       })
     }
+
+    if (process.env.NODE_ENV === 'development') {
+      this.store.on('change', () => this.broadcast({ type: 'updateAllQueries' }))
+      this.pages.on('create', () => this.codegen.generate('routes.js'))
+      this.pages.on('remove', () => this.codegen.generate('routes.js'))
+      this.pages.on('change', page => {
+        this.broadcast({
+          type: 'updateQuery',
+          query: page.query.source,
+          component: path.relative(this.context, page.component)
+        })
+      })
+    }
   }
 
-  generateCode () {
-    return this.codegen.generate()
+  async generateCode () {
+    await this.codegen.generate()
   }
 
   //

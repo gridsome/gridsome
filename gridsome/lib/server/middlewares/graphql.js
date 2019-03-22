@@ -1,4 +1,5 @@
 const { print } = require('graphql')
+const { trimEnd } = require('lodash')
 const { getGraphQLParams } = require('express-graphql')
 
 const {
@@ -18,18 +19,21 @@ module.exports = ({ store, pages }) => {
     const { path } = variables
 
     if (path) {
-      const context = findContext(path, { store, pages, pageQuery })
+      const page = pages.findPage({
+        path: { $in: [path, trimEnd(path, '/')] }
+      })
 
-      if (!context) {
+      if (!page) {
         return res
           .status(404)
-          .send({
-            code: 404,
-            message: `Could not find ${path}`
-          })
+          .send({ code: 404, message: `Could not find ${path}` })
       }
 
-      Object.assign(variables, context, { path })
+      Object.assign(
+        variables,
+        contextValues(page.context, pageQuery.variables),
+        { path: page.path }
+      )
     }
 
     req.body = body
@@ -37,14 +41,5 @@ module.exports = ({ store, pages }) => {
     req.body.variables = variables
 
     next()
-  }
-}
-
-function findContext (path, { store, pages, pageQuery }) {
-  if (pages.hasPage(path)) {
-    return pages.getPage(path).context
-  } else if (store.index.findOne({ path })) {
-    const node = store.getNodeByPath(path)
-    return contextValues(node, pageQuery.variables)
   }
 }

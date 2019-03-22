@@ -1,49 +1,42 @@
+const path = require('path')
+const { uniqBy } = require('lodash')
 const slugify = require('@sindresorhus/slugify')
 
-const {
-  STATIC_ROUTE,
-  STATIC_TEMPLATE_ROUTE
-} = require('../../utils/constants')
-
-function genRoutes (app) {
+function genRoutes (app, routeMeta = {}) {
   let res = ''
 
-  const routes = app.pages.routes
-  const notFound = routes.find(route => route.name === '404')
+  const pages = uniqBy(app.pages.allPages(), page => page.route)
+  const notFound = app.pages.findPage({ path: '/404' })
 
   // use the /404 page as fallback route
-  routes.push({
+  pages.push({
     ...notFound,
-    chunkName: notFound.name,
-    metaDataPath: notFound.metaDataPath,
+    routeMeta: routeMeta[notFound.route],
     name: '*',
-    path: '*'
+    route: '*'
   })
 
-  res += `export default [${routes.map(route => {
-    const component = JSON.stringify(route.component)
-    const chunkName = JSON.stringify('component--' + slugify(route.chunkName || route.name))
-    const hasData = !!route.pageQuery.query
-    const queue = route.renderQueue
+  res += `export default [${pages.map(page => {
+    const component = JSON.stringify(page.component)
+    const name = (page.chunkName || slugify(path.parse(component).name))
+    const chunkName = JSON.stringify('component--' + name)
+    const queryMeta = page.routeMeta || routeMeta[page.route]
     const props = []
     const metas = []
 
-    props.push(`    path: ${JSON.stringify(route.path)}`)
+    props.push(`    path: ${JSON.stringify(page.route)}`)
     props.push(`    component: () => import(/* webpackChunkName: ${chunkName} */ ${component})`)
 
-    if (hasData && queue.length) {
-      if ([STATIC_ROUTE, STATIC_TEMPLATE_ROUTE].includes(route.type)) {
-        metas.push(`data: ${JSON.stringify(queue[0].metaData)}`)
-      } else {
-        const metaDataPath = JSON.stringify(route.metaDataPath)
-        metas.push(`data: () => import(/* webpackChunkName: ${chunkName} */ ${metaDataPath})`)
-      }
+    if (typeof queryMeta === 'string') {
+      metas.push(`data: () => import(/* webpackChunkName: ${chunkName} */ ${JSON.stringify(queryMeta)})`)
+    } else if (Array.isArray(queryMeta)) {
+      metas.push(`data: ${JSON.stringify(queryMeta)}`)
     }
 
     if (metas.length) props.push(`    meta: { ${metas.join(', ')} }`)
 
-    if (route.name) {
-      props.unshift(`    name: ${JSON.stringify(route.name)}`)
+    if (page.name) {
+      props.unshift(`    name: ${JSON.stringify(page.name)}`)
     }
 
     return `\n  {\n${props.join(',\n')}\n  }`
