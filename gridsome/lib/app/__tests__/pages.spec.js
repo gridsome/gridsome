@@ -5,7 +5,7 @@ const { BOOTSTRAP_PAGES } = require('../../utils/constants')
 
 test('create page', async () => {
   const { pages, pages: { createPage }} = await createApp()
-  const emit = jest.spyOn(pages, 'emit')
+  const emit = jest.spyOn(pages._events, 'emit')
 
   const page = createPage({
     path: '/page',
@@ -48,7 +48,7 @@ test('create page with pagination', async () => {
 
 test('upate page', async () => {
   const { pages, pages: { createPage, updatePage }} = await createApp()
-  const emit = jest.spyOn(pages, 'emit')
+  const emit = jest.spyOn(pages._events, 'emit')
 
   const page1 = createPage({
     path: '/page',

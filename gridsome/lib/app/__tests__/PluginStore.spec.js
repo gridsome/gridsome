@@ -52,7 +52,7 @@ test('add node', () => {
     typeName: 'TestPost'
   })
 
-  const emit = jest.spyOn(contentType, 'emit')
+  const emit = jest.spyOn(contentType._events, 'emit')
   const node = contentType.addNode({
     id: 'test',
     title: 'Lorem ipsum dolor sit amet',
@@ -85,7 +85,7 @@ test('update node', () => {
     route: '/test/:foo/:slug'
   })
 
-  const emit = jest.spyOn(contentType, 'emit')
+  const emit = jest.spyOn(contentType._events, 'emit')
 
   const oldNode = contentType.addNode({
     id: 'test',
@@ -173,7 +173,7 @@ test('remove node', () => {
     typeName: 'TestPost'
   })
 
-  const emit = jest.spyOn(contentType, 'emit')
+  const emit = jest.spyOn(contentType._events, 'emit')
   const node = contentType.addNode({ id: 'test' })
 
   contentType.removeNode('test')
