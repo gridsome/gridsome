@@ -19,12 +19,8 @@ exports.render = async function ({
   for (let i = 0; i < length; i++) {
     page = pages[i]
 
-    const { data } = page.dataOutput
-      ? await fs.readJson(page.dataOutput)
-      : {}
-
     try {
-      html = await render(page.path, data)
+      html = await render(page)
     } catch (err) {
       throw err
     }

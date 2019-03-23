@@ -150,7 +150,7 @@ async function runWebpack (app) {
 
 async function renderHTML (renderQueue, config) {
   const timer = hirestime()
-  const { htmlTemplate, clientManifestPath, serverBundlePath } = config
+  const { outDir, htmlTemplate, clientManifestPath, serverBundlePath } = config
 
   const htmlQueue = renderQueue.map(entry => {
     const segments = entry.segments.map(segment => decodeURIComponent(segment))
@@ -159,7 +159,7 @@ async function renderHTML (renderQueue, config) {
     return {
       path: entry.path,
       dataOutput: entry.dataOutput,
-      htmlOutput: path.join(config.outDir, ...segments, fileName)
+      htmlOutput: path.join(outDir, ...segments, fileName)
     }
   })
 

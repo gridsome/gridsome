@@ -1,3 +1,4 @@
+const fs = require('fs-extra')
 const chalk = require('chalk')
 const createHTMLRenderer = require('./createHTMLRenderer')
 const { createBundleRenderer } = require('vue-server-renderer')
@@ -17,14 +18,18 @@ module.exports = function createRenderFn ({
     runInNewContext: false
   })
 
-  return async function render (url, data = {}) {
-    const context = { url, pageQuery: { data }}
+  return async function render (page) {
+    const context = {
+      url: page.path,
+      state: page.dataOutput ? await fs.readJson(page.dataOutput) : {}
+    }
+
     let app = ''
 
     try {
       app = await renderer.renderToString(context)
     } catch (err) {
-      error(chalk.red(`Failed to render ${url}`))
+      error(chalk.red(`Failed to render ${page.path}`))
       throw err
     }
 
@@ -44,6 +49,7 @@ module.exports = function createRenderFn ({
       context.renderStyles()
 
     const scripts = '' +
+      context.renderState() +
       context.renderScripts() +
       inject.script.text({ body: true })
 
