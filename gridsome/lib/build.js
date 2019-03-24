@@ -71,24 +71,20 @@ async function renderPageQueries (renderQueue, app) {
   let group = 0
 
   const res = await pMap(renderQueue, async entry => {
-    if (!entry.query) return entry
-
     if (count % (groupSize - 1) === 0) group++
     count++
 
-    const results = await execute(
-      app.schema,
-      entry.query,
-      undefined,
-      context,
-      entry.context
-    )
+    const results = entry.query
+      ? await execute(app.schema, entry.query, undefined, context, entry.queryContext)
+      : {}
 
     if (results.errors) {
       const relPath = path.relative(app.context, entry.component)
       error(`An error occurred while executing page-query for ${relPath}\n`)
       throw new Error(results.errors[0])
     }
+
+    results.context = entry.context
 
     const hash = hashSum(results)
     const dataOutput = path.join(app.config.assetsDir, 'data', `${group}/${hash}.json`)

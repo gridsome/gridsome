@@ -5,6 +5,7 @@ const graphqlHTTP = require('express-graphql')
 const graphqlMiddleware = require('./middlewares/graphql')
 const { default: playground } = require('graphql-playground-middleware-express')
 const { forwardSlash } = require('../utils')
+const { trimEnd } = require('lodash')
 
 const endpoint = {
   graphql: '/___graphql',
@@ -31,6 +32,7 @@ module.exports = async (app, options = {}) => {
 
   server.use(
     endpoint.graphql,
+    express.json(),
     graphqlMiddleware(app),
     graphqlHTTP({
       schema,
@@ -38,7 +40,11 @@ module.exports = async (app, options = {}) => {
       formatError: err => ({
         message: err.message,
         stringified: err.toString()
-      })
+      }),
+      extensions ({ variables: { path }}) {
+        const page = app.pages.findPage({ path })
+        return { context: page ? page.context : {}}
+      }
     })
   )
 

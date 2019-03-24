@@ -129,7 +129,7 @@ function createRenderQueue ({ pages, store, schema }) {
 
   for (const page of pages.allPages()) {
     const { typeName, fieldName, belongsTo } = page.query.paginate
-    const context = page.queryContext || page.context || null
+    const context = page.queryContext || page.context || {}
     const variables = contextValues(context, page.query.variables)
 
     if (typeName) {
@@ -167,19 +167,20 @@ function createRenderQueue ({ pages, store, schema }) {
   return res
 }
 
-function createRenderEntry (page, context = {}) {
+function createRenderEntry (page, variables = {}) {
   const segments = page.path.split('/').filter(segment => !!segment)
   const pagePath = `/${segments.join('/')}`
 
-  if (context.page > 1) {
-    segments.push(context.page)
+  if (variables.page > 1) {
+    segments.push(variables.page)
   }
 
   return {
     route: page.route,
     path: `/${segments.join('/')}`,
     component: page.component,
-    context: { ...context, path: pagePath },
+    queryContext: { ...variables, path: pagePath },
+    context: page.context,
     query: page.query.query,
     isIndex: page.internal.isIndex,
     isDynamic: page.internal.isDynamic,

@@ -31,6 +31,8 @@ function genRoutes (app, routeMeta = {}) {
       metas.push(`data: () => import(/* webpackChunkName: ${chunkName} */ ${JSON.stringify(queryMeta)})`)
     } else if (Array.isArray(queryMeta)) {
       metas.push(`data: ${JSON.stringify(queryMeta)}`)
+    } else if (process.env.NODE_ENV === 'development' && (page.query.query || page.context)) {
+      metas.push(`data: true`)
     }
 
     if (metas.length) props.push(`    meta: { ${metas.join(', ')} }`)
