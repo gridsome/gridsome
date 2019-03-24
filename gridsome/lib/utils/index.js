@@ -6,6 +6,12 @@ const mime = require('mime-types')
 const isRelative = require('is-relative')
 const slugify = require('@sindresorhus/slugify')
 
+exports.pipe = function (funcs, res, ...args) {
+  return funcs.reduce(async (res, fn) => {
+    return fn(await res, ...args)
+  }, Promise.resolve(res))
+}
+
 exports.forwardSlash = function (input) {
   return slash(input)
 }

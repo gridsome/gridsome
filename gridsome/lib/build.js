@@ -4,8 +4,9 @@ const fs = require('fs-extra')
 const hashSum = require('hash-sum')
 const hirestime = require('hirestime')
 const sysinfo = require('./utils/sysinfo')
-const { chunk, pick, groupBy } = require('lodash')
+const { chunk, groupBy } = require('lodash')
 const { log, error, info } = require('./utils/log')
+const { pipe } = require('./utils')
 
 const createApp = require('./app')
 const { execute } = require('graphql')
@@ -21,37 +22,31 @@ module.exports = async (context, args) => {
   const { config } = app
 
   await app.dispatch('beforeBuild', { context, config })
-  await fs.ensureDir(config.dataDir)
+
   await fs.remove(config.outDir)
+  await fs.ensureDir(config.dataDir)
+  await fs.ensureDir(config.outDir)
 
-  let queue = createRenderQueue(app)
+  const queue = await pipe([
+    createRenderQueue,
+    createHTMLPaths,
+    executeQueries
+  ], [], app)
 
-  // run all GraphQL queries and save results into json files
-  await app.dispatch('beforeRenderQueries', () => ({ context, config, queue }))
-  queue = await renderPageQueries(queue, app)
-
-  // write out route metas and new routes
-  await createRoutesMeta(app, queue)
-
-  // compile assets with webpack
+  await writeQueryResults(queue, app)
   await runWebpack(app)
-
-  // render a static index.html file for each possible route
-  await app.dispatch('beforeRenderHTML', () => ({ context, config, queue }))
-  queue = await renderHTML(queue, config)
-
-  // process queued images
-  await app.dispatch('beforeProcessAssets', () => ({ context, config, queue: app.queue }))
-  await processFiles(app.queue.files, config)
-  await processImages(app.queue.images, config)
+  await renderHTML(queue, app)
+  await processFiles(app.queue.files, app.config)
+  await processImages(app.queue.images, app.config)
 
   // copy static files
   if (fs.existsSync(config.staticDir)) {
     await fs.copy(config.staticDir, config.outDir)
   }
 
-  // clean up
   await app.dispatch('afterBuild', () => ({ context, config, queue }))
+
+  // clean up
   await fs.remove(config.manifestsDir)
   await fs.remove(config.dataDir)
 
@@ -62,7 +57,20 @@ module.exports = async (context, args) => {
   return app
 }
 
-async function renderPageQueries (renderQueue, app) {
+function createHTMLPaths (renderQueue, app) {
+  return renderQueue.map(entry => {
+    const segments = entry.path.split('/').filter(segment => !!segment)
+    const fileSegments = segments.map(segment => decodeURIComponent(segment))
+    const fileName = entry.isIndex ? 'index.html' : `${fileSegments.pop()}.html`
+
+    return {
+      ...entry,
+      htmlOutput: path.join(app.config.outDir, ...fileSegments, fileName)
+    }
+  })
+}
+
+async function executeQueries (renderQueue, app) {
   const timer = hirestime()
   const context = app.createSchemaContext()
   const groupSize = 500
@@ -84,48 +92,52 @@ async function renderPageQueries (renderQueue, app) {
       throw new Error(results.errors[0])
     }
 
-    results.context = entry.context
-
-    const hash = hashSum(results)
+    const data = { data: results.data || null, context: entry.context }
+    const hash = hashSum(data)
+    const dataInfo = { group, hash }
     const dataOutput = path.join(app.config.assetsDir, 'data', `${group}/${hash}.json`)
-    const dataMeta = { group, hash }
 
-    await fs.outputFile(dataOutput, JSON.stringify(results))
-
-    return { ...entry, dataMeta, dataOutput }
+    return { ...entry, dataOutput, data, dataInfo }
   }, { concurrency: sysinfo.cpus.physical })
 
-  info(`Run GraphQL (${count} queries) - ${timer(hirestime.S)}s`)
+  info(`Execute GraphQL (${count} queries) - ${timer(hirestime.S)}s`)
 
   return res
 }
 
-async function createRoutesMeta (app, renderQueue) {
-  const data = renderQueue
-    .filter(entry => entry.dataMeta)
-    .map(entry => pick(entry, ['route', 'path', 'dataMeta']))
+async function writeQueryResults (renderQueue, app) {
+  const timer = hirestime()
+  const queryQueue = renderQueue.filter(entry => entry.dataOutput)
+  const routes = groupBy(queryQueue, entry => entry.route)
+  const meta = {}
 
-  const routeMeta = groupBy(data, entry => entry.route)
-  let num = 1
+  let count = 0
 
-  for (const route in routeMeta) {
-    const entries = routeMeta[route]
-    const content = entries.reduce((acc, { path, dataMeta }) => {
-      acc[path] = [dataMeta.group, dataMeta.hash]
+  for (const entry of queryQueue) {
+    if (!entry.dataOutput) continue
+    await fs.outputFile(entry.dataOutput, JSON.stringify(entry.data))
+  }
+
+  for (const route in routes) {
+    const entries = routes[route]
+    const content = entries.reduce((acc, { path, dataInfo }) => {
+      acc[path] = [dataInfo.group, dataInfo.hash]
       return acc
     }, {})
 
     if (entries.length > 1) {
-      const output = path.join(app.config.dataDir, 'route-meta', `${num++}.json`)
+      const output = path.join(app.config.dataDir, 'route-meta', `${count++}.json`)
       await fs.outputFile(output, JSON.stringify(content))
-      routeMeta[route] = output
+      meta[route] = output
     } else {
-      routeMeta[route] = content[entries[0].path]
+      meta[route] = content[entries[0].path]
     }
   }
 
-  // re-generate routes with new page query meta
-  await app.codegen.generate('routes.js', routeMeta)
+  // re-generate routes with query meta
+  await app.codegen.generate('routes.js', meta)
+
+  info(`Write query results (${queryQueue.length + count} files) - ${timer(hirestime.S)}s`)
 }
 
 async function runWebpack (app) {
@@ -144,24 +156,12 @@ async function runWebpack (app) {
   info(`Compile assets - ${compileTime(hirestime.S)}s`)
 }
 
-async function renderHTML (renderQueue, config) {
+async function renderHTML (renderQueue, app) {
   const timer = hirestime()
-  const { outDir, htmlTemplate, clientManifestPath, serverBundlePath } = config
-
-  const htmlQueue = renderQueue.map(entry => {
-    const segments = entry.segments.map(segment => decodeURIComponent(segment))
-    const fileName = entry.isIndex ? 'index.html' : `${segments.pop()}.html`
-
-    return {
-      path: entry.path,
-      dataOutput: entry.dataOutput,
-      htmlOutput: path.join(outDir, ...segments, fileName)
-    }
-  })
-
   const worker = createWorker('html-writer')
+  const { htmlTemplate, clientManifestPath, serverBundlePath } = app.config
 
-  await Promise.all(chunk(htmlQueue, 350).map(async pages => {
+  await Promise.all(chunk(renderQueue, 350).map(async pages => {
     try {
       await worker.render({
         pages,
@@ -177,9 +177,7 @@ async function renderHTML (renderQueue, config) {
 
   worker.end()
 
-  info(`Render HTML (${htmlQueue.length} pages) - ${timer(hirestime.S)}s`)
-
-  return htmlQueue
+  info(`Render HTML (${renderQueue.length} files) - ${timer(hirestime.S)}s`)
 }
 
 async function processFiles (queue, { outDir }) {

@@ -188,7 +188,7 @@ test('generate render queue', async () => {
     })
   })
 
-  const queue = createRenderQueue(app)
+  const queue = createRenderQueue([], app)
 
   expect(queue).toHaveLength(11)
 })

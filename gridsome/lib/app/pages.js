@@ -123,53 +123,56 @@ function createPage ({ component, pageQuery, options }) {
   }
 }
 
-function createRenderQueue ({ pages, store, schema }) {
-  const rootFields = schema.getQueryType().getFields()
-  const res = []
-
+function createRenderQueue (renderQueue, { pages, store, schema }) {
   for (const page of pages.allPages()) {
-    const { typeName, fieldName, belongsTo } = page.query.paginate
     const context = page.queryContext || page.context || {}
     const variables = contextValues(context, page.query.variables)
 
-    if (typeName) {
-      const filters = page.query.getFilters(variables)
-      const perPage = page.query.getPerPage(variables)
-
-      let totalNodes = 0
-
-      if (belongsTo) {
-        const { args } = rootFields[fieldName].type.getFields().belongsTo
-        const query = createCollectionQuery(args, filters)
-        const node = store.getNodeByPath(page.path)
-
-        query[createBelongsToKey(node)] = { $eq: true }
-
-        totalNodes = store.index.count(query)
-      } else {
-        const { collection } = store.getContentType(typeName)
-        const { args } = rootFields[fieldName]
-        const query = createCollectionQuery(args, filters)
-
-        totalNodes = collection.find(query).length
-      }
-
-      const totalPages = Math.ceil(totalNodes / perPage) || 1
+    if (page.query.paginate.typeName) {
+      const totalPages = calcTotalPages(page, variables, store, schema)
 
       for (let i = 1; i <= totalPages; i++) {
-        res.push(createRenderEntry(page, { ...variables, page: i }))
+        renderQueue.push(createRenderEntry(page, { ...variables, page: i }))
       }
     } else {
-      res.push(createRenderEntry(page, variables))
+      renderQueue.push(createRenderEntry(page, variables))
     }
   }
 
-  return res
+  return renderQueue
+}
+
+function calcTotalPages (page, variables, store, schema) {
+  const { belongsTo, fieldName, typeName } = page.query.paginate
+  const rootFields = schema.getQueryType().getFields()
+
+  const filters = page.query.getFilters(variables)
+  const perPage = page.query.getPerPage(variables)
+
+  let totalNodes = 0
+
+  if (belongsTo) {
+    const { args } = rootFields[fieldName].type.getFields().belongsTo
+    const query = createCollectionQuery(args, filters)
+    const node = store.getNodeByPath(page.path)
+
+    query[createBelongsToKey(node)] = { $eq: true }
+
+    totalNodes = store.index.count(query)
+  } else {
+    const { collection } = store.getContentType(typeName)
+    const { args } = rootFields[fieldName]
+    const query = createCollectionQuery(args, filters)
+
+    totalNodes = collection.find(query).length
+  }
+
+  return Math.ceil(totalNodes / perPage) || 1
 }
 
 function createRenderEntry (page, variables = {}) {
   const segments = page.path.split('/').filter(segment => !!segment)
-  const pagePath = `/${segments.join('/')}`
+  const originalPath = `/${segments.join('/')}`
 
   if (variables.page > 1) {
     segments.push(variables.page)
@@ -179,12 +182,10 @@ function createRenderEntry (page, variables = {}) {
     route: page.route,
     path: `/${segments.join('/')}`,
     component: page.component,
-    queryContext: { ...variables, path: pagePath },
+    queryContext: { ...variables, path: originalPath },
     context: page.context,
     query: page.query.query,
-    isIndex: page.internal.isIndex,
-    isDynamic: page.internal.isDynamic,
-    segments
+    isIndex: page.internal.isIndex
   }
 }
 
