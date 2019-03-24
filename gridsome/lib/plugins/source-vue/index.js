@@ -1,8 +1,9 @@
+const path = require('path')
 const fs = require('fs-extra')
 const glob = require('globby')
 const slash = require('slash')
+const { find } = require('lodash')
 const chokidar = require('chokidar')
-const { parse, join } = require('path')
 const { createPagePath, parseComponent } = require('./lib/utils')
 
 class VueSource {
@@ -52,27 +53,28 @@ class VueSource {
   }
 
   createPage (file) {
-    const path = createPagePath(file)
-    const name = path === '/' ? 'home' : undefined
-    const component = join(this.pagesDir, file)
-
-    return this.pages.createPage({ path, name, component, autoCreated: true })
+    return this.pages.createPage({
+      path: createPagePath(file),
+      name: /^[iI]ndex\.vue$/.test(file) ? 'home' : undefined,
+      component: path.join(this.pagesDir, file),
+      autoCreated: true
+    })
   }
 
   removePage (file) {
-    const component = join(this.pagesDir, file)
+    const component = path.join(this.pagesDir, file)
     return this.pages.removePage({ component })
   }
 
   async createTemplates () {
-    const files = await glob('*.vue', { cwd: this.templatesDir })
+    const files = await glob('**/*.vue', { cwd: this.templatesDir })
 
     for (const file of files) {
       this.createTemplate(file)
     }
 
     if (process.env.NODE_ENV === 'development') {
-      const watcher = chokidar.watch('*.vue', {
+      const watcher = chokidar.watch('**/*.vue', {
         ignoreInitial: true,
         cwd: this.templatesDir
       })
@@ -84,8 +86,10 @@ class VueSource {
   }
 
   createTemplate (file) {
-    const { name: typeName } = parse(file)
-    const contentType = this.store.getContentType(typeName)
+    const component = path.join(this.templatesDir, file)
+    const contentType = find(this.store.store.collections, ({ options }) => {
+      return options.component === component
+    })
 
     if (!contentType) return
 
@@ -101,9 +105,10 @@ class VueSource {
   }
 
   removeTemplate (file) {
-    const { name: typeName } = parse(file)
-    const contentType = this.store.getContentType(typeName)
-    const component = join(this.templatesDir, file)
+    const component = path.join(this.templatesDir, file)
+    const contentType = find(this.store.store.collections, ({ options }) => {
+      return options.component === component
+    })
 
     if (!contentType) return
 
@@ -118,7 +123,7 @@ class VueSource {
 
   createNodePage (node) {
     const contentType = this.store.getContentType(node.typeName)
-    const component = join(this.templatesDir, `${node.typeName}.vue`)
+    const component = path.join(this.templatesDir, `${node.typeName}.vue`)
     const { route } = contentType.options
 
     return this.pages.createPage({
@@ -132,7 +137,7 @@ class VueSource {
 
   updateNodePage (node, oldNode) {
     const contentType = this.store.getContentType(node.typeName)
-    const component = join(this.templatesDir, `${node.typeName}.vue`)
+    const component = path.join(this.templatesDir, `${node.typeName}.vue`)
     const { route } = contentType.options
 
     if (node.path !== oldNode.path && !route) {

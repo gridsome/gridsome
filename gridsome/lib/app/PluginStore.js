@@ -84,6 +84,9 @@ class Source {
       options.resolveAbsolutePaths = this._resolveAbsolutePaths
     }
 
+    const { templatesDir } = this._app.config
+    const component = path.join(templatesDir, `${options.typeName}.vue`)
+
     return this.store.addContentType(this, {
       route: options.route,
       fields: options.fields || {},
@@ -102,6 +105,7 @@ class Source {
       mimeTypes: [],
       belongsTo: {},
       createPath,
+      component,
       refs
     })
   }
