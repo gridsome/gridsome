@@ -1,5 +1,6 @@
 const path = require('path')
 const autoBind = require('auto-bind')
+const { cloneDeep } = require('lodash')
 const { Collection } = require('lokijs')
 const isRelative = require('is-relative')
 const EventEmitter = require('eventemitter3')
@@ -59,15 +60,15 @@ class Pages {
   }
 
   updatePage (options) {
-    const oldPage = this.findPage({ path: options.path })
+    const page = this.findPage({ path: options.path })
     const component = isRelative(options.component)
       ? path.resolve(this._context, options.component)
       : options.component
     const { pageQuery } = this._parse(component)
-    const page = createPage({ component, pageQuery, options })
+    const oldNode = cloneDeep(page)
 
-    Object.assign(oldPage, page)
-    this._events.emit('change', page)
+    Object.assign(page, createPage({ component, pageQuery, options }))
+    this._events.emit('update', page, oldNode)
 
     return page
   }

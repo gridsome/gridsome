@@ -129,11 +129,7 @@ class App {
   }
 
   async createPages () {
-    await this.dispatch('createPages', api => ({
-      graphql: this.graphql,
-      store: this.store,
-      ...api.pages
-    }))
+    await this.dispatch('createPages', api => api.pages)
 
     // ensure a /404 page exists
     if (!this.pages.findPage({ path: '/404' })) {
@@ -144,15 +140,17 @@ class App {
     }
 
     if (process.env.NODE_ENV === 'development') {
-      this.store.on('change', () => this.broadcast({ type: 'updateAllQueries' }))
       this.pages.on('create', () => this.codegen.generate('routes.js'))
       this.pages.on('remove', () => this.codegen.generate('routes.js'))
-      this.pages.on('change', page => {
-        this.broadcast({
-          type: 'updateQuery',
-          query: page.query.source,
-          component: path.relative(this.context, page.component)
-        })
+
+      this.pages.on('update', (page, oldPage) => {
+        if (
+          (page.path !== oldPage.path && !page.internal.isDynamic) ||
+          (page.query.query && !oldPage.query.query) ||
+          (!page.query.query && oldPage.query.query)
+        ) {
+          this.codegen.generate('routes.js')
+        }
       })
     }
   }

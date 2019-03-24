@@ -67,8 +67,8 @@ class BaseStore {
     return collection
   }
 
-  getContentType (type) {
-    return this.collections[type]
+  getContentType (typeName) {
+    return this.collections[typeName]
   }
 
   getNodeByPath (path) {

@@ -10,7 +10,7 @@ class PluginAPI {
     this.context = app.context
 
     this.store = new PluginStore(app, entry.options, { transformers })
-    this.pages = createPagesAPI(app)
+    this.pages = createPagesAPI(this)
 
     autoBind(this)
   }
@@ -76,16 +76,18 @@ class PluginAPI {
   }
 }
 
-function createPagesAPI (app) {
+function createPagesAPI (api) {
   return {
+    store: api.store,
+    graphql: api._app.graphql,
     createPage (options) {
-      return app.pages.createPage(options)
+      return api._app.pages.createPage(options)
     },
     updatePage (options) {
-      return app.pages.updatePage(options)
+      return api._app.pages.updatePage(options)
     },
     removePage (query) {
-      return app.pages.removePage(query)
+      return api._app.pages.removePage(query)
     }
   }
 }
