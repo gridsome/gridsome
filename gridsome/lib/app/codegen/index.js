@@ -4,6 +4,7 @@ const genIcons = require('./icons')
 const genConfig = require('./config')
 const genRoutes = require('./routes')
 const genPlugins = require('./plugins')
+const genConstants = require('./constants')
 
 // TODO: let plugins add generated files
 
@@ -15,6 +16,7 @@ class Codegen {
       'icons.js': genIcons,
       'config.js': genConfig,
       'routes.js': genRoutes,
+      'constants.js': genConstants,
       'plugins-server.js': () => genPlugins(app, true),
       'plugins-client.js': () => genPlugins(app, false),
       'now.js': () => `export default ${app.store.lastUpdate}`

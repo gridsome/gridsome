@@ -8,8 +8,9 @@ const EventEmitter = require('eventemitter3')
 const { createBelongsToKey } = require('../graphql/nodes/utils')
 const { createFilterQuery } = require('../graphql/createFilterTypes')
 const { parsePageQuery, processPageQuery, contextValues } = require('../graphql/page-query')
+const { NOT_FOUND_NAME, NOT_FOUND_PATH } = require('../utils/constants')
 
-const nonIndex = ['/404']
+const nonIndex = [NOT_FOUND_PATH]
 
 class Pages {
   constructor (app) {
@@ -148,18 +149,19 @@ function createPage ({ component, query, options }) {
   const segments = options.path.split('/').filter(segment => !!segment)
   const path = `/${segments.join('/')}`
 
+  const name = path === NOT_FOUND_PATH ? NOT_FOUND_NAME : options.name
+
   return {
+    name,
     path,
     component,
-    name: options.name,
     chunkName: options.chunkName,
     context: options.context || null,
     queryContext: options.queryContext || null,
     internal: {
-      route: options.route,
+      route: options.route || null,
       isIndex: !nonIndex.includes(path),
-      isDynamic: typeof options.route === 'string',
-      isAutoCreated: options.autoCreated === true
+      isDynamic: typeof options.route === 'string'
     }
   }
 }

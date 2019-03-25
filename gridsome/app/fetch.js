@@ -2,7 +2,7 @@
 
 import prefetch from './utils/prefetch'
 import { unslashEnd } from './utils/helpers'
-import { NOT_FOUND_NAME, NOT_FOUND_PATH } from './utils/constants'
+import { NOT_FOUND_NAME, NOT_FOUND_PATH } from '~/.temp/constants'
 
 const dataUrl = process.env.DATA_URL
 const isPrefetched = {}
