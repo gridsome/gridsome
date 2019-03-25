@@ -88,6 +88,12 @@ function createPagesAPI (api) {
     },
     removePage (query) {
       return api._app.pages.removePage(query)
+    },
+    findPage (query) {
+      return api._app.pages.findPage(query)
+    },
+    findPages (query) {
+      return api._app.pages.findPages(query)
     }
   }
 }

@@ -5,7 +5,6 @@ const graphqlHTTP = require('express-graphql')
 const graphqlMiddleware = require('./middlewares/graphql')
 const { default: playground } = require('graphql-playground-middleware-express')
 const { forwardSlash } = require('../utils')
-const { trimEnd } = require('lodash')
 
 const endpoint = {
   graphql: '/___graphql',

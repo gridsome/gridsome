@@ -17,7 +17,7 @@ export function formatError (err, route) {
   if (err.stringified && options.__file) {
     return console.error( // eslint-disable-line
       `An error occurred while executing ` +
-      `page-query for ${options.__file}\n\n` +
+      `query for ${options.__file}\n\n` +
       `Error: ${err.stringified}`
     )
   }

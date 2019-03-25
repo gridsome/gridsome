@@ -19,9 +19,12 @@ class VueSource {
     this.pagesDir = api.config.pagesDir
     this.templatesDir = api.config.templatesDir
 
-    api.registerComponentParser({
-      test: /\.vue$/,
-      parse: parseComponent
+    api.transpileDependencies([path.resolve(__dirname, 'lib', 'loaders')])
+    api.registerComponentParser({ test: /\.vue$/, parse: parseComponent })
+
+    api.chainWebpack(config => {
+      this.createGraphQLRule(config, 'page-query', './lib/loaders/page-query')
+      this.createGraphQLRule(config, 'static-query', './lib/loaders/static-query')
     })
 
     if (fs.existsSync(this.pagesDir)) {
@@ -31,6 +34,23 @@ class VueSource {
     if (fs.existsSync(this.templatesDir)) {
       api.createPages(args => this.createTemplates(args))
     }
+  }
+
+  createGraphQLRule (config, type, loader) {
+    const re = new RegExp(`blockType=(${type})`)
+
+    config.module.rule(type)
+      .resourceQuery(re)
+      .use('babel-loader')
+      .loader('babel-loader')
+      .options({
+        presets: [
+          require.resolve('@vue/babel-preset-app')
+        ]
+      })
+      .end()
+      .use(`${type}-loader`)
+      .loader(require.resolve(loader))
   }
 
   async createPages () {

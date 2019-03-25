@@ -6,10 +6,7 @@ const cache = new LRU({ max: 1000 })
 
 module.exports = async function (source, map) {
   const { config, graphql, store } = process.GRIDSOME
-  const staticQueryPath = path.join(config.appPath, 'static-query')
   const resourcePath = this.resourcePath
-
-  this.dependency(path.join(config.appPath, 'static-query', 'index.js'))
 
   // add dependency to now.js to re-run
   // this loader when store has changed
@@ -39,10 +36,22 @@ module.exports = async function (source, map) {
   }
 
   const res = `
-    import initStaticQuery from ${JSON.stringify(staticQueryPath)}
+    import Vue from 'vue'
 
-    export default Component => {
-      initStaticQuery(Component, ${JSON.stringify(data)})
+    const { computed } = Vue.config.optionMergeStrategies
+    const data = ${JSON.stringify(data)}
+
+    export default ({ options }) => {
+      if (options.__staticData) {
+        options.__staticData.data = data
+        return
+      }
+
+      options.__staticData = Vue.observable({ data })
+
+      options.computed = computed({
+        $static: () => options.__staticData.data
+      }, options.computed)
     }
   `
 

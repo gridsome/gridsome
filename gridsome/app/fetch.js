@@ -1,39 +1,38 @@
 /* global GRIDSOME_MODE */
 
-import router from '../router'
-import { setResults } from './shared'
-import prefetch from '../utils/prefetch'
-import { unslashEnd } from '../utils/helpers'
-import { NOT_FOUND_NAME, NOT_FOUND_PATH } from '../utils/constants'
+import prefetch from './utils/prefetch'
+import { unslashEnd } from './utils/helpers'
+import { NOT_FOUND_NAME, NOT_FOUND_PATH } from './utils/constants'
 
 const dataUrl = process.env.DATA_URL
 const isPrefetched = {}
 
-export default (route, query, prefetchOnly = false) => {
+export default (route, shouldPrefetch = false) => {
+  if (!route.meta.data) {
+    return Promise.resolve({ data: null, context: {}})
+  }
+
   if (GRIDSOME_MODE === 'serve') {
-    const { page, ...params } = route.params
-    const { location } = router.resolve({ ...route, params })
-    const path = location.path || '/'
+    // exclude page param from route path
+    const path = route.params.page
+      ? route.path.split('/').slice(0, -1).join('/')
+      : route.path
 
     return new Promise((resolve, reject) => {
       fetch(process.env.GRAPHQL_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          variables: {
-            page: page ? Number(page) : null,
-            path: route.name === NOT_FOUND_NAME
-              ? NOT_FOUND_PATH
-              : path
-          },
-          query
+          page: route.params.page ? Number(route.params.page) : null,
+          path: route.name === NOT_FOUND_NAME
+            ? NOT_FOUND_PATH
+            : path
         })
       })
         .then(res => res.json())
         .then(res => {
           if (res.errors) reject(res.errors[0])
-          else if (!res.data) resolve(res)
-          else setResults(route.path, res.data) && resolve(res)
+          else resolve({ data: res.data, context: res.extensions.context })
         })
         .catch(err => {
           reject(err)
@@ -45,7 +44,7 @@ export default (route, query, prefetchOnly = false) => {
     const load = ([ group, hash ]) => {
       const jsonPath = dataUrl + `${group}/${hash}.json` 
 
-      if (prefetchOnly) {
+      if (shouldPrefetch) {
         if (!isPrefetched[jsonPath]) {
           isPrefetched[jsonPath] = prefetch(jsonPath)
         }
@@ -61,7 +60,7 @@ export default (route, query, prefetchOnly = false) => {
         .then(res => res.json())
         .then(res => {
           if (res.errors) reject(res.errors[0])
-          else (setResults(route.path, res.data), resolve(res))
+          else resolve(res)
         })
         .catch(reject)
     }
