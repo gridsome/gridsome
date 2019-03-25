@@ -31,9 +31,9 @@ test('add type', () => {
   expect(contentType.options.refs).toMatchObject({})
   expect(contentType.options.fields).toMatchObject({})
   expect(contentType.options.belongsTo).toMatchObject({})
-  expect(contentType.options.routeKeys[0]).toMatchObject({ name: 'id', path: ['id'] })
-  expect(contentType.options.routeKeys[1]).toMatchObject({ name: 'bar', path: ['fields', 'bar'] })
-  expect(contentType.options.routeKeys[2]).toMatchObject({ name: 'foo', path: ['fields', 'foo'] })
+  expect(contentType.options.routeKeys[0]).toMatchObject({ name: 'id', path: ['id'], fieldName: 'id', repeat: false })
+  expect(contentType.options.routeKeys[1]).toMatchObject({ name: 'bar', path: ['fields', 'bar'], fieldName: 'bar', repeat: false })
+  expect(contentType.options.routeKeys[2]).toMatchObject({ name: 'foo_raw', path: ['fields', 'foo'], fieldName: 'foo', repeat: false })
   expect(contentType.options.resolveAbsolutePaths).toEqual(false)
 
   expect(contentType.addNode).toBeInstanceOf(Function)
@@ -164,6 +164,19 @@ test('change node id from fields', () => {
   expect(node2.id).toEqual('test-2')
   expect(node2.uid).toEqual('test')
   expect(entry.uid).toEqual('test')
+})
+
+test('prioritize node.id over node.fields.id', () => {
+  const contentType = createPlugin().store.addContentType('Test')
+
+  const node = contentType.addNode({
+    id: 'foo',
+    fields: {
+      id: 'bar'
+    }
+  })
+
+  expect(node.id).toEqual('foo')
 })
 
 test('remove node', () => {
@@ -307,6 +320,110 @@ test('add type with custom fields in route', () => {
   })
 
   expect(node.path).toEqual('/my-value/My%20value/1234/10/2/thriller/1/missing/lorem-ipsum')
+})
+
+test('deeply nested field starting with `raw`', () => {
+  const contentType = createPlugin().store.addContentType({
+    typeName: 'TestPost',
+    route: '/:foo__rawValue'
+  })
+
+  const node = contentType.addNode({
+    fields: {
+      foo: {
+        rawValue: 'BAR'
+      }
+    }
+  })
+
+  expect(node.path).toEqual('/bar')
+})
+
+test('raw version of deeply nested field starting with `raw`', () => {
+  const contentType = createPlugin().store.addContentType({
+    typeName: 'TestPost',
+    route: '/:foo__rawValue_raw'
+  })
+
+  const node = contentType.addNode({
+    fields: {
+      foo: {
+        rawValue: 'BAR'
+      }
+    }
+  })
+
+  expect(node.path).toEqual('/BAR')
+})
+
+test.each([
+  [
+    '/:segments+',
+    { segments: ['this', 'should be', 'SLUGIFIED'] },
+    '/this/should-be/slugified'
+  ],
+  [
+    '/:segments_raw+',
+    { segments: ['this', 'should not be', 'SLUGIFIED'] },
+    '/this/should%20not%20be/SLUGIFIED'
+  ],
+  [
+    '/path/:optionalSegments*',
+    { optionalSegments: [] },
+    '/path'
+  ],
+  [
+    '/:segments+',
+    { segments: 'this works too' },
+    '/this-works-too'
+  ],
+  [
+    '/:before*/c/:after*',
+    { before: ['a', 'b'], after: ['d'] },
+    '/a/b/c/d'
+  ],
+  [
+    '/blog/:tags*',
+    { tags: [{ typeName: 'Tag', id: 1 }, { typeName: 'Tag', id: 2 }] },
+    '/blog/1/2'
+  ],
+  [
+    '/:mixed_raw+/:mixed+',
+    { mixed: [{ typeName: 'Thing', id: 42 }, '&&&', { thisIs: 'ignored' }] },
+    '/42/%26%26%26/42/and-and-and'
+  ],
+  [
+    '/this-is/:notRepeated',
+    { notRepeated: ['a', 'b', 'c'] },
+    '/this-is/a-b-c'
+  ],
+  [
+    '/path/:segments_raw',
+    { segments: ['a', 'b', 'c'] },
+    '/path/a%2Cb%2Cc'
+  ]
+])('dynamic route with repeated segments', (route, fields, path) => {
+  const contentType = createPlugin().store.addContentType({
+    typeName: 'TestPost',
+    route
+  })
+
+  const node = contentType.addNode({ fields })
+
+  expect(node.path).toEqual(path)
+})
+
+test('dynamic route with non-optional repeated segments', () => {
+  const contentType = createPlugin().store.addContentType({
+    typeName: 'TestPost',
+    route: '/path/:segments+'
+  })
+
+  expect(() => contentType.addNode({
+    fields: {
+      segments: []
+    }
+  })).toThrow(TypeError, 'Expected "segments" to not be empty')
 })
 
 test('transform node', () => {

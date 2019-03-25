@@ -163,6 +163,32 @@ test('respect config.maxImageWidth', async () => {
   expect(result.srcset[1]).toEqual('/assets/static/1000x600.bd6740a.test.png 600w')
 })
 
+test('use all image sizes', async () => {
+  const filePath = path.resolve(context, 'assets/2560x2560.png')
+  const config = { ...baseconfig, maxImageWidth: 2560 }
+  const queue = new AssetsQueue({ context, config })
+
+  const result = await queue.add(filePath)
+
+  expect(queue.images.queue).toHaveLength(4)
+  expect(result.src).toEqual('/assets/static/2560x2560.42db587.test.png')
+  expect(result.sets).toHaveLength(4)
+  expect(result.srcset).toHaveLength(4)
+})
+
+test('use custom image sizes', async () => {
+  const filePath = path.resolve(context, 'assets/2560x2560.png')
+  const config = { ...baseconfig, maxImageWidth: 2560 }
+  const queue = new AssetsQueue({ context, config })
+
+  const result = await queue.add(filePath, { sizes: [480, 1024] })
+
+  expect(queue.images.queue).toHaveLength(2)
+  expect(result.src).toEqual('/assets/static/2560x2560.cbab2cf.test.png')
+  expect(result.sets).toHaveLength(2)
+  expect(result.srcset).toHaveLength(2)
+})
+
 test('do not resize if image is too small', async () => {
   const filePath = path.resolve(context, 'assets/350x250.png')
   const config = { ...baseconfig, maxImageWidth: 600 }

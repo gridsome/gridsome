@@ -6,6 +6,11 @@ module.exports = ({ store, pages }) => {
   return async function graphqlMiddleware (req, res, next) {
     const { body = {}} = req
 
+    // allow OPTIONS method for cors
+    if (req.method === 'OPTIONS') {
+      return res.sendStatus(200)
+    }
+
     if (!body.path) return next()
 
     const page = pages.findPage({
