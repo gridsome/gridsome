@@ -1,4 +1,5 @@
 import fetch from '../fetch'
+import router from '../router'
 import caniuse from '../utils/caniuse'
 import { stripPathPrefix } from '../utils/helpers'
 import { createObserver } from '../utils/intersectionObserver'
@@ -28,8 +29,11 @@ function intersectionHandler ({ intersectionRatio, target }) {
         else isPreloaded[target.pathname] = true
 
         const path = stripPathPrefix(target.pathname)
+        const { route } = router.resolve({ path })
 
-        setTimeout(() => fetch(path, true), 250)
+        if (!route.meta.data) return
+
+        setTimeout(() => fetch(route, true), 250)
       }
     }
   }

@@ -6,7 +6,7 @@ const { BOOTSTRAP_CODE } = require('../utils/constants')
 test('create render queue for basic project', async () => {
   const context = path.join(__dirname, '__fixtures__', 'project-basic')
   const app = await createApp(context, undefined, BOOTSTRAP_CODE)
-  const queue = createRenderQueue(app)
+  const queue = createRenderQueue([], app)
 
   const renderPaths = queue.map(entry => entry.path)
 
@@ -18,7 +18,7 @@ test('create render queue for basic project', async () => {
 test('create render queue for blog project', async () => {
   const context = path.join(__dirname, '__fixtures__', 'project-blog')
   const app = await createApp(context, undefined, BOOTSTRAP_CODE)
-  const queue = createRenderQueue(app)
+  const queue = createRenderQueue([], app)
 
   const renderPaths = queue.map(entry => entry.path)
 

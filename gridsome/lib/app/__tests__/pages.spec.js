@@ -15,23 +15,13 @@ test('create page', async () => {
   expect(page.path).toEqual('/page')
   expect(page.route).toEqual('/page')
   expect(page.chunkName).toBeUndefined()
+  expect(page.context).toBeNull()
+  expect(page.queryContext).toBeNull()
+  expect(page.query.query).toBeNull()
   expect(page.component).toEqual(path.join(__dirname, '__fixtures__', 'DefaultPage.vue'))
   expect(emit).toHaveBeenCalledTimes(1)
 
   emit.mockRestore()
-})
-
-test('create home page', async () => {
-  const { pages: { createPage }} = await createApp()
-
-  const page = createPage({
-    path: '/',
-    component: './__fixtures__/DefaultPage.vue'
-  })
-
-  expect(page.path).toEqual('/')
-  expect(page.route).toEqual('/')
-  expect(page.chunkName).toEqual('home')
 })
 
 test('create page with pagination', async () => {
@@ -44,6 +34,22 @@ test('create page with pagination', async () => {
 
   expect(page.path).toEqual('/page')
   expect(page.route).toEqual('/page/:page(\\d+)?')
+  expect(page.query.paginate.typeName).toEqual('Post')
+})
+
+test('create page with custom route', async () => {
+  const { pages: { createPage }} = await createApp()
+
+  const page = createPage({
+    path: '/page/1',
+    route: '/page/:id',
+    component: './__fixtures__/PagedPage.vue'
+  })
+
+  expect(page.path).toEqual('/page/1')
+  expect(page.route).toEqual('/page/:id/:page(\\d+)?')
+  expect(page.internal.route).toEqual('/page/:id')
+  expect(page.internal.isDynamic).toEqual(true)
 })
 
 test('upate page', async () => {

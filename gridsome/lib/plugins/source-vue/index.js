@@ -72,11 +72,13 @@ class VueSource {
   }
 
   createPage (file) {
+    const name = /^[iI]ndex\.vue$/.test(file) ? 'home' : undefined
+
     return this.pages.createPage({
+      name,
+      chunkName: name,
       path: createPagePath(file),
-      name: /^[iI]ndex\.vue$/.test(file) ? 'home' : undefined,
-      component: path.join(this.pagesDir, file),
-      autoCreated: true
+      component: path.join(this.pagesDir, file)
     })
   }
 
@@ -145,7 +147,6 @@ class VueSource {
     const { route } = contentType.options
 
     return this.pages.createPage({
-      autoCreated: true,
       queryContext: node,
       path: node.path,
       component,

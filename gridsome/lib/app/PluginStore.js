@@ -85,7 +85,9 @@ class Source {
     }
 
     const { templatesDir } = this._app.config
-    const component = path.join(templatesDir, `${options.typeName}.vue`)
+    const component = templatesDir
+      ? path.join(templatesDir, `${options.typeName}.vue`)
+      : null
 
     return this.store.addContentType(this, {
       route: options.route,
