@@ -11,7 +11,7 @@ const { pipe } = require('./utils')
 const createApp = require('./app')
 const { execute } = require('graphql')
 const { createWorker } = require('./workers')
-const { createRenderQueue } = require('./app/pages')
+const { createRenderQueue } = require('./app/render-queue')
 
 module.exports = async (context, args) => {
   process.env.NODE_ENV = 'production'

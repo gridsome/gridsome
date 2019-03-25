@@ -1,5 +1,6 @@
 const path = require('path')
 const isUrl = require('is-url')
+const Pages = require('./pages')
 const Codegen = require('./codegen')
 const autoBind = require('auto-bind')
 const hirestime = require('hirestime')
@@ -13,7 +14,6 @@ const { defaultsDeep } = require('lodash')
 const { version } = require('../../package.json')
 const { parseUrl, resolvePath } = require('../utils')
 const { info } = require('../utils/log')
-const { Pages } = require('./pages')
 
 const {
   BOOTSTRAP_CONFIG,

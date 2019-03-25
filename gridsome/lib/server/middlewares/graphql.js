@@ -1,6 +1,6 @@
 const { print } = require('graphql')
 const { trimEnd } = require('lodash')
-const { createQueryContext } = require('../../app/pages')
+const { createQueryContext } = require('../../app/render-queue')
 
 module.exports = ({ store, pages }) => {
   return async function graphqlMiddleware (req, res, next) {
