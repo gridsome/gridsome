@@ -3,6 +3,7 @@ const autoBind = require('auto-bind')
 const { cloneDeep } = require('lodash')
 const { Collection } = require('lokijs')
 const isRelative = require('is-relative')
+const { FSWatcher } = require('chokidar')
 const EventEmitter = require('eventemitter3')
 const { createBelongsToKey } = require('../graphql/nodes/utils')
 const { createFilterQuery } = require('../graphql/createFilterTypes')
@@ -15,6 +16,8 @@ class Pages {
     this._context = app.context
     this._parsers = app.config.componentParsers
     this._events = new EventEmitter()
+    this._watcher = new FSWatcher({ disableGlobbing: true })
+    this._watchedComponents = {}
 
     this._collection = new Collection({
       indices: ['path'],
@@ -23,6 +26,22 @@ class Pages {
     })
 
     autoBind(this)
+
+    if (process.env.NODE_ENV === 'development') {
+      this._watcher.on('change', component => {
+        const { pageQuery } = this._parse(component)
+        const query = createQuery(pageQuery)
+
+        this.findPages({ component }).forEach(page => {
+          const oldPage = cloneDeep(page)
+
+          Object.assign(page, { query })
+          Object.assign(page, createRoute({ page, query }))
+
+          this._events.emit('update', page, oldPage)
+        })
+      })
+    }
   }
 
   on (eventName, fn, ctx) {
@@ -37,12 +56,17 @@ class Pages {
     return this._collection.chain().simplesort('order').data()
   }
 
+  findPages (query) {
+    return this._collection.find(query)
+  }
+
   findPage (query) {
     return this._collection.findOne(query)
   }
 
   createPage (options) {
     const oldPage = this.findPage({ path: options.path })
+    const page = {}
 
     if (oldPage) return this.updatePage(options)
 
@@ -51,10 +75,18 @@ class Pages {
       : options.component
 
     const { pageQuery } = this._parse(component)
-    const page = createPage({ component, pageQuery, options })
+    const query = createQuery(pageQuery)
+
+    Object.assign(page, { query })
+    Object.assign(page, createPage({ component, query, options }))
+    Object.assign(page, createRoute({ page, query }))
 
     this._collection.insert(page)
     this._events.emit('create', page)
+
+    if (process.env.NODE_ENV === 'development') {
+      this._watch(component)
+    }
 
     return page
   }
@@ -65,10 +97,15 @@ class Pages {
       ? path.resolve(this._context, options.component)
       : options.component
     const { pageQuery } = this._parse(component)
-    const oldNode = cloneDeep(page)
+    const query = createQuery(pageQuery)
 
-    Object.assign(page, createPage({ component, pageQuery, options }))
-    this._events.emit('update', page, oldNode)
+    const oldPage = cloneDeep(page)
+
+    Object.assign(page, { query })
+    Object.assign(page, createPage({ component, query, options }))
+    Object.assign(page, createRoute({ page, query }))
+
+    this._events.emit('update', page, oldPage)
 
     return page
   }
@@ -79,6 +116,7 @@ class Pages {
     if (page) {
       this._collection.findAndRemove(query)
       this._events.emit('remove', page)
+      this._unwatch(page.component)
     }
   }
 
@@ -86,40 +124,63 @@ class Pages {
     const parser = this._parsers.find(options => file.match(options.test))
     return parser ? parser.parse(file) : {}
   }
+
+  _watch (component) {
+    if (!this._watchedComponents[component]) {
+      this._watchedComponents[component] = true
+      this._watcher.add(component)
+    }
+  }
+
+  _unwatch (component) {
+    if (this.findPages({ component }).length <= 0) {
+      this._watcher.unwatch(component)
+    }
+  }
 }
 
-function createPage ({ component, pageQuery, options }) {
+function createQuery (pageQuery) {
   const parsedPageQuery = parsePageQuery(pageQuery)
+  return processPageQuery(parsedPageQuery)
+}
+
+function createPage ({ component, query, options }) {
   const segments = options.path.split('/').filter(segment => !!segment)
   const path = `/${segments.join('/')}`
-  let routeSegments = segments.slice()
-  let order = 1
-
-  if (options.route) {
-    order = 3
-    routeSegments = options.route.split('/').filter(segment => !!segment)
-  }
-
-  if (parsedPageQuery.paginate) {
-    routeSegments.push(':page(\\d+)?')
-    order = options.route ? 3 : 2
-  }
 
   return {
-    order,
     path,
     component,
     name: options.name,
-    chunkName: path === '/' ? 'home' : options.chunkName,
-    route: `/${routeSegments.join('/')}`,
+    chunkName: options.chunkName,
     context: options.context || null,
     queryContext: options.queryContext || null,
-    query: processPageQuery(parsedPageQuery),
     internal: {
+      route: options.route,
       isIndex: !nonIndex.includes(path),
       isDynamic: typeof options.route === 'string',
       isAutoCreated: options.autoCreated === true
     }
+  }
+}
+
+function createRoute ({ page, query }) {
+  let segments = page.path.split('/').filter(segment => !!segment).filter(segment => !!segment)
+  let order = 1
+
+  if (page.internal.route) {
+    segments = page.internal.route.split('/').filter(segment => !!segment)
+    order = 3
+  }
+
+  if (query.paginate.typeName) {
+    segments.push(':page(\\d+)?')
+    order = page.internal.route ? 3 : 2
+  }
+
+  return {
+    order,
+    route: `/${segments.join('/')}`
   }
 }
 

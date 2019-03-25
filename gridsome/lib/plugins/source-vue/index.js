@@ -48,7 +48,6 @@ class VueSource {
 
       watcher.on('add', file => this.createPage(slash(file)))
       watcher.on('unlink', file => this.removePage(slash(file)))
-      watcher.on('change', file => this.createPage(slash(file)))
     }
   }
 
@@ -81,7 +80,6 @@ class VueSource {
 
       watcher.on('add', file => this.createTemplate(slash(file)))
       watcher.on('unlink', file => this.removeTemplate(slash(file)))
-      watcher.on('change', file => this.createTemplate(slash(file)))
     }
   }
 

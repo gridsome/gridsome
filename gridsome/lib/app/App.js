@@ -146,11 +146,14 @@ class App {
       this.pages.on('update', (page, oldPage) => {
         if (
           (page.path !== oldPage.path && !page.internal.isDynamic) ||
+          (page.query.paginate.typeName !== oldPage.query.paginate.typeName) ||
           (page.query.query && !oldPage.query.query) ||
           (!page.query.query && oldPage.query.query)
         ) {
-          this.codegen.generate('routes.js')
+          return this.codegen.generate('routes.js')
         }
+
+        this.broadcast({ type: 'updateQuery' })
       })
     }
   }
