@@ -133,6 +133,7 @@ class Pages {
 
   _unwatch (component) {
     if (this.findPages({ component }).length <= 0) {
+      this._watchedComponents[component] = false
       this._watcher.unwatch(component)
     }
   }
