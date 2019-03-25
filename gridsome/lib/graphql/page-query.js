@@ -3,68 +3,42 @@ const { get, trimStart, upperFirst } = require('lodash')
 const { PER_PAGE, NODE_FIELDS } = require('../utils/constants')
 const { isRefField } = require('./utils')
 
-function parsePageQuery (query = '') {
+function parsePageQuery (query, context) {
   const result = {
-    query: null,
-    paginate: false
+    source: null,
+    document: null,
+    paginate: null,
+    context: {},
+    filters: {}
   }
 
-  if (query) {
-    let ast = null
+  let ast = null
+  let perPage = null
+  let filters = null
+  const variables = []
 
-    try {
-      ast = parse(query)
-    } catch (err) {
-      return result
-    }
-
-    result.query = query.trim() || null
-
-    visit(ast, {
-      Directive (node) {
-        if (node.name.value === 'paginate') {
-          result.paginate = true
-          return BREAK
-        }
-      }
-    })
+  try {
+    ast = parse(query)
+  } catch (err) {
+    return result
   }
 
-  return result
-}
+  result.source = query
 
-function processPageQuery (pageQuery) {
-  const result = {
-    query: undefined,
-    source: undefined,
-    variables: [],
-    paginate: {
-      fieldName: undefined,
-      typeName: undefined,
-      belongsTo: false
-    },
-    getFilters: () => {},
-    getPerPage: () => PER_PAGE
-  }
-
-  const ast = pageQuery.query ? parse(pageQuery.query) : null
-
-  result.source = ast ? pageQuery.query : null
-
-  result.query = ast && visit(ast, {
+  result.document = visit(ast, {
     Variable ({ name: { value: name }}) {
       if (name === 'page') return
       if (name === 'path') return
 
       const path = name.split('__')
 
-      result.variables.push({ name, path })
+      variables.push({ name, path })
     },
     Field (fieldNode) {
       return visit(fieldNode, {
         Directive (node, key, parent, path, ancestors) {
           if (node.name.value === 'paginate') {
-            if (result.paginate.typeName) {
+            if (result.paginate) {
               return BREAK
             }
 
@@ -72,22 +46,16 @@ function processPageQuery (pageQuery) {
             const perPageArg = parentNode.arguments.find(node => node.name.value === 'perPage')
             const filterArg = parentNode.arguments.find(node => node.name.value === 'filter')
 
-            // guess content type by converting root field value into a camel cased string
-            result.paginate.typeName = upperFirst(trimStart(fieldNode.name.value, 'all'))
-            result.paginate.belongsTo = parentNode.name.value === 'belongsTo'
-            result.paginate.fieldName = fieldNode.name.value
-
-            if (perPageArg) {
-              result.getPerPage = (vars = {}) => {
-                return vars.perPage || Number(perPageArg.value.value)
-              }
+            result.paginate = {
+              // guess content type by converting root field value into a camel cased string
+              typeName: upperFirst(trimStart(fieldNode.name.value, 'all')),
+              perPage: perPageArg && perPageArg.value.value ? Number(perPageArg.value.value) : PER_PAGE,
+              belongsTo: parentNode.name.value === 'belongsTo',
+              fieldName: fieldNode.name.value
             }
 
-            if (filterArg) {
-              result.getFilters = (vars = {}) => {
-                return argToObject(filterArg.value, vars)
-              }
-            }
+            if (perPageArg) perPage = perPageArg.value
+            if (filterArg) filters = filterArg.value
 
             return null
           }
@@ -96,23 +64,49 @@ function processPageQuery (pageQuery) {
     }
   })
 
+  result.context = context ? createQueryContext(context, variables) : {}
+  result.filters = filters ? nodeToObject(filters, result.context) : {}
+
+  if (result.paginate && perPage) {
+    result.paginate.perPage = nodeToObject(perPage, result.context) || PER_PAGE
+  }
+
   return result
 }
 
-function argToObject (node, vars = {}) {
+function createQueryContext (context, variables = []) {
+  return variables.reduce((acc, { name, path }) => {
+    // check for $loki to get variables in node fields
+    const getPath = context.$loki && !NODE_FIELDS.includes(path[0])
+      ? ['fields', ...path]
+      : path
+
+    let value = get(context, getPath) || null
+
+    if (value && isRefField(value)) {
+      value = value.id
+    }
+
+    acc[name] = value
+
+    return acc
+  }, {})
+}
+
+function nodeToObject (node, vars = {}) {
   const obj = {}
 
   switch (node.kind) {
     case 'Argument':
-      obj[node.name.value] = argToObject(node.value, vars)
+      obj[node.name.value] = nodeToObject(node.value, vars)
       break
     case 'ObjectValue':
       return node.fields.reduce((acc, fieldNode) => {
-        acc[fieldNode.name.value] = argToObject(fieldNode.value, vars)
+        acc[fieldNode.name.value] = nodeToObject(fieldNode.value, vars)
         return acc
       }, {})
     case 'ListValue':
-      return node.values.map(node => argToObject(node, vars))
+      return node.values.map(node => nodeToObject(node, vars))
     case 'IntValue':
       return parseInt(node.value, 10)
     case 'FloatValue':
@@ -130,26 +124,4 @@ function argToObject (node, vars = {}) {
   return obj
 }
 
-function contextValues (context, variables = []) {
-  return variables.reduce((acc, { name, path }) => {
-    const getPath = context.typeName && !NODE_FIELDS.includes(path[0])
-      ? ['fields', ...path]
-      : path
-
-    let value = get(context, getPath) || null
-
-    if (value && isRefField(value)) {
-      value = value.id
-    }
-
-    acc[name] = value
-
-    return acc
-  }, {})
-}
-
-module.exports = {
-  parsePageQuery,
-  processPageQuery,
-  contextValues
-}
+module.exports = parsePageQuery

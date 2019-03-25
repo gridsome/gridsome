@@ -1,6 +1,6 @@
 const { print } = require('graphql')
 const { trimEnd } = require('lodash')
-const { contextValues } = require('../../graphql/page-query')
+const { createQueryContext } = require('../../app/pages')
 
 module.exports = ({ store, pages }) => {
   return async function graphqlMiddleware (req, res, next) {
@@ -18,19 +18,13 @@ module.exports = ({ store, pages }) => {
         .send({ code: 404, message: `Could not find ${body.path}` })
     }
 
-    const { context, queryContext, query: { query, variables }} = page
-
-    if (!query) {
-      return res.json({ extensions: { context }, data: null })
+    if (!page.query.document) {
+      return res.json({ extensions: { context: page.context }, data: null })
     }
 
     req.body = {
-      query: print(query),
-      variables: {
-        ...contextValues(queryContext || context, variables),
-        page: body.page,
-        path: page.path
-      }
+      query: print(page.query.document),
+      variables: createQueryContext(page, body.page)
     }
 
     next()

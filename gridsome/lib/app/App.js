@@ -144,16 +144,22 @@ class App {
       this.pages.on('remove', () => this.codegen.generate('routes.js'))
 
       this.pages.on('update', (page, oldPage) => {
+        const { path: oldPath, query: oldQuery } = oldPage
+        const { path, query } = page
+
         if (
-          (page.path !== oldPage.path && !page.internal.isDynamic) ||
-          (page.query.paginate.typeName !== oldPage.query.paginate.typeName) ||
-          (page.query.query && !oldPage.query.query) ||
-          (!page.query.query && oldPage.query.query)
+          (path !== oldPath && !page.internal.isDynamic) ||
+          // pagination was added or removed in page-query
+          (query.paginate && !oldQuery.paginate) ||
+          (!query.paginate && oldQuery.paginate) ||
+          // page-query was created or removed
+          (query.document && !oldQuery.document) ||
+          (!query.document && oldQuery.document)
         ) {
           return this.codegen.generate('routes.js')
         }
 
-        this.broadcast({ type: 'updateQuery' })
+        this.broadcast({ type: 'fetch' })
       })
     }
   }

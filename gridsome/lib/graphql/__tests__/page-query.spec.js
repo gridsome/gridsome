@@ -1,13 +1,8 @@
 const { print, Kind } = require('graphql')
+const parsePageQuery = require('../page-query')
 const { PER_PAGE } = require('../../utils/constants')
 
-const {
-  contextValues,
-  parsePageQuery,
-  processPageQuery
-} = require('../page-query')
-
-test('parse page-query', () => {
+test('parsed page-query', () => {
   const query = `query {
     allTestAuthors {
       edges {
@@ -20,44 +15,11 @@ test('parse page-query', () => {
 
   const parsed = parsePageQuery(query)
 
-  expect(parsed.query).toEqual(query)
-  expect(parsed.paginate).toEqual(false)
-})
-
-test('parse empty page-query', () => {
-  const parsed = parsePageQuery('  \n  ')
-
-  expect(parsed.query).toEqual(null)
-  expect(parsed.paginate).toEqual(false)
-})
-
-test('parse invalid page-query', () => {
-  const parsed = parsePageQuery('..')
-
-  expect(parsed.query).toEqual(null)
-  expect(parsed.paginate).toEqual(false)
-})
-
-test('process parsed page-query', () => {
-  const query = `query {
-    allTestAuthors {
-      edges {
-        node {
-          id
-        }
-      }
-    }
-  }`
-
-  const parsed = parsePageQuery(query)
-  const processed = processPageQuery(parsed)
-
-  expect(processed.query.kind).toEqual(Kind.DOCUMENT)
-  expect(processed.source).toEqual(query)
-  expect(processed.variables).toHaveLength(0)
-  expect(processed.paginate.fieldName).toBeUndefined()
-  expect(processed.paginate.typeName).toBeUndefined()
-  expect(processed.paginate.belongsTo).toEqual(false)
+  expect(parsed.document.kind).toEqual(Kind.DOCUMENT)
+  expect(parsed.source).toEqual(query)
+  expect(parsed.paginate).toBeNull()
+  expect(parsed.context).toMatchObject({})
+  expect(parsed.filters).toMatchObject({})
 })
 
 test('parse @paginate directive for connection', () => {
@@ -78,16 +40,49 @@ test('parse @paginate directive for connection', () => {
     }
   }`)
 
-  const processed = processPageQuery(parsed)
+  expect(parsed.paginate.typeName).toEqual('TestPost')
+  expect(parsed.paginate.fieldName).toEqual('allTestPost')
+  expect(parsed.paginate.perPage).toEqual(PER_PAGE)
+  expect(parsed.paginate.belongsTo).toEqual(false)
+})
 
-  expect(parsed.paginate).toEqual(true)
-  expect(processed.paginate.typeName).toEqual('TestPost')
-  expect(processed.paginate.fieldName).toEqual('allTestPost')
-  expect(processed.getPerPage()).toEqual(PER_PAGE)
+test('parse @paginate with perPage variable', () => {
+  const parsed = parsePageQuery(`query ($num: Int) {
+    allTestPost (perPage: $num) @paginate {
+      edges {
+        node {
+          id
+        }
+      }
+    }
+  }`, {
+    num: 2
+  })
+
+  expect(parsed.paginate.perPage).toEqual(2)
+})
+
+test('parse @paginate with perPage variable from node field', () => {
+  const parsed = parsePageQuery(`query ($num: Int) {
+    allTestPost (perPage: $num) @paginate {
+      edges {
+        node {
+          id
+        }
+      }
+    }
+  }`, {
+    $loki: 1,
+    fields: {
+      num: 2
+    }
+  })
+
+  expect(parsed.paginate.perPage).toEqual(2)
 })
 
 test('parse @paginate directive from belongsTo field', () => {
-  const processed = parseAndProcess(`query {
+  const parsed = parsePageQuery(`query {
     testPage {
       belongsTo (perPage: 5) @paginate {
         edges {
@@ -99,13 +94,14 @@ test('parse @paginate directive from belongsTo field', () => {
     }
   }`)
 
-  expect(processed.paginate.typeName).toEqual('TestPage')
-  expect(processed.paginate.fieldName).toEqual('testPage')
-  expect(processed.getPerPage()).toEqual(5)
+  expect(parsed.paginate.typeName).toEqual('TestPage')
+  expect(parsed.paginate.fieldName).toEqual('testPage')
+  expect(parsed.paginate.belongsTo).toEqual(true)
+  expect(parsed.paginate.perPage).toEqual(5)
 })
 
-test('parse filters from @paginate field', () => {
-  const processed = parseAndProcess(`query ($customVar: String) {
+test('parse filters from @paginate', () => {
+  const parsed = parsePageQuery(`query ($customVar: String) {
     pages: allTestPost (
       filter: {
         myField: { eq: $customVar }
@@ -118,20 +114,45 @@ test('parse filters from @paginate field', () => {
         }
       }
     }
-  }`)
-
-  const filters = processed.getFilters({
+  }`, {
     customVar: 'custom var'
   })
 
-  expect(filters).toMatchObject({
+  expect(parsed.filters).toMatchObject({
+    myField: { eq: 'custom var' },
+    num: { gt: 2 }
+  })
+})
+
+test('parse filters from @paginate with variable from node field', () => {
+  const parsed = parsePageQuery(`query ($customVar: String) {
+    pages: allTestPost (
+      filter: {
+        myField: { eq: $customVar }
+        num: { gt: 2 }
+      }
+    ) @paginate {
+      edges {
+        node {
+          id
+        }
+      }
+    }
+  }`, {
+    $loki: 1,
+    fields: {
+      customVar: 'custom var'
+    }
+  })
+
+  expect(parsed.filters).toMatchObject({
     myField: { eq: 'custom var' },
     num: { gt: 2 }
   })
 })
 
 test('remove @paginate directive from ast', () => {
-  const processed = parseAndProcess(`query {
+  const parsed = parsePageQuery(`query {
     allTestAuthors (perPage: 5) @paginate {
       edges {
         node {
@@ -141,11 +162,22 @@ test('remove @paginate directive from ast', () => {
     }
   }`)
 
-  expect(print(processed.query)).not.toMatch('@paginate')
+  expect(print(parsed.document)).not.toMatch('@paginate')
 })
 
-test('parse page-query variables', () => {
-  const { variables } = parseAndProcess(`query (
+test('parse empty page-query', () => {
+  const parsed = parsePageQuery('  \n  ')
+
+  expect(parsed.document).toBeNull()
+})
+
+test('parse invalid page-query', () => {
+  const parsed = parsePageQuery('..')
+  expect(parsed.document).toBeNull()
+})
+
+test('parse page-query with context', () => {
+  const { context } = parsePageQuery(`query (
     $page: Int
     $path: String
     $id: String
@@ -159,10 +191,8 @@ test('parse page-query variables', () => {
     testAuthor {
       id
     }
-  }`)
-
-  const values = contextValues({
-    typeName: 'Test',
+  }`, {
+    $loki: 1,
     id: '1',
     title: 'title',
     fields: {
@@ -177,20 +207,13 @@ test('parse page-query variables', () => {
         { typeName: 'Post', id: '2' }
       ]
     }
-  }, variables)
+  })
 
-  expect(variables).toHaveLength(7)
-  expect(values.id).toEqual('1')
-  expect(values.title).toEqual('title')
-  expect(values.custom).toEqual('custom value')
-  expect(values.deep__value).toEqual('deep value')
-  expect(values.list__1__value).toEqual(2)
-  expect(values.ref).toEqual('1')
-  expect(values.refs__1).toEqual('2')
+  expect(context.id).toEqual('1')
+  expect(context.title).toEqual('title')
+  expect(context.custom).toEqual('custom value')
+  expect(context.deep__value).toEqual('deep value')
+  expect(context.list__1__value).toEqual(2)
+  expect(context.ref).toEqual('1')
+  expect(context.refs__1).toEqual('2')
 })
-
-function parseAndProcess (query) {
-  const parsed = parsePageQuery(query)
-  return processPageQuery(parsed)
-}
-

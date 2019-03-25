@@ -9,7 +9,7 @@ sock.onmessage = message => {
   const data = JSON.parse(message.data)
 
   switch (data.type) {
-    case 'updateQuery':
+    case 'fetch':
       fetch(router.currentRoute)
         .then(res => {
           if (res.errors) formatError(res.errors[0], router.currentRoute)

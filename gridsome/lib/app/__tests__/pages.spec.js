@@ -16,8 +16,7 @@ test('create page', async () => {
   expect(page.route).toEqual('/page')
   expect(page.chunkName).toBeUndefined()
   expect(page.context).toBeNull()
-  expect(page.queryContext).toBeNull()
-  expect(page.query.query).toBeNull()
+  expect(page.query.document).toBeNull()
   expect(page.component).toEqual(path.join(__dirname, '__fixtures__', 'DefaultPage.vue'))
   expect(emit).toHaveBeenCalledTimes(1)
 
@@ -195,8 +194,21 @@ test('generate render queue', async () => {
   })
 
   const queue = createRenderQueue([], app)
+  const paths = queue.map(entry => entry.path)
 
-  expect(queue).toHaveLength(11)
+  expect(paths).toEqual(expect.arrayContaining([
+    '/about',
+    '/movie/three',
+    '/movie/two',
+    '/movie/one',
+    '/404',
+    '/blog',
+    '/blog/2',
+    '/post/1',
+    '/post/1/2',
+    '/post/2',
+    '/post/3'
+  ]))
 })
 
 async function createApp (plugin) {

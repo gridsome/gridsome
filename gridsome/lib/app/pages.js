@@ -5,9 +5,9 @@ const { Collection } = require('lokijs')
 const isRelative = require('is-relative')
 const { FSWatcher } = require('chokidar')
 const EventEmitter = require('eventemitter3')
+const parsePageQuery = require('../graphql/page-query')
 const { createBelongsToKey } = require('../graphql/nodes/utils')
 const { createFilterQuery } = require('../graphql/createFilterTypes')
-const { parsePageQuery, processPageQuery, contextValues } = require('../graphql/page-query')
 const { NOT_FOUND_NAME, NOT_FOUND_PATH } = require('../utils/constants')
 
 const nonIndex = [NOT_FOUND_PATH]
@@ -31,10 +31,10 @@ class Pages {
     if (process.env.NODE_ENV === 'development') {
       this._watcher.on('change', component => {
         const { pageQuery } = this._parse(component)
-        const query = createQuery(pageQuery)
 
         this.findPages({ component }).forEach(page => {
           const oldPage = cloneDeep(page)
+          const query = parsePageQuery(pageQuery, page.queryContext)
 
           Object.assign(page, { query })
           Object.assign(page, createRoute({ page, query }))
@@ -67,7 +67,6 @@ class Pages {
 
   createPage (options) {
     const oldPage = this.findPage({ path: options.path })
-    const page = {}
 
     if (oldPage) return this.updatePage(options)
 
@@ -76,10 +75,10 @@ class Pages {
       : options.component
 
     const { pageQuery } = this._parse(component)
-    const query = createQuery(pageQuery)
+    const page = createPage({ component, options })
+    const query = parsePageQuery(pageQuery, page.queryContext)
 
     Object.assign(page, { query })
-    Object.assign(page, createPage({ component, query, options }))
     Object.assign(page, createRoute({ page, query }))
 
     this._collection.insert(page)
@@ -98,12 +97,13 @@ class Pages {
       ? path.resolve(this._context, options.component)
       : options.component
     const { pageQuery } = this._parse(component)
-    const query = createQuery(pageQuery)
+    const newPage = createPage({ component, options })
+    const query = parsePageQuery(pageQuery, newPage.queryContext)
 
     const oldPage = cloneDeep(page)
 
     Object.assign(page, { query })
-    Object.assign(page, createPage({ component, query, options }))
+    Object.assign(page, newPage)
     Object.assign(page, createRoute({ page, query }))
 
     this._events.emit('update', page, oldPage)
@@ -140,15 +140,11 @@ class Pages {
   }
 }
 
-function createQuery (pageQuery) {
-  const parsedPageQuery = parsePageQuery(pageQuery)
-  return processPageQuery(parsedPageQuery)
-}
-
-function createPage ({ component, query, options }) {
+function createPage ({ component, options }) {
   const segments = options.path.split('/').filter(segment => !!segment)
   const path = `/${segments.join('/')}`
 
+  // the /404 page must be named 404
   const name = path === NOT_FOUND_PATH ? NOT_FOUND_NAME : options.name
 
   return {
@@ -157,7 +153,7 @@ function createPage ({ component, query, options }) {
     component,
     chunkName: options.chunkName,
     context: options.context || null,
-    queryContext: options.queryContext || null,
+    queryContext: options.queryContext || options.context || null,
     internal: {
       route: options.route || null,
       isIndex: !nonIndex.includes(path),
@@ -167,17 +163,16 @@ function createPage ({ component, query, options }) {
 }
 
 function createRoute ({ page, query }) {
-  let segments = page.path.split('/').filter(segment => !!segment).filter(segment => !!segment)
-  let order = 1
+  const { route } = page.internal
+  const segments = route
+    ? route.split('/').filter(segment => !!segment)
+    : page.path.split('/').filter(segment => !!segment)
 
-  if (page.internal.route) {
-    segments = page.internal.route.split('/').filter(segment => !!segment)
-    order = 3
-  }
+  let order = route ? 3 : 1
 
-  if (query.paginate.typeName) {
+  if (query && query.paginate) {
     segments.push(':page(\\d+)?')
-    order = page.internal.route ? 3 : 2
+    order = route ? 3 : 2
   }
 
   return {
@@ -188,35 +183,29 @@ function createRoute ({ page, query }) {
 
 function createRenderQueue (renderQueue, { pages, store, schema }) {
   for (const page of pages.allPages()) {
-    const context = page.queryContext || page.context || {}
-    const variables = contextValues(context, page.query.variables)
-
-    if (page.query.paginate.typeName) {
-      const totalPages = calcTotalPages(page, variables, store, schema)
+    if (page.query.paginate) {
+      const totalPages = calcTotalPages(page, store, schema)
 
       for (let i = 1; i <= totalPages; i++) {
-        renderQueue.push(createRenderEntry(page, { ...variables, page: i }))
+        renderQueue.push(createRenderEntry(page, i))
       }
     } else {
-      renderQueue.push(createRenderEntry(page, variables))
+      renderQueue.push(createRenderEntry(page))
     }
   }
 
   return renderQueue
 }
 
-function calcTotalPages (page, variables, store, schema) {
-  const { belongsTo, fieldName, typeName } = page.query.paginate
+function calcTotalPages (page, store, schema) {
+  const { belongsTo, fieldName, typeName, perPage } = page.query.paginate
   const rootFields = schema.getQueryType().getFields()
-
-  const filters = page.query.getFilters(variables)
-  const perPage = page.query.getPerPage(variables)
 
   let totalNodes = 0
 
   if (belongsTo) {
     const { args } = rootFields[fieldName].type.getFields().belongsTo
-    const query = createCollectionQuery(args, filters)
+    const query = createCollectionQuery(args, page.query.filters)
     const node = store.getNodeByPath(page.path)
 
     query[createBelongsToKey(node)] = { $eq: true }
@@ -225,7 +214,7 @@ function calcTotalPages (page, variables, store, schema) {
   } else {
     const { collection } = store.getContentType(typeName)
     const { args } = rootFields[fieldName]
-    const query = createCollectionQuery(args, filters)
+    const query = createCollectionQuery(args, page.query.filters)
 
     totalNodes = collection.find(query).length
   }
@@ -233,22 +222,29 @@ function calcTotalPages (page, variables, store, schema) {
   return Math.ceil(totalNodes / perPage) || 1
 }
 
-function createRenderEntry (page, variables = {}) {
+function createRenderEntry (page, currentPage = undefined) {
   const segments = page.path.split('/').filter(segment => !!segment)
-  const originalPath = `/${segments.join('/')}`
 
-  if (variables.page > 1) {
-    segments.push(variables.page)
+  if (currentPage > 1) {
+    segments.push(currentPage)
   }
 
   return {
     route: page.route,
     path: `/${segments.join('/')}`,
     component: page.component,
-    queryContext: { ...variables, path: originalPath },
     context: page.context,
-    query: page.query.query,
-    isIndex: page.internal.isIndex
+    query: page.query.document,
+    isIndex: page.internal.isIndex,
+    queryContext: createQueryContext(page, currentPage)
+  }
+}
+
+function createQueryContext (page, currentPage = undefined) {
+  return {
+    ...page.query.context,
+    page: currentPage,
+    path: page.path
   }
 }
 
@@ -261,5 +257,6 @@ function createCollectionQuery (args, filters) {
 
 module.exports = {
   Pages,
-  createRenderQueue
+  createRenderQueue,
+  createQueryContext
 }
