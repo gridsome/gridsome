@@ -15,7 +15,7 @@ export default (route, shouldPrefetch = false) => {
   if (GRIDSOME_MODE === 'serve') {
     // exclude page param from route path
     const path = route.params.page
-      ? route.path.split('/').slice(0, -1).join('/')
+      ? route.path.split('/').slice(0, -1).join('/') || '/'
       : route.path
 
     return new Promise((resolve, reject) => {
