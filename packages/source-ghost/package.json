@@ -1,0 +1,25 @@
+{
+  "version": "0.1.0",
+  "name": "@gridsome/source-ghost",
+  "description": "ghost source for Gridsome",
+  "homepage": "https://github.com/gridsome/gridsome/tree/master/packages/source-ghost#readme",
+  "repository": "https://github.com/gridsome/gridsome/tree/master/packages/source-ghost",
+  "main": "index.js",
+  "keywords": [
+    "gridsome",
+    "gridsome-plugin",
+    "gridsome-source",
+    "ghost"
+  ],
+  "dependencies": {
+    "@tryghost/content-api": "^1.2.0",
+    "axios": "^0.18.0",
+    "lodash": "^4.17.10"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=8.3"
+  }
+}
