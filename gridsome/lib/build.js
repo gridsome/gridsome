@@ -9,7 +9,6 @@ const { log, error, info } = require('./utils/log')
 const { pipe } = require('./utils')
 
 const createApp = require('./app')
-const { execute } = require('graphql')
 const { createWorker } = require('./workers')
 const createRenderQueue = require('./pages/createRenderQueue')
 
@@ -72,7 +71,6 @@ function createHTMLPaths (renderQueue, app) {
 
 async function executeQueries (renderQueue, app) {
   const timer = hirestime()
-  const context = app.createSchemaContext()
   const groupSize = 500
 
   let count = 0
@@ -83,7 +81,7 @@ async function executeQueries (renderQueue, app) {
     count++
 
     const results = entry.query
-      ? await execute(app.schema, entry.query, undefined, context, entry.queryContext)
+      ? await app.graphql(entry.query, entry.queryContext)
       : {}
 
     if (results.errors) {
