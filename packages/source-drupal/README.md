@@ -197,7 +197,9 @@ Get the details of an individual `DrupalNodeArticle` using `<page-query>` in a G
       fieldImage {
         title,
         filename,
-        url
+        uri {
+          url
+        }
       },
       fieldTags {
         name,
