@@ -19,7 +19,7 @@ exports.parseComponent = function (file) {
   const filename = path.parse(file).name
   const source = fs.readFileSync(file, 'utf-8')
   const { customBlocks } = parse({ filename, source, compiler })
-  const pageQuery = customBlocks.find(block => /^page-query$/.test(block.type))
+  const pageQuery = customBlocks.find(block => block.type === 'page-query')
 
   return {
     pageQuery: pageQuery ? pageQuery.content : null

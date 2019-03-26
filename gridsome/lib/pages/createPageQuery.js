@@ -1,29 +1,47 @@
 const { visit, parse, BREAK } = require('graphql')
 const { get, trimStart, upperFirst } = require('lodash')
 const { PER_PAGE, NODE_FIELDS } = require('../utils/constants')
-const { isRefField } = require('./utils')
+const { isRefField } = require('../graphql/utils')
 
-function parsePageQuery (query, context) {
+function createPageQuery (source, ctx) {
+  const result = parsePageQuery(source)
+
+  const context = ctx ? createQueryContext(ctx, result.variables) : {}
+  const filters = result.filters ? nodeToObject(result.filters, context) : {}
+  const paginate = result.paginate ? { ...result.paginate } : null
+
+  if (paginate && result.perPage) {
+    paginate.perPage = nodeToObject(result.perPage, context) || PER_PAGE
+  }
+
+  return {
+    source: result.source,
+    document: result.document,
+    paginate,
+    context,
+    filters
+  }
+}
+
+function parsePageQuery (source) {
   const result = {
     source: null,
     document: null,
     paginate: null,
-    context: {},
-    filters: {}
+    perPage: null,
+    filters: null,
+    variables: []
   }
 
   let ast = null
-  let perPage = null
-  let filters = null
-  const variables = []
 
   try {
-    ast = parse(query)
+    ast = parse(source)
   } catch (err) {
     return result
   }
 
-  result.source = query
+  result.source = source
 
   result.document = visit(ast, {
     Variable ({ name: { value: name }}) {
@@ -32,7 +50,7 @@ function parsePageQuery (query, context) {
 
       const path = name.split('__')
 
-      variables.push({ name, path })
+      result.variables.push({ name, path })
     },
     Field (fieldNode) {
       return visit(fieldNode, {
@@ -54,8 +72,8 @@ function parsePageQuery (query, context) {
               fieldName: fieldNode.name.value
             }
 
-            if (perPageArg) perPage = perPageArg.value
-            if (filterArg) filters = filterArg.value
+            if (perPageArg) result.perPage = perPageArg.value
+            if (filterArg) result.filters = filterArg.value
 
             return null
           }
@@ -63,13 +81,6 @@ function parsePageQuery (query, context) {
       })
     }
   })
-
-  result.context = context ? createQueryContext(context, variables) : {}
-  result.filters = filters ? nodeToObject(filters, result.context) : {}
-
-  if (result.paginate && perPage) {
-    result.paginate.perPage = nodeToObject(perPage, result.context) || PER_PAGE
-  }
 
   return result
 }
@@ -124,4 +135,4 @@ function nodeToObject (node, vars = {}) {
   return obj
 }
 
-module.exports = parsePageQuery
+module.exports = createPageQuery

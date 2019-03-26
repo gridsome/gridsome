@@ -5,7 +5,7 @@ const { Collection } = require('lokijs')
 const isRelative = require('is-relative')
 const { FSWatcher } = require('chokidar')
 const EventEmitter = require('eventemitter3')
-const parsePageQuery = require('../graphql/page-query')
+const createPageQuery = require('./createPageQuery')
 const { NOT_FOUND_NAME, NOT_FOUND_PATH } = require('../utils/constants')
 
 const nonIndex = [NOT_FOUND_PATH]
@@ -32,7 +32,7 @@ class Pages {
 
         this.findPages({ component }).forEach(page => {
           const oldPage = cloneDeep(page)
-          const query = parsePageQuery(pageQuery, page.queryContext)
+          const query = createPageQuery(pageQuery, page.queryContext)
 
           Object.assign(page, { query })
           Object.assign(page, createRoute({ page, query }))
@@ -74,7 +74,7 @@ class Pages {
 
     const { pageQuery } = this._parse(component)
     const page = createPage({ component, options })
-    const query = parsePageQuery(pageQuery, page.queryContext)
+    const query = createPageQuery(pageQuery, page.queryContext)
 
     Object.assign(page, { query })
     Object.assign(page, createRoute({ page, query }))
@@ -96,7 +96,7 @@ class Pages {
       : options.component
     const { pageQuery } = this._parse(component)
     const newPage = createPage({ component, options })
-    const query = parsePageQuery(pageQuery, newPage.queryContext)
+    const query = createPageQuery(pageQuery, newPage.queryContext)
 
     const oldPage = cloneDeep(page)
 

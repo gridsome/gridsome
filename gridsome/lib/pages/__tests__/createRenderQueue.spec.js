@@ -163,6 +163,7 @@ test('create render queue for createPages hook', async () => {
   const queue = createRenderQueue([], app)
   const paths = queue.map(entry => entry.path)
 
+  expect(paths).toHaveLength(11)
   expect(paths).toEqual(expect.arrayContaining([
     '/about',
     '/movie/three',
