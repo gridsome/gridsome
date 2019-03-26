@@ -1,5 +1,6 @@
 const autoBind = require('auto-bind')
 const PluginStore = require('./PluginStore')
+const { createPagesAPI } = require('../pages/utils')
 
 class PluginAPI {
   constructor (app, { entry, transformers }) {
@@ -73,28 +74,6 @@ class PluginAPI {
 
   afterBuild (fn) {
     this._on('afterBuild', fn)
-  }
-}
-
-function createPagesAPI (api) {
-  return {
-    store: api.store,
-    graphql: api._app.graphql,
-    createPage (options) {
-      return api._app.pages.createPage(options)
-    },
-    updatePage (options) {
-      return api._app.pages.updatePage(options)
-    },
-    removePage (query) {
-      return api._app.pages.removePage(query)
-    },
-    findPage (query) {
-      return api._app.pages.findPage(query)
-    },
-    findPages (query) {
-      return api._app.pages.findPages(query)
-    }
   }
 }
 

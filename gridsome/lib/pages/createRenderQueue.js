@@ -1,3 +1,4 @@
+const { createQueryContext } = require('./utils')
 const { createBelongsToKey } = require('../graphql/nodes/utils')
 const { createFilterQuery } = require('../graphql/createFilterTypes')
 
@@ -60,14 +61,6 @@ function createRenderEntry (page, currentPage = undefined) {
   }
 }
 
-function createQueryContext (page, currentPage = undefined) {
-  return {
-    ...page.query.context,
-    page: currentPage,
-    path: page.path
-  }
-}
-
 function createCollectionQuery (args, filters) {
   const filter = args.find(arg => arg.name === 'filter')
   const fields = filter.type.getFields()
@@ -75,7 +68,4 @@ function createCollectionQuery (args, filters) {
   return createFilterQuery(filters, fields)
 }
 
-module.exports = {
-  createRenderQueue,
-  createQueryContext
-}
+module.exports = createRenderQueue

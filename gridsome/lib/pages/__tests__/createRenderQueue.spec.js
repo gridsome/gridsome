@@ -1,7 +1,7 @@
 const path = require('path')
-const App = require('../App')
-const createApp = require('../index')
-const { createRenderQueue } = require('../render-queue')
+const App = require('../../app/App')
+const createApp = require('../../app/index')
+const createRenderQueue = require('../createRenderQueue')
 const { BOOTSTRAP_PAGES } = require('../../utils/constants')
 
 test('create render queue for basic project', async () => {

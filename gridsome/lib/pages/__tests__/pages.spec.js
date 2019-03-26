@@ -1,5 +1,5 @@
 const path = require('path')
-const App = require('../App')
+const App = require('../../app/App')
 const { BOOTSTRAP_PAGES } = require('../../utils/constants')
 
 test('create page', async () => {
