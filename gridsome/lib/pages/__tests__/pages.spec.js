@@ -50,6 +50,23 @@ test('create page with custom route', async () => {
   expect(page.internal.isDynamic).toEqual(true)
 })
 
+test('allways include a /404 page', async () => {
+  const app = await createApp()
+  const notFound = app.pages.findPage({ path: '/404' })
+
+  expect(notFound.path).toEqual('/404')
+})
+
+test('cache parsed components', async () => {
+  const { pages: { _cached, createPage }} = await createApp()
+
+  createPage({ path: '/page/1', component: './__fixtures__/PagedPage.vue' })
+  createPage({ path: '/page/2', component: './__fixtures__/PagedPage.vue' })
+  createPage({ path: '/page/3', component: './__fixtures__/PagedPage.vue' })
+
+  expect(Object.keys(_cached)).toHaveLength(2) // includes /404
+})
+
 test('upate page', async () => {
   const { pages, pages: { createPage, updatePage }} = await createApp()
   const emit = jest.spyOn(pages._events, 'emit')
@@ -95,13 +112,6 @@ test('override page with equal path', async () => {
   })
 
   expect(pages.allPages()).toHaveLength(2) // includes /404
-})
-
-test('allways include a /404 page', async () => {
-  const app = await createApp()
-  const notFound = app.pages.findPage({ path: '/404' })
-
-  expect(notFound.path).toEqual('/404')
 })
 
 async function createApp (plugin) {

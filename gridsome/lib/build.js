@@ -33,7 +33,7 @@ module.exports = async (context, args) => {
     executeQueries
   ], [], app)
 
-  await writeQueryResults(queue, app)
+  await writePageData(queue, app)
   await runWebpack(app)
   await renderHTML(queue, app)
   await processFiles(app.queue.files, app.config)
@@ -105,7 +105,7 @@ async function executeQueries (renderQueue, app) {
   return res
 }
 
-async function writeQueryResults (renderQueue, app) {
+async function writePageData (renderQueue, app) {
   const timer = hirestime()
   const queryQueue = renderQueue.filter(entry => entry.dataOutput)
   const routes = groupBy(queryQueue, entry => entry.route)
@@ -137,7 +137,7 @@ async function writeQueryResults (renderQueue, app) {
   // re-generate routes with query meta
   await app.codegen.generate('routes.js', meta)
 
-  info(`Write query results (${queryQueue.length + count} files) - ${timer(hirestime.S)}s`)
+  info(`Write page data (${queryQueue.length + count} files) - ${timer(hirestime.S)}s`)
 }
 
 async function runWebpack (app) {

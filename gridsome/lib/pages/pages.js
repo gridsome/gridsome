@@ -16,7 +16,8 @@ class Pages {
     this._parsers = app.config.componentParsers
     this._events = new EventEmitter()
     this._watcher = new FSWatcher({ disableGlobbing: true })
-    this._watchedComponents = {}
+    this._watched = {}
+    this._cached = {}
 
     this._collection = new Collection({
       indices: ['path'],
@@ -28,7 +29,7 @@ class Pages {
 
     if (process.env.NODE_ENV === 'development') {
       this._watcher.on('change', component => {
-        const { pageQuery } = this._parse(component)
+        const { pageQuery } = this._parse(component, false)
 
         this.findPages({ component }).forEach(page => {
           const oldPage = cloneDeep(page)
@@ -94,7 +95,7 @@ class Pages {
     const component = isRelative(options.component)
       ? path.resolve(this._context, options.component)
       : options.component
-    const { pageQuery } = this._parse(component)
+    const { pageQuery } = this._parse(component, false)
     const newPage = createPage({ component, options })
     const query = createPageQuery(pageQuery, newPage.queryContext)
 
@@ -119,21 +120,30 @@ class Pages {
     }
   }
 
-  _parse (file) {
-    const parser = this._parsers.find(options => file.match(options.test))
-    return parser ? parser.parse(file) : {}
+  _parse (component, useCache = true) {
+    const parser = this._parsers.find(options => component.match(options.test))
+
+    if (!parser) return {}
+
+    if (useCache && this._cached[component]) {
+      return this._cached[component]
+    }
+
+    const results = this._cached[component] = parser.parse(component)
+
+    return results
   }
 
   _watch (component) {
-    if (!this._watchedComponents[component]) {
-      this._watchedComponents[component] = true
+    if (!this._watched[component]) {
+      this._watched[component] = true
       this._watcher.add(component)
     }
   }
 
   _unwatch (component) {
     if (this.findPages({ component }).length <= 0) {
-      this._watchedComponents[component] = false
+      this._watched[component] = false
       this._watcher.unwatch(component)
     }
   }
