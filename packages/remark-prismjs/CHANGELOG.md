@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.0.5](https://github.com/gridsome/gridsome/tree/master/packages/remark-prismjs/compare/@gridsome/remark-prismjs@0.0.4...@gridsome/remark-prismjs@0.0.5) (2019-03-08)
+
+**Note:** Version bump only for package @gridsome/remark-prismjs
+
+
+
+
+
 
 
 <a name="0.0.4"></a>

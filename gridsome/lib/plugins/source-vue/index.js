@@ -53,16 +53,15 @@ class VueSource {
 
 function createPage (source, file) {
   const { name } = path.parse(file)
-  const absPath = source.source.resolve(file)
-  const { pageQuery } = parseComponent(absPath)
-  const component = file.replace('src', '~')
+  const component = source.source.resolve(file)
+  const { pageQuery } = parseComponent(component)
   const _id = createId(file)
   let type = 'page'
 
   const options = {
     _id,
-    component,
     pageQuery,
+    component,
     slug: source.source.slugify(name),
     path: createPagePath(file),
     internal: {

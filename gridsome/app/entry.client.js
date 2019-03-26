@@ -20,6 +20,11 @@ document.addEventListener('click', event => {
 
   if (
     event.defaultPrevented ||     // disables this behavior
+    event.which !== 1 ||          // not a left click
+    event.metaKey ||
+    event.altKey ||
+    event.ctrlKey ||
+    event.shiftKey ||
     $el === null ||               // no link clicked
     $el.__gLink__ ||              // g-link anchor
     $el.hostname !== hostname ||  // external link

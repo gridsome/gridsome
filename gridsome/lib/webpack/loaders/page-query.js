@@ -30,7 +30,7 @@ module.exports = function (source, map) {
     const errors = validateQuery(schema, source)
 
     if (errors && errors.length) {
-      this.callback(errors[0], source, map)
+      this.callback(new Error(errors[0]), source, map)
       return
     }
   } catch (err) {

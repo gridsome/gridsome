@@ -1,21 +1,29 @@
 <template>
-  <div>
-    <h1>Welcome to my blog (page: {{ $page.posts.pageInfo.currentPage }})</h1>
-    <Pager :info="$page.posts.pageInfo"/>
+  <Layout :class="`home-${$page.posts.pageInfo.currentPage}`">
+    <h1>Blog</h1>
+    <span class="current-page">{{ $page.posts.pageInfo.currentPage }}</span>
+    <g-link class="not-found-link" to="/asdf">Show /404</g-link>
     <ul>
-      <li v-for="{ node } in $page.posts.edges" :key="node.id">
-        <h2 v-html="node.title"/>
-        <router-link :to="node.path">
-          Read more
-        </router-link>
+      <li v-for="{ node } in $page.posts.edges" :key="node.id" :class="`post-${node.id}`">
+        <span>{{ node.title }}</span>
+        <g-link :class="`post-link-${node.id}`" :to="node.path">Read more</g-link>
       </li>
     </ul>
-  </div>
+    <Pager :linkClass="{ 'pager-link': true }" :info="$page.posts.pageInfo"/>
+  </Layout>
 </template>
 
 <page-query>
-query Home ($page: Int) {
-  posts: allPost (perPage: 10, page: $page) @paginate {
+query Blog ($page: Int) {
+  posts: allPost (
+    perPage: 2,
+    page: $page,
+    filter: {
+      excluded: {
+        ne: true
+      }
+    }
+  ) @paginate {
     pageInfo {
       totalPages
       currentPage

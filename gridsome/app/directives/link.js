@@ -29,6 +29,9 @@ function intersectionHandler ({ intersectionRatio, target }) {
 
         const path = stripPathPrefix(target.pathname)
         const { route } = router.resolve({ path })
+        const options = route.matched[0].components.default
+        
+        if (route.meta.isStatic) return
 
         const fetchComponentData = options => {
           setTimeout(() => {
@@ -38,14 +41,10 @@ function intersectionHandler ({ intersectionRatio, target }) {
           }, 250)
         }
 
-        if (route.meta.data && route.matched.length) {
-          const options = route.matched[0].components.default
-
-          if (typeof options === 'function') {
-            options().then(m => fetchComponentData(m.default))
-          } else {
-            fetchComponentData(options)
-          }
+        if (typeof options === 'function') {
+          options().then(m => fetchComponentData(m.default))
+        } else {
+          fetchComponentData(options)
         }
       }
     }

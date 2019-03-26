@@ -7,14 +7,15 @@
   ],
   "scripts": {
     "bootstrap": "lerna bootstrap",
-    "test": "node scripts/test.js",
-    "test:build": "node scripts/test.js --build",
+    "test:unit": "node scripts/test.js",
+    "test:e2e": "node scripts/test.js --e2e",
     "changelog": "node scripts/changelog.js",
     "lint": "eslint \"gridsome/**/*.js\" \"packages/**/*.js\""
   },
   "devDependencies": {
     "@lerna/conventional-commits": "^3.4.1",
     "babel-eslint": "^10.0.1",
+    "cheerio": "^1.0.0-rc.2",
     "conventional-changelog": "^2.0.3",
     "eslint": "^5.2.0",
     "eslint-plugin-node": "^7.0.1",
@@ -24,7 +25,8 @@
     "jest": "^24.1.0",
     "lerna": "^3.4.0",
     "memfs": "^2.9.4",
-    "minimist": "^1.2.0"
+    "minimist": "^1.2.0",
+    "puppeteer": "^1.12.2"
   },
   "engines": {
     "node": ">=8.3",

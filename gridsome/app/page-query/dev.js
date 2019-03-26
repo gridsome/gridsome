@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import fetch from './fetch'
 import SockJS from 'sockjs-client'
+import { formatError } from './shared'
 
 const sock = new SockJS(process.env.SOCKJS_ENDPOINT)
 const active = {}
@@ -20,6 +21,8 @@ sock.onmessage = message => {
   for (const file in active) {
     const { options, vm } = active[file]
     fetch(vm.$route, options.__pageQuery)
+      .then(({ errors }) => errors && formatError(errors[0], vm.$route))
+      .catch(err => formatError(err, vm.$route))
   }
 }
 

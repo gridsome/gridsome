@@ -31,6 +31,13 @@ test('parse empty page-query', () => {
   expect(parsed.paginate).toEqual(false)
 })
 
+test('parse invalid page-query', () => {
+  const parsed = parsePageQuery('..')
+
+  expect(parsed.query).toEqual(null)
+  expect(parsed.paginate).toEqual(false)
+})
+
 test('parse @paginate directive for connection', () => {
   const parsed = parsePageQuery(`query {
     allTestAuthors {

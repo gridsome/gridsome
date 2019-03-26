@@ -1,4 +1,4 @@
-const { GraphQLString, GraphQLBoolean, GraphQLError } = require('graphql')
+const { GraphQLString, GraphQLBoolean } = require('graphql')
 
 module.exports = ({ nodeType }) => {
   return {
@@ -17,6 +17,10 @@ module.exports = ({ nodeType }) => {
       const { collection } = store.getContentType(returnType)
       let node = null
 
+      if (!id && !path) {
+        return new Error(`Must provide either id or path in order to find a node.`)
+      }
+
       if (id) {
         node = collection.by('id', id)
       } else if (path) {
@@ -26,11 +30,10 @@ module.exports = ({ nodeType }) => {
       }
 
       if (!node && !nullable) {
-        const message = path
-          ? `${path} was not found`
-          : `A ${returnType} with id ${id} was not found`
-
-        throw new GraphQLError(message)
+        return new Error(id
+          ? `A ${returnType} node with id ${id} could not be found.`
+          : `A ${returnType} node with path ${path} could not be found.`
+        )
       }
 
       return node

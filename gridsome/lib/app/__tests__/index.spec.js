@@ -101,9 +101,10 @@ test('setup style loader options', async () => {
   const app = await createApp(context, {
     localConfig: {
       css: {
+        split: true,
         loaderOptions: {
           css: { url: false },
-          sass: { data: '@import "variables.sass";' },
+          sass: { indentedSyntax: false },
           scss: { data: '@import "variables.scss";' },
           less: { strictMath: true },
           stylus: { use: ['plugin'] },
@@ -119,6 +120,8 @@ test('setup style loader options', async () => {
   const chain = await createClientConfig(app)
   const oneOf = ['normal', 'modules']
 
+  expect(app.config.css.split).toEqual(true)
+
   oneOf.forEach(oneOf => {
     const css = chain.module.rule('css').oneOf(oneOf).use('css-loader').toConfig()
     const postcss = chain.module.rule('postcss').oneOf(oneOf).use('postcss-loader').toConfig()
@@ -132,7 +135,7 @@ test('setup style loader options', async () => {
     expect(postcss.options.plugins).toHaveLength(2)
     expect(postcss.options.plugins[0]).toEqual('plugin')
     expect(postcss.options.plugins[1]).toBeInstanceOf(Function)
-    expect(sass.options.data).toEqual('@import "variables.sass";')
+    expect(sass.options.indentedSyntax).toEqual(false)
     expect(scss.options.data).toEqual('@import "variables.scss";')
     expect(less.options.strictMath).toEqual(true)
     expect(stylus.options.use[0]).toEqual('plugin')

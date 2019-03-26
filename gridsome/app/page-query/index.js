@@ -1,5 +1,6 @@
 import Vue from 'vue'
-import cache from './cache'
+import { getResults, formatError } from './shared'
+import { NOT_FOUND_NAME, MODULE_NOT_FOUND } from '../utils/constants'
 
 const merge = Vue.config.optionMergeStrategies
 
@@ -15,7 +16,7 @@ export default ({ options }, query = true) => {
     $page () {
       return process.isServer
         ? this.$ssrContext.pageQuery.data
-        : cache.get(this.$route.path)
+        : getResults(this.$route.path)
     }
   }, options.computed)
 
@@ -26,20 +27,23 @@ export default ({ options }, query = true) => {
 
     const createGuardFunc = () => {
       return (to, from, next) => {
-        const error = () => {
-          next({
-            name: '404',
-            params: {
-              0: to.path,
-              route: to
-            }
-          })
-        }
-
         import(/* webpackChunkName: "page-query" */ './fetch').then(m => {
           m.default(to, options.__pageQuery)
-            .then(() => next())
-            .catch(() => error())
+            .then(res => {
+              if (res.code === 404) {
+                next({ name: NOT_FOUND_NAME, params: { 0: to.path }})
+              } else {
+                next()
+              }
+            })
+            .catch(err => {
+              if (err.code === MODULE_NOT_FOUND || err.code === 404) {
+                console.error(err) // eslint-disable-line
+                next({ name: NOT_FOUND_NAME, params: { 0: to.path }})
+              } else {
+                formatError(err, to)
+              }
+            })
         })
       }
     }

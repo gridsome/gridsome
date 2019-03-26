@@ -17,9 +17,9 @@ export default {
   },
 
   render: (h, { data, props }) => {
-    const classNames = [data.staticClass, data.class, 'g-image']
+    const classNames = [data.class, 'g-image']
+    const noscriptClassNames = [data.staticClass, classNames.slice()]
     const isImmediate = props.immediate || props.immediate !== undefined
-    const noscriptClassNames = classNames.slice()
     const directives = data.directives || []
     const attrs = data.attrs || {}
     const hook = data.hook || {}

@@ -147,7 +147,7 @@ module.exports = (app, { isProd, isServer }) => {
   // assets
 
   config.module.rule('images')
-    .test(/\.(png|jpe?g|gif)(\?.*)?$/)
+    .test(/\.(png|jpe?g|gif|webp)(\?.*)?$/)
     .use('url-loader')
     .loader('url-loader')
     .options({
@@ -234,17 +234,26 @@ module.exports = (app, { isProd, isServer }) => {
         filename: `${assetsDir}/css/styles${useHash ? '.[contenthash:8]' : ''}.css`
       }])
 
-    config.optimization.splitChunks({
-      cacheGroups: {
-        data: {
-          test: m => m.resource && m.request.startsWith(`${projectConfig.cacheDir}/data`),
-          name: false,
-          chunks: 'all',
-          maxSize: 60000,
-          minSize: 5000
-        }
+    const cacheGroups = {
+      data: {
+        test: m => m.resource && m.request.startsWith(`${projectConfig.cacheDir}/data`),
+        name: false,
+        chunks: 'all',
+        maxSize: 60000,
+        minSize: 5000
       }
-    })
+    }
+
+    if (projectConfig.css.split !== true) {
+      cacheGroups.styles = {
+        name: 'styles',
+        test: m => /css\/mini-extract/.test(m.type),
+        chunks: 'all',
+        enforce: true
+      }
+    }
+
+    config.optimization.splitChunks({ cacheGroups })
   }
 
   if (process.env.GRIDSOME_TEST) {
@@ -336,7 +345,7 @@ module.exports = (app, { isProd, isServer }) => {
       'process.env.PUBLIC_PATH': JSON.stringify(pathPrefix),
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || ''),
       'GRIDSOME_CACHE_DIR': JSON.stringify(projectConfig.cacheDir),
-      'GRIDSOME_DATA_DIR': JSON.stringify(`${projectConfig.cacheDir}/data`),
+      'GRIDSOME_DATA_DIR': JSON.stringify(projectConfig.dataDir),
       'GRIDSOME_MODE': JSON.stringify(process.env.GRIDSOME_MODE || ''),
       'process.isClient': !isServer,
       'process.isServer': isServer,

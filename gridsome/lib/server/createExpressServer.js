@@ -32,7 +32,14 @@ module.exports = async (app, options = {}) => {
   server.use(
     endpoint.graphql,
     graphqlMiddleware(app),
-    graphqlHTTP({ schema, context: app.createSchemaContext() })
+    graphqlHTTP({
+      schema,
+      context: app.createSchemaContext(),
+      formatError: err => ({
+        message: err.message,
+        stringified: err.toString()
+      })
+    })
   )
 
   if (options.withExplorer) {

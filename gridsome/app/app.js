@@ -1,6 +1,5 @@
 import Vue from 'vue'
 import plugins from '~/.temp/plugins-server'
-import routes from '~/.temp/routes.js'
 import main from './main'
 
 import head from './head'
@@ -16,8 +15,6 @@ Vue.component('g-image', Image)
 Vue.component('ClientOnly', ClientOnly)
 
 Vue.prototype.$url = url
-
-router.addRoutes(routes)
 
 const context = {
   appOptions: {

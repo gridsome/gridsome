@@ -34,3 +34,5 @@ module.exports = {
   ]
 }
 ```
+
+Your sitemap will be available at `/sitemap.xml` after your site is built.

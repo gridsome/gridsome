@@ -10,17 +10,24 @@ function parsePageQuery (query = '') {
   }
 
   if (query) {
+    let ast = null
+
+    try {
+      ast = parse(query)
+    } catch (err) {
+      return result
+    }
+
     result.query = query.trim() || null
 
-    if (result.query) {
-      visit(parse(result.query), {
-        Directive (node) {
-          if (node.name.value === 'paginate') {
-            result.paginate = true
-          }
+    visit(ast, {
+      Directive (node) {
+        if (node.name.value === 'paginate') {
+          result.paginate = true
+          return BREAK
         }
-      })
-    }
+      }
+    })
   }
 
   return result
