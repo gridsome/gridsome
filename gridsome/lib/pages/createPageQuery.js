@@ -1,10 +1,12 @@
 const { visit, parse, BREAK } = require('graphql')
-const { get, trimStart, upperFirst } = require('lodash')
+const { memoize, get, trimStart, upperFirst } = require('lodash')
 const { PER_PAGE, NODE_FIELDS } = require('../utils/constants')
 const { isRefField } = require('../graphql/utils')
 
+const memoized = memoize(parsePageQuery)
+
 function createPageQuery (source, ctx) {
-  const result = parsePageQuery(source)
+  const result = memoized(source)
 
   const context = ctx ? createQueryContext(ctx, result.variables) : {}
   const filters = result.filters ? nodeToObject(result.filters, context) : {}
