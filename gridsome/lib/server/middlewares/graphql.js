@@ -14,18 +14,13 @@ module.exports = ({ store }) => {
       return res.sendStatus(200)
     }
 
-    const { query, variables, ...body } = await getGraphQLParams(req)
-
-    if (!query || !variables) {
-      return next()
-    }
+    const { query = '', variables, ...body } = await getGraphQLParams(req)
 
     const pageQuery = processPageQuery({ query })
-    const { path } = variables
 
-    if (variables.path) {
+    if (variables && variables.path) {
       const entry = store.index.findOne({
-        path: { $in: [path, trimEnd(path, '/')] }
+        path: { $in: [variables.path, trimEnd(variables.path, '/')] }
       })
 
       if (!entry) {
