@@ -13,10 +13,11 @@ test('create page', async () => {
 
   expect(page.path).toEqual('/page')
   expect(page.route).toEqual('/page')
-  expect(page.chunkName).toBeUndefined()
   expect(page.context).toBeNull()
+  expect(page.queryContext).toBeNull()
   expect(page.query.document).toBeNull()
   expect(page.component).toEqual(path.join(__dirname, '__fixtures__', 'DefaultPage.vue'))
+  expect(page.chunkName).toEqual('page--fixtures--default-page-vue')
   expect(emit).toHaveBeenCalledTimes(1)
 
   emit.mockRestore()
@@ -33,6 +34,33 @@ test('create page with pagination', async () => {
   expect(page.path).toEqual('/page')
   expect(page.route).toEqual('/page/:page(\\d+)?')
   expect(page.query.paginate.typeName).toEqual('Post')
+  expect(page.chunkName).toEqual('page--fixtures--paged-page-vue')
+})
+
+test('create page with context', async () => {
+  const { pages: { createPage }} = await createApp()
+
+  const page = createPage({
+    path: '/page',
+    component: './__fixtures__/DefaultPAge.vue',
+    context: { test: true }
+  })
+
+  expect(page.context).toMatchObject({ test: true })
+  expect(page.queryContext).toMatchObject({ test: true })
+})
+
+test('create page with query context', async () => {
+  const { pages: { createPage }} = await createApp()
+
+  const page = createPage({
+    path: '/page',
+    component: './__fixtures__/DefaultPAge.vue',
+    queryContext: { test: true }
+  })
+
+  expect(page.context).toBeNull()
+  expect(page.queryContext).toMatchObject({ test: true })
 })
 
 test('create page with custom route', async () => {
@@ -55,6 +83,7 @@ test('allways include a /404 page', async () => {
   const notFound = app.pages.findPage({ path: '/404' })
 
   expect(notFound.path).toEqual('/404')
+  expect(notFound.chunkName).toEqual('page--app--pages--404-vue')
 })
 
 test('cache parsed components', async () => {
@@ -78,8 +107,8 @@ test('upate page', async () => {
 
   expect(page1.path).toEqual('/page')
   expect(page1.route).toEqual('/page')
-  expect(page1.chunkName).toBeUndefined()
   expect(page1.component).toEqual(path.join(__dirname, '__fixtures__', 'DefaultPage.vue'))
+  expect(page1.chunkName).toEqual('page--fixtures--default-page-vue')
 
   const page2 = updatePage({
     path: '/page',

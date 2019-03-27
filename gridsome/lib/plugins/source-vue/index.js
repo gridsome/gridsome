@@ -76,7 +76,6 @@ class VueSource {
 
     return this.pages.createPage({
       name,
-      chunkName: name,
       path: createPagePath(file),
       component: path.join(this.pagesDir, file)
     })

@@ -1,6 +1,4 @@
-const path = require('path')
 const { uniqBy } = require('lodash')
-const slugify = require('@sindresorhus/slugify')
 
 function genRoutes (app, routeMeta = {}) {
   let res = ''
@@ -11,26 +9,25 @@ function genRoutes (app, routeMeta = {}) {
   // use the /404 page as fallback route
   pages.push({
     ...notFound,
-    routeMeta: routeMeta[notFound.route],
+    dataInfo: routeMeta[notFound.route],
     name: '*',
     route: '*'
   })
 
   res += `export default [${pages.map(page => {
     const component = JSON.stringify(page.component)
-    const name = (page.chunkName || slugify(path.parse(component).name))
-    const chunkName = JSON.stringify('component--' + name)
-    const queryMeta = page.routeMeta || routeMeta[page.route]
+    const chunkName = JSON.stringify(page.chunkName)
+    const dataInfo = page.dataInfo || routeMeta[page.route]
     const props = []
     const metas = []
 
     props.push(`    path: ${JSON.stringify(page.route)}`)
     props.push(`    component: () => import(/* webpackChunkName: ${chunkName} */ ${component})`)
 
-    if (typeof queryMeta === 'string') {
-      metas.push(`data: () => import(/* webpackChunkName: ${chunkName} */ ${JSON.stringify(queryMeta)})`)
-    } else if (Array.isArray(queryMeta)) {
-      metas.push(`data: ${JSON.stringify(queryMeta)}`)
+    if (typeof dataInfo === 'string') {
+      metas.push(`data: () => import(/* webpackChunkName: ${chunkName} */ ${JSON.stringify(dataInfo)})`)
+    } else if (Array.isArray(dataInfo)) {
+      metas.push(`data: ${JSON.stringify(dataInfo)}`)
     } else if (process.env.NODE_ENV === 'development' && (page.query.document || page.context)) {
       metas.push(`data: true`)
     }

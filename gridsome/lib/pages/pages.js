@@ -7,6 +7,7 @@ const { FSWatcher } = require('chokidar')
 const EventEmitter = require('eventemitter3')
 const createPageQuery = require('./createPageQuery')
 const { NOT_FOUND_NAME, NOT_FOUND_PATH } = require('../utils/constants')
+const { slugify } = require('../utils')
 
 const nonIndex = [NOT_FOUND_PATH]
 
@@ -74,7 +75,7 @@ class Pages {
       : options.component
 
     const { pageQuery } = this._parse(component)
-    const page = createPage({ component, options })
+    const page = createPage({ component, options, context: this._context })
     const query = createPageQuery(pageQuery, page.queryContext)
 
     Object.assign(page, { query })
@@ -92,11 +93,13 @@ class Pages {
 
   updatePage (options) {
     const page = this.findPage({ path: options.path })
+
     const component = isRelative(options.component)
       ? path.resolve(this._context, options.component)
       : options.component
+
     const { pageQuery } = this._parse(component, false)
-    const newPage = createPage({ component, options })
+    const newPage = createPage({ component, options, context: this._context })
     const query = createPageQuery(pageQuery, newPage.queryContext)
 
     const oldPage = cloneDeep(page)
@@ -149,7 +152,7 @@ class Pages {
   }
 }
 
-function createPage ({ component, options }) {
+function createPage ({ component, options, context }) {
   const segments = options.path.split('/').filter(segment => !!segment)
   const path = `/${segments.join('/')}`
 
@@ -160,15 +163,25 @@ function createPage ({ component, options }) {
     name,
     path,
     component,
-    chunkName: options.chunkName,
     context: options.context || null,
     queryContext: options.queryContext || options.context || null,
+    chunkName: options.chunkName || genChunkName(component, context),
     internal: {
       route: options.route || null,
       isIndex: !nonIndex.includes(path),
       isDynamic: typeof options.route === 'string'
     }
   }
+}
+
+function genChunkName (component, context) {
+  const chunkName = path.relative(context, component)
+    .split('/')
+    .filter(s => s !== '..')
+    .map(s => slugify(s))
+    .join('--')
+
+  return `page--${chunkName}`
 }
 
 function createRoute ({ page, query }) {
