@@ -42,7 +42,7 @@ test('create page with context', async () => {
 
   const page = createPage({
     path: '/page',
-    component: './__fixtures__/DefaultPAge.vue',
+    component: './__fixtures__/DefaultPage.vue',
     context: { test: true }
   })
 
@@ -55,7 +55,7 @@ test('create page with query context', async () => {
 
   const page = createPage({
     path: '/page',
-    component: './__fixtures__/DefaultPAge.vue',
+    component: './__fixtures__/DefaultPage.vue',
     queryContext: { test: true }
   })
 
