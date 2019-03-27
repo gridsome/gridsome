@@ -1,5 +1,4 @@
 const GhostContentAPI = require('@tryghost/content-api')
-const { isPlainObject } = require('lodash')
 
 const TYPE_AUTHOR = 'AUTHOR'
 const TYPE_POST = 'POST'
@@ -97,14 +96,13 @@ class GhostSource {
 
     while (keepGoing) {
       const rawEntities = await contentEntity.browse({ limit: this.options.perPage, page: currentPage })
-      console.log(rawEntities)
       rawEntities.forEach((entity) => {
         collection.addNode({
           id: entity.id,
           title: entity.name,
           slug: entity.slug,
           fields: {
-            ...this.normalizeFields(entity)
+            ...entity
           }
         })
       })
@@ -113,45 +111,7 @@ class GhostSource {
       }
       currentPage++
     }
-    console.log(`Uploaded ${collection.length} authors`)
     return { keepGoing, currentPage }
-  }
-
-  normalizeFields (fields) {
-    const res = {}
-
-    for (const key in fields) {
-      if (key.startsWith('meta')) continue // skip meta
-      res[key] = this.normalizeFieldValue(fields[key])
-    }
-
-    return res
-  }
-
-  normalizeFieldValue (value) {
-    if (value === null) return null
-    if (value === undefined) return null
-
-    const { makeTypeName } = this.api.store
-
-    if (Array.isArray(value)) {
-      return value.map(v => this.normalizeFieldValue(v))
-    }
-
-    if (isPlainObject(value)) {
-      if (value.post_type && (value.ID || value.id)) {
-        return {
-          typeName: makeTypeName(value.post_type),
-          id: value.ID || value.id
-        }
-      } else if (value.hasOwnProperty('rendered')) {
-        return value.rendered
-      }
-
-      return this.normalizeFields(value)
-    }
-
-    return value
   }
 }
 

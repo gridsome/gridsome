@@ -12,9 +12,7 @@
     "ghost"
   ],
   "dependencies": {
-    "@tryghost/content-api": "^1.2.0",
-    "axios": "^0.18.0",
-    "lodash": "^4.17.10"
+    "@tryghost/content-api": "^1.2.0"
   },
   "publishConfig": {
     "access": "public"
