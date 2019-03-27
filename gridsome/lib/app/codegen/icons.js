@@ -1,9 +1,11 @@
+const path = require('path')
 const fs = require('fs-extra')
+const isRelative = require('is-relative')
 
-async function genIcons ({ config, resolve, queue }) {
+async function genIcons ({ config, context, queue }) {
   const { touchicon, favicon } = config.icon
-  const touchiconPath = resolve(touchicon.src)
-  const faviconPath = resolve(favicon.src)
+  const touchiconPath = iconPath(context, touchicon.src)
+  const faviconPath = iconPath(context, favicon.src)
 
   const icons = {
     touchiconMimeType: null,
@@ -35,6 +37,12 @@ async function genIcons ({ config, resolve, queue }) {
   }
 
   return `export default ${JSON.stringify(icons, null, 2)}`
+}
+
+function iconPath (context, src) {
+  return isRelative(src)
+    ? path.join(context, src)
+    : src
 }
 
 function iconData (set) {
