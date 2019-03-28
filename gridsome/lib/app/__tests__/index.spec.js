@@ -28,10 +28,10 @@ test('setup basic config', () => {
   expect(config.siteName).toEqual('Gridsome')
   expect(config.titleTemplate).toEqual('%s | Test')
   expect(config.icon.favicon).toHaveProperty('sizes')
-  expect(config.icon.favicon).toHaveProperty('src', 'src/favicon.png')
+  expect(config.icon.favicon).toHaveProperty('src', './src/favicon.png')
   expect(config.icon.touchicon).toHaveProperty('sizes')
   expect(config.icon.touchicon).toHaveProperty('precomposed')
-  expect(config.icon.touchicon).toHaveProperty('src', 'src/favicon.png')
+  expect(config.icon.touchicon).toHaveProperty('src', './src/favicon.png')
 })
 
 test('load env variables', () => {
