@@ -1,26 +1,38 @@
-const { visit, parse, BREAK } = require('graphql')
-const { memoize, get, trimStart, upperFirst } = require('lodash')
-const { PER_PAGE, NODE_FIELDS } = require('../utils/constants')
 const { isRefField } = require('../graphql/utils')
+const { PER_PAGE, NODE_FIELDS } = require('../utils/constants')
+const { memoize, get, trimStart, upperFirst } = require('lodash')
+const { visit, parse, BREAK, valueFromASTUntyped } = require('graphql')
 
 const memoized = memoize(parsePageQuery)
 
-function createPageQuery (source, ctx) {
+function createPageQuery (source, context = null) {
   const result = memoized(source)
 
-  const context = ctx ? createQueryContext(ctx, result.variables) : {}
-  const filters = result.filters ? nodeToObject(result.filters, context) : {}
+  const variables = context ? variablesFromContext(context, result.variables) : {}
+  const filters = result.filtersAST ? valueFromASTUntyped(result.filtersAST, variables) : {}
   const paginate = result.paginate ? { ...result.paginate } : null
 
-  if (paginate && result.perPage) {
-    paginate.perPage = nodeToObject(result.perPage, context) || PER_PAGE
+  if (paginate && result.perPageAST) {
+    paginate.perPage = valueFromASTUntyped(result.perPageAST, variables) || PER_PAGE
+  }
+
+  if (paginate && result.paginate.belongsTo) {
+    paginate.belongsTo = { id: undefined, path: undefined }
+
+    if (result.idAST) {
+      paginate.belongsTo.id = valueFromASTUntyped(result.idAST, variables)
+    }
+
+    if (result.pathAST) {
+      paginate.belongsTo.path = valueFromASTUntyped(result.pathAST, variables)
+    }
   }
 
   return {
     source: result.source,
     document: result.document,
     paginate,
-    context,
+    variables,
     filters
   }
 }
@@ -30,8 +42,10 @@ function parsePageQuery (source) {
     source: null,
     document: null,
     paginate: null,
-    perPage: null,
-    filters: null,
+    perPageAST: null,
+    filtersAST: null,
+    pathAST: null,
+    idAST: null,
     variables: []
   }
 
@@ -46,13 +60,15 @@ function parsePageQuery (source) {
   result.source = source
 
   result.document = visit(ast, {
-    Variable ({ name: { value: name }}) {
+    VariableDefinition (node) {
+      const { name: { value: name }} = node.variable
+      const defaultValue = node.defaultValue
+        ? valueFromASTUntyped(node.defaultValue)
+        : null
+
       if (name === 'page') return
-      if (name === 'path') return
 
-      const path = name.split('__')
-
-      result.variables.push({ name, path })
+      result.variables.push({ name, defaultValue, path: name.split('__') })
     },
     Field (fieldNode) {
       return visit(fieldNode, {
@@ -62,20 +78,31 @@ function parsePageQuery (source) {
               return BREAK
             }
 
-            const parentNode = ancestors.slice().pop()
-            const perPageArg = parentNode.arguments.find(node => node.name.value === 'perPage')
-            const filterArg = parentNode.arguments.find(node => node.name.value === 'filter')
+            const { name: fieldName, arguments: args } = fieldNode
+            const { name: parentName, arguments: parentArgs } = ancestors.slice().pop()
+
+            const perPageArg = parentArgs.find(node => node.name.value === 'perPage')
+            const filterArg = parentArgs.find(node => node.name.value === 'filter')
 
             result.paginate = {
               // guess content type by converting root field value into a camel cased string
-              typeName: upperFirst(trimStart(fieldNode.name.value, 'all')),
+              typeName: upperFirst(trimStart(fieldName.value, 'all')),
               perPage: perPageArg && perPageArg.value.value ? Number(perPageArg.value.value) : PER_PAGE,
-              belongsTo: parentNode.name.value === 'belongsTo',
-              fieldName: fieldNode.name.value
+              fieldName: fieldName.value,
+              belongsTo: null
             }
 
-            if (perPageArg) result.perPage = perPageArg.value
-            if (filterArg) result.filters = filterArg.value
+            if (perPageArg) result.perPageAST = perPageArg.value
+            if (filterArg) result.filtersAST = filterArg.value
+
+            if (parentName.value === 'belongsTo') {
+              const idArg = args.find(({ name }) => name.value === 'id')
+              const pathArg = args.find(({ name }) => name.value === 'path')
+
+              result.idAST = idArg ? idArg.value : null
+              result.pathAST = pathArg ? pathArg.value : null
+              result.paginate.belongsTo = true
+            }
 
             return null
           }
@@ -87,14 +114,14 @@ function parsePageQuery (source) {
   return result
 }
 
-function createQueryContext (context, variables = []) {
-  return variables.reduce((acc, { name, path }) => {
+function variablesFromContext (context, queryVariables = []) {
+  return queryVariables.reduce((acc, { path, name, defaultValue }) => {
     // check for $loki to get variables in node fields
     const getPath = context.$loki && !NODE_FIELDS.includes(path[0])
       ? ['fields', ...path]
       : path
 
-    let value = get(context, getPath) || null
+    let value = get(context, getPath, defaultValue)
 
     if (value && isRefField(value)) {
       value = value.id
@@ -104,37 +131,6 @@ function createQueryContext (context, variables = []) {
 
     return acc
   }, {})
-}
-
-function nodeToObject (node, vars = {}) {
-  const obj = {}
-
-  switch (node.kind) {
-    case 'Argument':
-      obj[node.name.value] = nodeToObject(node.value, vars)
-      break
-    case 'ObjectValue':
-      return node.fields.reduce((acc, fieldNode) => {
-        acc[fieldNode.name.value] = nodeToObject(fieldNode.value, vars)
-        return acc
-      }, {})
-    case 'ListValue':
-      return node.values.map(node => nodeToObject(node, vars))
-    case 'IntValue':
-      return parseInt(node.value, 10)
-    case 'FloatValue':
-      return parseFloat(node.value)
-    case 'NullValue':
-      return null
-    case 'Variable':
-      return vars[node.name.value]
-    case 'EnumValue':
-    case 'BooleanValue':
-    case 'StringValue':
-      return node.value
-  }
-
-  return obj
 }
 
 module.exports = createPageQuery

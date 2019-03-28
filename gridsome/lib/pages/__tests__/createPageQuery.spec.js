@@ -18,7 +18,7 @@ test('parsed page-query', () => {
   expect(query.document.kind).toEqual(Kind.DOCUMENT)
   expect(query.source).toEqual(source)
   expect(query.paginate).toBeNull()
-  expect(query.context).toMatchObject({})
+  expect(query.variables).toMatchObject({})
   expect(query.filters).toMatchObject({})
 })
 
@@ -43,7 +43,7 @@ test('parse @paginate directive for connection', () => {
   expect(query.paginate.typeName).toEqual('TestPost')
   expect(query.paginate.fieldName).toEqual('allTestPost')
   expect(query.paginate.perPage).toEqual(PER_PAGE)
-  expect(query.paginate.belongsTo).toEqual(false)
+  expect(query.paginate.belongsTo).toEqual(null)
 })
 
 test('parse @paginate with perPage variable', () => {
@@ -60,6 +60,22 @@ test('parse @paginate with perPage variable', () => {
   })
 
   expect(query.paginate.perPage).toEqual(2)
+})
+
+test('do not get page variable from context', () => {
+  const query = createPageQuery(`query ($page: Int) {
+    allTestPost (page: $page) @paginate {
+      edges {
+        node {
+          id
+        }
+      }
+    }
+  }`, {
+    page: 3
+  })
+
+  expect(query.variables.page).toBeUndefined()
 })
 
 test('parse @paginate with perPage variable from node field', () => {
@@ -81,9 +97,25 @@ test('parse @paginate with perPage variable from node field', () => {
   expect(query.paginate.perPage).toEqual(2)
 })
 
-test('parse @paginate directive from belongsTo field', () => {
+test('parse @paginate with perPage default value', () => {
+  const query = createPageQuery(`query ($num: Int = 5) {
+    allTestPost (perPage: $num) @paginate {
+      edges {
+        node {
+          id
+        }
+      }
+    }
+  }`, {
+    $loki: 1
+  })
+
+  expect(query.paginate.perPage).toEqual(5)
+})
+
+test('parse @paginate directive from belongsTo field with id', () => {
   const query = createPageQuery(`query {
-    testPage {
+    testPage (id: "1") {
       belongsTo (perPage: 5) @paginate {
         edges {
           node {
@@ -96,8 +128,49 @@ test('parse @paginate directive from belongsTo field', () => {
 
   expect(query.paginate.typeName).toEqual('TestPage')
   expect(query.paginate.fieldName).toEqual('testPage')
-  expect(query.paginate.belongsTo).toEqual(true)
+  expect(query.paginate.belongsTo).toMatchObject({ id: '1' })
   expect(query.paginate.perPage).toEqual(5)
+})
+
+test('parse @paginate directive from belongsTo field with path and alias', () => {
+  const query = createPageQuery(`query {
+    post: testPage (path: "/2019/03/28/hello-world") {
+      belongsTo (perPage: 5) @paginate {
+        edges {
+          node {
+            id
+          }
+        }
+      }
+    }
+  }`)
+
+  expect(query.paginate.typeName).toEqual('TestPage')
+  expect(query.paginate.fieldName).toEqual('testPage')
+  expect(query.paginate.belongsTo).toMatchObject({ path: '/2019/03/28/hello-world' })
+  expect(query.paginate.perPage).toEqual(5)
+})
+
+test('parse @paginate directive from belongsTo field with variable', () => {
+  const query = createPageQuery(`query ($post: String!, $limit: Int!) {
+    post (id: $post) {
+      belongsTo (perPage: $limit) @paginate {
+        edges {
+          node {
+            id
+          }
+        }
+      }
+    }
+  }`, {
+    post: '2',
+    limit: 10
+  })
+
+  expect(query.paginate.typeName).toEqual('Post')
+  expect(query.paginate.fieldName).toEqual('post')
+  expect(query.paginate.belongsTo).toMatchObject({ id: '2' })
+  expect(query.paginate.perPage).toEqual(10)
 })
 
 test('parse filters from @paginate', () => {
@@ -208,11 +281,11 @@ test('parse page-query with context', () => {
     }
   })
 
-  expect(query.context.id).toEqual('1')
-  expect(query.context.title).toEqual('title')
-  expect(query.context.custom).toEqual('custom value')
-  expect(query.context.deep__value).toEqual('deep value')
-  expect(query.context.list__1__value).toEqual(2)
-  expect(query.context.ref).toEqual('1')
-  expect(query.context.refs__1).toEqual('2')
+  expect(query.variables.id).toEqual('1')
+  expect(query.variables.title).toEqual('title')
+  expect(query.variables.custom).toEqual('custom value')
+  expect(query.variables.deep__value).toEqual('deep value')
+  expect(query.variables.list__1__value).toEqual(2)
+  expect(query.variables.ref).toEqual('1')
+  expect(query.variables.refs__1).toEqual('2')
 })

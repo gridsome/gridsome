@@ -1,4 +1,4 @@
-const { createQueryContext } = require('./utils')
+const { createQueryVariables } = require('./utils')
 const { createBelongsToKey } = require('../graphql/nodes/utils')
 const { createFilterQuery } = require('../graphql/createFilterTypes')
 
@@ -20,20 +20,21 @@ function createRenderQueue (renderQueue, { pages, store, schema }) {
 
 function calcTotalPages (page, store, schema) {
   const { belongsTo, fieldName, typeName, perPage } = page.query.paginate
+  const { collection } = store.getContentType(typeName)
   const rootFields = schema.getQueryType().getFields()
 
   let totalNodes = 0
 
   if (belongsTo) {
+    const { id, path } = belongsTo
     const { args } = rootFields[fieldName].type.getFields().belongsTo
     const query = createCollectionQuery(args, page.query.filters)
-    const node = store.getNodeByPath(page.path)
+    const node = id ? collection.by('id', id) : collection.by('path', path)
 
     query[createBelongsToKey(node)] = { $eq: true }
 
     totalNodes = store.index.count(query)
   } else {
-    const { collection } = store.getContentType(typeName)
     const { args } = rootFields[fieldName]
     const query = createCollectionQuery(args, page.query.filters)
 
@@ -55,9 +56,11 @@ function createRenderEntry (page, currentPage = undefined) {
     path: `/${segments.join('/')}`,
     component: page.component,
     context: page.context,
-    query: page.query.document,
     isIndex: page.internal.isIndex,
-    queryContext: createQueryContext(page, currentPage)
+    query: page.query.document ? {
+      document: page.query.document,
+      variables: createQueryVariables(page, currentPage)
+    } : null
   }
 }
 

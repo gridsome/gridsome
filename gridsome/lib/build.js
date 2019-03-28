@@ -81,7 +81,7 @@ async function executeQueries (renderQueue, app) {
     count++
 
     const results = entry.query
-      ? await app.graphql(entry.query, entry.queryContext)
+      ? await app.graphql(entry.query.document, entry.query.variables)
       : {}
 
     if (results.errors) {

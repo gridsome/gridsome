@@ -145,7 +145,7 @@ test('generate /404.html', () => {
 
 test('compile scripts correctly', () => {
   const appJS = content('dist/assets/js/app.js')
-  const homeJS = content('dist/assets/js/component--home.js')
+  const homeJS = content('dist/assets/js/page--src--pages--index-vue.js')
 
   // never include the context path
   expect(appJS).not.toMatch(context)

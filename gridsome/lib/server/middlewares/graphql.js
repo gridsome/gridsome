@@ -1,6 +1,6 @@
 const { print } = require('graphql')
 const { trimEnd } = require('lodash')
-const { createQueryContext } = require('../../pages/utils')
+const { createQueryVariables } = require('../../pages/utils')
 
 module.exports = ({ store, pages }) => {
   return async function graphqlMiddleware (req, res, next) {
@@ -29,7 +29,7 @@ module.exports = ({ store, pages }) => {
 
     req.body = {
       query: print(page.query.document),
-      variables: createQueryContext(page, body.page)
+      variables: createQueryVariables(page, body.page)
     }
 
     next()

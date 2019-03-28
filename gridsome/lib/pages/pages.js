@@ -119,7 +119,12 @@ class Pages {
     if (page) {
       this._collection.findAndRemove(query)
       this._events.emit('remove', page)
-      this._unwatch(page.component)
+
+      const pages = this.findPages({ component: page.component })
+
+      if (!pages.length) {
+        this._unwatch(page.component)
+      }
     }
   }
 

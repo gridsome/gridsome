@@ -1,8 +1,8 @@
-exports.createQueryContext = function (page, currentPage = undefined) {
+exports.createQueryVariables = function (page, currentPage = undefined) {
   return {
-    ...page.query.context,
+    ...page.query.variables,
     page: currentPage,
-    path: page.path
+    __path: page.path
   }
 }
 
