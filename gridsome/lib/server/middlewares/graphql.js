@@ -11,7 +11,9 @@ module.exports = ({ store, pages }) => {
       return res.sendStatus(200)
     }
 
-    if (!body.path) return next()
+    if (body.path) {
+      return next()
+    }
 
     const page = pages.findPage({
       path: { $in: [body.path, trimEnd(body.path, '/')] }

@@ -1,5 +1,6 @@
 import Vue from 'vue'
 import Router from 'vue-router'
+import routes from '~/.temp/routes.js'
 
 Vue.use(Router)
 
@@ -7,6 +8,7 @@ const router = new Router({
   base: process.env.PUBLIC_PATH,
   mode: 'history',
   fallback: false,
+  routes,
 
   scrollBehavior (to, from, saved) {
     if (saved) {

@@ -1,7 +1,6 @@
 import Vue from 'vue'
 import plugins from '~/.temp/plugins-server'
 import main from './main'
-import routes from '~/.temp/routes.js'
 
 import head from './head'
 import router from './router'
@@ -20,7 +19,6 @@ Vue.component('ClientOnly', ClientOnly)
 
 Vue.prototype.$url = url
 
-router.addRoutes(routes)
 router.beforeEach(gaphqlGuard)
 
 const context = {

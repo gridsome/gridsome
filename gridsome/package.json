@@ -1,5 +1,5 @@
 {
-  "version": "0.5.5",
+  "version": "0.5.6",
   "name": "gridsome",
   "description": "A JAMstack framework for building blazing fast websites with Vue.js",
   "homepage": "https://gridsome.org",
@@ -28,7 +28,7 @@
   ],
   "dependencies": {
     "@babel/core": "^7.0.0",
-    "@gridsome/cli": "^0.0.8",
+    "@gridsome/cli": "^0.0.9",
     "@sindresorhus/slugify": "^0.8.0",
     "@vue/babel-preset-app": "^3.4.0",
     "@vue/component-compiler-utils": "^2.5.2",
