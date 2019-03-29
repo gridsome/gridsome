@@ -1,12 +1,14 @@
+const Joi = require('joi')
 const path = require('path')
 const autoBind = require('auto-bind')
-const { cloneDeep } = require('lodash')
 const { Collection } = require('lokijs')
 const isRelative = require('is-relative')
 const { FSWatcher } = require('chokidar')
 const EventEmitter = require('eventemitter3')
 const createPageQuery = require('./createPageQuery')
 const { NOT_FOUND_NAME, NOT_FOUND_PATH } = require('../utils/constants')
+const schema = require('./options-schema')
+const { cloneDeep } = require('lodash')
 const { slugify } = require('../utils')
 
 const nonIndex = [NOT_FOUND_PATH]
@@ -65,17 +67,14 @@ class Pages {
     return this._collection.findOne(query)
   }
 
-  createPage (options) {
+  createPage (input) {
+    const options = this._normalizeOptions(input)
     const oldPage = this.findPage({ path: options.path })
 
     if (oldPage) return this.updatePage(options)
 
-    const component = isRelative(options.component)
-      ? path.resolve(this._context, options.component)
-      : options.component
-
-    const { pageQuery } = this._parse(component)
-    const page = createPage({ component, options, context: this._context })
+    const { pageQuery } = this._parse(options.component)
+    const page = createPage({ options, context: this._context })
     const query = createPageQuery(pageQuery, page.queryContext)
 
     Object.assign(page, { query })
@@ -85,21 +84,18 @@ class Pages {
     this._events.emit('create', page)
 
     if (process.env.NODE_ENV === 'development') {
-      this._watch(component)
+      this._watch(options.component)
     }
 
     return page
   }
 
-  updatePage (options) {
+  updatePage (input) {
+    const options = this._normalizeOptions(input)
     const page = this.findPage({ path: options.path })
 
-    const component = isRelative(options.component)
-      ? path.resolve(this._context, options.component)
-      : options.component
-
-    const { pageQuery } = this._parse(component, false)
-    const newPage = createPage({ component, options, context: this._context })
+    const { pageQuery } = this._parse(options.component, false)
+    const newPage = createPage({ options, context: this._context })
     const query = createPageQuery(pageQuery, newPage.queryContext)
 
     const oldPage = cloneDeep(page)
@@ -126,6 +122,20 @@ class Pages {
         this._unwatch(page.component)
       }
     }
+  }
+
+  _normalizeOptions (input = {}) {
+    const { error, value: options } = Joi.validate(input, schema)
+
+    if (error) {
+      throw new Error(error.message)
+    }
+
+    options.component = isRelative(input.component)
+      ? path.resolve(this._context, input.component)
+      : input.component
+
+    return options
   }
 
   _parse (component, useCache = true) {
@@ -157,7 +167,7 @@ class Pages {
   }
 }
 
-function createPage ({ component, options, context }) {
+function createPage ({ options, context }) {
   const segments = options.path.split('/').filter(segment => !!segment)
   const path = `/${segments.join('/')}`
 
@@ -167,10 +177,10 @@ function createPage ({ component, options, context }) {
   return {
     name,
     path,
-    component,
+    component: options.component,
     context: options.context || null,
     queryContext: options.queryContext || options.context || null,
-    chunkName: options.chunkName || genChunkName(component, context),
+    chunkName: options.chunkName || genChunkName(options.component, context),
     internal: {
       route: options.route || null,
       isIndex: !nonIndex.includes(path),

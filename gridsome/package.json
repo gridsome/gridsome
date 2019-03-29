@@ -65,6 +65,7 @@
     "is-relative": "^1.0.0",
     "is-url": "^1.2.4",
     "jest-worker": "24.0.0",
+    "joi": "^14.3.1",
     "json-loader": "^0.5.7",
     "loader-utils": "^1.2.3",
     "lodash": "^4.17.11",
