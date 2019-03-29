@@ -1,4 +1,5 @@
 const path = require('path')
+const fs = require('fs-extra')
 const isUrl = require('is-url')
 const Codegen = require('./codegen')
 const autoBind = require('auto-bind')
@@ -20,11 +21,7 @@ class App {
   constructor (context, options) {
     process.GRIDSOME = this
 
-    this.events = {
-      chainWebpack: [],
-      configureWebpack: []
-    }
-
+    this.events = {}
     this.clients = {}
     this.plugins = []
     this.context = context
@@ -176,20 +173,27 @@ class App {
     const createConfig = isClient ? createClientConfig : createServerConfig
     const isProd = process.env.NODE_ENV === 'production'
     const args = { context: this.context, isServer, isClient, isProd }
-    const config = await createConfig(this, args)
+    const chain = await createConfig(this, args)
 
-    await this.dispatch('chainWebpack', null, config, args)
+    await this.dispatch('chainWebpack', null, chain, args)
 
-    if (fn) fn(config)
+    if (fn) fn(chain)
 
-    return this.events.configureWebpack.reduce(async (acc, { handler }) => {
+    const configureWebpack = (this.events.configureWebpack || []).slice()
+    const configFilePath = this.resolve('webpack.config.js')
+
+    if (fs.existsSync(configFilePath)) {
+      configureWebpack.push(require(configFilePath))
+    }
+
+    return configureWebpack.reduce(async (acc, { handler }) => {
       const config = await Promise.resolve(acc)
       const result = typeof handler === 'function'
         ? await handler(config, args)
         : handler
 
       return result ? merge(config, result) : config
-    }, Promise.resolve(config.toConfig()))
+    }, Promise.resolve(chain.toConfig()))
   }
 
   resolveFilePath (fromPath, toPath, isAbsolute) {
