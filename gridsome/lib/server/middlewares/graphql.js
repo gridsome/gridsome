@@ -11,7 +11,7 @@ module.exports = ({ store, pages }) => {
       return res.sendStatus(200)
     }
 
-    if (body.path) {
+    if (body.query) {
       return next()
     }
 

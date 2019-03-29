@@ -32,7 +32,12 @@ export default (route, shouldPrefetch = false) => {
         .then(res => res.json())
         .then(res => {
           if (res.errors) reject(res.errors[0])
-          else resolve({ data: res.data, context: res.extensions.context })
+          else resolve({
+            data: res.data,
+            context: res.extensions
+              ? res.extensions.context
+              : {}
+          })
         })
         .catch(err => {
           reject(err)
