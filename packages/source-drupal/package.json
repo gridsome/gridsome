@@ -1,5 +1,5 @@
 {
-  "version": "0.1.0",
+  "version": "0.1.1",
   "name": "@gridsome/source-drupal",
   "description": "Drupal source for Gridsome",
   "homepage": "https://github.com/gridsome/gridsome/tree/master/packages/source-drupal#readme",

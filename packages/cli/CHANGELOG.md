@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.0.9](https://github.com/gridsome/gridsome/tree/master/packages/cli/compare/@gridsome/cli@0.0.8...@gridsome/cli@0.0.9) (2019-03-29)
+
+
+### Bug Fixes
+
+* **cli:** show warning for missing deps ([#281](https://github.com/gridsome/gridsome/tree/master/packages/cli/issues/281)) ([89d6aa3](https://github.com/gridsome/gridsome/tree/master/packages/cli/commit/89d6aa3))
+
+
+
+
+
 <a name="0.0.8"></a>
 ## [0.0.8](https://github.com/gridsome/gridsome/tree/master/packages/cli/compare/@gridsome/cli@0.0.7...@gridsome/cli@0.0.8) (2019-02-19)
 
