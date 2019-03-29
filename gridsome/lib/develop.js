@@ -4,7 +4,6 @@ const express = require('express')
 const createApp = require('./app')
 const createExpressServer = require('./server/createExpressServer')
 const createSockJsServer = require('./server/createSockJsServer')
-const createClientConfig = require('./webpack/createClientConfig')
 
 module.exports = async (context, args) => {
   process.env.NODE_ENV = 'development'
@@ -22,7 +21,7 @@ module.exports = async (context, args) => {
   server.app.use(config.pathPrefix, express.static(config.staticDir))
   server.app.use(require('connect-history-api-fallback')())
 
-  const webpackConfig = await createWebpackConfig()
+  const webpackConfig = await app.resolveWebpackConfig({ isClient: true }, chainWebpack)
   const compiler = require('webpack')(webpackConfig)
   server.app.use(require('webpack-hot-middleware')(compiler, {
     quiet: true,
@@ -59,15 +58,14 @@ module.exports = async (context, args) => {
   // helpers
   //
 
-  async function createWebpackConfig () {
-    const clientConfig = await createClientConfig(app)
+  async function chainWebpack (config) {
     const { SOCKJS_ENDPOINT, GRAPHQL_ENDPOINT, GRAPHQL_WS_ENDPOINT } = process.env
 
-    clientConfig
+    config
       .plugin('friendly-errors')
       .use(require('friendly-errors-webpack-plugin'))
 
-    clientConfig
+    config
       .plugin('injections')
       .tap(args => {
         const definitions = args[0]
@@ -80,12 +78,10 @@ module.exports = async (context, args) => {
         return args
       })
 
-    clientConfig.entryPoints.store.forEach((entry, name) => {
-      clientConfig.entry(name)
+    config.entryPoints.store.forEach((entry, name) => {
+      config.entry(name)
         .prepend(`webpack-hot-middleware/client?name=${name}&reload=true`)
         .prepend('webpack/hot/dev-server')
     })
-
-    return clientConfig.toConfig()
   }
 }

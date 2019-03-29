@@ -1,32 +1,22 @@
-const createClientConfig = require('./createClientConfig')
-const createServerConfig = require('./createServerConfig')
-
 module.exports = async (app, defines = {}) => {
-  const clientConfig = await createClientConfig(app)
-  const serverConfig = await createServerConfig(app)
-
-  clientConfig
-    .plugin('gridsome-endpoints')
-    .use(require('webpack/lib/DefinePlugin'), [defines])
-
-  await app.dispatch('beforeCompileAssets', {
-    context: app.context,
-    config: app.config,
-    clientConfig,
-    serverConfig
-  })
-
-  return compile([
-    clientConfig.toConfig(),
-    serverConfig.toConfig()
-  ])
-}
-
-function compile (config) {
   const webpack = require('webpack')
 
+  const serverConfig = await app.resolveWebpackConfig({ isServer: true })
+  const clientConfig = await app.resolveWebpackConfig({ isClient: true }, config => {
+    config
+      .plugin('injections')
+      .tap(args => {
+        const definitions = args[0]
+        args[0] = {
+          ...definitions,
+          ...defines
+        }
+        return args
+      })
+  })
+
   return new Promise((resolve, reject) => {
-    webpack(config).run((err, stats) => {
+    webpack([clientConfig, serverConfig]).run((err, stats) => {
       if (err) return reject(err)
 
       if (stats.hasErrors()) {

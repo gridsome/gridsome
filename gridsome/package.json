@@ -96,6 +96,7 @@
     "webpack-chain": "^5.2.0",
     "webpack-dev-middleware": "^3.5.2",
     "webpack-hot-middleware": "^2.24.3",
+    "webpack-merge": "^4.2.1",
     "yaml-loader": "^0.5.0"
   },
   "engines": {

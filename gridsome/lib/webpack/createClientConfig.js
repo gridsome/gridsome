@@ -39,11 +39,5 @@ module.exports = async app => {
       }])
   }
 
-  await app.dispatch('chainWebpack', null, config, {
-    context: app.context,
-    isServer: false,
-    isProd
-  })
-
   return config
 }

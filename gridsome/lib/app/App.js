@@ -2,6 +2,7 @@ const path = require('path')
 const isUrl = require('is-url')
 const Codegen = require('./codegen')
 const autoBind = require('auto-bind')
+const merge = require('webpack-merge')
 const hirestime = require('hirestime')
 const BaseStore = require('./BaseStore')
 const PluginAPI = require('./PluginAPI')
@@ -19,7 +20,11 @@ class App {
   constructor (context, options) {
     process.GRIDSOME = this
 
-    this.events = []
+    this.events = {
+      chainWebpack: [],
+      configureWebpack: []
+    }
+
     this.clients = {}
     this.plugins = []
     this.context = context
@@ -94,6 +99,11 @@ class App {
       this.on('chainWebpack', { handler: this.config.chainWebpack })
     }
 
+    // run config.configureWebpack after all plugins
+    if (this.config.configureWebpack) {
+      this.on('configureWebpack', { handler: this.config.configureWebpack })
+    }
+
     // run config.configureServer after all plugins
     if (typeof this.config.configureServer === 'function') {
       this.on('configureServer', { handler: this.config.configureServer })
@@ -158,6 +168,28 @@ class App {
 
   resolve (p) {
     return path.resolve(this.context, p)
+  }
+
+  async resolveWebpackConfig ({ isServer = false, isClient = false }, fn = null) {
+    const createClientConfig = require('../webpack//createClientConfig')
+    const createServerConfig = require('../webpack//createServerConfig')
+    const createConfig = isClient ? createClientConfig : createServerConfig
+    const isProd = process.env.NODE_ENV === 'production'
+    const args = { context: this.context, isServer, isClient, isProd }
+    const config = await createConfig(this, args)
+
+    await this.dispatch('chainWebpack', null, config, args)
+
+    if (fn) fn(config)
+
+    return this.events.configureWebpack.reduce(async (acc, { handler }) => {
+      const config = await Promise.resolve(acc)
+      const result = typeof handler === 'function'
+        ? await handler(config, args)
+        : handler
+
+      return result ? merge(config, result) : config
+    }, Promise.resolve(config.toConfig()))
   }
 
   resolveFilePath (fromPath, toPath, isAbsolute) {

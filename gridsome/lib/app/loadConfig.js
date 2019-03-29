@@ -75,8 +75,6 @@ module.exports = (context, options = {}, pkg = {}) => {
   config.host = args.host || localConfig.host || 'localhost'
   config.port = parseInt(args.port || localConfig.port, 10) || 8080
   config.plugins = normalizePlugins(context, plugins)
-  config.chainWebpack = localConfig.chainWebpack
-  config.configureServer = localConfig.configureServer
   config.transformers = resolveTransformers(config.pkg, localConfig)
   config.pathPrefix = isProd ? localConfig.pathPrefix || '/' : '/'
   config.staticDir = resolve('static')
@@ -91,6 +89,10 @@ module.exports = (context, options = {}, pkg = {}) => {
   config.imageCacheDir = resolve('.cache', assetsDir, 'static')
   config.maxImageWidth = localConfig.maxImageWidth || 2560
   config.imageExtensions = SUPPORTED_IMAGE_TYPES
+
+  config.chainWebpack = localConfig.chainWebpack
+  config.configureWebpack = localConfig.configureWebpack
+  config.configureServer = localConfig.configureServer
 
   config.images = { ...localConfig.images }
 
