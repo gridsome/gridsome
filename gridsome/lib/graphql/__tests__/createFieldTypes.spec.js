@@ -129,6 +129,33 @@ test('create graphql types from node fields', () => {
   expect(types.emptyObj).toBeUndefined()
 })
 
+test.each([
+  ['number first', [{ number: 1 }, { number: 1.2 }, { number: 2 }]],
+  ['float first', [{ number: 1.2 }, { number: 1 }, { number: 2 }]],
+  ['missing number 1', [{ number: 1 }, {}, { number: 1.2 }]],
+  ['missing number 2', [{ number: 1.2 }, {}, { number: 1 }]],
+  ['mixed type', [{ number: 1.2 }, { number: true }, { number: 'string' }]]
+])('prefer float when mixed number types - %s', (_, nodeFields) => {
+  const nodes = nodeFields.map(fields => ({ fields }))
+  const fields = createFieldDefinitions(nodes)
+  const types = createFieldTypes(fields, 'Test')
+
+  expect(types.number.type).toEqual(GraphQLFloat)
+})
+
+test.each([
+  ['number first', [{ numbers: [1, 1.5, 2] }]],
+  ['float first', [{ numbers: [1.5, 1] }]],
+  ['empty list', [{ numbers: [] }, { numbers: [1] }, { numbers: [1.2] }]],
+  ['missing list', [{ numbers: [1.2] }, {}, { numbers: [1] }]]
+])('prefer float when mixed number types in lists - %s', (_, nodeFields) => {
+  const nodes = nodeFields.map(fields => ({ fields }))
+  const fields = createFieldDefinitions(nodes)
+  const types = createFieldTypes(fields, 'Test')
+
+  expect(types.numbers.type.ofType).toEqual(GraphQLFloat)
+})
+
 test('infer date fields', () => {
   const fields = createFieldDefinitions([
     {
