@@ -11,7 +11,6 @@ const PluginAPI = require('./PluginAPI')
 const ComponentParser = require('./ComponentParser')
 const { execute, graphql } = require('graphql')
 const AssetsQueue = require('./queue/AssetsQueue')
-const createSchema = require('../graphql/createSchema')
 const loadConfig = require('./loadConfig')
 const { defaultsDeep } = require('lodash')
 const { version } = require('../../package.json')
@@ -143,14 +142,24 @@ class App {
 
   async createSchema () {
     const graphql = require('../graphql/graphql')
+    const { mergeSchemas } = require('graphql-tools')
+    const createSchema = require('../graphql/createSchema')
 
-    this.schema = createSchema(this.store, {
-      schemas: await this.dispatch('createSchema', () => graphql)
-    })
+    const schema = createSchema(this.store)
+    const schemas = [schema]
+
+    const api = { ...graphql, addSchema: schema => schemas.push(schema) }
+    const results = await this.dispatch('createSchema', () => api)
+
+    // add custom schemas returned from the hook handlers
+    results.forEach(schema => schema && schemas.push(schema))
+
+    this.schema = mergeSchemas({ schemas })
   }
 
   async createPages () {
-    await this.dispatch('createPages', api => api.pages)
+    const { createPagesAPI } = require('../pages/utils')
+    await this.dispatch('createPages', api => createPagesAPI(api))
 
     // ensure a /404 page exists
     if (!this.pages.findPage({ path: '/404' })) {
@@ -204,14 +213,14 @@ class App {
   }
 
   dispatch (eventName, cb, ...args) {
-    if (!this.events[eventName]) return
+    if (!this.events[eventName]) return []
     return Promise.all(this.events[eventName].map(({ api, handler }) => {
       return typeof cb === 'function' ? handler(cb(api)) : handler(...args, api)
     }))
   }
 
   dispatchSync (eventName, cb, ...args) {
-    if (!this.events[eventName]) return
+    if (!this.events[eventName]) return []
     return this.events[eventName].map(({ api, handler }) => {
       return typeof cb === 'function' ? handler(cb(api)) : handler(...args, api)
     })

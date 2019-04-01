@@ -21,7 +21,9 @@ class VueTemplates {
     }
   }
 
-  async createTemplates () {
+  async createTemplates (pages) {
+    this.pages = pages
+
     const files = await glob('**/*.vue', { cwd: this.templatesDir })
 
     for (const file of files) {

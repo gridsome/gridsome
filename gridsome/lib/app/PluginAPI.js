@@ -1,6 +1,5 @@
 const autoBind = require('auto-bind')
 const PluginStore = require('./PluginStore')
-const { createPagesAPI } = require('../pages/utils')
 
 class PluginAPI {
   constructor (app, { entry, transformers }) {
@@ -11,7 +10,6 @@ class PluginAPI {
     this.context = app.context
 
     this.store = new PluginStore(app, entry.options, { transformers })
-    this.pages = createPagesAPI(this)
 
     autoBind(this)
   }

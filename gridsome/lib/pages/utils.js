@@ -8,8 +8,10 @@ exports.createQueryVariables = function (page, currentPage = undefined) {
 
 exports.createPagesAPI = function (api) {
   return {
-    store: api.store,
     graphql: api._app.graphql,
+    getContentType (typeName) {
+      return api.store.getContentType(typeName)
+    },
     createPage (options) {
       return api._app.pages.createPage(options)
     },
