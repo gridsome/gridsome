@@ -52,6 +52,7 @@ test('build basic project', () => {
   expect($home('span.from-env-production').text()).toEqual('PROD_2')
   expect($home('span.from-plugin').text()).toEqual('test 2')
   expect($home('span.from-chain-webpack').text()).toEqual('test 3')
+  expect($home('span.from-metadata').text()).toEqual('test')
   expect($home('.footer span.meta-data-1').text()).toEqual('Test Value')
   expect($home('.footer span.meta-data-2').text()).toEqual('bar')
 })

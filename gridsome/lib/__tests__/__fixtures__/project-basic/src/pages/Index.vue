@@ -22,6 +22,7 @@
     <span class="from-env-production">{{ TEST_1 }}</span>
     <span class="from-plugin">{{ TEST_2 }}</span>
     <span class="from-chain-webpack">{{ TEST_3 }}</span>
+    <span class="from-metadata">{{ $page.metaData.someMeta }}</span>
 
     <ul>
       <li v-for="edge in $page.allTestDoc.edges" :key="edge.node.id">
@@ -40,6 +41,7 @@
 query Home {
   customRootValue
   metaData {
+    someMeta
     myTest {
       value
     }
