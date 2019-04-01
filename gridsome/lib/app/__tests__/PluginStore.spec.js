@@ -2,22 +2,6 @@ const App = require('../App')
 const PluginAPI = require('../PluginAPI')
 const JSONTransformer = require('./__fixtures__/JSONTransformer')
 
-function createPlugin (context = '/') {
-  const app = new App(context, { config: { plugins: [] }}).init()
-  const api = new PluginAPI(app, {
-    entry: { options: {}, clientOptions: undefined },
-    transformers: {
-      'application/json': {
-        TransformerClass: JSONTransformer,
-        options: {},
-        name: 'json'
-      }
-    }
-  })
-
-  return api
-}
-
 test('add type', () => {
   const api = createPlugin()
 
@@ -790,3 +774,19 @@ test('remove page', () => {
 
   emit.mockRestore()
 })
+
+function createPlugin (context = '/') {
+  const app = new App(context, { config: { plugins: [] }}).init()
+  const api = new PluginAPI(app, {
+    entry: { options: {}, clientOptions: undefined },
+    transformers: {
+      'application/json': {
+        TransformerClass: JSONTransformer,
+        options: {},
+        name: 'json'
+      }
+    }
+  })
+
+  return api
+}

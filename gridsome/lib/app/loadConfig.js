@@ -65,10 +65,6 @@ module.exports = (context, options = {}, pkg = {}) => {
   // add project root as plugin
   plugins.push(context)
 
-  if (localConfig.pathPrefix && /\/+$/.test(localConfig.pathPrefix)) {
-    throw new Error(`pathPrefix must not have a trailing slash`)
-  }
-
   const assetsDir = localConfig.assetsDir || 'assets'
 
   config.pkg = options.pkg || resolvePkg(context)
@@ -76,7 +72,7 @@ module.exports = (context, options = {}, pkg = {}) => {
   config.port = parseInt(args.port || localConfig.port, 10) || 8080
   config.plugins = normalizePlugins(context, plugins)
   config.transformers = resolveTransformers(config.pkg, localConfig)
-  config.pathPrefix = isProd ? localConfig.pathPrefix || '/' : '/'
+  config.pathPrefix = normalizePathPrefix(isProd ? localConfig.pathPrefix : '/')
   config.staticDir = resolve('static')
   config.outDir = resolve(localConfig.outDir || 'dist')
   config.assetsDir = path.join(config.outDir, assetsDir)
@@ -157,10 +153,17 @@ function resolvePkg (context) {
   } catch (err) {}
 
   if (!Object.keys(pkg.dependencies).includes('gridsome')) {
-    throw new Error('This is not a Gridsome project.')
+    if (!process.env.GRIDSOME_TEST) {
+      throw new Error('This is not a Gridsome project.')
+    }
   }
 
   return pkg
+}
+
+function normalizePathPrefix (pathPrefix = '/') {
+  const segments = pathPrefix.split('/').filter(s => !!s)
+  return segments.length ? `/${segments.join('/')}/` : '/'
 }
 
 function normalizePlugins (context, plugins) {

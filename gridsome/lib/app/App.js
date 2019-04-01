@@ -167,18 +167,23 @@ class App {
     return path.resolve(this.context, p)
   }
 
-  async resolveWebpackConfig ({ isServer = false, isClient = false }, fn = null) {
-    const createClientConfig = require('../webpack//createClientConfig')
-    const createServerConfig = require('../webpack//createServerConfig')
-    const createConfig = isClient ? createClientConfig : createServerConfig
+  async resolveChainableWebpackConfig (isServer = false) {
+    const createClientConfig = require('../webpack/createClientConfig')
+    const createServerConfig = require('../webpack/createServerConfig')
+    const createChainableConfig = isServer ? createServerConfig : createClientConfig
     const isProd = process.env.NODE_ENV === 'production'
-    const args = { context: this.context, isServer, isClient, isProd }
-    const chain = await createConfig(this, args)
+    const args = { context: this.context, isServer, isClient: !isServer, isProd, isDev: !isProd }
+    const chain = await createChainableConfig(this, args)
 
     await this.dispatch('chainWebpack', null, chain, args)
 
-    if (fn) fn(chain)
+    return chain
+  }
 
+  async resolveWebpackConfig (isServer = false, chain = null) {
+    const isProd = process.env.NODE_ENV === 'production'
+    const args = { context: this.context, isServer, isClient: !isServer, isProd, isDev: !isProd }
+    const resolvedChain = chain || await this.resolveChainableWebpackConfig(isServer)
     const configureWebpack = (this.events.configureWebpack || []).slice()
     const configFilePath = this.resolve('webpack.config.js')
 
@@ -186,14 +191,28 @@ class App {
       configureWebpack.push(require(configFilePath))
     }
 
-    return configureWebpack.reduce(async (acc, { handler }) => {
+    const config = await configureWebpack.reduce(async (acc, { handler }) => {
       const config = await Promise.resolve(acc)
-      const result = typeof handler === 'function'
-        ? await handler(config, args)
-        : handler
 
-      return result ? merge(config, result) : config
-    }, Promise.resolve(chain.toConfig()))
+      if (typeof handler === 'function') {
+        return handler(config, args) || config
+      }
+
+      if (typeof handler === 'object') {
+        return merge(config, handler)
+      }
+
+      return config
+    }, Promise.resolve(resolvedChain.toConfig()))
+
+    if (config.output.publicPath !== this.config.pathPrefix) {
+      throw new Error(
+        `Do not modify webpack output.publicPath directly. ` +
+        `Use the "pathPrefix" option in gridsome.config.js instead.`
+      )
+    }
+
+    return config
   }
 
   resolveFilePath (fromPath, toPath, isAbsolute) {

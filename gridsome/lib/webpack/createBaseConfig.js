@@ -2,7 +2,6 @@ const path = require('path')
 const hash = require('hash-sum')
 const { pick } = require('lodash')
 const Config = require('webpack-chain')
-const { forwardSlash } = require('../utils')
 const { VueLoaderPlugin } = require('vue-loader')
 const createHTMLRenderer = require('../server/createHTMLRenderer')
 const CSSExtractPlugin = require('mini-css-extract-plugin')
@@ -13,7 +12,7 @@ module.exports = (app, { isProd, isServer }) => {
   const { config: projectConfig } = app
   const { cacheDirectory, cacheIdentifier } = createCacheOptions()
   const assetsDir = path.relative(projectConfig.outDir, projectConfig.assetsDir)
-  const pathPrefix = forwardSlash(path.join(projectConfig.pathPrefix, '/'))
+  const { pathPrefix } = projectConfig
   const config = new Config()
 
   const useHash = isProd && !process.env.GRIDSOME_TEST

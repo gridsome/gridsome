@@ -21,7 +21,7 @@ module.exports = async (context, args) => {
   server.app.use(config.pathPrefix, express.static(config.staticDir))
   server.app.use(require('connect-history-api-fallback')())
 
-  const webpackConfig = await app.resolveWebpackConfig({ isClient: true }, chainWebpack)
+  const webpackConfig = await createWebpackConfig(app)
   const compiler = require('webpack')(webpackConfig)
   server.app.use(require('webpack-hot-middleware')(compiler, {
     quiet: true,
@@ -58,8 +58,10 @@ module.exports = async (context, args) => {
   // helpers
   //
 
-  async function chainWebpack (config) {
+  async function createWebpackConfig (app) {
     const { SOCKJS_ENDPOINT, GRAPHQL_ENDPOINT, GRAPHQL_WS_ENDPOINT } = process.env
+
+    const config = await app.resolveChainableWebpackConfig()
 
     config
       .plugin('friendly-errors')
@@ -83,5 +85,7 @@ module.exports = async (context, args) => {
         .prepend(`webpack-hot-middleware/client?name=${name}&reload=true`)
         .prepend('webpack/hot/dev-server')
     })
+
+    return app.resolveWebpackConfig(false, config)
   }
 }
