@@ -1,7 +1,7 @@
-const App = require('../../app/App')
+const App = require('../../../app/App')
 const { graphql } = require('graphql')
-const PluginAPI = require('../../app/PluginAPI')
-const createSchema = require('../createSchema')
+const PluginAPI = require('../../../app/PluginAPI')
+const createSchema = require('../../createSchema')
 
 let app, api
 
@@ -37,20 +37,26 @@ test('create node reference', async () => {
   authors.addNode({
     id: '3',
     title: 'Author 3',
-    related: { typeName: 'Author', id: '2' }
+    fields: {
+      related: { typeName: 'Author', id: '2' }
+    }
   })
 
   books.addNode({
     id: '1',
     title: 'Post A',
-    author: { typeName: 'Author', id: '2' },
-    user: { typeName: 'Author', id: '2' }
+    fields: {
+      author: { typeName: 'Author', id: '2' },
+      user: { typeName: 'Author', id: '2' }
+    }
   })
 
   books.addNode({
     id: '2',
     title: 'Post B',
-    authorRef: '2'
+    fields: {
+      authorRef: '2'
+    }
   })
 
   const query = `query {
@@ -93,11 +99,11 @@ test('handle pagination for filtered belongsTo', async () => {
   authors.addNode({ id: '1', title: 'Author 1' })
 
   for (let i = 1; i <= 10; i++) {
-    books.addNode({ id: String(i), author: { typeName: 'Author', id: '1' }})
+    books.addNode({ id: String(i), fields: { author: { typeName: 'Author', id: '1' }}})
   }
 
   for (let i = 1; i <= 10; i++) {
-    stores.addNode({ id: String(i), author: { typeName: 'Author', id: '1' }})
+    stores.addNode({ id: String(i), fields: { author: { typeName: 'Author', id: '1' }}})
   }
 
   const query = `query {

@@ -4,9 +4,7 @@ class JSONTransformer {
   }
 
   parse (content) {
-    return {
-      fields: JSON.parse(content)
-    }
+    return JSON.parse(content)
   }
 }
 

@@ -24,7 +24,7 @@ module.exports = {
   internalRE: /^internal\:\/\//,
   transformerRE: /(?:^@?gridsome[/-]|\/)transformer-([\w-]+)/,
 
-  NODE_FIELDS: ['id', 'typeName', 'title', 'path', 'date'],
+  NODE_FIELDS: ['uid', 'id', 'typeName', 'title', 'path', 'date', 'internal'],
   PAGE_FIELDS: ['id', 'typeName', 'path', 'slug'],
 
   ISO_8601_FORMAT: [

@@ -6,8 +6,9 @@ const camelCase = require('camelcase')
 const { warn } = require('../utils/log')
 const { isRefField } = require('../graphql/utils')
 const { ISO_8601_FORMAT } = require('../utils/constants')
-const { cloneDeep, isPlainObject, isDate, get } = require('lodash')
+const { cloneDeep, isPlainObject, isDate, get, omit } = require('lodash')
 const { isResolvablePath, slugify, safeKey } = require('../utils')
+const { NODE_FIELDS } = require('../utils/constants')
 
 const nonValidCharsRE = new RegExp('[^a-zA-Z0-9_]', 'g')
 const leadingNumberRE = new RegExp('^([0-9])')
@@ -49,26 +50,42 @@ class ContentTypeCollection extends EventEmitter {
     const { typeName } = this.options
     const internal = this.pluginStore._createInternals(options.internal)
 
-    // TODO: remove before 1.0
-    this._transformDeprecatedOptions(options)
-
     // prioritize node.id over node.fields.id
     if (options.id && options.fields && options.fields.id) {
       delete options.fields.id
     }
 
-    // transform content with transformer for given mime type
-    if (internal.content && internal.mimeType) {
-      this._transformNodeOptions(options, internal)
+    const _fields = omit(options, [NODE_FIELDS])
+
+    // TODO: remove check before 1.0
+    if (_fields.fields) {
+      Object.assign(_fields, _fields.fields)
+      delete _fields.fields
     }
 
-    const { fields, belongsTo } = this._processNodeFields(options.fields, internal.origin)
+    // TODO: remove check before 1.0
+    if (options.fields) {
+      Object.assign(_fields, options.fields)
+      delete options.fields
+    }
+
+    // transform content with transformer for given mime type
+    if (internal.content && internal.mimeType) {
+      this._transformNodeOptions(options, _fields, internal)
+    }
+
+    const { fields, belongsTo } = this._processNodeFields(_fields, internal.origin)
 
     const id = fields.id || options.id || options._id || hash(options)
     const node = { id, typeName, internal }
 
     // TODO: remove before 1.0
     node._id = id
+
+    // TODO: remove before 1.0
+    // the remark transformer uses node.content
+    node.content = fields.content
+    node.excerpt = fields.excerpt
 
     node.uid = options.uid || this.makeUid(typeName + node.id)
     node.title = options.title || fields.title || node.id
@@ -131,8 +148,19 @@ class ContentTypeCollection extends EventEmitter {
       options = _options
     }
 
-    // TODO: remove before 1.0
-    this._transformDeprecatedOptions(options)
+    const _fields = omit(options, [NODE_FIELDS])
+
+    // TODO: remove check before 1.0
+    if (_fields.fields) {
+      Object.assign(_fields, _fields.fields)
+      delete _fields.fields
+    }
+
+    // TODO: remove check before 1.0
+    if (options.fields) {
+      Object.assign(_fields, options.fields)
+      delete options.fields
+    }
 
     const internal = this.pluginStore._createInternals(options.internal)
 
@@ -143,10 +171,10 @@ class ContentTypeCollection extends EventEmitter {
 
     // transform content with transformer for given mime type
     if (internal.content && internal.mimeType) {
-      this._transformNodeOptions(options, internal)
+      this._transformNodeOptions(options, _fields, internal)
     }
 
-    const { fields, belongsTo } = this._processNodeFields(options.fields, internal.origin)
+    const { fields, belongsTo } = this._processNodeFields(_fields, internal.origin)
     const id = fields.id || options.id || options._id
     const query = options.uid ? { uid: options.uid } : { id }
 
@@ -164,9 +192,12 @@ class ContentTypeCollection extends EventEmitter {
     node.title = options.title || fields.title || node.title
     node.date = options.date || fields.date || node.date
     node.slug = options.slug || fields.slug || this.slugify(node.title)
-    node.content = options.content || fields.content || node.content
-    node.excerpt = options.excerpt || fields.excerpt || node.excerpt
     node.internal = Object.assign({}, node.internal, internal)
+
+    // TODO: remove before 1.0
+    // the remark transformer uses node.content
+    node.content = fields.content || node.content
+    node.excerpt = fields.excerpt || node.excerpt
 
     node.fields = fields
     node.path = typeof options.path === 'string'
@@ -183,18 +214,7 @@ class ContentTypeCollection extends EventEmitter {
     return node
   }
 
-  _transformDeprecatedOptions (options) {
-    options.fields = options.fields || {}
-
-    ;['slug', 'content', 'excerpt'].forEach(name => {
-      if (options[name]) {
-        options.fields[name] = options[name]
-        delete options[name]
-      }
-    })
-  }
-
-  _transformNodeOptions (options, internal) {
+  _transformNodeOptions (options, fields, internal) {
     const { mimeType, content } = internal
     const transformer = this.pluginStore._transformers[mimeType]
 
@@ -204,17 +224,23 @@ class ContentTypeCollection extends EventEmitter {
 
     const result = transformer.parse(content)
 
+    const _fields = omit(result, [NODE_FIELDS])
+
+    // TODO: remove check before 1.0
+    if (_fields.fields) {
+      Object.assign(_fields, _fields.fields)
+      delete _fields.fields
+    }
+
     if (result.id) options.id = result.id
     if (result.title) options.title = result.title
-    if (result.slug) options.slug = result.slug
     if (result.path) options.path = result.path
     if (result.date) options.date = result.date
-    if (result.content) options.content = result.content
-    if (result.excerpt) options.excerpt = result.excerpt
+    if (result.slug) _fields.slug = result.slug
+    if (result.content) _fields.content = result.content
+    if (result.excerpt) _fields.excerpt = result.excerpt
 
-    if (result.fields) {
-      options.fields = Object.assign(options.fields || {}, result.fields)
-    }
+    Object.assign(fields, _fields)
   }
 
   _processNodeFields (input = {}, origin = '') {
