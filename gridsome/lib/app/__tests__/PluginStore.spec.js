@@ -66,9 +66,7 @@ test('add node', () => {
   expect(typeof node.uid).toEqual('string')
   expect(node.typeName).toEqual('TestPost')
   expect(node.title).toEqual('Lorem ipsum dolor sit amet')
-  expect(node.slug).toEqual('lorem-ipsum-dolor-sit-amet')
   expect(node.date).toEqual('2018-09-04T23:20:33.918Z')
-  expect(node.fields).toMatchObject({})
   expect(emit).toHaveBeenCalledTimes(1)
   expect(entry.id).toEqual('test')
   expect(entry.uid).toEqual(node.uid)
@@ -89,6 +87,7 @@ test('update node', () => {
 
   const oldNode = contentType.addNode({
     id: 'test',
+    slug: 'test',
     date: '2018-09-04T23:20:33.918Z',
     content: 'Lorem ipsum dolor sit amet',
     excerpt: 'Lorem ipsum...',
@@ -103,6 +102,7 @@ test('update node', () => {
   const node = contentType.updateNode({
     id: 'test',
     title: 'New title',
+    slug: 'new-title',
     content: 'Praesent commodo cursus magna',
     excerpt: 'Praesent commodo...',
     fields: {
@@ -118,8 +118,8 @@ test('update node', () => {
   expect(node.slug).toEqual('new-title')
   expect(node.path).toEqual('/test/foo/new-title')
   expect(node.date).toEqual('2018-09-04T23:20:33.918Z')
-  expect(node.content).toEqual('Praesent commodo cursus magna')
-  expect(node.excerpt).toEqual('Praesent commodo...')
+  expect(node.fields.content).toEqual('Praesent commodo cursus magna')
+  expect(node.fields.excerpt).toEqual('Praesent commodo...')
   expect(node.fields.foo).toEqual('foo')
   expect(node.internal.timestamp).not.toEqual(oldTimestamp)
   expect(emit).toHaveBeenCalledTimes(2)
@@ -268,7 +268,7 @@ test('add nodes with custom paths', () => {
 test('add type with dynamic route', () => {
   const contentType = createPlugin().store.addContentType({
     typeName: 'TestPost',
-    route: '/:year/:month/:day/:slug'
+    route: '/:year/:month/:day/:title'
   })
 
   const node = contentType.addNode({
@@ -276,7 +276,7 @@ test('add type with dynamic route', () => {
     date: '2018-09-04T23:20:33.918Z'
   })
 
-  expect(contentType.options.route).toEqual('/:year/:month/:day/:slug')
+  expect(contentType.options.route).toEqual('/:year/:month/:day/:title')
   expect(node.path).toEqual('/2018/09/04/lorem-ipsum-dolor-sit-amet')
 })
 

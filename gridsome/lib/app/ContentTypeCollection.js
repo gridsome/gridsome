@@ -25,7 +25,7 @@ class ContentTypeCollection extends EventEmitter {
     this.resolveAbsolutePaths = options.resolveAbsolutePaths || false
 
     this.collection = store.data.addCollection(options.typeName, {
-      indices: ['id', 'path', 'date'],
+      indices: ['id', 'path'],
       unique: ['id', 'path'],
       autoupdate: true
     })
@@ -49,6 +49,9 @@ class ContentTypeCollection extends EventEmitter {
     const { typeName } = this.options
     const internal = this.pluginStore._createInternals(options.internal)
 
+    // TODO: remove before 1.0
+    this._transformDeprecatedOptions(options)
+
     // prioritize node.id over node.fields.id
     if (options.id && options.fields && options.fields.id) {
       delete options.fields.id
@@ -70,9 +73,6 @@ class ContentTypeCollection extends EventEmitter {
     node.uid = options.uid || this.makeUid(typeName + node.id)
     node.title = options.title || fields.title || node.id
     node.date = options.date || fields.date || new Date().toISOString()
-    node.slug = options.slug || fields.slug || this.slugify(node.title)
-    node.content = options.content || fields.content || ''
-    node.excerpt = options.excerpt || fields.excerpt || ''
     node.withPath = typeof options.path === 'string'
 
     node.fields = fields
@@ -131,6 +131,9 @@ class ContentTypeCollection extends EventEmitter {
       options = _options
     }
 
+    // TODO: remove before 1.0
+    this._transformDeprecatedOptions(options)
+
     const internal = this.pluginStore._createInternals(options.internal)
 
     // prioritize node.id over node.fields.id
@@ -178,6 +181,17 @@ class ContentTypeCollection extends EventEmitter {
     this.emit('change', node, oldNode)
 
     return node
+  }
+
+  _transformDeprecatedOptions (options) {
+    options.fields = options.fields || {}
+
+    ;['slug', 'content', 'excerpt'].forEach(name => {
+      if (options[name]) {
+        options.fields[name] = options[name]
+        delete options[name]
+      }
+    })
   }
 
   _transformNodeOptions (options, internal) {
@@ -297,7 +311,15 @@ class ContentTypeCollection extends EventEmitter {
     // Param values are slugified but the original
     // value will be available with '_raw' suffix.
     for (let i = 0; i < length; i++) {
-      const { name, path, fieldName, repeat, suffix } = routeKeys[i]
+      const { name, fieldName, repeat, suffix } = routeKeys[i]
+      let { path } = routeKeys[i]
+
+      // TODO: remove before 1.0
+      // let slug fallback to title
+      if (name === 'slug' && !node.fields.slug) {
+        path = ['title']
+      }
+
       const field = get(node, path, fieldName)
 
       if (fieldName === 'year') params.year = date.format('YYYY')

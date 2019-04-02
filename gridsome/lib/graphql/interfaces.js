@@ -12,11 +12,8 @@ const nodeInterface = new GraphQLInterfaceType({
   fields: () => ({
     id: { type: new GraphQLNonNull(GraphQLID) },
     title: { type: GraphQLString },
-    slug: { type: GraphQLString },
     path: { type: GraphQLString },
-    date: { type: GraphQLDate },
-    content: { type: GraphQLString },
-    excerpt: { type: GraphQLString }
+    date: { type: GraphQLDate }
   })
 })
 

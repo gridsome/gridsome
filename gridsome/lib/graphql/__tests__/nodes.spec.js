@@ -119,6 +119,29 @@ test('get deprecated node fields', async () => {
   expect(data.testPost.fields.obj.foo).toEqual('bar')
 })
 
+// TODO: remove test before 1.0
+test('use deprectaded node fields as custom fields', async () => {
+  const posts = api.store.addContentType({
+    typeName: 'TestPost',
+    route: '/test/:slug'
+  })
+
+  posts.addNode({
+    id: '1',
+    title: 'Slug fallback',
+    content: 'Content',
+    excerpt: 'Excerpt'
+  })
+
+  const query = '{ testPost (id: "1") { id path content excerpt }}'
+  const { errors, data } = await createSchemaAndExecute(query)
+
+  expect(errors).toBeUndefined()
+  expect(data.testPost.path).toEqual('/test/slug-fallback')
+  expect(data.testPost.content).toEqual('Content')
+  expect(data.testPost.excerpt).toEqual('Excerpt')
+})
+
 test('get node by path', async () => {
   const posts = api.store.addContentType({
     typeName: 'TestPost'
@@ -162,9 +185,9 @@ test('fail if node with given ID is missing', async () => {
 test('fail if node with given path is missing', async () => {
   const posts = api.store.addContentType('TestPost')
 
-  posts.addNode('post', { path: '/test' })
+  posts.addNode({ path: '/test' })
 
-  const query = '{ testPost (path: "/fail") { _id }}'
+  const query = '{ testPost (path: "/fail") { id }}'
   const { errors } = await createSchemaAndExecute(query)
 
   expect(errors[0].message).toEqual('A TestPost node with path /fail could not be found.')
@@ -173,7 +196,7 @@ test('fail if node with given path is missing', async () => {
 test('fail if no id or path was provided', async () => {
   const posts = api.store.addContentType('TestPost')
 
-  posts.addNode('post', { path: '/test' })
+  posts.addNode({ path: '/test' })
 
   const query = '{ testPost { id }}'
   const { errors } = await createSchemaAndExecute(query)
@@ -758,9 +781,7 @@ test('preserve internal custom fields', async () => {
 })
 
 test('should format dates from schema', async () => {
-  const posts = api.store.addContentType({
-    typeName: 'TestPostDate'
-  })
+  const posts = api.store.addContentType('TestPostDate')
 
   posts.addNode({
     id: '1',

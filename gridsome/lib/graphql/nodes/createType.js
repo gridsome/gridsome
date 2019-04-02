@@ -28,16 +28,12 @@ module.exports = ({ contentType, nodeTypes, fields }) => {
         ...fieldTypes,
         ...refs,
 
-        content: { type: GraphQLString },
-        excerpt: { type: GraphQLString },
-
         ...extendNodeType(contentType, nodeType, nodeTypes),
         ...createFields(contentType, fieldTypes),
 
         belongsTo: createBelongsTo(contentType, nodeTypes),
         id: { type: new GraphQLNonNull(GraphQLID) },
         title: { type: GraphQLString },
-        slug: { type: GraphQLString },
         path: { type: GraphQLString },
         date: dateType,
 
