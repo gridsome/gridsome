@@ -47,16 +47,14 @@ test('add type', () => {
 
 test('add node', () => {
   const api = createPlugin()
-
-  const contentType = api.store.addContentType({
-    typeName: 'TestPost'
-  })
+  const contentType = api.store.addContentType('TestPost')
 
   const emit = jest.spyOn(contentType, 'emit')
   const node = contentType.addNode({
     id: 'test',
     title: 'Lorem ipsum dolor sit amet',
-    date: '2018-09-04T23:20:33.918Z'
+    date: '2018-09-04T23:20:33.918Z',
+    customField: true
   })
 
   const entry = api.store.store.index.findOne({ uid: node.uid })
@@ -67,6 +65,7 @@ test('add node', () => {
   expect(node.typeName).toEqual('TestPost')
   expect(node.title).toEqual('Lorem ipsum dolor sit amet')
   expect(node.date).toEqual('2018-09-04T23:20:33.918Z')
+  expect(node.fields.customField).toEqual(true)
   expect(emit).toHaveBeenCalledTimes(1)
   expect(entry.id).toEqual('test')
   expect(entry.uid).toEqual(node.uid)
@@ -111,7 +110,6 @@ test('update node', () => {
   expect(node.id).toEqual('test')
   expect(node.typeName).toEqual('TestPost')
   expect(node.title).toEqual('New title')
-  expect(node.slug).toEqual('new-title')
   expect(node.path).toEqual('/test/foo/new-title')
   expect(node.date).toEqual('2018-09-04T23:20:33.918Z')
   expect(node.fields.content).toEqual('Praesent commodo cursus magna')
@@ -403,7 +401,7 @@ test('dynamic route with non-optional repeated segments', () => {
   })).toThrow(TypeError, 'Expected "segments" to not be empty')
 })
 
-test('transform node', () => {
+test('transformnode', () => {
   const api = createPlugin()
 
   const contentType = api.store.addContentType({
@@ -432,7 +430,7 @@ test('resolve file paths', () => {
     file: 'image.png',
     file2: '/image.png',
     file3: '../image.png',
-    path: 'dir/to/image.png',
+    filepath: 'dir/to/image.png',
     url: 'https://example.com/image.jpg',
     url2: '//example.com/image.jpg',
     url3: 'git@github.com:gridsome/gridsome.git',
@@ -449,7 +447,7 @@ test('resolve file paths', () => {
   expect(node.fields.file).toEqual('image.png')
   expect(node.fields.file2).toEqual('/absolute/dir/to/project/image.png')
   expect(node.fields.file3).toEqual('/absolute/dir/to/image.png')
-  expect(node.fields.path).toEqual('dir/to/image.png')
+  expect(node.fields.filepath).toEqual('dir/to/image.png')
   expect(node.fields.url).toEqual('https://example.com/image.jpg')
   expect(node.fields.url2).toEqual('//example.com/image.jpg')
   expect(node.fields.url3).toEqual('git@github.com:gridsome/gridsome.git')
@@ -574,7 +572,7 @@ test('resolve absolute paths from external sources', () => {
   })
 
   const node3 = contentType2.addNode({
-    path: 'images/image.png',
+    imagepath: 'images/image.png',
     file2: '/images/image.png',
     file3: './images/image.png',
     internal: {
@@ -582,7 +580,7 @@ test('resolve absolute paths from external sources', () => {
     }
   })
 
-  expect(node3.fields.path).toEqual('images/image.png')
+  expect(node3.fields.imagepath).toEqual('images/image.png')
   expect(node3.fields.file2).toEqual('https://www.example.com/images/image.png')
   expect(node3.fields.file3).toEqual('https://www.example.com/2018/11/02/another-blog-post/images/image.png')
 })

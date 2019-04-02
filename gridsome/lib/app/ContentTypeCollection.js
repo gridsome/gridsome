@@ -1,14 +1,15 @@
-const hash = require('hash-sum')
 const moment = require('moment')
 const autoBind = require('auto-bind')
-const EventEmitter = require('events')
 const camelCase = require('camelcase')
+const EventEmitter = require('events')
 const { warn } = require('../utils/log')
 const { isRefField } = require('../graphql/utils')
 const { ISO_8601_FORMAT } = require('../utils/constants')
-const { cloneDeep, isPlainObject, isDate, get, omit } = require('lodash')
-const { isResolvablePath, slugify, safeKey } = require('../utils')
-const { NODE_FIELDS } = require('../utils/constants')
+const { cloneDeep, isDate, isPlainObject, get } = require('lodash')
+const { isResolvablePath, safeKey, slugify } = require('../utils')
+
+const normalize = require('./store/normalize')
+const transform = require('./store/transform')
 
 const nonValidCharsRE = new RegExp('[^a-zA-Z0-9_]', 'g')
 const leadingNumberRE = new RegExp('^([0-9])')
@@ -47,53 +48,22 @@ class ContentTypeCollection extends EventEmitter {
   }
 
   addNode (options) {
-    const { typeName } = this.options
-    const internal = this.pluginStore._createInternals(options.internal)
+    options = normalize(options, this.typeName)
+    options = transform(options, this.pluginStore._transformers)
 
-    // prioritize node.id over node.fields.id
-    if (options.id && options.fields && options.fields.id) {
-      delete options.fields.id
-    }
+    const { fields, belongsTo } = this._normalizeFields(options)
+    const { typeName, uid, id } = options
 
-    const _fields = omit(options, [NODE_FIELDS])
+    const entry = { type: 'node', typeName, uid, id, belongsTo }
+    const node = { ...options, fields }
 
-    // TODO: remove check before 1.0
-    if (_fields.fields) {
-      Object.assign(_fields, _fields.fields)
-      delete _fields.fields
-    }
-
-    // TODO: remove check before 1.0
-    if (options.fields) {
-      Object.assign(_fields, options.fields)
-      delete options.fields
-    }
-
-    // transform content with transformer for given mime type
-    if (internal.content && internal.mimeType) {
-      this._transformNodeOptions(options, _fields, internal)
-    }
-
-    const { fields, belongsTo } = this._processNodeFields(_fields, internal.origin)
-
-    const id = fields.id || options.id || options._id || hash(options)
-    const node = { id, typeName, internal }
+    if (!node.date) node.date = new Date().toISOString()
 
     // TODO: remove before 1.0
-    node._id = id
+    node.slug = fields.slug || this.slugify(node.title)
 
-    // TODO: remove before 1.0
-    // the remark transformer uses node.content
-    node.content = fields.content
-    node.excerpt = fields.excerpt
-
-    node.uid = options.uid || this.makeUid(typeName + node.id)
-    node.title = options.title || fields.title || node.id
-    node.date = options.date || fields.date || new Date().toISOString()
-    node.withPath = typeof options.path === 'string'
-
-    node.fields = fields
-    node.path = typeof options.path === 'string'
+    node.withPath = typeof node.path === 'string'
+    node.path = entry.path = typeof options.path === 'string'
       ? '/' + options.path.replace(/^\/+/g, '')
       : this._createPath(node)
 
@@ -106,15 +76,7 @@ class ContentTypeCollection extends EventEmitter {
     }
 
     try {
-      this.baseStore.index.insert({
-        type: 'node',
-        path: node.path,
-        typeName: node.typeName,
-        uid: node.uid,
-        id: node.id,
-        belongsTo,
-        _id: node.id // TODO: remove this before v1.0
-      })
+      this.baseStore.index.insert(entry)
     } catch (err) {
       warn(`Skipping duplicate path for ${node.path}`, this.typeName)
       return null
@@ -148,37 +110,13 @@ class ContentTypeCollection extends EventEmitter {
       options = _options
     }
 
-    const _fields = omit(options, [NODE_FIELDS])
+    options = normalize(options, this.typeName)
+    options = transform(options, this.pluginStore._transformers)
 
-    // TODO: remove check before 1.0
-    if (_fields.fields) {
-      Object.assign(_fields, _fields.fields)
-      delete _fields.fields
-    }
+    const { fields, belongsTo } = this._normalizeFields(options)
+    const { uid, id } = options
 
-    // TODO: remove check before 1.0
-    if (options.fields) {
-      Object.assign(_fields, options.fields)
-      delete options.fields
-    }
-
-    const internal = this.pluginStore._createInternals(options.internal)
-
-    // prioritize node.id over node.fields.id
-    if (options.id && options.fields && options.fields.id) {
-      delete options.fields.id
-    }
-
-    // transform content with transformer for given mime type
-    if (internal.content && internal.mimeType) {
-      this._transformNodeOptions(options, _fields, internal)
-    }
-
-    const { fields, belongsTo } = this._processNodeFields(_fields, internal.origin)
-    const id = fields.id || options.id || options._id
-    const query = options.uid ? { uid: options.uid } : { id }
-
-    const node = this.getNode(query)
+    const node = this.getNode(uid ? { uid } : { id })
 
     if (!node) {
       throw new Error(`Could not find node to update with id: ${id}`)
@@ -186,20 +124,23 @@ class ContentTypeCollection extends EventEmitter {
 
     const oldNode = cloneDeep(node)
 
-    Object.assign(node.internal, this.pluginStore._createInternals(options.internal))
+    if (id) node.id = id || node.id
+    if (options.title) node.title = options.title
+    if (options.date) node.date = options.date
 
-    node.id = id || node.id
-    node.title = options.title || fields.title || node.title
-    node.date = options.date || fields.date || node.date
-    node.slug = options.slug || fields.slug || this.slugify(node.title)
-    node.internal = Object.assign({}, node.internal, internal)
+    node.fields = fields
+
+    Object.assign(node.internal, options.internal)
 
     // TODO: remove before 1.0
     // the remark transformer uses node.content
-    node.content = fields.content || node.content
-    node.excerpt = fields.excerpt || node.excerpt
+    if (options.content) node.content = options.content
+    if (options.excerpt) node.excerpt = options.excerpt
+    if (options.slug) node.slug = options.slug
 
-    node.fields = fields
+    // TODO: remove before 1.0
+    node.slug = fields.slug || this.slugify(node.title)
+
     node.path = typeof options.path === 'string'
       ? '/' + options.path.replace(/^\/+/g, '')
       : this._createPath(node)
@@ -214,36 +155,7 @@ class ContentTypeCollection extends EventEmitter {
     return node
   }
 
-  _transformNodeOptions (options, fields, internal) {
-    const { mimeType, content } = internal
-    const transformer = this.pluginStore._transformers[mimeType]
-
-    if (!transformer) {
-      throw new Error(`No transformer for ${mimeType} is installed.`)
-    }
-
-    const result = transformer.parse(content)
-
-    const _fields = omit(result, [NODE_FIELDS])
-
-    // TODO: remove check before 1.0
-    if (_fields.fields) {
-      Object.assign(_fields, _fields.fields)
-      delete _fields.fields
-    }
-
-    if (result.id) options.id = result.id
-    if (result.title) options.title = result.title
-    if (result.path) options.path = result.path
-    if (result.date) options.date = result.date
-    if (result.slug) _fields.slug = result.slug
-    if (result.content) _fields.content = result.content
-    if (result.excerpt) _fields.excerpt = result.excerpt
-
-    Object.assign(fields, _fields)
-  }
-
-  _processNodeFields (input = {}, origin = '') {
+  _normalizeFields ({ fields: input, internal: { origin = '' }}) {
     const belongsTo = {}
 
     const addBelongsTo = ({ typeName, id }) => {
@@ -318,11 +230,12 @@ class ContentTypeCollection extends EventEmitter {
 
     const fields = processFields(input)
 
-    // TODO: this should be removed before 1.0
+    // references add by collection.addReference()
     for (const fieldName in this.options.refs) {
-      const id = fields[fieldName]
       const { typeName } = this.options.refs[fieldName]
-      addBelongsTo({ id, typeName })
+      const id = fields[fieldName]
+
+      if (id) addBelongsTo({ id, typeName })
     }
 
     return { fields, belongsTo }
