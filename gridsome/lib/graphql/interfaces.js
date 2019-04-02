@@ -8,7 +8,7 @@ const {
 const { GraphQLDate } = require('./types/date')
 
 const nodeInterface = new GraphQLInterfaceType({
-  name: 'NodeInterface',
+  name: 'Node',
   fields: () => ({
     id: { type: new GraphQLNonNull(GraphQLID) },
     title: { type: GraphQLString },

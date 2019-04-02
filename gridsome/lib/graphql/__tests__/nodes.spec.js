@@ -643,7 +643,7 @@ test('create reference with multiple node types', async () => {
     testPost (id: "3") {
       id
       people {
-        ...on NodeInterface {
+        ...on Node {
           id
           title
         }
