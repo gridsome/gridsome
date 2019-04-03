@@ -13,7 +13,7 @@ export default {
     nextLabel: { type: String, default: '›' },
     lastLabel: { type: String, default: '»' },
     linkClass: { type: String, default: '' },
-    linkRange: { type: Number, default: 5 },
+    range: { type: Number, default: 5 },
     activeLinkClass: { type: String, default: undefined },
     exactActiveLinkClass: { type: String, default: undefined },
 
@@ -29,7 +29,7 @@ export default {
 
   render: (h, { props, data }) => {
     const { info, showLinks, showNavigation, ariaLabel } = props
-    const { current, total, pages, start, end } = resolveRange(info, props.linkRange)
+    const { current, total, pages, start, end } = resolveRange(info, props.range)
 
     const renderLink = (page, text = page, ariaLabel = text) => {
       if (page === current) ariaLabel = props.ariaCurrentLabel
@@ -84,20 +84,20 @@ export default {
 function resolveRange ({
   currentPage: current = 1,
   totalPages: total = 1
-}, linkRange) {
-  const offset = Math.ceil(linkRange / 2)
+}, range) {
+  const offset = Math.ceil(range / 2)
 
   let start = Math.floor(current - offset)
   let end = Math.floor(current + offset)
 
-  if (total <= linkRange) {
+  if (total <= range) {
     start = 0
     end = total
   } else if (current <= offset) {
     start = 0
-    end = linkRange
+    end = range
   } else if ((current + offset) >= total) {
-    start = total - linkRange
+    start = total - range
     end = total
   }
 
