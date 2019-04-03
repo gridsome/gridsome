@@ -109,7 +109,14 @@ class WordPressSource {
       }
     }
   }
-
+  
+async getFeaturedMedia (featured_media) {
+  const image = await this.fetch('wp/v2/media/', {featured_media}, {})
+  const fields = this.normalizeFields(image.data[0])
+  return fields;
+    
+}
+  
   async getPosts (store) {
     for (const type in this.restBases.posts) {
       const restBase = this.restBases.posts[type]
@@ -126,12 +133,19 @@ class WordPressSource {
           id: post.author || 0
         }
 
-        if (post.type !== 'attachment') {
-          fields.featuredMedia = {
-            typeName: store.makeTypeName(TYPE_ATTACHEMENT),
-            id: post.featured_media
-          }
-        }
+        if (post.type == 'post') {
+		  if (post.featured_media != 0){
+		  		var featuredMedia = await this.getFeaturedMedia(post.featured_media);
+		  		fields.featuredMedia = {
+            		typeName: store.makeTypeName(TYPE_ATTACHEMENT),
+            		id: post.featured_media,
+            		url: featuredMedia.source_url,
+            		width: featuredMedia.media_details.width,
+            		height: featuredMedia.media_details.height,
+            		altText: featuredMedia.alt_text
+          		}
+      		}
+      	}
 
         // add references if post has any taxonomy rest bases as properties
         for (const type in this.restBases.taxonomies) {
@@ -148,6 +162,7 @@ class WordPressSource {
           id: post.id,
           title: post.title ? post.title.rendered : '',
           date: post.date,
+          modified: post.modified,
           slug: post.slug,
           fields
         })
