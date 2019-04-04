@@ -15,7 +15,8 @@ module.exports = {
     {
       use: '@gridsome/source-ghost',
       options: {
-        baseUrl: 'http://localhost:2368', // required
+        url: 'http://localhost:2368',
+        key: '0b7050113fba7147f358cc2f4d',
         perPage: 100,
         routes: {
           post: '/:year/:month/:day/:slug',

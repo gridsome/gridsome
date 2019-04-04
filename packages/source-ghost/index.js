@@ -9,8 +9,7 @@ class GhostSource {
   static defaultOptions () {
     return {
       url: '',
-      contentKey: '',
-      adminKey: '',
+      key: '',
       perPage: 100,
       version: 'v2',
       typeName: 'Ghost'
@@ -24,7 +23,7 @@ class GhostSource {
 
     this.contentAPI = new GhostContentAPI({
       url: options.url,
-      key: options.contentKey,
+      key: options.key,
       version: options.version
     })
 
@@ -34,16 +33,16 @@ class GhostSource {
 
     this.routes = {
       post: '/:year/:month/:day/:slug',
-      tags: '/tag/:slug',
-      pages: '/pages/:slug',
+      tag: '/tag/:slug',
+      page: '/page/:slug',
       author: '/author/:slug',
       ...this.options.routes
     }
 
     api.loadSource(async store => {
       console.log(`Loading data from ${options.url}`)
-      await this.loadPosts(store)
       await this.loadAuthors(store)
+      await this.loadPosts(store)
       await this.loadTags(store)
       await this.loadPages(store)
     })
@@ -57,8 +56,9 @@ class GhostSource {
       route: this.routes.tags
     })
 
-    await this.loadEntity(tags, this.contentAPI.tags)
+    await this.loadBasicEntity(tags, this.contentAPI.tags)
   }
+
   async loadPages (store) {
     console.log('Processing Pages...')
 
@@ -67,7 +67,7 @@ class GhostSource {
       route: this.routes.pages
     })
 
-    await this.loadEntity(pages, this.contentAPI.pages)
+    await this.loadBasicEntity(pages, this.contentAPI.pages)
   }
 
   async loadAuthors (store) {
@@ -78,7 +78,7 @@ class GhostSource {
       route: this.routes.author
     })
 
-    await this.loadEntity(authors, this.contentAPI.authors)
+    await this.loadBasicEntity(authors, this.contentAPI.authors)
   }
   async loadPosts (store) {
     console.log('Processing Posts...')
@@ -87,15 +87,65 @@ class GhostSource {
       route: this.routes.post
     })
 
-    await this.loadEntity(posts, this.contentAPI.posts)
-  }
-
-  async loadEntity (collection, contentEntity) {
     var keepGoing = true
     var currentPage = 1
 
     while (keepGoing) {
-      const rawEntities = await contentEntity.browse({ limit: this.options.perPage, page: currentPage })
+      const rawEntities = await this.contentAPI.posts.browse({
+        limit: this.options.perPage,
+        page: currentPage,
+        include: 'tags,authors'
+      })
+
+      rawEntities.forEach((entity) => {
+        var tags = entity.tags
+        var parsedTags = []
+
+        tags.forEach(tag => {
+          parsedTags.push({
+            typeName: store.makeTypeName(TYPE_TAG),
+            id: tag.id
+          })
+        })
+
+        var authors = entity.authors
+        var parsedAuthors = []
+
+        authors.forEach(tag => {
+          parsedAuthors.push({
+            typeName: store.makeTypeName(TYPE_AUTHOR),
+            id: tag.id
+          })
+        })
+
+        entity.authors = parsedAuthors
+
+        posts.addNode({
+          id: entity.id,
+          title: entity.name,
+          slug: entity.slug,
+          fields: {
+            ...entity
+          }
+        })
+      })
+      if (currentPage === rawEntities.meta.pagination.pages) {
+        keepGoing = false
+      }
+      currentPage++
+    }
+  }
+
+  async loadBasicEntity (collection, contentEntity) {
+    var keepGoing = true
+    var currentPage = 1
+
+    while (keepGoing) {
+      const rawEntities = await contentEntity.browse({
+        limit: this.options.perPage,
+        page: currentPage
+      })
+
       rawEntities.forEach((entity) => {
         collection.addNode({
           id: entity.id,
@@ -111,7 +161,6 @@ class GhostSource {
       }
       currentPage++
     }
-    return { keepGoing, currentPage }
   }
 }
 
