@@ -107,6 +107,7 @@ class GhostSource {
             id: tag.id
           })
         })
+        entity.tags = parsedTags
 
         var authors = entity.authors
         var parsedAuthors = []
@@ -124,6 +125,7 @@ class GhostSource {
           id: entity.id,
           title: entity.name,
           slug: entity.slug,
+          date: entity.published_at,
           fields: {
             ...entity
           }
