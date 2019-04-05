@@ -3,7 +3,7 @@ const fs = require('fs-extra')
 const glob = require('globby')
 const slash = require('slash')
 const chokidar = require('chokidar')
-const { createPagePath, parseComponent } = require('./lib/utils')
+const { createPagePath } = require('./lib/utils')
 
 class VuePages {
   static defaultOptions () {
@@ -13,14 +13,6 @@ class VuePages {
   constructor (api) {
     this.pages = api.pages
     this.pagesDir = api.config.pagesDir
-
-    api.transpileDependencies([path.resolve(__dirname, 'lib', 'loaders')])
-    api.registerComponentParser({ test: /\.vue$/, parse: parseComponent })
-
-    api.chainWebpack(config => {
-      this.createGraphQLRule(config, 'page-query', './lib/loaders/page-query')
-      this.createGraphQLRule(config, 'static-query', './lib/loaders/static-query')
-    })
 
     if (fs.existsSync(this.pagesDir)) {
       api.createPages(args => this.createPages(args))

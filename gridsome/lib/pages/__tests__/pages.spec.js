@@ -96,7 +96,7 @@ test('cache parsed components', async () => {
   expect(Object.keys(_cached)).toHaveLength(2) // includes /404
 })
 
-test('upate page', async () => {
+test('update page', async () => {
   const { pages, pages: { createPage, updatePage }} = await createApp()
   const emit = jest.spyOn(pages._events, 'emit')
 

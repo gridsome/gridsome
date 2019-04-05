@@ -3,31 +3,33 @@ const { createBelongsToKey } = require('../graphql/nodes/utils')
 const { createFilterQuery } = require('../graphql/createFilterTypes')
 
 function createRenderQueue (renderQueue, { pages, store, schema }) {
+  const queryFields = schema.getQueryType().getFields()
+  const queue = renderQueue.slice()
+
   for (const page of pages.allPages()) {
     if (page.query.paginate) {
-      const totalPages = calcTotalPages(page, store, schema)
+      const totalPages = calcTotalPages(page, store, queryFields)
 
       for (let i = 1; i <= totalPages; i++) {
-        renderQueue.push(createRenderEntry(page, i))
+        queue.push(createRenderEntry(page, i))
       }
     } else {
-      renderQueue.push(createRenderEntry(page))
+      queue.push(createRenderEntry(page))
     }
   }
 
-  return renderQueue
+  return queue
 }
 
-function calcTotalPages (page, store, schema) {
+function calcTotalPages (page, store, queryFields) {
   const { belongsTo, fieldName, typeName, perPage } = page.query.paginate
   const { collection } = store.getContentType(typeName)
-  const rootFields = schema.getQueryType().getFields()
 
   let totalNodes = 0
 
   if (belongsTo) {
     const { id, path } = belongsTo
-    const { args } = rootFields[fieldName].type.getFields().belongsTo
+    const { args } = queryFields[fieldName].type.getFields().belongsTo
     const query = createCollectionQuery(args, page.query.filters)
     const node = id ? collection.by('id', id) : collection.by('path', path)
 
@@ -35,7 +37,7 @@ function calcTotalPages (page, store, schema) {
 
     totalNodes = store.index.count(query)
   } else {
-    const { args } = rootFields[fieldName]
+    const { args } = queryFields[fieldName]
     const query = createCollectionQuery(args, page.query.filters)
 
     totalNodes = collection.find(query).length

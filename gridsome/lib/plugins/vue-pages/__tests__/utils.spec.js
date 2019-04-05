@@ -1,5 +1,4 @@
-const path = require('path')
-const { createPagePath, parseComponent } = require('../lib/utils')
+const { createPagePath } = require('../lib/utils')
 
 test('transform filepath into router path', () => {
   const home = createPagePath('Index.vue')
@@ -19,18 +18,4 @@ test('transform filepath into router path', () => {
   expect(nested).toEqual('/section')
   expect(nested2).toEqual('/section/foo-bar')
   expect(nested3).toEqual('/section/bar-index')
-})
-
-test('extract page query from component', () => {
-  const filePath = path.resolve(__dirname, '__fixtures__/ComponentWithQuery.vue')
-  const { pageQuery } = parseComponent(filePath)
-
-  expect(pageQuery.trim()).toMatchSnapshot()
-})
-
-test('extract empty page query if missing', () => {
-  const filePath = path.resolve(__dirname, '__fixtures__/ComponentWithoutQuery.vue')
-  const { pageQuery } = parseComponent(filePath)
-
-  expect(pageQuery).toBeNull()
 })
