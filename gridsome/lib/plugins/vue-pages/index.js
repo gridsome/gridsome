@@ -5,7 +5,7 @@ const slash = require('slash')
 const chokidar = require('chokidar')
 const { createPagePath, parseComponent } = require('./lib/utils')
 
-class VueSource {
+class VuePages {
   static defaultOptions () {
     return {}
   }
@@ -78,4 +78,4 @@ class VueSource {
   }
 }
 
-module.exports = VueSource
+module.exports = VuePages
