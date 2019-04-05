@@ -7,7 +7,8 @@ const { defaultsDeep, camelCase } = require('lodash')
 const { internalRE, transformerRE, SUPPORTED_IMAGE_TYPES } = require('../utils/constants')
 
 const builtInPlugins = [
-  path.resolve(__dirname, '../plugins/source-vue')
+  path.resolve(__dirname, '../plugins/source-vue'),
+  path.resolve(__dirname, '../plugins/vue-templates')
 ]
 
 // TODO: use joi to define and validate config schema
