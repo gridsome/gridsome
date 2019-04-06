@@ -1,12 +1,15 @@
+const path = require('path')
+const isUrl = require('is-url')
 const moment = require('moment')
 const autoBind = require('auto-bind')
 const camelCase = require('camelcase')
 const EventEmitter = require('events')
 const { warn } = require('../utils/log')
+const isRelative = require('is-relative')
 const { isRefField } = require('../graphql/utils')
 const { ISO_8601_FORMAT } = require('../utils/constants')
 const { cloneDeep, isDate, isPlainObject, get } = require('lodash')
-const { isResolvablePath, safeKey, slugify } = require('../utils')
+const { isResolvablePath, parseUrl, resolvePath, safeKey, slugify } = require('../utils')
 
 const normalize = require('./store/normalize')
 const transform = require('./store/transform')
@@ -15,18 +18,28 @@ const nonValidCharsRE = new RegExp('[^a-zA-Z0-9_]', 'g')
 const leadingNumberRE = new RegExp('^([0-9])')
 
 class ContentTypeCollection extends EventEmitter {
-  constructor (store, pluginStore, options) {
+  constructor (baseStore, pluginStore, options) {
     super()
 
-    this.baseStore = store
+    const { app: { context }} = baseStore
+
+    this.baseStore = baseStore
     this.pluginStore = pluginStore
 
     this.options = { refs: {}, fields: {}, ...options }
     this.typeName = options.typeName
     this.description = options.description
-    this.resolveAbsolutePaths = options.resolveAbsolutePaths || false
 
-    this.collection = store.data.addCollection(options.typeName, {
+    this._resolveAbsolutePaths = options.resolveAbsolutePaths || false
+    this._assetsContext = typeof options.resolveAbsolutePaths === 'string'
+      ? isUrl(options.resolveAbsolutePaths)
+        ? parseUrl(options.resolveAbsolutePaths).fullUrl
+        : isRelative(options.resolveAbsolutePaths)
+          ? path.resolve(context, options.resolveAbsolutePaths)
+          : options.resolveAbsolutePaths
+      : context
+
+    this.collection = baseStore.data.addCollection(options.typeName, {
       indices: ['id', 'path'],
       unique: ['id', 'path'],
       autoupdate: true
@@ -51,7 +64,7 @@ class ContentTypeCollection extends EventEmitter {
     options = normalize(options, this.typeName)
     options = transform(options, this.pluginStore._transformers)
 
-    const { fields, belongsTo } = this._normalizeFields(options)
+    const { fields, belongsTo } = this._processFields(options)
     const { typeName, uid, id } = options
 
     const entry = { type: 'node', typeName, uid, id, belongsTo }
@@ -113,7 +126,7 @@ class ContentTypeCollection extends EventEmitter {
     options = normalize(options, this.typeName)
     options = transform(options, this.pluginStore._transformers)
 
-    const { fields, belongsTo } = this._normalizeFields(options)
+    const { fields, belongsTo } = this._processFields(options)
     const { uid, id } = options
 
     const node = this.getNode(uid ? { uid } : { id })
@@ -155,7 +168,8 @@ class ContentTypeCollection extends EventEmitter {
     return node
   }
 
-  _normalizeFields ({ fields: input, internal: { origin = '' }}) {
+  _processFields ({ fields: input, internal: { origin = '' }}) {
+    const { _assetsContext: context, _resolveAbsolutePaths: resolveAbsolute } = this
     const belongsTo = {}
 
     const addBelongsTo = ({ typeName, id }) => {
@@ -190,11 +204,7 @@ class ContentTypeCollection extends EventEmitter {
           return processFields(field)
         case 'string':
           return isResolvablePath(field)
-            ? this.pluginStore._app.resolveFilePath(
-              origin,
-              field,
-              this.resolveAbsolutePaths
-            )
+            ? resolvePath(origin, field, { context, resolveAbsolute })
             : field
       }
 

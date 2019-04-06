@@ -56,13 +56,23 @@ exports.isResolvablePath = function (value) {
   )
 }
 
-exports.resolvePath = function (fromPath, toPath, rootDir) {
+exports.resolvePath = function (origin, toPath, options = {}) {
+  const { context = null, resolveAbsolute = false } = options
+
   if (typeof toPath !== 'string') return toPath
-  if (typeof fromPath !== 'string') return toPath
+  if (typeof origin !== 'string') return toPath
   if (path.extname(toPath).length <= 1) return toPath
   if (isUrl(toPath)) return toPath
   if (mime.lookup(toPath) === 'application/x-msdownload') return toPath
   if (!mime.lookup(toPath)) return toPath
+
+  const url = isUrl(origin) ? exports.parseUrl(origin) : null
+  const contextPath = url && resolveAbsolute === true ? url.baseUrl : context
+  const fromPath = url ? url.fullUrl : origin
+
+  if (path.isAbsolute(toPath) && !resolveAbsolute) {
+    return toPath
+  }
 
   if (isRelative(toPath)) {
     if (!fromPath) return toPath
@@ -70,8 +80,8 @@ exports.resolvePath = function (fromPath, toPath, rootDir) {
     return rootPath + path.resolve(basePath, toPath)
   }
 
-  if (rootDir) {
-    const { rootPath, basePath } = parsePath(rootDir)
+  if (typeof contextPath === 'string') {
+    const { rootPath, basePath } = parsePath(contextPath)
     return rootPath + path.join(basePath, toPath)
   }
 

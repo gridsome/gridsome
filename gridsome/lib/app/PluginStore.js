@@ -11,6 +11,7 @@ const { parsePageQuery } = require('../graphql/page-query')
 const { mapValues, cloneDeep, isPlainObject } = require('lodash')
 const { cache, nodeCache } = require('../utils/cache')
 const { log, warn } = require('../utils/log')
+const { resolvePath } = require('../utils')
 
 class Source extends EventEmitter {
   constructor (app, options, { transformers }) {
@@ -91,6 +92,7 @@ class Source extends EventEmitter {
       route: options.route,
       fields: options.fields || {},
       typeName: options.typeName,
+      resolveAbsolutePaths: options.resolveAbsolutePaths,
       routeKeys: routeKeys
         .filter(key => typeof key.name === 'string')
         .map(key => {
@@ -111,7 +113,6 @@ class Source extends EventEmitter {
             suffix
           }
         }),
-      resolveAbsolutePaths: options.resolveAbsolutePaths,
       mimeTypes: [],
       belongsTo: {},
       createPath,
@@ -211,12 +212,12 @@ class Source extends EventEmitter {
 
   _resolveNodeFilePath (node, toPath) {
     const contentType = this.getContentType(node.typeName)
+    const { origin = '' } = node.internal
 
-    return this._app.resolveFilePath(
-      node.internal.origin,
-      toPath,
-      contentType.resolveAbsolutePaths
-    )
+    return resolvePath(origin, toPath, {
+      context: contentType._assetsContext,
+      resolveAbsolute: contentType._resolveAbsolutePaths
+    })
   }
 
   //
