@@ -16,7 +16,7 @@ const { app, router } = createApp()
 // let Vue router handle internal URLs for anchors in innerHTML
 document.addEventListener('click', event => {
   const $el = event.target.closest('a')
-  const { hostname } = document.location
+  const { hostname, port } = document.location
 
   if (
     event.defaultPrevented ||     // disables this behavior
@@ -28,6 +28,7 @@ document.addEventListener('click', event => {
     $el === null ||               // no link clicked
     $el.__gLink__ ||              // g-link anchor
     $el.hostname !== hostname ||  // external link
+    $el.port !== port ||  // external link
     /\.[^.]+$/.test($el.pathname) // link to a file
   ) return
 
