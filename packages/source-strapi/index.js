@@ -1,5 +1,4 @@
 const axios = require('axios')
-const { pascalCase } = require('change-case')
 const query = require('./helpers/query')
 
 module.exports = function (api, options) {
@@ -13,7 +12,7 @@ module.exports = function (api, options) {
     'excerpt'
   ]
 
-  api.loadSource(async ({ addContentType, slugify }) => {
+  api.loadSource(async ({ addContentType, makeTypeName, slugify }) => {
     const { apiURL, queryLimit, contentTypes, loginData } = options
     let jwtToken = null
 
@@ -45,16 +44,14 @@ module.exports = function (api, options) {
     }
 
     return Promise.all(contentTypes.map(resourceName => {
-      const typeName = pascalCase(resourceName)
-      var contentType = addContentType({ typeName: `Strapi${typeName}` })
-      return query({ apiURL, contentType: typeName, jwtToken, queryLimit })
+      const typeName = makeTypeName(resourceName)
+      var contentType = addContentType({ typeName })
+
+      return query({ apiURL, resourceName, jwtToken, queryLimit })
         .then(docs => docs.map(doc => {
           const content = {}
           const fields = {}
           Object.entries(doc).map(([name, val]) => {
-            if (val instanceof Object) {
-              val = JSON.stringify(val) // TODO: Look into making this easier to access
-            }
             if (coreProperties.includes(name)) {
               content[name] = val
             } else {
@@ -73,5 +70,6 @@ module.exports.defaultOptions = () => ({
   apiURL: 'http://localhost:1337',
   contentTypes: [],
   loginData: {},
-  queryLimit: 100
+  queryLimit: 100,
+  typeName: 'Strapi'
 })

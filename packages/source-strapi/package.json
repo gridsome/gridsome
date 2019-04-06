@@ -18,9 +18,7 @@
   },
   "dependencies": {
     "axios": "^0.18.0",
-    "change-case": "^3.1.0",
     "lodash": "^4.17.11",
-    "node-fetch": "^2.3.0",
     "pluralize": "^7.0.0"
   }
 }

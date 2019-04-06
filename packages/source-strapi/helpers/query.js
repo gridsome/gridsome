@@ -1,13 +1,14 @@
-const clean = require('./clean')
-const fetch = require('node-fetch')
+const axios = require('axios')
 const pluralize = require('pluralize')
+const clean = require('./clean')
 
-module.exports = async ({ apiURL, contentType, jwtToken, queryLimit }) => {
+module.exports = async ({ apiURL, resourceName, jwtToken, queryLimit }) => {
   console.time('Fetch Strapi data')
-  console.log(`Starting to fetch data from Strapi (${pluralize(contentType)})`)
+  const resource = pluralize(resourceName).toLowerCase()
+  console.log(`Starting to fetch data from Strapi (${resource})`)
 
   // Define API endpoint.
-  const apiEndpoint = `${apiURL}/${pluralize(contentType)}?_limit=${queryLimit}`
+  const apiEndpoint = `${apiURL}/${resource}?_limit=${queryLimit}`
 
   // Set authorization token
   const fetchRequestConfig = {}
@@ -18,14 +19,15 @@ module.exports = async ({ apiURL, contentType, jwtToken, queryLimit }) => {
   }
 
   // Make API request.
-  return fetch(apiEndpoint, fetchRequestConfig)
-    .then(res => res.json())
+  return axios(apiEndpoint, fetchRequestConfig)
+    .then(res => res.data)
     .then(data => data.map(item => clean(item)))
     .then(docs => {
       console.timeEnd('Fetch Strapi data')
       return docs
     })
-    .catch(e => {
-      throw new Error(`Unable to get content type (${contentType}). Did you enable permissions in the Strapi admin for this?`)
+    .catch(err => {
+      console.error(`Unable to get content type (${resource}). Did you enable permissions in the Strapi admin for this?`)
+      throw err
     })
 }
