@@ -1,5 +1,6 @@
 const path = require('path')
 const isUrl = require('is-url')
+const crypto = require('crypto')
 const moment = require('moment')
 const autoBind = require('auto-bind')
 const camelCase = require('camelcase')
@@ -18,32 +19,25 @@ const nonValidCharsRE = new RegExp('[^a-zA-Z0-9_]', 'g')
 const leadingNumberRE = new RegExp('^([0-9])')
 
 class ContentTypeCollection extends EventEmitter {
-  constructor (baseStore, pluginStore, options) {
+  constructor (store, collection, options = {}) {
     super()
 
-    const { app: { context }} = baseStore
-
-    this.baseStore = baseStore
-    this.pluginStore = pluginStore
+    this.collection = collection
 
     this.options = { refs: {}, fields: {}, ...options }
     this.typeName = options.typeName
     this.description = options.description
 
+    this._store = store
+    this._transformers = store._transformers
     this._resolveAbsolutePaths = options.resolveAbsolutePaths || false
     this._assetsContext = typeof options.resolveAbsolutePaths === 'string'
       ? isUrl(options.resolveAbsolutePaths)
         ? parseUrl(options.resolveAbsolutePaths).fullUrl
         : isRelative(options.resolveAbsolutePaths)
-          ? path.resolve(context, options.resolveAbsolutePaths)
+          ? path.resolve(store.context, options.resolveAbsolutePaths)
           : options.resolveAbsolutePaths
-      : context
-
-    this.collection = baseStore.data.addCollection(options.typeName, {
-      indices: ['id', 'path'],
-      unique: ['id', 'path'],
-      autoupdate: true
-    })
+      : store.context
 
     autoBind(this)
   }
@@ -62,7 +56,7 @@ class ContentTypeCollection extends EventEmitter {
 
   addNode (options) {
     options = normalize(options, this.typeName)
-    options = transform(options, this.pluginStore._transformers)
+    options = transform(options, this._transformers)
 
     const { fields, belongsTo } = this._processFields(options)
     const { typeName, uid, id } = options
@@ -85,11 +79,11 @@ class ContentTypeCollection extends EventEmitter {
     const { mimeTypes } = this.options
     const { mimeType } = node.internal
     if (mimeType && !mimeTypes.hasOwnProperty(mimeType)) {
-      mimeTypes[mimeType] = this.pluginStore._transformers[mimeType]
+      mimeTypes[mimeType] = this._transformers[mimeType]
     }
 
     try {
-      this.baseStore.index.insert(entry)
+      this._store.store.index.insert(entry)
     } catch (err) {
       warn(`Skipping duplicate path for ${node.path}`, this.typeName)
       return null
@@ -110,7 +104,7 @@ class ContentTypeCollection extends EventEmitter {
     const query = typeof id === 'string' ? { id } : id
     const node = this.collection.findOne(query)
 
-    this.baseStore.index.findAndRemove({ uid: node.uid })
+    this._store.store.index.findAndRemove({ uid: node.uid })
     this.collection.findAndRemove({ uid: node.uid })
 
     this.emit('change', undefined, node)
@@ -124,7 +118,7 @@ class ContentTypeCollection extends EventEmitter {
     }
 
     options = normalize(options, this.typeName)
-    options = transform(options, this.pluginStore._transformers)
+    options = transform(options, this._transformers)
 
     const { fields, belongsTo } = this._processFields(options)
     const { uid, id } = options
@@ -158,7 +152,7 @@ class ContentTypeCollection extends EventEmitter {
       ? '/' + options.path.replace(/^\/+/g, '')
       : this._createPath(node)
 
-    const indexEntry = this.baseStore.index.findOne({ uid: node.uid })
+    const indexEntry = this._store.store.index.findOne({ uid: node.uid })
 
     indexEntry.path = node.path
     indexEntry.belongsTo = belongsTo
@@ -306,8 +300,8 @@ class ContentTypeCollection extends EventEmitter {
   // utils
   //
 
-  makeUid (value) {
-    return this.pluginStore.makeUid(value)
+  makeUid (orgId) {
+    return crypto.createHash('md5').update(orgId).digest('hex')
   }
 
   slugify (string = '') {

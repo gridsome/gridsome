@@ -54,9 +54,17 @@ class BaseStore {
   // nodes
 
   addContentType (pluginStore, options) {
-    const collection = new ContentTypeCollection(this, pluginStore, options)
-    this.collections[options.typeName] = collection
-    return collection
+    const collection = this.data.addCollection(options.typeName, {
+      indices: ['id', 'path'],
+      unique: ['id', 'path'],
+      autoupdate: true
+    })
+
+    const contentType = new ContentTypeCollection(pluginStore, collection, options)
+
+    this.collections[options.typeName] = contentType
+
+    return contentType
   }
 
   getContentType (type) {

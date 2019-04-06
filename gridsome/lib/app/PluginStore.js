@@ -13,17 +13,19 @@ const { cache, nodeCache } = require('../utils/cache')
 const { log, warn } = require('../utils/log')
 const { resolvePath } = require('../utils')
 
-class Source extends EventEmitter {
-  constructor (app, options, { transformers }) {
+class PluginStore extends EventEmitter {
+  constructor (app, pluginOptions, { transformers }) {
     super()
     autoBind(this)
 
+    const { typeName, resolveAbsolutePaths } = pluginOptions
+
     this._app = app
-    this._typeName = options.typeName
-    this._resolveAbsolutePaths = options.resolveAbsolutePaths || false
+    this._typeName = typeName
+    this._resolveAbsolutePaths = resolveAbsolutePaths || false
     this._transformers = mapValues(transformers || app.config.transformers, transformer => {
       return new transformer.TransformerClass(transformer.options, {
-        localOptions: options[transformer.name] || {},
+        localOptions: pluginOptions[transformer.name] || {},
         resolveNodeFilePath: this._resolveNodeFilePath,
         context: app.context,
         queue: app.queue,
@@ -253,4 +255,4 @@ class Source extends EventEmitter {
   }
 }
 
-module.exports = Source
+module.exports = PluginStore
