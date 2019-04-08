@@ -3,20 +3,17 @@ const isUrl = require('is-url')
 const crypto = require('crypto')
 const moment = require('moment')
 const autoBind = require('auto-bind')
-const camelCase = require('camelcase')
 const EventEmitter = require('events')
 const { warn } = require('../utils/log')
 const isRelative = require('is-relative')
-const { isRefField } = require('../graphql/utils')
 const { ISO_8601_FORMAT } = require('../utils/constants')
-const { cloneDeep, isDate, isPlainObject, get } = require('lodash')
-const { isResolvablePath, parseUrl, resolvePath, safeKey, slugify } = require('../utils')
+const { cloneDeep, isPlainObject, get } = require('lodash')
+const { slugify } = require('../utils')
 
 const normalize = require('./store/normalize')
 const transform = require('./store/transform')
-
-const nonValidCharsRE = new RegExp('[^a-zA-Z0-9_]', 'g')
-const leadingNumberRE = new RegExp('^([0-9])')
+const processFields = require('./store/processFields')
+const { parseUrl } = require('./store/utils')
 
 class ContentTypeCollection extends EventEmitter {
   constructor (store, collection, options = {}) {
@@ -58,7 +55,12 @@ class ContentTypeCollection extends EventEmitter {
     options = normalize(options, this.typeName)
     options = transform(options, this._transformers)
 
-    const { fields, belongsTo } = this._processFields(options)
+    const { fields, belongsTo } = processFields(options.fields, this.options.refs, {
+      origin: options.internal.origin,
+      context: this._assetsContext,
+      resolveAbsolute: this._resolveAbsolutePaths
+    })
+
     const { typeName, uid, id } = options
 
     const entry = { type: 'node', typeName, uid, id, belongsTo }
@@ -120,7 +122,12 @@ class ContentTypeCollection extends EventEmitter {
     options = normalize(options, this.typeName)
     options = transform(options, this._transformers)
 
-    const { fields, belongsTo } = this._processFields(options)
+    const { fields, belongsTo } = processFields(options.fields, this.options.refs, {
+      origin: options.internal.origin,
+      context: this._assetsContext,
+      resolveAbsolute: this._resolveAbsolutePaths
+    })
+
     const { uid, id } = options
 
     const node = this.getNode(uid ? { uid } : { id })
@@ -160,89 +167,6 @@ class ContentTypeCollection extends EventEmitter {
     this.emit('change', node, oldNode)
 
     return node
-  }
-
-  _processFields ({ fields: input, internal: { origin = '' }}) {
-    const { _assetsContext: context, _resolveAbsolutePaths: resolveAbsolute } = this
-    const belongsTo = {}
-
-    const addBelongsTo = ({ typeName, id }) => {
-      belongsTo[typeName] = belongsTo[typeName] || {}
-      if (Array.isArray(id)) {
-        id.forEach(id => {
-          belongsTo[typeName][safeKey(id)] = true
-        })
-      } else {
-        belongsTo[typeName][safeKey(id)] = true
-      }
-    }
-
-    const processField = field => {
-      if (field === undefined) return field
-      if (field === null) return field
-
-      switch (typeof field) {
-        case 'object':
-          if (isDate(field)) {
-            return field
-          }
-          if (isRefField(field)) {
-            if (Array.isArray(field.typeName)) {
-              field.typeName.forEach(typeName => {
-                addBelongsTo({ typeName, id: field.id })
-              })
-            } else {
-              addBelongsTo(field)
-            }
-          }
-          return processFields(field)
-        case 'string':
-          return isResolvablePath(field)
-            ? resolvePath(origin, field, { context, resolveAbsolute })
-            : field
-      }
-
-      return field
-    }
-
-    const createKey = key => {
-      key = key.replace(nonValidCharsRE, '_')
-      key = camelCase(key)
-      key = key.replace(leadingNumberRE, '_$1')
-
-      return key
-    }
-
-    const processFields = fields => {
-      const res = {}
-
-      for (const key in fields) {
-        if (key.startsWith('__')) {
-          // don't touch keys which starts with __ because they are
-          // meant for internal use and will not be part of the schema
-          res[key] = fields[key]
-          continue
-        }
-
-        res[createKey(key)] = Array.isArray(fields[key])
-          ? fields[key].map(value => processField(value))
-          : processField(fields[key])
-      }
-
-      return res
-    }
-
-    const fields = processFields(input)
-
-    // references add by collection.addReference()
-    for (const fieldName in this.options.refs) {
-      const { typeName } = this.options.refs[fieldName]
-      const id = fields[fieldName]
-
-      if (id) addBelongsTo({ id, typeName })
-    }
-
-    return { fields, belongsTo }
   }
 
   _createPath (node) {

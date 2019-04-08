@@ -10,8 +10,8 @@ const { NODE_FIELDS } = require('../utils/constants')
 const { parsePageQuery } = require('../graphql/page-query')
 const { mapValues, cloneDeep, isPlainObject } = require('lodash')
 const { cache, nodeCache } = require('../utils/cache')
+const { resolvePath } = require('./store/utils')
 const { log, warn } = require('../utils/log')
-const { resolvePath } = require('../utils')
 
 class PluginStore extends EventEmitter {
   constructor (app, pluginOptions, { transformers }) {
