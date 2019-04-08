@@ -80,6 +80,9 @@ class ContentfulSource {
           )
         } else if (typeof value === 'object' && typeof value.sys !== 'undefined') {
           fields[key] = this.createReferenceField(value)
+        } else if (typeof value === 'object' && value.nodeType === 'document') {
+          // value is Rich Text
+          fields[key] = JSON.stringify(value)
         } else {
           fields[key] = value
         }
@@ -109,6 +112,7 @@ class ContentfulSource {
   }
 
   createReferenceField (item) {
+    console.log('item', item)
     switch (item.sys.type) {
       case 'Asset' :
         return {
