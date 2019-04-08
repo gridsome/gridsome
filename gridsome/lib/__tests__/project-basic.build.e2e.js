@@ -103,6 +103,7 @@ test('render g-image components', () => {
   expect($home('img.g-image-2').data('srcset')).toMatch('/assets/static/test.82a2fbd.test.png 480w')
   expect($home('img.g-image-2').data('src')).toEqual('/assets/static/test.97c148e.test.png')
   expect($home('img.g-image-2').attr('class')).not.toEqual('g-image-false')
+  expect($home('img.g-image-2 + noscript').html()).toMatch('alt="Test image"')
   expect($home('img.g-image-static').attr('src')).toEqual('/uploads/test.png')
   expect($home('img.g-image-static').attr('alt')).toEqual('Static image')
   expect($home('img.g-image-immediate').attr('src')).toEqual('/assets/static/test.cbab2cf.test.png')
