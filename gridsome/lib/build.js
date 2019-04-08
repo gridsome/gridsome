@@ -1,16 +1,11 @@
 const path = require('path')
-const pMap = require('p-map')
 const fs = require('fs-extra')
-const hashSum = require('hash-sum')
 const hirestime = require('hirestime')
-const sysinfo = require('./utils/sysinfo')
 const { chunk, groupBy } = require('lodash')
-const { log, error, info } = require('./utils/log')
-const { pipe } = require('./utils')
+const { log, info } = require('./utils/log')
 
 const createApp = require('./app')
 const { createWorker } = require('./workers')
-const createRenderQueue = require('./pages/createRenderQueue')
 
 module.exports = async (context, args) => {
   process.env.NODE_ENV = 'production'
@@ -26,11 +21,7 @@ module.exports = async (context, args) => {
   await fs.ensureDir(config.dataDir)
   await fs.ensureDir(config.outDir)
 
-  const queue = await pipe([
-    createRenderQueue,
-    createHTMLPaths,
-    executeQueries
-  ], [], app)
+  const queue = await createRenderQueue(app)
 
   await writePageData(queue, app)
   await runWebpack(app)
@@ -56,51 +47,13 @@ module.exports = async (context, args) => {
   return app
 }
 
-function createHTMLPaths (renderQueue, app) {
-  return renderQueue.map(entry => {
-    const segments = entry.path.split('/').filter(segment => !!segment)
-    const fileSegments = segments.map(segment => decodeURIComponent(segment))
-    const fileName = entry.isIndex ? 'index.html' : `${fileSegments.pop()}.html`
-
-    return {
-      ...entry,
-      htmlOutput: path.join(app.config.outDir, ...fileSegments, fileName)
-    }
+function createRenderQueue (app) {
+  return new Promise((resolve, reject) => {
+    app.hooks.createRenderQueue.callAsync([], app, (err, res) => {
+      if (err) return reject(err)
+      resolve(res)
+    })
   })
-}
-
-async function executeQueries (renderQueue, app) {
-  const timer = hirestime()
-  const groupSize = 500
-
-  let count = 0
-  let group = 0
-
-  const res = await pMap(renderQueue, async entry => {
-    if (count % (groupSize - 1) === 0) group++
-    count++
-
-    const results = entry.query
-      ? await app.graphql(entry.query.document, entry.query.variables)
-      : {}
-
-    if (results.errors) {
-      const relPath = path.relative(app.context, entry.component)
-      error(`An error occurred while executing page-query for ${relPath}\n`)
-      throw new Error(results.errors[0])
-    }
-
-    const data = { data: results.data || null, context: entry.context }
-    const hash = hashSum(data)
-    const dataInfo = { group, hash }
-    const dataOutput = path.join(app.config.assetsDir, 'data', `${group}/${hash}.json`)
-
-    return { ...entry, dataOutput, data, dataInfo }
-  }, { concurrency: sysinfo.cpus.physical })
-
-  info(`Execute GraphQL (${count} queries) - ${timer(hirestime.S)}s`)
-
-  return res
 }
 
 async function writePageData (renderQueue, app) {

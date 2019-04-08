@@ -16,6 +16,10 @@ const { parseUrl, resolvePath } = require('../utils')
 const { info } = require('../utils/log')
 
 const {
+  AsyncSeriesWaterfallHook
+} = require('tapable')
+
+const {
   BOOTSTRAP_CONFIG,
   BOOTSTRAP_SOURCES,
   BOOTSTRAP_GRAPHQL,
@@ -34,6 +38,14 @@ class App {
     this.config = loadConfig(context, options)
     this.isInitialized = false
     this.isBootstrapped = false
+
+    this.hooks = {
+      createRenderQueue: new AsyncSeriesWaterfallHook(['renderQueue', 'app'])
+    }
+
+    this.hooks.createRenderQueue.tap('Gridsome', require('../pages/createRenderQueue'))
+    this.hooks.createRenderQueue.tap('Gridsome', require('../pages/createHTMLPaths'))
+    this.hooks.createRenderQueue.tapPromise('Gridsome', require('../graphql/executeQueries'))
 
     autoBind(this)
   }

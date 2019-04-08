@@ -1,13 +1,12 @@
-const Joi = require('joi')
 const path = require('path')
 const autoBind = require('auto-bind')
 const { Collection } = require('lokijs')
 const isRelative = require('is-relative')
 const { FSWatcher } = require('chokidar')
 const EventEmitter = require('eventemitter3')
+const validateOptions = require('./validateOptions')
 const createPageQuery = require('./createPageQuery')
 const { NOT_FOUND_NAME, NOT_FOUND_PATH } = require('../utils/constants')
-const schema = require('./options-schema')
 const { cloneDeep } = require('lodash')
 const { slugify } = require('../utils')
 
@@ -125,11 +124,7 @@ class Pages {
   }
 
   _normalizeOptions (input = {}) {
-    const { error, value: options } = Joi.validate(input, schema)
-
-    if (error) {
-      throw new Error(error.message)
-    }
+    const options = validateOptions(input)
 
     options.component = isRelative(input.component)
       ? path.resolve(this._context, input.component)

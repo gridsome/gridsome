@@ -1,6 +1,6 @@
 const Joi = require('joi')
 
-module.exports = Joi.object()
+const schema = Joi.object()
   .label('Page options')
   .keys({
     path: Joi.string().regex(/^\//, 'leading slash').required(),
@@ -11,3 +11,13 @@ module.exports = Joi.object()
     context: Joi.object(),
     queryContext: Joi.object()
   })
+
+module.exports = function vaidateOptions (options) {
+  const { error, value } = Joi.validate(options, schema)
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  return value
+}
