@@ -226,11 +226,7 @@ class PluginStore extends EventEmitter {
   // utils
   //
 
-  makeUid (orgId) {
-    return crypto.createHash('md5').update(orgId).digest('hex')
-  }
-
-  makeTypeName (name = '') {
+  createTypeName (name = '') {
     if (!this._typeName) {
       throw new Error(`Missing typeName option.`)
     }
@@ -248,6 +244,18 @@ class PluginStore extends EventEmitter {
 
   slugify (string = '') {
     return slugify(string, { separator: '-' })
+  }
+
+  //
+  // deprecated
+  //
+
+  makeUid (orgId) {
+    return crypto.createHash('md5').update(orgId).digest('hex')
+  }
+
+  makeTypeName (name = '') {
+    return this.createTypeName(name)
   }
 
   resolve (p) {
