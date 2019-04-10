@@ -44,15 +44,29 @@ articles: allContentfulArticle{
     node{
       id,
       title,
-      richArticle
+      richArticle {
+        html,
+        document
+      }
     }
   }
 }
 }
 </page-query>
 ```
+Rich text content types return two values,
 
-The content from `richArticle` can then be passed to a Vue `method`: from the page `<template>`. In this case, the method name is `richtextToHTML`
+##### `html`
+Pre-parsed HTML output of the Rich text that can simply be passed in to an element with `v-html`.
+example:
+```
+ <div v-html="edge.node.richArticle.html" />
+```
+
+##### 'document'
+The raw, stringified JSON response from Contentful with all of the node information. Useful for handling the rendering of HTML within the Vue app if you need to handle different types of content, or render them with a Vue component, e.g., images or other `Embeded Asset Blocks`. see below.
+
+The content from `richArticle.document` can then be passed to a Vue `method`: from the page `<template>`. In this case, the method name is `richtextToHTML`
 ```
  <div v-for="edge in $page.articles.edges" :key="edge.id">
       <p v-html="richtextToHTML(edge.node.richArticle)"></p>
