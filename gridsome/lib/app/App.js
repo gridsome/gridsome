@@ -6,6 +6,7 @@ const hirestime = require('hirestime')
 const Pages = require('../pages/pages')
 const BaseStore = require('./BaseStore')
 const PluginAPI = require('./PluginAPI')
+const ComponentParser = require('./ComponentParser')
 const { execute, graphql } = require('graphql')
 const AssetsQueue = require('./queue/AssetsQueue')
 const createSchema = require('../graphql/createSchema')
@@ -87,6 +88,7 @@ class App {
     this.store = new BaseStore(this)
     this.queue = new AssetsQueue(this)
     this.codegen = new Codegen(this)
+    this.parser = new ComponentParser(this)
     this.pages = new Pages(this)
 
     this.config.plugins.map(entry => {
@@ -129,7 +131,7 @@ class App {
   }
 
   async loadSources () {
-    return this.dispatch('loadSource', api => api.store)
+    await this.dispatch('loadSource', api => api.store)
   }
 
   async createSchema () {

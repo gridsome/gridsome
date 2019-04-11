@@ -29,7 +29,7 @@ class PluginAPI {
   }
 
   registerComponentParser (options) {
-    this._app.config.componentParsers.push(options)
+    this._app.parser.add(options)
   }
 
   loadSource (handler) {

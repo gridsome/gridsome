@@ -15,11 +15,10 @@ const nonIndex = [NOT_FOUND_PATH]
 class Pages {
   constructor (app) {
     this._context = app.context
-    this._parsers = app.config.componentParsers
+    this._parser = app.parser
     this._events = new EventEmitter()
     this._watcher = new FSWatcher({ disableGlobbing: true })
     this._watched = {}
-    this._cached = {}
 
     this._collection = new Collection({
       indices: ['path'],
@@ -134,17 +133,7 @@ class Pages {
   }
 
   _parse (component, useCache = true) {
-    const parser = this._parsers.find(options => component.match(options.test))
-
-    if (!parser) return {}
-
-    if (useCache && this._cached[component]) {
-      return this._cached[component]
-    }
-
-    const results = this._cached[component] = parser.parse(component)
-
-    return results
+    return this._parser.parse(component, useCache)
   }
 
   _watch (component) {
@@ -172,6 +161,7 @@ function createPage ({ options, context }) {
   return {
     name,
     path,
+    pathSegments: segments,
     component: options.component,
     context: options.context || null,
     queryContext: options.queryContext || options.context || null,
