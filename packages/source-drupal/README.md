@@ -2,6 +2,17 @@
 
 > Drupal source for Gridsome.
 
+### Table of Contents
+* [Install](#install)
+* [Usage](#usage)
+* [API Schema to GraphQL Conversion](#api-schema-to-graphql-conversion)
+* [Contenta CMS](#contenta-cms)
+* [Routing](#routing)
+* [Excludes](#excludes)
+* [Auth](#auth)
+* [Example Page Queries](#example-page-queries)
+* [Starter project](https://github.com/matt-e-king/gridsome-starter-drupal)
+
 ### Quick Overview
 
 This is the source plugin for pulling in data from the Drupal content management system for Gridsome. The Drupal module [JSON:API](https://www.drupal.org/project/jsonapi) is required for this plugin to work correctly. 
@@ -108,6 +119,21 @@ module.exports = {
 Path parameters can be any GraphQL field on that node:
 `node--article: 'aritlces/:langcode/:slug' -> /aritcles/en/lorem-ipsum`
 
+### Contenta CMS
+[Contenta CMS](https://github.com/contentacms/contenta_jsonapi#--contenta-cms--) should work out-of-the-box with @gridsome/source-drupal. The main difference being, Contenta CMS is by default already using [JSON:API Extras](https://www.drupal.org/project/jsonapi_extras). This gives the user more flexibility and control over resources returned by the api. 
+
+JSON:API has a clear finite list of features which are listed on its [Drupal project page](https://www.drupal.org/project/jsonapi_extras).
+
+This has the biggest impact in regards to the [API Schema to GraphQL Conversion](#api-schema-to-graphql-conversion) mentioned above. Custom types/nodes won't be return with the prefixed `node--`, which will affect your `routes` configuration in `gridsome.config.js`. Look closely at the payload returned by `/api` and make adjustments accordingly.
+
+Here is an [example `gridsome.config.js`](https://github.com/matt-e-king/gridsome-starter-drupal/blob/master/gridsome.config.js) in the Drupal Source Starter, see the commented out section at the bottom for Contenta CMS.
+
+**NOTE:** This will also affect your GraphQL queries:
+```
+article -> DrupalArticle
+recipies -> DrupalRecipes
+```
+
 ### Excludes
 A majority of the endpoints returned in the api schema are not necessary so `@gridsome/source-drupal` exclude some by default. See those defaults in `lib/constants.js`.
 
@@ -123,7 +149,7 @@ module.exports = {
     {
       use: '@gridsome/source-drupal',
       options: {
-        baseUrl: 'https://dev-cctd8.pantheonsite.io',
+        baseUrl: 'https://somedrupalsite.pantheon.io',
         exclude: [ ...defaultExcludes, 'user--user' ], // include the defaults
         routes: {
           'node--article': '/articles/:slug',
@@ -149,7 +175,7 @@ module.exports = {
     {
       use: '@gridsome/source-drupal',
       options: {
-        baseUrl: 'https://dev-cctd8.pantheonsite.io',
+        baseUrl: 'https://somedrupalsite.pantheon.io',
         requestConfig: {
           auth: {
             username: process.env.BASIC_AUTH_USERNAME,
@@ -209,7 +235,3 @@ Get the details of an individual `DrupalNodeArticle` using `<page-query>` in a G
   }
 </page-query>
 ```
-
-### Starter project
-
-Coming soon...
