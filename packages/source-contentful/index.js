@@ -64,10 +64,17 @@ class ContentfulSource {
       const { typeName, displayField } = this.typesIndex[id]
       const collection = store.getContentType(typeName)
       const fields = {}
+      const links = await this.fetch('getEntries', {
+        links_to_entry: entry.sys.id
+      })
 
       fields.createdAt = entry.sys.createdAt
       fields.updatedAt = entry.sys.updatedAt
       fields.locale = entry.sys.locale
+
+      if (links.length > 0) {
+        fields.links = links
+      }
 
       for (const key in entry.fields) {
         const value = entry.fields[key]
@@ -95,8 +102,8 @@ class ContentfulSource {
     }
   }
 
-  async fetch (method, limit = 1000, order = 'sys.createdAt') {
-    const fetch = skip => this.client[method]({ skip, limit, order })
+  async fetch (method, params = {}, limit = 1000, order = 'sys.createdAt') {
+    const fetch = skip => this.client[method]({ skip, limit, order, ...params })
     const { total, items } = await fetch(0)
     const pages = Math.ceil(total / limit)
 
