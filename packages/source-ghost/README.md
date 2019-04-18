@@ -4,6 +4,7 @@
 API might change before v1 is released.
 
 ## Install
+
 - `yarn add @gridsome/source-ghost`
 - `npm install @gridsome/source-ghost`
 
@@ -17,10 +18,9 @@ module.exports = {
       options: {
         url: 'http://localhost:2368',
         key: '0b7050113fba7147f358cc2f4d',
-        perPage: 100,
         routes: {
           post: '/:year/:month/:day/:slug',
-          post_tag: '/tag/:slug'
+          tag: '/tag/:slug'
         }
       }
     }

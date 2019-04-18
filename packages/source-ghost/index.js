@@ -1,10 +1,10 @@
 const GhostContentAPI = require('@tryghost/content-api')
 const camelCase = require('camelcase')
 
-const TYPE_AUTHOR = 'AUTHOR'
-const TYPE_POST = 'POST'
-const TYPE_PAGE = 'PAGE'
-const TYPE_TAG = 'TAG'
+const TYPE_AUTHOR = 'author'
+const TYPE_POST = 'post'
+const TYPE_PAGE = 'page'
+const TYPE_TAG = 'tag'
 
 class GhostSource {
   static defaultOptions () {
@@ -52,91 +52,68 @@ class GhostSource {
   }
 
   async loadTags (store) {
-    console.log('Processing Tags...')
-
     const tags = store.addContentType({
       typeName: store.makeTypeName(TYPE_TAG),
-      route: this.routes.tags
+      route: this.routes[TYPE_TAG]
     })
 
     await this.loadBasicEntity(tags, this.contentAPI.tags)
   }
 
   async loadPages (store) {
-    console.log('Processing Pages...')
-
     const pages = store.addContentType({
       typeName: store.makeTypeName(TYPE_PAGE),
-      route: this.routes.pages
+      route: this.routes[TYPE_PAGE]
     })
 
     await this.loadBasicEntity(pages, this.contentAPI.pages)
   }
 
   async loadAuthors (store) {
-    console.log('Processing Authors...')
-
     const authors = store.addContentType({
       typeName: store.makeTypeName(TYPE_AUTHOR),
-      route: this.routes.author
+      route: this.routes[TYPE_AUTHOR]
     })
 
     await this.loadBasicEntity(authors, this.contentAPI.authors)
   }
+
   async loadPosts (store) {
-    console.log('Processing Posts...')
     const posts = store.addContentType({
       typeName: store.makeTypeName(TYPE_POST),
-      route: this.routes.post
+      route: this.routes[TYPE_POST]
     })
 
-    var keepGoing = true
-    var currentPage = 1
+    const tagTypeName = store.makeTypeName(TYPE_TAG)
+    const authorTypeName = store.makeTypeName(TYPE_AUTHOR)
+
+    let keepGoing = true
+    let currentPage = 1
 
     while (keepGoing) {
-      const rawEntities = await this.contentAPI.posts.browse({
+      const entities = await this.contentAPI.posts.browse({
         limit: this.options.perPage,
         page: currentPage,
         include: 'tags,authors'
       })
 
-      rawEntities.forEach((entity) => {
-        var tags = entity.tags
-        var parsedTags = []
+      entities.forEach(entity => {
+        const { id, title, slug, tags = [], authors = [], ...fields } = entity
+        const { primary_author = {}, primary_tag = {}} = entity // eslint-disable-line
+        const { published_at: date } = entity // eslint-disable-line
 
-        tags.forEach(tag => {
-          parsedTags.push({
-            typeName: store.makeTypeName(TYPE_TAG),
-            id: tag.id
-          })
-        })
-        entity.tags = parsedTags
+        fields.primary_tag = store.createReference(tagTypeName, primary_tag.id)
+        fields.primary_author = store.createReference(authorTypeName, primary_author.id)
+        fields.tags = tags.map(tag => store.createReference(tagTypeName, tag.id))
+        fields.authors = authors.map(author => store.createReference(authorTypeName, author.id))
 
-        var authors = entity.authors
-        var parsedAuthors = []
-
-        authors.forEach(tag => {
-          parsedAuthors.push({
-            typeName: store.makeTypeName(TYPE_AUTHOR),
-            id: tag.id
-          })
-        })
-
-        entity.authors = parsedAuthors
-
-        posts.addNode({
-          id: entity.id,
-          title: entity.name,
-          slug: entity.slug,
-          date: entity.published_at,
-          fields: {
-            ...entity
-          }
-        })
+        posts.addNode({ id, title, slug, date, fields })
       })
-      if (currentPage === rawEntities.meta.pagination.pages) {
+
+      if (currentPage === entities.meta.pagination.pages) {
         keepGoing = false
       }
+
       currentPage++
     }
   }
@@ -150,28 +127,23 @@ class GhostSource {
   }
 
   async loadBasicEntity (collection, contentEntity) {
-    var keepGoing = true
-    var currentPage = 1
+    let keepGoing = true
+    let currentPage = 1
 
     while (keepGoing) {
-      const rawEntities = await contentEntity.browse({
+      const entities = await contentEntity.browse({
         limit: this.options.perPage,
         page: currentPage
       })
 
-      rawEntities.forEach((entity) => {
-        collection.addNode({
-          id: entity.id,
-          title: entity.name,
-          slug: entity.slug,
-          fields: {
-            ...entity
-          }
-        })
+      entities.forEach(({ id, name: title, slug, ...fields }) => {
+        collection.addNode({ id, title, slug, fields })
       })
-      if (currentPage === rawEntities.meta.pagination.pages) {
+
+      if (currentPage === entities.meta.pagination.pages) {
         keepGoing = false
       }
+
       currentPage++
     }
   }
