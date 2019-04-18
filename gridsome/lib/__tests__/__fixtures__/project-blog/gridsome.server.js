@@ -110,7 +110,7 @@ module.exports = function (api) {
       createPage({
         path: `/tag/${node.id}/extra`,
         component: './src/templates/Tag.vue',
-        queryContext: node
+        queryVariables: node
       })
     })
   })

@@ -142,7 +142,7 @@ test('create render queue for createPages hook', async () => {
           route: '/article/:id',
           path: `/article/${node.id}`,
           component: './__fixtures__/DefaultTemplate.vue',
-          queryContext: node
+          queryVariables: node
         })
       }
 

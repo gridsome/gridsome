@@ -81,7 +81,7 @@ class VueTemplates {
     const { route } = contentType.options
 
     return this.pages.createPage({
-      queryContext: node,
+      queryVariables: node,
       path: node.path,
       component,
       route
@@ -99,7 +99,7 @@ class VueTemplates {
     }
 
     return this.pages.createPage({
-      queryContext: node,
+      queryVariables: node,
       path: node.path,
       component,
       route

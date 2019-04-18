@@ -9,7 +9,7 @@ const schema = Joi.object()
     route: Joi.string(),
     name: Joi.string(),
     context: Joi.object(),
-    queryContext: Joi.object()
+    queryVariables: Joi.object()
   })
 
 module.exports = function vaidateOptions (options) {

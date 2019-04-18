@@ -32,7 +32,7 @@ class Pages {
 
         this.findPages({ component }).forEach(page => {
           const oldPage = cloneDeep(page)
-          const query = createPageQuery(pageQuery, page.queryContext)
+          const query = createPageQuery(pageQuery, page.queryVariables)
 
           Object.assign(page, { query })
           Object.assign(page, createRoute({ page, query }))
@@ -71,7 +71,7 @@ class Pages {
 
     const { pageQuery } = this._parse(options.component)
     const page = createPage({ options, context: this._context })
-    const query = createPageQuery(pageQuery, page.queryContext)
+    const query = createPageQuery(pageQuery, page.queryVariables)
 
     Object.assign(page, { query })
     Object.assign(page, createRoute({ page, query }))
@@ -92,7 +92,7 @@ class Pages {
 
     const { pageQuery } = this._parse(options.component, false)
     const newPage = createPage({ options, context: this._context })
-    const query = createPageQuery(pageQuery, newPage.queryContext)
+    const query = createPageQuery(pageQuery, newPage.queryVariables)
 
     const oldPage = cloneDeep(page)
 
@@ -161,7 +161,7 @@ function createPage ({ options, context }) {
     path,
     component: options.component,
     context: options.context || null,
-    queryContext: options.queryContext || options.context || null,
+    queryVariables: options.queryVariables || options.context || null,
     chunkName: options.chunkName || genChunkName(options.component, context),
     internal: {
       path: { segments },

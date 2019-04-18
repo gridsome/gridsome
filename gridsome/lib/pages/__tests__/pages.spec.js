@@ -14,7 +14,7 @@ test('create page', async () => {
   expect(page.path).toEqual('/page')
   expect(page.route).toEqual('/page')
   expect(page.context).toBeNull()
-  expect(page.queryContext).toBeNull()
+  expect(page.queryVariables).toBeNull()
   expect(page.query.document).toBeNull()
   expect(page.component).toEqual(path.join(__dirname, '__fixtures__', 'DefaultPage.vue'))
   expect(page.chunkName).toEqual('page--fixtures--default-page-vue')
@@ -47,7 +47,7 @@ test('create page with context', async () => {
   })
 
   expect(page.context).toMatchObject({ test: true })
-  expect(page.queryContext).toMatchObject({ test: true })
+  expect(page.queryVariables).toMatchObject({ test: true })
 })
 
 test('create page with query context', async () => {
@@ -56,11 +56,11 @@ test('create page with query context', async () => {
   const page = createPage({
     path: '/page',
     component: './__fixtures__/DefaultPage.vue',
-    queryContext: { test: true }
+    queryVariables: { test: true }
   })
 
   expect(page.context).toBeNull()
-  expect(page.queryContext).toMatchObject({ test: true })
+  expect(page.queryVariables).toMatchObject({ test: true })
 })
 
 test('create page with custom route', async () => {
