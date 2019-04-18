@@ -1,4 +1,5 @@
 const GhostContentAPI = require('@tryghost/content-api')
+const camelCase = require('camelcase')
 
 const TYPE_AUTHOR = 'AUTHOR'
 const TYPE_POST = 'POST'
@@ -12,7 +13,8 @@ class GhostSource {
       key: '',
       perPage: 100,
       version: 'v2',
-      typeName: 'Ghost'
+      typeName: 'Ghost',
+      settingsName: null
     }
   }
 
@@ -45,6 +47,7 @@ class GhostSource {
       await this.loadPosts(store)
       await this.loadTags(store)
       await this.loadPages(store)
+      await this.loadSettings(store)
     })
   }
 
@@ -136,6 +139,14 @@ class GhostSource {
       }
       currentPage++
     }
+  }
+
+  async loadSettings (store) {
+    const { settingsName, typeName } = this.options
+    const settings = await this.contentAPI.settings.browse()
+    const fieldName = settingsName || camelCase(typeName)
+
+    store.addMetaData(fieldName, settings)
   }
 
   async loadBasicEntity (collection, contentEntity) {
