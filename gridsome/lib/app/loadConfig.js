@@ -1,6 +1,7 @@
 const path = require('path')
 const fs = require('fs-extra')
 const crypto = require('crypto')
+const dotenv = require('dotenv')
 const colorString = require('color-string')
 const { defaultsDeep, camelCase } = require('lodash')
 const { internalRE, transformerRE, SUPPORTED_IMAGE_TYPES } = require('../utils/constants')
@@ -11,21 +12,39 @@ const builtInPlugins = [
 
 // TODO: use joi to define and validate config schema
 module.exports = (context, options = {}, pkg = {}) => {
+  const env = resolveEnv(context)
+
+  Object.assign(process.env, env)
+
   if (options.config) {
     return options.config
   }
 
   const resolve = (...p) => path.resolve(context, ...p)
-  const isServing = process.env.GRIDSOME_MODE === 'serve'
   const isProd = process.env.NODE_ENV === 'production'
   const configPath = resolve('gridsome.config.js')
+  const localIndex = resolve('src/index.html')
   const args = options.args || {}
   const config = {}
   const plugins = []
 
-  const localConfig = fs.existsSync(configPath)
-    ? require(configPath)
-    : {}
+  const css = {
+    split: false,
+    loaderOptions: {
+      sass: {
+        indentedSyntax: true
+      },
+      stylus: {
+        preferPathResolver: 'webpack'
+      }
+    }
+  }
+
+  const localConfig = options.localConfig
+    ? options.localConfig
+    : fs.existsSync(configPath)
+      ? require(configPath)
+      : {}
 
   // use provided plugins instaed of local plugins
   if (Array.isArray(options.plugins)) {
@@ -53,24 +72,24 @@ module.exports = (context, options = {}, pkg = {}) => {
   const assetsDir = localConfig.assetsDir || 'assets'
 
   config.pkg = options.pkg || resolvePkg(context)
-  config.host = args.host || 'localhost'
-  config.port = parseInt(args.port, 10) || 8080
+  config.host = args.host || localConfig.host || 'localhost'
+  config.port = parseInt(args.port || localConfig.port, 10) || 8080
   config.plugins = normalizePlugins(context, plugins)
   config.chainWebpack = localConfig.chainWebpack
+  config.configureServer = localConfig.configureServer
   config.transformers = resolveTransformers(config.pkg, localConfig)
-  config.pathPrefix = isProd && isServing ? '/' : localConfig.pathPrefix || '/'
+  config.pathPrefix = isProd ? localConfig.pathPrefix || '/' : '/'
   config.staticDir = resolve('static')
   config.outDir = resolve(localConfig.outDir || 'dist')
-  config.targetDir = path.join(config.outDir, config.pathPrefix)
-  config.assetsDir = path.join(config.targetDir, assetsDir)
+  config.assetsDir = path.join(config.outDir, assetsDir)
   config.imagesDir = path.join(config.assetsDir, 'static')
   config.filesDir = path.join(config.assetsDir, 'files')
   config.appPath = path.resolve(__dirname, '../../app')
   config.tmpDir = resolve('src/.temp')
   config.cacheDir = resolve('.cache')
+  config.dataDir = path.join(config.cacheDir, 'data')
   config.imageCacheDir = resolve('.cache', assetsDir, 'static')
-  config.minProcessImageWidth = 500 // TODO: find a better name for this
-  config.maxImageWidth = localConfig.maxImageWidth || 1920
+  config.maxImageWidth = localConfig.maxImageWidth || 2560
   config.imageExtensions = SUPPORTED_IMAGE_TYPES
 
   config.images = { ...localConfig.images }
@@ -92,6 +111,7 @@ module.exports = (context, options = {}, pkg = {}) => {
   config.baseUrl = localConfig.baseUrl || '/'
   config.siteName = localConfig.siteName || path.parse(context).name
   config.titleTemplate = localConfig.titleTemplate || `%s - ${config.siteName}`
+  config.siteDescription = localConfig.siteDescription || ''
 
   config.manifestsDir = path.join(config.assetsDir, 'manifest')
   config.clientManifestPath = path.join(config.manifestsDir, 'client.json')
@@ -99,16 +119,30 @@ module.exports = (context, options = {}, pkg = {}) => {
 
   config.icon = normalizeIconsConfig(localConfig.icon)
 
-  config.templatePath = path.resolve(config.appPath, 'index.html')
+  config.templatePath = fs.existsSync(localIndex) ? localIndex : path.resolve(config.appPath, 'index.html')
   config.htmlTemplate = fs.readFileSync(config.templatePath, 'utf-8')
 
-  config.scss = {}
-  config.sass = {}
-  config.less = {}
-  config.stylus = {}
-  config.postcss = {}
+  config.css = defaultsDeep(localConfig.css || {}, css)
 
   return Object.freeze(config)
+}
+
+function resolveEnv (context) {
+  const env = process.env.NODE_ENV || 'development'
+  const envPath = path.resolve(context, '.env')
+  const envPathByMode = path.resolve(context, `.env.${env}`)
+  const readPath = fs.existsSync(envPathByMode) ? envPathByMode : envPath
+
+  let parsed = {}
+  try {
+    parsed = dotenv.parse(fs.readFileSync(readPath, 'utf8'))
+  } catch (err) {
+    if (err.code !== 'ENOENT') {
+      console.error('There was a problem processing the .env file', err)
+    }
+  }
+
+  return parsed
 }
 
 function resolvePkg (context) {
@@ -212,8 +246,8 @@ function normalizeIconsConfig (config = {}) {
 
   const faviconSizes = [16, 32, 96]
   const touchiconSizes = [76, 152, 120, 167, 180]
-  const defaultIcon = 'src/favicon.png'
-  const icon = typeof config === 'string' ? { favicon: icon } : (config || {})
+  const defaultIcon = './src/favicon.png'
+  const icon = typeof config === 'string' ? { favicon: config } : (config || {})
 
   res.favicon = typeof icon.favicon === 'string'
     ? { src: icon.favicon, sizes: faviconSizes }

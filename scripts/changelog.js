@@ -26,7 +26,7 @@ async function run () {
     const version = name.charAt(0) === 'v'
       ? name.substring(1)
       : name.split('@').pop()
-    
+
     return { name, date, version }
   })
 
@@ -51,7 +51,7 @@ async function run () {
       tags,
       dirname,
       location: resolve(dirname),
-      changelog: resolve(dirname, 'CHANGELOG.md'),
+      changelog: resolve(dirname, 'CHANGELOG.md')
     }
   })
 
@@ -62,7 +62,7 @@ async function run () {
 
 async function genChangelogs (pkg) {
   console.log(`Generating changelog for ${pkg.name}`)
-  
+
   for (let i = 0; i < pkg.tags.length - 1; i++) {
     await genChangelog(pkg, i)
   }

@@ -13,85 +13,116 @@ class ContentfulSource {
 
   constructor (api, options) {
     this.options = options
+    this.store = api.store
+    this.typesIndex = {}
 
-    api.loadSource(args => this.fetchContentfulContent(args))
-  }
-
-  async fetchContentfulContent (store) {
-    const { addContentType, getContentType, makeTypeName, slugify } = store
-    const { space, accessToken, environment, host, routes } = this.options
-
-    const client = contentful.createClient({
-      space, accessToken, environment, host
+    this.client = contentful.createClient({
+      accessToken: options.accessToken,
+      environment: options.environment,
+      space: options.space,
+      host: options.host
     })
 
-    const { items: contentTypes } = await client.getContentTypes()
-    const cache = { contentTypes: {}}
+    api.loadSource(async store => {
+      await this.getContentTypes(store)
+      await this.getAssets(store)
+      await this.getEntries(store)
+    })
+  }
+
+  async getContentTypes (store) {
+    const contentTypes = await this.fetch('getContentTypes')
 
     for (const contentType of contentTypes) {
-      cache.contentTypes[contentType.sys.id] = contentType
+      const { name, sys: { id }} = contentType
+      const typeName = store.makeTypeName(name)
+      const route = this.options.routes[name] || `/${store.slugify(name)}/:slug`
+
+      store.addContentType({ typeName, route })
+
+      this.typesIndex[id] = { ...contentType, typeName }
     }
+  }
 
-    for (const contentType of contentTypes) {
-      addContentType({
-        typeName: makeTypeName(contentType.name),
-        route: routes[contentType.name] || `/${slugify(contentType.name)}/:slug`,
-        refs: contentType.fields.reduce((refs, { id, items }) => {
-          if (items && items.type === 'Link' && items.linkType === 'Entry') {
-            refs[id] = {
-              key: '_id',
-              typeName: items.validations.reduce((types, { linkContentType }) => {
-                linkContentType.forEach(id => {
-                  const contentType = cache.contentTypes[id]
-                  const typeName = makeTypeName(contentType.name)
-                  types.push(typeName)
-                })
+  async getAssets (store) {
+    const assets = await this.fetch('getAssets')
+    const typeName = store.makeTypeName('asset')
+    const route = this.options.routes.asset || '/asset/:id'
 
-                return types
-              }, [])
-            }
-          }
+    const contentType = store.addContentType({ typeName, route })
 
-          return refs
-        }, {})
-      })
+    for (const asset of assets) {
+      contentType.addNode({ id: asset.sys.id, fields: asset.fields })
     }
+  }
 
-    const { items: entries } = await client.getEntries()
+  async getEntries (store) {
+    const entries = await this.fetch('getEntries')
 
-    for (const item of entries) {
-      const id = item.sys.contentType.sys.id
-      const contentType = cache.contentTypes[id]
-      const typeName = makeTypeName(contentType.name)
-      const collection = getContentType(typeName)
+    for (const entry of entries) {
+      const id = entry.sys.contentType.sys.id
+      const { typeName, displayField } = this.typesIndex[id]
+      const collection = store.getContentType(typeName)
+      const fields = {}
 
-      const fields = contentType.fields.reduce((fields, { id, type, items }) => {
-        if (!item.fields[id]) return fields
+      fields.createdAt = entry.sys.createdAt
+      fields.updatedAt = entry.sys.updatedAt
+      fields.locale = entry.sys.locale
 
-        if (items) {
-          if (items.type === 'Link' && items.linkType === 'Entry') {
-            fields[id] = item.fields[id].map(item => item.sys.id)
-          }
+      for (const key in entry.fields) {
+        const value = entry.fields[key]
+
+        if (Array.isArray(value)) {
+          fields[key] = value.map(item =>
+            typeof item === 'object' && typeof value.sys !== 'undefined'
+              ? this.createReferenceField(item)
+              : item
+          )
+        } else if (typeof value === 'object' && typeof value.sys !== 'undefined') {
+          fields[key] = this.createReferenceField(value)
         } else {
-          if (type === 'Link') {
-            fields[id] = [item.fields[id].sys.id]
-          } else {
-            fields[id] = item.fields[id]
-          }
+          fields[key] = value
         }
+      }
 
-        return fields
-      })
-
-      // TODO: let user choose which field contains the slug
       collection.addNode({
-        _id: item.sys.id,
-        title: item.fields[contentType.displayField],
-        slug: item.fields.slug || '',
-        created: new Date(item.sys.createdAt),
-        updated: new Date(item.sys.updatedAt),
+        id: entry.sys.id,
+        title: entry.fields[displayField],
+        slug: entry.fields.slug || '', // TODO: let user choose which field contains the slug
+        date: entry.sys.createdAt,
         fields
       })
+    }
+  }
+
+  async fetch (method, limit = 1000, order = 'sys.createdAt') {
+    const fetch = skip => this.client[method]({ skip, limit, order })
+    const { total, items } = await fetch(0)
+    const pages = Math.ceil(total / limit)
+
+    for (let i = 1; i < pages; i++) {
+      const res = await fetch(limit * i)
+      items.push(...res.items)
+    }
+
+    return items
+  }
+
+  createReferenceField (item) {
+    switch (item.sys.type) {
+      case 'Asset' :
+        return {
+          typeName: this.store.makeTypeName('asset'),
+          id: item.sys.id
+        }
+
+      case 'Entry' :
+        const contentType = this.typesIndex[item.sys.contentType.sys.id]
+
+        return {
+          typeName: this.store.makeTypeName(contentType.name),
+          id: item.sys.id
+        }
     }
   }
 }

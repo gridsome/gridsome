@@ -3,16 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+<a name="0.1.1"></a>
+## [0.1.1](https://github.com/gridsome/gridsome/tree/master/packages/plugin-critical/compare/@gridsome/plugin-critical@0.1.0...@gridsome/plugin-critical@0.1.1) (2019-02-26)
+
+**Note:** Version bump only for package @gridsome/plugin-critical
+
+
+
+
+
 <a name="0.1.0"></a>
-# [0.1.0](https://github.com/gridsome/gridsome/tree/master/packages/plugin-critical/compare/@gridsome/plugin-critical@0.0.6...@gridsome/plugin-critical@0.1.0) (2018-11-11)
+# [0.1.0](https://github.com/gridsome/gridsome/compare/@gridsome/plugin-critical@0.0.6...@gridsome/plugin-critical@0.1.0) (2018-11-11)
 
 
 ### Features
 
-* build hooks ([32774f0](https://github.com/gridsome/gridsome/tree/master/packages/plugin-critical/commit/32774f0))
-
-
-
+* build hooks ([32774f0](https://github.com/gridsome/gridsome/commit/32774f0))
 
 
 <a name="0.0.6"></a>

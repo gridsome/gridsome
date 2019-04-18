@@ -3,16 +3,37 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-<a name="0.0.7"></a>
-## [0.0.7](https://github.com/gridsome/gridsome/tree/master/packages/cli/compare/@gridsome/cli@0.0.6...@gridsome/cli@0.0.7) (2018-11-22)
+## [0.0.9](https://github.com/gridsome/gridsome/tree/master/packages/cli/compare/@gridsome/cli@0.0.8...@gridsome/cli@0.0.9) (2019-03-29)
 
 
 ### Bug Fixes
 
-* **cli:** allow any url as starter ([b689dd1](https://github.com/gridsome/gridsome/tree/master/packages/cli/commit/b689dd1))
+* **cli:** show warning for missing deps ([#281](https://github.com/gridsome/gridsome/tree/master/packages/cli/issues/281)) ([89d6aa3](https://github.com/gridsome/gridsome/tree/master/packages/cli/commit/89d6aa3))
 
 
 
+
+
+<a name="0.0.8"></a>
+## [0.0.8](https://github.com/gridsome/gridsome/tree/master/packages/cli/compare/@gridsome/cli@0.0.7...@gridsome/cli@0.0.8) (2019-02-19)
+
+
+### Bug Fixes
+
+* **cli:** create project in current directory ([#179](https://github.com/gridsome/gridsome/tree/master/packages/cli/issues/179)) ([efb7b06](https://github.com/gridsome/gridsome/tree/master/packages/cli/commit/efb7b06))
+* **cli:** include package name in version ([#176](https://github.com/gridsome/gridsome/tree/master/packages/cli/issues/176)) ([e90538c](https://github.com/gridsome/gridsome/tree/master/packages/cli/commit/e90538c))
+
+
+
+
+
+<a name="0.0.7"></a>
+## [0.0.7](https://github.com/gridsome/gridsome/compare/@gridsome/cli@0.0.6...@gridsome/cli@0.0.7) (2018-11-23)
+
+
+### Bug Fixes
+
+* **cli:** allow any url as starter ([b689dd1](https://github.com/gridsome/gridsome/commit/b689dd1))
 
 
 <a name="0.0.6"></a>

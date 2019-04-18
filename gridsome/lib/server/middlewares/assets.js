@@ -47,7 +47,6 @@ module.exports = ({ context, config, queue }) => {
         if (!fs.existsSync(destPath)) {
           await worker.processImage({
             backgroundColor: config.images.backgroundColor,
-            minWidth: config.minProcessImageWidth,
             size: asset.size,
             filePath,
             destPath,

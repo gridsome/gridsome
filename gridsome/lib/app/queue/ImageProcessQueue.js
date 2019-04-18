@@ -2,7 +2,6 @@ const path = require('path')
 const fs = require('fs-extra')
 const sharp = require('sharp')
 const crypto = require('crypto')
-const { trim } = require('lodash')
 const mime = require('mime-types')
 const colorString = require('color-string')
 const md5File = require('md5-file/promise')
@@ -34,13 +33,13 @@ class ImageProcessQueue {
       return asset
     }
 
-    asset.sets.forEach(({ filename, src, width }) => {
-      if (!this._queue.has(src + asset.cacheKey)) {
-        this._queue.set(src + asset.cacheKey, {
+    asset.sets.forEach(({ filename, destPath, src, width }) => {
+      if (!this._queue.has(destPath + asset.cacheKey)) {
+        this._queue.set(destPath + asset.cacheKey, {
           options: { ...options, width },
-          destination: trim(src, '/'),
           cacheKey: asset.cacheKey,
           size: asset.size,
+          destPath,
           filename,
           filePath
         })
@@ -51,8 +50,8 @@ class ImageProcessQueue {
   }
 
   async preProcess (filePath, options = {}) {
-    const { imageExtensions, targetDir, pathPrefix, maxImageWidth } = this.config
-    const imagesDir = path.relative(targetDir, this.config.imagesDir)
+    const { imageExtensions, outDir, pathPrefix, maxImageWidth } = this.config
+    const imagesDir = path.relative(outDir, this.config.imagesDir)
     const relPath = path.relative(this.context, filePath)
     const { name, ext } = path.parse(filePath)
     const mimeType = mime.lookup(filePath)
@@ -82,9 +81,8 @@ class ImageProcessQueue {
       ? parseInt(options.height, 10)
       : Math.ceil(height * (imageWidth / width))
 
-    const imageSizes = (options.sizes || [480, 1024, 1920, 2560]).filter(size => {
-      return size <= maxImageWidth && size <= imageWidth
-    })
+    const allSizes = options.sizes || [480, 1024, 1920, 2560]
+    const imageSizes = allSizes.filter(size => size <= imageWidth)
 
     if (
       (imageSizes.length === 1 && imageSizes[0] <= imageWidth) ||
@@ -102,13 +100,13 @@ class ImageProcessQueue {
       options.background = this.config.imageBackgroundColor
     }
 
-    const createSrcPath = (filename, imageOptions) => {
+    const createDestPath = (filename, imageOptions) => {
       if (process.env.GRIDSOME_MODE === 'serve') {
         const query = '?' + createOptionsQuery(imageOptions)
         return path.join('/', imagesDir, forwardSlash(relPath)) + query
       }
 
-      return forwardSlash(path.join('/', pathPrefix, imagesDir, filename))
+      return path.join(imagesDir, filename)
     }
 
     const sets = imageSizes.map((width = imageWidth) => {
@@ -121,9 +119,11 @@ class ImageProcessQueue {
 
       const arr = this.createImageOptions(imageOptions)
       const filename = this.createFileName(filePath, arr, hash)
-      const src = createSrcPath(filename, arr)
+      const relPath = createDestPath(filename, arr)
+      const destPath = path.join(this.config.outDir, relPath)
+      const src = forwardSlash(path.join(pathPrefix, relPath))
 
-      return { filename, src, width, height }
+      return { filename, destPath, src, width, height }
     })
 
     const results = {
@@ -200,6 +200,10 @@ class ImageProcessQueue {
 
     if (options.background) {
       imageOptions.push({ key: 'background', shortKey: 'b-', value: options.background })
+    }
+
+    if (options.blur) {
+      imageOptions.push({ key: 'blur', shortKey: 'bl-', value: options.blur })
     }
 
     return imageOptions

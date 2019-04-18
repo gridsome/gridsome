@@ -2,24 +2,23 @@
 
 const path = require('path')
 const chalk = require('chalk')
-const fs = require('fs-extra')
 const program = require('commander')
 const resolveCwd = require('resolve-cwd')
-const create = require('../lib/commands/create')
+const resolveVersions = require('../lib/utils/version')
 const pkgPath = require('find-up').sync('package.json')
-const context = pkgPath ? path.dirname(pkgPath) : process.cwd()
 
-// to know whether we are in the core repo or not
-process.env.GRIDSOME_DEV = fs.existsSync('../../lerna.json')
+const context = pkgPath ? path.dirname(pkgPath) : process.cwd()
+const version = resolveVersions(pkgPath)
 
 program
-  .version(require('../package').version)
+  .version(version, '-v, --version')
   .usage('<command> [options]')
 
 program
   .command('create <name> [starter]')
   .description('create a new website')
   .action((...args) => {
+    const create = require('../lib/commands/create')
     return wrapCommand(create)(...args)
   })
 
@@ -27,7 +26,6 @@ try {
   const gridsomePath = resolveCwd.silent('gridsome')
 
   if (gridsomePath) {
-    // eslint-disable-next-line
     require(gridsomePath)({ context, program })
   }
 } catch (err) {
@@ -35,8 +33,18 @@ try {
 }
 
 // show a warning if the command does not exist
-program.arguments('<command>').action((command) => {
-  console.log(chalk.red(`Unknown command ${chalk.bold(command)}`))
+program.arguments('<command>').action(async command => {
+  const { isGridsomeProject, hasYarn } = require('../lib/utils')
+
+  if (isGridsomeProject(pkgPath)) {
+    const useYarn = await hasYarn()
+
+    console.log()
+    console.log(`  Please run ${chalk.cyan(useYarn ? 'yarn' : 'npm install')} to install dependencies first.`)
+    console.log()
+  } else {
+    console.log(chalk.red(`Unknown command ${chalk.bold(command)}`))
+  }
 })
 
 program.on('--help', () => {

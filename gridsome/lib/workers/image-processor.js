@@ -4,19 +4,17 @@ const sharp = require('sharp')
 const imagemin = require('imagemin')
 const colorString = require('color-string')
 const imageminWebp = require('imagemin-webp')
+const imageminMozjpeg = require('imagemin-mozjpeg')
 const imageminPngquant = require('imagemin-pngquant')
-const imageminJpegoptim = require('imagemin-jpegoptim')
 
 sharp.simd(true)
 
 exports.processImage = async function ({
+  size,
   filePath,
   destPath,
   cachePath,
-  size,
   options = {},
-  minWidth = 500,
-  resizeImage = false,
   backgroundColor = null
 }) {
   if (cachePath && await fs.exists(cachePath)) {
@@ -55,12 +53,14 @@ exports.processImage = async function ({
     }
 
     if (/\.png$/.test(ext)) {
+      const quality = config.quality / 100
+
       pipeline = pipeline.png({
         compressionLevel: config.pngCompressionLevel,
         adaptiveFiltering: false
       })
       plugins.push(imageminPngquant({
-        quality: config.quality
+        quality: [quality, quality]
       }))
     }
 
@@ -69,8 +69,9 @@ exports.processImage = async function ({
         progressive: config.jpegProgressive,
         quality: config.quality
       })
-      plugins.push(imageminJpegoptim({
-        max: config.quality
+      plugins.push(imageminMozjpeg({
+        progressive: config.jpegProgressive,
+        quality: config.quality
       }))
     }
 
@@ -90,16 +91,14 @@ exports.processImage = async function ({
   await fs.outputFile(destPath, buffer)
 }
 
-exports.process = async function ({ queue, outDir, cacheDir, minWidth, backgroundColor }) {
+exports.process = async function ({ queue, cacheDir, backgroundColor }) {
   return Promise.all(queue.map(set => {
     const cachePath = cacheDir ? path.join(cacheDir, set.filename) : null
-    const destPath = path.join(outDir, set.destination)
 
     return exports.processImage({
+      destPath: set.destPath,
       backgroundColor,
       cachePath,
-      destPath,
-      minWidth,
       ...set
     })
   }))

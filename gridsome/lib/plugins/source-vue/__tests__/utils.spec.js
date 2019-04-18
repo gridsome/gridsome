@@ -25,14 +25,12 @@ test('extract page query from component', () => {
   const filePath = path.resolve(__dirname, '__fixtures__/ComponentWithQuery.vue')
   const { pageQuery } = parseComponent(filePath)
 
-  expect(pageQuery.content.trim()).toMatchSnapshot()
-  expect(pageQuery.options.foo).toEqual('bar')
+  expect(pageQuery.trim()).toMatchSnapshot()
 })
 
 test('extract empty page query if missing', () => {
   const filePath = path.resolve(__dirname, '__fixtures__/ComponentWithoutQuery.vue')
   const { pageQuery } = parseComponent(filePath)
 
-  expect(pageQuery.content).toBeNull()
-  expect(pageQuery.options).toMatchObject({})
+  expect(pageQuery).toBeNull()
 })

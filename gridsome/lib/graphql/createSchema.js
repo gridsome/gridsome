@@ -1,16 +1,12 @@
 const { omitBy, isEmpty } = require('lodash')
 const { mergeSchemas } = require('graphql-tools')
-
-const {
-  GraphQLSchema,
-  GraphQLObjectType
-} = require('./graphql')
+const { GraphQLSchema, GraphQLObjectType } = require('graphql')
 
 module.exports = (store, options = {}) => {
-  const directives = require('./schema/directives')
-  const pagesSchema = require('./schema/pages')()
-  const nodesSchema = require('./schema/nodes')(store)
-  const metaData = require('./schema/metaData')(store, nodesSchema.nodeTypes)
+  const directives = require('./directives')
+  const pagesSchema = require('./pages')()
+  const nodesSchema = require('./nodes')(store)
+  const metaData = require('./metaData')(store, nodesSchema.nodeTypes)
   const { schemas = [] } = options
 
   const schema = new GraphQLSchema({

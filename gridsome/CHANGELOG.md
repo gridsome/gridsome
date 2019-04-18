@@ -3,6 +3,270 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.5.7](https://github.com/gridsome/gridsome/compare/gridsome@0.5.6...gridsome@0.5.7) (2019-04-09)
+
+
+### Bug Fixes
+
+* **app:** don't resolve url for different port ([#350](https://github.com/gridsome/gridsome/issues/350)) ([a6ab23f](https://github.com/gridsome/gridsome/commit/a6ab23f))
+* **g-image:** alt attribute for noscript image ([#353](https://github.com/gridsome/gridsome/issues/353)) ([fcfcf36](https://github.com/gridsome/gridsome/commit/fcfcf36))
+* **graphql:** prefer float when mixed number types ([#332](https://github.com/gridsome/gridsome/issues/332)) ([b311850](https://github.com/gridsome/gridsome/commit/b311850))
+
+
+
+
+
+## [0.5.6](https://github.com/gridsome/gridsome/compare/gridsome@0.5.5...gridsome@0.5.6) (2019-03-29)
+
+
+### Bug Fixes
+
+* **app:** allow absolute path to custom favicon ([53a755c](https://github.com/gridsome/gridsome/commit/53a755c))
+* **app:** allow css.split option to be true ([#266](https://github.com/gridsome/gridsome/issues/266)) ([a0fcd10](https://github.com/gridsome/gridsome/commit/a0fcd10))
+* **app:** make routes appear in vue-devtools ([#322](https://github.com/gridsome/gridsome/issues/322)) ([f1a865c](https://github.com/gridsome/gridsome/commit/f1a865c))
+* **develop:** allow OPTIONS method request to /___graphql ([#271](https://github.com/gridsome/gridsome/issues/271)) ([f1ec997](https://github.com/gridsome/gridsome/commit/f1ec997))
+* **g-image:** increase max image width ([#286](https://github.com/gridsome/gridsome/issues/286)) ([8a7ae89](https://github.com/gridsome/gridsome/commit/8a7ae89))
+* **graphql:** allow requests without variables ([#323](https://github.com/gridsome/gridsome/issues/323)) ([8184834](https://github.com/gridsome/gridsome/commit/8184834))
+* **store:** handle route params starting with raw correctly ([#295](https://github.com/gridsome/gridsome/issues/295)) ([931937c](https://github.com/gridsome/gridsome/commit/931937c))
+* **store:** prioritize node.id over node.fields.id ([3d7c180](https://github.com/gridsome/gridsome/commit/3d7c180))
+* **store:** support repeated segments in dynamic routes ([#279](https://github.com/gridsome/gridsome/issues/279)) ([2259f85](https://github.com/gridsome/gridsome/commit/2259f85))
+
+
+
+
+
+## [0.5.5](https://github.com/gridsome/gridsome/compare/gridsome@0.5.4...gridsome@0.5.5) (2019-03-08)
+
+
+### Bug Fixes
+
+* **app:** don’t preload /404 without page-query ([5835733](https://github.com/gridsome/gridsome/commit/5835733))
+* **app:** only intercept left clicks on links ([#236](https://github.com/gridsome/gridsome/issues/236)) ([78413dc](https://github.com/gridsome/gridsome/commit/78413dc))
+* **build:** render template with static route and pagination once ([2f4d93a](https://github.com/gridsome/gridsome/commit/2f4d93a))
+* **develop:** show /404 for non existing paths ([b18e8e9](https://github.com/gridsome/gridsome/commit/b18e8e9))
+* **develop:** update static-query when source changes ([d867e93](https://github.com/gridsome/gridsome/commit/d867e93))
+* **graphq:** siteDescription as metaData ([#260](https://github.com/gridsome/gridsome/issues/260)) ([640f72d](https://github.com/gridsome/gridsome/commit/640f72d))
+* **pager:** bind linkClass to an object ([#257](https://github.com/gridsome/gridsome/issues/257)) ([6765a3d](https://github.com/gridsome/gridsome/commit/6765a3d))
+* **store:** keep references for empty arrays ([ec6fcf9](https://github.com/gridsome/gridsome/commit/ec6fcf9))
+* **webpack:** combine all css in one file ([#230](https://github.com/gridsome/gridsome/issues/230)) ([952148d](https://github.com/gridsome/gridsome/commit/952148d))
+* **webpack:** support webp images ([#227](https://github.com/gridsome/gridsome/issues/227)) ([72123f7](https://github.com/gridsome/gridsome/commit/72123f7))
+* count minimum one physical cpu ([#255](https://github.com/gridsome/gridsome/issues/255)) ([91444c7](https://github.com/gridsome/gridsome/commit/91444c7))
+* pin jest-worker version until fix is published ([#252](https://github.com/gridsome/gridsome/issues/252)) ([c0d15b6](https://github.com/gridsome/gridsome/commit/c0d15b6))
+
+
+### Performance Improvements
+
+* **graphql:** improve belongsTo query performance ([bcdacce](https://github.com/gridsome/gridsome/commit/bcdacce))
+
+
+
+
+
+<a name="0.5.4"></a>
+## [0.5.4](https://github.com/gridsome/gridsome/compare/gridsome@0.5.3...gridsome@0.5.4) (2019-02-27)
+
+
+### Bug Fixes
+
+* **build:** ensure data directory exists before building ([#93](https://github.com/gridsome/gridsome/issues/93)) ([3453aff](https://github.com/gridsome/gridsome/commit/3453aff))
+* **graphql:** don’t process non graphql requests ([#220](https://github.com/gridsome/gridsome/issues/220)) ([c276b98](https://github.com/gridsome/gridsome/commit/c276b98))
+
+
+
+
+
+<a name="0.5.3"></a>
+## [0.5.3](https://github.com/gridsome/gridsome/compare/gridsome@0.5.2...gridsome@0.5.3) (2019-02-26)
+
+
+### Bug Fixes
+
+* **app:** fetch data properly for homepage ([#218](https://github.com/gridsome/gridsome/issues/218)) ([fd72abc](https://github.com/gridsome/gridsome/commit/fd72abc))
+
+
+
+
+
+<a name="0.5.2"></a>
+## [0.5.2](https://github.com/gridsome/gridsome/compare/gridsome@0.5.1...gridsome@0.5.2) (2019-02-26)
+
+
+### Bug Fixes
+
+* **app:** preload data for links in view ([35411aa](https://github.com/gridsome/gridsome/commit/35411aa))
+* **app:** unslash path before fetching data ([7c086a7](https://github.com/gridsome/gridsome/commit/7c086a7))
+
+
+
+
+
+<a name="0.5.1"></a>
+## [0.5.1](https://github.com/gridsome/gridsome/compare/gridsome@0.5.0...gridsome@0.5.1) (2019-02-26)
+
+
+### Bug Fixes
+
+* **app:** keep original path when showing 404 ([f0efbaa](https://github.com/gridsome/gridsome/commit/f0efbaa))
+* **build:** fail if path resolves to 404 ([#218](https://github.com/gridsome/gridsome/issues/218)) ([b3b7add](https://github.com/gridsome/gridsome/commit/b3b7add))
+* **build:** put images in correct folder when pathPrefix is used ([#221](https://github.com/gridsome/gridsome/issues/221)) ([497998c](https://github.com/gridsome/gridsome/commit/497998c))
+* **build:** query context for templates with static route ([a962482](https://github.com/gridsome/gridsome/commit/a962482))
+* **build:** render pagination correctly for root path ([#218](https://github.com/gridsome/gridsome/issues/218)) ([1ee57fe](https://github.com/gridsome/gridsome/commit/1ee57fe))
+* **g-image:** add static classes to noscript image ([#203](https://github.com/gridsome/gridsome/issues/203)) ([c4036b8](https://github.com/gridsome/gridsome/commit/c4036b8))
+* **g-image:** refresh when src updates on same element ([7128fd6](https://github.com/gridsome/gridsome/commit/7128fd6))
+* **g-image:** remove duplicate class names ([2de526f](https://github.com/gridsome/gridsome/commit/2de526f))
+* **graphql:** don’t fail when invalid page-query ([d143767](https://github.com/gridsome/gridsome/commit/d143767))
+* **graphql:** improve graphql error handling ([#204](https://github.com/gridsome/gridsome/issues/204)) ([767b674](https://github.com/gridsome/gridsome/commit/767b674))
+* **store:** include GraphQLJSON type in addSchemaField ([73e332c](https://github.com/gridsome/gridsome/commit/73e332c))
+* **webpack:** don’t fail if g-image or g-link has no attrs ([5267a78](https://github.com/gridsome/gridsome/commit/5267a78))
+
+
+
+
+
+<a name="0.5.0"></a>
+# [0.5.0](https://github.com/gridsome/gridsome/compare/gridsome@0.4.7...gridsome@0.5.0) (2019-02-19)
+
+
+### Bug Fixes
+
+* **app:** fix cyclic dependency when importing Pager ([#109](https://github.com/gridsome/gridsome/issues/109)) ([b8247af](https://github.com/gridsome/gridsome/commit/b8247af))
+* **app:** parse dates as UTC ([bb1972d](https://github.com/gridsome/gridsome/commit/bb1972d))
+* **build:** create new Vue instance before each route ([424e678](https://github.com/gridsome/gridsome/commit/424e678))
+* **build:** ensure 404 route for /404 page ([70698e0](https://github.com/gridsome/gridsome/commit/70698e0))
+* **g-image:** behave properly inside v-for ([#185](https://github.com/gridsome/gridsome/issues/185)) ([e3c2aba](https://github.com/gridsome/gridsome/commit/e3c2aba))
+* **g-image:** pass custom blur to asset queue ([1f9ce9a](https://github.com/gridsome/gridsome/commit/1f9ce9a))
+* **graphql:** do not send page param in path ([61cdf9c](https://github.com/gridsome/gridsome/commit/61cdf9c))
+* **graphql:** don’t convert URLs or filenames to object ([be08c52](https://github.com/gridsome/gridsome/commit/be08c52))
+* **graphql:** handle date types correctly ([53f963d](https://github.com/gridsome/gridsome/commit/53f963d))
+* **graphql:** improved error handling ([0dad580](https://github.com/gridsome/gridsome/commit/0dad580))
+* **graphql:** merge all entries in arrays ([#184](https://github.com/gridsome/gridsome/issues/184)) ([80952d6](https://github.com/gridsome/gridsome/commit/80952d6))
+* **graphql:** return null for missing references ([8d920fc](https://github.com/gridsome/gridsome/commit/8d920fc))
+* **graphql:** sort by custom field value ([cfcefaf](https://github.com/gridsome/gridsome/commit/cfcefaf))
+* **store:** allow regex wildcard route param ([f283526](https://github.com/gridsome/gridsome/commit/f283526))
+
+
+### Features
+
+* **app:** override active link classes for Pager ([#143](https://github.com/gridsome/gridsome/issues/143)) ([6a5159d](https://github.com/gridsome/gridsome/commit/6a5159d))
+* **app:** override default index.html template ([#162](https://github.com/gridsome/gridsome/issues/162)) ([4cdd326](https://github.com/gridsome/gridsome/commit/4cdd326))
+* **app:** siteDescription as description meta tag ([#70](https://github.com/gridsome/gridsome/issues/70)) ([6fa118c](https://github.com/gridsome/gridsome/commit/6fa118c))
+* **app:** upgrade to Vue 2.6 ([f1ab4e1](https://github.com/gridsome/gridsome/commit/f1ab4e1))
+* **build:** generate 404.html file ([#75](https://github.com/gridsome/gridsome/issues/75)) ([59988e5](https://github.com/gridsome/gridsome/commit/59988e5))
+* **develop:** configureServer hook ([029e431](https://github.com/gridsome/gridsome/commit/029e431))
+* **g-link:** rel noopener for external links ([#104](https://github.com/gridsome/gridsome/issues/104)) ([9f11efb](https://github.com/gridsome/gridsome/commit/9f11efb))
+* **graphql:** belongsTo field for listing references ([#119](https://github.com/gridsome/gridsome/issues/119)) ([2ef275f](https://github.com/gridsome/gridsome/commit/2ef275f))
+* **graphql:** current node as query variables ([#77](https://github.com/gridsome/gridsome/issues/77)) ([1beece4](https://github.com/gridsome/gridsome/commit/1beece4))
+* **graphql:** filter argument ([#84](https://github.com/gridsome/gridsome/issues/84)) ([692f6cb](https://github.com/gridsome/gridsome/commit/692f6cb))
+* **router:** deep node fields as route params ([#115](https://github.com/gridsome/gridsome/issues/115)) ([2d2ec44](https://github.com/gridsome/gridsome/commit/2d2ec44))
+* **store:** helper for creating refs in sub fields ([b9d7add](https://github.com/gridsome/gridsome/commit/b9d7add))
+* **webpack:** add custom css loader options ([#46](https://github.com/gridsome/gridsome/issues/46)) ([cf7a505](https://github.com/gridsome/gridsome/commit/cf7a505))
+* **webpack:** enviroment variables and support for dotenv files ([#123](https://github.com/gridsome/gridsome/issues/123)) ([c236d8b](https://github.com/gridsome/gridsome/commit/c236d8b))
+* **webpack:** use [@vue](https://github.com/vue)/babel-preset-app ([e51e363](https://github.com/gridsome/gridsome/commit/e51e363))
+
+
+
+
+
+<a name="0.4.7"></a>
+## [0.4.7](https://github.com/gridsome/gridsome/compare/gridsome@0.4.6...gridsome@0.4.7) (2019-02-04)
+
+
+### Bug Fixes
+
+* **app:** add key to viewport meta ([#169](https://github.com/gridsome/gridsome/issues/169)) ([c7f6dfa](https://github.com/gridsome/gridsome/commit/c7f6dfa))
+* **store:** pass resolveAbsolutePaths correctly ([6164464](https://github.com/gridsome/gridsome/commit/6164464))
+* **webpack:** remove duplicate style links (163) ([5ce0106](https://github.com/gridsome/gridsome/commit/5ce0106))
+
+
+
+
+
+<a name="0.4.6"></a>
+## [0.4.6](https://github.com/gridsome/gridsome/compare/gridsome@0.4.5...gridsome@0.4.6) (2019-01-30)
+
+
+### Bug Fixes
+
+* **app:** add format-detection meta tag ([#145](https://github.com/gridsome/gridsome/issues/145)) ([f7f94ae](https://github.com/gridsome/gridsome/commit/f7f94ae))
+* **app:** simplify IntersectionObserver check ([#153](https://github.com/gridsome/gridsome/issues/153)) ([5a0d729](https://github.com/gridsome/gridsome/commit/5a0d729))
+* **build:** throw error if something fails in main.js ([bb62605](https://github.com/gridsome/gridsome/commit/bb62605))
+* **g-image:** observe images in v-html ([#158](https://github.com/gridsome/gridsome/issues/158)) ([07821da](https://github.com/gridsome/gridsome/commit/07821da))
+* **g-image:** run onload event once ([ca6f015](https://github.com/gridsome/gridsome/commit/ca6f015)), closes [#93](https://github.com/gridsome/gridsome/issues/93)
+* **webpack:** don’t cache static-query ([#160](https://github.com/gridsome/gridsome/issues/160)) ([0352f99](https://github.com/gridsome/gridsome/commit/0352f99))
+
+
+
+
+
+<a name="0.4.5"></a>
+## [0.4.5](https://github.com/gridsome/gridsome/compare/gridsome@0.4.4...gridsome@0.4.5) (2019-01-26)
+
+
+### Bug Fixes
+
+* **app:** custom favicon path ([#149](https://github.com/gridsome/gridsome/issues/149)) ([f6b6b3d](https://github.com/gridsome/gridsome/commit/f6b6b3d)), closes [#138](https://github.com/gridsome/gridsome/issues/138)
+* **g-image:** bind custom classes to object ([#151](https://github.com/gridsome/gridsome/issues/151)) ([10150ca](https://github.com/gridsome/gridsome/commit/10150ca))
+
+
+
+
+
+<a name="0.4.4"></a>
+## [0.4.4](https://github.com/gridsome/gridsome/compare/gridsome@0.4.3...gridsome@0.4.4) (2019-01-15)
+
+
+### Bug Fixes
+
+* **graphql:** merge ref fields correctly ([#128](https://github.com/gridsome/gridsome/issues/128), [#129](https://github.com/gridsome/gridsome/issues/129)) ([ffb29ee](https://github.com/gridsome/gridsome/commit/ffb29ee))
+* **webpack:** cache graphql loader results ([6e794ab](https://github.com/gridsome/gridsome/commit/6e794ab))
+* **webpack:** transpile custom blocks ([#130](https://github.com/gridsome/gridsome/issues/130)) ([c81fee4](https://github.com/gridsome/gridsome/commit/c81fee4))
+
+
+
+
+
+<a name="0.4.3"></a>
+## [0.4.3](https://github.com/gridsome/gridsome/compare/gridsome@0.4.2...gridsome@0.4.3) (2019-01-09)
+
+
+### Bug Fixes
+
+* **webpack:** fix config for IE support ([e403f4c](https://github.com/gridsome/gridsome/commit/e403f4c))
+
+
+
+
+
+<a name="0.4.2"></a>
+## [0.4.2](https://github.com/gridsome/gridsome/compare/gridsome@0.4.1...gridsome@0.4.2) (2019-01-07)
+
+
+### Bug Fixes
+
+* **route:** allow node props as route params ([1658fde](https://github.com/gridsome/gridsome/commit/1658fde))
+* **store:** update node content and excerpt ([637e0e4](https://github.com/gridsome/gridsome/commit/637e0e4))
+
+
+
+
+
+<a name="0.4.1"></a>
+## [0.4.1](https://github.com/gridsome/gridsome/compare/gridsome@0.4.0...gridsome@0.4.1) (2019-01-03)
+
+
+### Bug Fixes
+
+* **config:** customizing host and port ([bc44a64](https://github.com/gridsome/gridsome/commit/bc44a64))
+* **config:** use host and port from project config ([7936aa7](https://github.com/gridsome/gridsome/commit/7936aa7))
+* **graphql:** fix deprecated references api ([cb6f245](https://github.com/gridsome/gridsome/commit/cb6f245))
+* **image:** don’t re-render when parent updates ([#93](https://github.com/gridsome/gridsome/issues/93)) ([c813d70](https://github.com/gridsome/gridsome/commit/c813d70))
+* **pathPrefix:** don’t create subfolder ([#85](https://github.com/gridsome/gridsome/issues/85)) ([96bfbed](https://github.com/gridsome/gridsome/commit/96bfbed))
+* **router:** add leading slash to routes ([4024ace](https://github.com/gridsome/gridsome/commit/4024ace))
+
+
+
+
+
 <a name="0.4.0"></a>
 # [0.4.0](https://github.com/gridsome/gridsome/compare/gridsome@0.3.6...gridsome@0.4.0) (2018-12-19)
 

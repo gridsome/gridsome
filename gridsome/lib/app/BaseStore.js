@@ -1,6 +1,6 @@
 const Loki = require('lokijs')
 const autoBind = require('auto-bind')
-const { isArray, isPlainObject } = require('lodash')
+const { omit, isArray, isPlainObject } = require('lodash')
 const ContentTypeCollection = require('./ContentTypeCollection')
 
 class BaseStore {
@@ -9,22 +9,25 @@ class BaseStore {
     this.data = new Loki()
     this.collections = {}
     this.taxonomies = {}
+    this.lastUpdate = null
+
+    this.setUpdateTime()
 
     autoBind(this)
 
-    this.index = this.data.addCollection('nodeIndex', {
+    this.index = this.data.addCollection('core/nodeIndex', {
       indices: ['path', 'typeName', 'id'],
       unique: ['uid', 'path'],
       autoupdate: true
     })
 
-    this.pages = this.data.addCollection('Page', {
+    this.pages = this.data.addCollection('core/page', {
       indices: ['type'],
       unique: ['path'],
       autoupdate: true
     })
 
-    this.metaData = this.data.addCollection('MetaData', {
+    this.metaData = this.data.addCollection('core/metaData', {
       unique: ['key'],
       autoupdate: true
     })
@@ -39,6 +42,8 @@ class BaseStore {
       node.data = node.data.concat(data)
     } else if (node && isPlainObject(node.data) && isPlainObject(data)) {
       Object.assign(node.data, data)
+    } else if (node) {
+      node.data = data
     } else {
       node = this.metaData.insert({ key, data })
     }
@@ -61,23 +66,19 @@ class BaseStore {
   getNodeByPath (path) {
     const entry = this.index.findOne({ path })
 
-    if (!entry) {
+    if (!entry || entry.type === 'page') {
       return null
     }
 
-    const { collection } = this.getContentType(entry.typeName)
-
-    return collection.getNode(entry.id)
+    return this.getContentType(entry.typeName).getNode({ uid: entry.uid })
   }
 
-  // taxonomies
-
-  addTaxonomy (pluginStore, options) {
-    // TODO: implement taxonomies
-  }
-
-  getTaxonomy (type) {
-    // TODO: implement taxonomies
+  chainIndex (query = {}) {
+    return this.index.chain().find(query).map(entry => {
+      const type = this.collections[entry.typeName]
+      const node = type.collection.by('id', entry.id)
+      return omit(node, '$loki')
+    })
   }
 
   // pages
@@ -86,12 +87,18 @@ class BaseStore {
     return this.pages.insert(options)
   }
 
-  getPage (_id) {
-    return this.pages.findOne({ _id })
+  getPage (id) {
+    return this.pages.findOne({ id })
   }
 
-  removePage (_id) {
-    return this.pages.findAndRemove({ _id })
+  removePage (id) {
+    return this.pages.findAndRemove({ id })
+  }
+
+  // utils
+
+  setUpdateTime () {
+    this.lastUpdate = Date.now()
   }
 }
 

@@ -6,8 +6,9 @@ const EventEmitter = require('events')
 const camelCase = require('camelcase')
 const pathToRegexp = require('path-to-regexp')
 const slugify = require('@sindresorhus/slugify')
-const parsePageQuery = require('../graphql/parsePageQuery')
-const { mapValues, cloneDeep } = require('lodash')
+const { NODE_FIELDS } = require('../utils/constants')
+const { parsePageQuery } = require('../graphql/page-query')
+const { mapValues, cloneDeep, isPlainObject } = require('lodash')
 const { cache, nodeCache } = require('../utils/cache')
 const { log, warn } = require('../utils/log')
 
@@ -22,7 +23,7 @@ class Source extends EventEmitter {
     this._transformers = mapValues(transformers || app.config.transformers, transformer => {
       return new transformer.TransformerClass(transformer.options, {
         localOptions: options[transformer.name] || {},
-        resolveNodeFilePath: this.resolveNodeFilePath,
+        resolveNodeFilePath: this._resolveNodeFilePath,
         context: app.context,
         queue: app.queue,
         cache,
@@ -49,6 +50,10 @@ class Source extends EventEmitter {
   }
 
   addContentType (options) {
+    if (typeof options === 'string') {
+      options = { typeName: options }
+    }
+
     if (typeof options.typeName !== 'string') {
       throw new Error(`«typeName» option is required.`)
     }
@@ -61,11 +66,12 @@ class Source extends EventEmitter {
       return this.store.getContentType(options.typeName)
     }
 
-    let makePath = () => null
+    let createPath = () => null
     const routeKeys = []
 
     if (typeof options.route === 'string') {
-      makePath = pathToRegexp.compile(options.route)
+      options.route = '/' + options.route.replace(/^\/+/g, '')
+      createPath = pathToRegexp.compile(options.route)
       pathToRegexp(options.route, routeKeys)
     }
 
@@ -85,11 +91,30 @@ class Source extends EventEmitter {
       route: options.route,
       fields: options.fields || {},
       typeName: options.typeName,
-      routeKeys: routeKeys.map(key => key.name.replace('_raw', '')),
+      routeKeys: routeKeys
+        .filter(key => typeof key.name === 'string')
+        .map(key => {
+          // separate field name from suffix
+          const [, fieldName, suffix] = (
+            key.name.match(/^(.*[^_])_([a-z]+)$/) ||
+            [null, key.name, null]
+          )
+          const path = !NODE_FIELDS.includes(fieldName)
+            ? ['fields'].concat(fieldName.split('__'))
+            : [fieldName]
+
+          return {
+            name: key.name,
+            path,
+            fieldName,
+            repeat: key.repeat,
+            suffix
+          }
+        }),
       resolveAbsolutePaths: options.resolveAbsolutePaths,
       mimeTypes: [],
       belongsTo: {},
-      makePath,
+      createPath,
       refs
     }).on('change', (node, oldNode) => {
       this.emit('change', node, oldNode)
@@ -107,16 +132,14 @@ class Source extends EventEmitter {
       id: options.id || options._id,
       type: type || 'page',
       component: options.component,
-      internal: this.createInternals(options.internal)
+      typeName: options.typeName,
+      internal: this._createInternals(options.internal)
     }
 
     // TODO: remove before 1.0
     page._id = page.id
 
-    try {
-      page.pageQuery = parsePageQuery(options.pageQuery || {})
-    } catch (err) {}
-
+    page.pageQuery = parsePageQuery(options.pageQuery)
     page.title = options.title || page.id
     page.slug = options.slug || this.slugify(page.title)
     page.path = options.path || `/${page.slug}`
@@ -143,14 +166,12 @@ class Source extends EventEmitter {
   updatePage (id, options) {
     const page = this.getPage(id)
     const oldPage = cloneDeep(page)
-    const internal = this.createInternals(options.internal)
+    const internal = this._createInternals(options.internal)
     const entry = this.store.index.findOne({ uid: page.id })
 
-    try {
-      page.pageQuery = options.pageQuery
-        ? parsePageQuery(options.pageQuery)
-        : page.pageQuery
-    } catch (err) {}
+    page.pageQuery = options.pageQuery
+      ? parsePageQuery(options.pageQuery)
+      : page.pageQuery
 
     page.title = options.title || page.title
     page.slug = options.slug || page.slug
@@ -171,13 +192,15 @@ class Source extends EventEmitter {
     this.emit('removePage', id)
   }
 
-  getPage (_id) {
-    return this.store.getPage(_id)
+  getPage (id) {
+    return this.store.getPage(id)
   }
 
+  //
   // misc
+  //
 
-  createInternals (options = {}) {
+  _createInternals (options = {}) {
     return {
       origin: options.origin,
       mimeType: options.mimeType,
@@ -185,6 +208,20 @@ class Source extends EventEmitter {
       timestamp: Date.now()
     }
   }
+
+  _resolveNodeFilePath (node, toPath) {
+    const contentType = this.getContentType(node.typeName)
+
+    return this._app.resolveFilePath(
+      node.internal.origin,
+      toPath,
+      contentType.resolveAbsolutePaths
+    )
+  }
+
+  //
+  // utils
+  //
 
   makeUid (orgId) {
     return crypto.createHash('md5').update(orgId).digest('hex')
@@ -198,22 +235,20 @@ class Source extends EventEmitter {
     return camelCase(`${this._typeName} ${name}`, { pascalCase: true })
   }
 
+  createReference (typeName, id) {
+    if (isPlainObject(typeName)) {
+      return { typeName: typeName.typeName, id: typeName.id }
+    }
+
+    return { typeName, id }
+  }
+
   slugify (string = '') {
     return slugify(string, { separator: '-' })
   }
 
   resolve (p) {
     return path.resolve(this.context, p)
-  }
-
-  resolveNodeFilePath (node, toPath) {
-    const { collection } = this.getContentType(node.typeName)
-
-    return this._app.resolveFilePath(
-      node.internal.origin,
-      toPath,
-      collection.resolveAbsolutePaths
-    )
   }
 }
 

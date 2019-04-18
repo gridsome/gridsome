@@ -21,12 +21,16 @@ class AssetsQueue {
     const data = {
       type: isImage ? 'image' : 'file',
       mimeType: mime.lookup(filePath),
+      isUrl: false,
       filePath
     }
 
     // TODO: process external files and images
     if (isUrl(filePath) || !filePath.startsWith(context)) {
-      return { ...data, src: filePath }
+      data.isUrl = true
+      data.src = filePath
+
+      return data
     }
 
     const results = isImage

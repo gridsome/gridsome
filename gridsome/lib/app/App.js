@@ -1,17 +1,16 @@
 const path = require('path')
 const isUrl = require('is-url')
-const Router = require('vue-router')
+const Codegen = require('./codegen')
 const autoBind = require('auto-bind')
 const hirestime = require('hirestime')
 const BaseStore = require('./BaseStore')
 const PluginAPI = require('./PluginAPI')
-const CodeGenerator = require('./CodeGenerator')
+const { execute, graphql } = require('graphql')
 const AssetsQueue = require('./queue/AssetsQueue')
 const createSchema = require('../graphql/createSchema')
 const loadConfig = require('./loadConfig')
 const { defaultsDeep } = require('lodash')
 const createRoutes = require('./createRoutes')
-const { execute, graphql } = require('../graphql/graphql')
 const { version } = require('../../package.json')
 const { parseUrl, resolvePath } = require('../utils')
 const { info } = require('../utils/log')
@@ -38,7 +37,8 @@ class App {
       { title: 'Initialize', run: this.init },
       { title: 'Load sources', run: this.loadSources },
       { title: 'Create GraphQL schema', run: this.createSchema },
-      { title: 'Generate code', run: this.generateFiles }
+      { title: 'Set up routes', run: this.createRoutes },
+      { title: 'Generate code', run: this.generateCode }
     ]
 
     info(`Gridsome v${version}\n`)
@@ -66,7 +66,7 @@ class App {
   init () {
     this.store = new BaseStore(this)
     this.queue = new AssetsQueue(this)
-    this.generator = new CodeGenerator(this)
+    this.codegen = new Codegen(this)
 
     this.config.plugins.map(entry => {
       const Plugin = entry.entries.serverEntry
@@ -91,9 +91,12 @@ class App {
 
     // run config.chainWebpack after all plugins
     if (typeof this.config.chainWebpack === 'function') {
-      this.on('chainWebpack', {
-        handler: this.config.chainWebpack
-      })
+      this.on('chainWebpack', { handler: this.config.chainWebpack })
+    }
+
+    // run config.configureServer after all plugins
+    if (typeof this.config.configureServer === 'function') {
+      this.on('configureServer', { handler: this.config.configureServer })
     }
 
     this.isInitialized = true
@@ -113,20 +116,12 @@ class App {
     })
   }
 
-  generateFiles () {
-    this.routerData = createRoutes(this)
+  createRoutes () {
+    this.routes = createRoutes(this)
+  }
 
-    this.router = new Router({
-      base: '/',
-      mode: 'history',
-      fallback: false,
-      routes: this.routerData.pages.map(page => ({
-        path: page.route || page.path,
-        component: () => page
-      }))
-    })
-
-    return this.generator.generate()
+  generateCode () {
+    return this.codegen.generate()
   }
 
   //
@@ -197,25 +192,13 @@ class App {
     return func(this.schema, docOrQuery, undefined, context, variables)
   }
 
-  queryRouteData (route, docOrQuery) {
-    const emptyData = { data: {}}
-    if (!route.matched.length) return emptyData
-
-    const { pageQuery } = route.matched[0].components.default()
-    const variables = { ...route.params, path: route.path }
-
-    return pageQuery.query
-      ? this.graphql(pageQuery.query, variables)
-      : emptyData
-  }
-
   broadcast (message, hotReload = true) {
     for (const client in this.clients) {
       this.clients[client].write(JSON.stringify(message))
     }
 
     return hotReload
-      ? this.generator.generate('now.js')
+      ? this.codegen.generate('now.js')
       : undefined
   }
 

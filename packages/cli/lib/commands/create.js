@@ -2,18 +2,23 @@ const path = require('path')
 const fs = require('fs-extra')
 const execa = require('execa')
 const chalk = require('chalk')
-const semver = require('semver')
 const Tasks = require('@hjvedvik/tasks')
 const sortPackageJson = require('sort-package-json')
+const { hasYarn } = require('../utils')
 
 module.exports = async (name, starter = 'default') => {
   const dir = aboslutePath(name)
   const projectName = path.basename(dir)
   const starters = ['default', 'wordpress']
-  const hasYarn = await useYarn()
+  const useYarn = await hasYarn()
 
-  if (fs.existsSync(dir)) {
-    return console.log(chalk.red(`Directory «${projectName}» already exists.`))
+  try {
+    const files = fs.existsSync(dir) ? fs.readdirSync(dir) : []
+    if (files.length > 1) {
+      return console.log(chalk.red(`Directory «${projectName}» is not empty.`))
+    }
+  } catch (err) {
+    throw new Error(err.message)
   }
 
   if (starters.includes(starter)) {
@@ -51,7 +56,7 @@ module.exports = async (name, starter = 'default') => {
     {
       title: `Install dependencies`,
       task: (_, task) => {
-        const command = hasYarn ? 'yarn' : 'npm'
+        const command = useYarn ? 'yarn' : 'npm'
         const stdio = ['ignore', 'pipe', 'ignore']
         const options = { cwd: dir, stdio }
         const args = []
@@ -116,18 +121,12 @@ module.exports = async (name, starter = 'default') => {
   }
 
   console.log()
-  console.log(`  - Enter directory ${chalk.green(`cd ${name}`)}`)
+  if (process.cwd() !== dir) {
+    console.log(`  - Enter directory ${chalk.green(`cd ${name}`)}`)
+  }
   console.log(`  - Run ${chalk.green(developCommand)} to start local development`)
   console.log(`  - Run ${chalk.green(buildCommand)} to build for production`)
   console.log()
-}
-
-async function useYarn () {
-  try {
-    const { stdout: version } = await execa('yarn', ['--version'])
-    return semver.satisfies(version, '>= 1.4.0')
-  } catch (err) {}
-  return false
 }
 
 async function updatePkg (pkgPath, obj) {

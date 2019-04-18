@@ -1,12 +1,12 @@
 const autoBind = require('auto-bind')
 const PluginStore = require('./PluginStore')
-const createRoutes = require('./createRoutes')
 
 class PluginAPI {
   constructor (app, { entry, transformers }) {
     this._entry = entry
     this._app = app
 
+    this.config = app.config
     this.context = app.context
     this.store = new PluginStore(app, entry.options, { transformers })
 
@@ -21,8 +21,9 @@ class PluginAPI {
         clearTimeout(regenerateTimeout)
         regenerateTimeout = setTimeout(() => {
           if (app.isBootstrapped) {
-            app.routerData = createRoutes(app)
-            app.generator.generate('routes.js')
+            app.createRoutes()
+            app.store.setUpdateTime()
+            app.codegen.generate('routes.js')
           }
         }, 20)
       }
@@ -32,6 +33,8 @@ class PluginAPI {
 
       this.store.on('change', (node, oldNode = node) => {
         if (!app.isBootstrapped) return
+
+        app.store.setUpdateTime()
 
         if (
           (node && node.withPath && node === oldNode) ||
@@ -52,15 +55,14 @@ class PluginAPI {
         const { pageQuery: { paginate: oldPaginate }} = oldPage
         const { pageQuery: { paginate }} = page
 
-        // regenerate route.js whenever paging options changes
-        if (paginate.collection !== oldPaginate.collection) {
+        if (paginate !== oldPaginate) {
           return regenerateRoutes()
         }
 
         // send query to front-end for re-fetch
         app.broadcast({
           type: 'updateQuery',
-          query: page.pageQuery.content,
+          query: page.pageQuery.query,
           file: page.internal.origin
         })
       })
@@ -89,6 +91,10 @@ class PluginAPI {
 
   chainWebpack (fn) {
     this._on('chainWebpack', fn)
+  }
+
+  configureServer (fn) {
+    this._on('configureServer', fn)
   }
 
   //

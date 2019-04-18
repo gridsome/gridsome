@@ -1,0 +1,13 @@
+{
+  "name": "test-project-basic",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "gridsome build",
+    "develop": "gridsome develop",
+    "explore": "gridsome explore"
+  },
+  "dependencies": {
+    "gridsome": "*"
+  }
+}

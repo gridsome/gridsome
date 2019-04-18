@@ -3,17 +3,27 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-<a name="0.2.0"></a>
-# [0.2.0](https://github.com/gridsome/gridsome/tree/master/packages/source-filesystem/compare/@gridsome/source-filesystem@0.1.0...@gridsome/source-filesystem@0.2.0) (2018-11-11)
+<a name="0.3.0"></a>
+# [0.3.0](https://github.com/gridsome/gridsome/tree/master/packages/source-filesystem/compare/@gridsome/source-filesystem@0.2.0...@gridsome/source-filesystem@0.3.0) (2019-02-19)
 
 
 ### Features
 
-* plugin api ([7a7889b](https://github.com/gridsome/gridsome/tree/master/packages/source-filesystem/commit/7a7889b))
-* store api ([15d1c97](https://github.com/gridsome/gridsome/tree/master/packages/source-filesystem/commit/15d1c97))
+* **filesystem:** fileInfo field in schema ([b844708](https://github.com/gridsome/gridsome/tree/master/packages/source-filesystem/commit/b844708))
+* **filesystem:** refs option to create references ([d445f1f](https://github.com/gridsome/gridsome/tree/master/packages/source-filesystem/commit/d445f1f))
 
 
 
+
+
+<a name="0.2.0"></a>
+# [0.2.0](https://github.com/gridsome/gridsome/compare/@gridsome/source-filesystem@0.1.0...@gridsome/source-filesystem@0.2.0) (2018-11-11)
+
+
+### Features
+
+* plugin api ([7a7889b](https://github.com/gridsome/gridsome/commit/7a7889b))
+* store api ([15d1c97](https://github.com/gridsome/gridsome/commit/15d1c97))
 
 
 <a name="0.1.0"></a>

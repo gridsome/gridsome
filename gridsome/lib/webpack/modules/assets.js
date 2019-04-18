@@ -3,12 +3,19 @@ const isRelative = require('is-relative')
 
 module.exports = () => ({
   postTransformNode (node) {
-    if (node.tag === 'g-link') transformNodeAttr(node, 'to')
-    if (node.tag === 'g-image') transformNodeAttr(node, 'src')
+    if (node.tag === 'g-link') {
+      transformNodeAttr(node, 'to')
+    }
+
+    if (node.tag === 'g-image') {
+      transformNodeAttr(node, 'src')
+    }
   }
 })
 
 function transformNodeAttr (node, attrName) {
+  if (!Array.isArray(node.attrs)) return
+
   for (const attr of node.attrs) {
     if (attr.name === attrName) {
       if (isStatic(attr.value)) {

@@ -1,13 +1,21 @@
-import createApp from './app'
+import createApp, { runMain } from './app'
+import { NOT_FOUND_NAME, NOT_FOUND_PATH } from './utils/constants'
 
-const { app, router } = createApp()
-const meta = app.$meta()
+runMain()
 
 export default context => new Promise((resolve, reject) => {
-  router.push(context.url)
-  context.meta = meta
+  const { app, router } = createApp()
+  const location = context.url
+  
+  context.meta = app.$meta()
 
-  router.onReady(() => {
+  router.push(location, () => {
+    const { matched: [match] } = app.$route
+
+    if (!match || (location !== NOT_FOUND_PATH && match.name === NOT_FOUND_NAME)) {
+      return reject(new Error(`Could not resolve ${context.url}`))
+    }
+
     resolve(app)
-  }, reject)
+  })
 })

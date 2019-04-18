@@ -6,7 +6,7 @@ const resolve = p => path.resolve(__dirname, p)
 module.exports = async app => {
   const isProd = process.env.NODE_ENV === 'production'
   const config = createBaseConfig(app, { isProd, isServer: false })
-  const { targetDir, clientManifestPath } = app.config
+  const { outDir, clientManifestPath } = app.config
 
   config.entry('app').add(resolve('../../app/entry.client.js'))
 
@@ -23,9 +23,9 @@ module.exports = async app => {
   }
 
   if (isProd) {
-    config.plugin('ssr-client')
+    config.plugin('vue-server-renderer')
       .use(require('./plugins/VueSSRClientPlugin'), [{
-        filename: path.relative(targetDir, clientManifestPath)
+        filename: path.relative(outDir, clientManifestPath)
       }])
 
     config.plugin('optimize-css')

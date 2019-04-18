@@ -1,11 +1,13 @@
-const path = require('path')
-const crypto = require('crypto')
+const hash = require('hash-sum')
+const moment = require('moment')
+const autoBind = require('auto-bind')
 const EventEmitter = require('events')
 const camelCase = require('camelcase')
-const dateFormat = require('dateformat')
-const slugify = require('@sindresorhus/slugify')
-const { cloneDeep, isObject } = require('lodash')
 const { warn } = require('../utils/log')
+const { isRefField } = require('../graphql/utils')
+const { ISO_8601_FORMAT } = require('../utils/constants')
+const { cloneDeep, isPlainObject, isDate, get } = require('lodash')
+const { isResolvablePath, slugify, safeKey } = require('../utils')
 
 const nonValidCharsRE = new RegExp('[^a-zA-Z0-9_]', 'g')
 const leadingNumberRE = new RegExp('^([0-9])')
@@ -21,23 +23,62 @@ class ContentTypeCollection extends EventEmitter {
     this.typeName = options.typeName
     this.description = options.description
     this.resolveAbsolutePaths = options.resolveAbsolutePaths || false
+
     this.collection = store.data.addCollection(options.typeName, {
+      indices: ['id', 'path', 'date'],
       unique: ['id', 'path'],
-      indices: ['date'],
       autoupdate: true
     })
+
+    autoBind(this)
   }
 
   addReference (fieldName, options) {
-    this.options.refs[camelCase(fieldName)] = options
+    if (typeof options === 'string') {
+      options = { typeName: options }
+    }
+
+    this.options.refs[fieldName] = options
   }
 
   addSchemaField (fieldName, options) {
-    this.options.fields[camelCase(fieldName)] = options
+    this.options.fields[fieldName] = options
   }
 
   addNode (options) {
-    const node = this.createNode(options)
+    const { typeName } = this.options
+    const internal = this.pluginStore._createInternals(options.internal)
+
+    // prioritize node.id over node.fields.id
+    if (options.id && options.fields && options.fields.id) {
+      delete options.fields.id
+    }
+
+    // transform content with transformer for given mime type
+    if (internal.content && internal.mimeType) {
+      this._transformNodeOptions(options, internal)
+    }
+
+    const { fields, belongsTo } = this._processNodeFields(options.fields, internal.origin)
+
+    const id = fields.id || options.id || options._id || hash(options)
+    const node = { id, typeName, internal }
+
+    // TODO: remove before 1.0
+    node._id = id
+
+    node.uid = options.uid || this.makeUid(typeName + node.id)
+    node.title = options.title || fields.title || node.id
+    node.date = options.date || fields.date || new Date().toISOString()
+    node.slug = options.slug || fields.slug || this.slugify(node.title)
+    node.content = options.content || fields.content || ''
+    node.excerpt = options.excerpt || fields.excerpt || ''
+    node.withPath = typeof options.path === 'string'
+
+    node.fields = fields
+    node.path = typeof options.path === 'string'
+      ? '/' + options.path.replace(/^\/+/g, '')
+      : this._createPath(node)
 
     // add transformer to content type to let it
     // extend the node type when creating schema
@@ -54,6 +95,7 @@ class ContentTypeCollection extends EventEmitter {
         typeName: node.typeName,
         uid: node.uid,
         id: node.id,
+        belongsTo,
         _id: node.id // TODO: remove this before v1.0
       })
     } catch (err) {
@@ -68,88 +110,87 @@ class ContentTypeCollection extends EventEmitter {
   }
 
   getNode (id) {
-    return this.collection.findOne({ id })
+    const query = typeof id === 'string' ? { id } : id
+    return this.collection.findOne(query)
   }
 
-  updateNode (id, options) {
-    const node = this.getNode(id)
-    const oldNode = cloneDeep(node)
-    const indexEntry = this.baseStore.index.findOne({ uid: node.uid })
-    const internal = this.createInternals(options.internal)
+  removeNode (id) {
+    const query = typeof id === 'string' ? { id } : id
+    const node = this.collection.findOne(query)
+
+    this.baseStore.index.findAndRemove({ uid: node.uid })
+    this.collection.findAndRemove({ uid: node.uid })
+
+    this.emit('change', undefined, node)
+  }
+
+  updateNode (options = {}, _options = {}) {
+    // TODO: remove before 1.0
+    if (typeof options === 'string') {
+      _options.id = options
+      options = _options
+    }
+
+    const internal = this.pluginStore._createInternals(options.internal)
+
+    // prioritize node.id over node.fields.id
+    if (options.id && options.fields && options.fields.id) {
+      delete options.fields.id
+    }
 
     // transform content with transformer for given mime type
     if (internal.content && internal.mimeType) {
-      this.transformNodeOptions(options, internal)
+      this._transformNodeOptions(options, internal)
     }
 
-    const { fields = {}} = options
+    const { fields, belongsTo } = this._processNodeFields(options.fields, internal.origin)
+    const id = fields.id || options.id || options._id
+    const query = options.uid ? { uid: options.uid } : { id }
 
+    const node = this.getNode(query)
+
+    if (!node) {
+      throw new Error(`Could not find node to update with id: ${id}`)
+    }
+
+    const oldNode = cloneDeep(node)
+
+    Object.assign(node.internal, this.pluginStore._createInternals(options.internal))
+
+    node.id = id || node.id
     node.title = options.title || fields.title || node.title
     node.date = options.date || fields.date || node.date
     node.slug = options.slug || fields.slug || this.slugify(node.title)
+    node.content = options.content || fields.content || node.content
+    node.excerpt = options.excerpt || fields.excerpt || node.excerpt
     node.internal = Object.assign({}, node.internal, internal)
-    node.path = options.path || this.makePath(node)
 
-    node.fields = this.processNodeFields(fields, node.internal.origin)
+    node.fields = fields
+    node.path = typeof options.path === 'string'
+      ? '/' + options.path.replace(/^\/+/g, '')
+      : this._createPath(node)
+
+    const indexEntry = this.baseStore.index.findOne({ uid: node.uid })
+
     indexEntry.path = node.path
+    indexEntry.belongsTo = belongsTo
 
     this.emit('change', node, oldNode)
 
     return node
   }
 
-  removeNode (id) {
-    const node = this.collection.findOne({ id })
+  _transformNodeOptions (options, internal) {
+    const { mimeType, content } = internal
+    const transformer = this.pluginStore._transformers[mimeType]
 
-    this.baseStore.index.findAndRemove({ uid: node.uid })
-    this.collection.findAndRemove({ id })
-
-    this.emit('change', undefined, node)
-  }
-
-  createNode (options = {}) {
-    const { typeName } = this.options
-    const hash = crypto.createHash('md5')
-    const internal = this.createInternals(options.internal)
-    const id = options.id || options._id || this.makeUid(JSON.stringify(options))
-    const node = { id, typeName, internal }
-
-    // TODO: remove before 1.0
-    node._id = id
-
-    // transform content with transformer for given mime type
-    if (internal.content && internal.mimeType) {
-      this.transformNodeOptions(options, internal)
+    if (!transformer) {
+      throw new Error(`No transformer for ${mimeType} is installed.`)
     }
 
-    const { fields = {}} = options
+    const result = transformer.parse(content)
 
-    node.uid = hash.update(typeName + node.id).digest('hex')
-    node.title = options.title || fields.title || node.id
-    node.date = options.date || fields.date || new Date().toISOString()
-    node.slug = options.slug || fields.slug || this.slugify(node.title)
-    node.content = options.content || fields.content || ''
-    node.excerpt = options.excerpt || fields.excerpt || ''
-    node.withPath = !!options.path
-
-    node.fields = this.processNodeFields(fields, node.internal.origin)
-    node.path = options.path || this.makePath(node)
-
-    return node
-  }
-
-  createInternals (options = {}) {
-    return {
-      origin: options.origin,
-      mimeType: options.mimeType,
-      content: options.content,
-      timestamp: Date.now()
-    }
-  }
-
-  transformNodeOptions (options, internal) {
-    const result = this.transform(internal)
-
+    if (result.id) options.id = result.id
     if (result.title) options.title = result.title
     if (result.slug) options.slug = result.slug
     if (result.path) options.path = result.path
@@ -162,18 +203,47 @@ class ContentTypeCollection extends EventEmitter {
     }
   }
 
-  processNodeFields (fields, origin) {
+  _processNodeFields (input = {}, origin = '') {
+    const belongsTo = {}
+
+    const addBelongsTo = ({ typeName, id }) => {
+      belongsTo[typeName] = belongsTo[typeName] || {}
+      if (Array.isArray(id)) {
+        id.forEach(id => {
+          belongsTo[typeName][safeKey(id)] = true
+        })
+      } else {
+        belongsTo[typeName][safeKey(id)] = true
+      }
+    }
+
     const processField = field => {
       if (field === undefined) return field
       if (field === null) return field
 
       switch (typeof field) {
         case 'object':
+          if (isDate(field)) {
+            return field
+          }
+          if (isRefField(field)) {
+            if (Array.isArray(field.typeName)) {
+              field.typeName.forEach(typeName => {
+                addBelongsTo({ typeName, id: field.id })
+              })
+            } else {
+              addBelongsTo(field)
+            }
+          }
           return processFields(field)
         case 'string':
-          if (path.extname(field).length > 1) {
-            return this.resolveFilePath(origin, field)
-          }
+          return isResolvablePath(field)
+            ? this.pluginStore._app.resolveFilePath(
+              origin,
+              field,
+              this.resolveAbsolutePaths
+            )
+            : field
       }
 
       return field
@@ -199,66 +269,78 @@ class ContentTypeCollection extends EventEmitter {
         }
 
         res[createKey(key)] = Array.isArray(fields[key])
-          ? fields[key].map(processField)
+          ? fields[key].map(value => processField(value))
           : processField(fields[key])
       }
 
       return res
     }
 
-    return processFields(fields)
+    const fields = processFields(input)
+
+    // TODO: this should be removed before 1.0
+    for (const fieldName in this.options.refs) {
+      const id = fields[fieldName]
+      const { typeName } = this.options.refs[fieldName]
+      addBelongsTo({ id, typeName })
+    }
+
+    return { fields, belongsTo }
   }
 
-  resolveFilePath (...args) {
-    return this.pluginStore._app.resolveFilePath(...args, this.resolveAbsolutePaths)
-  }
-
-  makePath (node) {
-    const year = node.date ? dateFormat(node.date, 'yyyy') : null
-    const month = node.date ? dateFormat(node.date, 'mm') : null
-    const day = node.date ? dateFormat(node.date, 'dd') : null
-    const params = { year, month, day, slug: node.slug }
+  _createPath (node) {
+    const date = moment.utc(node.date, ISO_8601_FORMAT, true)
     const { routeKeys } = this.options
+    const length = routeKeys.length
+    const params = {}
 
-    // Use root level fields as route params. Primitive values
-    // are slugified but the original value will be available
-    // with '_raw' suffix.
-    for (let i = 0, l = routeKeys.length; i < l; i++) {
-      const keyName = routeKeys[i]
-      const fieldValue = node.fields[keyName] || keyName
+    // Param values are slugified but the original
+    // value will be available with '_raw' suffix.
+    for (let i = 0; i < length; i++) {
+      const { name, path, fieldName, repeat, suffix } = routeKeys[i]
+      const field = get(node, path, fieldName)
 
-      if (
-        isObject(fieldValue) &&
-        fieldValue.hasOwnProperty('typeName') &&
-        fieldValue.hasOwnProperty('id') &&
-        !Array.isArray(fieldValue.id)
-      ) {
-        params[keyName] = String(fieldValue.id)
-      } else if (!isObject(fieldValue) && !params[keyName]) {
-        params[keyName] = this.slugify(String(fieldValue))
-        params[keyName + '_raw'] = String(fieldValue)
+      if (fieldName === 'year') params.year = date.format('YYYY')
+      else if (fieldName === 'month') params.month = date.format('MM')
+      else if (fieldName === 'day') params.day = date.format('DD')
+      else {
+        const repeated = repeat && Array.isArray(field)
+        const values = repeated ? field : [field]
+
+        const segments = values.map(value => {
+          if (
+            isPlainObject(value) &&
+            value.hasOwnProperty('typeName') &&
+            value.hasOwnProperty('id') &&
+            !Array.isArray(value.id)
+          ) {
+            return String(value.id)
+          } else if (!isPlainObject(value)) {
+            return suffix === 'raw'
+              ? String(value)
+              : this.slugify(String(value))
+          } else {
+            return ''
+          }
+        }).filter(Boolean)
+
+        params[name] = repeated ? segments : segments[0]
       }
     }
 
-    return this.options.makePath(params)
+    return this.options.createPath(params)
   }
 
-  makeUid (orgId) {
-    return crypto.createHash('md5').update(orgId).digest('hex')
+  //
+  // utils
+  //
+
+  makeUid (value) {
+    return this.pluginStore.makeUid(value)
   }
 
   slugify (string = '') {
-    return slugify(string, { separator: '-' })
-  }
-
-  transform ({ mimeType, content }, options) {
-    const transformer = this.pluginStore._transformers[mimeType]
-
-    if (!transformer) {
-      throw new Error(`No transformer for ${mimeType} is installed.`)
-    }
-
-    return transformer.parse(content, options)
+    return slugify(string)
   }
 }
 

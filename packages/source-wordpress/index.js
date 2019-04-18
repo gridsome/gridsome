@@ -1,11 +1,15 @@
+const pMap = require('p-map')
 const axios = require('axios')
-const Queue = require('better-queue')
-const querystring = require('querystring')
+const { mapKeys, isPlainObject } = require('lodash')
+
+const TYPE_AUTHOR = 'author'
+const TYPE_ATTACHEMENT = 'attachment'
 
 class WordPressSource {
   static defaultOptions () {
     return {
       baseUrl: '',
+      apiBase: 'wp-json',
       perPage: 100,
       concurrent: 10,
       routes: {},
@@ -14,164 +18,90 @@ class WordPressSource {
   }
 
   constructor (api, options) {
+    this.api = api
     this.options = options
+    this.restBases = { posts: {}, taxonomies: {}}
 
-    api.loadSource(args => this.fetchWordPressContent(args))
-  }
-
-  async fetchWordPressContent (store) {
-    const { addContentType, getContentType, makeTypeName } = store
-    const { baseUrl, perPage, concurrent } = this.options
-    let { routes } = this.options
-
-    const restUrl = `${baseUrl.replace(/\/+$/, '')}/wp-json/wp/v2`
-    const restBases = { posts: {}, taxonomies: {}}
-
-    try {
-      await axios.get(restUrl)
-    } catch (err) {
-      throw new Error(`Failed to fetch baseUrl ${baseUrl}`)
+    if (options.perPage > 100 || options.perPage < 1) {
+      throw new Error(`${options.typeName}: perPage cannot be more than 100 or less than 1`)
     }
 
-    routes = {
+    this.client = axios.create({
+      baseURL: `${options.baseUrl.replace(/\/+$/, '')}/${options.apiBase}`
+    })
+
+    this.routes = {
       post: '/:year/:month/:day/:slug',
       post_tag: '/tag/:slug',
       category: '/category/:slug',
-      ...routes
+      author: '/author/:slug',
+      ...this.options.routes
     }
 
-    let types = {}
-    let taxonomies = {}
+    api.loadSource(async store => {
+      console.log(`Loading data from ${options.baseUrl}`)
 
-    try {
-      const res = await axios.get(`${restUrl}/types`)
-      types = res.data
-    } catch (err) {
-      throw err
+      await this.getPostTypes(store)
+      await this.getUsers(store)
+      await this.getTaxonomies(store)
+      await this.getPosts(store)
+    })
+  }
+
+  async getPostTypes (store) {
+    const { data } = await this.fetch('wp/v2/types', {}, {})
+
+    for (const type in data) {
+      const options = data[type]
+      const typeName = store.makeTypeName(type)
+      const route = this.routes[type] || `/${options.rest_base}/:slug`
+
+      this.restBases.posts[type] = options.rest_base
+
+      store.addContentType({ typeName, route })
     }
+  }
 
-    try {
-      const res = await axios.get(`${restUrl}/taxonomies`)
-      taxonomies = res.data
-    } catch (err) {
-      throw err
-    }
+  async getUsers (store) {
+    const { data } = await this.fetch('wp/v2/users')
 
-    for (const type in types) {
-      const options = types[type]
+    const authors = store.addContentType({
+      typeName: store.makeTypeName(TYPE_AUTHOR),
+      route: this.routes.author
+    })
 
-      const typeName = makeTypeName(type)
-      const route = routes[type] || `/${options.rest_base}/:slug`
-
-      restBases.posts[type] = options.rest_base
-
-      const collection = addContentType({ typeName, route })
-
-      if (type !== 'attachment') {
-        const attachmentTypeName = makeTypeName('attachment')
-
-        collection.addReference('featuredMedia', {
-          typeName: attachmentTypeName,
-          key: '_id'
-        })
-
-        // collection.addSchemaField('featuredMedia', ({ nodeTypes }) => ({
-        //   type: nodeTypes[attachmentTypeName],
-        //   async resolve (node, args, { store }) {
-        //     const { collection } = getContentType(attachmentTypeName)
-        //     return collection.findOne({ _id: node.fields.featuredMedia })
-        //   }
-        // }))
-      }
-    }
-
-    for (const type in taxonomies) {
-      const options = taxonomies[type]
-      const typeName = makeTypeName(type)
-      const route = routes[type] || `/${options.rest_base}/:slug`
-
-      restBases.taxonomies[type] = options.rest_base
-
-      for (const type of options.types) {
-        const postTypeName = makeTypeName(type)
-        const collection = getContentType(postTypeName)
-
-        if (!collection) {
-          continue
+    for (const user of data) {
+      authors.addNode({
+        id: user.id,
+        title: user.name,
+        slug: user.slug,
+        fields: {
+          ...this.normalizeFields(user),
+          avatars: mapKeys(user.avatar_urls, (v, key) => `avatar${key}`)
         }
-
-        collection.addReference(options.rest_base, { typeName, key: '_id' })
-      }
-
-      addContentType({ typeName, route })
+      })
     }
+  }
 
-    for (const type in restBases.posts) {
-      const restBase = restBases.posts[type]
-      const typeName = makeTypeName(type)
-      const collection = getContentType(typeName)
-      const endpoint = `${restUrl}/${restBase}`
-      let posts = []
+  async getTaxonomies (store) {
+    const { data } = await this.fetch('wp/v2/taxonomies', {}, {})
 
-      try {
-        posts = await fetchPaged(endpoint, { perPage, concurrent })
-      } catch (err) {
-        console.error(err.message)
-      }
+    for (const type in data) {
+      const options = data[type]
+      const typeName = store.makeTypeName(type)
+      const route = this.routes[type] || `/${options.rest_base}/:slug`
+      const collection = store.addContentType({ typeName, route })
 
-      for (const post of posts) {
-        const fields = {}
+      this.restBases.taxonomies[type] = options.rest_base
 
-        if (post.type === 'attachment') {
-          fields.url = post.source_url
-          fields.mediaType = post.media_type
-          fields.mimeType = post.mime_type
-          fields.width = post.media_details.width
-          fields.height = post.media_details.height
-        } else {
-          fields.content = post.content ? post.content.rendered : ''
-          fields.excerpt = post.excerpt ? post.excerpt.rendered : ''
-          fields.featuredMedia = post.featured_media
-        }
-
-        // add references if post has any taxonomy rest bases as properties
-        for (const type in restBases.taxonomies) {
-          const propName = restBases.taxonomies[type]
-          if (post.hasOwnProperty(propName)) {
-            fields[propName] = post[propName]
-          }
-        }
-
-        collection.addNode({
-          _id: post.id,
-          title: post.title ? post.title.rendered : '',
-          date: post.date ? new Date(post.date) : null,
-          content: post.content ? post.content.rendered : '',
-          excerpt: post.excerpt ? post.excerpt.rendered : '',
-          slug: post.slug,
-          fields
-        })
-      }
-    }
-
-    for (const type in restBases.taxonomies) {
-      const restBase = restBases.taxonomies[type]
-      const typeName = makeTypeName(type)
-      const collection = getContentType(typeName)
-      const endpoint = `${restUrl}/${restBase}`
-      let terms = []
-
-      try {
-        terms = await fetchPaged(endpoint, { perPage, concurrent })
-      } catch (err) {
-        console.error(err.message)
-      }
+      const terms = await this.fetchPaged(`wp/v2/${options.rest_base}`)
 
       for (const term of terms) {
         collection.addNode({
-          _id: term.id,
+          id: term.id,
           slug: term.slug,
           title: term.name,
+          content: term.description,
           fields: {
             count: term.count
           }
@@ -179,68 +109,161 @@ class WordPressSource {
       }
     }
   }
-}
 
-async function taskHandler (task, cb) {
-  try {
-    const response = await axios.get(task.id)
-    cb(null, response)
-  } catch (err) {
-    cb(err)
+  async getPosts (store) {
+    for (const type in this.restBases.posts) {
+      const restBase = this.restBases.posts[type]
+      const typeName = store.makeTypeName(type)
+      const collection = store.getContentType(typeName)
+
+      const posts = await this.fetchPaged(`wp/v2/${restBase}`)
+
+      for (const post of posts) {
+        const fields = this.normalizeFields(post)
+
+        fields.author = {
+          typeName: store.makeTypeName(TYPE_AUTHOR),
+          id: post.author || 0
+        }
+
+        if (post.type !== 'attachment') {
+          fields.featuredMedia = {
+            typeName: store.makeTypeName(TYPE_ATTACHEMENT),
+            id: post.featured_media
+          }
+        }
+
+        // add references if post has any taxonomy rest bases as properties
+        for (const type in this.restBases.taxonomies) {
+          const propName = this.restBases.taxonomies[type]
+          if (post.hasOwnProperty(propName)) {
+            fields[propName] = {
+              typeName: store.makeTypeName(type),
+              id: post[propName]
+            }
+          }
+        }
+
+        collection.addNode({
+          id: post.id,
+          title: post.title ? post.title.rendered : '',
+          date: post.date,
+          slug: post.slug,
+          fields
+        })
+      }
+    }
   }
-}
 
-function fetchPaged (url, options = {}) {
-  return new Promise(async (resolve, reject) => {
-    const query = querystring.stringify({ per_page: options.perPage })
-    const endpoint = `${url}?${query}`
+  async fetch (url, params = {}, fallbackData = []) {
     let res
 
     try {
-      res = await axios.get(endpoint)
-    } catch (err) {
-      return reject(new Error(`${err.message}: ${endpoint}`))
+      res = await this.client.request({ url, params })
+    } catch ({ response, code, config }) {
+      if (!response && code) {
+        throw new Error(`${code} - ${config.url}`)
+      }
+
+      const { url } = response.config
+      const { status } = response.data.data
+
+      if ([401, 403].includes(status)) {
+        console.warn(`Error: Status ${status} - ${url}`)
+        return { ...response, data: fallbackData }
+      } else {
+        throw new Error(`${status} - ${url}`)
+      }
     }
 
-    const totalItems = parseInt(res.headers['x-wp-total'], 10)
-    const totalPages = parseInt(res.headers['x-wp-totalpages'], 10)
+    return res
+  }
 
-    try {
-      res.data = ensureArrayData(url, res.data)
-    } catch (err) {
-      return reject(err)
-    }
+  async fetchPaged (path) {
+    const { perPage, concurrent } = this.options
 
-    if (!totalItems || totalPages <= 1) {
-      return resolve(res.data)
-    }
+    return new Promise(async (resolve, reject) => {
+      let res
 
-    const queue = new Queue(taskHandler, {
-      concurrent: options.concurrent
-    })
-
-    for (let page = 2; page <= totalPages; page++) {
-      const query = querystring.stringify({ per_page: options.perPage, page })
-      queue.push({ id: `${url}?${query}` })
-    }
-
-    queue.on('task_failed', (id, err) => {
-      reject(new Error(`${err.message}: ${id}`))
-      queue.destroy()
-    })
-
-    queue.on('task_finish', (id, { data }) => {
       try {
-        res.data.push(...ensureArrayData(id, data))
+        res = await this.fetch(path, { per_page: perPage })
       } catch (err) {
         return reject(err)
       }
-    })
 
-    queue.on('drain', () => {
+      const totalItems = parseInt(res.headers['x-wp-total'], 10)
+      const totalPages = parseInt(res.headers['x-wp-totalpages'], 10)
+
+      try {
+        res.data = ensureArrayData(path, res.data)
+      } catch (err) {
+        return reject(err)
+      }
+
+      if (!totalItems || totalPages <= 1) {
+        return resolve(res.data)
+      }
+
+      const queue = []
+
+      for (let page = 2; page <= totalPages; page++) {
+        queue.push({ per_page: perPage, page })
+      }
+
+      await pMap(queue, async params => {
+        try {
+          const { data } = await this.fetch(path, params)
+          res.data.push(...ensureArrayData(path, data))
+        } catch (err) {
+          console.log(err.message)
+        }
+      }, { concurrency: concurrent })
+
       resolve(res.data)
     })
-  })
+  }
+
+  normalizeFields (fields) {
+    const res = {}
+
+    for (const key in fields) {
+      if (key.startsWith('_')) continue // skip links and embeds etc
+      res[key] = this.normalizeFieldValue(fields[key])
+    }
+
+    return res
+  }
+
+  normalizeFieldValue (value) {
+    if (value === null) return null
+    if (value === undefined) return null
+
+    const { makeTypeName } = this.api.store
+
+    if (Array.isArray(value)) {
+      return value.map(v => this.normalizeFieldValue(v))
+    }
+
+    if (isPlainObject(value)) {
+      if (value.post_type && (value.ID || value.id)) {
+        return {
+          typeName: makeTypeName(value.post_type),
+          id: value.ID || value.id
+        }
+      } else if (value.filename && (value.ID || value.id)) {
+        return {
+          typeName: makeTypeName(TYPE_ATTACHEMENT),
+          id: value.ID || value.id
+        }
+      } else if (value.hasOwnProperty('rendered')) {
+        return value.rendered
+      }
+
+      return this.normalizeFields(value)
+    }
+
+    return value
+  }
 }
 
 function ensureArrayData (url, data) {

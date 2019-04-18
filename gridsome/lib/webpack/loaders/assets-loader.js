@@ -5,7 +5,15 @@ module.exports = async function (source, map) {
 
   const { queue } = process.GRIDSOME
   const options = utils.parseQuery(this.query || '?')
-  const asset = await queue.add(this.resourcePath, options)
+
+  let asset
+
+  try {
+    asset = await queue.add(this.resourcePath, options)
+  } catch (err) {
+    callback(err, source, map)
+    return
+  }
 
   this.dependency(this.resourcePath)
 
@@ -15,8 +23,8 @@ module.exports = async function (source, map) {
     src: asset.src
   }
 
+  // required properties for g-image
   if (asset.type === 'image') {
-    res.sets = asset.sets
     res.size = asset.size
     res.sizes = asset.sizes
     res.srcset = asset.srcset

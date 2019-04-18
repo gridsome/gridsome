@@ -1,5 +1,5 @@
 {
-  "version": "0.0.4",
+  "version": "0.0.5",
   "name": "@gridsome/remark-prismjs",
   "description": "Prism for Gridsome",
   "homepage": "https://github.com/gridsome/gridsome/tree/master/packages/remark-prismjs#readme",

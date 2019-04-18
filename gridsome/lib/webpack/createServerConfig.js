@@ -6,7 +6,7 @@ const resolve = p => path.resolve(__dirname, p)
 module.exports = async app => {
   const isProd = process.env.NODE_ENV === 'production'
   const config = createBaseConfig(app, { isProd, isServer: true })
-  const { targetDir, serverBundlePath } = app.config
+  const { outDir, serverBundlePath } = app.config
 
   config.entry('app').add(resolve('../../app/entry.server.js'))
 
@@ -17,9 +17,9 @@ module.exports = async app => {
   config.optimization.minimize(false)
   config.output.libraryTarget('commonjs2')
 
-  config.plugin('ssr-server')
-    .use(require('./plugins/VueSSRServerPlugin'), [{
-      filename: path.relative(targetDir, serverBundlePath)
+  config.plugin('vue-server-renderer')
+    .use(require('vue-server-renderer/server-plugin'), [{
+      filename: path.relative(outDir, serverBundlePath)
     }])
 
   await app.dispatch('chainWebpack', null, config, {

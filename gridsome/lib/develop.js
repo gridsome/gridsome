@@ -5,7 +5,6 @@ const createApp = require('./app')
 const createExpressServer = require('./server/createExpressServer')
 const createSockJsServer = require('./server/createSockJsServer')
 const createClientConfig = require('./webpack/createClientConfig')
-const { default: playground } = require('graphql-playground-middleware-express')
 
 module.exports = async (context, args) => {
   process.env.NODE_ENV = 'development'
@@ -14,16 +13,11 @@ module.exports = async (context, args) => {
   const app = await createApp(context, { args })
   const { config } = app
 
-  const server = await createExpressServer(app)
+  const server = await createExpressServer(app, { withExplorer: true })
   const sock = await createSockJsServer(app)
 
   await fs.remove(config.cacheDir)
   await fs.ensureDir(config.cacheDir)
-
-  server.app.get(
-    server.endpoint.explore,
-    playground({ endpoint: server.endpoint.graphql })
-  )
 
   server.app.use(config.pathPrefix, express.static(config.staticDir))
   server.app.use(require('connect-history-api-fallback')())
@@ -67,18 +61,24 @@ module.exports = async (context, args) => {
 
   async function createWebpackConfig () {
     const clientConfig = await createClientConfig(app)
+    const { SOCKJS_ENDPOINT, GRAPHQL_ENDPOINT, GRAPHQL_WS_ENDPOINT } = process.env
 
     clientConfig
       .plugin('friendly-errors')
       .use(require('friendly-errors-webpack-plugin'))
 
     clientConfig
-      .plugin('dev-endpoints')
-      .use(require('webpack/lib/DefinePlugin'), [{
-        'SOCKJS_ENDPOINT': JSON.stringify(sock.url),
-        'GRAPHQL_ENDPOINT': JSON.stringify(server.url.graphql),
-        'GRAPHQL_WS_ENDPOINT': JSON.stringify(server.url.websocket)
-      }])
+      .plugin('injections')
+      .tap(args => {
+        const definitions = args[0]
+        args[0] = {
+          ...definitions,
+          'process.env.SOCKJS_ENDPOINT': JSON.stringify(SOCKJS_ENDPOINT || sock.url),
+          'process.env.GRAPHQL_ENDPOINT': JSON.stringify(GRAPHQL_ENDPOINT || server.url.graphql),
+          'process.env.GRAPHQL_WS_ENDPOINT': JSON.stringify(GRAPHQL_WS_ENDPOINT || server.url.websocket)
+        }
+        return args
+      })
 
     clientConfig.entryPoints.store.forEach((entry, name) => {
       clientConfig.entry(name)
