@@ -1,5 +1,5 @@
 {
-  "version": "0.0.1",
+  "version": "0.0.0",
   "name": "@gridsome/source-storyblok",
   "description": "StoryBlok source for Gridsome",
   "main": "index.js",
