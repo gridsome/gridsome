@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.5.8](https://github.com/gridsome/gridsome/compare/gridsome@0.5.7...gridsome@0.5.8) (2019-04-18)
+
+
+### Bug Fixes
+
+* **app:** don’t handle external links with router ([#367](https://github.com/gridsome/gridsome/issues/367)) ([bfb2a79](https://github.com/gridsome/gridsome/commit/bfb2a79))
+
+
+
+
+
 ## [0.5.7](https://github.com/gridsome/gridsome/compare/gridsome@0.5.6...gridsome@0.5.7) (2019-04-09)
 
 
