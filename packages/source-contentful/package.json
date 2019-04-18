@@ -15,6 +15,9 @@
     "@contentful/rich-text-html-renderer": "^13.1.0",
     "contentful": "^6.1.1"
   },
+  "peerDependencies": {
+    "gridsome": "0.x"
+  },
   "publishConfig": {
     "access": "public"
   },

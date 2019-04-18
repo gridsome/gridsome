@@ -1,5 +1,5 @@
 const contentful = require('contentful')
-const contentfulRenderer = require('@contentful/rich-text-html-renderer');
+const createRichTextType = require('./lib/types/rich-text')
 
 class ContentfulSource {
   static defaultOptions () {
@@ -8,6 +8,7 @@ class ContentfulSource {
       environment: 'master',
       host: 'cdn.contentful.com',
       typeName: 'Contentful',
+      richText: {},
       routes: {}
     }
   }
@@ -33,13 +34,20 @@ class ContentfulSource {
 
   async getContentTypes (store) {
     const contentTypes = await this.fetch('getContentTypes')
+    const richTextType = createRichTextType(this.options)
 
     for (const contentType of contentTypes) {
       const { name, sys: { id }} = contentType
       const typeName = store.makeTypeName(name)
       const route = this.options.routes[name] || `/${store.slugify(name)}/:slug`
 
-      store.addContentType({ typeName, route })
+      const collection = store.addContentType({ typeName, route })
+
+      for (const field of contentType.fields) {
+        if (field.type === 'RichText') {
+          collection.addSchemaField(field.id, () => richTextType)
+        }
+      }
 
       this.typesIndex[id] = { ...contentType, typeName }
     }
@@ -81,12 +89,6 @@ class ContentfulSource {
           )
         } else if (typeof value === 'object' && typeof value.sys !== 'undefined') {
           fields[key] = this.createReferenceField(value)
-        } else if (typeof value === 'object' && value.nodeType === 'document') {
-          // value is Rich Text
-          fields[key] = {
-            document: JSON.stringify(value),
-            html: contentfulRenderer.documentToHtmlString(value)
-          }
         } else {
           fields[key] = value
         }
@@ -116,7 +118,6 @@ class ContentfulSource {
   }
 
   createReferenceField (item) {
-    console.log('item', item)
     switch (item.sys.type) {
       case 'Asset' :
         return {
