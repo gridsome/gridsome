@@ -1,8 +1,7 @@
 const { print } = require('graphql')
-const { trimEnd } = require('lodash')
 const { createQueryVariables } = require('../../pages/utils')
 
-module.exports = ({ store, pages }) => {
+module.exports = ({ store, pages, config }) => {
   return async function graphqlMiddleware (req, res, next) {
     const { body = {}} = req
 
@@ -15,9 +14,7 @@ module.exports = ({ store, pages }) => {
       return next()
     }
 
-    const page = pages.findPage({
-      path: { $in: [body.path, trimEnd(body.path, '/')] }
-    })
+    const page = pages.findPage({ path: body.path })
 
     if (!page) {
       return res

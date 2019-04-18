@@ -189,7 +189,6 @@ test('create render queue for createPages hook', async () => {
     expect(entry.route).toBeDefined()
     expect(entry.path).toBeDefined()
     expect(entry.component).toBeDefined()
-    expect(entry.isIndex).toBeDefined()
 
     if (entry.context) expect(typeof entry.context).toEqual('object')
     else expect(entry.context).toBeNull()

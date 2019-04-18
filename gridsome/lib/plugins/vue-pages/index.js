@@ -3,7 +3,6 @@ const fs = require('fs-extra')
 const glob = require('globby')
 const slash = require('slash')
 const chokidar = require('chokidar')
-const { createPagePath } = require('./lib/utils')
 
 class VuePages {
   static defaultOptions () {
@@ -12,6 +11,7 @@ class VuePages {
 
   constructor (api) {
     this.pages = api.pages
+    this.store = api.store
     this.pagesDir = api.config.pagesDir
 
     if (fs.existsSync(this.pagesDir)) {
@@ -59,7 +59,7 @@ class VuePages {
 
     return this.pages.createPage({
       name,
-      path: createPagePath(file),
+      path: this.createPagePath(file),
       component: path.join(this.pagesDir, file)
     })
   }
@@ -67,6 +67,17 @@ class VuePages {
   removePage (file) {
     const component = path.join(this.pagesDir, file)
     return this.pages.removePage({ component })
+  }
+
+  createPagePath (filePath) {
+    const path = filePath
+      .split('/')
+      .filter(s => !/^[iI]ndex\.vue$/.test(s))
+      .map(s => s.replace(/\.vue$/, ''))
+      .map(s => this.store.slugify(s))
+      .join('/')
+
+    return `/${path}`
   }
 }
 

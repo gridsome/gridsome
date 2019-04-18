@@ -6,8 +6,8 @@ const { warn } = require('../utils/log')
 const EventEmitter = require('eventemitter3')
 const { isRefField } = require('../graphql/utils')
 const { ISO_8601_FORMAT } = require('../utils/constants')
-const { cloneDeep, isPlainObject, isDate, get } = require('lodash')
-const { isResolvablePath, slugify, safeKey } = require('../utils')
+const { cloneDeep, trimEnd, isPlainObject, isDate, get } = require('lodash')
+const { isResolvablePath, safeKey } = require('../utils')
 
 const nonValidCharsRE = new RegExp('[^a-zA-Z0-9_]', 'g')
 const leadingNumberRE = new RegExp('^([0-9])')
@@ -84,7 +84,7 @@ class ContentTypeCollection {
 
     node.fields = fields
     node.path = typeof options.path === 'string'
-      ? '/' + options.path.replace(/^\/+/g, '')
+      ? trimEnd('/' + options.path.replace(/^\/+/g, ''), '/')
       : this._createPath(node)
 
     // add transformer to content type to let it
@@ -175,7 +175,7 @@ class ContentTypeCollection {
 
     node.fields = fields
     node.path = typeof options.path === 'string'
-      ? '/' + options.path.replace(/^\/+/g, '')
+      ? trimEnd('/' + options.path.replace(/^\/+/g, ''), '/')
       : this._createPath(node)
 
     const indexEntry = this.baseStore.index.findOne({ uid: node.uid })
@@ -349,7 +349,7 @@ class ContentTypeCollection {
   }
 
   slugify (string = '') {
-    return slugify(string)
+    return this.pluginStore.slugify(string)
   }
 }
 

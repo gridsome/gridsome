@@ -47,24 +47,26 @@ function calcTotalPages (page, store, queryFields) {
 }
 
 function createRenderEntry (page, currentPage = undefined) {
-  const segments = page.path.split('/').filter(segment => !!segment)
-  const segments = page.pathSegments.slice()
+  const segments = page.internal.path.segments.slice()
 
   if (currentPage > 1) {
     segments.push(currentPage)
   }
 
+  const originalPath = `/${segments.join('/')}`
   return {
     route: page.route,
     path: `/${segments.join('/')}`,
     component: page.component,
     context: page.context,
-    isIndex: page.internal.isIndex,
-    pathSegments: segments,
     query: page.query.document ? {
       document: page.query.document,
       variables: createQueryVariables(page, currentPage)
-    } : null
+    } : null,
+    internal: {
+      originalPath,
+      pathSegments: segments
+    }
   }
 }
 

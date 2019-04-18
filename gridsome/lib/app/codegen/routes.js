@@ -1,10 +1,11 @@
 const { uniqBy } = require('lodash')
+const { NOT_FOUND_NAME } = require('../../utils/constants')
 
 function genRoutes (app, routeMeta = {}) {
   let res = ''
 
   const pages = uniqBy(app.pages.allPages(), page => page.route)
-  const notFound = app.pages.findPage({ path: '/404' })
+  const notFound = app.pages.findPage({ name: NOT_FOUND_NAME })
 
   // use the /404 page as fallback route
   pages.push({

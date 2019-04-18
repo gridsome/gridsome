@@ -18,7 +18,7 @@ export default (to, from, next) => {
   fetch(to)
     .then(res => {
       if (res.code === 404) {
-        next({ name: '404', params: { 0: to.path }})
+        next({ name: '*', params: { 0: to.path }})
       } else {
         setResults(to.path, res)
         next()
@@ -27,7 +27,7 @@ export default (to, from, next) => {
     .catch(err => {
       if (err.code === 'MODULE_NOT_FOUND' || err.code === 404) {
         console.error(err) // eslint-disable-line
-        next({ name: '404', params: { 0: to.path }})
+        next({ name: '*', params: { 0: to.path }})
       } else {
         formatError(err, to)
       }

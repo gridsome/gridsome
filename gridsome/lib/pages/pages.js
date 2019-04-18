@@ -10,8 +10,6 @@ const { NOT_FOUND_NAME, NOT_FOUND_PATH } = require('../utils/constants')
 const { cloneDeep } = require('lodash')
 const { slugify } = require('../utils')
 
-const nonIndex = [NOT_FOUND_PATH]
-
 class Pages {
   constructor (app) {
     this._context = app.context
@@ -161,14 +159,13 @@ function createPage ({ options, context }) {
   return {
     name,
     path,
-    pathSegments: segments,
     component: options.component,
     context: options.context || null,
     queryContext: options.queryContext || options.context || null,
     chunkName: options.chunkName || genChunkName(options.component, context),
     internal: {
+      path: { segments },
       route: options.route || null,
-      isIndex: !nonIndex.includes(path),
       isDynamic: typeof options.route === 'string'
     }
   }
@@ -185,10 +182,10 @@ function genChunkName (component, context) {
 }
 
 function createRoute ({ page, query }) {
-  const { route } = page.internal
+  const { route, path: { segments: pathSegments }} = page.internal
   const segments = route
     ? route.split('/').filter(segment => !!segment)
-    : page.path.split('/').filter(segment => !!segment)
+    : pathSegments.slice()
 
   let order = route ? 3 : 1
 

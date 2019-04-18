@@ -87,13 +87,13 @@ test('allways include a /404 page', async () => {
 })
 
 test('cache parsed components', async () => {
-  const { pages: { _cached, createPage }} = await createApp()
+  const { pages: { _parser, createPage }} = await createApp()
 
   createPage({ path: '/page/1', component: './__fixtures__/PagedPage.vue' })
   createPage({ path: '/page/2', component: './__fixtures__/PagedPage.vue' })
   createPage({ path: '/page/3', component: './__fixtures__/PagedPage.vue' })
 
-  expect(Object.keys(_cached)).toHaveLength(2) // includes /404
+  expect(Object.keys(_parser._cached)).toHaveLength(2) // includes /404
 })
 
 test('update page', async () => {
