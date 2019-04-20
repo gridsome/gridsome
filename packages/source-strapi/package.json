@@ -1,0 +1,23 @@
+{
+  "version": "0.0.1",
+  "name": "@gridsome/source-strapi",
+  "description": "Strapi source for Gridsome",
+  "homepage": "https://github.com/gridsome/gridsome/tree/master/packages/source-strapi#readme",
+  "repository": "https://github.com/gridsome/gridsome/tree/master/packages/source-strapi",
+  "main": "index.js",
+  "keywords": [
+    "gridsome",
+    "gridsome-plugin",
+    "gridsome-source",
+    "strapi"
+  ],
+  "dependencies": {
+    "strapi-sdk-javascript": "^0.3.1"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=8"
+  }
+}
