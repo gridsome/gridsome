@@ -65,6 +65,10 @@ test('render favicons', () => {
   expect(exists('dist/assets/static/favicon.1539b60.test.png')).toBeTruthy()
 })
 
+test('copy contents of static folder', () => {
+  expect(exists('dist/external/index.html')).toBeTruthy()
+})
+
 // #163 - no duplicate style links
 test('do not render duplicate style links', () => {
   expect(content('dist/index.html').match(/styles\.css/g)).toHaveLength(2)
@@ -103,6 +107,7 @@ test('render g-image components', () => {
   expect($home('img.g-image-2').data('srcset')).toMatch('/assets/static/test.82a2fbd.test.png 480w')
   expect($home('img.g-image-2').data('src')).toEqual('/assets/static/test.97c148e.test.png')
   expect($home('img.g-image-2').attr('class')).not.toEqual('g-image-false')
+  expect($home('img.g-image-2 + noscript').html()).toMatch('alt="Test image"')
   expect($home('img.g-image-static').attr('src')).toEqual('/uploads/test.png')
   expect($home('img.g-image-static').attr('alt')).toEqual('Static image')
   expect($home('img.g-image-immediate').attr('src')).toEqual('/assets/static/test.cbab2cf.test.png')
@@ -237,6 +242,11 @@ test('navigate to /asdf', async () => {
 test('navigate to /', async () => {
   await page.click('.home-link')
   await page.waitForSelector('#app.home')
+})
+
+test('navigate to /external', async () => {
+  await page.click('.external-link')
+  await page.waitForSelector('body.external')
 })
 
 test('open /docs/1/ directly', async () => {
