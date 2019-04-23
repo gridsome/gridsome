@@ -578,6 +578,7 @@ test('should convert keys to valid field names', async () => {
 
   const { errors, data } = await createSchemaAndExecute(`{
     testPost (id: "1") {
+      id
       myObject {
         _2value
         value
@@ -590,6 +591,7 @@ test('should convert keys to valid field names', async () => {
   }`)
 
   const obj = {
+    id: '1',
     myObject: {
       _2value: 'test',
       value: 'test',
@@ -602,7 +604,7 @@ test('should convert keys to valid field names', async () => {
 
   expect(errors).toBeUndefined()
   expect(data.testPost).toMatchObject(obj)
-  expect(node.fields).toMatchObject(obj)
+  expect(node).toMatchObject(obj)
 })
 
 test('preserve internal custom fields', async () => {
@@ -631,8 +633,8 @@ test('preserve internal custom fields', async () => {
   expect(errors).toHaveLength(2)
   expect(errors[0].message).toEqual('Cannot query field "__hidden" on type "TestPost".')
   expect(errors[1].message).toEqual('Cannot query field "__nested_hidden" on type "TestPostNested".')
-  expect(node.fields.__hidden).toBeTruthy()
-  expect(node.fields.nested['__nested-hidden']).toBeTruthy()
+  expect(node.__hidden).toBeTruthy()
+  expect(node.nested['__nested-hidden']).toBeTruthy()
 })
 
 test('should format dates from schema', async () => {

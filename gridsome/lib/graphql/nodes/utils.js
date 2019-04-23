@@ -1,6 +1,4 @@
 const { safeKey } = require('../../utils')
-const { info } = require('../../utils/log')
-const { NODE_FIELDS } = require('../../utils/constants')
 
 exports.applyChainArgs = function (chain, args) {
   if (args.sortBy) chain = chain.simplesort(args.sortBy, args.order === -1)
@@ -15,21 +13,11 @@ exports.createBelongsToKey = function (node) {
 }
 
 exports.createPagedNodeEdges = function (chain, args) {
-  const { order, skip } = args
+  const { sortBy, order, skip } = args
   const page = Math.max(args.page, 1) // ensure page higher than 0
   const perPage = Math.max(args.perPage, 1) // ensure page higher than 1
   const totalNodes = chain.data().length
   const totalCount = Math.max(totalNodes - skip, 0)
-  let sortBy = args.sortBy
-
-  if (!NODE_FIELDS.includes(sortBy)) {
-    // TODO: remove check before 1.0
-    if (sortBy.startsWith('fields.')) {
-      info(`Do not prefix custom fields in sortBy argument with "fields."`)
-    } else {
-      sortBy = `fields.${sortBy}`
-    }
-  }
 
   chain = chain.simplesort(sortBy, order === 'DESC')
   chain = chain.offset(((page - 1) * perPage) + skip)

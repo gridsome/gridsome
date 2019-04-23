@@ -1,9 +1,7 @@
 const { applyChainArgs } = require('./nodes/utils')
 
 function fieldResolver (obj, args, ctx, { fieldName }) {
-  return obj.hasOwnProperty('$loki') // the node object
-    ? obj.fields[fieldName]
-    : obj[fieldName]
+  return obj[fieldName]
 }
 
 function createRefResolver ({ typeName, isList = false }) {

@@ -1,7 +1,6 @@
 const camelCase = require('camelcase')
 const { isDate } = require('./types/date')
-const { NODE_FIELDS } = require('../utils/constants')
-const { isEmpty, pick, omit, reduce } = require('lodash')
+const { isEmpty, reduce } = require('lodash')
 const { is32BitInt, isRefFieldDefinition } = require('./utils')
 
 const {
@@ -170,12 +169,7 @@ function toGraphQLType (value) {
 }
 
 function createFilterQuery (filter, fields) {
-  const query = {}
-
-  Object.assign(query, toFilterArgs(omit(filter, NODE_FIELDS), fields, 'fields'))
-  Object.assign(query, toFilterArgs(pick(filter, NODE_FIELDS), fields))
-
-  return query
+  return Object.assign({}, toFilterArgs(filter, fields))
 }
 
 function toFilterArgs (filter, fields, current = '') {

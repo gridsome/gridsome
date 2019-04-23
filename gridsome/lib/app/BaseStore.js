@@ -6,7 +6,7 @@ const ContentTypeCollection = require('./ContentTypeCollection')
 class BaseStore {
   constructor (app) {
     this.app = app
-    this.data = new Loki()
+    this.store = new Loki()
     this.collections = {}
     this.taxonomies = {}
     this.lastUpdate = null
@@ -15,19 +15,19 @@ class BaseStore {
 
     autoBind(this)
 
-    this.index = this.data.addCollection('core/nodeIndex', {
+    this.index = this.store.addCollection('core/nodeIndex', {
       indices: ['path', 'typeName', 'id'],
       unique: ['uid', 'path'],
       autoupdate: true
     })
 
-    this.pages = this.data.addCollection('core/page', {
+    this.pages = this.store.addCollection('core/page', {
       indices: ['type'],
       unique: ['path'],
       autoupdate: true
     })
 
-    this.metaData = this.data.addCollection('core/metaData', {
+    this.metaData = this.store.addCollection('core/metaData', {
       unique: ['key'],
       autoupdate: true
     })
@@ -54,10 +54,10 @@ class BaseStore {
   // nodes
 
   addContentType (pluginStore, options) {
-    const collection = this.data.addCollection(options.typeName, {
+    const collection = this.store.addCollection(options.typeName, {
       indices: ['id', 'path', 'date'],
       unique: ['id', 'path'],
-      autoupdate: true
+      disableMeta: true
     })
 
     const contentType = new ContentTypeCollection(pluginStore, collection, options)

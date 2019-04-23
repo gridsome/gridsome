@@ -112,7 +112,7 @@ function createRefs (contentType, nodeTypes, fields) {
         const field = {
           [fieldName]: {
             typeName,
-            id: obj.fields[fieldName]
+            id: obj[fieldName]
           }
         }
 

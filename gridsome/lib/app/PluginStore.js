@@ -6,7 +6,6 @@ const EventEmitter = require('events')
 const camelCase = require('camelcase')
 const pathToRegexp = require('path-to-regexp')
 const slugify = require('@sindresorhus/slugify')
-const { NODE_FIELDS } = require('../utils/constants')
 const { parsePageQuery } = require('../graphql/page-query')
 const { mapValues, cloneDeep, isPlainObject } = require('lodash')
 const { cache, nodeCache } = require('../utils/cache')
@@ -103,9 +102,8 @@ class PluginStore extends EventEmitter {
             key.name.match(/^(.*[^_])_([a-z]+)$/) ||
             [null, key.name, null]
           )
-          const path = !NODE_FIELDS.includes(fieldName)
-            ? ['fields'].concat(fieldName.split('__'))
-            : [fieldName]
+
+          const path = fieldName.split('__')
 
           return {
             name: key.name,

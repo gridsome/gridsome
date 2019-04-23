@@ -11,7 +11,6 @@ const { cloneDeep, isPlainObject, get } = require('lodash')
 const { slugify } = require('../utils')
 
 const normalize = require('./store/normalize')
-const transform = require('./store/transform')
 const processFields = require('./store/processFields')
 const { parseUrl } = require('./store/utils')
 
@@ -52,28 +51,27 @@ class ContentTypeCollection extends EventEmitter {
   }
 
   addNode (options) {
-    options = normalize(options, this.typeName)
-    options = transform(options, this._transformers)
+    const { nodeOptions, customFields } = normalize(options, this)
 
-    const { fields, belongsTo } = processFields(options.fields, this.options.refs, {
-      origin: options.internal.origin,
+    const { fields, belongsTo } = processFields(customFields, this.options.refs, {
+      origin: nodeOptions.internal.origin,
       context: this._assetsContext,
       resolveAbsolute: this._resolveAbsolutePaths
     })
 
-    const { typeName, uid, id } = options
+    const { typeName, uid, id } = nodeOptions
 
     const entry = { type: 'node', typeName, uid, id, belongsTo }
-    const node = { ...options, fields }
+    const node = { ...fields, ...nodeOptions }
 
     if (!node.date) node.date = new Date().toISOString()
 
     // TODO: remove before 1.0
-    node.slug = fields.slug || this.slugify(node.title)
+    if (!node.slug) node.slug = this.slugify(node.title)
 
     node.withPath = typeof node.path === 'string'
-    node.path = entry.path = typeof options.path === 'string'
-      ? '/' + options.path.replace(/^\/+/g, '')
+    node.path = entry.path = typeof nodeOptions.path === 'string'
+      ? '/' + nodeOptions.path.replace(/^\/+/g, '')
       : this._createPath(node)
 
     // add transformer to content type to let it
@@ -119,17 +117,15 @@ class ContentTypeCollection extends EventEmitter {
       options = _options
     }
 
-    options = normalize(options, this.typeName)
-    options = transform(options, this._transformers)
+    const { nodeOptions, customFields } = normalize(options, this)
 
-    const { fields, belongsTo } = processFields(options.fields, this.options.refs, {
-      origin: options.internal.origin,
+    const { fields, belongsTo } = processFields(customFields, this.options.refs, {
+      origin: nodeOptions.internal.origin,
       context: this._assetsContext,
       resolveAbsolute: this._resolveAbsolutePaths
     })
 
-    const { uid, id } = options
-
+    const { uid, id } = nodeOptions
     const node = this.getNode(uid ? { uid } : { id })
 
     if (!node) {
@@ -139,12 +135,11 @@ class ContentTypeCollection extends EventEmitter {
     const oldNode = cloneDeep(node)
 
     if (id) node.id = id || node.id
-    if (options.title) node.title = options.title
-    if (options.date) node.date = options.date
+    if (nodeOptions.title) node.title = nodeOptions.title
+    if (nodeOptions.date) node.date = nodeOptions.date
 
-    node.fields = fields
-
-    Object.assign(node.internal, options.internal)
+    Object.assign(node, fields)
+    Object.assign(node.internal, nodeOptions.internal)
 
     // TODO: remove before 1.0
     // the remark transformer uses node.content
@@ -153,10 +148,10 @@ class ContentTypeCollection extends EventEmitter {
     if (options.slug) node.slug = options.slug
 
     // TODO: remove before 1.0
-    node.slug = fields.slug || this.slugify(node.title)
+    if (node.slug && !options.slug) node.slug = this.slugify(node.title)
 
-    node.path = typeof options.path === 'string'
-      ? '/' + options.path.replace(/^\/+/g, '')
+    node.path = typeof nodeOptions.path === 'string'
+      ? '/' + nodeOptions.path.replace(/^\/+/g, '')
       : this._createPath(node)
 
     const indexEntry = this._store.store.index.findOne({ uid: node.uid })
@@ -164,6 +159,8 @@ class ContentTypeCollection extends EventEmitter {
     indexEntry.path = node.path
     indexEntry.belongsTo = belongsTo
 
+    this.collection.update(node)
+    this._store.store.index.update(indexEntry)
     this.emit('change', node, oldNode)
 
     return node
@@ -183,7 +180,7 @@ class ContentTypeCollection extends EventEmitter {
 
       // TODO: remove before 1.0
       // let slug fallback to title
-      if (name === 'slug' && !node.fields.slug) {
+      if (name === 'slug' && !node.slug) {
         path = ['title']
       }
 

@@ -1,6 +1,6 @@
 const { visit, parse, BREAK } = require('graphql')
 const { get, trimStart, upperFirst } = require('lodash')
-const { PER_PAGE, NODE_FIELDS } = require('../utils/constants')
+const { PER_PAGE } = require('../utils/constants')
 const { isRefField } = require('./utils')
 
 function parsePageQuery (query = '') {
@@ -52,9 +52,7 @@ function processPageQuery (pageQuery) {
       if (name === 'page') return
       if (name === 'path') return
 
-      const path = !NODE_FIELDS.includes(name)
-        ? ['fields'].concat(name.split('__'))
-        : [name]
+      const path = name.split('__')
 
       result.variables.push({ name, path })
     },

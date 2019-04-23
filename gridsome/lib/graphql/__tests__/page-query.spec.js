@@ -142,18 +142,16 @@ test('parse page-query variables', () => {
   const values = contextValues({
     id: '1',
     title: 'title',
-    fields: {
-      custom: 'custom value',
-      deep: {
-        value: 'deep value'
-      },
-      list: [{ value: 1 }, { value: 2 }, { value: 3 }],
-      ref: { typeName: 'Post', id: '1' },
-      refs: [
-        { typeName: 'Post', id: '1' },
-        { typeName: 'Post', id: '2' }
-      ]
-    }
+    custom: 'custom value',
+    deep: {
+      value: 'deep value'
+    },
+    list: [{ value: 1 }, { value: 2 }, { value: 3 }],
+    ref: { typeName: 'Post', id: '1' },
+    refs: [
+      { typeName: 'Post', id: '1' },
+      { typeName: 'Post', id: '2' }
+    ]
   }, variables)
 
   expect(variables).toHaveLength(7)
