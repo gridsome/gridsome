@@ -6,13 +6,11 @@ const autoBind = require('auto-bind')
 const EventEmitter = require('events')
 const { warn } = require('../utils/log')
 const isRelative = require('is-relative')
-const { ISO_8601_FORMAT } = require('../utils/constants')
-const { cloneDeep, isPlainObject, get } = require('lodash')
-const { slugify } = require('../utils')
-
-const normalize = require('./store/normalize')
-const processFields = require('./store/processFields')
+const createNodeOptions = require('./store/createNodeOptions')
+const { ISO_8601_FORMAT, NODE_FIELDS } = require('../utils/constants')
+const { cloneDeep, isPlainObject, omit, get } = require('lodash')
 const { parseUrl } = require('./store/utils')
+const { slugify } = require('../utils')
 
 class ContentTypeCollection extends EventEmitter {
   constructor (store, collection, options = {}) {
@@ -51,27 +49,22 @@ class ContentTypeCollection extends EventEmitter {
   }
 
   addNode (options) {
-    const { nodeOptions, customFields } = normalize(options, this)
+    const { nodeOptions, fields, belongsTo } = createNodeOptions(options, this)
 
-    const { fields, belongsTo } = processFields(customFields, this.options.refs, {
-      origin: nodeOptions.internal.origin,
-      context: this._assetsContext,
-      resolveAbsolute: this._resolveAbsolutePaths
-    })
-
-    const { typeName, uid, id } = nodeOptions
-
-    const entry = { type: 'node', typeName, uid, id, belongsTo }
+    const { uid, id } = nodeOptions
+    const entry = { type: 'node', typeName: this.typeName, uid, id, belongsTo }
     const node = { ...fields, ...nodeOptions }
 
-    if (!node.date) node.date = new Date().toISOString()
+    node.typeName = this.typeName
 
-    // TODO: remove before 1.0
-    if (!node.slug) node.slug = this.slugify(node.title)
+    if (!node[this.options.dateField]) {
+      node[this.options.dateField] = new Date().toISOString()
+    }
 
-    node.withPath = typeof node.path === 'string'
-    node.path = entry.path = typeof nodeOptions.path === 'string'
-      ? '/' + nodeOptions.path.replace(/^\/+/g, '')
+    // TODO: move this to a separate/internal plugin?
+    node.__withPath = typeof fields.path === 'string'
+    node.path = entry.path = node.__withPath
+      ? '/' + fields.path.replace(/^\/+/g, '')
       : this._createPath(node)
 
     // add transformer to content type to let it
@@ -117,41 +110,28 @@ class ContentTypeCollection extends EventEmitter {
       options = _options
     }
 
-    const { nodeOptions, customFields } = normalize(options, this)
-
-    const { fields, belongsTo } = processFields(customFields, this.options.refs, {
-      origin: nodeOptions.internal.origin,
-      context: this._assetsContext,
-      resolveAbsolute: this._resolveAbsolutePaths
-    })
+    const { nodeOptions, fields, belongsTo } = createNodeOptions(options, this)
 
     const { uid, id } = nodeOptions
-    const node = this.getNode(uid ? { uid } : { id })
+    const oldNode = this.getNode(uid ? { uid } : { id })
 
-    if (!node) {
+    if (!oldNode) {
       throw new Error(`Could not find node to update with id: ${id}`)
     }
 
-    const oldNode = cloneDeep(node)
+    const oldOptions = cloneDeep(oldNode)
+    const oldFields = omit(oldOptions, NODE_FIELDS)
 
-    if (id) node.id = id || node.id
-    if (nodeOptions.title) node.title = nodeOptions.title
-    if (nodeOptions.date) node.date = nodeOptions.date
+    const node = { ...oldFields, ...fields, ...nodeOptions }
 
-    Object.assign(node, fields)
-    Object.assign(node.internal, nodeOptions.internal)
+    node.$loki = oldNode.$loki
+    node.id = nodeOptions.id || node.id
+    node.typeName = this.typeName
 
-    // TODO: remove before 1.0
-    // the remark transformer uses node.content
-    if (options.content) node.content = options.content
-    if (options.excerpt) node.excerpt = options.excerpt
-    if (options.slug) node.slug = options.slug
-
-    // TODO: remove before 1.0
-    if (node.slug && !options.slug) node.slug = this.slugify(node.title)
-
-    node.path = typeof nodeOptions.path === 'string'
-      ? '/' + nodeOptions.path.replace(/^\/+/g, '')
+    // TODO: move this to a separate/internal plugin?
+    node.__withPath = typeof fields.path === 'string'
+    node.path = node.__withPath
+      ? '/' + fields.path.replace(/^\/+/g, '')
       : this._createPath(node)
 
     const indexEntry = this._store.store.index.findOne({ uid: node.uid })
@@ -161,14 +141,14 @@ class ContentTypeCollection extends EventEmitter {
 
     this.collection.update(node)
     this._store.store.index.update(indexEntry)
-    this.emit('change', node, oldNode)
+    this.emit('change', node, oldOptions)
 
     return node
   }
 
   _createPath (node) {
-    const date = moment.utc(node.date, ISO_8601_FORMAT, true)
-    const { routeKeys } = this.options
+    const { routeKeys, dateField } = this.options
+    const date = moment.utc(node[dateField], ISO_8601_FORMAT, true)
     const length = routeKeys.length
     const params = {}
 

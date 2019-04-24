@@ -89,10 +89,17 @@ class PluginStore extends EventEmitter {
       options.resolveAbsolutePaths = this._resolveAbsolutePaths
     }
 
+    const dateField = 'date'
+    const defaultSortBy = dateField
+    const defaultSortOrder = 'DESC'
+
     return this.store.addContentType(this, {
       route: options.route,
       fields: options.fields || {},
       typeName: options.typeName,
+      dateField,
+      defaultSortBy,
+      defaultSortOrder,
       resolveAbsolutePaths: options.resolveAbsolutePaths,
       routeKeys: routeKeys
         .filter(key => typeof key.name === 'string')

@@ -1,7 +1,6 @@
-const camelCase = require('camelcase')
 const { isDate } = require('./types/date')
 const { isEmpty, reduce } = require('lodash')
-const { is32BitInt, isRefFieldDefinition } = require('./utils')
+const { is32BitInt, isRefFieldDefinition, createTypeName } = require('./utils')
 
 const {
   GraphQLInt,
@@ -151,7 +150,7 @@ function createObjectFilter (obj, fieldName, typeName) {
 }
 
 function createFilterName (typeName, key) {
-  return camelCase(`${typeName} ${key} Filter`, { pascalCase: true })
+  return createTypeName(typeName, key, 'Filter')
 }
 
 function toGraphQLType (value) {

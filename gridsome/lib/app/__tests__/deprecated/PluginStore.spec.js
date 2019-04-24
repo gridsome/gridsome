@@ -111,7 +111,6 @@ test('update node', () => {
   expect(node.id).toEqual('test')
   expect(node.typeName).toEqual('TestPost')
   expect(node.title).toEqual('New title')
-  expect(node.slug).toEqual('new-title')
   expect(node.path).toEqual('/test/foo/new-title')
   expect(node.date).toEqual('2018-09-04T23:20:33.918Z')
   expect(node.content).toEqual('Praesent commodo cursus magna')
@@ -144,25 +143,7 @@ test('change node id', () => {
   expect(entry.uid).toEqual('test')
 })
 
-test('change node id from fields', () => {
-  const { store } = createPlugin()
-
-  const uid = 'test'
-  const contentType = store.addContentType('TestPost')
-
-  const node1 = contentType.addNode({ uid, fields: { id: 'test' }})
-
-  expect(node1.id).toEqual('test')
-
-  const node2 = contentType.updateNode({ uid, fields: { id: 'test-2' }})
-  const entry = store.store.index.findOne({ uid })
-
-  expect(node2.id).toEqual('test-2')
-  expect(node2.uid).toEqual('test')
-  expect(entry.uid).toEqual('test')
-})
-
-test('prioritize node.id over node.id', () => {
+test('prioritize node.id over fields.id', () => {
   const contentType = createPlugin().store.addContentType('Test')
 
   const node = contentType.addNode({

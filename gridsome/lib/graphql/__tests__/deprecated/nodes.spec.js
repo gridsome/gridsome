@@ -344,10 +344,10 @@ test('create node reference to same typeName', async () => {
 
   const query = `{
     post1: testPost (id: "2") {
-      rel { id title }
+      rel { id }
     }
     post2: testPost (id: "3") {
-      rel { id title }
+      rel { id }
     }
   }`
 
@@ -618,12 +618,13 @@ test('create reference with multiple node types', async () => {
       people {
         ...on Node {
           id
-          title
         }
         ...on TestAuthor {
+          title
           name
         }
         ...on TestUser {
+          title
           username
         }
       }

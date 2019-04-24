@@ -37,9 +37,9 @@ class PluginAPI {
         app.store.setUpdateTime()
 
         if (
-          (node && node.withPath && node === oldNode) ||
-          (node && node.withPath && node.path !== oldNode.path) ||
-          (!node && oldNode.withPath)
+          (node && node.__withPath && node === oldNode) ||
+          (node && node.__withPath && node.path !== oldNode.path) ||
+          (!node && oldNode.__withPath)
         ) {
           return regenerateRoutes()
         }

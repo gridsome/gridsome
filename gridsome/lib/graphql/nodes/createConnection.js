@@ -12,7 +12,7 @@ const {
   GraphQLInputObjectType
 } = require('graphql')
 
-module.exports = ({ nodeType, fields }) => {
+module.exports = ({ contentType, nodeType, fields }) => {
   const edgeType = new GraphQLObjectType({
     name: `${nodeType.name}Edge`,
     fields: () => ({
@@ -31,9 +31,11 @@ module.exports = ({ nodeType, fields }) => {
     })
   })
 
+  const { defaultSortBy, defaultSortOrder } = contentType.options
+
   const connectionArgs = {
-    sortBy: { type: GraphQLString, defaultValue: 'date' },
-    order: { type: sortOrderType, defaultValue: 'DESC' },
+    sortBy: { type: GraphQLString, defaultValue: defaultSortBy },
+    order: { type: sortOrderType, defaultValue: defaultSortOrder },
     perPage: { type: GraphQLInt, defaultValue: PER_PAGE },
     skip: { type: GraphQLInt, defaultValue: 0 },
     page: { type: GraphQLInt, defaultValue: 1 },
@@ -46,16 +48,7 @@ module.exports = ({ nodeType, fields }) => {
     description: `Filter for ${nodeType.name} nodes.`,
     type: new GraphQLInputObjectType({
       name: `${nodeType.name}Filters`,
-      fields: createFilterTypes({
-        ...fields,
-        id: '',
-        title: '',
-        slug: '',
-        path: '',
-        content: '',
-        excerpt: '',
-        date: '2019-01-03'
-      }, `${nodeType.name}Filter`)
+      fields: createFilterTypes({ ...fields, id: '' }, `${nodeType.name}Filter`)
     })
   }
 

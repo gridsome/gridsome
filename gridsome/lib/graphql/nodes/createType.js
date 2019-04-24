@@ -24,6 +24,10 @@ module.exports = ({ contentType, nodeTypes, fields }) => {
       const fieldTypes = createFieldTypes(fields, contentType.typeName, nodeTypes)
       const refs = createRefs(contentType, nodeTypes, fieldTypes)
 
+      if (fieldTypes.hasOwnProperty(contentType.options.dateField)) {
+        fieldTypes[contentType.options.dateField] = dateType
+      }
+
       const nodeFields = {
         ...fieldTypes,
         ...refs,
@@ -31,11 +35,8 @@ module.exports = ({ contentType, nodeTypes, fields }) => {
         ...extendNodeType(contentType, nodeType, nodeTypes),
         ...createFields(contentType, fieldTypes),
 
-        belongsTo: createBelongsTo(contentType, nodeTypes),
         id: { type: new GraphQLNonNull(GraphQLID) },
-        title: { type: GraphQLString },
-        path: { type: GraphQLString },
-        date: dateType,
+        belongsTo: createBelongsTo(contentType, nodeTypes),
 
         _id: {
           deprecationReason: 'Use node.id instead.',

@@ -55,7 +55,7 @@ class BaseStore {
 
   addContentType (pluginStore, options) {
     const collection = this.store.addCollection(options.typeName, {
-      indices: ['id', 'path', 'date'],
+      indices: ['id', 'path', options.dateField],
       unique: ['id', 'path'],
       disableMeta: true
     })
