@@ -89,8 +89,7 @@ module.exports = (context, options = {}, pkg = {}) => {
   config.cacheDir = resolve('.cache')
   config.dataDir = path.join(config.cacheDir, 'data')
   config.imageCacheDir = resolve('.cache', assetsDir, 'static')
-  config.minProcessImageWidth = 500 // TODO: find a better name for this
-  config.maxImageWidth = localConfig.maxImageWidth || 1920
+  config.maxImageWidth = localConfig.maxImageWidth || 2560
   config.imageExtensions = SUPPORTED_IMAGE_TYPES
 
   config.images = { ...localConfig.images }
@@ -123,7 +122,7 @@ module.exports = (context, options = {}, pkg = {}) => {
   config.templatePath = fs.existsSync(localIndex) ? localIndex : path.resolve(config.appPath, 'index.html')
   config.htmlTemplate = fs.readFileSync(config.templatePath, 'utf-8')
 
-  config.css = defaultsDeep(css, localConfig.css || {})
+  config.css = defaultsDeep(localConfig.css || {}, css)
 
   return Object.freeze(config)
 }
@@ -247,7 +246,7 @@ function normalizeIconsConfig (config = {}) {
 
   const faviconSizes = [16, 32, 96]
   const touchiconSizes = [76, 152, 120, 167, 180]
-  const defaultIcon = 'src/favicon.png'
+  const defaultIcon = './src/favicon.png'
   const icon = typeof config === 'string' ? { favicon: config } : (config || {})
 
   res.favicon = typeof icon.favicon === 'string'

@@ -8,7 +8,17 @@
 
 ## Usage
 
-Add syntax highlighter to a single markdown source:
+In your `main.js` file, import a Prism CSS theme:
+
+```js
+import 'prismjs/themes/prism.css'
+
+export default function (Vue) {
+  // ...
+}
+```
+
+In `gridsome.config.js`, add syntax highlighter to a single markdown source:
 
 ```js
 module.exports = {
@@ -29,7 +39,7 @@ module.exports = {
 }
 ```
 
-Add syntax highlighter to all markdown sources:
+Or add syntax highlighter to all markdown sources:
 
 ```js
 module.exports = {

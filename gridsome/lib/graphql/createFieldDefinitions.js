@@ -1,4 +1,4 @@
-const { isPlainObject } = require('lodash')
+const { isPlainObject, isNumber, isInteger } = require('lodash')
 const { isRefField, isRefFieldDefinition } = require('./utils')
 
 module.exports = function createFieldDefinitions (nodes) {
@@ -64,6 +64,10 @@ function fieldValue (value, currentValue) {
     }
 
     return fieldValues(value, currentValue)
+  } else if (isNumber(value)) {
+    return isNumber(currentValue) && isInteger(value)
+      ? currentValue
+      : value
   }
 
   return currentValue !== undefined ? currentValue : value

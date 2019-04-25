@@ -49,6 +49,11 @@ class ContentTypeCollection extends EventEmitter {
     const { typeName } = this.options
     const internal = this.pluginStore._createInternals(options.internal)
 
+    // prioritize node.id over node.fields.id
+    if (options.id && options.fields && options.fields.id) {
+      delete options.fields.id
+    }
+
     // transform content with transformer for given mime type
     if (internal.content && internal.mimeType) {
       this._transformNodeOptions(options, internal)
@@ -127,6 +132,11 @@ class ContentTypeCollection extends EventEmitter {
     }
 
     const internal = this.pluginStore._createInternals(options.internal)
+
+    // prioritize node.id over node.fields.id
+    if (options.id && options.fields && options.fields.id) {
+      delete options.fields.id
+    }
 
     // transform content with transformer for given mime type
     if (internal.content && internal.mimeType) {
@@ -287,22 +297,34 @@ class ContentTypeCollection extends EventEmitter {
     // Param values are slugified but the original
     // value will be available with '_raw' suffix.
     for (let i = 0; i < length; i++) {
-      const { name, path } = routeKeys[i]
-      const value = get(node, path, name)
+      const { name, path, fieldName, repeat, suffix } = routeKeys[i]
+      const field = get(node, path, fieldName)
 
-      if (name === 'year') params.year = date.format('YYYY')
-      else if (name === 'month') params.month = date.format('MM')
-      else if (name === 'day') params.day = date.format('DD')
-      else if (
-        isPlainObject(value) &&
-        value.hasOwnProperty('typeName') &&
-        value.hasOwnProperty('id') &&
-        !Array.isArray(value.id)
-      ) {
-        params[name] = String(value.id)
-      } else if (!isPlainObject(value) && !params[name]) {
-        params[name] = this.slugify(String(value))
-        params[name + '_raw'] = String(value)
+      if (fieldName === 'year') params.year = date.format('YYYY')
+      else if (fieldName === 'month') params.month = date.format('MM')
+      else if (fieldName === 'day') params.day = date.format('DD')
+      else {
+        const repeated = repeat && Array.isArray(field)
+        const values = repeated ? field : [field]
+
+        const segments = values.map(value => {
+          if (
+            isPlainObject(value) &&
+            value.hasOwnProperty('typeName') &&
+            value.hasOwnProperty('id') &&
+            !Array.isArray(value.id)
+          ) {
+            return String(value.id)
+          } else if (!isPlainObject(value)) {
+            return suffix === 'raw'
+              ? String(value)
+              : this.slugify(String(value))
+          } else {
+            return ''
+          }
+        }).filter(Boolean)
+
+        params[name] = repeated ? segments : segments[0]
       }
     }
 

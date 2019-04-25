@@ -1,0 +1,24 @@
+{
+  "version": "0.1.0",
+  "name": "@gridsome/transformer-csv",
+  "description": "CSV transformer for Gridsome",
+  "homepage": "https://github.com/gridsome/gridsome/tree/master/packages/transformer-csv#readme",
+  "repository": "https://github.com/gridsome/gridsome/tree/master/packages/transformer-csv",
+  "license": "MIT",
+  "main": "index.js",
+  "keywords": [
+    "gridsome",
+    "gridsome-plugin",
+    "gridsome-transformer",
+    "csv"
+  ],
+  "dependencies": {
+    "csv-parse": "^4.3.4"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=8"
+  }
+}

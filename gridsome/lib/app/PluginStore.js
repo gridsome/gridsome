@@ -94,12 +94,22 @@ class Source extends EventEmitter {
       routeKeys: routeKeys
         .filter(key => typeof key.name === 'string')
         .map(key => {
-          const name = key.name.replace('_raw', '')
-          const path = !NODE_FIELDS.includes(name)
-            ? ['fields'].concat(name.split('__'))
-            : [name]
+          // separate field name from suffix
+          const [, fieldName, suffix] = (
+            key.name.match(/^(.*[^_])_([a-z]+)$/) ||
+            [null, key.name, null]
+          )
+          const path = !NODE_FIELDS.includes(fieldName)
+            ? ['fields'].concat(fieldName.split('__'))
+            : [fieldName]
 
-          return { name, path }
+          return {
+            name: key.name,
+            path,
+            fieldName,
+            repeat: key.repeat,
+            suffix
+          }
         }),
       resolveAbsolutePaths: options.resolveAbsolutePaths,
       mimeTypes: [],

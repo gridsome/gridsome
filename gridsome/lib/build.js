@@ -134,6 +134,27 @@ async function createRenderQueue ({ routes, store, schema }) {
         break
       }
 
+      case PAGED_STATIC_TEMPLATE: {
+        const { fieldName } = pageQuery.paginate
+        const { belongsTo } = rootFields[fieldName].type.getFields()
+        const filter = belongsTo.args.find(arg => arg.name === 'filter')
+        const fields = filter.type.getFields()
+        const node = store.getNodeByPath(page.path)
+        const variables = contextValues(node, pageQuery.variables)
+        const filters = pageQuery.getFilters(variables)
+        const perPage = pageQuery.getPerPage(variables)
+        const query = createFilterQuery(filters, fields)
+        const key = createBelongsToKey(node)
+        const totalNodes = store.index.count({ ...query, [key]: { $eq: true }})
+        const totalPages = Math.ceil(totalNodes / perPage) || 1
+
+        for (let i = 1; i <= totalPages; i++) {
+          queue.push(createEntry(node, page, pageQuery.query, { ...variables, page: i }))
+        }
+
+        break
+      }
+
       case PAGED_TEMPLATE: {
         const { fieldName } = pageQuery.paginate
         const { belongsTo } = rootFields[fieldName].type.getFields()
@@ -316,7 +337,6 @@ async function processImages (queue, config) {
         queue,
         outDir: config.outDir,
         cacheDir: config.imageCacheDir,
-        minWidth: config.minProcessImageWidth,
         backgroundColor: config.images.backgroundColor
       })
     } catch (err) {

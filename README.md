@@ -31,7 +31,7 @@ Gridsome is a <a href="//vuejs.org">Vue-powered</a> static site generator for bu
 > This project is under active development. Any feedback or contributions would be appreciated.
 
 ### Enjoy a modern development stack
-Build websites with modern tools like Vue.js, webpack and Node.js. Get hot-reloading and access to any packages from npm and write CSS in your favorite preprocessor like Sass or Less with autoprefixing.
+Build websites with modern tools like Vue.js, webpack and Node.js. Get hot-reloading and access to any packages from npm and write CSS in your favorite preprocessor like Sass or Less with auto-prefixing.
 
 ### Connect to any CMS or data source
 Use any CMS or data source for content. Pull data from WordPress, Contentful, local Markdown, or any other headless CMS or APIs and access it with GraphQL in your pages and components.
@@ -40,7 +40,7 @@ Use any CMS or data source for content. Pull data from WordPress, Contentful, lo
 Only critical HTML, CSS, and JavaScript get loaded first. The next pages are then prefetched so users can click around incredibly fast without page reloads, even when offline.
 
 ### Get perfect page speed scores
-Gridsome automatically optimises your frontend to load and perform blazing fast. You get code-splitting, image optimisation, lazy-loading, and almost perfect lighthouse scores out-of-the-box.
+Gridsome automatically optimizes your frontend to load and perform blazing fast. You get code-splitting, image optimization, lazy-loading, and almost perfect lighthouse scores out-of-the-box.
 
 ### Build future ready websites
 The future of the web is JavaScript, API's, and Markup - the [JAMstack](https://jamstack.org/). Gridsome uses the power of blazing-fast static site generator, JavaScript and APIs to create stunning dynamic web experiences.
@@ -71,7 +71,7 @@ Gridsome sites are usually not connected to any database and can be hosted entir
 - [How it works](https://gridsome.org/docs/how-it-works)
 - [How to deploy](https://gridsome.org/docs/deployment)
 
-## How to contribute
+## How to Contribute
 
 Install [Node.js 8.3](https://nodejs.org/en/download/) or higher and [Yarn](https://yarnpkg.com/lang/en/docs/install/). It's also recommended to install [Lerna](https://www.npmjs.com/package/lerna) globally.
 
@@ -80,11 +80,19 @@ Install [Node.js 8.3](https://nodejs.org/en/download/) or higher and [Yarn](http
 3. Enter the new project folder and run `yarn` (or `lerna bootstrap` if installed).
 4. The project will now use the local packages when you run `gridsome develop`.
 
-Make sure your test poject has a version number in its `package.json` if you use an existing project.
+Make sure your test project has a version number in its `package.json` if you use an existing project.
 
 To use the local version of `@gridsome/cli` as the global command, enter the `~/packages/cli` folder and run `npm link`.
 
 Yarn will add dependencies from your test projects to the root `yarn.lock` file. So you should not commit changes in that file unless you have added dependencies to any of the core packages. If you need to commit it, remove your projects from the `~/projects` folder temporary and run `yarn` or `lerna bootstrap` in the root folder. Yarn will then clean up the lock file with only core dependencies. Commit the file and move your projects back and run `yarn` or `lerna bootstrap` again to start developing.
+
+### Code of Conduct
+
+In the interest of fostering an open and welcoming environment please read and follow our [Code of Conduct](./CODE_OF_CONDUCT.md).  
+
+## License
+
+Licensed under the [MIT License](./LICENSE).
 
 ## Roadmap for v1.0
 

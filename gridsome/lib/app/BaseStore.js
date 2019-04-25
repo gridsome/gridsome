@@ -42,6 +42,8 @@ class BaseStore {
       node.data = node.data.concat(data)
     } else if (node && isPlainObject(node.data) && isPlainObject(data)) {
       Object.assign(node.data, data)
+    } else if (node) {
+      node.data = data
     } else {
       node = this.metaData.insert({ key, data })
     }

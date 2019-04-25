@@ -98,7 +98,7 @@ test('open blog in browser', async () => {
 })
 
 test('navigate to /2', async () => {
-  await page.click('nav[role="navigation"] a.active + a')
+  await page.click('nav[role="navigation"] .pager-link.active + .pager-link')
   await page.waitForSelector('#app.home-2')
 })
 

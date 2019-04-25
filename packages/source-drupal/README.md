@@ -7,7 +7,7 @@
 This is the source plugin for pulling in data from the Drupal content management system for Gridsome. The Drupal module [JSON:API](https://www.drupal.org/project/jsonapi) is required for this plugin to work correctly. 
 
 ### Install
-* `yard add @gridsome/source-drupal`
+* `yarn add @gridsome/source-drupal`
 * `npm install @gridsome/source-drupal`
 
 ### Usage
@@ -197,7 +197,9 @@ Get the details of an individual `DrupalNodeArticle` using `<page-query>` in a G
       fieldImage {
         title,
         filename,
-        url
+        uri {
+          url
+        }
       },
       fieldTags {
         name,

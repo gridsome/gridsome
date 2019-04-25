@@ -44,7 +44,7 @@ export default {
       }
 
       return h(Link, {
-        staticClass: props.linkClass,
+        class: props.linkClass,
         props: linkProps,
         attrs: {
           'aria-label': ariaLabel.replace('%n', page),

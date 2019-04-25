@@ -9,18 +9,18 @@ const {
 
 module.exports = ({ store }) => {
   return async function (req, res, next) {
-    const { query, variables, ...body } = await getGraphQLParams(req)
-
-    if (!query || !variables) {
-      return next()
+    // allow OPTIONS method for cors
+    if (req.method === 'OPTIONS') {
+      return res.sendStatus(200)
     }
 
-    const pageQuery = processPageQuery({ query })
-    const { path } = variables
+    const { query = '', variables, ...body } = await getGraphQLParams(req)
 
-    if (variables.path) {
+    const pageQuery = processPageQuery({ query })
+
+    if (variables && variables.path) {
       const entry = store.index.findOne({
-        path: { $in: [path, trimEnd(path, '/')] }
+        path: { $in: [variables.path, trimEnd(variables.path, '/')] }
       })
 
       if (!entry) {

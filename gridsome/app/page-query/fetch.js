@@ -1,6 +1,5 @@
 /* global GRIDSOME_MODE */
 
-import router from '../router'
 import { setResults } from './shared'
 import prefetch from '../utils/prefetch'
 import { unslashEnd } from '../utils/helpers'
@@ -11,9 +10,11 @@ const isPrefetched = {}
 
 export default (route, query, prefetchOnly = false) => {
   if (GRIDSOME_MODE === 'serve') {
-    const { page, ...params } = route.params
-    const { location } = router.resolve({ ...route, params })
-    const path = location.path || '/'
+    const { name, params: { page }} = route
+
+    const path = page
+      ? route.path.split('/').slice(0, -1).join('/')
+      : route.path
 
     return new Promise((resolve, reject) => {
       fetch(process.env.GRAPHQL_ENDPOINT, {
@@ -22,9 +23,7 @@ export default (route, query, prefetchOnly = false) => {
         body: JSON.stringify({
           variables: {
             page: page ? Number(page) : null,
-            path: route.name === NOT_FOUND_NAME
-              ? NOT_FOUND_PATH
-              : path
+            path: name === NOT_FOUND_NAME ? NOT_FOUND_PATH : (path || '/')
           },
           query
         })
