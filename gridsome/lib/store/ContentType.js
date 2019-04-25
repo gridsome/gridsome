@@ -148,7 +148,7 @@ class ContentType {
     this.collection.update(node)
     this._store.store.index.update(indexEntry)
     this._store.store.setUpdateTime()
-    this._events.emit('update', node, oldNode)
+    this._events.emit('update', node, oldOptions)
 
     return node
   }
