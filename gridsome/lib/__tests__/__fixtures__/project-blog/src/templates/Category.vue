@@ -11,7 +11,7 @@
 </template>
 
 <page-query>
-query Tag ($id: String!, $page: Int, $showType: String) {
+query Category ($id: String!, $page: Int, $showType: String) {
   category (id: $id) {
     id
     title

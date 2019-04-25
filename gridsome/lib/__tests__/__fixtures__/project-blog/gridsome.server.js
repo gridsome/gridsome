@@ -102,4 +102,16 @@ module.exports = function (api) {
       })
     }
   })
+
+  api.createPages(({ store, createPage }) => {
+    const tags = store.getContentType('Tag')
+
+    tags.collection.find().forEach(node => {
+      createPage({
+        path: `/tag/${node.id}/extra`,
+        component: './src/templates/Tag.vue',
+        queryVariables: node
+      })
+    })
+  })
 }

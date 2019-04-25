@@ -1,6 +1,6 @@
+import fetch from '../fetch'
 import router from '../router'
 import caniuse from '../utils/caniuse'
-import fetch from '../page-query/fetch'
 import { stripPathPrefix } from '../utils/helpers'
 import { createObserver } from '../utils/intersectionObserver'
 
@@ -30,21 +30,10 @@ function intersectionHandler ({ intersectionRatio, target }) {
 
         const path = stripPathPrefix(target.pathname)
         const { route } = router.resolve({ path })
-        const options = route.matched[0].components.default
-        
+
         if (!route.meta.data) return
 
-        const fetchComponentData = options => {
-          setTimeout(() => {
-            fetch(route, options.__pageQuery, true)
-          }, 250)
-        }
-
-        if (typeof options === 'function') {
-          options().then(m => fetchComponentData(m.default))
-        } else {
-          fetchComponentData(options)
-        }
+        setTimeout(() => fetch(route, true), 250)
       }
     }
   }

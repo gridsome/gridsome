@@ -17,8 +17,9 @@ module.exports = function createRenderFn ({
     runInNewContext: false
   })
 
-  return async function render (url, data = {}) {
-    const context = { url, pageQuery: { data }}
+  return async function render (url, state = {}) {
+    const context = { url, state }
+
     let app = ''
 
     try {
@@ -44,6 +45,7 @@ module.exports = function createRenderFn ({
       context.renderStyles()
 
     const scripts = '' +
+      context.renderState() +
       context.renderScripts() +
       inject.script.text({ body: true })
 

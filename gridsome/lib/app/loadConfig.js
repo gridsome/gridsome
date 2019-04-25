@@ -7,7 +7,9 @@ const { defaultsDeep, camelCase } = require('lodash')
 const { internalRE, transformerRE, SUPPORTED_IMAGE_TYPES } = require('../utils/constants')
 
 const builtInPlugins = [
-  path.resolve(__dirname, '../plugins/source-vue')
+  path.resolve(__dirname, '../plugins/vue-components'),
+  path.resolve(__dirname, '../plugins/vue-pages'),
+  path.resolve(__dirname, '../plugins/vue-templates')
 ]
 
 // TODO: use joi to define and validate config schema
@@ -91,6 +93,9 @@ module.exports = (context, options = {}, pkg = {}) => {
   config.imageCacheDir = resolve('.cache', assetsDir, 'static')
   config.maxImageWidth = localConfig.maxImageWidth || 2560
   config.imageExtensions = SUPPORTED_IMAGE_TYPES
+  config.pagesDir = resolve('src/pages')
+  config.templatesDir = resolve('src/templates')
+  config.componentParsers = []
 
   config.images = { ...localConfig.images }
 
@@ -154,7 +159,10 @@ function resolvePkg (context) {
     pkg = Object.assign(pkg, JSON.parse(content))
   } catch (err) {}
 
-  if (!Object.keys(pkg.dependencies).includes('gridsome')) {
+  if (
+    !Object.keys(pkg.dependencies).includes('gridsome') &&
+    !process.env.GRIDSOME_TEST
+  ) {
     throw new Error('This is not a Gridsome project.')
   }
 
@@ -163,7 +171,7 @@ function resolvePkg (context) {
 
 function normalizePlugins (context, plugins) {
   return plugins.map((plugin, index) => {
-    if (typeof plugin === 'string') {
+    if (typeof plugin !== 'object') {
       plugin = { use: plugin }
     }
 
@@ -185,7 +193,12 @@ function normalizePlugins (context, plugins) {
 function resolvePluginEntries (id, context) {
   let dirName = ''
 
-  if (path.isAbsolute(id)) {
+  if (typeof id === 'function') {
+    return {
+      clientEntry: null,
+      serverEntry: id
+    }
+  } else if (path.isAbsolute(id)) {
     dirName = id
   } else if (id.startsWith('~/')) {
     dirName = path.join(context, id.replace(/^~\//, ''))

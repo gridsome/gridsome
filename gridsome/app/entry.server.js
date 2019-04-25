@@ -1,5 +1,5 @@
 import createApp, { runMain } from './app'
-import { NOT_FOUND_NAME, NOT_FOUND_PATH } from './utils/constants'
+import { NOT_FOUND_NAME, NOT_FOUND_PATH } from '~/.temp/constants'
 
 runMain()
 

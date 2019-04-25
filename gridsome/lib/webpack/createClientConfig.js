@@ -14,14 +14,6 @@ module.exports = async app => {
     setImmediate: false
   })
 
-  if (!isProd) {
-    config.plugin('hmr')
-      .use(require('webpack/lib/HotModuleReplacementPlugin'))
-
-    config.plugin('no-emit-on-errors')
-      .use(require('webpack/lib/NoEmitOnErrorsPlugin'))
-  }
-
   if (isProd) {
     config.plugin('vue-server-renderer')
       .use(require('./plugins/VueSSRClientPlugin'), [{
@@ -37,6 +29,14 @@ module.exports = async app => {
           mergeLonghand: false
         }
       }])
+  } else {
+    config.entry('app').add(resolve('../../app/entry.sockjs.js'))
+
+    config.plugin('hmr')
+      .use(require('webpack/lib/HotModuleReplacementPlugin'))
+
+    config.plugin('no-emit-on-errors')
+      .use(require('webpack/lib/NoEmitOnErrorsPlugin'))
   }
 
   await app.dispatch('chainWebpack', null, config, {
