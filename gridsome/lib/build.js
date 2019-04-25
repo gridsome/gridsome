@@ -3,7 +3,6 @@ const pMap = require('p-map')
 const fs = require('fs-extra')
 const { chunk } = require('lodash')
 const hirestime = require('hirestime')
-const { createPath } = require('./utils')
 const sysinfo = require('./utils/sysinfo')
 const { log, error, info } = require('./utils/log')
 
@@ -12,7 +11,7 @@ const { execute } = require('graphql')
 const { createWorker } = require('./workers')
 const { createBelongsToKey } = require('./graphql/nodes/utils')
 const { createFilterQuery } = require('./graphql/createFilterTypes')
-const { processPageQuery, contextValues } = require('./graphql/page-query')
+const { contextValues } = require('./graphql/page-query')
 
 module.exports = async (context, args) => {
   process.env.NODE_ENV = 'production'
@@ -31,6 +30,12 @@ module.exports = async (context, args) => {
   // 1. run all GraphQL queries and save results into json files
   await app.dispatch('beforeRenderQueries', () => ({ context, config, queue }))
   await renderPageQueries(queue, app)
+
+  // write out route metas
+  await writeRoutesMeta(app)
+
+  // re-generate routes.js with updated data
+  await app.codegen.generate('routes.js')
 
   // 2. compile assets with webpack
   await runWebpack(app)
@@ -73,59 +78,36 @@ const {
 
 module.exports.createRenderQueue = createRenderQueue
 
-async function createRenderQueue ({ routes, config, store, schema }) {
+async function createRenderQueue ({ routes, store, schema }) {
   const rootFields = schema.getQueryType().getFields()
 
-  const createEntry = (node, page, query, variables = { page: 1 }) => {
-    const path = createPath(node.path, variables.page, page.isIndex)
+  for (const route of routes.routes) {
+    const pageQuery = route.processPageQuery()
 
-    return {
-      path: path.toUrlPath(),
-      htmlOutput: path.toFilePath(config.outDir, 'html'),
-      dataOutput: query ? path.toFilePath(config.dataDir, 'json') : null,
-      variables: { ...variables, path: node.path },
-      component: page.component,
-      query
-    }
-  }
-
-  const queue = []
-  const queries = {}
-
-  for (const page of routes) {
-    const key = page.component
-    let pageQuery = null
-
-    if (!queries[key]) {
-      queries[key] = processPageQuery(page.pageQuery)
-    }
-
-    pageQuery = queries[key]
-
-    switch (page.type) {
+    switch (route.type) {
       case STATIC_ROUTE:
       case NOT_FOUND_ROUTE: {
-        queue.push(createEntry(page, page, pageQuery.query))
+        route.addRenderPath(route.path)
 
         break
       }
 
       case STATIC_TEMPLATE_ROUTE: {
-        const node = store.getNodeByPath(page.path)
+        const node = store.getNodeByPath(route.path)
         const variables = contextValues(node, pageQuery.variables)
-        queue.push(createEntry(node, page, pageQuery.query, variables))
+        route.addRenderPath(node.path, variables)
 
         break
       }
 
       case DYNAMIC_TEMPLATE_ROUTE: {
-        const { collection } = store.getContentType(page.typeName)
+        const { collection } = store.getContentType(route.typeName)
         const nodes = collection.find()
         const length = nodes.length
 
         for (let i = 0; i < length; i++) {
           const variables = contextValues(nodes[i], pageQuery.variables)
-          queue.push(createEntry(nodes[i], page, pageQuery.query, variables))
+          route.addRenderPath(nodes[i].path, variables)
         }
 
         break
@@ -136,7 +118,7 @@ async function createRenderQueue ({ routes, config, store, schema }) {
         const { belongsTo } = rootFields[fieldName].type.getFields()
         const filter = belongsTo.args.find(arg => arg.name === 'filter')
         const fields = filter.type.getFields()
-        const node = store.getNodeByPath(page.path)
+        const node = store.getNodeByPath(route.path)
         const variables = contextValues(node, pageQuery.variables)
         const filters = pageQuery.getFilters(variables)
         const perPage = pageQuery.getPerPage(variables)
@@ -146,7 +128,7 @@ async function createRenderQueue ({ routes, config, store, schema }) {
         const totalPages = Math.ceil(totalNodes / perPage) || 1
 
         for (let i = 1; i <= totalPages; i++) {
-          queue.push(createEntry(node, page, pageQuery.query, { ...variables, page: i }))
+          route.addRenderPath(node.path, { ...variables, page: i })
         }
 
         break
@@ -157,7 +139,7 @@ async function createRenderQueue ({ routes, config, store, schema }) {
         const { belongsTo } = rootFields[fieldName].type.getFields()
         const filter = belongsTo.args.find(arg => arg.name === 'filter')
         const fields = filter.type.getFields()
-        const { collection } = store.getContentType(page.typeName)
+        const { collection } = store.getContentType(route.typeName)
         const nodes = collection.find()
         const length = nodes.length
 
@@ -167,13 +149,12 @@ async function createRenderQueue ({ routes, config, store, schema }) {
           const filters = pageQuery.getFilters(variables)
           const perPage = pageQuery.getPerPage(variables)
           const query = createFilterQuery(filters, fields)
-
           const key = createBelongsToKey(node)
           const totalNodes = store.index.count({ ...query, [key]: { $eq: true }})
           const totalPages = Math.ceil(totalNodes / perPage) || 1
 
           for (let i = 1; i <= totalPages; i++) {
-            queue.push(createEntry(node, page, pageQuery.query, { ...variables, page: i }))
+            route.addRenderPath(node.path, { ...variables, page: i })
           }
         }
 
@@ -193,7 +174,7 @@ async function createRenderQueue ({ routes, config, store, schema }) {
         const totalPages = Math.ceil(totalNodes / perPage) || 1
 
         for (let i = 1; i <= totalPages; i++) {
-          queue.push(createEntry(page, page, pageQuery.query, { page: i }))
+          route.addRenderPath(route.path, { page: i })
         }
 
         break
@@ -201,7 +182,31 @@ async function createRenderQueue ({ routes, config, store, schema }) {
     }
   }
 
-  return queue
+  return routes.renderQueue
+}
+
+async function writeRoutesMeta (app) {
+  const routes = app.routes.sortedRoutes
+  const length = routes.length
+  const files = {}
+
+  for (let i = 0; i < length; i++) {
+    const { type, pageQuery, renderQueue, metaDataPath } = routes[i]
+
+    if (!!pageQuery.query && renderQueue.length) {
+      if (![STATIC_ROUTE, STATIC_TEMPLATE_ROUTE].includes(type)) {
+        const metaData = files[metaDataPath] || (files[metaDataPath] = {})
+        Object.assign(metaData, renderQueue.reduce((acc, entry) => {
+          acc[entry.path] = entry.metaData
+          return acc
+        }, {}))
+      }
+    }
+  }
+
+  for (const output in files) {
+    await fs.outputFile(output, JSON.stringify(files[output]))
+  }
 }
 
 async function runWebpack (app) {
@@ -220,39 +225,54 @@ async function runWebpack (app) {
   info(`Compile assets - ${compileTime(hirestime.S)}s`)
 }
 
-async function renderPageQueries (queue, app) {
+async function renderPageQueries (renderQueue, app) {
   const timer = hirestime()
   const context = app.createSchemaContext()
-  const pages = queue.filter(page => !!page.dataOutput)
+  const queue = renderQueue.filter(entry => entry.hasPageQuery)
+  const groupSize = 500
 
-  await pMap(pages, async ({ dataOutput, query, variables, component }) => {
-    const results = await execute(app.schema, query, undefined, context, variables)
+  let count = 0
+  let group = 0
+
+  await pMap(queue, async entry => {
+    if (count % (groupSize - 1) === 0) group++
+    count++
+
+    const results = await execute(
+      app.schema,
+      entry.pageQuery.query,
+      undefined,
+      context,
+      entry.variables
+    )
 
     if (results.errors) {
-      const relPath = path.relative(app.context, component)
+      const relPath = path.relative(app.context, entry.component)
       error(`An error occurred while executing page-query for ${relPath}\n`)
       throw new Error(results.errors[0])
     }
 
-    await fs.outputFile(dataOutput, JSON.stringify(results))
+    entry.setData(results, group)
+
+    await fs.outputFile(entry.dataOutput, JSON.stringify(entry.data))
   }, { concurrency: sysinfo.cpus.physical })
 
-  info(`Run GraphQL (${pages.length} queries) - ${timer(hirestime.S)}s`)
+  info(`Run GraphQL (${queue.length} queries) - ${timer(hirestime.S)}s`)
 }
 
-async function renderHTML (queue, config) {
+async function renderHTML (renderQueue, config) {
   const timer = hirestime()
-  const totalPages = queue.length
-  const chunks = chunk(queue, 350)
+  const totalPages = renderQueue.length
+  const chunks = chunk(renderQueue, 350)
   const worker = createWorker('html-writer')
 
   const { htmlTemplate, clientManifestPath, serverBundlePath } = config
 
   await Promise.all(chunks.map(async queue => {
-    const pages = queue.map(page => ({
-      path: page.path,
-      htmlOutput: page.htmlOutput,
-      dataOutput: page.dataOutput
+    const pages = queue.map(entry => ({
+      path: entry.path,
+      htmlOutput: entry.htmlOutput,
+      dataOutput: entry.dataOutput
     }))
 
     try {
@@ -313,9 +333,9 @@ async function processImages (queue, config) {
 // webpack fails silently in some cases, appends styles.js to app.js to fix it
 // https://github.com/webpack-contrib/mini-css-extract-plugin/issues/85
 async function removeStylesJsChunk (stats, outDir) {
-  const { children: [child] } = stats
-  const styleChunk = child.assets.find(a => /styles(\.\w{8})?\.js$/.test(a.name))
-  const appChunk = child.assets.find(a => /app(\.\w{8})?\.js$/.test(a.name))
+  const { children: [clientStats] } = stats
+  const styleChunk = clientStats.assets.find(a => /styles(\.\w{8})?\.js$/.test(a.name))
+  const appChunk = clientStats.assets.find(a => /app(\.\w{8})?\.js$/.test(a.name))
 
   if (!styleChunk) return
 

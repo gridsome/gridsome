@@ -234,15 +234,7 @@ module.exports = (app, { isProd, isServer }) => {
         filename: `${assetsDir}/css/styles${useHash ? '.[contenthash:8]' : ''}.css`
       }])
 
-    const cacheGroups = {
-      data: {
-        test: m => m.resource && m.request.startsWith(`${projectConfig.cacheDir}/data`),
-        name: false,
-        chunks: 'all',
-        maxSize: 60000,
-        minSize: 5000
-      }
-    }
+    const cacheGroups = {}
 
     if (projectConfig.css.split !== true) {
       cacheGroups.styles = {
@@ -341,11 +333,14 @@ module.exports = (app, { isProd, isServer }) => {
   }
 
   function createEnv (projectConfig) {
+    const assetsUrl = forwardSlash(path.join(pathPrefix, assetsDir, '/'))
+    const dataUrl = forwardSlash(path.join(assetsUrl, 'data', '/'))
+
     const baseEnv = {
       'process.env.PUBLIC_PATH': JSON.stringify(pathPrefix),
+      'process.env.ASSETS_URL': JSON.stringify(assetsUrl),
+      'process.env.DATA_URL': JSON.stringify(dataUrl),
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || ''),
-      'GRIDSOME_CACHE_DIR': JSON.stringify(projectConfig.cacheDir),
-      'GRIDSOME_DATA_DIR': JSON.stringify(projectConfig.dataDir),
       'GRIDSOME_MODE': JSON.stringify(process.env.GRIDSOME_MODE || ''),
       'process.isClient': !isServer,
       'process.isServer': isServer,

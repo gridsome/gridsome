@@ -4,6 +4,14 @@ export function unslash (string) {
   return string.replace(/^\/+|\/+$/g, '')
 }
 
+export function unslashStart (string) {
+  return string.replace(/^\/+/g, '')
+}
+
+export function unslashEnd (string) {
+  return string.replace(/\/+$/g, '')
+}
+
 export function url (string) {
   return `${publicPath}${string}`.replace(/\/+/g, '/')
 }

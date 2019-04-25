@@ -1,10 +1,14 @@
-/* global GRIDSOME_MODE, GRIDSOME_DATA_DIR */
+/* global GRIDSOME_MODE */
 
 import { setResults } from './shared'
-import { unslash } from '../utils/helpers'
+import prefetch from '../utils/prefetch'
+import { unslashEnd } from '../utils/helpers'
 import { NOT_FOUND_NAME, NOT_FOUND_PATH } from '../utils/constants'
 
-export default (route, query) => {
+const dataUrl = process.env.DATA_URL
+const isPrefetched = {}
+
+export default (route, query, prefetchOnly = false) => {
   if (GRIDSOME_MODE === 'serve') {
     const { name, params: { page }} = route
 
@@ -34,20 +38,44 @@ export default (route, query) => {
           reject(err)
         })
     })
-  } else if (GRIDSOME_MODE === 'static') {
-    return new Promise((resolve, reject) => {
-      const { name, meta: { isIndex }} = route
-      const path = unslash(name === NOT_FOUND_NAME ? NOT_FOUND_PATH : route.path)
-      const jsonPath = unslash(isIndex === false ? `${path}.json` : `${path}/index.json`)
+  }
 
-      import(/* webpackChunkName: "data/" */ `${GRIDSOME_DATA_DIR}/${jsonPath}`)
+  return new Promise((resolve, reject) => {
+    const load = ([ group, hash ]) => {
+      const jsonPath = dataUrl + `${group}/${hash}.json` 
+
+      if (prefetchOnly) {
+        if (!isPrefetched[jsonPath]) {
+          isPrefetched[jsonPath] = prefetch(jsonPath)
+        }
+
+        return isPrefetched[jsonPath]
+          .then(resolve)
+          .catch(reject)
+      }
+
+      fetch(jsonPath, {
+        headers: { 'Content-Type': 'application/json' }
+      })
+        .then(res => res.json())
         .then(res => {
           if (res.errors) reject(res.errors[0])
           else (setResults(route.path, res.data), resolve(res))
         })
-        .catch(err => {
-          reject(err)
-        })
-    })
-  }
+        .catch(reject)
+    }
+
+    const { name, meta: { data }} = route
+    const usePath = name === NOT_FOUND_NAME ? NOT_FOUND_PATH : route.path
+    const path = unslashEnd(usePath) || '/'
+
+    if (typeof data === 'function') {
+      data().then(data => {
+        if (data[path]) load(data[path])
+        else resolve({ code: 404 })
+      }).catch(reject)
+    } else {
+      load(data)
+    }
+  })
 }

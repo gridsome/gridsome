@@ -8,19 +8,21 @@ test('create render queue for basic project', async () => {
   const app = await createApp(context, undefined, BOOTSTRAP_ROUTES)
   const queue = await createRenderQueue(app)
 
-  const renderPaths = queue.map(page => page.path)
-  const htmlOutputs = queue.map(page => page.htmlOutput)
-  const dataOutputs = queue.map(page => page.dataOutput)
+  const renderPaths = queue.map(entry => entry.path)
+  const htmlOutputs = queue.map(entry => entry.htmlOutput)
+  const dataOutputs = queue.map(entry => entry.setData({ path: entry.path }))
+
+  expect(queue).toHaveLength(11)
 
   expect(queue).toHaveLength(11)
 
   expect(renderPaths).toContain('/')
   expect(htmlOutputs).toContain(path.join(app.config.outDir, 'index.html'))
-  expect(dataOutputs).toContain(path.join(app.config.dataDir, 'index.json'))
+  expect(dataOutputs).toContain(path.join(app.config.assetsDir, 'data', '1', '6d4ad46e.json'))
 
   expect(renderPaths).toContain('/404')
   expect(htmlOutputs).toContain(path.join(app.config.outDir, '404.html'))
-  expect(dataOutputs).toContain(path.join(app.config.dataDir, '404.json'))
+  expect(dataOutputs).toContain(path.join(app.config.assetsDir, 'data', '1', '77051a62.json'))
 })
 
 test('create render queue for blog project', async () => {
@@ -28,7 +30,7 @@ test('create render queue for blog project', async () => {
   const app = await createApp(context, undefined, BOOTSTRAP_ROUTES)
   const queue = await createRenderQueue(app)
 
-  const renderPaths = queue.map(page => page.path)
+  const renderPaths = queue.map(entry => entry.path)
 
   expect(renderPaths).toContain('/')
   expect(renderPaths).toContain('/2')
