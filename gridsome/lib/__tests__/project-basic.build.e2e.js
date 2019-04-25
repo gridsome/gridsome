@@ -150,7 +150,7 @@ test('generate /404.html', () => {
 
 test('compile scripts correctly', () => {
   const appJS = content('dist/assets/js/app.js')
-  const homeJS = content('dist/assets/js/component--home.js')
+  const homeJS = content('dist/assets/js/page--src--pages--index-vue.js')
 
   // never include the context path
   expect(appJS).not.toMatch(context)
@@ -199,6 +199,13 @@ test('navigate to /docs/1', async () => {
   await page.waitForSelector('#app.doc-template-1')
 })
 
+test('navigate to /docs/1/extra', async () => {
+  await page.click('.doc-extra-link')
+  await page.waitForSelector('#app.doc-extra-template-1')
+  await page.click('.doc-link')
+  await page.waitForSelector('#app.doc-template-1')
+})
+
 test('navigate to /pages/2', async () => {
   await page.click('.page-link-2')
   await page.waitForSelector('#app.page-template')
@@ -222,6 +229,13 @@ test('navigate to /docs/2/2', async () => {
 test('navigate to /docs/2/3', async () => {
   await page.click('nav[role="navigation"] a.active + a')
   await page.waitForSelector('#app.doc-template-2.page-3')
+})
+
+test('navigate to /docs/2/extra', async () => {
+  await page.click('.doc-extra-link')
+  await page.waitForSelector('#app.doc-extra-template-2')
+  await page.click('.doc-link')
+  await page.waitForSelector('#app.doc-template-2')
 })
 
 test('navigate to /pages/1', async () => {
@@ -251,6 +265,11 @@ test('navigate to /external', async () => {
 
 test('open /docs/1/ directly', async () => {
   await page.goto('http://localhost:8080/docs/1/', { waitUntil: 'networkidle2' })
+  await page.waitForSelector('#app.is-mounted')
+})
+
+test('open /docs/1/extra/ directly', async () => {
+  await page.goto('http://localhost:8080/docs/1/extra/', { waitUntil: 'networkidle2' })
   await page.waitForSelector('#app.is-mounted')
 })
 

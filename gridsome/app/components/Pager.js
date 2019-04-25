@@ -1,4 +1,5 @@
 import Link from './Link'
+import { unslashEnd, stripPageParam } from '../utils/helpers'
 
 // @vue/component
 export default {
@@ -26,14 +27,18 @@ export default {
     ariaLastLabel: { type: String, default: 'Go to last page. Page %n' }
   },
 
-  render: (h, { props, data }) => {
+  render: (h, { props, data, parent }) => {
     const { info, showLinks, showNavigation, ariaLabel } = props
     const { current, total, pages, start, end } = resolveRange(info)
+    const currentPath = stripPageParam(parent.$route)
 
     const renderLink = (page, text = page, ariaLabel = text) => {
       if (page === current) ariaLabel = props.ariaCurrentLabel
 
-      const linkProps = { page }
+      const linkProps = {
+        to: createPagePath(currentPath, page),
+        exact: true
+      }
       
       if (props.activeLinkClass) {
         linkProps.activeClass = props.activeLinkClass
@@ -45,8 +50,8 @@ export default {
 
       return h(Link, {
         class: props.linkClass,
-        props: linkProps,
         attrs: {
+          ...linkProps,
           'aria-label': ariaLabel.replace('%n', page),
           'aria-current': current === page
         }
@@ -78,6 +83,10 @@ export default {
       }
     }, links)
   }
+}
+
+function createPagePath (path, page) {
+  return page > 1 ? unslashEnd(path) + `/${page}` : path
 }
 
 function resolveRange ({

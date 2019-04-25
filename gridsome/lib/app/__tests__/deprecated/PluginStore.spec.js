@@ -50,7 +50,6 @@ test('add node', () => {
 
   const contentType = api.store.addContentType('TestPost')
 
-  const emit = jest.spyOn(contentType, 'emit')
   const node = contentType.addNode({
     id: 'test',
     title: 'Lorem ipsum dolor sit amet',
@@ -65,12 +64,9 @@ test('add node', () => {
   expect(node.typeName).toEqual('TestPost')
   expect(node.title).toEqual('Lorem ipsum dolor sit amet')
   expect(node.date).toEqual('2018-09-04T23:20:33.918Z')
-  expect(emit).toHaveBeenCalledTimes(1)
   expect(entry.id).toEqual('test')
   expect(entry.uid).toEqual(node.uid)
   expect(entry.typeName).toEqual('TestPost')
-
-  emit.mockRestore()
 })
 
 test('update node', () => {
@@ -80,8 +76,6 @@ test('update node', () => {
     typeName: 'TestPost',
     route: '/test/:foo/:slug'
   })
-
-  const emit = jest.spyOn(contentType, 'emit')
 
   const oldNode = contentType.addNode({
     id: 'test',
@@ -117,12 +111,9 @@ test('update node', () => {
   expect(node.excerpt).toEqual('Praesent commodo...')
   expect(node.foo).toEqual('foo')
   expect(node.internal.timestamp).not.toEqual(oldTimestamp)
-  expect(emit).toHaveBeenCalledTimes(2)
   expect(entry.id).toEqual('test')
   expect(entry.uid).toEqual(uid)
   expect(entry.path).toEqual('/test/foo/new-title')
-
-  emit.mockRestore()
 })
 
 test('change node id', () => {
@@ -170,8 +161,6 @@ test('remove node', () => {
   const api = createPlugin()
 
   const contentType = api.store.addContentType('TestPost')
-
-  const emit = jest.spyOn(contentType, 'emit')
   const node = contentType.addNode({ id: 'test' })
 
   contentType.removeNode('test')
@@ -179,10 +168,7 @@ test('remove node', () => {
   const entry = api.store.store.index.findOne({ uid: node.uid })
 
   expect(contentType.getNode('test')).toBeNull()
-  expect(emit).toHaveBeenCalledTimes(2)
   expect(entry).toBeNull()
-
-  emit.mockRestore()
 })
 
 test('add nodes with custom fields', () => {

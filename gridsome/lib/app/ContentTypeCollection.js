@@ -3,20 +3,19 @@ const isUrl = require('is-url')
 const crypto = require('crypto')
 const moment = require('moment')
 const autoBind = require('auto-bind')
-const EventEmitter = require('events')
 const { warn } = require('../utils/log')
 const isRelative = require('is-relative')
+const EventEmitter = require('eventemitter3')
+const { ISO_8601_FORMAT } = require('../utils/constants')
+const { cloneDeep, trimEnd, isPlainObject, omit, get } = require('lodash')
 const createNodeOptions = require('./store/createNodeOptions')
-const { ISO_8601_FORMAT, NODE_FIELDS } = require('../utils/constants')
-const { cloneDeep, isPlainObject, omit, get } = require('lodash')
+const { NODE_FIELDS } = require('../utils/constants')
 const { parseUrl } = require('./store/utils')
-const { slugify } = require('../utils')
 
-class ContentTypeCollection extends EventEmitter {
+class ContentTypeCollection {
   constructor (store, collection, options = {}) {
-    super()
-
     this.collection = collection
+    this._events = new EventEmitter()
 
     this.options = { refs: {}, fields: {}, ...options }
     this.typeName = options.typeName
@@ -34,6 +33,14 @@ class ContentTypeCollection extends EventEmitter {
       : store.context
 
     autoBind(this)
+  }
+
+  on (eventName, fn, ctx) {
+    return this._events.on(eventName, fn, ctx)
+  }
+
+  off (eventName, fn, ctx) {
+    return this._events.removeListener(eventName, fn, ctx)
   }
 
   addReference (fieldName, options) {
@@ -64,7 +71,7 @@ class ContentTypeCollection extends EventEmitter {
     // TODO: move this to a separate/internal plugin?
     node.__withPath = typeof fields.path === 'string'
     node.path = entry.path = node.__withPath
-      ? '/' + fields.path.replace(/^\/+/g, '')
+      ? trimEnd('/' + fields.path.replace(/^\/+/g, ''), '/')
       : this._createPath(node)
 
     // add transformer to content type to let it
@@ -83,7 +90,8 @@ class ContentTypeCollection extends EventEmitter {
     }
 
     this.collection.insert(node)
-    this.emit('change', node)
+    this._store.store.setUpdateTime()
+    this._events.emit('add', node)
 
     return node
   }
@@ -99,8 +107,9 @@ class ContentTypeCollection extends EventEmitter {
 
     this._store.store.index.findAndRemove({ uid: node.uid })
     this.collection.findAndRemove({ uid: node.uid })
+    this._store.store.setUpdateTime()
 
-    this.emit('change', undefined, node)
+    this._events.emit('remove', node)
   }
 
   updateNode (options = {}, _options = {}) {
@@ -131,7 +140,7 @@ class ContentTypeCollection extends EventEmitter {
     // TODO: move this to a separate/internal plugin?
     node.__withPath = typeof fields.path === 'string'
     node.path = node.__withPath
-      ? '/' + fields.path.replace(/^\/+/g, '')
+      ? trimEnd('/' + fields.path.replace(/^\/+/g, ''), '/')
       : this._createPath(node)
 
     const indexEntry = this._store.store.index.findOne({ uid: node.uid })
@@ -141,7 +150,8 @@ class ContentTypeCollection extends EventEmitter {
 
     this.collection.update(node)
     this._store.store.index.update(indexEntry)
-    this.emit('change', node, oldOptions)
+    this._store.store.setUpdateTime()
+    this._events.emit('update', node, oldNode)
 
     return node
   }
@@ -206,7 +216,7 @@ class ContentTypeCollection extends EventEmitter {
   }
 
   slugify (string = '') {
-    return slugify(string)
+    return this._store.slugify(string)
   }
 }
 

@@ -49,7 +49,7 @@ test('add node', () => {
   const api = createPlugin()
   const contentType = api.store.addContentType('TestPost')
 
-  const emit = jest.spyOn(contentType, 'emit')
+  const emit = jest.spyOn(contentType._events, 'emit')
   const node = contentType.addNode({
     id: 'test',
     title: 'Lorem ipsum dolor sit amet',
@@ -82,7 +82,7 @@ test('update node', () => {
     route: '/test/:foo/:slug'
   })
 
-  const emit = jest.spyOn(contentType, 'emit')
+  const emit = jest.spyOn(contentType._events, 'emit')
 
   const oldNode = contentType.addNode({
     id: 'test',
@@ -150,7 +150,7 @@ test('remove node', () => {
     typeName: 'TestPost'
   })
 
-  const emit = jest.spyOn(contentType, 'emit')
+  const emit = jest.spyOn(contentType._events, 'emit')
   const node = contentType.addNode({ id: 'test' })
 
   contentType.removeNode('test')
@@ -640,88 +640,4 @@ test('generate slug from any string', () => {
   expect(slug2).toEqual('string-with-aeoa-characters')
   expect(slug3).toEqual('string-with-slashes')
   expect(slug4).toEqual('trim-string')
-})
-
-test('add page', () => {
-  const api = createPlugin()
-
-  const emit = jest.spyOn(api.store, 'emit')
-  const page = api.store.addPage('page', {
-    title: 'Lorem ipsum dolor sit amet',
-    internal: { origin: 'Test.vue' }
-  })
-
-  expect(page).toHaveProperty('$loki')
-  expect(page).toHaveProperty('pageQuery')
-  expect(page.type).toEqual('page')
-  expect(page.title).toEqual('Lorem ipsum dolor sit amet')
-  expect(page.slug).toEqual('lorem-ipsum-dolor-sit-amet')
-  expect(page.path).toEqual('/lorem-ipsum-dolor-sit-amet')
-  expect(page.internal.origin).toEqual('Test.vue')
-  expect(emit).toHaveBeenCalledTimes(1)
-
-  emit.mockRestore()
-})
-
-test('add page with query', () => {
-  const api = createPlugin()
-
-  const page = api.store.addPage('page', {
-    pageQuery: 'query Test { page { id } }'
-  })
-
-  expect(page.pageQuery.query).toEqual('query Test { page { id } }')
-  expect(page.pageQuery.paginate).toEqual(false)
-})
-
-test('update page', () => {
-  const api = createPlugin()
-
-  api.store.addPage('page', {
-    id: 'test',
-    title: 'Lorem ipsum dolor sit amet',
-    internal: { origin: 'Test.vue' }
-  })
-
-  const emit = jest.spyOn(api.store, 'emit')
-  const page = api.store.updatePage('test', {
-    internal: { origin: 'Test2.vue' },
-    title: 'New title'
-  })
-
-  expect(page.title).toEqual('New title')
-  expect(page.slug).toEqual('lorem-ipsum-dolor-sit-amet')
-  expect(page.path).toEqual('/lorem-ipsum-dolor-sit-amet')
-  expect(page.internal.origin).toEqual('Test2.vue')
-  expect(emit).toHaveBeenCalledTimes(1)
-
-  emit.mockRestore()
-})
-
-test('update page path when slug is changed', () => {
-  const api = createPlugin()
-
-  api.store.addPage('page', { id: 'test' })
-
-  const page = api.store.updatePage('test', {
-    slug: 'new-title'
-  })
-
-  expect(page.title).toEqual('test')
-  expect(page.slug).toEqual('new-title')
-  expect(page.path).toEqual('/new-title')
-})
-
-test('remove page', () => {
-  const api = createPlugin()
-
-  const emit = jest.spyOn(api.store, 'emit')
-
-  api.store.addPage('page', { id: 'test' })
-  api.store.removePage('test')
-
-  expect(api.store.getPage('test')).toBeNull()
-  expect(emit).toHaveBeenCalledTimes(2)
-
-  emit.mockRestore()
 })
