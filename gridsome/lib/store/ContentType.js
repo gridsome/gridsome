@@ -7,7 +7,7 @@ const { warn } = require('../utils/log')
 const isRelative = require('is-relative')
 const EventEmitter = require('eventemitter3')
 const { ISO_8601_FORMAT } = require('../utils/constants')
-const { cloneDeep, trimEnd, isPlainObject, omit, get } = require('lodash')
+const { cloneDeep, isString, isPlainObject, trim, omit, get } = require('lodash')
 const createNodeOptions = require('./createNodeOptions')
 const { NODE_FIELDS } = require('../utils/constants')
 const { parseUrl } = require('./utils')
@@ -69,10 +69,9 @@ class ContentType {
     }
 
     // TODO: move this to a separate/internal plugin?
-    node.__withPath = typeof fields.path === 'string'
-    node.path = entry.path = node.__withPath
-      ? trimEnd('/' + fields.path.replace(/^\/+/g, ''), '/')
-      : this._createPath(node)
+    if (typeof fields.path === 'string' || this.options.route) {
+      node.path = entry.path = this._createPath(node)
+    }
 
     // add transformer to content type to let it
     // extend the node type when creating schema
@@ -138,10 +137,9 @@ class ContentType {
     node.typeName = this.typeName
 
     // TODO: move this to a separate/internal plugin?
-    node.__withPath = typeof fields.path === 'string'
-    node.path = node.__withPath
-      ? trimEnd('/' + fields.path.replace(/^\/+/g, ''), '/')
-      : this._createPath(node)
+    if (typeof fields.path === 'string' || this.options.route) {
+      node.path = this._createPath(node)
+    }
 
     const indexEntry = this._store.store.index.findOne({ uid: node.uid })
 
@@ -157,6 +155,12 @@ class ContentType {
   }
 
   _createPath (node) {
+    if (!isString(this.options.route)) {
+      return isString(node.path)
+        ? '/' + trim(node.path, '/')
+        : null
+    }
+
     const { routeKeys, dateField } = this.options
     const date = moment.utc(node[dateField], ISO_8601_FORMAT, true)
     const length = routeKeys.length
@@ -204,7 +208,7 @@ class ContentType {
       }
     }
 
-    return this.options.createPath(params)
+    return '/' + trim(this.options.createPath(params), '/')
   }
 
   //
