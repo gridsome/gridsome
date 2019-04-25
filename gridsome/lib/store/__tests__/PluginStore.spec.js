@@ -120,7 +120,6 @@ test('update node', () => {
   expect(emit).toHaveBeenCalledTimes(2)
   expect(entry.id).toEqual('test')
   expect(entry.uid).toEqual(uid)
-  expect(entry.path).toEqual('/test/foo/new-title')
 
   emit.mockRestore()
 })

@@ -70,7 +70,7 @@ class ContentType {
 
     // TODO: move this to a separate/internal plugin?
     if (typeof fields.path === 'string' || this.options.route) {
-      node.path = entry.path = this._createPath(node)
+      node.path = this._createPath(node)
     }
 
     // add transformer to content type to let it
@@ -143,7 +143,6 @@ class ContentType {
 
     const indexEntry = this._store.store.index.findOne({ uid: node.uid })
 
-    indexEntry.path = node.path
     indexEntry.belongsTo = belongsTo
 
     this.collection.update(node)

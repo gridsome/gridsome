@@ -113,7 +113,6 @@ test('update node', () => {
   expect(node.internal.timestamp).not.toEqual(oldTimestamp)
   expect(entry.id).toEqual('test')
   expect(entry.uid).toEqual(uid)
-  expect(entry.path).toEqual('/test/foo/new-title')
 })
 
 test('change node id', () => {

@@ -18,15 +18,9 @@ class Store {
     autoBind(this)
 
     this.index = this.store.addCollection('core/nodeIndex', {
-      indices: ['path', 'typeName', 'id'],
-      unique: ['uid', 'path'],
-      autoupdate: true
-    })
-
-    this.pages = this.store.addCollection('core/page', {
-      indices: ['type'],
-      unique: ['path'],
-      autoupdate: true
+      indices: ['typeName', 'id'],
+      unique: ['uid'],
+      disableMeta: true
     })
 
     this.metaData = this.store.addCollection('core/metaData', {
@@ -79,14 +73,6 @@ class Store {
 
   getContentType (typeName) {
     return this.collections[typeName]
-  }
-
-  getNodeByPath (path) {
-    const node = this.index.findOne({ path })
-
-    if (!node) return null
-
-    return this.getContentType(node.typeName).getNode({ uid: node.uid })
   }
 
   chainIndex (query = {}) {
