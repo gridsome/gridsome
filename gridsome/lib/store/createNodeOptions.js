@@ -2,7 +2,7 @@ const hash = require('hash-sum')
 const crypto = require('crypto')
 const { pick, omit } = require('lodash')
 const processFields = require('./processFields')
-const { NODE_FIELDS } = require('../../utils/constants')
+const { NODE_FIELDS } = require('../utils/constants')
 
 module.exports = function createNodeOptions (options, contentType, useFallbacks = true) {
   const { nodeOptions, customFields } = normalizeOptions(options, contentType, useFallbacks)

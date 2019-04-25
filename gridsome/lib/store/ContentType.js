@@ -8,11 +8,11 @@ const isRelative = require('is-relative')
 const EventEmitter = require('eventemitter3')
 const { ISO_8601_FORMAT } = require('../utils/constants')
 const { cloneDeep, trimEnd, isPlainObject, omit, get } = require('lodash')
-const createNodeOptions = require('./store/createNodeOptions')
+const createNodeOptions = require('./createNodeOptions')
 const { NODE_FIELDS } = require('../utils/constants')
-const { parseUrl } = require('./store/utils')
+const { parseUrl } = require('./utils')
 
-class ContentTypeCollection {
+class ContentType {
   constructor (store, collection, options = {}) {
     this.collection = collection
     this._events = new EventEmitter()
@@ -220,4 +220,4 @@ class ContentTypeCollection {
   }
 }
 
-module.exports = ContentTypeCollection
+module.exports = ContentType

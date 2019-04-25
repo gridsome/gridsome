@@ -1,8 +1,8 @@
 const { isDate } = require('lodash')
 const camelCase = require('camelcase')
 const { resolvePath } = require('./utils')
-const { isRefField } = require('../../graphql/utils')
-const { isResolvablePath, safeKey } = require('../../utils')
+const { isRefField } = require('../graphql/utils')
+const { isResolvablePath, safeKey } = require('../utils')
 
 const nonValidCharsRE = new RegExp('[^a-zA-Z0-9_]', 'g')
 const leadingNumberRE = new RegExp('^([0-9])')

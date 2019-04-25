@@ -2,9 +2,9 @@ const Loki = require('lokijs')
 const autoBind = require('auto-bind')
 const EventEmitter = require('eventemitter3')
 const { omit, isArray, isPlainObject } = require('lodash')
-const ContentTypeCollection = require('./ContentTypeCollection')
+const ContentType = require('./ContentType')
 
-class BaseStore {
+class Store {
   constructor (app) {
     this.app = app
     this.store = new Loki()
@@ -70,7 +70,7 @@ class BaseStore {
       disableMeta: true
     })
 
-    const contentType = new ContentTypeCollection(pluginStore, collection, options)
+    const contentType = new ContentType(pluginStore, collection, options)
 
     this.collections[options.typeName] = contentType
 
@@ -108,4 +108,4 @@ class BaseStore {
   }
 }
 
-module.exports = BaseStore
+module.exports = Store

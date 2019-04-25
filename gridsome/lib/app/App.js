@@ -3,7 +3,7 @@ const Codegen = require('./codegen')
 const autoBind = require('auto-bind')
 const hirestime = require('hirestime')
 const Pages = require('../pages/pages')
-const BaseStore = require('./BaseStore')
+const Store = require('../store/Store')
 const PluginAPI = require('./PluginAPI')
 const ComponentParser = require('./ComponentParser')
 const { execute, graphql } = require('graphql')
@@ -83,7 +83,7 @@ class App {
   //
 
   init () {
-    this.store = new BaseStore(this)
+    this.store = new Store(this)
     this.queue = new AssetsQueue(this)
     this.codegen = new Codegen(this)
     this.parser = new ComponentParser(this)

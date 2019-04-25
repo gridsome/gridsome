@@ -1,6 +1,6 @@
-const App = require('../../App')
-const PluginAPI = require('../../PluginAPI')
-const JSONTransformer = require('../__fixtures__/JSONTransformer')
+const App = require('../../app/App')
+const PluginAPI = require('../../app/PluginAPI')
+const JSONTransformer = require('./__fixtures__/JSONTransformer')
 
 function createPlugin (context = '/') {
   const app = new App(context, { config: { plugins: [] }}).init()
@@ -47,13 +47,14 @@ test('add type', () => {
 
 test('add node', () => {
   const api = createPlugin()
-
   const contentType = api.store.addContentType('TestPost')
 
+  const emit = jest.spyOn(contentType._events, 'emit')
   const node = contentType.addNode({
     id: 'test',
     title: 'Lorem ipsum dolor sit amet',
-    date: '2018-09-04T23:20:33.918Z'
+    date: '2018-09-04T23:20:33.918Z',
+    customField: true
   })
 
   const entry = api.store.store.index.findOne({ uid: node.uid })
@@ -64,9 +65,13 @@ test('add node', () => {
   expect(node.typeName).toEqual('TestPost')
   expect(node.title).toEqual('Lorem ipsum dolor sit amet')
   expect(node.date).toEqual('2018-09-04T23:20:33.918Z')
+  expect(node.customField).toEqual(true)
+  expect(emit).toHaveBeenCalledTimes(1)
   expect(entry.id).toEqual('test')
   expect(entry.uid).toEqual(node.uid)
   expect(entry.typeName).toEqual('TestPost')
+
+  emit.mockRestore()
 })
 
 test('update node', () => {
@@ -77,14 +82,15 @@ test('update node', () => {
     route: '/test/:foo/:slug'
   })
 
+  const emit = jest.spyOn(contentType._events, 'emit')
+
   const oldNode = contentType.addNode({
     id: 'test',
+    slug: 'test',
     date: '2018-09-04T23:20:33.918Z',
     content: 'Lorem ipsum dolor sit amet',
     excerpt: 'Lorem ipsum...',
-    fields: {
-      foo: 'bar'
-    }
+    foo: 'bar'
   })
 
   const oldTimestamp = oldNode.internal.timestamp
@@ -93,11 +99,10 @@ test('update node', () => {
   const node = contentType.updateNode({
     id: 'test',
     title: 'New title',
+    slug: 'new-title',
     content: 'Praesent commodo cursus magna',
     excerpt: 'Praesent commodo...',
-    fields: {
-      foo: 'foo'
-    }
+    foo: 'foo'
   })
 
   const entry = api.store.store.index.findOne({ uid: node.uid })
@@ -105,22 +110,26 @@ test('update node', () => {
   expect(node.id).toEqual('test')
   expect(node.typeName).toEqual('TestPost')
   expect(node.title).toEqual('New title')
+  expect(node.slug).toEqual('new-title')
   expect(node.path).toEqual('/test/foo/new-title')
   expect(node.date).toEqual('2018-09-04T23:20:33.918Z')
   expect(node.content).toEqual('Praesent commodo cursus magna')
   expect(node.excerpt).toEqual('Praesent commodo...')
   expect(node.foo).toEqual('foo')
   expect(node.internal.timestamp).not.toEqual(oldTimestamp)
+  expect(emit).toHaveBeenCalledTimes(2)
   expect(entry.id).toEqual('test')
   expect(entry.uid).toEqual(uid)
   expect(entry.path).toEqual('/test/foo/new-title')
+
+  emit.mockRestore()
 })
 
 test('change node id', () => {
   const { store } = createPlugin()
 
   const uid = 'test'
-  const contentType = store.addContentType('TestPost')
+  const contentType = store.addContentType({ typeName: 'TestPost' })
 
   const node1 = contentType.addNode({ uid, id: 'test' })
 
@@ -134,33 +143,14 @@ test('change node id', () => {
   expect(entry.uid).toEqual('test')
 })
 
-test('prioritize node.id over fields.id', () => {
-  const contentType = createPlugin().store.addContentType('Test')
-
-  const node = contentType.addNode({
-    id: 'foo',
-    fields: {
-      id: 'bar'
-    }
-  })
-
-  expect(node.id).toEqual('foo')
-})
-
-test('get node by id', () => {
-  const posts = createPlugin().store.addContentType('Post')
-
-  posts.addNode({ id: '1' })
-  posts.addNode({ id: '2' })
-  posts.addNode({ id: '3' })
-
-  expect(posts.getNode('2').id).toEqual('2')
-})
-
 test('remove node', () => {
   const api = createPlugin()
 
-  const contentType = api.store.addContentType('TestPost')
+  const contentType = api.store.addContentType({
+    typeName: 'TestPost'
+  })
+
+  const emit = jest.spyOn(contentType._events, 'emit')
   const node = contentType.addNode({ id: 'test' })
 
   contentType.removeNode('test')
@@ -168,27 +158,28 @@ test('remove node', () => {
   const entry = api.store.store.index.findOne({ uid: node.uid })
 
   expect(contentType.getNode('test')).toBeNull()
+  expect(emit).toHaveBeenCalledTimes(2)
   expect(entry).toBeNull()
+
+  emit.mockRestore()
 })
 
 test('add nodes with custom fields', () => {
   const api = createPlugin()
 
-  const contentType = api.store.addContentType('TestPost')
+  const contentType = api.store.addContentType({ typeName: 'TestPost' })
 
   const node = contentType.addNode({
     title: 'Lorem ipsum',
-    fields: {
-      nullValue: null,
-      undefinedValue: undefined,
-      falseValue: false,
-      test: 'My value',
-      list: ['1', '2', '3'],
-      objectList: [{ test: 1 }, { test: 2 }],
-      number: 24,
-      tags: ['Node.js'],
-      filename: 'image.png'
-    }
+    nullValue: null,
+    undefinedValue: undefined,
+    falseValue: false,
+    test: 'My value',
+    list: ['1', '2', '3'],
+    objectList: [{ test: 1 }, { test: 2 }],
+    number: 24,
+    tags: ['Node.js'],
+    filename: 'image.png'
   })
 
   expect(node.test).toEqual('My value')
@@ -224,7 +215,9 @@ test('add type with ref', () => {
 })
 
 test('add nodes with custom paths', () => {
-  const contentType = createPlugin().store.addContentType('TestPost')
+  const contentType = createPlugin().store.addContentType({
+    typeName: 'TestPost'
+  })
 
   const node1 = contentType.addNode({ path: '/lorem-ipsum-dolor-sit-amet' })
   const node2 = contentType.addNode({ path: 'nibh-fermentum-fringilla' })
@@ -237,7 +230,7 @@ test('add nodes with custom paths', () => {
 test('add type with dynamic route', () => {
   const contentType = createPlugin().store.addContentType({
     typeName: 'TestPost',
-    route: '/:year/:month/:day/:slug'
+    route: '/:year/:month/:day/:title'
   })
 
   const node = contentType.addNode({
@@ -245,7 +238,7 @@ test('add type with dynamic route', () => {
     date: '2018-09-04T23:20:33.918Z'
   })
 
-  expect(contentType.options.route).toEqual('/:year/:month/:day/:slug')
+  expect(contentType.options.route).toEqual('/:year/:month/:day/:title')
   expect(node.path).toEqual('/2018/09/04/lorem-ipsum-dolor-sit-amet')
 })
 
@@ -273,22 +266,122 @@ test('add type with custom fields in route', () => {
   const node = contentType.addNode({
     id: '1234',
     title: 'Lorem ipsum',
-    fields: {
-      test: 'My value',
-      genre: {
-        popularity: 0.8,
-        name: 'Thriller'
-      },
-      arr: [0, 1, 2],
-      numeric: 10,
-      author: {
-        typeName: 'Author',
-        id: '2'
-      }
+    test: 'My value',
+    genre: {
+      popularity: 0.8,
+      name: 'Thriller'
+    },
+    arr: [0, 1, 2],
+    numeric: 10,
+    author: {
+      typeName: 'Author',
+      id: '2'
     }
   })
 
   expect(node.path).toEqual('/my-value/My%20value/1234/10/2/thriller/1/missing/lorem-ipsum')
+})
+
+test('deeply nested field starting with `raw`', () => {
+  const contentType = createPlugin().store.addContentType({
+    typeName: 'TestPost',
+    route: '/:foo__rawValue'
+  })
+
+  const node = contentType.addNode({
+    fields: {
+      foo: {
+        rawValue: 'BAR'
+      }
+    }
+  })
+
+  expect(node.path).toEqual('/bar')
+})
+
+test('raw version of deeply nested field starting with `raw`', () => {
+  const contentType = createPlugin().store.addContentType({
+    typeName: 'TestPost',
+    route: '/:foo__rawValue_raw'
+  })
+
+  const node = contentType.addNode({
+    foo: {
+      rawValue: 'BAR'
+    }
+  })
+
+  expect(node.path).toEqual('/BAR')
+})
+
+test.each([
+  [
+    '/:segments+',
+    { segments: ['this', 'should be', 'SLUGIFIED'] },
+    '/this/should-be/slugified'
+  ],
+  [
+    '/:segments_raw+',
+    { segments: ['this', 'should not be', 'SLUGIFIED'] },
+    '/this/should%20not%20be/SLUGIFIED'
+  ],
+  [
+    '/path/:optionalSegments*',
+    { optionalSegments: [] },
+    '/path'
+  ],
+  [
+    '/:segments+',
+    { segments: 'this works too' },
+    '/this-works-too'
+  ],
+  [
+    '/:before*/c/:after*',
+    { before: ['a', 'b'], after: ['d'] },
+    '/a/b/c/d'
+  ],
+  [
+    '/blog/:tags*',
+    { tags: [{ typeName: 'Tag', id: 1 }, { typeName: 'Tag', id: 2 }] },
+    '/blog/1/2'
+  ],
+  [
+    '/:mixed_raw+/:mixed+',
+    { mixed: [{ typeName: 'Thing', id: 42 }, '&&&', { thisIs: 'ignored' }] },
+    '/42/%26%26%26/42/and-and-and'
+  ],
+  [
+    '/this-is/:notRepeated',
+    { notRepeated: ['a', 'b', 'c'] },
+    '/this-is/a-b-c'
+  ],
+  [
+    '/path/:segments_raw',
+    { segments: ['a', 'b', 'c'] },
+    '/path/a%2Cb%2Cc'
+  ]
+])('dynamic route with repeated segments', (route, fields, path) => {
+  const contentType = createPlugin().store.addContentType({
+    typeName: 'TestPost',
+    route
+  })
+
+  const node = contentType.addNode({ fields })
+
+  expect(node.path).toEqual(path)
+})
+
+test('dynamic route with non-optional repeated segments', () => {
+  const contentType = createPlugin().store.addContentType({
+    typeName: 'TestPost',
+    route: '/path/:segments+'
+  })
+
+  expect(() => contentType.addNode({
+    fields: {
+      segments: []
+    }
+  })).toThrow(TypeError, 'Expected "segments" to not be empty')
 })
 
 test('transform node', () => {
@@ -297,13 +390,14 @@ test('transform node', () => {
   const contentType = api.store.addContentType('TestPost')
 
   const node = contentType.addNode({
+    id: '1',
     internal: {
       mimeType: 'application/json',
-      content: JSON.stringify({ foo: 'bar' })
+      content: JSON.stringify({ id: '2', foo: 'bar' })
     }
   })
 
-  expect(node).toMatchObject({ foo: 'bar' })
+  expect(node).toMatchObject({ id: '2', foo: 'bar' })
 })
 
 test('resolve file paths', () => {
@@ -315,20 +409,18 @@ test('resolve file paths', () => {
   })
 
   const node = contentType.addNode({
-    fields: {
-      file: 'image.png',
-      file2: '/image.png',
-      file3: '../image.png',
-      filepath: 'dir/to/image.png',
-      url: 'https://example.com/image.jpg',
-      url2: '//example.com/image.jpg',
-      url3: 'git@github.com:gridsome/gridsome.git',
-      url4: 'ftp://ftp.example.com',
-      email: 'email@example.com',
-      text: 'Lorem ipsum dolor sit amet.',
-      text2: 'example.com',
-      text3: 'md'
-    },
+    file: 'image.png',
+    file2: '/image.png',
+    file3: '../image.png',
+    filepath: 'dir/to/image.png',
+    url: 'https://example.com/image.jpg',
+    url2: '//example.com/image.jpg',
+    url3: 'git@github.com:gridsome/gridsome.git',
+    url4: 'ftp://ftp.example.com',
+    email: 'email@example.com',
+    text: 'Lorem ipsum dolor sit amet.',
+    text2: 'example.com',
+    text3: 'md',
     internal: {
       origin: '/absolute/dir/to/a/file.md'
     }
@@ -357,10 +449,8 @@ test('resolve absolute file paths with no origin', () => {
   })
 
   const node = contentType.addNode({
-    fields: {
-      file: 'image.png',
-      file2: '/image.png'
-    }
+    file: 'image.png',
+    file2: '/image.png'
   })
 
   expect(node.file).toEqual('image.png')
@@ -376,18 +466,14 @@ test('resolve absolute file paths with a custom path', () => {
   })
 
   const node1 = contentType.addNode({
-    fields: {
-      file: '/image.png'
-    },
+    file: '/image.png',
     internal: {
       origin: '/absolute/dir/to/a/file.md'
     }
   })
 
   const node2 = contentType.addNode({
-    fields: {
-      file: '/image.png'
-    }
+    file: '/image.png'
   })
 
   expect(node1.file).toEqual('/path/to/dir/image.png')
@@ -397,14 +483,12 @@ test('resolve absolute file paths with a custom path', () => {
 test('don\'t touch absolute paths when resolveAbsolutePaths is not set', () => {
   const api = createPlugin('/absolute/dir/to/project')
 
-  const contentType = api.store.addContentType('A')
+  const contentType = api.store.addContentType({ typeName: 'A' })
 
   const node = contentType.addNode({
-    fields: {
-      file: 'image.png',
-      file2: '/image.png',
-      file3: '../image.png'
-    },
+    file: 'image.png',
+    file2: '/image.png',
+    file3: '../image.png',
     internal: {
       origin: '/absolute/dir/to/a/file.md'
     }
@@ -418,12 +502,10 @@ test('don\'t touch absolute paths when resolveAbsolutePaths is not set', () => {
 test('always resolve relative paths from filesytem sources', () => {
   const api = createPlugin()
 
-  const contentType = api.store.addContentType('A')
+  const contentType = api.store.addContentType({ typeName: 'A' })
 
   const node = contentType.addNode({
-    fields: {
-      file: '../image.png'
-    },
+    file: '../image.png',
     internal: {
       origin: '/absolute/dir/to/a/file.md'
     }
@@ -435,12 +517,10 @@ test('always resolve relative paths from filesytem sources', () => {
 test('dont resolve relative paths when no origin', () => {
   const api = createPlugin()
 
-  const contentType = api.store.addContentType('A')
+  const contentType = api.store.addContentType({ typeName: 'A' })
 
   const node = contentType.addNode({
-    fields: {
-      file: '../image.png'
-    }
+    file: '../image.png'
   })
 
   expect(node.file).toEqual('../image.png')
@@ -449,14 +529,12 @@ test('dont resolve relative paths when no origin', () => {
 test('resolve relative paths from external sources', () => {
   const api = createPlugin()
 
-  const contentType1 = api.store.addContentType('A')
+  const contentType1 = api.store.addContentType({ typeName: 'A' })
 
   const node = contentType1.addNode({
-    fields: {
-      filename: 'image.png',
-      file2: '/image.png',
-      file3: '../../image.png'
-    },
+    filename: 'image.png',
+    file2: '/image.png',
+    file3: '../../image.png',
     internal: {
       origin: 'https://www.example.com/2018/11/02/blog-post'
     }
@@ -476,17 +554,15 @@ test('resolve absolute paths from external sources', () => {
   })
 
   const node3 = contentType2.addNode({
-    fields: {
-      filepath: 'images/image.png',
-      file2: '/images/image.png',
-      file3: './images/image.png'
-    },
+    imagepath: 'images/image.png',
+    file2: '/images/image.png',
+    file3: './images/image.png',
     internal: {
       origin: 'https://www.example.com/2018/11/02/another-blog-post/'
     }
   })
 
-  expect(node3.filepath).toEqual('images/image.png')
+  expect(node3.imagepath).toEqual('images/image.png')
   expect(node3.file2).toEqual('https://www.example.com/images/image.png')
   expect(node3.file3).toEqual('https://www.example.com/2018/11/02/another-blog-post/images/image.png')
 })
@@ -500,12 +576,10 @@ test('resolve paths from external sources with a custom url', () => {
   })
 
   const node = contentType.addNode({
-    fields: {
-      file: 'image.png',
-      file2: '/image.png',
-      file3: '../image.png',
-      file4: 'https://subdomain.example.com/images/image.png'
-    },
+    file: 'image.png',
+    file2: '/image.png',
+    file3: '../image.png',
+    file4: 'https://subdomain.example.com/images/image.png',
     internal: {
       origin: 'https://www.example.com/2018/11/02/blog-post.html'
     }
@@ -522,12 +596,10 @@ test('resolve paths from external sources with a custom url', () => {
   })
 
   const node2 = contentType2.addNode({
-    fields: {
-      file: 'image.png',
-      file2: '/image.png',
-      file3: '../image.png',
-      file4: 'https://subdomain.example.com/images/image.png'
-    },
+    file: 'image.png',
+    file2: '/image.png',
+    file3: '../image.png',
+    file4: 'https://subdomain.example.com/images/image.png',
     internal: {
       origin: 'https://www.example.com/2018/11/02/blog-post.html'
     }
@@ -537,4 +609,35 @@ test('resolve paths from external sources with a custom url', () => {
   expect(node2.file2).toEqual('https://cdn.example.com/assets/images/image.png')
   expect(node2.file3).toEqual('https://www.example.com/2018/11/image.png')
   expect(node2.file4).toEqual('https://subdomain.example.com/images/image.png')
+})
+
+test('fail if transformer is not installed', () => {
+  const api = createPlugin()
+
+  const contentType = api.store.addContentType({
+    typeName: 'TestPost'
+  })
+
+  expect(() => {
+    contentType.addNode({
+      internal: {
+        mimeType: 'text/markdown',
+        content: '# Test'
+      }
+    })
+  }).toThrow('No transformer for text/markdown is installed')
+})
+
+test('generate slug from any string', () => {
+  const api = createPlugin()
+
+  const slug1 = api.store.slugify('Lorem ipsum dolor sit amet')
+  const slug2 = api.store.slugify('String with æøå characters')
+  const slug3 = api.store.slugify('String/with / slashes')
+  const slug4 = api.store.slugify('  Trim  string   ')
+
+  expect(slug1).toEqual('lorem-ipsum-dolor-sit-amet')
+  expect(slug2).toEqual('string-with-aeoa-characters')
+  expect(slug3).toEqual('string-with-slashes')
+  expect(slug4).toEqual('trim-string')
 })

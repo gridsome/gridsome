@@ -1,5 +1,5 @@
 const autoBind = require('auto-bind')
-const PluginStore = require('./PluginStore')
+const PluginStore = require('../store/PluginStore')
 const { createPagesAPI } = require('../pages/utils')
 
 class PluginAPI {

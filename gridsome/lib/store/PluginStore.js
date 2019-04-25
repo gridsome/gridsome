@@ -7,7 +7,7 @@ const pathToRegexp = require('path-to-regexp')
 const slugify = require('@sindresorhus/slugify')
 const { mapValues, isPlainObject } = require('lodash')
 const { cache, nodeCache } = require('../utils/cache')
-const { resolvePath } = require('./store/utils')
+const { resolvePath } = require('./utils')
 const { log } = require('../utils/log')
 
 class PluginStore {
