@@ -3,7 +3,6 @@ const isUrl = require('is-url')
 const crypto = require('crypto')
 const moment = require('moment')
 const autoBind = require('auto-bind')
-const { warn } = require('../utils/log')
 const isRelative = require('is-relative')
 const EventEmitter = require('eventemitter3')
 const { ISO_8601_FORMAT } = require('../utils/constants')
@@ -59,14 +58,10 @@ class ContentType {
     const { nodeOptions, fields, belongsTo } = createNodeOptions(options, this)
 
     const { uid, id } = nodeOptions
-    const entry = { type: 'node', typeName: this.typeName, uid, id, belongsTo }
+    const entry = { typeName: this.typeName, uid, id, belongsTo }
     const node = { ...fields, ...nodeOptions }
 
     node.typeName = this.typeName
-
-    if (!node[this.options.dateField]) {
-      node[this.options.dateField] = new Date().toISOString()
-    }
 
     // TODO: move this to a separate/internal plugin?
     if (typeof fields.path === 'string' || this.options.route) {
@@ -81,14 +76,8 @@ class ContentType {
       mimeTypes[mimeType] = this._transformers[mimeType]
     }
 
-    try {
-      this._store.store.index.insert(entry)
-    } catch (err) {
-      warn(`Skipping duplicate path for ${node.path}`, this.typeName)
-      return null
-    }
-
     this.collection.insert(node)
+    this._store.store.index.insert(entry)
     this._store.store.setUpdateTime()
     this._events.emit('add', node)
 
@@ -141,12 +130,12 @@ class ContentType {
       node.path = this._createPath(node)
     }
 
-    const indexEntry = this._store.store.index.findOne({ uid: node.uid })
+    const entry = this._store.store.index.findOne({ uid: node.uid })
 
-    indexEntry.belongsTo = belongsTo
+    entry.belongsTo = belongsTo
 
     this.collection.update(node)
-    this._store.store.index.update(indexEntry)
+    this._store.store.index.update(entry)
     this._store.store.setUpdateTime()
     this._events.emit('update', node, oldOptions)
 
