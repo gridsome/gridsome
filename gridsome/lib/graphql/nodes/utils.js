@@ -1,8 +1,7 @@
 const { safeKey } = require('../../utils')
 
 exports.applyChainArgs = function (chain, args = {}, sort = []) {
-  chain = applySort(chain, sort)
-
+  if (sort.length) chain = applySort(chain, sort)
   if (args.skip) chain = chain.offset(args.skip)
   if (args.limit) chain = chain.limit(args.limit)
 
