@@ -1,7 +1,8 @@
 const { safeKey } = require('../../utils')
 
 exports.applyChainArgs = function (chain, args) {
-  if (args.sortBy) chain = chain.simplesort(args.sortBy, args.order === -1)
+  chain = applyChainSort(chain, args)
+
   if (args.skip) chain = chain.offset(args.skip)
   if (args.limit) chain = chain.limit(args.limit)
 
@@ -13,14 +14,13 @@ exports.createBelongsToKey = function (node) {
 }
 
 exports.createPagedNodeEdges = function (chain, args) {
-  const { sortBy, order, skip } = args
   const page = Math.max(args.page, 1) // ensure page higher than 0
   const perPage = Math.max(args.perPage, 1) // ensure page higher than 1
   const totalNodes = chain.data().length
-  const totalCount = Math.max(totalNodes - skip, 0)
+  const totalCount = Math.max(totalNodes - args.skip, 0)
 
-  chain = chain.simplesort(sortBy, order === 'DESC')
-  chain = chain.offset(((page - 1) * perPage) + skip)
+  chain = applyChainSort(chain, args)
+  chain = chain.offset(((page - 1) * perPage) + args.skip)
   chain = chain.limit(perPage)
 
   const nodes = chain.data()
@@ -43,4 +43,16 @@ exports.createPagedNodeEdges = function (chain, args) {
       isLast
     }
   }
+}
+
+function applyChainSort (chain, { sort, sortBy, order }) {
+  if (sort && sort.length) {
+    return chain.compoundsort(sort.map(({ by, order }) => {
+      return [by, order === 'DESC']
+    }))
+  } else if (sortBy) {
+    return chain.simplesort(sortBy, order === 'DESC')
+  }
+
+  return chain
 }

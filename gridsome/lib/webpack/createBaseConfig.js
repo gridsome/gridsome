@@ -13,7 +13,7 @@ module.exports = (app, { isProd, isServer }) => {
   const { config: projectConfig } = app
   const { cacheDirectory, cacheIdentifier } = createCacheOptions()
   const assetsDir = path.relative(projectConfig.outDir, projectConfig.assetsDir)
-  const pathPrefix = forwardSlash(path.join(projectConfig.pathPrefix, '/'))
+  const { pathPrefix } = projectConfig
   const config = new Config()
 
   const useHash = isProd && !process.env.GRIDSOME_TEST

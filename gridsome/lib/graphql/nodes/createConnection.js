@@ -1,6 +1,6 @@
 const { createPagedNodeEdges } = require('./utils')
 const { PER_PAGE } = require('../../utils/constants')
-const { pageInfoType, sortOrderType } = require('../types')
+const { pageInfoType, sortOrderType, sortType } = require('../types')
 const { createFilterTypes, createFilterQuery } = require('../createFilterTypes')
 
 const {
@@ -39,6 +39,7 @@ module.exports = ({ contentType, nodeType, fields }) => {
     perPage: { type: GraphQLInt, defaultValue: PER_PAGE },
     skip: { type: GraphQLInt, defaultValue: 0 },
     page: { type: GraphQLInt, defaultValue: 1 },
+    sort: { type: new GraphQLList(sortType) },
 
     // TODO: remove before 1.0
     regex: { type: GraphQLString, deprecationReason: 'Use filter instead.' }

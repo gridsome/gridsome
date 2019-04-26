@@ -6,8 +6,6 @@ module.exports = {
   NOT_FOUND_NAME: '404',
   NOT_FOUND_PATH: '/404',
 
-  PER_PAGE: 25,
-
   SUPPORTED_IMAGE_TYPES: ['.png', '.jpeg', '.jpg', '.gif', '.svg', '.webp'],
 
   BOOTSTRAP_CONFIG: 'config',
@@ -21,6 +19,8 @@ module.exports = {
 
   NODE_FIELDS: ['uid', 'id', '_id', 'typeName', 'internal', '$loki'],
   PAGE_FIELDS: ['id', 'typeName', 'path', 'slug'],
+  SORT_ORDER: 'DESC',
+  PER_PAGE: 25,
 
   ISO_8601_FORMAT: [
     'YYYY',

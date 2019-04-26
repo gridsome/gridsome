@@ -488,8 +488,8 @@ test('create node list reference', async () => {
   expect(data.testPost.author.id).toEqual('1')
   expect(data.testPost.author.title).toEqual('A Author')
   expect(data.testPost.customRefs.authors).toHaveLength(2)
-  expect(data.testPost.customRefs.authors[0].title).toEqual('B Author')
-  expect(data.testPost.customRefs.authors[1].title).toEqual('C Author')
+  expect(data.testPost.customRefs.authors[0].title).toEqual('C Author')
+  expect(data.testPost.customRefs.authors[1].title).toEqual('B Author')
 })
 
 test('create node list reference with missing types', async () => {
@@ -557,7 +557,7 @@ test('create node list reference with id as array', async () => {
 
   const query = `{
     testPost (id: "1") {
-      authors (sortBy: "title", limit: 2, skip: 1) {
+      authors (sortBy: "title", order: ASC, limit: 2, skip: 1) {
         id
         title
       }

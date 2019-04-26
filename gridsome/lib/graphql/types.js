@@ -1,9 +1,11 @@
 const {
   GraphQLInt,
+  GraphQLString,
   GraphQLNonNull,
   GraphQLBoolean,
   GraphQLEnumType,
-  GraphQLObjectType
+  GraphQLObjectType,
+  GraphQLInputObjectType
 } = require('graphql')
 
 const pageInfoType = new GraphQLObjectType({
@@ -17,7 +19,7 @@ const pageInfoType = new GraphQLObjectType({
 })
 
 const sortOrderType = new GraphQLEnumType({
-  name: 'SortOrder',
+  name: 'SortOrderEnum',
   values: {
     ASC: {
       value: 'ASC',
@@ -32,7 +34,22 @@ const sortOrderType = new GraphQLEnumType({
   }
 })
 
+const sortType = new GraphQLInputObjectType({
+  name: 'SortArgument',
+  fields: () => ({
+    by: {
+      type: new GraphQLNonNull(GraphQLString),
+      defaultValue: 'date'
+    },
+    order: {
+      type: sortOrderType,
+      defaultValue: 'DESC'
+    }
+  })
+})
+
 module.exports = {
   pageInfoType,
-  sortOrderType
+  sortOrderType,
+  sortType
 }

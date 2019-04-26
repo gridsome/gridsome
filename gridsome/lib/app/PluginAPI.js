@@ -48,6 +48,10 @@ class PluginAPI {
     this._on('chainWebpack', fn)
   }
 
+  configureWebpack (fn) {
+    this._on('configureWebpack', fn)
+  }
+
   configureServer (fn) {
     this._on('configureServer', fn)
   }

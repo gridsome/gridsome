@@ -67,20 +67,14 @@ module.exports = (context, options = {}, pkg = {}) => {
   // add project root as plugin
   plugins.push(context)
 
-  if (localConfig.pathPrefix && /\/+$/.test(localConfig.pathPrefix)) {
-    throw new Error(`pathPrefix must not have a trailing slash`)
-  }
-
   const assetsDir = localConfig.assetsDir || 'assets'
 
   config.pkg = options.pkg || resolvePkg(context)
   config.host = args.host || localConfig.host || 'localhost'
   config.port = parseInt(args.port || localConfig.port, 10) || 8080
   config.plugins = normalizePlugins(context, plugins)
-  config.chainWebpack = localConfig.chainWebpack
-  config.configureServer = localConfig.configureServer
   config.transformers = resolveTransformers(config.pkg, localConfig)
-  config.pathPrefix = isProd ? localConfig.pathPrefix || '/' : '/'
+  config.pathPrefix = normalizePathPrefix(isProd ? localConfig.pathPrefix : '/')
   config.staticDir = resolve('static')
   config.outDir = resolve(localConfig.outDir || 'dist')
   config.assetsDir = path.join(config.outDir, assetsDir)
@@ -96,6 +90,10 @@ module.exports = (context, options = {}, pkg = {}) => {
   config.pagesDir = resolve('src/pages')
   config.templatesDir = resolve('src/templates')
   config.componentParsers = []
+
+  config.chainWebpack = localConfig.chainWebpack
+  config.configureWebpack = localConfig.configureWebpack
+  config.configureServer = localConfig.configureServer
 
   config.images = { ...localConfig.images }
 
@@ -167,6 +165,11 @@ function resolvePkg (context) {
   }
 
   return pkg
+}
+
+function normalizePathPrefix (pathPrefix = '/') {
+  const segments = pathPrefix.split('/').filter(s => !!s)
+  return segments.length ? `/${segments.join('/')}/` : '/'
 }
 
 function normalizePlugins (context, plugins) {

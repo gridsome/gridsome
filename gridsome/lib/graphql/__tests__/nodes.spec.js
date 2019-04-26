@@ -219,6 +219,29 @@ test('sort nodes collection by custom field', async () => {
   expect(data.allTestPost.edges[2].node.value).toEqual('c')
 })
 
+test('sort nodes collection by mutliple fields', async () => {
+  const posts = api.store.addContentType('Post')
+  posts.addNode({ id: '1', date: '2019-02-01', fields: { featured: true }})
+  posts.addNode({ id: '2', date: '2019-02-02', fields: { featured: true }})
+  posts.addNode({ id: '3', date: '2019-02-03', fields: { featured: false }})
+
+  const query = `{
+    allPost (sort: [{ by: "featured" }, { by: "date" }]) {
+      edges {
+        node { id }
+      }
+    }
+  }`
+
+  const { errors, data } = await createSchemaAndExecute(query)
+
+  expect(errors).toBeUndefined()
+  expect(data.allPost.edges.length).toEqual(3)
+  expect(data.allPost.edges[0].node.id).toEqual('2')
+  expect(data.allPost.edges[1].node.id).toEqual('1')
+  expect(data.allPost.edges[2].node.id).toEqual('3')
+})
+
 test('get nodes by path regex', async () => {
   const posts = api.store.addContentType({
     typeName: 'TestPost'
@@ -362,10 +385,10 @@ test('create node list reference', async () => {
     }
   })
 
-  authors.addNode({ id: '1', title: 'A Author' })
-  authors.addNode({ id: '2', title: 'B Author' })
-  authors.addNode({ id: '3', title: 'C Author' })
-  authors.addNode({ id: '4', title: 'D Author' })
+  authors.addNode({ id: '1', title: 'A' })
+  authors.addNode({ id: '2', title: 'B' })
+  authors.addNode({ id: '3', title: 'C' })
+  authors.addNode({ id: '4', title: 'D' })
 
   posts.addNode({
     id: '1',
@@ -396,10 +419,10 @@ test('create node list reference', async () => {
 
   expect(errors).toBeUndefined()
   expect(data.testPost.author.id).toEqual('1')
-  expect(data.testPost.author.title).toEqual('A Author')
+  expect(data.testPost.author.title).toEqual('A')
   expect(data.testPost.customRefs.authors).toHaveLength(2)
-  expect(data.testPost.customRefs.authors[0].title).toEqual('B Author')
-  expect(data.testPost.customRefs.authors[1].title).toEqual('C Author')
+  expect(data.testPost.customRefs.authors[0].title).toEqual('C')
+  expect(data.testPost.customRefs.authors[1].title).toEqual('B')
 })
 
 test('create node list reference with missing types', async () => {
@@ -442,9 +465,9 @@ test('create node list reference with id as array', async () => {
   const authors = api.store.addContentType('TestAuthor')
   const posts = api.store.addContentType('TestPost')
 
-  authors.addNode({ id: '2', title: 'First Author' })
-  authors.addNode({ id: '3', title: 'Second Author' })
-  authors.addNode({ id: '4', title: 'Third Author' })
+  authors.addNode({ id: '2', title: 'A', fields: { sticky: false }})
+  authors.addNode({ id: '3', title: 'B', fields: { sticky: true }})
+  authors.addNode({ id: '4', title: 'C', fields: { sticky: false }})
 
   posts.addNode({
     id: '1',
@@ -453,9 +476,11 @@ test('create node list reference with id as array', async () => {
 
   const query = `{
     testPost (id: "1") {
-      authors (sortBy: "title", limit: 2, skip: 1) {
+      authors (sortBy: "title", order: ASC, limit: 2, skip: 1) {
         id
-        title
+      }
+      sorted: authors (sort: [{by: "sticky"}, {by: "title", order: ASC}]) {
+        id
       }
     }
   }`
@@ -464,8 +489,11 @@ test('create node list reference with id as array', async () => {
 
   expect(errors).toBeUndefined()
   expect(data.testPost.authors).toHaveLength(2)
-  expect(data.testPost.authors[0].title).toEqual('Second Author')
-  expect(data.testPost.authors[1].title).toEqual('Third Author')
+  expect(data.testPost.authors[0].id).toEqual('3')
+  expect(data.testPost.authors[1].id).toEqual('4')
+  expect(data.testPost.sorted[0].id).toEqual('3')
+  expect(data.testPost.sorted[1].id).toEqual('2')
+  expect(data.testPost.sorted[2].id).toEqual('4')
 })
 
 test('create node reference to same type', async () => {

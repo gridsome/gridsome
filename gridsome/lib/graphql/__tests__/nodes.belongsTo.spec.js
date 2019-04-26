@@ -18,9 +18,7 @@ beforeEach(() => {
 })
 
 test('create node reference', async () => {
-  const authors = api.store.addContentType({
-    typeName: 'Author'
-  })
+  const authors = api.store.addContentType('Author')
 
   const books = api.store.addContentType({
     typeName: 'Book',
@@ -55,7 +53,7 @@ test('create node reference', async () => {
 
   const query = `query {
     author (id: "2") {
-      belongsTo (sortBy: "title") {
+      belongsTo (sortBy: "title", order: ASC) {
         totalCount
         pageInfo {
           totalPages
@@ -78,17 +76,49 @@ test('create node reference', async () => {
   expect(data.author.belongsTo.edges).toHaveLength(3)
   expect(data.author.belongsTo.totalCount).toEqual(3)
   expect(data.author.belongsTo.pageInfo.totalPages).toEqual(1)
-  expect(data.author.belongsTo.edges[0].node.id).toEqual('2')
-  expect(data.author.belongsTo.edges[0].node.__typename).toEqual('Book')
+  expect(data.author.belongsTo.edges[0].node.__typename).toEqual('Author')
   expect(data.author.belongsTo.edges[1].node.id).toEqual('1')
   expect(data.author.belongsTo.edges[1].node.__typename).toEqual('Book')
-  expect(data.author.belongsTo.edges[2].node.__typename).toEqual('Author')
+  expect(data.author.belongsTo.edges[2].node.id).toEqual('2')
+  expect(data.author.belongsTo.edges[2].node.__typename).toEqual('Book')
+})
+
+test('sort belongsTo by multiple fields', async () => {
+  const authors = api.store.addContentType('Author')
+  const books = api.store.addContentType('Book')
+  books.addReference('author', 'Author')
+
+  authors.addNode({ id: '1', title: 'Author 1' })
+  books.addNode({ id: '1', title: 'A', fields: { author: '1', featured: false }})
+  books.addNode({ id: '2', title: 'B', fields: { author: '1', featured: true }})
+  books.addNode({ id: '3', title: 'C', fields: { author: '1', featured: false }})
+
+  const query = `query {
+    author (id: "1") {
+      belongsTo (sort: [{ by: "featured" }, { by: "title", order: ASC }]) {
+        edges {
+          node {
+            ...on Book {
+              id
+            }
+          }
+        }
+      }
+    }
+  }`
+
+  const { errors, data } = await createSchemaAndExecute(query)
+
+  expect(errors).toBeUndefined()
+  expect(data.author.belongsTo.edges[0].node.id).toEqual('2')
+  expect(data.author.belongsTo.edges[1].node.id).toEqual('1')
+  expect(data.author.belongsTo.edges[2].node.id).toEqual('3')
 })
 
 test('handle pagination for filtered belongsTo', async () => {
-  const authors = api.store.addContentType({ typeName: 'Author' })
-  const books = api.store.addContentType({ typeName: 'Book' })
-  const stores = api.store.addContentType({ typeName: 'Store' })
+  const authors = api.store.addContentType('Author')
+  const stores = api.store.addContentType('Store')
+  const books = api.store.addContentType('Book')
 
   authors.addNode({ id: '1', title: 'Author 1' })
 
