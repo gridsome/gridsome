@@ -6,8 +6,6 @@ module.exports = {
   NOT_FOUND_NAME: '404',
   NOT_FOUND_PATH: '/404',
 
-  PER_PAGE: 25,
-
   SUPPORTED_IMAGE_TYPES: ['.png', '.jpeg', '.jpg', '.gif', '.svg', '.webp'],
 
   BOOTSTRAP_CONFIG: 'config',
