@@ -243,6 +243,7 @@ class App {
   createSchemaContext () {
     return {
       store: this.store,
+      pages: this.pages,
       config: this.config,
       queue: this.queue
     }
