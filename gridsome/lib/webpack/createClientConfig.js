@@ -39,11 +39,5 @@ module.exports = async app => {
       .use(require('webpack/lib/NoEmitOnErrorsPlugin'))
   }
 
-  await app.dispatch('chainWebpack', null, config, {
-    context: app.context,
-    isServer: false,
-    isProd
-  })
-
   return config
 }

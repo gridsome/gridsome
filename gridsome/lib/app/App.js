@@ -1,7 +1,9 @@
 const path = require('path')
+const fs = require('fs-extra')
 const isUrl = require('is-url')
 const Codegen = require('./codegen')
 const autoBind = require('auto-bind')
+const merge = require('webpack-merge')
 const hirestime = require('hirestime')
 const Pages = require('../pages/pages')
 const BaseStore = require('./BaseStore')
@@ -32,7 +34,7 @@ class App {
   constructor (context, options) {
     process.GRIDSOME = this
 
-    this.events = []
+    this.events = {}
     this.clients = {}
     this.plugins = []
     this.context = context
@@ -118,6 +120,11 @@ class App {
     // run config.chainWebpack after all plugins
     if (typeof this.config.chainWebpack === 'function') {
       this.on('chainWebpack', { handler: this.config.chainWebpack })
+    }
+
+    // run config.configureWebpack after all plugins
+    if (this.config.configureWebpack) {
+      this.on('configureWebpack', { handler: this.config.configureWebpack })
     }
 
     // run config.configureServer after all plugins
@@ -216,6 +223,54 @@ class App {
 
   resolve (p) {
     return path.resolve(this.context, p)
+  }
+
+  async resolveChainableWebpackConfig (isServer = false) {
+    const createClientConfig = require('../webpack/createClientConfig')
+    const createServerConfig = require('../webpack/createServerConfig')
+    const createChainableConfig = isServer ? createServerConfig : createClientConfig
+    const isProd = process.env.NODE_ENV === 'production'
+    const args = { context: this.context, isServer, isClient: !isServer, isProd, isDev: !isProd }
+    const chain = await createChainableConfig(this, args)
+
+    await this.dispatch('chainWebpack', null, chain, args)
+
+    return chain
+  }
+
+  async resolveWebpackConfig (isServer = false, chain = null) {
+    const isProd = process.env.NODE_ENV === 'production'
+    const args = { context: this.context, isServer, isClient: !isServer, isProd, isDev: !isProd }
+    const resolvedChain = chain || await this.resolveChainableWebpackConfig(isServer)
+    const configureWebpack = (this.events.configureWebpack || []).slice()
+    const configFilePath = this.resolve('webpack.config.js')
+
+    if (fs.existsSync(configFilePath)) {
+      configureWebpack.push(require(configFilePath))
+    }
+
+    const config = await configureWebpack.reduce(async (acc, { handler }) => {
+      const config = await Promise.resolve(acc)
+
+      if (typeof handler === 'function') {
+        return handler(config, args) || config
+      }
+
+      if (typeof handler === 'object') {
+        return merge(config, handler)
+      }
+
+      return config
+    }, Promise.resolve(resolvedChain.toConfig()))
+
+    if (config.output.publicPath !== this.config.pathPrefix) {
+      throw new Error(
+        `Do not modify webpack output.publicPath directly. ` +
+        `Use the "pathPrefix" option in gridsome.config.js instead.`
+      )
+    }
+
+    return config
   }
 
   resolveFilePath (fromPath, toPath, isAbsolute) {
