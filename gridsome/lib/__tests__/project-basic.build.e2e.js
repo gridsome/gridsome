@@ -217,6 +217,16 @@ test('navigate to /', async () => {
   await page.waitForSelector('#app.home')
 })
 
+test('fetch /doc/3 data', async () => {
+  await page.click('.fetch-doc-page-3')
+  await page.waitForSelector('.fetched-doc-page-3')
+})
+
+test('fetch /doc/6 data', async () => {
+  await page.click('.fetch-doc-page-6')
+  await page.waitForSelector('.fetched-doc-page-not-found')
+})
+
 test('navigate to /docs/2', async () => {
   await page.click('.doc-link-2')
   await page.waitForSelector('#app.doc-template-2.page-1')

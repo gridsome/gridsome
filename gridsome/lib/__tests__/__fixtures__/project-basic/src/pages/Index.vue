@@ -24,6 +24,14 @@
     <span class="from-chain-webpack">{{ TEST_3 }}</span>
     <span class="from-metadata">{{ $page.metaData.someMeta }}</span>
 
+    <button class="fetch-doc-page-3" @click="fetchPath1('/docs/3')">
+      fetch /docs/3
+    </button>
+    <button class="fetch-doc-page-6" @click="fetchPath2('/docs/6')">
+      fetch /docs/6
+    </button>
+    <pre :class="testDocClass">{{ testDoc }}</pre>
+
     <ul>
       <li v-for="edge in $page.allTestDoc.edges" :key="edge.node.id">
         <g-link :to="edge.node.path" :class="`doc-link-${edge.node.id}`">
@@ -59,14 +67,25 @@ query Home {
 </page-query>
 
 <script>
+import { fetch } from 'gridsome'
+
 export default {
   data () {
     return {
+      testDoc: null,
       TEST_1,
       TEST_2,
       TEST_3,
       GRIDSOME_PROD_VARIABLE: process.env.GRIDSOME_PROD_VARIABLE,
       PROD_VARIABLE: process.env.PROD_VARIABLE
+    }
+  },
+
+  computed: {
+    testDocClass () {
+      return this.testDoc
+        ? `fetched-doc-page-${this.testDoc.data.testDoc.id}`
+        : 'fetched-doc-page-not-found'
     }
   },
 
@@ -87,6 +106,19 @@ export default {
           content: 'test-meta'
         }
       ]
+    }
+  },
+
+  methods: {
+    fetchPath1 (path) {
+      this.$fetch(path).then(res => {
+        this.testDoc = res
+      })
+    },
+    fetchPath2 (path) {
+      fetch(path).catch(err => {
+        this.testDoc = null
+      })
     }
   }
 }
