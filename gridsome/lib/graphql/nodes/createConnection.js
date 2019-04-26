@@ -1,6 +1,6 @@
 const { createPagedNodeEdges } = require('./utils')
-const { PER_PAGE } = require('../../utils/constants')
-const { pageInfoType, sortOrderType } = require('../types')
+const { PER_PAGE, SORT_ORDER } = require('../../utils/constants')
+const { pageInfoType, sortOrderType, sortType } = require('../types')
 const { createFilterTypes, createFilterQuery } = require('../createFilterTypes')
 
 const {
@@ -33,10 +33,11 @@ module.exports = ({ nodeType, fields }) => {
 
   const connectionArgs = {
     sortBy: { type: GraphQLString, defaultValue: 'date' },
-    order: { type: sortOrderType, defaultValue: 'DESC' },
+    order: { type: sortOrderType, defaultValue: SORT_ORDER },
     perPage: { type: GraphQLInt, defaultValue: PER_PAGE },
     skip: { type: GraphQLInt, defaultValue: 0 },
     page: { type: GraphQLInt, defaultValue: 1 },
+    sort: { type: new GraphQLList(sortType) },
 
     // TODO: remove before 1.0
     regex: { type: GraphQLString, deprecationReason: 'Use filter instead.' }
