@@ -81,9 +81,8 @@ class ImageProcessQueue {
       ? parseInt(options.height, 10)
       : Math.ceil(height * (imageWidth / width))
 
-    const imageSizes = (options.sizes || [480, 1024, 1920, 2560]).filter(size => {
-      return size <= maxImageWidth && size <= imageWidth
-    })
+    const allSizes = options.sizes || [480, 1024, 1920, 2560]
+    const imageSizes = allSizes.filter(size => size <= imageWidth)
 
     if (
       (imageSizes.length === 1 && imageSizes[0] <= imageWidth) ||

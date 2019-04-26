@@ -1,3 +1,4 @@
+import fetch from '../fetch'
 import router from '../router'
 import caniuse from '../utils/caniuse'
 import { stripPathPrefix } from '../utils/helpers'
@@ -29,23 +30,10 @@ function intersectionHandler ({ intersectionRatio, target }) {
 
         const path = stripPathPrefix(target.pathname)
         const { route } = router.resolve({ path })
-        const options = route.matched[0].components.default
-        
-        if (route.meta.isStatic) return
 
-        const fetchComponentData = options => {
-          setTimeout(() => {
-            import(/* webpackChunkName: "page-query" */ '../page-query/fetch').then(m => {
-              m.default(route, options.__pageQuery)
-            })
-          }, 250)
-        }
+        if (!route.meta.data) return
 
-        if (typeof options === 'function') {
-          options().then(m => fetchComponentData(m.default))
-        } else {
-          fetchComponentData(options)
-        }
+        setTimeout(() => fetch(route, true), 250)
       }
     }
   }

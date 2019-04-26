@@ -1,5 +1,6 @@
 const Loki = require('lokijs')
 const autoBind = require('auto-bind')
+const EventEmitter = require('eventemitter3')
 const { omit, isArray, isPlainObject } = require('lodash')
 const ContentTypeCollection = require('./ContentTypeCollection')
 
@@ -9,6 +10,10 @@ class BaseStore {
     this.data = new Loki()
     this.collections = {}
     this.taxonomies = {}
+    this.lastUpdate = null
+    this._events = new EventEmitter()
+
+    this.setUpdateTime()
 
     autoBind(this)
 
@@ -30,6 +35,14 @@ class BaseStore {
     })
   }
 
+  on (eventName, fn, ctx) {
+    return this._events.on(eventName, fn, ctx)
+  }
+
+  off (eventName, fn, ctx) {
+    return this._events.removeListener(eventName, fn, ctx)
+  }
+
   // site
 
   addMetaData (key, data) {
@@ -39,6 +52,8 @@ class BaseStore {
       node.data = node.data.concat(data)
     } else if (node && isPlainObject(node.data) && isPlainObject(data)) {
       Object.assign(node.data, data)
+    } else if (node) {
+      node.data = data
     } else {
       node = this.metaData.insert({ key, data })
     }
@@ -54,18 +69,16 @@ class BaseStore {
     return collection
   }
 
-  getContentType (type) {
-    return this.collections[type]
+  getContentType (typeName) {
+    return this.collections[typeName]
   }
 
   getNodeByPath (path) {
-    const entry = this.index.findOne({ path })
+    const node = this.index.findOne({ path })
 
-    if (!entry || entry.type === 'page') {
-      return null
-    }
+    if (!node) return null
 
-    return this.getContentType(entry.typeName).getNode({ uid: entry.uid })
+    return this.getContentType(node.typeName).getNode({ uid: node.uid })
   }
 
   chainIndex (query = {}) {
@@ -76,18 +89,14 @@ class BaseStore {
     })
   }
 
-  // pages
+  // utils
 
-  addPage (options) {
-    return this.pages.insert(options)
-  }
+  setUpdateTime () {
+    this.lastUpdate = Date.now()
 
-  getPage (id) {
-    return this.pages.findOne({ id })
-  }
-
-  removePage (id) {
-    return this.pages.findAndRemove({ id })
+    if (this.app.isBootstrapped) {
+      this._events.emit('change')
+    }
   }
 }
 

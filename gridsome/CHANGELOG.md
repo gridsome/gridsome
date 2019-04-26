@@ -3,6 +3,76 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.5.8](https://github.com/gridsome/gridsome/compare/gridsome@0.5.7...gridsome@0.5.8) (2019-04-18)
+
+
+### Bug Fixes
+
+* **app:** don’t handle external links with router ([#367](https://github.com/gridsome/gridsome/issues/367)) ([bfb2a79](https://github.com/gridsome/gridsome/commit/bfb2a79))
+
+
+
+
+
+## [0.5.7](https://github.com/gridsome/gridsome/compare/gridsome@0.5.6...gridsome@0.5.7) (2019-04-09)
+
+
+### Bug Fixes
+
+* **app:** don't resolve url for different port ([#350](https://github.com/gridsome/gridsome/issues/350)) ([a6ab23f](https://github.com/gridsome/gridsome/commit/a6ab23f))
+* **g-image:** alt attribute for noscript image ([#353](https://github.com/gridsome/gridsome/issues/353)) ([fcfcf36](https://github.com/gridsome/gridsome/commit/fcfcf36))
+* **graphql:** prefer float when mixed number types ([#332](https://github.com/gridsome/gridsome/issues/332)) ([b311850](https://github.com/gridsome/gridsome/commit/b311850))
+
+
+
+
+
+## [0.5.6](https://github.com/gridsome/gridsome/compare/gridsome@0.5.5...gridsome@0.5.6) (2019-03-29)
+
+
+### Bug Fixes
+
+* **app:** allow absolute path to custom favicon ([53a755c](https://github.com/gridsome/gridsome/commit/53a755c))
+* **app:** allow css.split option to be true ([#266](https://github.com/gridsome/gridsome/issues/266)) ([a0fcd10](https://github.com/gridsome/gridsome/commit/a0fcd10))
+* **app:** make routes appear in vue-devtools ([#322](https://github.com/gridsome/gridsome/issues/322)) ([f1a865c](https://github.com/gridsome/gridsome/commit/f1a865c))
+* **develop:** allow OPTIONS method request to /___graphql ([#271](https://github.com/gridsome/gridsome/issues/271)) ([f1ec997](https://github.com/gridsome/gridsome/commit/f1ec997))
+* **g-image:** increase max image width ([#286](https://github.com/gridsome/gridsome/issues/286)) ([8a7ae89](https://github.com/gridsome/gridsome/commit/8a7ae89))
+* **graphql:** allow requests without variables ([#323](https://github.com/gridsome/gridsome/issues/323)) ([8184834](https://github.com/gridsome/gridsome/commit/8184834))
+* **store:** handle route params starting with raw correctly ([#295](https://github.com/gridsome/gridsome/issues/295)) ([931937c](https://github.com/gridsome/gridsome/commit/931937c))
+* **store:** prioritize node.id over node.fields.id ([3d7c180](https://github.com/gridsome/gridsome/commit/3d7c180))
+* **store:** support repeated segments in dynamic routes ([#279](https://github.com/gridsome/gridsome/issues/279)) ([2259f85](https://github.com/gridsome/gridsome/commit/2259f85))
+
+
+
+
+
+## [0.5.5](https://github.com/gridsome/gridsome/compare/gridsome@0.5.4...gridsome@0.5.5) (2019-03-08)
+
+
+### Bug Fixes
+
+* **app:** don’t preload /404 without page-query ([5835733](https://github.com/gridsome/gridsome/commit/5835733))
+* **app:** only intercept left clicks on links ([#236](https://github.com/gridsome/gridsome/issues/236)) ([78413dc](https://github.com/gridsome/gridsome/commit/78413dc))
+* **build:** render template with static route and pagination once ([2f4d93a](https://github.com/gridsome/gridsome/commit/2f4d93a))
+* **develop:** show /404 for non existing paths ([b18e8e9](https://github.com/gridsome/gridsome/commit/b18e8e9))
+* **develop:** update static-query when source changes ([d867e93](https://github.com/gridsome/gridsome/commit/d867e93))
+* **graphq:** siteDescription as metaData ([#260](https://github.com/gridsome/gridsome/issues/260)) ([640f72d](https://github.com/gridsome/gridsome/commit/640f72d))
+* **pager:** bind linkClass to an object ([#257](https://github.com/gridsome/gridsome/issues/257)) ([6765a3d](https://github.com/gridsome/gridsome/commit/6765a3d))
+* **store:** keep references for empty arrays ([ec6fcf9](https://github.com/gridsome/gridsome/commit/ec6fcf9))
+* **webpack:** combine all css in one file ([#230](https://github.com/gridsome/gridsome/issues/230)) ([952148d](https://github.com/gridsome/gridsome/commit/952148d))
+* **webpack:** support webp images ([#227](https://github.com/gridsome/gridsome/issues/227)) ([72123f7](https://github.com/gridsome/gridsome/commit/72123f7))
+* count minimum one physical cpu ([#255](https://github.com/gridsome/gridsome/issues/255)) ([91444c7](https://github.com/gridsome/gridsome/commit/91444c7))
+* pin jest-worker version until fix is published ([#252](https://github.com/gridsome/gridsome/issues/252)) ([c0d15b6](https://github.com/gridsome/gridsome/commit/c0d15b6))
+
+
+### Performance Improvements
+
+* **graphql:** improve belongsTo query performance ([bcdacce](https://github.com/gridsome/gridsome/commit/bcdacce))
+
+
+
+
+
 <a name="0.5.4"></a>
 ## [0.5.4](https://github.com/gridsome/gridsome/compare/gridsome@0.5.3...gridsome@0.5.4) (2019-02-27)
 

@@ -9,7 +9,7 @@
         <g-link :class="`post-link-${node.id}`" :to="node.path">Read more</g-link>
       </li>
     </ul>
-    <Pager :info="$page.posts.pageInfo"/>
+    <Pager :linkClass="{ 'pager-link': true }" :info="$page.posts.pageInfo"/>
   </Layout>
 </template>
 

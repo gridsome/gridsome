@@ -33,8 +33,18 @@ try {
 }
 
 // show a warning if the command does not exist
-program.arguments('<command>').action((command) => {
-  console.log(chalk.red(`Unknown command ${chalk.bold(command)}`))
+program.arguments('<command>').action(async command => {
+  const { isGridsomeProject, hasYarn } = require('../lib/utils')
+
+  if (isGridsomeProject(pkgPath)) {
+    const useYarn = await hasYarn()
+
+    console.log()
+    console.log(`  Please run ${chalk.cyan(useYarn ? 'yarn' : 'npm install')} to install dependencies first.`)
+    console.log()
+  } else {
+    console.log(chalk.red(`Unknown command ${chalk.bold(command)}`))
+  }
 })
 
 program.on('--help', () => {

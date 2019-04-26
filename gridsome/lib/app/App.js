@@ -1,31 +1,54 @@
 const path = require('path')
+const fs = require('fs-extra')
 const isUrl = require('is-url')
 const Codegen = require('./codegen')
 const autoBind = require('auto-bind')
+const merge = require('webpack-merge')
 const hirestime = require('hirestime')
+const Pages = require('../pages/pages')
 const BaseStore = require('./BaseStore')
 const PluginAPI = require('./PluginAPI')
+const ComponentParser = require('./ComponentParser')
 const { execute, graphql } = require('graphql')
 const AssetsQueue = require('./queue/AssetsQueue')
 const createSchema = require('../graphql/createSchema')
 const loadConfig = require('./loadConfig')
 const { defaultsDeep } = require('lodash')
-const createRoutes = require('./createRoutes')
 const { version } = require('../../package.json')
 const { parseUrl, resolvePath } = require('../utils')
 const { info } = require('../utils/log')
+
+const {
+  AsyncSeriesWaterfallHook
+} = require('tapable')
+
+const {
+  BOOTSTRAP_CONFIG,
+  BOOTSTRAP_SOURCES,
+  BOOTSTRAP_GRAPHQL,
+  BOOTSTRAP_PAGES,
+  BOOTSTRAP_CODE
+} = require('../utils/constants')
 
 class App {
   constructor (context, options) {
     process.GRIDSOME = this
 
-    this.events = []
+    this.events = {}
     this.clients = {}
     this.plugins = []
     this.context = context
     this.config = loadConfig(context, options)
     this.isInitialized = false
     this.isBootstrapped = false
+
+    this.hooks = {
+      createRenderQueue: new AsyncSeriesWaterfallHook(['renderQueue', 'app'])
+    }
+
+    this.hooks.createRenderQueue.tap('Gridsome', require('../pages/createRenderQueue'))
+    this.hooks.createRenderQueue.tap('Gridsome', require('../pages/createHTMLPaths'))
+    this.hooks.createRenderQueue.tapPromise('Gridsome', require('../graphql/executeQueries'))
 
     autoBind(this)
   }
@@ -34,22 +57,22 @@ class App {
     const bootstrapTime = hirestime()
 
     const phases = [
-      { title: 'Initialize', run: this.init },
-      { title: 'Load sources', run: this.loadSources },
-      { title: 'Create GraphQL schema', run: this.createSchema },
-      { title: 'Set up routes', run: this.createRoutes },
-      { title: 'Generate code', run: this.generateCode }
+      { phase: BOOTSTRAP_CONFIG, title: 'Initialize', run: this.init },
+      { phase: BOOTSTRAP_SOURCES, title: 'Load sources', run: this.loadSources },
+      { phase: BOOTSTRAP_GRAPHQL, title: 'Create GraphQL schema', run: this.createSchema },
+      { phase: BOOTSTRAP_PAGES, title: 'Create pages and templates', run: this.createPages },
+      { phase: BOOTSTRAP_CODE, title: 'Generate code', run: this.generateCode }
     ]
 
     info(`Gridsome v${version}\n`)
 
     for (const current of phases) {
-      if (phases.indexOf(current) <= phase) {
-        const timer = hirestime()
-        await current.run(this)
+      const timer = hirestime()
+      await current.run(this)
 
-        info(`${current.title} - ${timer(hirestime.S)}s`)
-      }
+      info(`${current.title} - ${timer(hirestime.S)}s`)
+
+      if (current.phase === phase) break
     }
 
     info(`Bootstrap finish - ${bootstrapTime(hirestime.S)}s`)
@@ -67,11 +90,16 @@ class App {
     this.store = new BaseStore(this)
     this.queue = new AssetsQueue(this)
     this.codegen = new Codegen(this)
+    this.parser = new ComponentParser(this)
+    this.pages = new Pages(this)
 
     this.config.plugins.map(entry => {
-      const Plugin = entry.entries.serverEntry
+      const { serverEntry } = entry.entries
+      const Plugin = typeof serverEntry === 'string'
         ? require(entry.entries.serverEntry)
-        : null
+        : typeof serverEntry === 'function'
+          ? serverEntry
+          : null
 
       if (typeof Plugin !== 'function') return
       if (!Plugin.prototype) return
@@ -94,6 +122,11 @@ class App {
       this.on('chainWebpack', { handler: this.config.chainWebpack })
     }
 
+    // run config.configureWebpack after all plugins
+    if (this.config.configureWebpack) {
+      this.on('configureWebpack', { handler: this.config.configureWebpack })
+    }
+
     // run config.configureServer after all plugins
     if (typeof this.config.configureServer === 'function') {
       this.on('configureServer', { handler: this.config.configureServer })
@@ -105,7 +138,7 @@ class App {
   }
 
   async loadSources () {
-    return this.dispatch('loadSource', api => api.store)
+    await this.dispatch('loadSource', api => api.store)
   }
 
   async createSchema () {
@@ -116,12 +149,44 @@ class App {
     })
   }
 
-  createRoutes () {
-    this.routes = createRoutes(this)
+  async createPages () {
+    await this.dispatch('createPages', api => api.pages)
+
+    // ensure a /404 page exists
+    if (!this.pages.findPage({ path: '/404' })) {
+      this.pages.createPage({
+        path: '/404',
+        component: path.join(this.config.appPath, 'pages', '404.vue')
+      })
+    }
+
+    if (process.env.NODE_ENV === 'development') {
+      this.pages.on('create', () => this.codegen.generate('routes.js'))
+      this.pages.on('remove', () => this.codegen.generate('routes.js'))
+
+      this.pages.on('update', (page, oldPage) => {
+        const { path: oldPath, query: oldQuery } = oldPage
+        const { path, query } = page
+
+        if (
+          (path !== oldPath && !page.internal.isDynamic) ||
+          // pagination was added or removed in page-query
+          (query.paginate && !oldQuery.paginate) ||
+          (!query.paginate && oldQuery.paginate) ||
+          // page-query was created or removed
+          (query.document && !oldQuery.document) ||
+          (!query.document && oldQuery.document)
+        ) {
+          return this.codegen.generate('routes.js')
+        }
+
+        this.broadcast({ type: 'fetch' })
+      })
+    }
   }
 
-  generateCode () {
-    return this.codegen.generate()
+  async generateCode () {
+    await this.codegen.generate()
   }
 
   //
@@ -158,6 +223,54 @@ class App {
 
   resolve (p) {
     return path.resolve(this.context, p)
+  }
+
+  async resolveChainableWebpackConfig (isServer = false) {
+    const createClientConfig = require('../webpack/createClientConfig')
+    const createServerConfig = require('../webpack/createServerConfig')
+    const createChainableConfig = isServer ? createServerConfig : createClientConfig
+    const isProd = process.env.NODE_ENV === 'production'
+    const args = { context: this.context, isServer, isClient: !isServer, isProd, isDev: !isProd }
+    const chain = await createChainableConfig(this, args)
+
+    await this.dispatch('chainWebpack', null, chain, args)
+
+    return chain
+  }
+
+  async resolveWebpackConfig (isServer = false, chain = null) {
+    const isProd = process.env.NODE_ENV === 'production'
+    const args = { context: this.context, isServer, isClient: !isServer, isProd, isDev: !isProd }
+    const resolvedChain = chain || await this.resolveChainableWebpackConfig(isServer)
+    const configureWebpack = (this.events.configureWebpack || []).slice()
+    const configFilePath = this.resolve('webpack.config.js')
+
+    if (fs.existsSync(configFilePath)) {
+      configureWebpack.push(require(configFilePath))
+    }
+
+    const config = await configureWebpack.reduce(async (acc, { handler }) => {
+      const config = await Promise.resolve(acc)
+
+      if (typeof handler === 'function') {
+        return handler(config, args) || config
+      }
+
+      if (typeof handler === 'object') {
+        return merge(config, handler)
+      }
+
+      return config
+    }, Promise.resolve(resolvedChain.toConfig()))
+
+    if (config.output.publicPath !== this.config.pathPrefix) {
+      throw new Error(
+        `Do not modify webpack output.publicPath directly. ` +
+        `Use the "pathPrefix" option in gridsome.config.js instead.`
+      )
+    }
+
+    return config
   }
 
   resolveFilePath (fromPath, toPath, isAbsolute) {

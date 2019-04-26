@@ -2,15 +2,15 @@ const path = require('path')
 const fs = require('fs-extra')
 const execa = require('execa')
 const chalk = require('chalk')
-const semver = require('semver')
 const Tasks = require('@hjvedvik/tasks')
 const sortPackageJson = require('sort-package-json')
+const { hasYarn } = require('../utils')
 
 module.exports = async (name, starter = 'default') => {
   const dir = aboslutePath(name)
   const projectName = path.basename(dir)
   const starters = ['default', 'wordpress']
-  const hasYarn = await useYarn()
+  const useYarn = await hasYarn()
 
   try {
     const files = fs.existsSync(dir) ? fs.readdirSync(dir) : []
@@ -56,7 +56,7 @@ module.exports = async (name, starter = 'default') => {
     {
       title: `Install dependencies`,
       task: (_, task) => {
-        const command = hasYarn ? 'yarn' : 'npm'
+        const command = useYarn ? 'yarn' : 'npm'
         const stdio = ['ignore', 'pipe', 'ignore']
         const options = { cwd: dir, stdio }
         const args = []
@@ -127,14 +127,6 @@ module.exports = async (name, starter = 'default') => {
   console.log(`  - Run ${chalk.green(developCommand)} to start local development`)
   console.log(`  - Run ${chalk.green(buildCommand)} to build for production`)
   console.log()
-}
-
-async function useYarn () {
-  try {
-    const { stdout: version } = await execa('yarn', ['--version'])
-    return semver.satisfies(version, '>= 1.4.0')
-  } catch (err) {}
-  return false
 }
 
 async function updatePkg (pkgPath, obj) {

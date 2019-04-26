@@ -66,3 +66,23 @@ query Json {
 }
 </page-query>
 ```
+
+### Custom Routes
+To add custom routes use the `routes` option with the ContentType name as the key and the custom route as the value.
+
+If you have Contentful ContentTypes named BlogPost and Article you can add new routes like this.
+```js
+module.exports = {
+  plugins: [
+    {
+      use: '@gridsome/source-contentful',
+      options: {
+        routes: {
+          'BlogPost': '/blog/:slug',
+          'Article': '/articles/:slug'
+        }
+      }
+    }
+  ]
+}
+```
