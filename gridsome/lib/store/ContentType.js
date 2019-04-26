@@ -9,6 +9,7 @@ const { ISO_8601_FORMAT } = require('../utils/constants')
 const { cloneDeep, isString, isPlainObject, trim, omit, get } = require('lodash')
 const createNodeOptions = require('./createNodeOptions')
 const { NODE_FIELDS } = require('../utils/constants')
+const { warn } = require('../utils/log')
 const { parseUrl } = require('./utils')
 
 class ContentType {
@@ -76,8 +77,14 @@ class ContentType {
       mimeTypes[mimeType] = this._transformers[mimeType]
     }
 
-    this.collection.insert(node)
-    this._store.store.index.insert(entry)
+    try {
+      this.collection.insert(node)
+      this._store.store.index.insert(entry)
+    } catch (err) {
+      warn(`Failed to add node: ${err.message}`, this.typeName)
+      return null
+    }
+
     this._store.store.setUpdateTime()
     this._events.emit('add', node)
 
@@ -134,8 +141,14 @@ class ContentType {
 
     entry.belongsTo = belongsTo
 
-    this.collection.update(node)
-    this._store.store.index.update(entry)
+    try {
+      this.collection.update(node)
+      this._store.store.index.update(entry)
+    } catch (err) {
+      warn(`Failed to update node: ${err.message}`, this.typeName)
+      return null
+    }
+
     this._store.store.setUpdateTime()
     this._events.emit('update', node, oldOptions)
 
