@@ -2,7 +2,12 @@ const { mapValues, values } = require('lodash')
 const { nodeInterface } = require('../interfaces')
 const { PER_PAGE, SORT_ORDER } = require('../../utils/constants')
 const { pageInfoType, sortOrderType, sortType } = require('../types')
-const { createPagedNodeEdges, createBelongsToKey } = require('./utils')
+
+const {
+  createPagedNodeEdges,
+  createBelongsToKey,
+  createSortOptions
+} = require('./utils')
 
 const {
   createFilterTypes,
@@ -94,6 +99,7 @@ module.exports = function createBelongsTo (contentType, nodeTypes) {
     args: belongsToArgs,
     resolve (node, { filter, ...args }, { store }) {
       const key = createBelongsToKey(node)
+      const sort = createSortOptions(args)
       const query = { [key]: { $eq: true }}
 
       if (filter) {
@@ -103,7 +109,7 @@ module.exports = function createBelongsTo (contentType, nodeTypes) {
 
       const chain = store.chainIndex(query)
 
-      return createPagedNodeEdges(chain, args)
+      return createPagedNodeEdges(chain, args, sort)
     }
   }
 }

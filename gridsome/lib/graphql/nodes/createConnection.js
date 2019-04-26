@@ -1,7 +1,7 @@
-const { createPagedNodeEdges } = require('./utils')
 const { PER_PAGE } = require('../../utils/constants')
 const { pageInfoType, sortOrderType, sortType } = require('../types')
 const { createFilterTypes, createFilterQuery } = require('../createFilterTypes')
+const { createPagedNodeEdges, createSortOptions } = require('./utils')
 
 const {
   GraphQLInt,
@@ -59,7 +59,12 @@ module.exports = ({ contentType, nodeType, fields }) => {
     description: `Connection to all ${nodeType.name} nodes`,
     async resolve (_, { regex, filter, ...args }, { store }, info) {
       const { collection } = store.getContentType(nodeType.name)
+      const sort = createSortOptions(args)
       const query = {}
+
+      for (const [fieldName] of sort) {
+        collection.ensureIndex(fieldName)
+      }
 
       if (regex) {
         // TODO: remove before 1.0
@@ -73,7 +78,7 @@ module.exports = ({ contentType, nodeType, fields }) => {
 
       const chain = collection.chain().find(query)
 
-      return createPagedNodeEdges(chain, args)
+      return createPagedNodeEdges(chain, args, sort)
     }
   }
 }
