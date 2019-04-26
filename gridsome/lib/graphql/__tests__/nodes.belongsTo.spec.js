@@ -89,9 +89,9 @@ test('sort belongsTo by multiple fields', async () => {
   books.addReference('author', 'Author')
 
   authors.addNode({ id: '1', title: 'Author 1' })
-  books.addNode({ id: '1', title: 'A', fields: { author: '1', featured: false }})
-  books.addNode({ id: '2', title: 'B', fields: { author: '1', featured: true }})
-  books.addNode({ id: '3', title: 'C', fields: { author: '1', featured: false }})
+  books.addNode({ id: '1', title: 'A', author: '1', featured: false })
+  books.addNode({ id: '2', title: 'B', author: '1', featured: true })
+  books.addNode({ id: '3', title: 'C', author: '1', featured: false })
 
   const query = `query {
     author (id: "1") {

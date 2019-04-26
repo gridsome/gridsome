@@ -221,9 +221,9 @@ test('sort nodes collection by custom field', async () => {
 
 test('sort nodes collection by mutliple fields', async () => {
   const posts = api.store.addContentType('Post')
-  posts.addNode({ id: '1', date: '2019-02-01', fields: { featured: true }})
-  posts.addNode({ id: '2', date: '2019-02-02', fields: { featured: true }})
-  posts.addNode({ id: '3', date: '2019-02-03', fields: { featured: false }})
+  posts.addNode({ id: '1', date: '2019-02-01', featured: true })
+  posts.addNode({ id: '2', date: '2019-02-02', featured: true })
+  posts.addNode({ id: '3', date: '2019-02-03', featured: false })
 
   const query = `{
     allPost (sort: [{ by: "featured" }, { by: "date" }]) {
@@ -465,9 +465,9 @@ test('create node list reference with id as array', async () => {
   const authors = api.store.addContentType('TestAuthor')
   const posts = api.store.addContentType('TestPost')
 
-  authors.addNode({ id: '2', title: 'A', fields: { sticky: false }})
-  authors.addNode({ id: '3', title: 'B', fields: { sticky: true }})
-  authors.addNode({ id: '4', title: 'C', fields: { sticky: false }})
+  authors.addNode({ id: '2', title: 'A', sticky: false })
+  authors.addNode({ id: '3', title: 'B', sticky: true })
+  authors.addNode({ id: '4', title: 'C', sticky: false })
 
   posts.addNode({
     id: '1',
@@ -522,9 +522,9 @@ test('create reference with multiple node types', async () => {
   const authors = api.store.addContentType({ typeName: 'TestAuthor' })
   const users = api.store.addContentType({ typeName: 'TestUser' })
 
-  authors.addNode({ id: '1', title: 'Author', fields: { name: 'Test' }})
-  users.addNode({ id: '1', title: 'User', fields: { username: 'test' }})
-  users.addNode({ id: '2', title: 'User 2', fields: { username: 'test2' }})
+  authors.addNode({ id: '1', title: 'Author', name: 'Test' })
+  users.addNode({ id: '1', title: 'User', username: 'test' })
+  users.addNode({ id: '2', title: 'User 2', username: 'test2' })
 
   posts.addNode({
     id: '3',
