@@ -17,6 +17,29 @@ module.exports = function (api) {
     pages.addNode({ id: '2', title: 'Page 2', path: '/pages/2', fields: { doc: '3' } })
   })
 
+  api.createPages(async ({ createPage, graphql }) => {
+    const results = await graphql(`query {
+      allTestDoc {
+        edges {
+          node {
+            id
+            path
+          }
+        }
+      }
+    }`)
+
+    results.data.allTestDoc.edges.forEach(edge => {
+      createPage({
+        path: `${edge.node.path}/extra`,
+        component: './src/templates/TestDocExtra.vue',
+        context: {
+          id: edge.node.id
+        }
+      })
+    })
+  })
+
   api.chainWebpack(config => {
     config.plugin('test-injections-3')
       .use(require('webpack/lib/DefinePlugin'), [{

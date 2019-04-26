@@ -26,7 +26,7 @@ What happened.
 Libs:
 - gridsome version: X.Y.Z
 - @gridsome/cli version: X.Y.Z
-<!-- Check whether this is still an issue in the most recent Angular version -->
+<!-- Check whether this is still an issue in the most recent Gridsome version -->
 
 Browser:
 - [ ] Chrome (desktop) version XX

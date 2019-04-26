@@ -1,46 +1,35 @@
 const { print } = require('graphql')
-const { trimEnd } = require('lodash')
-const { getGraphQLParams } = require('express-graphql')
+const { createQueryVariables } = require('../../pages/utils')
 
-const {
-  contextValues,
-  processPageQuery
-} = require('../../graphql/page-query')
+module.exports = ({ store, pages, config }) => {
+  return async function graphqlMiddleware (req, res, next) {
+    const { body = {}} = req
 
-module.exports = ({ store }) => {
-  return async function (req, res, next) {
     // allow OPTIONS method for cors
     if (req.method === 'OPTIONS') {
       return res.sendStatus(200)
     }
 
-    const { query = '', variables, ...body } = await getGraphQLParams(req)
-
-    const pageQuery = processPageQuery({ query })
-
-    if (variables && variables.path) {
-      const entry = store.index.findOne({
-        path: { $in: [variables.path, trimEnd(variables.path, '/')] }
-      })
-
-      if (!entry) {
-        return res
-          .status(404)
-          .send({
-            code: 404,
-            message: `Could not find ${variables.path}`
-          })
-      }
-
-      const node = store.getNodeByPath(entry.path)
-      const values = node ? contextValues(node, pageQuery.variables) : null
-
-      Object.assign(variables, values, { path: entry.path })
+    if (body.query) {
+      return next()
     }
 
-    req.body = body
-    req.body.query = print(pageQuery.query)
-    req.body.variables = variables
+    const page = pages.findPage({ path: body.path })
+
+    if (!page) {
+      return res
+        .status(404)
+        .send({ code: 404, message: `Could not find ${body.path}` })
+    }
+
+    if (!page.query.document) {
+      return res.json({ extensions: { context: page.context }, data: null })
+    }
+
+    req.body = {
+      query: print(page.query.document),
+      variables: createQueryVariables(page, body.page)
+    }
 
     next()
   }

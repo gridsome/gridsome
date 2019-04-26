@@ -160,7 +160,11 @@ class WordPressSource {
 
     try {
       res = await this.client.request({ url, params })
-    } catch ({ response }) {
+    } catch ({ response, code, config }) {
+      if (!response && code) {
+        throw new Error(`${code} - ${config.url}`)
+      }
+
       const { url } = response.config
       const { status } = response.data.data
 
@@ -168,7 +172,7 @@ class WordPressSource {
         console.warn(`Error: Status ${status} - ${url}`)
         return { ...response, data: fallbackData }
       } else {
-        throw new Error(`Status ${status} - ${url}`)
+        throw new Error(`${status} - ${url}`)
       }
     }
 
