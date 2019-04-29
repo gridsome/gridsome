@@ -144,39 +144,6 @@ test('get node by id', async () => {
   expect(data.testPost.title).toEqual('Test')
 })
 
-test('fail if node with given ID is missing', async () => {
-  const posts = api.store.addContentType('TestPost')
-
-  posts.addNode({ id: '1' })
-
-  const query = '{ testPost (id: "2") { id }}'
-  const { errors } = await createSchemaAndExecute(query)
-
-  expect(errors[0].message).toEqual('A TestPost node with id 2 could not be found.')
-})
-
-test('fail if node with given path is missing', async () => {
-  const posts = api.store.addContentType('TestPost')
-
-  posts.addNode({ path: '/test' })
-
-  const query = '{ testPost (path: "/fail") { id }}'
-  const { errors } = await createSchemaAndExecute(query)
-
-  expect(errors[0].message).toEqual('A TestPost node with path /fail could not be found.')
-})
-
-test('fail if no id or path was provided', async () => {
-  const posts = api.store.addContentType('TestPost')
-
-  posts.addNode({ path: '/test' })
-
-  const query = '{ testPost { id }}'
-  const { errors } = await createSchemaAndExecute(query)
-
-  expect(errors[0].message).toEqual('Must provide either id or path in order to find a node.')
-})
-
 test('create connection', async () => {
   const posts = api.store.addContentType({
     typeName: 'TestPost'
