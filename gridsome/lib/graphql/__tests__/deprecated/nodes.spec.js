@@ -325,59 +325,6 @@ test('create node reference to same typeName', async () => {
   expect(data.post2.rel.id).toEqual('1')
 })
 
-// TODO: remove this test before 1.0
-test('create deprecated node reference', async () => {
-  const authors = api.store.addContentType({
-    typeName: 'TestAuthor'
-  })
-
-  const posts = api.store.addContentType({
-    typeName: 'TestPost',
-    refs: {
-      author: {
-        key: '_id',
-        typeName: 'TestAuthor'
-      },
-      authors: {
-        key: '_id',
-        typeName: 'TestAuthor'
-      }
-    }
-  })
-
-  posts.addNode({ _id: '1', fields: { author: '1', authors: ['1', '2'] }})
-  posts.addNode({ _id: '2', fields: { author: '8', authors: ['8', '9'] }})
-  authors.addNode({ _id: '1', title: 'Test Author' })
-  authors.addNode({ _id: '2', title: 'Test Author 2' })
-  authors.addNode({ _id: '3', title: 'Test Author 3' })
-
-  const query = `{
-    testPost: testPost (_id: "1") {
-      refs {
-        author { _id title }
-        authors { _id title }
-      }
-    }
-    testPost2: testPost (_id: "2") {
-      refs {
-        author { _id title }
-        authors { _id title }
-      }
-    }
-  }`
-
-  const { errors, data } = await createSchemaAndExecute(query)
-
-  expect(errors).toBeUndefined()
-  expect(data.testPost.refs.author._id).toEqual('1')
-  expect(data.testPost.refs.author.title).toEqual('Test Author')
-  expect(data.testPost.refs.authors).toHaveLength(2)
-  expect(data.testPost.refs.authors[0]).toMatchObject({ _id: '1', title: 'Test Author' })
-  expect(data.testPost.refs.authors[1]).toMatchObject({ _id: '2', title: 'Test Author 2' })
-  expect(data.testPost2.refs.author).toBeNull()
-  expect(data.testPost2.refs.authors).toHaveLength(0)
-})
-
 test('create references with collection.addReference()', async () => {
   const authors = api.store.addContentType('Author')
   const posts = api.store.addContentType('Post')
@@ -552,12 +499,12 @@ test('create node reference to same type', async () => {
   posts.addNode({ id: '1', fields: { related: '2' }})
   posts.addNode({ id: '2', title: 'Test' })
 
-  const query = '{ testPost (id: "1") { refs { related { id title }}}}'
+  const query = '{ testPost (id: "1") { related { id title }}}'
   const { errors, data } = await createSchemaAndExecute(query)
 
   expect(errors).toBeUndefined()
-  expect(data.testPost.refs.related.id).toEqual('2')
-  expect(data.testPost.refs.related.title).toEqual('Test')
+  expect(data.testPost.related.id).toEqual('2')
+  expect(data.testPost.related.title).toEqual('Test')
 })
 
 test('create reference with multiple node types', async () => {

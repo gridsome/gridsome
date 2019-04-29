@@ -476,12 +476,12 @@ test('create node reference to same type', async () => {
   posts.addNode({ id: '1', related: '2' })
   posts.addNode({ id: '2', title: 'Test' })
 
-  const query = '{ testPost (id: "1") { refs { related { id title }}}}'
+  const query = '{ testPost (id: "1") { related { id title }}}'
   const { errors, data } = await createSchemaAndExecute(query)
 
   expect(errors).toBeUndefined()
-  expect(data.testPost.refs.related.id).toEqual('2')
-  expect(data.testPost.refs.related.title).toEqual('Test')
+  expect(data.testPost.related.id).toEqual('2')
+  expect(data.testPost.related.title).toEqual('Test')
 })
 
 test('create reference with multiple node types', async () => {

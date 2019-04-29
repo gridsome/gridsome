@@ -45,17 +45,6 @@ module.exports = ({ contentType, nodeTypes, fields }) => {
         }
       }
 
-      if (!isEmpty(refs)) {
-        nodeFields.refs = {
-          resolve: obj => obj,
-          deprecationReason: 'Use ref on node instead.',
-          type: new GraphQLObjectType({
-            name: `${contentType.typeName}References`,
-            fields: () => refs
-          })
-        }
-      }
-
       return nodeFields
     }
   })
