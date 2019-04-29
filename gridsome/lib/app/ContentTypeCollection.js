@@ -1,23 +1,22 @@
 const hash = require('hash-sum')
 const moment = require('moment')
 const autoBind = require('auto-bind')
-const EventEmitter = require('events')
 const camelCase = require('camelcase')
 const { warn } = require('../utils/log')
+const EventEmitter = require('eventemitter3')
 const { isRefField } = require('../graphql/utils')
 const { ISO_8601_FORMAT } = require('../utils/constants')
-const { cloneDeep, isPlainObject, isDate, get } = require('lodash')
-const { isResolvablePath, slugify, safeKey } = require('../utils')
+const { cloneDeep, trimEnd, isPlainObject, isDate, get } = require('lodash')
+const { isResolvablePath, safeKey } = require('../utils')
 
 const nonValidCharsRE = new RegExp('[^a-zA-Z0-9_]', 'g')
 const leadingNumberRE = new RegExp('^([0-9])')
 
-class ContentTypeCollection extends EventEmitter {
+class ContentTypeCollection {
   constructor (store, pluginStore, options) {
-    super()
-
     this.baseStore = store
     this.pluginStore = pluginStore
+    this._events = new EventEmitter()
 
     this.options = { refs: {}, fields: {}, ...options }
     this.typeName = options.typeName
@@ -31,6 +30,14 @@ class ContentTypeCollection extends EventEmitter {
     })
 
     autoBind(this)
+  }
+
+  on (eventName, fn, ctx) {
+    return this._events.on(eventName, fn, ctx)
+  }
+
+  off (eventName, fn, ctx) {
+    return this._events.removeListener(eventName, fn, ctx)
   }
 
   addReference (fieldName, options) {
@@ -77,7 +84,7 @@ class ContentTypeCollection extends EventEmitter {
 
     node.fields = fields
     node.path = typeof options.path === 'string'
-      ? '/' + options.path.replace(/^\/+/g, '')
+      ? trimEnd('/' + options.path.replace(/^\/+/g, ''), '/')
       : this._createPath(node)
 
     // add transformer to content type to let it
@@ -90,7 +97,6 @@ class ContentTypeCollection extends EventEmitter {
 
     try {
       this.baseStore.index.insert({
-        type: 'node',
         path: node.path,
         typeName: node.typeName,
         uid: node.uid,
@@ -104,7 +110,8 @@ class ContentTypeCollection extends EventEmitter {
     }
 
     this.collection.insert(node)
-    this.emit('change', node)
+    this.baseStore.setUpdateTime()
+    this._events.emit('add', node)
 
     return node
   }
@@ -120,8 +127,9 @@ class ContentTypeCollection extends EventEmitter {
 
     this.baseStore.index.findAndRemove({ uid: node.uid })
     this.collection.findAndRemove({ uid: node.uid })
+    this.baseStore.setUpdateTime()
 
-    this.emit('change', undefined, node)
+    this._events.emit('remove', node)
   }
 
   updateNode (options = {}, _options = {}) {
@@ -167,7 +175,7 @@ class ContentTypeCollection extends EventEmitter {
 
     node.fields = fields
     node.path = typeof options.path === 'string'
-      ? '/' + options.path.replace(/^\/+/g, '')
+      ? trimEnd('/' + options.path.replace(/^\/+/g, ''), '/')
       : this._createPath(node)
 
     const indexEntry = this.baseStore.index.findOne({ uid: node.uid })
@@ -175,7 +183,8 @@ class ContentTypeCollection extends EventEmitter {
     indexEntry.path = node.path
     indexEntry.belongsTo = belongsTo
 
-    this.emit('change', node, oldNode)
+    this.baseStore.setUpdateTime()
+    this._events.emit('update', node, oldNode)
 
     return node
   }
@@ -340,7 +349,7 @@ class ContentTypeCollection extends EventEmitter {
   }
 
   slugify (string = '') {
-    return slugify(string)
+    return this.pluginStore.slugify(string)
   }
 }
 

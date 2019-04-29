@@ -2,6 +2,7 @@ const fs = require('fs-extra')
 const chalk = require('chalk')
 const express = require('express')
 const createApp = require('./app')
+const { uniqBy } = require('lodash')
 const pathToRegexp = require('path-to-regexp')
 const compileAssets = require('./webpack/compileAssets')
 const createExpressServer = require('./server/createExpressServer')
@@ -47,17 +48,18 @@ module.exports = async (context, args) => {
 }
 
 function createRoutes (app) {
-  return app.routes.map(route => {
+  const pages = uniqBy(app.pages.allPages(), page => page.route)
+
+  return pages.map(page => {
     const keys = []
-    const path = route.route || route.path
-    const regex = pathToRegexp(path, keys)
-    const toPath = pathToRegexp.compile(path)
+    const regex = pathToRegexp(page.route, keys)
+    const toPath = pathToRegexp.compile(page.route)
 
     return {
       regex,
-      path: route.path,
-      route: route.route,
-      pageQuery: route.pageQuery,
+      path: page.path,
+      route: page.route,
+      query: page.query,
 
       toParams (url) {
         const matches = regex.exec(url)
