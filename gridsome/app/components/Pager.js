@@ -14,6 +14,7 @@ export default {
     nextLabel: { type: String, default: '›' },
     lastLabel: { type: String, default: '»' },
     linkClass: { type: String, default: '' },
+    range: { type: Number, default: 5 },
     activeLinkClass: { type: String, default: undefined },
     exactActiveLinkClass: { type: String, default: undefined },
 
@@ -29,7 +30,7 @@ export default {
 
   render: (h, { props, data, parent }) => {
     const { info, showLinks, showNavigation, ariaLabel } = props
-    const { current, total, pages, start, end } = resolveRange(info)
+    const { current, total, pages, start, end } = resolveRange(info, props.range)
     const currentPath = stripPageParam(parent.$route)
 
     const renderLink = (page, text = page, ariaLabel = text) => {
@@ -92,21 +93,20 @@ function createPagePath (path, page) {
 function resolveRange ({
   currentPage: current = 1,
   totalPages: total = 1
-}) {
-  const length = 10
-  const offset = Math.ceil(length / 2)
+}, range) {
+  const offset = Math.ceil(range / 2)
 
-  let start = current - offset
-  let end = current + offset
+  let start = Math.floor(current - offset)
+  let end = Math.floor(current + offset)
 
-  if (total <= length) {
+  if (total <= range) {
     start = 0
     end = total
   } else if (current <= offset) {
     start = 0
-    end = length
+    end = range
   } else if ((current + offset) >= total) {
-    start = total - length
+    start = total - range
     end = total
   }
 
