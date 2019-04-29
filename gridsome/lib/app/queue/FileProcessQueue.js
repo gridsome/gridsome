@@ -63,8 +63,10 @@ class FileProcessQueue {
       filename = `${name}${urlHash}${ext}`
     }
 
+    const src = forwardSlash(path.join(pathPrefix, filesDir, filename))
+
     return {
-      src: forwardSlash(path.join(pathPrefix, filesDir, filename))
+      src: encodeURI(src)
     }
   }
 }

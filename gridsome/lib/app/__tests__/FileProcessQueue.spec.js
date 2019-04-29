@@ -24,6 +24,31 @@ test('generate src for file', async () => {
   expect(result.src).toEqual('/assets/files/dummy.pdf')
 })
 
+test('encode src', async () => {
+  const filePath = path.resolve(context, 'assets/folder name/dummy document.pdf')
+  const queue = new AssetsQueue({ context, config: baseconfig })
+
+  const result = await queue.add(filePath)
+
+  expect(result.filePath).toEqual(filePath)
+  expect(result.src).toEqual('/assets/files/dummy%20document.pdf')
+})
+
+test('encode src in serve mode', async () => {
+  const filePath = path.resolve(context, 'assets/folder name/dummy document.pdf')
+  const queue = new AssetsQueue({ context, config: baseconfig })
+  const mode = process.env.GRIDSOME_MODE
+
+  process.env.GRIDSOME_MODE = 'serve'
+
+  const result = await queue.add(filePath)
+
+  process.env.GRIDSOME_MODE = mode
+
+  expect(result.filePath).toEqual(filePath)
+  expect(result.src).toEqual('/assets/files/assets/folder%20name/dummy%20document.pdf')
+})
+
 test('generate src for file with base path', async () => {
   const filePath = path.resolve(context, 'assets/dummy.pdf')
   const config = { ...baseconfig, pathPrefix: '/base/path' }
