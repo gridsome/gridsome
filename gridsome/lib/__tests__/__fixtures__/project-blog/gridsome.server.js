@@ -22,9 +22,7 @@ module.exports = function (api) {
       id: '1',
       title: 'First category',
       path: '/category/first',
-      fields: {
-        showType: 'Post'
-      }
+      showType: 'Post'
     })
 
     categories.addNode({
@@ -33,62 +31,54 @@ module.exports = function (api) {
       path: '/category/second'
     })
 
-    tags.addNode({ id: '1', title: 'First tag', fields: { perPage: 2 }})
-    tags.addNode({ id: '2', title: 'Second tag', fields: { perPage: 2 } })
-    tags.addNode({ id: '3', title: 'Third tag', fields: { perPage: 2 } })
-    tags.addNode({ id: '4', title: 'Fourth tag', fields: { perPage: 2 } })
+    tags.addNode({ id: '1', title: 'First tag', perPage: 2 })
+    tags.addNode({ id: '2', title: 'Second tag', perPage: 2 })
+    tags.addNode({ id: '3', title: 'Third tag', perPage: 2 })
+    tags.addNode({ id: '4', title: 'Fourth tag', perPage: 2 })
 
     posts.addNode({
       id: '1',
       title: 'First post',
       date: '2017-05-23',
-      fields: {
-        dateFormat: 'YYYY',
-        tags: [
-          store.createReference('Tag', '2'),
-          store.createReference('Tag', '3'),
-          store.createReference('Tag', '4')
-        ],
-        category: store.createReference('Category', '1')
-      }
+      dateFormat: 'YYYY',
+      tags: [
+        store.createReference('Tag', '2'),
+        store.createReference('Tag', '3'),
+        store.createReference('Tag', '4')
+      ],
+      category: store.createReference('Category', '1')
     })
 
     posts.addNode({
       id: '2',
       title: 'Second post',
       date: '2018-03-18',
-      fields: {
-        dateFormat: 'YYYY-MM',
-        tags: [
-          store.createReference('Tag', '1'),
-          store.createReference('Tag', '2'),
-          store.createReference('Tag', '4')
-        ],
-        category: store.createReference('Category', '1')
-      }
+      dateFormat: 'YYYY-MM',
+      tags: [
+        store.createReference('Tag', '1'),
+        store.createReference('Tag', '2'),
+        store.createReference('Tag', '4')
+      ],
+      category: store.createReference('Category', '1')
     })
 
     posts.addNode({
       id: '3',
       title: 'Third post',
       date: '2018-11-12',
-      fields: {
-        dateFormat: 'YYYY-MM-DD',
-        tags: [
-          store.createReference('Tag', '1'),
-          store.createReference('Tag', '3'),
-          store.createReference('Tag', '4')
-        ],
-        category: store.createReference('Category', '1')
-      }
+      dateFormat: 'YYYY-MM-DD',
+      tags: [
+        store.createReference('Tag', '1'),
+        store.createReference('Tag', '3'),
+        store.createReference('Tag', '4')
+      ],
+      category: store.createReference('Category', '1')
     })
 
     for (let i = 4; i < 14; i++) {
       posts.addNode({
         title: `Post ${i}`,
-        fields: {
-          excluded: true
-        }
+        excluded: true
       })
     }
 
@@ -96,10 +86,20 @@ module.exports = function (api) {
       other.addNode({
         id: String(i),
         title: `Other ${i}`,
-        fields: {
-          category: store.createReference('Category', '1')
-        }
+        category: store.createReference('Category', '1')
       })
     }
+  })
+
+  api.createPages(({ getContentType, createPage }) => {
+    const tags = getContentType('Tag')
+
+    tags.collection.find().forEach(node => {
+      createPage({
+        path: `/tag/${node.id}/extra`,
+        component: './src/templates/Tag.vue',
+        queryVariables: node
+      })
+    })
   })
 }

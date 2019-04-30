@@ -7,7 +7,9 @@ const { defaultsDeep, camelCase } = require('lodash')
 const { internalRE, transformerRE, SUPPORTED_IMAGE_TYPES } = require('../utils/constants')
 
 const builtInPlugins = [
-  path.resolve(__dirname, '../plugins/source-vue')
+  path.resolve(__dirname, '../plugins/vue-components'),
+  path.resolve(__dirname, '../plugins/vue-pages'),
+  path.resolve(__dirname, '../plugins/vue-templates')
 ]
 
 // TODO: use joi to define and validate config schema
@@ -65,20 +67,14 @@ module.exports = (context, options = {}, pkg = {}) => {
   // add project root as plugin
   plugins.push(context)
 
-  if (localConfig.pathPrefix && /\/+$/.test(localConfig.pathPrefix)) {
-    throw new Error(`pathPrefix must not have a trailing slash`)
-  }
-
   const assetsDir = localConfig.assetsDir || 'assets'
 
   config.pkg = options.pkg || resolvePkg(context)
   config.host = args.host || localConfig.host || 'localhost'
   config.port = parseInt(args.port || localConfig.port, 10) || 8080
   config.plugins = normalizePlugins(context, plugins)
-  config.chainWebpack = localConfig.chainWebpack
-  config.configureServer = localConfig.configureServer
   config.transformers = resolveTransformers(config.pkg, localConfig)
-  config.pathPrefix = isProd ? localConfig.pathPrefix || '/' : '/'
+  config.pathPrefix = normalizePathPrefix(isProd ? localConfig.pathPrefix : '/')
   config.staticDir = resolve('static')
   config.outDir = resolve(localConfig.outDir || 'dist')
   config.assetsDir = path.join(config.outDir, assetsDir)
@@ -91,6 +87,13 @@ module.exports = (context, options = {}, pkg = {}) => {
   config.imageCacheDir = resolve('.cache', assetsDir, 'static')
   config.maxImageWidth = localConfig.maxImageWidth || 2560
   config.imageExtensions = SUPPORTED_IMAGE_TYPES
+  config.pagesDir = resolve('src/pages')
+  config.templatesDir = resolve('src/templates')
+  config.componentParsers = []
+
+  config.chainWebpack = localConfig.chainWebpack
+  config.configureWebpack = localConfig.configureWebpack
+  config.configureServer = localConfig.configureServer
 
   config.images = { ...localConfig.images }
 
@@ -112,6 +115,7 @@ module.exports = (context, options = {}, pkg = {}) => {
   config.siteName = localConfig.siteName || path.parse(context).name
   config.titleTemplate = localConfig.titleTemplate || `%s - ${config.siteName}`
   config.siteDescription = localConfig.siteDescription || ''
+  config.metaData = localConfig.metaData || {}
 
   config.manifestsDir = path.join(config.assetsDir, 'manifest')
   config.clientManifestPath = path.join(config.manifestsDir, 'client.json')
@@ -154,16 +158,24 @@ function resolvePkg (context) {
     pkg = Object.assign(pkg, JSON.parse(content))
   } catch (err) {}
 
-  if (!Object.keys(pkg.dependencies).includes('gridsome')) {
+  if (
+    !Object.keys(pkg.dependencies).includes('gridsome') &&
+    !process.env.GRIDSOME_TEST
+  ) {
     throw new Error('This is not a Gridsome project.')
   }
 
   return pkg
 }
 
+function normalizePathPrefix (pathPrefix = '/') {
+  const segments = pathPrefix.split('/').filter(s => !!s)
+  return segments.length ? `/${segments.join('/')}/` : '/'
+}
+
 function normalizePlugins (context, plugins) {
   return plugins.map((plugin, index) => {
-    if (typeof plugin === 'string') {
+    if (typeof plugin !== 'object') {
       plugin = { use: plugin }
     }
 
@@ -185,7 +197,12 @@ function normalizePlugins (context, plugins) {
 function resolvePluginEntries (id, context) {
   let dirName = ''
 
-  if (path.isAbsolute(id)) {
+  if (typeof id === 'function') {
+    return {
+      clientEntry: null,
+      serverEntry: id
+    }
+  } else if (path.isAbsolute(id)) {
     dirName = id
   } else if (id.startsWith('~/')) {
     dirName = path.join(context, id.replace(/^~\//, ''))

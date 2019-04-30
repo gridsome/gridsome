@@ -14,15 +14,12 @@ module.exports = function createRenderFn ({
 
   const renderer = createBundleRenderer(serverBundle, {
     clientManifest,
-    runInNewContext: false,
-    shouldPrefetch (file, type) {
-      // don't prefetch page data since we preload it with the g-link component
-      return type === 'script' && !/js\/data(?:[^/]+)?\//.test(file)
-    }
+    runInNewContext: false
   })
 
-  return async function render (url, data = {}) {
-    const context = { url, pageQuery: { data }}
+  return async function render (url, state = {}) {
+    const context = { url, state }
+
     let app = ''
 
     try {
@@ -48,6 +45,7 @@ module.exports = function createRenderFn ({
       context.renderStyles()
 
     const scripts = '' +
+      context.renderState() +
       context.renderScripts() +
       inject.script.text({ body: true })
 

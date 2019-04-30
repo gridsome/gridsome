@@ -1,9 +1,7 @@
 const { safeKey } = require('../../utils')
-const { info } = require('../../utils/log')
-const { NODE_FIELDS } = require('../../utils/constants')
 
-exports.applyChainArgs = function (chain, args) {
-  if (args.sortBy) chain = chain.simplesort(args.sortBy, args.order === -1)
+exports.applyChainArgs = function (chain, args = {}, sort = []) {
+  if (sort.length) chain = applySort(chain, sort)
   if (args.skip) chain = chain.offset(args.skip)
   if (args.limit) chain = chain.limit(args.limit)
 
@@ -14,25 +12,14 @@ exports.createBelongsToKey = function (node) {
   return `belongsTo.${node.typeName}.${safeKey(node.id)}`
 }
 
-exports.createPagedNodeEdges = function (chain, args) {
-  const { order, skip } = args
+exports.createPagedNodeEdges = function (chain, args = {}, sort = []) {
   const page = Math.max(args.page, 1) // ensure page higher than 0
   const perPage = Math.max(args.perPage, 1) // ensure page higher than 1
   const totalNodes = chain.data().length
-  const totalCount = Math.max(totalNodes - skip, 0)
-  let sortBy = args.sortBy
+  const totalCount = Math.max(totalNodes - args.skip, 0)
 
-  if (!NODE_FIELDS.includes(sortBy)) {
-    // TODO: remove check before 1.0
-    if (sortBy.startsWith('fields.')) {
-      info(`Do not prefix custom fields in sortBy argument with "fields."`)
-    } else {
-      sortBy = `fields.${sortBy}`
-    }
-  }
-
-  chain = chain.simplesort(sortBy, order === 'DESC')
-  chain = chain.offset(((page - 1) * perPage) + skip)
+  chain = applySort(chain, sort)
+  chain = chain.offset(((page - 1) * perPage) + args.skip)
   chain = chain.limit(perPage)
 
   const nodes = chain.data()
@@ -56,3 +43,21 @@ exports.createPagedNodeEdges = function (chain, args) {
     }
   }
 }
+
+exports.createSortOptions = function ({ sort, sortBy, order }) {
+  if (sort && sort.length) {
+    return sort.map(({ by, order }) => [by, order === 'DESC'])
+  } else if (sortBy) {
+    return [[sortBy, order === 'DESC']]
+  }
+
+  return []
+}
+
+function applySort (chain, sort = []) {
+  if (sort.length > 1) return chain.compoundsort(sort)
+  else if (sort.length) return chain.simplesort(...sort[0])
+
+  return chain
+}
+

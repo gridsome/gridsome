@@ -1,5 +1,5 @@
 {
-  "version": "0.2.1",
+  "version": "0.2.2",
   "name": "@gridsome/source-contentful",
   "description": "Contentful source for Gridsome",
   "homepage": "https://github.com/gridsome/gridsome/tree/master/packages/source-contentful#readme",

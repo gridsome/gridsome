@@ -1,18 +1,17 @@
-const { applyChainArgs } = require('./nodes/utils')
+const { applyChainArgs, createSortOptions } = require('./nodes/utils')
 
 function fieldResolver (obj, args, ctx, { fieldName }) {
-  return obj.hasOwnProperty('$loki') // the node object
-    ? obj.fields[fieldName]
-    : obj[fieldName]
+  return obj[fieldName]
 }
 
 function createRefResolver ({ typeName, isList = false }) {
-  return function refResolver (obj, args, context, info) {
-    const fieldValue = fieldResolver(obj, args, context, info)
+  return function refResolver (obj, args, context, { fieldName }) {
+    const fieldValue = obj[fieldName]
 
     if (!fieldValue) return isList ? [] : null
 
     const { id } = fieldValue
+    const sort = createSortOptions(args)
     const query = {}
     let chain
 
@@ -30,10 +29,14 @@ function createRefResolver ({ typeName, isList = false }) {
     } else {
       const { collection } = context.store.getContentType(typeName)
       chain = collection.chain().find(query)
+
+      for (const [fieldName] of sort) {
+        collection.ensureIndex(fieldName)
+      }
     }
 
     return isList
-      ? applyChainArgs(chain, args).data()
+      ? applyChainArgs(chain, args, sort).data()
       : chain.data()[0]
   }
 }

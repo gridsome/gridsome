@@ -22,6 +22,17 @@ exports.isRefFieldDefinition = function (field) {
   )
 }
 
-exports.createTypeName = function (prefix, key) {
-  return camelCase(`${prefix} ${key}`, { pascalCase: true })
+const typeNameCounter = {}
+
+exports.createTypeName = function (prefix, key, suffix = '') {
+  let name = camelCase(`${prefix} ${key} ${suffix}`, { pascalCase: true })
+
+  if (typeNameCounter[name]) {
+    typeNameCounter[name]++
+    name += typeNameCounter[name]
+  } else {
+    typeNameCounter[name] = 1
+  }
+
+  return name
 }

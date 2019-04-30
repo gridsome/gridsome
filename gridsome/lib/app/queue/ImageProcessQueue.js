@@ -121,7 +121,7 @@ class ImageProcessQueue {
       const filename = this.createFileName(filePath, arr, hash)
       const relPath = createDestPath(filename, arr)
       const destPath = path.join(this.config.outDir, relPath)
-      const src = forwardSlash(path.join(pathPrefix, relPath))
+      const src = encodeURI(forwardSlash(path.join(pathPrefix, relPath)))
 
       return { filename, destPath, src, width, height }
     })

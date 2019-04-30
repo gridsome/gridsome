@@ -24,38 +24,24 @@ module.exports = ({ contentType, nodeTypes, fields }) => {
       const fieldTypes = createFieldTypes(fields, contentType.typeName, nodeTypes)
       const refs = createRefs(contentType, nodeTypes, fieldTypes)
 
+      if (fieldTypes.hasOwnProperty(contentType.options.dateField)) {
+        fieldTypes[contentType.options.dateField] = dateType
+      }
+
       const nodeFields = {
         ...fieldTypes,
         ...refs,
 
-        content: { type: GraphQLString },
-        excerpt: { type: GraphQLString },
-
         ...extendNodeType(contentType, nodeType, nodeTypes),
         ...createFields(contentType, fieldTypes),
 
-        belongsTo: createBelongsTo(contentType, nodeTypes),
         id: { type: new GraphQLNonNull(GraphQLID) },
-        title: { type: GraphQLString },
-        slug: { type: GraphQLString },
-        path: { type: GraphQLString },
-        date: dateType,
+        belongsTo: createBelongsTo(contentType, nodeTypes),
 
         _id: {
           deprecationReason: 'Use node.id instead.',
           type: new GraphQLNonNull(GraphQLID),
           resolve: node => node.id
-        }
-      }
-
-      if (!isEmpty(refs)) {
-        nodeFields.refs = {
-          resolve: obj => obj,
-          deprecationReason: 'Use ref on node instead.',
-          type: new GraphQLObjectType({
-            name: `${contentType.typeName}References`,
-            fields: () => refs
-          })
         }
       }
 
@@ -116,7 +102,7 @@ function createRefs (contentType, nodeTypes, fields) {
         const field = {
           [fieldName]: {
             typeName,
-            id: obj.fields[fieldName]
+            id: obj[fieldName]
           }
         }
 

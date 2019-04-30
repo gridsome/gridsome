@@ -13,7 +13,7 @@ module.exports = (app, { isProd, isServer }) => {
   const { config: projectConfig } = app
   const { cacheDirectory, cacheIdentifier } = createCacheOptions()
   const assetsDir = path.relative(projectConfig.outDir, projectConfig.assetsDir)
-  const pathPrefix = forwardSlash(path.join(projectConfig.pathPrefix, '/'))
+  const { pathPrefix } = projectConfig
   const config = new Config()
 
   const useHash = isProd && !process.env.GRIDSOME_TEST
@@ -191,12 +191,6 @@ module.exports = (app, { isProd, isServer }) => {
     .use('yaml-loader')
     .loader('yaml-loader')
 
-  // graphql
-  // TODO: remove graphql loader before v1.0
-  createGraphQLRule('graphql', './loaders/page-query')
-  createGraphQLRule('page-query', './loaders/page-query')
-  createGraphQLRule('static-query', './loaders/static-query')
-
   // plugins
 
   if (process.stdout.isTTY && !process.env.GRIDSOME_TEST) {
@@ -234,15 +228,7 @@ module.exports = (app, { isProd, isServer }) => {
         filename: `${assetsDir}/css/styles${useHash ? '.[contenthash:8]' : ''}.css`
       }])
 
-    const cacheGroups = {
-      data: {
-        test: m => m.resource && m.request.startsWith(`${projectConfig.cacheDir}/data`),
-        name: false,
-        chunks: 'all',
-        maxSize: 60000,
-        minSize: 5000
-      }
-    }
+    const cacheGroups = {}
 
     if (projectConfig.css.split !== true) {
       cacheGroups.styles = {
@@ -279,23 +265,6 @@ module.exports = (app, { isProd, isServer }) => {
       cacheDirectory: app.resolve('node_modules/.cache/gridsome'),
       cacheIdentifier: hash(values)
     }
-  }
-
-  function createGraphQLRule (type, loader) {
-    const re = new RegExp(`blockType=(${type})`)
-
-    config.module.rule(type)
-      .resourceQuery(re)
-      .use('babel-loader')
-      .loader('babel-loader')
-      .options({
-        presets: [
-          require.resolve('@vue/babel-preset-app')
-        ]
-      })
-      .end()
-      .use(`${type}-loader`)
-      .loader(require.resolve(loader))
   }
 
   function createCSSRule (config, lang, test, loader = null, options = {}) {
@@ -341,11 +310,14 @@ module.exports = (app, { isProd, isServer }) => {
   }
 
   function createEnv (projectConfig) {
+    const assetsUrl = forwardSlash(path.join(pathPrefix, assetsDir, '/'))
+    const dataUrl = forwardSlash(path.join(assetsUrl, 'data', '/'))
+
     const baseEnv = {
       'process.env.PUBLIC_PATH': JSON.stringify(pathPrefix),
+      'process.env.ASSETS_URL': JSON.stringify(assetsUrl),
+      'process.env.DATA_URL': JSON.stringify(dataUrl),
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || ''),
-      'GRIDSOME_CACHE_DIR': JSON.stringify(projectConfig.cacheDir),
-      'GRIDSOME_DATA_DIR': JSON.stringify(projectConfig.dataDir),
       'GRIDSOME_MODE': JSON.stringify(process.env.GRIDSOME_MODE || ''),
       'process.isClient': !isServer,
       'process.isServer': isServer,
