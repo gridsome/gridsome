@@ -1,14 +1,10 @@
 const { isDate } = require('lodash')
-const camelCase = require('camelcase')
-const { resolvePath } = require('./utils')
 const { isRefField } = require('../graphql/utils')
 const { isResolvablePath, safeKey } = require('../utils')
-
-const nonValidCharsRE = new RegExp('[^a-zA-Z0-9_]', 'g')
-const leadingNumberRE = new RegExp('^([0-9])')
+const { resolvePath, createFieldName } = require('./utils')
 
 module.exports = function processFields (fields = {}, refs = {}, options = {}) {
-  const { origin = '', context, resolveAbsolute } = options
+  const { origin = '', context, resolveAbsolute, camelCased } = options
   const belongsTo = {}
 
   const addBelongsTo = ({ typeName, id }) => {
@@ -61,7 +57,7 @@ module.exports = function processFields (fields = {}, refs = {}, options = {}) {
         continue
       }
 
-      res[createKey(key)] = Array.isArray(fields[key])
+      res[createFieldName(key, camelCased)] = Array.isArray(fields[key])
         ? fields[key].map(value => processField(value))
         : processField(fields[key])
     }
@@ -80,12 +76,4 @@ module.exports = function processFields (fields = {}, refs = {}, options = {}) {
   }
 
   return { fields: res, belongsTo }
-}
-
-function createKey (key) {
-  key = key.replace(nonValidCharsRE, '_')
-  key = camelCase(key)
-  key = key.replace(leadingNumberRE, '_$1')
-
-  return key
 }

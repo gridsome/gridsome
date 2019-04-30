@@ -5,12 +5,11 @@ const moment = require('moment')
 const autoBind = require('auto-bind')
 const isRelative = require('is-relative')
 const EventEmitter = require('eventemitter3')
-const { ISO_8601_FORMAT } = require('../utils/constants')
+const { ISO_8601_FORMAT, NODE_FIELDS } = require('../utils/constants')
 const { cloneDeep, isString, isPlainObject, trim, omit, get } = require('lodash')
 const createNodeOptions = require('./createNodeOptions')
-const { NODE_FIELDS } = require('../utils/constants')
 const { warn } = require('../utils/log')
-const { parseUrl } = require('./utils')
+const { parseUrl, createFieldName } = require('./utils')
 
 class ContentType {
   constructor (store, collection, options = {}) {
@@ -19,10 +18,10 @@ class ContentType {
 
     this.options = { refs: {}, fields: {}, ...options }
     this.typeName = options.typeName
-    this.description = options.description
 
     this._store = store
     this._transformers = store._transformers
+    this._camelCasedFieldNames = options.camelCasedFieldNames || false
     this._resolveAbsolutePaths = options.resolveAbsolutePaths || false
     this._assetsContext = typeof options.resolveAbsolutePaths === 'string'
       ? isUrl(options.resolveAbsolutePaths)
@@ -48,7 +47,7 @@ class ContentType {
       options = { typeName: options }
     }
 
-    this.options.refs[fieldName] = options
+    this.options.refs[this.createFieldName(fieldName)] = options
   }
 
   addSchemaField (fieldName, options) {
@@ -219,6 +218,14 @@ class ContentType {
   makeUid (orgId) {
     return crypto.createHash('md5').update(orgId).digest('hex')
   }
+
+  createFieldName (name = '') {
+    return createFieldName(name, this._camelCasedFieldNames)
+  }
+
+  //
+  // deprecated
+  //
 
   slugify (string = '') {
     return this._store.slugify(string)

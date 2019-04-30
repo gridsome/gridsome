@@ -2,7 +2,19 @@ const url = require('url')
 const path = require('path')
 const isUrl = require('is-url')
 const mime = require('mime-types')
+const camelCase = require('camelcase')
 const isRelative = require('is-relative')
+
+const nonValidCharsRE = new RegExp('[^a-zA-Z0-9_]', 'g')
+const leadingNumberRE = new RegExp('^([0-9])')
+
+exports.createFieldName = function (key, camelCased = false) {
+  key = key.replace(nonValidCharsRE, '_')
+  if (camelCased) key = camelCase(key)
+  key = key.replace(leadingNumberRE, '_$1')
+
+  return key
+}
 
 exports.parseUrl = function (input) {
   const { protocol, host, path: pathName } = url.parse(input)

@@ -35,7 +35,7 @@ class PluginStore {
     this.mime = mime
   }
 
-  // data
+  // metadata
 
   addMetaData (key, data) {
     return this.store.addMetaData(key, data)
@@ -112,6 +112,7 @@ class PluginStore {
       dateField,
       defaultSortBy,
       defaultSortOrder,
+      camelCasedFieldNames: options.camelCasedFieldNames,
       resolveAbsolutePaths: options.resolveAbsolutePaths,
       routeKeys: routeKeys
         .filter(key => typeof key.name === 'string')

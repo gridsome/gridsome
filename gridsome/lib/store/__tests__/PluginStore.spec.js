@@ -262,6 +262,17 @@ test('add type with dynamic route', () => {
   expect(node.path).toEqual('/2018/09/04/lorem-ipsum-dolor-sit-amet')
 })
 
+test.each([
+  ['foo/bar', '/foo/bar'],
+  ['//foo/bar', '/foo/bar']
+])('ensure leading slash for node paths', (path, expteced) => {
+  const contentType = createPlugin().store.addContentType('TestPost')
+
+  const node = contentType.addNode({ path })
+
+  expect(node.path).toEqual(expteced)
+})
+
 test('prefix dynamic route with leading slash', () => {
   const contentType = createPlugin().store.addContentType({
     typeName: 'TestPost2',

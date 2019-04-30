@@ -337,6 +337,30 @@ test('create references with collection.addReference()', async () => {
   expect(data.post.author2.id).toEqual('1')
 })
 
+test('create references with collection.addReference() and camelCased fields', async () => {
+  const authors = api.store.addContentType({ typeName: 'Author', camelCasedFieldNames: true })
+  const posts = api.store.addContentType({ typeName: 'Post', camelCasedFieldNames: true })
+
+  posts.addReference('author_one', 'Author')
+  posts.addReference('author_two', { typeName: 'Author' })
+
+  authors.addNode({ id: '1', title: 'An Author' })
+  posts.addNode({ id: '1', author_one: '1', author_two: '1' })
+
+  const query = `{
+    post (id: "1") {
+      authorOne { id }
+      authorTwo { id }
+    }
+  }`
+
+  const { errors, data } = await createSchemaAndExecute(query)
+
+  expect(errors).toBeUndefined()
+  expect(data.post.authorOne.id).toEqual('1')
+  expect(data.post.authorTwo.id).toEqual('1')
+})
+
 test('create node list reference', async () => {
   const authors = api.store.addContentType({
     typeName: 'TestAuthor'
@@ -563,6 +587,8 @@ test('should convert keys to valid field names', async () => {
   const node = contentType.addNode({
     id: '1',
     'my-object': {
+      _valid_name: '_valid_name',
+      _validName: '_validName',
       '2value': 'test',
       ':value': 'test',
       'test:value': 'test',
@@ -574,12 +600,13 @@ test('should convert keys to valid field names', async () => {
 
   const { errors, data } = await createSchemaAndExecute(`{
     testPost (id: "1") {
-      id
-      myObject {
+      my_object {
+        _valid_name
+        _validName
         _2value
-        value
-        testValue
-        otherObject {
+        _value
+        test_value
+        other_object {
           value
         }
       }
@@ -587,12 +614,13 @@ test('should convert keys to valid field names', async () => {
   }`)
 
   const obj = {
-    id: '1',
-    myObject: {
+    my_object: {
+      _valid_name: '_valid_name',
+      _validName: '_validName',
       _2value: 'test',
-      value: 'test',
-      testValue: 'test',
-      otherObject: {
+      _value: 'test',
+      test_value: 'test',
+      other_object: {
         value: 'test'
       }
     }
@@ -603,8 +631,11 @@ test('should convert keys to valid field names', async () => {
   expect(node).toMatchObject(obj)
 })
 
-test('preserve internal custom fields', async () => {
-  const contentType = api.store.addContentType('TestPost')
+test('should camelCase field names', async () => {
+  const contentType = api.store.addContentType({
+    typeName: 'TestPost',
+    camelCasedFieldNames: true
+  })
 
   const node = contentType.addNode({
     id: '1',

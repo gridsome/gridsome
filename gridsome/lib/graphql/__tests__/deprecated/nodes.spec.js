@@ -586,56 +586,6 @@ test('should get values from object fields', async () => {
   expect(data.testPost.myObject.otherObject.value).toEqual('test2')
 })
 
-test('should convert keys to valid field names', async () => {
-  const contentType = api.store.addContentType({
-    typeName: 'TestPost'
-  })
-
-  const node = contentType.addNode({
-    id: '1',
-    fields: {
-      'my-object': {
-        '2value': 'test',
-        ':value': 'test',
-        'test:value': 'test',
-        'other-object': {
-          value: 'test'
-        }
-      }
-    }
-  })
-
-  const { errors, data } = await createSchemaAndExecute(`{
-    testPost (id: "1") {
-      id
-      myObject {
-        _2value
-        value
-        testValue
-        otherObject {
-          value
-        }
-      }
-    }
-  }`)
-
-  const obj = {
-    id: '1',
-    myObject: {
-      _2value: 'test',
-      value: 'test',
-      testValue: 'test',
-      otherObject: {
-        value: 'test'
-      }
-    }
-  }
-
-  expect(errors).toBeUndefined()
-  expect(data.testPost).toMatchObject(obj)
-  expect(node).toMatchObject(obj)
-})
-
 test('preserve internal custom fields', async () => {
   const contentType = api.store.addContentType({
     typeName: 'TestPost'

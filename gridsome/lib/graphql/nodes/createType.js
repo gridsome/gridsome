@@ -17,7 +17,6 @@ const {
 module.exports = ({ contentType, nodeTypes, fields }) => {
   const nodeType = new GraphQLObjectType({
     name: contentType.typeName,
-    description: contentType.description,
     interfaces: [nodeInterface],
     isTypeOf: node => node.typeName === contentType.typeName,
     fields: () => {

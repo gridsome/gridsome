@@ -35,6 +35,7 @@ module.exports = function createNodeOptions (options, contentType, useFallbacks 
   const { fields, belongsTo } = processFields(customFields, contentType.options.refs, {
     origin: nodeOptions.internal.origin,
     context: contentType._assetsContext,
+    camelCased: contentType._camelCasedFieldNames,
     resolveAbsolute: contentType._resolveAbsolutePaths
   })
 
