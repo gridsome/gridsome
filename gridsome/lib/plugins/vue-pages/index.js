@@ -10,12 +10,11 @@ class VuePages {
   }
 
   constructor (api) {
-    this.pages = api.pages
     this.store = api.store
     this.pagesDir = api.config.pagesDir
 
     if (fs.existsSync(this.pagesDir)) {
-      api.createPages(args => this.createPages(args))
+      api.createManagedPages(args => this.createPages(args))
     }
   }
 
@@ -36,11 +35,11 @@ class VuePages {
       .loader(require.resolve(loader))
   }
 
-  async createPages () {
+  async createPages ({ createPage, removePagesByComponent }) {
     const files = await glob('**/*.vue', { cwd: this.pagesDir })
 
     for (const file of files) {
-      this.createPage(file)
+      createPage(this.createPageOptions(file))
     }
 
     if (process.env.NODE_ENV === 'development') {
@@ -49,24 +48,22 @@ class VuePages {
         cwd: this.pagesDir
       })
 
-      watcher.on('add', file => this.createPage(slash(file)))
-      watcher.on('unlink', file => this.removePage(slash(file)))
+      watcher.on('add', file => {
+        createPage(this.createPageOptions(slash(file)))
+      })
+
+      watcher.on('unlink', file => {
+        removePagesByComponent(path.join(this.pagesDir, slash(file)))
+      })
     }
   }
 
-  createPage (file) {
-    const name = /^[iI]ndex\.vue$/.test(file) ? 'home' : undefined
-
-    return this.pages.createPage({
-      name,
+  createPageOptions (file) {
+    return {
+      name: /^[iI]ndex\.vue$/.test(file) ? 'home' : undefined,
       path: this.createPagePath(file),
       component: path.join(this.pagesDir, file)
-    })
-  }
-
-  removePage (file) {
-    const component = path.join(this.pagesDir, file)
-    return this.pages.removePage({ component })
+    }
   }
 
   createPagePath (filePath) {

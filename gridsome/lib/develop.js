@@ -2,6 +2,7 @@ const fs = require('fs-extra')
 const chalk = require('chalk')
 const express = require('express')
 const createApp = require('./app')
+const { debounce } = require('lodash')
 const createExpressServer = require('./server/createExpressServer')
 const createSockJsServer = require('./server/createSockJsServer')
 
@@ -52,6 +53,33 @@ module.exports = async (context, args) => {
 
   server.app.listen(server.port, server.host, err => {
     if (err) throw err
+  })
+
+  const createPages = debounce(() => app.createPages(), 16)
+  const fetchQueries = debounce(() => app.broadcast({ type: 'fetch' }), 16)
+  const generateRoutes = debounce(() => app.codegen.generate('routes.js'), 16)
+
+  app.store.on('change', createPages)
+  app.pages.on('create', generateRoutes)
+  app.pages.on('remove', generateRoutes)
+
+  app.pages.on('update', (page, oldPage) => {
+    const { path: oldPath, query: oldQuery } = oldPage
+    const { path, query } = page
+
+    if (
+      (path !== oldPath && !page.internal.isDynamic) ||
+      // pagination was added or removed in page-query
+      (query.paginate && !oldQuery.paginate) ||
+      (!query.paginate && oldQuery.paginate) ||
+      // page-query was created or removed
+      (query.document && !oldQuery.document) ||
+      (!query.document && oldQuery.document)
+    ) {
+      return generateRoutes()
+    }
+
+    fetchQueries()
   })
 
   //

@@ -6,24 +6,52 @@ exports.createQueryVariables = function (page, currentPage = undefined) {
   }
 }
 
-exports.createPagesAPI = function (api) {
+exports.createPagesAPI = function (api, { digest }) {
+  const { graphql, store, pages } = api._app
+
   return {
-    store: api.store,
-    graphql: api._app.graphql,
+    graphql,
+    getContentType (typeName) {
+      return store.getContentType(typeName)
+    },
     createPage (options) {
-      return api._app.pages.createPage(options)
+      return pages.createPage(options, { digest, isManaged: false })
+    }
+  }
+}
+
+exports.createManagedPagesAPI = function (api, { digest }) {
+  const internals = { digest, isManaged: true }
+  const { graphql, store, pages } = api._app
+
+  return {
+    graphql,
+    getContentType (typeName) {
+      return store.getContentType(typeName)
+    },
+    createPage (options) {
+      return pages.createPage(options, internals)
     },
     updatePage (options) {
-      return api._app.pages.updatePage(options)
+      return pages.updatePage(options, internals)
     },
-    removePage (query) {
-      return api._app.pages.removePage(query)
+    removePage (page) {
+      return pages.removePage(page)
+    },
+    removePageByPath (path) {
+      return pages.removePageByPath(path)
+    },
+    removePagesByComponent (component) {
+      return pages.removePagesByComponent(component)
+    },
+    findAndRemovePages (query) {
+      return pages.findAndRemovePages(query)
     },
     findPage (query) {
-      return api._app.pages.findPage(query)
+      return pages.findPage(query)
     },
     findPages (query) {
-      return api._app.pages.findPages(query)
+      return pages.findPages(query)
     }
   }
 }

@@ -91,8 +91,8 @@ module.exports = function (api) {
     }
   })
 
-  api.createPages(({ store, createPage }) => {
-    const tags = store.getContentType('Tag')
+  api.createPages(({ getContentType, createPage }) => {
+    const tags = getContentType('Tag')
 
     tags.collection.find().forEach(node => {
       createPage({

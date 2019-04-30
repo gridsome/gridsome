@@ -17,6 +17,7 @@ class Pages {
     this._events = new EventEmitter()
     this._watcher = new FSWatcher({ disableGlobbing: true })
     this._watched = {}
+    this._created = []
 
     this._collection = new Collection({
       indices: ['path'],
@@ -63,11 +64,11 @@ class Pages {
     return this._collection.findOne(query)
   }
 
-  createPage (input) {
+  createPage (input, internals = {}) {
     const options = this._normalizeOptions(input)
     const oldPage = this.findPage({ path: options.path })
 
-    if (oldPage) return this.updatePage(options)
+    if (oldPage) return this.updatePage(options, internals)
 
     const { pageQuery } = this._parse(options.component)
     const page = createPage({ options, context: this._context })
@@ -75,7 +76,9 @@ class Pages {
 
     Object.assign(page, { query })
     Object.assign(page, createRoute({ page, query }))
+    Object.assign(page.internal, internals)
 
+    this._created.push(page)
     this._collection.insert(page)
     this._events.emit('create', page)
 
@@ -86,7 +89,7 @@ class Pages {
     return page
   }
 
-  updatePage (input) {
+  updatePage (input, internals = {}) {
     const options = this._normalizeOptions(input)
     const page = this.findPage({ path: options.path })
 
@@ -99,25 +102,45 @@ class Pages {
     Object.assign(page, { query })
     Object.assign(page, newPage)
     Object.assign(page, createRoute({ page, query }))
+    Object.assign(page.internal, internals)
 
     this._events.emit('update', page, oldPage)
 
     return page
   }
 
-  removePage (query) {
-    const page = this.findPage(query)
+  removePage (page) {
+    const query = { path: page.path }
+
+    this._collection.findAndRemove(query)
+    this._events.emit('remove', page)
+    this._unwatch(page.component)
+  }
+
+  removePageByPath (path) {
+    const query = { path }
+    const page = this._collection.findOne(query)
 
     if (page) {
       this._collection.findAndRemove(query)
       this._events.emit('remove', page)
-
-      const pages = this.findPages({ component: page.component })
-
-      if (!pages.length) {
-        this._unwatch(page.component)
-      }
+      this._unwatch(page.component)
     }
+  }
+
+  removePagesByComponent (component) {
+    this._collection.find({ component }).forEach(page => {
+      this._events.emit('remove', page)
+    })
+
+    this._collection.findAndRemove({ component })
+    this._unwatch(component)
+  }
+
+  findAndRemovePages (query) {
+    this._collection.find(query).forEach(page => {
+      this.removePage(page)
+    })
   }
 
   _normalizeOptions (input = {}) {
@@ -142,8 +165,8 @@ class Pages {
   }
 
   _unwatch (component) {
-    if (this.findPages({ component }).length <= 0) {
-      this._watched[component] = false
+    if (this._collection.find({ component }).length <= 0) {
+      delete this._watched[component]
       this._watcher.unwatch(component)
     }
   }
@@ -164,9 +187,11 @@ function createPage ({ options, context }) {
     queryVariables: options.queryVariables || options.context || null,
     chunkName: options.chunkName || genChunkName(options.component, context),
     internal: {
+      digest: null,
       path: { segments },
       route: options.route || null,
-      isDynamic: typeof options.route === 'string'
+      isDynamic: typeof options.route === 'string',
+      isManaged: false
     }
   }
 }

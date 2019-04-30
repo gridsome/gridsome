@@ -121,8 +121,8 @@ test('create render queue for createPages hook', async () => {
       })
     })
 
-    api.createPages(async ({ store, createPage, graphql }) => {
-      const posts = store.getContentType('Post')
+    api.createPages(async ({ getContentType, createPage, graphql }) => {
+      const posts = getContentType('Post')
 
       createPage({
         path: '/about',

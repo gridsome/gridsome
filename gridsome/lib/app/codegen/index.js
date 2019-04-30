@@ -27,8 +27,13 @@ class Codegen {
     const outDir = this.app.config.tmpDir
 
     const outputFile = async (filename, ...args) => {
-      const content = await this.files[filename](this.app, ...args)
       const filepath = path.join(outDir, filename)
+      const content = await this.files[filename](this.app, ...args)
+
+      if (await fs.exists(filepath)) {
+        await fs.remove(filepath)
+      }
+
       await fs.outputFile(filepath, content)
     }
 

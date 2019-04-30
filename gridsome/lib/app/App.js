@@ -1,5 +1,6 @@
 const path = require('path')
 const fs = require('fs-extra')
+const Events = require('./Events')
 const Codegen = require('./codegen')
 const autoBind = require('auto-bind')
 const merge = require('webpack-merge')
@@ -10,10 +11,10 @@ const PluginAPI = require('./PluginAPI')
 const ComponentParser = require('./ComponentParser')
 const { execute, graphql } = require('graphql')
 const AssetsQueue = require('./queue/AssetsQueue')
-const createSchema = require('../graphql/createSchema')
 const loadConfig = require('./loadConfig')
 const { defaultsDeep } = require('lodash')
 const { version } = require('../../package.json')
+const { hashString } = require('../utils')
 const { info } = require('../utils/log')
 
 const {
@@ -32,7 +33,6 @@ class App {
   constructor (context, options) {
     process.GRIDSOME = this
 
-    this.events = {}
     this.clients = {}
     this.plugins = []
     this.context = context
@@ -85,8 +85,9 @@ class App {
   //
 
   init () {
+    this.events = new Events()
     this.store = new Store(this)
-    this.queue = new AssetsQueue(this)
+    this.queue = new AssetsQueue(this) // TODO: rename to assets
     this.codegen = new Codegen(this)
     this.parser = new ComponentParser(this)
     this.pages = new Pages(this)
@@ -117,17 +118,17 @@ class App {
 
     // run config.chainWebpack after all plugins
     if (typeof this.config.chainWebpack === 'function') {
-      this.on('chainWebpack', { handler: this.config.chainWebpack })
+      this.events.on('chainWebpack', { handler: this.config.chainWebpack })
     }
 
     // run config.configureWebpack after all plugins
     if (this.config.configureWebpack) {
-      this.on('configureWebpack', { handler: this.config.configureWebpack })
+      this.events.on('configureWebpack', { handler: this.config.configureWebpack })
     }
 
     // run config.configureServer after all plugins
     if (typeof this.config.configureServer === 'function') {
-      this.on('configureServer', { handler: this.config.configureServer })
+      this.events.on('configureServer', { handler: this.config.configureServer })
     }
 
     this.isInitialized = true
@@ -136,83 +137,56 @@ class App {
   }
 
   async loadSources () {
-    await this.dispatch('loadSource', api => api.store)
+    await this.events.dispatch('loadSource', api => api.store)
   }
 
   async createSchema () {
     const graphql = require('../graphql/graphql')
+    const { mergeSchemas } = require('graphql-tools')
+    const createSchema = require('../graphql/createSchema')
 
-    this.schema = createSchema(this.store, {
-      schemas: await this.dispatch('createSchema', () => graphql)
-    })
+    const schema = createSchema(this.store)
+    const schemas = [schema]
+
+    const api = { ...graphql, addSchema: schema => schemas.push(schema) }
+    const results = await this.events.dispatch('createSchema', () => api)
+
+    // add custom schemas returned from the hook handlers
+    results.forEach(schema => schema && schemas.push(schema))
+
+    this.schema = mergeSchemas({ schemas })
   }
 
   async createPages () {
-    await this.dispatch('createPages', api => api.pages)
+    const digest = hashString(Date.now().toString())
+    const { createPagesAPI, createManagedPagesAPI } = require('../pages/utils')
+
+    await this.events.dispatch('createManagedPages', api => {
+      return createManagedPagesAPI(api, { digest })
+    })
+
+    await this.events.dispatch('createPages', api => {
+      return createPagesAPI(api, { digest })
+    })
 
     // ensure a /404 page exists
     if (!this.pages.findPage({ path: '/404' })) {
       this.pages.createPage({
         path: '/404',
         component: path.join(this.config.appPath, 'pages', '404.vue')
-      })
+      }, { digest, isManaged: true })
     }
 
-    if (process.env.NODE_ENV === 'development') {
-      this.pages.on('create', () => this.codegen.generate('routes.js'))
-      this.pages.on('remove', () => this.codegen.generate('routes.js'))
-
-      this.pages.on('update', (page, oldPage) => {
-        const { path: oldPath, query: oldQuery } = oldPage
-        const { path, query } = page
-
-        if (
-          (path !== oldPath && !page.internal.isDynamic) ||
-          // pagination was added or removed in page-query
-          (query.paginate && !oldQuery.paginate) ||
-          (!query.paginate && oldQuery.paginate) ||
-          // page-query was created or removed
-          (query.document && !oldQuery.document) ||
-          (!query.document && oldQuery.document)
-        ) {
-          return this.codegen.generate('routes.js')
-        }
-
-        this.broadcast({ type: 'fetch' })
-      })
-    }
+    // remove unmanaged pages created
+    // in earlier digest cycles
+    this.pages.findAndRemovePages({
+      'internal.digest': { $ne: digest },
+      'internal.isManaged': { $eq: false }
+    })
   }
 
   async generateCode () {
     await this.codegen.generate()
-  }
-
-  //
-  // Events
-  //
-
-  on (eventName, { api, handler }) {
-    const { events } = this
-
-    if (!Array.isArray(events[eventName])) {
-      events[eventName] = []
-    }
-
-    events[eventName].push({ api, handler })
-  }
-
-  dispatch (eventName, cb, ...args) {
-    if (!this.events[eventName]) return
-    return Promise.all(this.events[eventName].map(({ api, handler }) => {
-      return typeof cb === 'function' ? handler(cb(api)) : handler(...args, api)
-    }))
-  }
-
-  dispatchSync (eventName, cb, ...args) {
-    if (!this.events[eventName]) return
-    return this.events[eventName].map(({ api, handler }) => {
-      return typeof cb === 'function' ? handler(cb(api)) : handler(...args, api)
-    })
   }
 
   //
@@ -231,7 +205,7 @@ class App {
     const args = { context: this.context, isServer, isClient: !isServer, isProd, isDev: !isProd }
     const chain = await createChainableConfig(this, args)
 
-    await this.dispatch('chainWebpack', null, chain, args)
+    await this.events.dispatch('chainWebpack', null, chain, args)
 
     return chain
   }
@@ -240,7 +214,7 @@ class App {
     const isProd = process.env.NODE_ENV === 'production'
     const args = { context: this.context, isServer, isClient: !isServer, isProd, isDev: !isProd }
     const resolvedChain = chain || await this.resolveChainableWebpackConfig(isServer)
-    const configureWebpack = (this.events.configureWebpack || []).slice()
+    const configureWebpack = (this.events._events.configureWebpack || []).slice()
     const configFilePath = this.resolve('webpack.config.js')
 
     if (fs.existsSync(configFilePath)) {

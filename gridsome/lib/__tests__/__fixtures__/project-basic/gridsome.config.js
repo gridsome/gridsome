@@ -3,6 +3,10 @@ module.exports = {
   siteUrl: 'https://www.gridsome.org',
   titleTemplate: '%s | Test',
 
+  metaData: {
+    someMeta: 'test'
+  },
+
   chainWebpack: config => {
     config.plugin('test-injections-1')
       .use(require('webpack/lib/DefinePlugin'), [{

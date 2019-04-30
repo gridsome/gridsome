@@ -52,6 +52,7 @@ test('build basic project', () => {
   expect($home('span.from-env-production').text()).toEqual('PROD_2')
   expect($home('span.from-plugin').text()).toEqual('test 2')
   expect($home('span.from-chain-webpack').text()).toEqual('test 3')
+  expect($home('span.from-metadata').text()).toEqual('test')
   expect($home('.footer span.meta-data-1').text()).toEqual('Test Value')
   expect($home('.footer span.meta-data-2').text()).toEqual('bar')
 })
@@ -214,6 +215,16 @@ test('navigate to /pages/2', async () => {
 test('navigate to /', async () => {
   await page.click('.home-link')
   await page.waitForSelector('#app.home')
+})
+
+test('fetch /doc/3 data', async () => {
+  await page.click('.fetch-doc-page-3')
+  await page.waitForSelector('.fetched-doc-page-3')
+})
+
+test('fetch /doc/6 data', async () => {
+  await page.click('.fetch-doc-page-6')
+  await page.waitForSelector('.fetched-doc-page-not-found')
 })
 
 test('navigate to /docs/2', async () => {

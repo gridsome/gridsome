@@ -15,7 +15,7 @@ module.exports = async (context, args) => {
   const app = await createApp(context, { args })
   const { config } = app
 
-  await app.dispatch('beforeBuild', { context, config })
+  await app.events.dispatch('beforeBuild', { context, config })
 
   await fs.remove(config.outDir)
   await fs.ensureDir(config.dataDir)
@@ -34,7 +34,7 @@ module.exports = async (context, args) => {
     await fs.copy(config.staticDir, config.outDir)
   }
 
-  await app.dispatch('afterBuild', () => ({ context, config, queue }))
+  await app.events.dispatch('afterBuild', () => ({ context, config, queue }))
 
   // clean up
   await fs.remove(config.manifestsDir)

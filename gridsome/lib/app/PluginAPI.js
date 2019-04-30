@@ -1,6 +1,5 @@
 const autoBind = require('auto-bind')
 const PluginStore = require('../store/PluginStore')
-const { createPagesAPI } = require('../pages/utils')
 
 class PluginAPI {
   constructor (app, { entry, transformers }) {
@@ -11,13 +10,12 @@ class PluginAPI {
     this.context = app.context
 
     this.store = new PluginStore(app, entry.options, { transformers })
-    this.pages = createPagesAPI(this)
 
     autoBind(this)
   }
 
-  _on (eventName, handler) {
-    this._app.on(eventName, { api: this, handler })
+  _on (eventName, handler, options = {}) {
+    this._app.events.on(eventName, { api: this, handler, options })
   }
 
   setClientOptions (options) {
@@ -42,6 +40,10 @@ class PluginAPI {
 
   createPages (handler) {
     this._on('createPages', handler)
+  }
+
+  createManagedPages (handler) {
+    this._on('createManagedPages', handler, { once: true })
   }
 
   chainWebpack (fn) {

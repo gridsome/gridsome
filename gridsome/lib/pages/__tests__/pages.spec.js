@@ -18,9 +18,68 @@ test('create page', async () => {
   expect(page.query.document).toBeNull()
   expect(page.component).toEqual(path.join(__dirname, '__fixtures__', 'DefaultPage.vue'))
   expect(page.chunkName).toEqual('page--fixtures--default-page-vue')
-  expect(emit).toHaveBeenCalledTimes(1)
 
-  emit.mockRestore()
+  expect(emit).toHaveBeenCalledWith('create', page)
+  expect(emit).toHaveBeenCalledTimes(1)
+})
+
+test('create page with plugin api', async () => {
+  await createApp(function (api) {
+    api.createPages(pages => {
+      const emit = jest.spyOn(api._app.pages._events, 'emit')
+
+      const page = pages.createPage({
+        path: '/page',
+        component: './__fixtures__/DefaultPage.vue'
+      })
+
+      expect(page.path).toEqual('/page')
+      expect(page.route).toEqual('/page')
+      expect(page.context).toBeNull()
+      expect(page.queryVariables).toBeNull()
+      expect(page.query.document).toBeNull()
+      expect(page.component).toEqual(path.join(__dirname, '__fixtures__', 'DefaultPage.vue'))
+      expect(page.chunkName).toEqual('page--fixtures--default-page-vue')
+      expect(page.internal.isManaged).toEqual(false)
+
+      expect(pages.graphql).toBeInstanceOf(Function)
+      expect(pages.getContentType).toBeInstanceOf(Function)
+      expect(pages.createPage).toBeInstanceOf(Function)
+      expect(pages.updatePage).toBeUndefined()
+
+      expect(emit).toHaveBeenCalledWith('create', page)
+      expect(emit).toHaveBeenCalledTimes(1)
+    })
+  })
+})
+
+test('create managed pages with plugin api', async () => {
+  await createApp(function (api) {
+    api.createManagedPages((pages) => {
+      const emit = jest.spyOn(api._app.pages._events, 'emit')
+
+      const page = pages.createPage({
+        path: '/page',
+        component: './__fixtures__/DefaultPage.vue'
+      })
+
+      expect(page.internal.isManaged).toEqual(true)
+
+      expect(pages.graphql).toBeInstanceOf(Function)
+      expect(pages.getContentType).toBeInstanceOf(Function)
+      expect(pages.createPage).toBeInstanceOf(Function)
+      expect(pages.updatePage).toBeInstanceOf(Function)
+      expect(pages.removePage).toBeInstanceOf(Function)
+      expect(pages.removePageByPath).toBeInstanceOf(Function)
+      expect(pages.removePagesByComponent).toBeInstanceOf(Function)
+      expect(pages.findAndRemovePages).toBeInstanceOf(Function)
+      expect(pages.findPages).toBeInstanceOf(Function)
+      expect(pages.findPage).toBeInstanceOf(Function)
+
+      expect(emit).toHaveBeenCalledWith('create', page)
+      expect(emit).toHaveBeenCalledTimes(1)
+    })
+  })
 })
 
 test('create page with pagination', async () => {
@@ -124,6 +183,122 @@ test('update page', async () => {
   expect(emit).toHaveBeenCalledTimes(2)
 
   emit.mockRestore()
+})
+
+test('remove page', async () => {
+  const { pages } = await createApp()
+  const emit = jest.spyOn(pages._events, 'emit')
+
+  const page = pages.createPage({
+    path: '/page',
+    component: './__fixtures__/DefaultPage.vue'
+  })
+
+  expect(pages.allPages()).toHaveLength(2)
+
+  pages.removePage(page)
+
+  expect(pages.allPages()).toHaveLength(1)
+  expect(emit).toHaveBeenCalledTimes(2)
+})
+
+test('remove page by path', async () => {
+  const { pages } = await createApp()
+  const emit = jest.spyOn(pages._events, 'emit')
+
+  pages.createPage({
+    path: '/page',
+    component: './__fixtures__/DefaultPage.vue'
+  })
+
+  expect(pages.allPages()).toHaveLength(2)
+
+  pages.removePageByPath('/page')
+
+  expect(pages.allPages()).toHaveLength(1)
+  expect(emit).toHaveBeenCalledTimes(2)
+})
+
+test('remove pages by component', async () => {
+  const { resolve, pages } = await createApp()
+  const emit = jest.spyOn(pages._events, 'emit')
+  const component = resolve('./__fixtures__/DefaultPage.vue')
+
+  pages.createPage({ path: '/page-1', component })
+  pages.createPage({ path: '/page-2', component })
+  pages.createPage({ path: '/page-3', component })
+
+  expect(pages.allPages()).toHaveLength(4)
+
+  pages.removePagesByComponent(component)
+
+  expect(pages._watched[component]).toBeUndefined()
+  expect(pages.allPages()).toHaveLength(1)
+  expect(emit).toHaveBeenCalledTimes(6)
+})
+
+test('find and reomve pages', async () => {
+  const { resolve, pages } = await createApp()
+  const emit = jest.spyOn(pages._events, 'emit')
+  const component = resolve('./__fixtures__/DefaultPage.vue')
+
+  pages.createPage({ path: '/page-1', component })
+  pages.createPage({ path: '/page-2', component })
+  pages.createPage({ path: '/page-3', component })
+
+  expect(pages.allPages()).toHaveLength(4)
+
+  pages.findAndRemovePages({ component })
+
+  expect(pages._watched[component]).toBeUndefined()
+  expect(pages.allPages()).toHaveLength(1)
+  expect(emit).toHaveBeenCalledTimes(6)
+})
+
+test('api.createManagedPages() should only be called once', async () => {
+  const createPages = jest.fn()
+  const createManagedPages = jest.fn()
+
+  const app = await createApp(function (api) {
+    api.createPages(createPages)
+    api.createManagedPages(createManagedPages)
+  })
+
+  await app.createPages()
+  await app.createPages()
+  await app.createPages()
+
+  expect(createPages.mock.calls).toHaveLength(4)
+  expect(createManagedPages.mock.calls).toHaveLength(1)
+})
+
+test('garbage collect unmanaged pages', async () => {
+  let maxPages = 10
+
+  const app = await createApp(function (api) {
+    api.createPages(({ createPage }) => {
+      for (let i = 1; i <= maxPages; i++) {
+        createPage({ path: `/page-${i}`, component: './__fixtures__/DefaultPage.vue' })
+      }
+    })
+
+    api.createManagedPages(({ createPage }) => {
+      createPage({ path: '/managed-page-1', component: './__fixtures__/PagedPage.vue' })
+      createPage({ path: '/managed-page-2', component: './__fixtures__/PagedPage.vue' })
+    })
+  })
+
+  expect(app.pages.allPages()).toHaveLength(13)
+
+  maxPages = 5
+  await app.createPages()
+
+  expect(app.pages.allPages()).toHaveLength(8)
+
+  maxPages = 1
+  await app.createPages()
+
+  expect(app.pages.allPages()).toHaveLength(4)
 })
 
 test('override page with equal path', async () => {
