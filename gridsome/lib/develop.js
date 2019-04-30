@@ -1,18 +1,18 @@
 const fs = require('fs-extra')
 const chalk = require('chalk')
-const express = require('express')
-const createApp = require('./app')
 const { debounce } = require('lodash')
-const createExpressServer = require('./server/createExpressServer')
-const createSockJsServer = require('./server/createSockJsServer')
 
 module.exports = async (context, args) => {
   process.env.NODE_ENV = 'development'
   process.env.GRIDSOME_MODE = 'serve'
 
+  const createApp = require('./app')
   const app = await createApp(context, { args })
   const { config } = app
 
+  const express = require('express')
+  const createExpressServer = require('./server/createExpressServer')
+  const createSockJsServer = require('./server/createSockJsServer')
   const server = await createExpressServer(app, { withExplorer: true })
   const sock = await createSockJsServer(app)
 

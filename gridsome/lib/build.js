@@ -4,20 +4,19 @@ const hirestime = require('hirestime')
 const { chunk, groupBy } = require('lodash')
 const { log, info } = require('./utils/log')
 
-const createApp = require('./app')
-const { createWorker } = require('./workers')
-
 module.exports = async (context, args) => {
   process.env.NODE_ENV = 'production'
   process.env.GRIDSOME_MODE = 'static'
 
   const buildTime = hirestime()
+  const createApp = require('./app')
   const app = await createApp(context, { args })
   const { config } = app
 
   await app.events.dispatch('beforeBuild', { context, config })
 
   await fs.remove(config.outDir)
+  await fs.remove(config.dataDir)
   await fs.ensureDir(config.dataDir)
   await fs.ensureDir(config.outDir)
 
@@ -108,6 +107,7 @@ async function runWebpack (app) {
 }
 
 async function renderHTML (renderQueue, app) {
+  const { createWorker } = require('./workers')
   const timer = hirestime()
   const worker = createWorker('html-writer')
   const { htmlTemplate, clientManifestPath, serverBundlePath } = app.config
@@ -143,6 +143,7 @@ async function processFiles (queue, { outDir }) {
 }
 
 async function processImages (queue, config) {
+  const { createWorker } = require('./workers')
   const timer = hirestime()
   const chunks = chunk(queue.queue, 100)
   const worker = createWorker('image-processor')
