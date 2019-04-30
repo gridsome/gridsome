@@ -89,9 +89,7 @@ test('parse @paginate with perPage variable from node field', () => {
     }
   }`, {
     $loki: 1,
-    fields: {
-      num: 2
-    }
+    num: 2
   })
 
   expect(query.paginate.perPage).toEqual(2)
@@ -213,9 +211,7 @@ test('parse filters from @paginate with variable from node field', () => {
     }
   }`, {
     $loki: 1,
-    fields: {
-      customVar: 'custom var'
-    }
+    customVar: 'custom var'
   })
 
   expect(query.filters).toMatchObject({
@@ -267,18 +263,16 @@ test('parse page-query with context', () => {
     $loki: 1,
     id: '1',
     title: 'title',
-    fields: {
-      custom: 'custom value',
-      deep: {
-        value: 'deep value'
-      },
-      list: [{ value: 1 }, { value: 2 }, { value: 3 }],
-      ref: { typeName: 'Post', id: '1' },
-      refs: [
-        { typeName: 'Post', id: '1' },
-        { typeName: 'Post', id: '2' }
-      ]
-    }
+    custom: 'custom value',
+    deep: {
+      value: 'deep value'
+    },
+    list: [{ value: 1 }, { value: 2 }, { value: 3 }],
+    ref: { typeName: 'Post', id: '1' },
+    refs: [
+      { typeName: 'Post', id: '1' },
+      { typeName: 'Post', id: '2' }
+    ]
   })
 
   expect(query.variables.id).toEqual('1')

@@ -1,7 +1,7 @@
-const { createPagedNodeEdges } = require('./utils')
-const { PER_PAGE, SORT_ORDER } = require('../../utils/constants')
+const { PER_PAGE } = require('../../utils/constants')
 const { pageInfoType, sortOrderType, sortType } = require('../types')
 const { createFilterTypes, createFilterQuery } = require('../createFilterTypes')
+const { createPagedNodeEdges, createSortOptions } = require('./utils')
 
 const {
   GraphQLInt,
@@ -12,7 +12,7 @@ const {
   GraphQLInputObjectType
 } = require('graphql')
 
-module.exports = ({ nodeType, fields }) => {
+module.exports = ({ contentType, nodeType, fields }) => {
   const edgeType = new GraphQLObjectType({
     name: `${nodeType.name}Edge`,
     fields: () => ({
@@ -31,9 +31,11 @@ module.exports = ({ nodeType, fields }) => {
     })
   })
 
+  const { defaultSortBy, defaultSortOrder } = contentType.options
+
   const connectionArgs = {
-    sortBy: { type: GraphQLString, defaultValue: 'date' },
-    order: { type: sortOrderType, defaultValue: SORT_ORDER },
+    sortBy: { type: GraphQLString, defaultValue: defaultSortBy },
+    order: { type: sortOrderType, defaultValue: defaultSortOrder },
     perPage: { type: GraphQLInt, defaultValue: PER_PAGE },
     skip: { type: GraphQLInt, defaultValue: 0 },
     page: { type: GraphQLInt, defaultValue: 1 },
@@ -47,16 +49,7 @@ module.exports = ({ nodeType, fields }) => {
     description: `Filter for ${nodeType.name} nodes.`,
     type: new GraphQLInputObjectType({
       name: `${nodeType.name}Filters`,
-      fields: createFilterTypes({
-        ...fields,
-        id: '',
-        title: '',
-        slug: '',
-        path: '',
-        content: '',
-        excerpt: '',
-        date: '2019-01-03'
-      }, `${nodeType.name}Filter`)
+      fields: createFilterTypes({ ...fields, id: '' }, `${nodeType.name}Filter`)
     })
   }
 
@@ -66,7 +59,12 @@ module.exports = ({ nodeType, fields }) => {
     description: `Connection to all ${nodeType.name} nodes`,
     async resolve (_, { regex, filter, ...args }, { store }, info) {
       const { collection } = store.getContentType(nodeType.name)
+      const sort = createSortOptions(args)
       const query = {}
+
+      for (const [fieldName] of sort) {
+        collection.ensureIndex(fieldName)
+      }
 
       if (regex) {
         // TODO: remove before 1.0
@@ -80,7 +78,7 @@ module.exports = ({ nodeType, fields }) => {
 
       const chain = collection.chain().find(query)
 
-      return createPagedNodeEdges(chain, args)
+      return createPagedNodeEdges(chain, args, sort)
     }
   }
 }

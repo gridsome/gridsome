@@ -1,22 +1,9 @@
 const path = require('path')
 const fs = require('fs-extra')
-const isUrl = require('is-url')
-const Events = require('./Events')
-const Codegen = require('./codegen')
 const autoBind = require('auto-bind')
-const merge = require('webpack-merge')
 const hirestime = require('hirestime')
-const Pages = require('../pages/pages')
-const BaseStore = require('./BaseStore')
-const PluginAPI = require('./PluginAPI')
-const ComponentParser = require('./ComponentParser')
-const { execute, graphql } = require('graphql')
-const AssetsQueue = require('./queue/AssetsQueue')
-const loadConfig = require('./loadConfig')
-const { defaultsDeep } = require('lodash')
-const { version } = require('../../package.json')
-const { parseUrl, resolvePath, hashString } = require('../utils')
 const { info } = require('../utils/log')
+const { version } = require('../../package.json')
 
 const {
   AsyncSeriesWaterfallHook
@@ -37,7 +24,7 @@ class App {
     this.clients = {}
     this.plugins = []
     this.context = context
-    this.config = loadConfig(context, options)
+    this.config = require('./loadConfig')(context, options)
     this.isInitialized = false
     this.isBootstrapped = false
 
@@ -86,14 +73,26 @@ class App {
   //
 
   init () {
+    const Events = require('./Events')
+    const Store = require('../store/Store')
+    const AssetsQueue = require('./queue/AssetsQueue')
+    const Codegen = require('./codegen')
+    const ComponentParser = require('./ComponentParser')
+    const Pages = require('../pages/pages')
+
     this.events = new Events()
-    this.store = new BaseStore(this)
+    this.store = new Store(this)
     this.queue = new AssetsQueue(this) // TODO: rename to assets
     this.codegen = new Codegen(this)
     this.parser = new ComponentParser(this)
     this.pages = new Pages(this)
 
-    this.config.plugins.map(entry => {
+    const { defaultsDeep } = require('lodash')
+    const PluginAPI = require('./PluginAPI')
+
+    info(`Initializing plugins...`)
+
+    this.config.plugins.forEach(entry => {
       const { serverEntry } = entry.entries
       const Plugin = typeof serverEntry === 'string'
         ? require(entry.entries.serverEntry)
@@ -155,10 +154,13 @@ class App {
     // add custom schemas returned from the hook handlers
     results.forEach(schema => schema && schemas.push(schema))
 
+    this._execute = graphql.execute
+    this._graphql = graphql.graphql
     this.schema = mergeSchemas({ schemas })
   }
 
   async createPages () {
+    const { hashString } = require('../utils')
     const digest = hashString(Date.now().toString())
     const { createPagesAPI, createManagedPagesAPI } = require('../pages/utils')
 
@@ -217,6 +219,7 @@ class App {
     const resolvedChain = chain || await this.resolveChainableWebpackConfig(isServer)
     const configureWebpack = (this.events._events.configureWebpack || []).slice()
     const configFilePath = this.resolve('webpack.config.js')
+    const merge = require('webpack-merge')
 
     if (fs.existsSync(configFilePath)) {
       configureWebpack.push(require(configFilePath))
@@ -246,28 +249,10 @@ class App {
     return config
   }
 
-  resolveFilePath (fromPath, toPath, isAbsolute) {
-    let rootDir = null
-
-    if (typeof isAbsolute === 'string') {
-      rootDir = isUrl(isAbsolute)
-        ? parseUrl(isAbsolute).fullUrl
-        : isAbsolute
-    }
-
-    if (isAbsolute === true) {
-      rootDir = isUrl(fromPath)
-        ? parseUrl(fromPath).baseUrl
-        : this.context
-    }
-
-    return resolvePath(fromPath, toPath, rootDir)
-  }
-
   graphql (docOrQuery, variables = {}) {
     const context = this.createSchemaContext()
 
-    const func = typeof docOrQuery === 'object' ? execute : graphql
+    const method = typeof docOrQuery === 'object' ? '_execute' : '_graphql'
 
     if (typeof docOrQuery === 'string') {
       // workaround until query directives
@@ -275,7 +260,7 @@ class App {
       docOrQuery = docOrQuery.replace(/@paginate/g, '')
     }
 
-    return func(this.schema, docOrQuery, undefined, context, variables)
+    return this[method](this.schema, docOrQuery, undefined, context, variables)
   }
 
   broadcast (message, hotReload = true) {

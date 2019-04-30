@@ -1,13 +1,13 @@
-const App = require('./App')
-
 module.exports = async (
   context,
   options = {},
   phase = null
 ) => {
-  const app = new App(context, options)
+  const App = require('./App')
 
-  await app.bootstrap(phase)
+  const instance = new App(context, options)
 
-  return app
+  await instance.bootstrap(phase)
+
+  return instance
 }

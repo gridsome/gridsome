@@ -5,21 +5,23 @@ const autoBind = require('auto-bind')
 const camelCase = require('camelcase')
 const pathToRegexp = require('path-to-regexp')
 const slugify = require('@sindresorhus/slugify')
-const { NODE_FIELDS } = require('../utils/constants')
 const { mapValues, isPlainObject } = require('lodash')
 const { cache, nodeCache } = require('../utils/cache')
+const { resolvePath } = require('./utils')
 const { log } = require('../utils/log')
 
-class Source {
-  constructor (app, options, { transformers }) {
+class PluginStore {
+  constructor (app, pluginOptions, { transformers }) {
     autoBind(this)
 
+    const { typeName, resolveAbsolutePaths } = pluginOptions
+
     this._app = app
-    this._typeName = options.typeName
-    this._resolveAbsolutePaths = options.resolveAbsolutePaths || false
+    this._typeName = typeName
+    this._resolveAbsolutePaths = resolveAbsolutePaths || false
     this._transformers = mapValues(transformers || app.config.transformers, transformer => {
       return new transformer.TransformerClass(transformer.options, {
-        localOptions: options[transformer.name] || {},
+        localOptions: pluginOptions[transformer.name] || {},
         resolveNodeFilePath: this._resolveNodeFilePath,
         context: app.context,
         queue: app.queue,
@@ -84,6 +86,10 @@ class Source {
       options.resolveAbsolutePaths = this._resolveAbsolutePaths
     }
 
+    const dateField = 'date'
+    const defaultSortBy = dateField
+    const defaultSortOrder = 'DESC'
+
     const { templatesDir } = this._app.config
     const component = templatesDir
       ? path.join(templatesDir, `${options.typeName}.vue`)
@@ -93,6 +99,10 @@ class Source {
       route: options.route,
       fields: options.fields || {},
       typeName: options.typeName,
+      dateField,
+      defaultSortBy,
+      defaultSortOrder,
+      resolveAbsolutePaths: options.resolveAbsolutePaths,
       routeKeys: routeKeys
         .filter(key => typeof key.name === 'string')
         .map(key => {
@@ -101,9 +111,8 @@ class Source {
             key.name.match(/^(.*[^_])_([a-z]+)$/) ||
             [null, key.name, null]
           )
-          const path = !NODE_FIELDS.includes(fieldName)
-            ? ['fields'].concat(fieldName.split('__'))
-            : [fieldName]
+
+          const path = fieldName.split('__')
 
           return {
             name: key.name,
@@ -113,7 +122,6 @@ class Source {
             suffix
           }
         }),
-      resolveAbsolutePaths: options.resolveAbsolutePaths,
       mimeTypes: [],
       belongsTo: {},
       createPath,
@@ -141,23 +149,19 @@ class Source {
 
   _resolveNodeFilePath (node, toPath) {
     const contentType = this.getContentType(node.typeName)
+    const { origin = '' } = node.internal
 
-    return this._app.resolveFilePath(
-      node.internal.origin,
-      toPath,
-      contentType.resolveAbsolutePaths
-    )
+    return resolvePath(origin, toPath, {
+      context: contentType._assetsContext,
+      resolveAbsolute: contentType._resolveAbsolutePaths
+    })
   }
 
   //
   // utils
   //
 
-  makeUid (orgId) {
-    return crypto.createHash('md5').update(orgId).digest('hex')
-  }
-
-  makeTypeName (name = '') {
+  createTypeName (name = '') {
     if (!this._typeName) {
       throw new Error(`Missing typeName option.`)
     }
@@ -177,9 +181,21 @@ class Source {
     return slugify(string, { separator: '-' })
   }
 
+  //
+  // deprecated
+  //
+
+  makeUid (orgId) {
+    return crypto.createHash('md5').update(orgId).digest('hex')
+  }
+
+  makeTypeName (name = '') {
+    return this.createTypeName(name)
+  }
+
   resolve (p) {
     return path.resolve(this.context, p)
   }
 }
 
-module.exports = Source
+module.exports = PluginStore

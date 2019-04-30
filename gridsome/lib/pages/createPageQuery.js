@@ -1,5 +1,5 @@
 const { isRefField } = require('../graphql/utils')
-const { PER_PAGE, NODE_FIELDS } = require('../utils/constants')
+const { PER_PAGE } = require('../utils/constants')
 const { memoize, get, trimStart, upperFirst } = require('lodash')
 const { visit, parse, BREAK, valueFromASTUntyped } = require('graphql')
 
@@ -116,12 +116,7 @@ function parsePageQuery (source) {
 
 function variablesFromContext (context, queryVariables = []) {
   return queryVariables.reduce((acc, { path, name, defaultValue }) => {
-    // check for $loki to get variables in node fields
-    const getPath = context.$loki && !NODE_FIELDS.includes(path[0])
-      ? ['fields', ...path]
-      : path
-
-    let value = get(context, getPath, defaultValue)
+    let value = get(context, path, defaultValue)
 
     if (value && isRefField(value)) {
       value = value.id

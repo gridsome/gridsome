@@ -2,12 +2,12 @@ const Loki = require('lokijs')
 const autoBind = require('auto-bind')
 const EventEmitter = require('eventemitter3')
 const { omit, isArray, isPlainObject } = require('lodash')
-const ContentTypeCollection = require('./ContentTypeCollection')
+const ContentType = require('./ContentType')
 
-class BaseStore {
+class Store {
   constructor (app) {
     this.app = app
-    this.data = new Loki()
+    this.store = new Loki()
     this.collections = {}
     this.taxonomies = {}
     this.lastUpdate = null
@@ -17,19 +17,13 @@ class BaseStore {
 
     autoBind(this)
 
-    this.index = this.data.addCollection('core/nodeIndex', {
-      indices: ['path', 'typeName', 'id'],
-      unique: ['uid', 'path'],
-      autoupdate: true
+    this.index = this.store.addCollection('core/nodeIndex', {
+      indices: ['typeName', 'id'],
+      unique: ['uid'],
+      disableMeta: true
     })
 
-    this.pages = this.data.addCollection('core/page', {
-      indices: ['type'],
-      unique: ['path'],
-      autoupdate: true
-    })
-
-    this.metaData = this.data.addCollection('core/metaData', {
+    this.metaData = this.store.addCollection('core/metaData', {
       unique: ['key'],
       autoupdate: true
     })
@@ -64,21 +58,21 @@ class BaseStore {
   // nodes
 
   addContentType (pluginStore, options) {
-    const collection = new ContentTypeCollection(this, pluginStore, options)
-    this.collections[options.typeName] = collection
-    return collection
+    const collection = this.store.addCollection(options.typeName, {
+      indices: ['id', 'path'],
+      unique: ['id', 'path'],
+      disableMeta: true
+    })
+
+    const contentType = new ContentType(pluginStore, collection, options)
+
+    this.collections[options.typeName] = contentType
+
+    return contentType
   }
 
   getContentType (typeName) {
     return this.collections[typeName]
-  }
-
-  getNodeByPath (path) {
-    const node = this.index.findOne({ path })
-
-    if (!node) return null
-
-    return this.getContentType(node.typeName).getNode({ uid: node.uid })
   }
 
   chainIndex (query = {}) {
@@ -100,4 +94,4 @@ class BaseStore {
   }
 }
 
-module.exports = BaseStore
+module.exports = Store

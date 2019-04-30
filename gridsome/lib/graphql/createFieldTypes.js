@@ -3,7 +3,7 @@ const { nodeInterface } = require('./interfaces')
 const { isFile, fileType } = require('./types/file')
 const { sortOrderType, sortType } = require('./types')
 const { isImage, imageType } = require('./types/image')
-const { isDate, dateTypeField } = require('./types/date')
+const { isDate, dateType } = require('./types/date')
 const { fieldResolver, createRefResolver } = require('./resolvers')
 const { is32BitInt, isRefFieldDefinition, createTypeName } = require('./utils')
 const { SORT_ORDER } = require('../utils/constants')
@@ -50,7 +50,7 @@ function createFieldType (value, key, typeName, nodeTypes) {
   }
 
   if (isDate(value)) {
-    return dateTypeField
+    return dateType
   }
 
   switch (typeof value) {
