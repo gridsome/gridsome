@@ -14,7 +14,7 @@ class VuePages {
     this.pagesDir = api.config.pagesDir
 
     if (fs.existsSync(this.pagesDir)) {
-      api.createPages(args => this.createPages(args))
+      api.createManagedPages(args => this.createPages(args))
     }
   }
 
@@ -35,7 +35,7 @@ class VuePages {
       .loader(require.resolve(loader))
   }
 
-  async createPages ({ createPage, removePage }) {
+  async createPages ({ createPage, removePagesByComponent }) {
     const files = await glob('**/*.vue', { cwd: this.pagesDir })
 
     for (const file of files) {
@@ -53,7 +53,7 @@ class VuePages {
       })
 
       watcher.on('unlink', file => {
-        removePage({ component: path.join(this.pagesDir, slash(file)) })
+        removePagesByComponent(path.join(this.pagesDir, slash(file)))
       })
     }
   }

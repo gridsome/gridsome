@@ -2,9 +2,16 @@ const url = require('url')
 const path = require('path')
 const slash = require('slash')
 const isUrl = require('is-url')
+const crypto = require('crypto')
 const mime = require('mime-types')
 const isRelative = require('is-relative')
 const slugify = require('@sindresorhus/slugify')
+
+exports.hashString = function (string) {
+  return crypto.createHash('md5')
+    .update(string)
+    .digest('hex')
+}
 
 exports.pipe = function (funcs, res, ...args) {
   return funcs.reduce(async (res, fn) => {

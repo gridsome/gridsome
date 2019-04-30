@@ -16,7 +16,7 @@ module.exports = async (app, options = {}) => {
   const { config, schema } = app
   const server = express()
 
-  await app.dispatch('configureServer', null, server, {
+  await app.events.dispatch('configureServer', null, server, {
     host: config.host,
     port
   })

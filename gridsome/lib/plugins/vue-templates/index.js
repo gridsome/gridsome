@@ -17,7 +17,7 @@ class VueTemplates {
     this.templatesDir = api.config.templatesDir
 
     if (fs.existsSync(this.templatesDir)) {
-      api.createPages(args => this.createTemplates(args))
+      api.createManagedPages(args => this.createTemplates(args))
     }
   }
 
@@ -68,7 +68,7 @@ class VueTemplates {
 
     if (!contentType) return
 
-    this.pages.removePage({ component })
+    this.pages.removePagesByComponent(component)
 
     if (process.env.NODE_ENV === 'development') {
       contentType.off('add', this.createNodePage, this)
@@ -109,7 +109,7 @@ class VueTemplates {
   }
 
   removeNodePage (node) {
-    return this.pages.removePage({ path: node.path })
+    return this.pages.removePageByPath(node.path)
   }
 }
 

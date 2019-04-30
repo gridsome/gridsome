@@ -14,8 +14,8 @@ class PluginAPI {
     autoBind(this)
   }
 
-  _on (eventName, handler) {
-    this._app.on(eventName, { api: this, handler })
+  _on (eventName, handler, options = {}) {
+    this._app.events.on(eventName, { api: this, handler, options })
   }
 
   setClientOptions (options) {
@@ -40,6 +40,10 @@ class PluginAPI {
 
   createPages (handler) {
     this._on('createPages', handler)
+  }
+
+  createManagedPages (handler) {
+    this._on('createManagedPages', handler, { once: true })
   }
 
   chainWebpack (fn) {
