@@ -48,9 +48,11 @@ test('create render queue for blog project', async () => {
     '/category/first',
     '/category/first/2',
     '/category/second',
+    '/skip-me',
     '/first-post',
     '/second-post',
     '/third-post',
+    '/fourth-post',
     '/post-4',
     '/post-5',
     '/post-6',
@@ -61,6 +63,7 @@ test('create render queue for blog project', async () => {
     '/post-11',
     '/post-12',
     '/post-13',
+    '/exclude-me',
     '/tag/first-tag',
     '/tag/second-tag',
     '/tag/third-tag',
@@ -76,7 +79,7 @@ test('create render queue for blog project', async () => {
   expect(renderPaths).not.toContain('/3')
   expect(renderPaths).not.toContain('/category/first/3')
   expect(renderPaths).not.toContain('/tag/4/extra/3')
-  expect(renderPaths).toHaveLength(30)
+  expect(renderPaths).toHaveLength(33)
 })
 
 test('create render queue for createPages hook', async () => {

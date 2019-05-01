@@ -1,4 +1,5 @@
 const { safeKey } = require('../../utils')
+const { PER_PAGE } = require('../../utils/constants')
 
 exports.applyChainArgs = function (chain, args = {}, sort = []) {
   if (sort.length) chain = applySort(chain, sort)
@@ -13,20 +14,43 @@ exports.createBelongsToKey = function (node) {
 }
 
 exports.createPagedNodeEdges = function (chain, args = {}, sort = []) {
-  const page = Math.max(args.page, 1) // ensure page higher than 0
-  const perPage = Math.max(args.perPage, 1) // ensure page higher than 1
-  const totalNodes = chain.data().length
-  const totalCount = Math.max(totalNodes - args.skip, 0)
+  let { limit: limitArg, perPage: perPageArg } = args
+  const isPaged = typeof args.page !== 'undefined'
+
+  // TODO: warn when limiting with perPage argument
+  if (perPageArg && !isPaged && !limitArg) {
+    limitArg = perPageArg
+    perPageArg = null
+  }
+
+  const limit = limitArg || Number.MAX_SAFE_INTEGER
+  const page = Math.max(args.page || 1, 1)
+  const skip = Math.max(args.skip || 0, 0)
+  const totalCount = chain.data().length
+  const maxResults = Math.max(totalCount - skip)
+  const totalItemsCount = Math.min(limit, maxResults)
+
+  const perPage = isPaged
+    ? Math.max(perPageArg || PER_PAGE, 1)
+    : args.limit
+      ? args.limit
+      : totalItemsCount
 
   chain = applySort(chain, sort)
-  chain = chain.offset(((page - 1) * perPage) + args.skip)
-  chain = chain.limit(perPage)
+
+  if (isPaged) {
+    chain = chain.offset(((page - 1) * perPage) + skip)
+    chain = chain.limit(perPage)
+  } else {
+    chain = chain.offset(skip)
+    chain = chain.limit(limit)
+  }
 
   const nodes = chain.data()
   const currentPage = page
-  const totalPages = Math.max(Math.ceil(totalCount / perPage), 1)
-  const isLast = page >= totalPages
-  const isFirst = page <= 1
+  const totalPages = Math.max(Math.ceil(totalItemsCount / perPage), 1)
+  const hasPreviousPage = page > 1
+  const hasNextPage = page < totalPages
 
   return {
     totalCount,
@@ -36,10 +60,14 @@ exports.createPagedNodeEdges = function (chain, args = {}, sort = []) {
       previous: nodes[index - 1]
     })),
     pageInfo: {
-      currentPage,
+      perPage,
       totalPages,
-      isFirst,
-      isLast
+      currentPage,
+      hasPreviousPage,
+      hasNextPage,
+      totalItems: totalItemsCount,
+      isFirst: hasPreviousPage === false,
+      isLast: hasNextPage === false
     }
   }
 }

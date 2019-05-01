@@ -151,7 +151,7 @@ test('handle pagination for filtered belongsTo', async () => {
   expect(errors).toBeUndefined()
   expect(data.author.belongsTo.edges).toHaveLength(3)
   expect(data.author.belongsTo.totalCount).toEqual(10)
-  expect(data.author.belongsTo.pageInfo.totalPages).toEqual(4)
+  expect(data.author.belongsTo.pageInfo.totalPages).toEqual(1)
   expect(data.author.belongsTo.edges[0].node.__typename).toEqual('Book')
 })
 

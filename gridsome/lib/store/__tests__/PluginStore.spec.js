@@ -18,7 +18,7 @@ function createPlugin (context = '/') {
   return api
 }
 
-test('add type', () => {
+test('add content type', () => {
   const api = createPlugin()
 
   const contentType = api.store.addContentType({
@@ -43,6 +43,27 @@ test('add type', () => {
   expect(contentType.addSchemaField).toBeInstanceOf(Function)
   expect(contentType.makeUid).toBeInstanceOf(Function)
   expect(contentType.slugify).toBeInstanceOf(Function)
+})
+
+test('add content type without template', () => {
+  const api = createPlugin()
+  const contentType = api.store.addContentType({
+    typeName: 'TestPost',
+    component: false
+  })
+
+  expect(contentType.options.component).toEqual(null)
+})
+
+test('add content type with custom template component', () => {
+  const api = createPlugin()
+  const contentType = api.store.addContentType({
+    typeName: 'TestPost',
+    route: '/path/:id/:bar/:foo_raw/(.*)?',
+    component: './src/templates/Custom.vue'
+  })
+
+  expect(contentType.options.component).toEqual('/src/templates/Custom.vue')
 })
 
 test('add node', () => {

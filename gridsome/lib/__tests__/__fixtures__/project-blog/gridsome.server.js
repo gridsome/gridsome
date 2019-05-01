@@ -31,10 +31,18 @@ module.exports = function (api) {
       path: '/category/second'
     })
 
-    tags.addNode({ id: '1', title: 'First tag', perPage: 2 })
-    tags.addNode({ id: '2', title: 'Second tag', perPage: 2 })
-    tags.addNode({ id: '3', title: 'Third tag', perPage: 2 })
-    tags.addNode({ id: '4', title: 'Fourth tag', perPage: 2 })
+    tags.addNode({ id: '1', title: 'First tag', perPage: 2, skip: 0, limit: 10 })
+    tags.addNode({ id: '2', title: 'Second tag', perPage: 2, skip: 0, limit: 10 })
+    tags.addNode({ id: '3', title: 'Third tag', perPage: 2, skip: 0, limit: 10 })
+    tags.addNode({ id: '4', title: 'Fourth tag', perPage: 2, skip: 1, limit: 3 })
+
+    posts.addNode({
+      title: 'Skip me',
+      date: '2019-05-01',
+      tags: [
+        store.createReference('Tag', '4')
+      ]
+    })
 
     posts.addNode({
       id: '1',
@@ -75,12 +83,24 @@ module.exports = function (api) {
       category: store.createReference('Category', '1')
     })
 
+    posts.addNode({
+      id: '4',
+      title: 'Fourth post',
+      date: '2018-12-04',
+      dateFormat: 'YYYY-MM-DD'
+    })
+
     for (let i = 4; i < 14; i++) {
-      posts.addNode({
-        title: `Post ${i}`,
-        excluded: true
-      })
+      posts.addNode({ title: `Post ${i}`, excluded: true })
     }
+
+    posts.addNode({
+      title: 'Exclude me',
+      date: '2017-03-14',
+      tags: [
+        store.createReference('Tag', '4')
+      ]
+    })
 
     for (let i = 1; i <= 10; i++) {
       other.addNode({

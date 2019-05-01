@@ -1,5 +1,4 @@
 const { isRefField } = require('../graphql/utils')
-const { PER_PAGE } = require('../utils/constants')
 const { memoize, get, trimStart, upperFirst } = require('lodash')
 const { visit, parse, BREAK, valueFromASTUntyped } = require('graphql')
 
@@ -12,19 +11,29 @@ function createPageQuery (source, context = null) {
   const filters = result.filtersAST ? valueFromASTUntyped(result.filtersAST, variables) : {}
   const paginate = result.paginate ? { ...result.paginate } : null
 
-  if (paginate && result.perPageAST) {
-    paginate.perPage = valueFromASTUntyped(result.perPageAST, variables) || PER_PAGE
-  }
+  if (paginate) {
+    paginate.skip = result.skipAST
+      ? valueFromASTUntyped(result.skipAST, variables)
+      : undefined
 
-  if (paginate && result.paginate.belongsTo) {
-    paginate.belongsTo = { id: undefined, path: undefined }
+    paginate.limit = result.limitAST
+      ? valueFromASTUntyped(result.limitAST, variables)
+      : undefined
 
-    if (result.idAST) {
-      paginate.belongsTo.id = valueFromASTUntyped(result.idAST, variables)
-    }
+    paginate.perPage = result.perPageAST
+      ? valueFromASTUntyped(result.perPageAST, variables)
+      : undefined
 
-    if (result.pathAST) {
-      paginate.belongsTo.path = valueFromASTUntyped(result.pathAST, variables)
+    if (paginate.belongsTo) {
+      paginate.belongsTo = { id: undefined, path: undefined }
+
+      if (result.idAST) {
+        paginate.belongsTo.id = valueFromASTUntyped(result.idAST, variables)
+      }
+
+      if (result.pathAST) {
+        paginate.belongsTo.path = valueFromASTUntyped(result.pathAST, variables)
+      }
     }
   }
 
@@ -42,6 +51,7 @@ function parsePageQuery (source) {
     source: null,
     document: null,
     paginate: null,
+    limitAST: null,
     perPageAST: null,
     filtersAST: null,
     pathAST: null,
@@ -81,17 +91,21 @@ function parsePageQuery (source) {
             const { name: fieldName, arguments: args } = fieldNode
             const { name: parentName, arguments: parentArgs } = ancestors.slice().pop()
 
+            const skipArg = parentArgs.find(node => node.name.value === 'skip')
+            const limitArg = parentArgs.find(node => node.name.value === 'limit')
             const perPageArg = parentArgs.find(node => node.name.value === 'perPage')
             const filterArg = parentArgs.find(node => node.name.value === 'filter')
 
             result.paginate = {
               // guess content type by converting root field value into a camel cased string
               typeName: upperFirst(trimStart(fieldName.value, 'all')),
-              perPage: perPageArg && perPageArg.value.value ? Number(perPageArg.value.value) : PER_PAGE,
+              perPage: perPageArg && perPageArg.value.value ? Number(perPageArg.value.value) : undefined,
               fieldName: fieldName.value,
               belongsTo: null
             }
 
+            if (skipArg) result.skipAST = skipArg.value
+            if (limitArg) result.limitAST = limitArg.value
             if (perPageArg) result.perPageAST = perPageArg.value
             if (filterArg) result.filtersAST = filterArg.value
 

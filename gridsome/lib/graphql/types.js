@@ -11,8 +11,12 @@ const {
 const pageInfoType = new GraphQLObjectType({
   name: 'PageInfo',
   fields: () => ({
-    totalPages: { type: new GraphQLNonNull(GraphQLInt) },
+    perPage: { type: new GraphQLNonNull(GraphQLInt) },
     currentPage: { type: new GraphQLNonNull(GraphQLInt) },
+    totalPages: { type: new GraphQLNonNull(GraphQLInt) },
+    totalItems: { type: new GraphQLNonNull(GraphQLInt) },
+    hasPreviousPage: { type: new GraphQLNonNull(GraphQLBoolean) },
+    hasNextPage: { type: new GraphQLNonNull(GraphQLBoolean) },
     isFirst: { type: new GraphQLNonNull(GraphQLBoolean) },
     isLast: { type: new GraphQLNonNull(GraphQLBoolean) }
   })

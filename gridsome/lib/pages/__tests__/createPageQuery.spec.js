@@ -1,6 +1,5 @@
 const { print, Kind } = require('graphql')
 const createPageQuery = require('../createPageQuery')
-const { PER_PAGE } = require('../../utils/constants')
 
 test('parsed page-query', () => {
   const source = `query {
@@ -42,7 +41,7 @@ test('parse @paginate directive for connection', () => {
 
   expect(query.paginate.typeName).toEqual('TestPost')
   expect(query.paginate.fieldName).toEqual('allTestPost')
-  expect(query.paginate.perPage).toEqual(PER_PAGE)
+  expect(query.paginate.perPage).toBeUndefined()
   expect(query.paginate.belongsTo).toEqual(null)
 })
 
@@ -60,6 +59,52 @@ test('parse @paginate with perPage variable', () => {
   })
 
   expect(query.paginate.perPage).toEqual(2)
+})
+
+test('parse @paginate with skip', () => {
+  const query = createPageQuery(`query {
+    allTestPost (skip: 10) @paginate {
+      edges {
+        node {
+          id
+        }
+      }
+    }
+  }`)
+
+  expect(query.paginate.skip).toEqual(10)
+})
+
+test('parse @paginate with limit', () => {
+  const query = createPageQuery(`query {
+    allTestPost (limit: 10) @paginate {
+      edges {
+        node {
+          id
+        }
+      }
+    }
+  }`)
+
+  expect(query.paginate.limit).toEqual(10)
+})
+
+test('parse @paginate with limit and skip from variables', () => {
+  const query = createPageQuery(`query ($limit: Int, $skip: Int) {
+    allTestPost (limit: $limit, skip: $skip) @paginate {
+      edges {
+        node {
+          id
+        }
+      }
+    }
+  }`, {
+    limit: 2,
+    skip: 10
+  })
+
+  expect(query.paginate.limit).toEqual(2)
+  expect(query.paginate.skip).toEqual(10)
 })
 
 test('do not get page variable from context', () => {
@@ -114,7 +159,7 @@ test('parse @paginate with perPage default value', () => {
 test('parse @paginate directive from belongsTo field with id', () => {
   const query = createPageQuery(`query {
     testPage (id: "1") {
-      belongsTo (perPage: 5) @paginate {
+      belongsTo (perPage: 5, skip: 1, limit: 10) @paginate {
         edges {
           node {
             id
@@ -128,6 +173,8 @@ test('parse @paginate directive from belongsTo field with id', () => {
   expect(query.paginate.fieldName).toEqual('testPage')
   expect(query.paginate.belongsTo).toMatchObject({ id: '1' })
   expect(query.paginate.perPage).toEqual(5)
+  expect(query.paginate.limit).toEqual(10)
+  expect(query.paginate.skip).toEqual(1)
 })
 
 test('parse @paginate directive from belongsTo field with path and alias', () => {

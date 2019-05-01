@@ -1,6 +1,6 @@
 const { createQueryVariables } = require('./utils')
-const { createBelongsToKey } = require('../graphql/nodes/utils')
 const { createFilterQuery } = require('../graphql/createFilterTypes')
+const { createBelongsToKey, createPagedNodeEdges } = require('../graphql/nodes/utils')
 
 function createRenderQueue (renderQueue, { pages, store, schema }) {
   const queryFields = schema.getQueryType().getFields()
@@ -22,28 +22,32 @@ function createRenderQueue (renderQueue, { pages, store, schema }) {
 }
 
 function calcTotalPages (page, store, queryFields) {
-  const { belongsTo, fieldName, typeName, perPage } = page.query.paginate
+  const { belongsTo, fieldName, typeName, perPage, skip, limit } = page.query.paginate
   const { collection } = store.getContentType(typeName)
 
-  let totalNodes = 0
+  let chain
 
   if (belongsTo) {
     const { id, path } = belongsTo
     const { args } = queryFields[fieldName].type.getFields().belongsTo
-    const query = createCollectionQuery(args, page.query.filters)
     const node = id ? collection.by('id', id) : collection.by('path', path)
+    const key = createBelongsToKey(node)
+    const query = { [key]: { $eq: true }}
 
-    query[createBelongsToKey(node)] = { $eq: true }
+    Object.assign(query, createCollectionQuery(args, page.query.filters))
 
-    totalNodes = store.index.count(query)
+    chain = store.chainIndex(query)
   } else {
     const { args } = queryFields[fieldName]
     const query = createCollectionQuery(args, page.query.filters)
 
-    totalNodes = collection.find(query).length
+    chain = collection.chain().find(query)
   }
 
-  return Math.ceil(totalNodes / perPage) || 1
+  const args = { page: 1, perPage, skip, limit }
+  const res = createPagedNodeEdges(chain, args)
+
+  return res.pageInfo.totalPages
 }
 
 function createRenderEntry (page, currentPage = undefined) {

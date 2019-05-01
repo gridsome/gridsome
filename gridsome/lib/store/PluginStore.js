@@ -90,10 +90,20 @@ class PluginStore {
     const defaultSortBy = dateField
     const defaultSortOrder = 'DESC'
 
-    const { templatesDir } = this._app.config
-    const component = templatesDir
-      ? path.join(templatesDir, `${options.typeName}.vue`)
-      : null
+    let component
+
+    if (typeof options.component !== 'undefined') {
+      component = typeof options.component === 'string'
+        ? path.isAbsolute(options.component)
+          ? options.component
+          : path.join(this.context, options.component)
+        : null
+    } else {
+      const { templatesDir } = this._app.config
+      component = templatesDir
+        ? path.join(templatesDir, `${options.typeName}.vue`)
+        : null
+    }
 
     return this.store.addContentType(this, {
       route: options.route,

@@ -62,9 +62,10 @@ module.exports = function createBelongsTo (contentType, nodeTypes) {
   const belongsToArgs = {
     sortBy: { type: GraphQLString, defaultValue: 'date' },
     order: { type: sortOrderType, defaultValue: SORT_ORDER },
-    perPage: { type: GraphQLInt, defaultValue: PER_PAGE },
+    perPage: { type: GraphQLInt, description: `Defaults to ${PER_PAGE} when page is provided.` },
     skip: { type: GraphQLInt, defaultValue: 0 },
-    page: { type: GraphQLInt, defaultValue: 1 },
+    limit: { type: GraphQLInt },
+    page: { type: GraphQLInt },
     sort: { type: new GraphQLList(sortType) }
   }
 

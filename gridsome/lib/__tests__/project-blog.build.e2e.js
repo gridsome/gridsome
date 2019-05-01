@@ -41,10 +41,12 @@ test('render pagination', () => {
   expect($blog('a.active--exact.active').attr('href')).toEqual('/')
   expect($blog('a.active--exact.active').attr('aria-current')).toEqual('true')
 
+  expect($blog('.post-4 span').text()).toEqual('Fourth post')
+  expect($blog('.post-4 a').attr('href')).toEqual('/fourth-post')
   expect($blog('.post-3 span').text()).toEqual('Third post')
   expect($blog('.post-3 a').attr('href')).toEqual('/third-post')
-  expect($blog('.post-2 span').text()).toEqual('Second post')
-  expect($blog('.post-2 a').attr('href')).toEqual('/second-post')
+  expect($blog2('.post-2 span').text()).toEqual('Second post')
+  expect($blog2('.post-2 a').attr('href')).toEqual('/second-post')
   expect($blog2('.post-1 span').text()).toEqual('First post')
   expect($blog2('.post-1 a').attr('href')).toEqual('/first-post')
 
@@ -112,9 +114,9 @@ test('navigate to /', async () => {
   await page.waitForSelector('#app.home-1')
 })
 
-test('navigate to /second-post', async () => {
-  await page.click('.post-link-2')
-  await page.waitForSelector('#app.post-2')
+test('navigate to /third-post', async () => {
+  await page.click('.post-link-3')
+  await page.waitForSelector('#app.post-3')
 })
 
 test('navigate to /tag/fourth-tag', async () => {

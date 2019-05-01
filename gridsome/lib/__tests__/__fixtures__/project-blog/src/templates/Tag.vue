@@ -13,12 +13,23 @@
 </template>
 
 <page-query>
-query Tag ($path: String!, $page: Int, $perPage: Int = 5) {
+query Tag (
+  $path: String!
+  $page: Int
+  $perPage: Int = 5
+  $skip: Int = 0
+  $limit: Int = 10
+) {
   tag (path: $path) {
     id
     title
     path
-    belongsTo (perPage: $perPage, page: $page) @paginate {
+    belongsTo (
+      perPage: $perPage
+      page: $page
+      skip: $skip
+      limit: $limit
+    ) @paginate {
       pageInfo {
         totalPages
         currentPage
