@@ -1,5 +1,6 @@
 const axios = require('axios')
 const { reduce } = require('lodash')
+const camelCase = require('camelcase')
 
 class Entity {
   constructor (source, { entityType, url }) {
@@ -7,31 +8,25 @@ class Entity {
 
     this.entityType = entityType
     this.graphQlContentType // gridsome store api addConentType
-    this.relationshipTypes = [] // array of possible relationships
     this.url = url // url to fetch, pulled from apiSchema
     this.response = [] // response from this.fetchData
   }
 
-  get getEntityType () {
-    return this.entityType
+  get typeName () {
+    return this.createTypeName(this.entityType)
   }
 
-  get getEntityTypeName () {
-    return this.createTypeName(this.getEntityType)
-  }
-
-  createTypeName (text = '') {
-    let innerText = text
+  createTypeName (value = '') {
+    const { typeName } = this.source.options
+    let res = value
 
     // this converts 'file--file' to just 'file'
-    if (innerText.includes('--')) {
-      const _split = innerText.split('--')
-      if (_split[0] === _split[1]) innerText = _split[0]
+    if (res.includes('--')) {
+      const _split = res.split('--')
+      if (_split[0] === _split[1]) res = _split[0]
     }
 
-    const { store } = this.source
-
-    return store.makeTypeName(innerText)
+    return camelCase(`${typeName} ${res}`, { pascalCase: true })
   }
 
   async initialize () {
@@ -40,7 +35,7 @@ class Entity {
     // don't build the graphQl if there is no response
     this.response.length
       ? await this.buildGraphQl()
-      : console.log(`${this.getEntityTypeName} has no values in response`)
+      : console.log(`${this.typeName} has no entities`)
   }
 
   async fetchData () {
@@ -82,48 +77,29 @@ class Entity {
       if (String(status).startsWith(4) || String(status).startsWith(5)) {
         console.error(`fetchData(): ${message}`)
       } else {
-        throw new Error(`fetchData(): ${this.getEntityTypeName} ${message}`)
+        throw new Error(`fetchData(): ${this.typeName} ${message}`)
       }
     }
   }
 
   async buildGraphQl () {
-    const { store } = this.source
-    const { addContentType } = store
-
-    const config = this.createGraphQlType()
-    this.graphQlContentType = addContentType(config)
+    const options = this.createContentTypeOptions()
+    this.graphQlContentType = this.source.store.addContentType(options)
 
     for (const item of this.response) {
-      const {
-        id,
-        attributes,
-        attributes: {
-          title,
-          name,
-          created,
-          changed
-        } = {},
-        relationships
-      } = item
-
-      const fields = this.processFields(attributes)
-      const relationshipFields = this.processRelationships(relationships)
+      const fields = this.processFields(item.attributes)
+      const relationships = this.processRelationships(item.relationships)
       const origin = typeof item.links.self === 'object'
         ? item.links.self.href
         : item.links.self
 
       this.graphQlContentType.addNode({
-        id,
-        title: title || name,
-        date: created || changed,
-        fields: {
-          ...fields,
-          ...relationshipFields
-        },
-        internal: {
-          origin
-        }
+        title: fields.title || fields.name,
+        date: fields.created || fields.changed,
+        ...fields,
+        ...relationships,
+        id: item.id,
+        internal: { origin }
       })
     }
   }
@@ -138,7 +114,7 @@ class Entity {
     return processedFields
   }
 
-  createGraphQlType (override = {}) {
+  createContentTypeOptions (override = {}) {
     const {
       store,
       options: {
@@ -149,36 +125,28 @@ class Entity {
 
     const typeNamePrefix = store.slugify(prefix)
 
-    // turn DrupalTaxonomyTermTags into 'taxonomy-term-tags'
-    const slug = store.slugify(this.getEntityTypeName)
-    const getRouteSlug = (slug.split(`${typeNamePrefix}-`)[1])
+    // turn DrupalTaxonomyTermTag into 'taxonomy-term-tag'
+    const slug = store.slugify(this.typeName)
+    const fallbackSlug = (slug.split(`${typeNamePrefix}-`)[1])
       ? slug.split(`${typeNamePrefix}-`)[1]
       : slug
 
-    // if user provided custom route in options, use that instead
-    const typeName = this.getEntityTypeName
-    const route = routes[this.getEntityType] || `/${getRouteSlug}/:slug`
-
     return Object.assign({
-      typeName,
-      route
+      typeName: this.typeName,
+      route: routes[this.entityType] || `/${fallbackSlug}/:id`
     }, override)
   }
 
   processRelationships (relationships) {
+    const { createReference } = this.source.store
+
     return reduce(relationships, (result, relationship, key) => {
       const { data } = relationship
 
       if (data !== null) {
         result[key] = Array.isArray(data)
-          ? data.map(relation => ({
-            typeName: this.createTypeName(relation.type),
-            id: relation.id
-          }))
-          : {
-            typeName: this.createTypeName(data.type),
-            id: data.id
-          }
+          ? data.map(relation => createReference(this.createTypeName(relation.type), relation.id))
+          : createReference(this.createTypeName(data.type), data.id)
       }
 
       return result
