@@ -41,9 +41,7 @@ class FilesystemSource {
     })
 
     mapValues(this.refs, (ref, key) => {
-      this.contentType.addReference(key, {
-        typeName: ref.typeName
-      })
+      this.contentType.addReference(key, ref.typeName)
 
       if (ref.create) {
         this.store.addContentType({
@@ -121,30 +119,27 @@ class FilesystemSource {
   // helpers
 
   async createNodeOptions (file) {
-    const absPath = path.join(this.context, file)
+    const origin = path.join(this.context, file)
     const relPath = path.relative(this.context, file)
     const mimeType = this.store.mime.lookup(file)
-    const content = await fs.readFile(absPath, 'utf8')
-    const uid = this.store.makeUid(relPath)
+    const content = await fs.readFile(origin, 'utf8')
+    const id = this.store.makeUid(relPath)
     const { dir, name, ext = '' } = path.parse(file)
     const routePath = this.createPath({ dir, name })
 
     return {
-      uid,
-      id: uid,
+      id,
       path: routePath,
-      fields: {
-        fileInfo: {
-          extension: ext,
-          directory: dir,
-          path: file,
-          name
-        }
+      fileInfo: {
+        extension: ext,
+        directory: dir,
+        path: file,
+        name
       },
       internal: {
         mimeType,
         content,
-        origin: absPath
+        origin
       }
     }
   }
