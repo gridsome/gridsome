@@ -8,11 +8,9 @@ class JSONTransformer {
   parse (source) {
     const data = parseJson(source)
 
-    const fields = typeof data !== 'object' || Array.isArray(data)
+    return typeof data !== 'object' || Array.isArray(data)
       ? { data }
       : data
-
-    return { fields }
   }
 }
 

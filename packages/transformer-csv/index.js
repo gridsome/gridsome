@@ -11,9 +11,7 @@ class CSVTransformer {
       skip_empty_lines: true
     })
 
-    const fields = { records }
-
-    return { fields }
+    return { records }
   }
 }
 

@@ -32,10 +32,10 @@ class RemarkTransformer {
     return ['text/markdown', 'text/x-markdown']
   }
 
-  constructor (options, { localOptions, resolveNodeFilePath, queue }) {
+  constructor (options, { localOptions, resolveNodeFilePath, assets, queue }) {
     this.options = defaultsDeep(localOptions, options)
     this.resolveNodeFilePath = resolveNodeFilePath
-    this.queue = queue
+    this.assets = assets || queue
 
     const plugins = (options.plugins || []).concat(localOptions.plugins || [])
 
@@ -46,24 +46,16 @@ class RemarkTransformer {
   }
 
   parse (source) {
-    const { data: fields, content, excerpt } = parse(source)
+    const { data, content, excerpt } = parse(source)
 
     // if no title was found by gray-matter,
     // try to find the first one in the content
-    if (!fields.title) {
+    if (!data.title) {
       const title = content.trim().match(/^#+\s+(.*)/)
-      if (title) fields.title = title[1]
+      if (title) data.title = title[1]
     }
 
-    return {
-      title: fields.title,
-      slug: fields.slug,
-      path: fields.path,
-      date: fields.date,
-      content,
-      excerpt,
-      fields
-    }
+    return { content, excerpt, ...data }
   }
 
   extendNodeType () {

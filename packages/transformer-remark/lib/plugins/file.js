@@ -17,7 +17,7 @@ module.exports = function attacher () {
         : node.url
 
       try {
-        const asset = await transformer.queue.add(path)
+        const asset = await transformer.assets.add(path)
         node.url = asset.src
       } catch (err) {
         callback(err)
