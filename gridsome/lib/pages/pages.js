@@ -128,7 +128,9 @@ class Pages {
     }
   }
 
-  removePagesByComponent (component) {
+  removePagesByComponent (path) {
+    const component = this._app.resolve(path)
+
     this._collection.find({ component }).forEach(page => {
       this._events.emit('remove', page)
     })
