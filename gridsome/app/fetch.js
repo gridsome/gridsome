@@ -1,5 +1,3 @@
-/* global GRIDSOME_MODE */
-
 import prefetch from './utils/prefetch'
 import { unslashEnd, stripPageParam } from './utils/helpers'
 import { NOT_FOUND_NAME, NOT_FOUND_PATH } from '~/.temp/constants'
@@ -12,7 +10,7 @@ export default (route, shouldPrefetch = false) => {
     return Promise.resolve({ data: null, context: {}})
   }
 
-  if (GRIDSOME_MODE === 'serve') {
+  if (!process.isStatic) {
     return new Promise((resolve, reject) => {
       fetch(process.env.GRAPHQL_ENDPOINT, {
         method: 'POST',

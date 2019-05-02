@@ -5,6 +5,7 @@ const createApp = require('./app')
 const { uniqBy } = require('lodash')
 const pathToRegexp = require('path-to-regexp')
 const compileAssets = require('./webpack/compileAssets')
+const { removeStylesJsChunk } = require('./webpack/utils')
 const createExpressServer = require('./server/createExpressServer')
 const createSockJsServer = require('./server/createSockJsServer')
 
@@ -25,11 +26,15 @@ module.exports = async (context, args) => {
 
   const { SOCKJS_ENDPOINT, GRAPHQL_ENDPOINT, GRAPHQL_WS_ENDPOINT } = process.env
 
-  await compileAssets(app, {
+  const stats = await compileAssets(app, {
     'process.env.SOCKJS_ENDPOINT': JSON.stringify(SOCKJS_ENDPOINT || sock.url),
     'process.env.GRAPHQL_ENDPOINT': JSON.stringify(GRAPHQL_ENDPOINT || server.url.graphql),
     'process.env.GRAPHQL_WS_ENDPOINT': JSON.stringify(GRAPHQL_WS_ENDPOINT || server.url.websocket)
   })
+
+  if (config.css.split !== true) {
+    await removeStylesJsChunk(stats, config.outDir)
+  }
 
   server.app.use(express.static(config.outDir))
   server.app.use(express.static(config.staticDir))

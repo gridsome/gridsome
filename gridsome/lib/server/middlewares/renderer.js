@@ -1,6 +1,6 @@
 const LRU = require('lru-cache')
 const createRenderFn = require('../createRenderFn')
-const { createQueryContext } = require('../../pages/utils')
+const { createQueryVariables } = require('../../pages/utils')
 
 module.exports = (app, routes) => {
   const render = createRenderFn({
@@ -38,7 +38,7 @@ module.exports = (app, routes) => {
     const state = { context: page.context, data: null }
 
     if (page.query.document) {
-      const variables = createQueryContext(page, currentPage)
+      const variables = createQueryVariables(page, currentPage)
       const results = await app.graphql(page.query.document, variables)
 
       if (results.errors) {

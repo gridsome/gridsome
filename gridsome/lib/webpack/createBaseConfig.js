@@ -318,10 +318,10 @@ module.exports = (app, { isProd, isServer }) => {
       'process.env.ASSETS_URL': JSON.stringify(assetsUrl),
       'process.env.DATA_URL': JSON.stringify(dataUrl),
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || ''),
-      'GRIDSOME_MODE': JSON.stringify(process.env.GRIDSOME_MODE || ''),
       'process.isClient': !isServer,
       'process.isServer': isServer,
-      'process.isProduction': process.env.NODE_ENV === 'production'
+      'process.isProduction': process.env.NODE_ENV === 'production',
+      'process.isStatic': process.env.GRIDSOME_MODE === 'static'
     }
 
     // merge variables start with GRIDSOME_ENV to config.env

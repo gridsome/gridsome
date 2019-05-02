@@ -29,7 +29,7 @@ function genRoutes (app, routeMeta = {}) {
       metas.push(`data: () => import(/* webpackChunkName: ${chunkName} */ ${JSON.stringify(dataInfo)})`)
     } else if (Array.isArray(dataInfo)) {
       metas.push(`data: ${JSON.stringify(dataInfo)}`)
-    } else if (process.env.NODE_ENV === 'development' && (page.query.document || page.context)) {
+    } else if (process.env.GRIDSOME_MODE !== 'static' && (page.query.document || page.context)) {
       metas.push(`data: true`)
     }
 

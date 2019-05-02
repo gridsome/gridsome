@@ -3,16 +3,13 @@ import { getResults, setResults, formatError } from './shared'
 
 export default (to, from, next) => {
   if (process.isServer) return next()
-  if (!to.meta.data) return next()
 
-  if (process.isProduction) {
-    if (global.__INITIAL_STATE__) {
-      setResults(to.path, global.__INITIAL_STATE__)
-      global.__INITIAL_STATE__ = null
-      return next()
-    } else if (getResults(to.path)) {
-      return next()
-    }
+  if (process.isProduction && global.__INITIAL_STATE__) {
+    setResults(to.path, global.__INITIAL_STATE__)
+    global.__INITIAL_STATE__ = null
+    return next()
+  } else if (getResults(to.path)) {
+    return next()
   }
 
   fetch(to)
