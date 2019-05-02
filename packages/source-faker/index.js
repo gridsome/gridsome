@@ -11,26 +11,18 @@ module.exports = function (api, options) {
       const random = faker.random.number({ min: 3, max: 6 })
       const title = faker.lorem.sentence(random).slice(0, -1)
 
-      const options = {
+      contentType.addNode({
         title,
         id: faker.random.uuid(),
         slug: slugify(title),
         date: faker.date.past(10),
         excerpt: faker.lorem.sentences(2),
         content: faker.lorem.paragraphs(10),
-        fields: {
-          author: faker.name.findName(),
-          thumbnail: faker.image.people(),
-          email: faker.internet.exampleEmail(),
-          avatar: faker.image.avatar()
-        }
-      }
-
-      try {
-        contentType.addNode(options)
-      } catch (err) {
-        this.logger.warn(err.message)
-      }
+        author: faker.name.findName(),
+        thumbnail: faker.image.people(),
+        email: faker.internet.exampleEmail(),
+        avatar: faker.image.avatar()
+      })
     }
   })
 }
