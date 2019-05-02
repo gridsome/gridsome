@@ -1,7 +1,6 @@
 const path = require('path')
 const autoBind = require('auto-bind')
 const { Collection } = require('lokijs')
-const isRelative = require('is-relative')
 const { FSWatcher } = require('chokidar')
 const EventEmitter = require('eventemitter3')
 const validateOptions = require('./validateOptions')
@@ -12,6 +11,7 @@ const { slugify } = require('../utils')
 
 class Pages {
   constructor (app) {
+    this._app = app
     this._context = app.context
     this._parser = app.parser
     this._events = new EventEmitter()
@@ -146,9 +146,7 @@ class Pages {
   _normalizeOptions (input = {}) {
     const options = validateOptions(input)
 
-    options.component = isRelative(input.component)
-      ? path.resolve(this._context, input.component)
-      : input.component
+    options.component = this._app.resolve(input.component)
 
     return options
   }

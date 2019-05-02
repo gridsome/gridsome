@@ -3,6 +3,7 @@ const fs = require('fs-extra')
 const autoBind = require('auto-bind')
 const hirestime = require('hirestime')
 const { info } = require('../utils/log')
+const isRelative = require('is-relative')
 const { version } = require('../../package.json')
 
 const {
@@ -196,8 +197,12 @@ class App {
   // helpers
   //
 
-  resolve (p) {
-    return path.resolve(this.context, p)
+  resolve (...args) {
+    const value = path.join(...args)
+
+    return isRelative(value)
+      ? path.join(this.context, value)
+      : value
   }
 
   async resolveChainableWebpackConfig (isServer = false) {

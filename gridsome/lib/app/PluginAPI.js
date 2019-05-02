@@ -18,6 +18,10 @@ class PluginAPI {
     this._app.events.on(eventName, { api: this, handler, options })
   }
 
+  resolve (value) {
+    return this._app.resolve(value)
+  }
+
   setClientOptions (options) {
     this._entry.clientOptions = options
   }
