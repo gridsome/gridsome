@@ -17,7 +17,7 @@ module.exports = {
   internalRE: /^internal\:\/\//,
   transformerRE: /(?:^@?gridsome[/-]|\/)transformer-([\w-]+)/,
 
-  NODE_FIELDS: ['uid', 'id', '_id', 'typeName', 'internal', '$loki'],
+  NODE_FIELDS: ['$uid', '$loki', 'id', '_id', 'typeName', 'internal'],
 
   SORT_ORDER: 'DESC',
   PER_PAGE: 25,

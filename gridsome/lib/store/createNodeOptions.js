@@ -61,7 +61,7 @@ function normalizeOptions (options, contentType, useFallbacks) {
 
   if (useFallbacks) {
     if (!nodeOptions.id) nodeOptions.id = hash(options)
-    if (!nodeOptions.uid) nodeOptions.uid = genUid(contentType.typeName + nodeOptions.id)
+    if (!nodeOptions.$uid) nodeOptions.$uid = genUid(contentType.typeName + nodeOptions.id)
   }
 
   // TODO: remove before 1.0

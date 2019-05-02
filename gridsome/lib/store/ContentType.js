@@ -57,8 +57,8 @@ class ContentType {
   addNode (options) {
     const { nodeOptions, fields, belongsTo } = createNodeOptions(options, this)
 
-    const { uid, id } = nodeOptions
-    const entry = { typeName: this.typeName, uid, id, belongsTo }
+    const { $uid, id } = nodeOptions
+    const entry = { typeName: this.typeName, uid: $uid, id, belongsTo }
     const node = { ...fields, ...nodeOptions }
 
     node.typeName = this.typeName
@@ -99,8 +99,8 @@ class ContentType {
     const query = typeof id === 'string' ? { id } : id
     const node = this.collection.findOne(query)
 
-    this._store.store.index.findAndRemove({ uid: node.uid })
-    this.collection.findAndRemove({ uid: node.uid })
+    this._store.store.index.findAndRemove({ uid: node.$uid })
+    this.collection.findAndRemove({ $uid: node.$uid })
     this._store.store.setUpdateTime()
 
     this._events.emit('remove', node)
@@ -115,8 +115,8 @@ class ContentType {
 
     const { nodeOptions, fields, belongsTo } = createNodeOptions(options, this)
 
-    const { uid, id } = nodeOptions
-    const oldNode = this.getNode(uid ? { uid } : { id })
+    const { $uid, id } = nodeOptions
+    const oldNode = this.getNode($uid ? { $uid } : { id })
 
     if (!oldNode) {
       throw new Error(`Could not find node to update with id: ${id}`)
@@ -136,7 +136,7 @@ class ContentType {
       node.path = this._createPath(node)
     }
 
-    const entry = this._store.store.index.findOne({ uid: node.uid })
+    const entry = this._store.store.index.findOne({ uid: node.$uid })
 
     entry.belongsTo = belongsTo
 

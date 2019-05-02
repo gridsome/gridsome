@@ -56,16 +56,16 @@ test('add node', () => {
     date: '2018-09-04T23:20:33.918Z'
   })
 
-  const entry = api.store.store.index.findOne({ uid: node.uid })
+  const entry = api.store.store.index.findOne({ uid: node.$uid })
 
   expect(node).toHaveProperty('$loki')
   expect(node.id).toEqual('test')
-  expect(typeof node.uid).toEqual('string')
+  expect(typeof node.$uid).toEqual('string')
   expect(node.typeName).toEqual('TestPost')
   expect(node.title).toEqual('Lorem ipsum dolor sit amet')
   expect(node.date).toEqual('2018-09-04T23:20:33.918Z')
   expect(entry.id).toEqual('test')
-  expect(entry.uid).toEqual(node.uid)
+  expect(entry.uid).toEqual(node.$uid)
   expect(entry.typeName).toEqual('TestPost')
 })
 
@@ -88,7 +88,7 @@ test('update node', () => {
   })
 
   const oldTimestamp = oldNode.internal.timestamp
-  const uid = oldNode.uid
+  const uid = oldNode.$uid
 
   const node = contentType.updateNode({
     id: 'test',
@@ -100,7 +100,7 @@ test('update node', () => {
     }
   })
 
-  const entry = api.store.store.index.findOne({ uid: node.uid })
+  const entry = api.store.store.index.findOne({ uid: node.$uid })
 
   expect(node.id).toEqual('test')
   expect(node.typeName).toEqual('TestPost')
@@ -121,15 +121,15 @@ test('change node id', () => {
   const uid = 'test'
   const contentType = store.addContentType('TestPost')
 
-  const node1 = contentType.addNode({ uid, id: 'test' })
+  const node1 = contentType.addNode({ $uid: uid, id: 'test' })
 
   expect(node1.id).toEqual('test')
 
-  const node2 = contentType.updateNode({ uid, id: 'test-2' })
+  const node2 = contentType.updateNode({ $uid: uid, id: 'test-2' })
   const entry = store.store.index.findOne({ uid })
 
   expect(node2.id).toEqual('test-2')
-  expect(node2.uid).toEqual('test')
+  expect(node2.$uid).toEqual('test')
   expect(entry.uid).toEqual('test')
 })
 
@@ -164,7 +164,7 @@ test('remove node', () => {
 
   contentType.removeNode('test')
 
-  const entry = api.store.store.index.findOne({ uid: node.uid })
+  const entry = api.store.store.index.findOne({ uid: node.$uid })
 
   expect(contentType.getNode('test')).toBeNull()
   expect(entry).toBeNull()

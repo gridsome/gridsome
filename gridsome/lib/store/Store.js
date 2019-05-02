@@ -77,8 +77,8 @@ class Store {
 
   chainIndex (query = {}) {
     return this.index.chain().find(query).map(entry => {
-      const type = this.collections[entry.typeName]
-      const node = type.collection.by('id', entry.id)
+      const contentType = this.collections[entry.typeName]
+      const node = contentType.collection.by('id', entry.id)
       return omit(node, '$loki')
     })
   }
