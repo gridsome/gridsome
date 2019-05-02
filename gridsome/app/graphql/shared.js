@@ -10,6 +10,14 @@ export function getResults (path) {
   return cache[path]
 }
 
+export function clearAllResults (currentPath) {
+  for (const path in cache) {
+    if (path !== currentPath) {
+      Vue.delete(cache, path)
+    }
+  }
+}
+
 export function formatError (err, route) {
   const matched = route.matched[0]
   const options = matched ? matched.components.default : {}

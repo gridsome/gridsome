@@ -1,3 +1,4 @@
+const { pick } = require('lodash')
 const camelCase = require('camelcase')
 
 exports.is32BitInt = function (x) {
@@ -35,4 +36,38 @@ exports.createTypeName = function (prefix, key, suffix = '') {
   }
 
   return name
+}
+
+exports.createSchemaAPI = function (extend = {}) {
+  const GraphQLJSON = require('graphql-type-json')
+  const graphql = require('graphql')
+
+  const res = pick(graphql, [
+    // Definitions
+    'GraphQLSchema',
+    'GraphQLScalarType',
+    'GraphQLObjectType',
+    'GraphQLInterfaceType',
+    'GraphQLUnionType',
+    'GraphQLEnumType',
+    'GraphQLInputObjectType',
+    // Type Wrappers
+    'GraphQLList',
+    'GraphQLNonNull',
+    // Built-in Directives defined by the Spec
+    'GraphQLDeprecatedDirective',
+    // Standard Scalars
+    'GraphQLInt',
+    'GraphQLFloat',
+    'GraphQLString',
+    'GraphQLBoolean',
+    'GraphQLID'
+  ])
+
+  return {
+    ...res,
+    ...extend,
+    GraphQLJSON,
+    graphql
+  }
 }
