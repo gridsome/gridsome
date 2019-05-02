@@ -83,10 +83,13 @@ class App {
 
     this.events = new Events()
     this.store = new Store(this)
-    this.queue = new AssetsQueue(this) // TODO: rename to assets
+    this.assets = new AssetsQueue(this)
     this.codegen = new Codegen(this)
     this.parser = new ComponentParser(this)
     this.pages = new Pages(this)
+
+    // TODO: remove before 1.0
+    this.queue = this.assets
 
     const { defaultsDeep } = require('lodash')
     const PluginAPI = require('./PluginAPI')
@@ -283,7 +286,9 @@ class App {
       store: this.store,
       pages: this.pages,
       config: this.config,
-      queue: this.queue
+      assets: this.assets,
+      // TODO: remove before 1.0
+      queue: this.assets
     }
   }
 }

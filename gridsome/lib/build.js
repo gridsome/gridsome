@@ -25,8 +25,8 @@ module.exports = async (context, args) => {
   await writePageData(queue, app)
   await runWebpack(app)
   await renderHTML(queue, app)
-  await processFiles(app.queue.files, app.config)
-  await processImages(app.queue.images, app.config)
+  await processFiles(app.assets.files, app.config)
+  await processImages(app.assets.images, app.config)
 
   // copy static files
   if (fs.existsSync(config.staticDir)) {
@@ -131,23 +131,23 @@ async function renderHTML (renderQueue, app) {
   info(`Render HTML (${renderQueue.length} files) - ${timer(hirestime.S)}s`)
 }
 
-async function processFiles (queue, { outDir }) {
+async function processFiles (files, { outDir }) {
   const timer = hirestime()
-  const totalFiles = queue.queue.length
+  const totalFiles = files.queue.length
 
-  for (const file of queue.queue) {
+  for (const file of files.queue) {
     await fs.copy(file.filePath, path.join(outDir, file.destination))
   }
 
   info(`Process files (${totalFiles} files) - ${timer(hirestime.S)}s`)
 }
 
-async function processImages (queue, config) {
+async function processImages (images, config) {
   const { createWorker } = require('./workers')
   const timer = hirestime()
-  const chunks = chunk(queue.queue, 100)
+  const chunks = chunk(images.queue, 100)
   const worker = createWorker('image-processor')
-  const totalAssets = queue.queue.length
+  const totalAssets = images.queue.length
 
   await Promise.all(chunks.map(async queue => {
     try {

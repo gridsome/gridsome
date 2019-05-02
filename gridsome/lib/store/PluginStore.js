@@ -24,9 +24,11 @@ class PluginStore {
         localOptions: pluginOptions[transformer.name] || {},
         resolveNodeFilePath: this._resolveNodeFilePath,
         context: app.context,
-        queue: app.queue,
+        assets: app.assets,
+        // TODO: remove before 1.0
         cache,
-        nodeCache
+        nodeCache,
+        queue: app.assets
       })
     })
 
