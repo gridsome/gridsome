@@ -7,6 +7,7 @@ const isDev = process.env.NODE_ENV === 'development'
 class FilesystemSource {
   static defaultOptions () {
     return {
+      baseDir: undefined,
       path: undefined,
       route: undefined,
       index: ['index'],
@@ -18,8 +19,10 @@ class FilesystemSource {
   constructor (api, options) {
     this.api = api
     this.options = options
-    this.context = api.context
     this.store = api.store
+    this.context = options.baseDir
+      ? api.resolve(options.baseDir)
+      : api.context
     this.refsCache = {}
 
     api.loadSource(async () => {
