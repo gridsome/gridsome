@@ -163,6 +163,46 @@ test('change node id', () => {
   expect(entry.uid).toEqual('test')
 })
 
+test('get node by id', () => {
+  const api = createPlugin()
+  const contentType = api.store.addContentType('TestPost')
+
+  contentType.addNode({ id: 'test' })
+
+  expect(contentType.getNode('test').id).toEqual('test')
+})
+
+test('find node', () => {
+  const api = createPlugin()
+  const contentType = api.store.addContentType('TestPost')
+
+  contentType.addNode({ id: 'test' })
+
+  expect(contentType.findNode({ id: 'test' }).id).toEqual('test')
+})
+
+test('find many nodes', () => {
+  const api = createPlugin()
+  const contentType = api.store.addContentType('TestPost')
+
+  contentType.addNode({ id: '1', value: 1 })
+  contentType.addNode({ id: '2', value: 2 })
+  contentType.addNode({ id: '3', value: 3 })
+
+  expect(contentType.findNodes({ value: { $gt: 1 }})).toHaveLength(2)
+})
+
+test('get all nodes', () => {
+  const api = createPlugin()
+  const contentType = api.store.addContentType('TestPost')
+
+  contentType.addNode({ id: '1' })
+  contentType.addNode({ id: '2' })
+  contentType.addNode({ id: '3' })
+
+  expect(contentType.data()).toHaveLength(3)
+})
+
 test('remove node', () => {
   const api = createPlugin()
 

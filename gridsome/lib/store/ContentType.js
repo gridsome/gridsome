@@ -13,7 +13,7 @@ const { parseUrl, createFieldName } = require('./utils')
 
 class ContentType {
   constructor (store, collection, options = {}) {
-    this.collection = collection
+    this._collection = collection
     this._events = new EventEmitter()
 
     this.options = { refs: {}, fields: {}, ...options }
@@ -32,6 +32,11 @@ class ContentType {
       : store.context
 
     autoBind(this)
+  }
+
+  get collection () {
+    // TODO: warn when using collection directly
+    return this._collection
   }
 
   on (eventName, fn, ctx) {
@@ -77,7 +82,7 @@ class ContentType {
     }
 
     try {
-      this.collection.insert(node)
+      this._collection.insert(node)
       this._store.store.index.insert(entry)
     } catch (err) {
       warn(`Failed to add node: ${err.message}`, this.typeName)
@@ -90,17 +95,29 @@ class ContentType {
     return node
   }
 
+  data () {
+    return this._collection.find()
+  }
+
   getNode (id) {
     const query = typeof id === 'string' ? { id } : id
-    return this.collection.findOne(query)
+    return this._collection.findOne(query)
+  }
+
+  findNode (query) {
+    return this._collection.findOne(query)
+  }
+
+  findNodes (query) {
+    return this._collection.find(query)
   }
 
   removeNode (id) {
     const query = typeof id === 'string' ? { id } : id
-    const node = this.collection.findOne(query)
+    const node = this._collection.findOne(query)
 
     this._store.store.index.findAndRemove({ uid: node.$uid })
-    this.collection.findAndRemove({ $uid: node.$uid })
+    this._collection.findAndRemove({ $uid: node.$uid })
     this._store.store.setUpdateTime()
 
     this._events.emit('remove', node)
@@ -141,7 +158,7 @@ class ContentType {
     entry.belongsTo = belongsTo
 
     try {
-      this.collection.update(node)
+      this._collection.update(node)
       this._store.store.index.update(entry)
     } catch (err) {
       warn(`Failed to update node: ${err.message}`, this.typeName)
