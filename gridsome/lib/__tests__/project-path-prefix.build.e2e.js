@@ -11,15 +11,15 @@ const exists = file => fs.existsSync(path.join(context, file))
 const load = file => cheerio.load(content(file))
 const app = express()
 
-let browser, page, server, pathPrefix
+let browser, page, server, publicPath
 
 beforeAll(async () => {
   const { config } = await build(context)
 
-  pathPrefix = config.pathPrefix
+  publicPath = config.publicPath
 
   await fs.remove(path.join(context, 'public'))
-  await fs.copy(path.join(context, 'dist'), path.join(context, 'public', pathPrefix))
+  await fs.copy(path.join(context, 'dist'), path.join(context, 'public', publicPath))
 
   app.use(express.static(path.join(context, 'public')))
 
@@ -38,17 +38,13 @@ afterAll(async () => {
   await fs.remove(path.join(context, '.cache'))
 })
 
-test('normalize pathPrefix', () => {
-  expect(pathPrefix).toEqual('/sub/-/dir/')
-})
-
 test('include pathPrefix in asset URLs', () => {
   const $home = load('dist/index.html')
 
   expect($home('.g-link-about').attr('href')).toEqual('/sub/-/dir/about')
   expect($home('.g-link-home').attr('href')).toEqual('/sub/-/dir/')
   expect($home('.g-image-test').data('src')).toEqual('/sub/-/dir/assets/static/test.97c148e.test.png')
-  expect($home('.g-link-file').attr('href')).toEqual('/sub/-/dir/assets/files/dummy.pdf')
+  expect($home('.g-link-file').attr('href')).toEqual('/sub/-/dir/assets/files/dummy.test.pdf')
   expect($home('script[src="/sub/-/dir/assets/js/app.js"]').get().length).toEqual(1)
 })
 
@@ -64,13 +60,13 @@ test('include pathPrefix in scripts', () => {
 })
 
 test('put assets in correct folder', () => {
-  expect(exists('dist/assets/files/dummy.pdf')).toEqual(true)
+  expect(exists('dist/assets/files/dummy.test.pdf')).toEqual(true)
   expect(exists('dist/assets/static/favicon.1539b60.test.png')).toEqual(true)
   expect(exists('dist/assets/static/test.97c148e.test.png')).toEqual(true)
 })
 
 test('open homepage in browser', async () => {
-  await page.goto(`http://localhost:8080${pathPrefix}`, { waitUntil: 'networkidle2' })
+  await page.goto(`http://localhost:8080${publicPath}`, { waitUntil: 'networkidle2' })
   await page.waitForSelector('#app.is-mounted')
 })
 
@@ -85,7 +81,7 @@ test('navigate to /', async () => {
 })
 
 test('open /about/ directly', async () => {
-  await page.goto(`http://localhost:8080${pathPrefix}about/`, { waitUntil: 'networkidle2' })
+  await page.goto(`http://localhost:8080${publicPath}about/`, { waitUntil: 'networkidle2' })
   await page.waitForSelector('#app.is-mounted')
 })
 

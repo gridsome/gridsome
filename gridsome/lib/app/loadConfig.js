@@ -74,7 +74,8 @@ module.exports = (context, options = {}, pkg = {}) => {
   config.port = parseInt(args.port || localConfig.port, 10) || 8080
   config.plugins = normalizePlugins(context, plugins)
   config.transformers = resolveTransformers(config.pkg, localConfig)
-  config.pathPrefix = normalizePathPrefix(isProd ? localConfig.pathPrefix : '/')
+  config.pathPrefix = normalizePathPrefix(isProd ? localConfig.pathPrefix : '')
+  config.publicPath = config.pathPrefix ? `${config.pathPrefix}/` : '/'
   config.staticDir = resolve('static')
   config.outDir = resolve(localConfig.outDir || 'dist')
   config.assetsDir = path.join(config.outDir, assetsDir)
@@ -111,7 +112,6 @@ module.exports = (context, options = {}, pkg = {}) => {
   config.maxCacheAge = localConfig.maxCacheAge || 1000
 
   config.siteUrl = localConfig.siteUrl || ''
-  config.baseUrl = localConfig.baseUrl || '/'
   config.siteName = localConfig.siteName || path.parse(context).name
   config.titleTemplate = localConfig.titleTemplate || `%s - ${config.siteName}`
   config.siteDescription = localConfig.siteDescription || ''
@@ -168,9 +168,9 @@ function resolvePkg (context) {
   return pkg
 }
 
-function normalizePathPrefix (pathPrefix = '/') {
+function normalizePathPrefix (pathPrefix = '') {
   const segments = pathPrefix.split('/').filter(s => !!s)
-  return segments.length ? `/${segments.join('/')}/` : '/'
+  return segments.length ? `/${segments.join('/')}` : ''
 }
 
 function normalizePlugins (context, plugins) {

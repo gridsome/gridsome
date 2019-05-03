@@ -11,9 +11,9 @@ const resolve = (p, c) => path.resolve(c || __dirname, p)
 
 module.exports = (app, { isProd, isServer }) => {
   const { config: projectConfig } = app
+  const { publicPath } = projectConfig
   const { cacheDirectory, cacheIdentifier } = createCacheOptions()
   const assetsDir = path.relative(projectConfig.outDir, projectConfig.assetsDir)
-  const { pathPrefix } = projectConfig
   const config = new Config()
 
   const useHash = isProd && !process.env.GRIDSOME_TEST
@@ -24,7 +24,7 @@ module.exports = (app, { isProd, isServer }) => {
   config.mode(isProd ? 'production' : 'development')
 
   config.output
-    .publicPath(pathPrefix)
+    .publicPath(publicPath)
     .path(projectConfig.outDir)
     .chunkFilename(`${assetsDir}/js/${filename}`)
     .filename(`${assetsDir}/js/${filename}`)
@@ -310,11 +310,11 @@ module.exports = (app, { isProd, isServer }) => {
   }
 
   function createEnv (projectConfig) {
-    const assetsUrl = forwardSlash(path.join(pathPrefix, assetsDir, '/'))
+    const assetsUrl = forwardSlash(path.join(publicPath, assetsDir, '/'))
     const dataUrl = forwardSlash(path.join(assetsUrl, 'data', '/'))
 
     const baseEnv = {
-      'process.env.PUBLIC_PATH': JSON.stringify(pathPrefix),
+      'process.env.PUBLIC_PATH': JSON.stringify(publicPath),
       'process.env.ASSETS_URL': JSON.stringify(assetsUrl),
       'process.env.DATA_URL': JSON.stringify(dataUrl),
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || ''),

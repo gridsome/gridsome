@@ -21,7 +21,8 @@ test('generate src for file', async () => {
   expect(result.type).toEqual('file')
   expect(result.filePath).toEqual(filePath)
   expect(result.mimeType).toEqual('application/pdf')
-  expect(result.src).toEqual('/assets/files/dummy.pdf')
+  expect(result.destPath).toEqual(path.join(context, 'assets/files/dummy.test.pdf'))
+  expect(result.src).toEqual('/assets/files/dummy.test.pdf')
 })
 
 test('encode src', async () => {
@@ -31,7 +32,8 @@ test('encode src', async () => {
   const result = await queue.add(filePath)
 
   expect(result.filePath).toEqual(filePath)
-  expect(result.src).toEqual('/assets/files/dummy%20document.pdf')
+  expect(result.destPath).toEqual(path.join(context, 'assets/files/dummy document.test.pdf'))
+  expect(result.src).toEqual('/assets/files/dummy%20document.test.pdf')
 })
 
 test('encode src in serve mode', async () => {
@@ -45,6 +47,7 @@ test('encode src in serve mode', async () => {
 
   process.env.GRIDSOME_MODE = mode
 
+  expect(result.destPath).toBeUndefined()
   expect(result.filePath).toEqual(filePath)
   expect(result.src).toEqual('/assets/files/assets/folder%20name/dummy%20document.pdf')
 })
@@ -57,16 +60,8 @@ test('generate src for file with base path', async () => {
   const result = await queue.add(filePath)
 
   expect(queue.files.queue).toHaveLength(1)
-  expect(result.src).toEqual('/base/path/assets/files/dummy.pdf')
-})
-
-test('generate src with hash', async () => {
-  const filePath = path.resolve(context, 'assets/dummy.pdf')
-  const queue = new AssetsQueue({ context, config: baseconfig })
-
-  const result = await queue.add(filePath, { hash: true })
-
-  expect(result.src).toEqual('/assets/files/dummy.test.pdf')
+  expect(result.destPath).toEqual(path.join(context, 'assets/files/dummy.test.pdf'))
+  expect(result.src).toEqual('/base/path/assets/files/dummy.test.pdf')
 })
 
 test('handle external file urls', async () => {
@@ -77,6 +72,7 @@ test('handle external file urls', async () => {
 
   expect(queue.files.queue).toHaveLength(0)
   expect(result.type).toEqual('file')
+  expect(result.destPath).toBeUndefined()
   expect(result.src).toEqual('https://www.example.com/assets/files/document.pdf')
   expect(result.mimeType).toEqual('application/pdf')
   expect(result.filePath).toEqual(filePath)
@@ -90,6 +86,7 @@ test('handle external file paths', async () => {
 
   expect(queue.files.queue).toHaveLength(0)
   expect(result.type).toEqual('file')
+  expect(result.destPath).toBeUndefined()
   expect(result.src).toEqual('/assets/files/document.pdf')
   expect(result.mimeType).toEqual('application/pdf')
   expect(result.filePath).toEqual(filePath)

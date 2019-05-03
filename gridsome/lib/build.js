@@ -138,7 +138,7 @@ async function processFiles (files, { outDir }) {
   const totalFiles = files.queue.length
 
   for (const file of files.queue) {
-    await fs.copy(file.filePath, path.join(outDir, file.destination))
+    await fs.copy(file.filePath, file.destPath)
   }
 
   info(`Process files (${totalFiles} files) - ${timer(hirestime.S)}s`)

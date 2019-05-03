@@ -6,7 +6,7 @@ function corePlugin (api, config) {
     store.addMetaData('siteName', config.siteName)
     store.addMetaData('siteDescription', config.siteDescription)
     store.addMetaData('siteUrl', config.siteUrl)
-    store.addMetaData('baseUrl', config.baseUrl)
+    store.addMetaData('pathPrefix', config.pathPrefix)
 
     for (const key in config.metaData) {
       store.addMetaData(key, config.metaData[key])

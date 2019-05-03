@@ -6,25 +6,24 @@ const loadConfig = require('../loadConfig')
 const { BOOTSTRAP_CONFIG } = require('../../utils/constants')
 
 const context = path.join(__dirname, '../../__tests__/__fixtures__/project-basic')
+const originalEnv = { ...process.env }
 
-let originalEnv
-
-beforeAll(() => {
-  originalEnv = { ...process.env }
+beforeEach(() => {
+  Object.assign(process.env, originalEnv, { NODE_ENV: 'production' })
 })
 
 afterEach(() => {
-  process.env = originalEnv
+  Object.assign(process.env, originalEnv)
 })
 
 test('setup basic config', () => {
   const config = loadConfig(context)
 
   expect(config.chainWebpack).toHaveLength(1)
-  expect(config.pathPrefix).toEqual('/')
+  expect(config.pathPrefix).toEqual('')
+  expect(config.publicPath).toEqual('/')
   expect(config.runtimeCompiler).toEqual(false)
   expect(config.siteUrl).toEqual('https://www.gridsome.org')
-  expect(config.baseUrl).toEqual('/')
   expect(config.siteName).toEqual('Gridsome')
   expect(config.titleTemplate).toEqual('%s | Test')
   expect(config.icon.favicon).toHaveProperty('sizes')
@@ -34,7 +33,17 @@ test('setup basic config', () => {
   expect(config.icon.touchicon).toHaveProperty('src', './src/favicon.png')
 })
 
+test('setup basic config for path prefix', () => {
+  const context = path.join(__dirname, '../../__tests__/__fixtures__/project-path-prefix')
+  const config = loadConfig(context)
+
+  expect(config.pathPrefix).toEqual('/sub/-/dir')
+  expect(config.publicPath).toEqual('/sub/-/dir/')
+})
+
 test('load env variables', () => {
+  process.env.NODE_ENV = 'development'
+
   loadConfig(context)
 
   expect(process.env.GRIDSOME_TEST_VARIABLE).toEqual('TEST_1')
@@ -241,15 +250,16 @@ test('modify config in api.configureWebpack', async () => {
 test('do not allow a custom publicPath', async () => {
   const app = await createApp(context, {
     localConfig: {
+      pathPrefix: '/test',
       configureWebpack: {
         output: {
-          publicPath: '/test/'
+          publicPath: '/testing/'
         }
       }
     }
   }, BOOTSTRAP_CONFIG)
 
-  await expect(app.resolveWebpackConfig()).rejects.toThrow()
+  await expect(app.resolveWebpackConfig()).rejects.toThrow('pathPrefix')
 })
 
 function createPlugin (context = '/') {
