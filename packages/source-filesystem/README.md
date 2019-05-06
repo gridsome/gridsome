@@ -3,6 +3,7 @@
 > Transform files into content that can be fetched with GraphQL in your components.
 
 ## Install
+
 - `yarn add @gridsome/source-filesystem`
 - `npm install @gridsome/source-filesystem`
 
@@ -31,7 +32,7 @@ A filesystem source will also require a transformer in order to parse the files.
 
 - Type: `string` *required*
 
-Where to look for files. Should be a glob path.
+Where to look for files. Should be a [glob](https://en.wikipedia.org/wiki/Glob_(programming)) pattern.
 
 #### typeName
 
@@ -44,26 +45,55 @@ The GraphQL type and template name. A `.vue` file in `src/templates` must match 
 
 - Type: `string`
 
-Define a dynamic route if your source is able to have a certain pathname structure. This will generate a single route for all nodes from this source. Possible path params are `year`, `month`, `day`, `slug` or any custom field value. If omitted, a route for each file will be generated based on their path and filename. Read more about [route params](https://gridsome.org/docs/routing#route-params).
+Define a dynamic route if your source is able to have a certain pathname structure. This will generate a single route for all nodes from this source. Any custom field can be used as path params. If a `date` field exists, `year`, `month` and `day` will also be available as params. If the `route` option is omitted, a route for each file will be generated based on the path and filename. Read more about [route params](https://gridsome.org/docs/routing#route-params).
+
+#### baseDir
+
+- Type: `string`
+
+The base directory for all files. The `baseDir` will not be included when routes are generated from the file paths. The option defaults to the project root directory if omitted.
+
+The following example will look for all markdown files inside the `/content/blog` directory. A file located at `/content/blog/hello-world.md` will generate a `/hello-world` route.
+
+```js
+module.exports = {
+  plugins: [
+    {
+      use: '@gridsome/source-filesystem',
+      options: {
+        baseDir: './content/blog',
+        path: '*.md'
+      }
+    }
+  ]
+}
+```
 
 #### refs
 
 - Type: `object`
 
-Define fields that will have a reference to another node. The referenced `typeName` is expected to exist. But a content type can also be created autmatically if you set `create: true`. Read more about [references](https://gridsome.org/docs/data-store-api#collectionaddreferencefieldname-typename).
+Define fields that will have a reference to another node. The referenced `typeName` is expected to exist. But a content type can also be created automatically if you set `create: true`. Read more about [references](https://gridsome.org/docs/data-store-api#collectionaddreferencefieldname-typename).
 
 ```js
-{
-  refs: {
-    // Reference to existing authors by id.
-    author: 'Author',
-    // Create a Tag content type and its nodes automatically.
-    tags: {
-      typeName: 'Tag',
-      route: '/tag/:id',
-      create: true
+module.exports = {
+  plugins: [
+    {
+      use: '@gridsome/source-filesystem',
+      options: {
+        refs: {
+          // Reference to existing authors by id.
+          author: 'Author',
+          // Create a Tag content type and its nodes automatically.
+          tags: {
+            typeName: 'Tag',
+            route: '/tag/:id',
+            create: true
+          }
+        }
+      }
     }
-  }
+  ]
 }
 ```
 
