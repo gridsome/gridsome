@@ -53,7 +53,7 @@ module.exports = async (context, args) => {
 }
 
 function createRoutes (app) {
-  const pages = uniqBy(app.pages.allPages(), page => page.route)
+  const pages = uniqBy(app.pages.data(), page => page.route)
 
   return pages.map(page => {
     const keys = []

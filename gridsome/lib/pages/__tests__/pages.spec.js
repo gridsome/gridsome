@@ -179,7 +179,7 @@ test('update page', async () => {
   expect(page2.route).toEqual('/page/:page(\\d+)?')
   expect(page2.chunkName).toEqual('page')
   expect(page2.component).toEqual(path.join(__dirname, '__fixtures__', 'PagedPage.vue'))
-  expect(pages.allPages()).toHaveLength(2) // includes /404
+  expect(pages.data()).toHaveLength(2) // includes /404
   expect(emit).toHaveBeenCalledTimes(2)
 
   emit.mockRestore()
@@ -194,11 +194,11 @@ test('remove page', async () => {
     component: './__fixtures__/DefaultPage.vue'
   })
 
-  expect(pages.allPages()).toHaveLength(2)
+  expect(pages.data()).toHaveLength(2)
 
   pages.removePage(page)
 
-  expect(pages.allPages()).toHaveLength(1)
+  expect(pages.data()).toHaveLength(1)
   expect(emit).toHaveBeenCalledTimes(2)
 })
 
@@ -211,11 +211,11 @@ test('remove page by path', async () => {
     component: './__fixtures__/DefaultPage.vue'
   })
 
-  expect(pages.allPages()).toHaveLength(2)
+  expect(pages.data()).toHaveLength(2)
 
   pages.removePageByPath('/page')
 
-  expect(pages.allPages()).toHaveLength(1)
+  expect(pages.data()).toHaveLength(1)
   expect(emit).toHaveBeenCalledTimes(2)
 })
 
@@ -228,12 +228,12 @@ test('remove pages by component', async () => {
   pages.createPage({ path: '/page-2', component })
   pages.createPage({ path: '/page-3', component })
 
-  expect(pages.allPages()).toHaveLength(4)
+  expect(pages.data()).toHaveLength(4)
 
   pages.removePagesByComponent(component)
 
   expect(pages._watched[component]).toBeUndefined()
-  expect(pages.allPages()).toHaveLength(1)
+  expect(pages.data()).toHaveLength(1)
   expect(emit).toHaveBeenCalledTimes(6)
 })
 
@@ -246,12 +246,12 @@ test('find and reomve pages', async () => {
   pages.createPage({ path: '/page-2', component })
   pages.createPage({ path: '/page-3', component })
 
-  expect(pages.allPages()).toHaveLength(4)
+  expect(pages.data()).toHaveLength(4)
 
   pages.findAndRemovePages({ component })
 
   expect(pages._watched[component]).toBeUndefined()
-  expect(pages.allPages()).toHaveLength(1)
+  expect(pages.data()).toHaveLength(1)
   expect(emit).toHaveBeenCalledTimes(6)
 })
 
@@ -288,17 +288,17 @@ test('garbage collect unmanaged pages', async () => {
     })
   })
 
-  expect(app.pages.allPages()).toHaveLength(13)
+  expect(app.pages.data()).toHaveLength(13)
 
   maxPages = 5
   await app.createPages()
 
-  expect(app.pages.allPages()).toHaveLength(8)
+  expect(app.pages.data()).toHaveLength(8)
 
   maxPages = 1
   await app.createPages()
 
-  expect(app.pages.allPages()).toHaveLength(4)
+  expect(app.pages.data()).toHaveLength(4)
 })
 
 test('override page with equal path', async () => {
@@ -315,7 +315,7 @@ test('override page with equal path', async () => {
     component: './__fixtures__/PagedPage.vue'
   })
 
-  expect(pages.allPages()).toHaveLength(2) // includes /404
+  expect(pages.data()).toHaveLength(2) // includes /404
 })
 
 async function createApp (plugin) {

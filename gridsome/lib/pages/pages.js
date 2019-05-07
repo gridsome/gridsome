@@ -52,7 +52,7 @@ class Pages {
     return this._events.removeListener(eventName, fn, ctx)
   }
 
-  allPages () {
+  data () {
     return this._collection.chain().simplesort('order').data()
   }
 
