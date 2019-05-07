@@ -10,7 +10,7 @@ exports.applyChainArgs = function (chain, args = {}, sort = []) {
 }
 
 exports.createBelongsToKey = function (node) {
-  return `belongsTo.${node.typeName}.${safeKey(node.id)}`
+  return `belongsTo.${node.internal.typeName}.${safeKey(node.id)}`
 }
 
 exports.createPagedNodeEdges = function (chain, args = {}, sort = []) {

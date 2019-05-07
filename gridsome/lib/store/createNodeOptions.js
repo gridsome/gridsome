@@ -56,8 +56,7 @@ function normalizeOptions (options, contentType, useFallbacks) {
     delete customFields.fields
   }
 
-  nodeOptions.typeName = contentType.typeName
-  nodeOptions.internal = createInternal(nodeOptions.internal)
+  nodeOptions.internal = createInternal(contentType, nodeOptions.internal)
 
   if (useFallbacks) {
     if (!nodeOptions.id) nodeOptions.id = hash(options)
@@ -74,8 +73,9 @@ function genUid (value) {
   return crypto.createHash('md5').update(value).digest('hex')
 }
 
-function createInternal (internal = {}) {
+function createInternal (contentType, internal = {}) {
   return {
+    typeName: contentType.typeName,
     origin: internal.origin,
     mimeType: internal.mimeType,
     content: internal.content,

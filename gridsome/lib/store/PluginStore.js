@@ -161,7 +161,7 @@ class PluginStore {
   }
 
   _resolveNodeFilePath (node, toPath) {
-    const contentType = this.getContentType(node.typeName)
+    const contentType = this.getContentType(node.internal.typeName)
     const { origin = '' } = node.internal
 
     return resolvePath(origin, toPath, {

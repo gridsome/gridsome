@@ -17,7 +17,7 @@ function createRefResolver ({ typeName, isList = false }) {
 
     if (id) {
       query.id = Array.isArray(id) ? { $in: id } : id
-      query.typeName = Array.isArray(typeName) ? { $in: typeName } : typeName
+      query['internal.typeName'] = Array.isArray(typeName) ? { $in: typeName } : typeName
     } else if (Array.isArray(fieldValue)) {
       query.$or = fieldValue
     } else {

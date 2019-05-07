@@ -1,13 +1,11 @@
 const { omit, isPlainObject, isNumber, isInteger } = require('lodash')
 const { isRefField, isRefFieldDefinition } = require('./utils')
 
-const exclude = ['$uid', '$loki', 'typeName', 'id', 'internal']
-
 module.exports = function createFieldDefinitions (nodes) {
   let fields = {}
 
   for (let i = 0, l = nodes.length; i < l; i++) {
-    fields = fieldValues(omit(nodes[i], exclude), fields)
+    fields = fieldValues(omit(nodes[i], ['id', 'internal']), fields)
   }
 
   return fields
@@ -19,6 +17,7 @@ function fieldValues (obj, currentObj = {}) {
   for (const key in obj) {
     const value = obj[key]
 
+    if (key.startsWith('$')) continue
     if (key.startsWith('__')) continue
     if (value === undefined) continue
     if (value === null) continue

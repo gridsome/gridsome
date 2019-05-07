@@ -66,8 +66,6 @@ class ContentType {
     const entry = { typeName: this.typeName, uid: $uid, id, belongsTo }
     const node = { ...fields, ...nodeOptions }
 
-    node.typeName = this.typeName
-
     // TODO: move this to a separate/internal plugin?
     if (typeof fields.path === 'string' || this.options.route) {
       node.path = this._createPath(node)
@@ -146,7 +144,6 @@ class ContentType {
 
     node.$loki = oldNode.$loki
     node.id = nodeOptions.id || node.id
-    node.typeName = this.typeName
 
     // TODO: move this to a separate/internal plugin?
     if (typeof fields.path === 'string' || this.options.route) {
