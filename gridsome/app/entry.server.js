@@ -8,11 +8,20 @@ export default context => new Promise((resolve, reject) => {
   const { fullPath, name } = router.resolve(url).route
 
   if (fullPath !== url || name === '*') {
-    return reject(new Error(`Could not resolve ${url}`))
+    return reject(new Error(`Could not resolve ${url}.`))
   }
-  
+
   context.meta = app.$meta()
 
-  router.push(url)
-  router.onReady(() => resolve(app))
+  router.onError(err => reject(err))
+  router.push(url, () => {
+    router.history.errorCbs.pop()
+    resolve(app)
+  }, err => {
+    if (err) reject(err)
+    else {
+      if (url === router.currentRoute.path) resolve(app)
+      else reject(new Error(`Route transition was aborted while generating HTML.`))
+    }
+  })
 })
