@@ -17,8 +17,9 @@ module.exports = async (context, args) => {
   const { config } = app
 
   await app.events.dispatch('beforeServe', { context, config })
+
   await fs.ensureDir(config.cacheDir)
-  await fs.remove(config.outDir)
+  await fs.emptyDir(config.outDir)
 
   const routes = createRoutes(app)
   const server = await createExpressServer(app)

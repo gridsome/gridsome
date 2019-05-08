@@ -16,8 +16,7 @@ module.exports = async (context, args) => {
   const server = await createExpressServer(app, { withExplorer: true })
   const sock = await createSockJsServer(app)
 
-  await fs.remove(config.cacheDir)
-  await fs.ensureDir(config.cacheDir)
+  await fs.emptyDir(config.cacheDir)
 
   server.app.use(config.pathPrefix, express.static(config.staticDir))
   server.app.use(require('connect-history-api-fallback')())

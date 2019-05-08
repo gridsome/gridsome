@@ -15,10 +15,8 @@ module.exports = async (context, args) => {
 
   await app.events.dispatch('beforeBuild', { context, config })
 
-  await fs.remove(config.outDir)
-  await fs.remove(config.dataDir)
-  await fs.ensureDir(config.dataDir)
-  await fs.ensureDir(config.outDir)
+  await fs.emptyDir(config.outDir)
+  await fs.emptyDir(config.dataDir)
 
   const queue = await createRenderQueue(app)
 
