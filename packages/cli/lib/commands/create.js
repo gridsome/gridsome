@@ -21,7 +21,9 @@ module.exports = async (name, starter = 'default') => {
     throw new Error(err.message)
   }
 
-  if (starters.includes(starter)) {
+  if (/^([a-z0-9_-]+)\//i.test(starter)) {
+    starter = `https://github.com/${starter}.git`
+  } else if (starters.includes(starter)) {
     starter = `https://github.com/gridsome/gridsome-starter-${starter}.git`
   }
 
