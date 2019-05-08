@@ -34,15 +34,9 @@ class RemarkTransformer {
 
   constructor (options, { localOptions, resolveNodeFilePath, assets, queue }) {
     this.options = defaultsDeep(localOptions, options)
+    this.processor = this.createProcessor(localOptions)
     this.resolveNodeFilePath = resolveNodeFilePath
     this.assets = assets || queue
-
-    const plugins = (options.plugins || []).concat(localOptions.plugins || [])
-
-    this.plugins = createPlugins(this.options, plugins)
-    this.toAST = unified().use(remarkParse).parse
-    this.applyPlugins = unified().data('transformer', this).use(this.plugins).run
-    this.toHTML = unified().use(remarkHtml).stringify
   }
 
   parse (source) {
@@ -124,18 +118,12 @@ class RemarkTransformer {
     }
   }
 
-  createProcessor (options) {
-    let processor = unified()
+  createProcessor (options = {}) {
+    return unified()
       .data('transformer', this)
       .use(remarkParse)
-
-    processor = processor.use(this.plugins)
-
-    if (Array.isArray(options.plugins)) {
-      processor = processor.use(options.plugins)
-    }
-
-    return processor
+      .use(createPlugins(this.options, options))
+      .use(remarkHtml)
   }
 
   _nodeToAST (node) {
@@ -144,9 +132,9 @@ class RemarkTransformer {
 
     if (!cached) {
       const file = createFile(node)
-      const ast = this.toAST(file)
+      const ast = this.processor.parse(file)
 
-      cached = this.applyPlugins(ast, file)
+      cached = this.processor.run(ast, file)
       cache.set(key, cached)
     }
 
@@ -162,7 +150,7 @@ class RemarkTransformer {
         const file = createFile(node)
         const ast = await this._nodeToAST(node)
 
-        return this.toHTML(ast, file)
+        return this.processor.stringify(ast, file)
       })()
 
       cache.set(key, cached)

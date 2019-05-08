@@ -19,25 +19,12 @@ exports.createFile = function (node) {
   })
 }
 
-exports.normalizePlugins = function (arr = []) {
-  const normalize = entry => {
-    return typeof entry === 'string'
-      ? require(entry)
-      : entry
-  }
-
-  return arr.map(entry => {
-    return Array.isArray(entry)
-      ? [normalize(entry[0]), entry[1] || {}]
-      : [normalize(entry), {}]
-  })
-}
-
-exports.createPlugins = function (options, userPlugins) {
+exports.createPlugins = function (options, localOptions) {
+  const userPlugins = (options.plugins || []).concat(localOptions.plugins || [])
   const plugins = []
 
   if (options.useBuiltIns === false) {
-    return exports.normalizePlugins(userPlugins || [])
+    return normalizePlugins(userPlugins || [])
   }
 
   plugins.push(require('./plugins/file'))
@@ -80,7 +67,7 @@ exports.createPlugins = function (options, userPlugins) {
 
   plugins.push(...userPlugins)
 
-  return exports.normalizePlugins(plugins)
+  return normalizePlugins(plugins)
 }
 
 exports.findHeadings = function (ast) {
@@ -104,4 +91,18 @@ exports.findHeadings = function (ast) {
   })
 
   return headings
+}
+
+function normalizePlugins (arr = []) {
+  const normalize = entry => {
+    return typeof entry === 'string'
+      ? require(entry)
+      : entry
+  }
+
+  return arr.map(entry => {
+    return Array.isArray(entry)
+      ? [normalize(entry[0]), entry[1] || {}]
+      : [normalize(entry), {}]
+  })
 }
