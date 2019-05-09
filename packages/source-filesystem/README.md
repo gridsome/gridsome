@@ -102,4 +102,4 @@ module.exports = {
 - Type: `Array`
 - Default: `['index']`
 
-Define which files to consider as index files. These files will not have their filename appear in its route path and will become the main `index.html` file of the directory. Make sure there is only one possible index file per directory if multiple index names are defined.
+Define which files to consider as index files. These files will not have their filename appear in its route path and will become the main `index.html` file of the directory. Make sure there is only one possible index file per directory if multiple index names are defined. This option is only used if there is no dynamic `route` defined.
