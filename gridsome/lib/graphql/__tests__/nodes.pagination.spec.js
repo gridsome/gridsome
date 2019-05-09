@@ -2,7 +2,7 @@ const App = require('../../app/App')
 const { BOOTSTRAP_PAGES } = require('../../utils/constants')
 
 test('should return all nodes', async () => {
-  const results = await graphql()
+  const results = await graphql(100)
 
   expect(results.data.allPost.totalCount).toEqual(100)
   expect(results.data.allPost.edges).toHaveLength(100)
@@ -18,8 +18,25 @@ test('should return all nodes', async () => {
   })
 })
 
+test('should return empty results', async () => {
+  const results = await graphql(0)
+
+  expect(results.data.allPost.totalCount).toEqual(0)
+  expect(results.data.allPost.edges).toHaveLength(0)
+  expect(results.data.allPost.pageInfo).toMatchObject({
+    perPage: 0,
+    totalPages: 1,
+    currentPage: 1,
+    totalItems: 0,
+    hasPreviousPage: false,
+    hasNextPage: false,
+    isFirst: true,
+    isLast: true
+  })
+})
+
 test('return limited nodes', async () => {
-  const results = await graphql('limit: 10')
+  const results = await graphql(100, 'limit: 10')
 
   expect(results.data.allPost.totalCount).toEqual(100)
   expect(results.data.allPost.edges).toHaveLength(10)
@@ -38,7 +55,7 @@ test('return limited nodes', async () => {
 })
 
 test('skip nodes', async () => {
-  const results = await graphql('skip: 95')
+  const results = await graphql(100, 'skip: 95')
 
   expect(results.data.allPost.totalCount).toEqual(100)
   expect(results.data.allPost.edges).toHaveLength(5)
@@ -57,7 +74,7 @@ test('skip nodes', async () => {
 })
 
 test('limit and skip', async () => {
-  const results = await graphql('limit: 10', 'skip: 10')
+  const results = await graphql(100, 'limit: 10', 'skip: 10')
 
   expect(results.data.allPost.totalCount).toEqual(100)
   expect(results.data.allPost.edges).toHaveLength(10)
@@ -76,7 +93,7 @@ test('limit and skip', async () => {
 })
 
 test('limit and skip is more than total nodes', async () => {
-  const results = await graphql('limit: 10', 'skip: 95')
+  const results = await graphql(100, 'limit: 10', 'skip: 95')
 
   expect(results.data.allPost.totalCount).toEqual(100)
   expect(results.data.allPost.edges).toHaveLength(5)
@@ -95,7 +112,7 @@ test('limit and skip is more than total nodes', async () => {
 })
 
 test('limit results with perPage argument', async () => {
-  const results = await graphql('perPage: 10')
+  const results = await graphql(100, 'perPage: 10')
 
   expect(results.data.allPost.totalCount).toEqual(100)
   expect(results.data.allPost.edges).toHaveLength(10)
@@ -112,7 +129,7 @@ test('limit results with perPage argument', async () => {
 })
 
 test('return specific page', async () => {
-  const results = await graphql('page: 2')
+  const results = await graphql(100, 'page: 2')
 
   expect(results.data.allPost.totalCount).toEqual(100)
   expect(results.data.allPost.edges).toHaveLength(25)
@@ -131,7 +148,7 @@ test('return specific page', async () => {
 })
 
 test('return specific page within limit', async () => {
-  const results = await graphql('page: 1', 'limit: 50')
+  const results = await graphql(100, 'page: 1', 'limit: 50')
 
   expect(results.data.allPost.totalCount).toEqual(100)
   expect(results.data.allPost.edges).toHaveLength(25)
@@ -150,7 +167,7 @@ test('return specific page within limit', async () => {
 })
 
 test('return specific page within limit with custom perPage', async () => {
-  const results = await graphql('page: 5', 'perPage: 3', 'limit: 50')
+  const results = await graphql(100, 'page: 5', 'perPage: 3', 'limit: 50')
 
   expect(results.data.allPost.totalCount).toEqual(100)
   expect(results.data.allPost.edges).toHaveLength(3)
@@ -168,7 +185,7 @@ test('return specific page within limit with custom perPage', async () => {
   })
 })
 
-async function graphql (...args) {
+async function graphql (count, ...args) {
   const defaultSort = 'sort: [{ by: "order", order: ASC }]'
   const argsArr = [...args, defaultSort]
 
@@ -179,7 +196,7 @@ async function graphql (...args) {
           api.loadSource(store => {
             const posts = store.addContentType('Post')
 
-            for (let i = 1; i <= 100; i++) {
+            for (let i = 1; i <= count; i++) {
               posts.addNode({ id: String(i), order: i })
             }
           })
