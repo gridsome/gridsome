@@ -1,10 +1,9 @@
 const graphql = require('../graphql')
-const { dateType } = require('../types/date')
 const { nodeInterface } = require('../interfaces')
 const createBelongsTo = require('./createBelongsTo')
 const { createRefResolver } = require('../resolvers')
-const { mapValues, isEmpty } = require('lodash')
 const { createFieldTypes, createRefType } = require('../createFieldTypes')
+const { mapValues, isEmpty } = require('lodash')
 
 const {
   GraphQLID,
@@ -17,9 +16,8 @@ const {
 module.exports = ({ contentType, nodeTypes, fields }) => {
   const nodeType = new GraphQLObjectType({
     name: contentType.typeName,
-    description: contentType.description,
     interfaces: [nodeInterface],
-    isTypeOf: node => node.typeName === contentType.typeName,
+    isTypeOf: node => node.internal.typeName === contentType.typeName,
     fields: () => {
       const fieldTypes = createFieldTypes(fields, contentType.typeName, nodeTypes)
       const refs = createRefs(contentType, nodeTypes, fieldTypes)
@@ -28,34 +26,16 @@ module.exports = ({ contentType, nodeTypes, fields }) => {
         ...fieldTypes,
         ...refs,
 
-        content: { type: GraphQLString },
-        excerpt: { type: GraphQLString },
-
         ...extendNodeType(contentType, nodeType, nodeTypes),
         ...createFields(contentType, fieldTypes),
 
-        belongsTo: createBelongsTo(contentType, nodeTypes),
         id: { type: new GraphQLNonNull(GraphQLID) },
-        title: { type: GraphQLString },
-        slug: { type: GraphQLString },
-        path: { type: GraphQLString },
-        date: dateType,
+        belongsTo: createBelongsTo(contentType, nodeTypes),
 
         _id: {
-          deprecationReason: 'Use node.id instead.',
+          deprecationReason: 'Use id instead.',
           type: new GraphQLNonNull(GraphQLID),
           resolve: node => node.id
-        }
-      }
-
-      if (!isEmpty(refs)) {
-        nodeFields.refs = {
-          resolve: obj => obj,
-          deprecationReason: 'Use ref on node instead.',
-          type: new GraphQLObjectType({
-            name: `${contentType.typeName}References`,
-            fields: () => refs
-          })
         }
       }
 
@@ -67,20 +47,20 @@ module.exports = ({ contentType, nodeTypes, fields }) => {
 }
 
 function extendNodeType (contentType, nodeType, nodeTypes) {
-  const payload = { contentType, nodeTypes, nodeType, graphql }
+  const context = { contentType, nodeTypes, nodeType, graphql }
   const fields = {}
 
   for (const mimeType in contentType.options.mimeTypes) {
     const transformer = contentType.options.mimeTypes[mimeType]
     if (typeof transformer.extendNodeType === 'function') {
-      Object.assign(fields, transformer.extendNodeType(payload))
+      Object.assign(fields, transformer.extendNodeType(context))
     }
   }
 
   for (const fieldName in contentType.options.fields) {
     const field = contentType.options.fields[fieldName]
     if (typeof field === 'function') {
-      fields[fieldName] = field(payload)
+      fields[fieldName] = field(context)
     }
   }
 
@@ -116,7 +96,7 @@ function createRefs (contentType, nodeTypes, fields) {
         const field = {
           [fieldName]: {
             typeName,
-            id: obj.fields[fieldName]
+            id: obj[fieldName]
           }
         }
 

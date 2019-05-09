@@ -46,6 +46,37 @@ test('generate srcset for image', async () => {
   expect(result.srcset[1]).toEqual('/assets/static/1000x600.97c148e.test.png 1000w')
 })
 
+test('encode src', async () => {
+  const filePath = path.resolve(context, 'assets/folder name/350 250.png')
+  const queue = new AssetsQueue({ context, config: baseconfig })
+
+  const result = await queue.add(filePath)
+
+  expect(result.filePath).toEqual(filePath)
+  expect(result.src).toEqual('/assets/static/350%20250.096da6d.test.png')
+  expect(result.sets[0].src).toEqual('/assets/static/350%20250.096da6d.test.png')
+  expect(result.sets[0].destPath).toEqual(path.join(imagesDir, '350 250.096da6d.test.png'))
+  expect(result.srcset[0]).toEqual('/assets/static/350%20250.096da6d.test.png 350w')
+})
+
+test('encode src in serve mode', async () => {
+  const filePath = path.resolve(context, 'assets/folder name/350 250.png')
+  const queue = new AssetsQueue({ context, config: baseconfig })
+  const mode = process.env.GRIDSOME_MODE
+
+  process.env.GRIDSOME_MODE = 'serve'
+
+  const result = await queue.add(filePath)
+
+  process.env.GRIDSOME_MODE = mode
+
+  expect(result.filePath).toEqual(filePath)
+  expect(result.src).toEqual('/assets/static/assets/folder%20name/350%20250.png?width=350')
+  expect(result.sets[0].src).toEqual('/assets/static/assets/folder%20name/350%20250.png?width=350')
+  expect(result.sets[0].destPath).toEqual(path.join(imagesDir, 'assets/folder name/350 250.png?width=350'))
+  expect(result.srcset[0]).toEqual('/assets/static/assets/folder%20name/350%20250.png?width=350 350w')
+})
+
 test('generate srcset for image with path prefix', async () => {
   const filePath = path.resolve(context, 'assets/1000x600.png')
   const config = { ...baseconfig, pathPrefix: '/site-art' }
@@ -161,6 +192,32 @@ test('respect config.maxImageWidth', async () => {
   expect(result.sets[1].src).toEqual('/assets/static/1000x600.bd6740a.test.png')
   expect(result.srcset[0]).toEqual('/assets/static/1000x600.82a2fbd.test.png 480w')
   expect(result.srcset[1]).toEqual('/assets/static/1000x600.bd6740a.test.png 600w')
+})
+
+test('use all image sizes', async () => {
+  const filePath = path.resolve(context, 'assets/2560x2560.png')
+  const config = { ...baseconfig, maxImageWidth: 2560 }
+  const queue = new AssetsQueue({ context, config })
+
+  const result = await queue.add(filePath)
+
+  expect(queue.images.queue).toHaveLength(4)
+  expect(result.src).toEqual('/assets/static/2560x2560.42db587.test.png')
+  expect(result.sets).toHaveLength(4)
+  expect(result.srcset).toHaveLength(4)
+})
+
+test('use custom image sizes', async () => {
+  const filePath = path.resolve(context, 'assets/2560x2560.png')
+  const config = { ...baseconfig, maxImageWidth: 2560 }
+  const queue = new AssetsQueue({ context, config })
+
+  const result = await queue.add(filePath, { sizes: [480, 1024] })
+
+  expect(queue.images.queue).toHaveLength(2)
+  expect(result.src).toEqual('/assets/static/2560x2560.cbab2cf.test.png')
+  expect(result.sets).toHaveLength(2)
+  expect(result.srcset).toHaveLength(2)
 })
 
 test('do not resize if image is too small', async () => {

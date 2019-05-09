@@ -1,5 +1,5 @@
 const autoBind = require('auto-bind')
-const PluginStore = require('./PluginStore')
+const PluginStore = require('../store/PluginStore')
 
 class PluginAPI {
   constructor (app, { entry, transformers }) {
@@ -8,69 +8,18 @@ class PluginAPI {
 
     this.config = app.config
     this.context = app.context
+
     this.store = new PluginStore(app, entry.options, { transformers })
 
     autoBind(this)
-
-    if (process.env.NODE_ENV === 'development') {
-      let regenerateTimeout = null
-
-      // use timeout as a workaround for when files are renamed,
-      // which triggers both addPage and removePage events...
-      const regenerateRoutes = () => {
-        clearTimeout(regenerateTimeout)
-        regenerateTimeout = setTimeout(() => {
-          if (app.isBootstrapped) {
-            app.createRoutes()
-            app.store.setUpdateTime()
-            app.codegen.generate('routes.js')
-          }
-        }, 20)
-      }
-
-      this.store.on('removePage', regenerateRoutes)
-      this.store.on('addPage', regenerateRoutes)
-
-      this.store.on('change', (node, oldNode = node) => {
-        if (!app.isBootstrapped) return
-
-        app.store.setUpdateTime()
-
-        if (
-          (node && node.withPath && node === oldNode) ||
-          (node && node.withPath && node.path !== oldNode.path) ||
-          (!node && oldNode.withPath)
-        ) {
-          return regenerateRoutes()
-        }
-
-        app.broadcast({
-          type: 'updateAllQueries'
-        })
-      })
-
-      this.store.on('updatePage', async (page, oldPage) => {
-        if (!app.isBootstrapped) return
-
-        const { pageQuery: { paginate: oldPaginate }} = oldPage
-        const { pageQuery: { paginate }} = page
-
-        if (paginate !== oldPaginate) {
-          return regenerateRoutes()
-        }
-
-        // send query to front-end for re-fetch
-        app.broadcast({
-          type: 'updateQuery',
-          query: page.pageQuery.query,
-          file: page.internal.origin
-        })
-      })
-    }
   }
 
-  _on (eventName, handler) {
-    this._app.on(eventName, { api: this, handler })
+  _on (eventName, handler, options = {}) {
+    this._app.events.on(eventName, { api: this, handler, options })
+  }
+
+  resolve (value) {
+    return this._app.resolve(value)
   }
 
   setClientOptions (options) {
@@ -81,6 +30,10 @@ class PluginAPI {
     this._app.config.transpileDependencies.push(...list)
   }
 
+  registerComponentParser (options) {
+    this._app.parser.add(options)
+  }
+
   loadSource (handler) {
     this._on('loadSource', handler)
   }
@@ -89,8 +42,20 @@ class PluginAPI {
     this._on('createSchema', handler)
   }
 
+  createPages (handler) {
+    this._on('createPages', handler)
+  }
+
+  createManagedPages (handler) {
+    this._on('createManagedPages', handler, { once: true })
+  }
+
   chainWebpack (fn) {
     this._on('chainWebpack', fn)
+  }
+
+  configureWebpack (fn) {
+    this._on('configureWebpack', fn)
   }
 
   configureServer (fn) {

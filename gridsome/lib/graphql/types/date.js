@@ -53,5 +53,7 @@ function formatDate (value, args = {}) {
 function toString (value) {
   return typeof value === 'number'
     ? new Date(value).toISOString()
-    : value
+    : typeof value === 'object'
+      ? value.toISOString()
+      : value
 }

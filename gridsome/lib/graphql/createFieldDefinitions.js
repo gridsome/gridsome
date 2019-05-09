@@ -1,11 +1,11 @@
-const { isPlainObject } = require('lodash')
+const { omit, isPlainObject, isNumber, isInteger } = require('lodash')
 const { isRefField, isRefFieldDefinition } = require('./utils')
 
 module.exports = function createFieldDefinitions (nodes) {
   let fields = {}
 
   for (let i = 0, l = nodes.length; i < l; i++) {
-    fields = fieldValues(nodes[i].fields, fields)
+    fields = fieldValues(omit(nodes[i], ['id', 'internal']), fields)
   }
 
   return fields
@@ -17,6 +17,7 @@ function fieldValues (obj, currentObj = {}) {
   for (const key in obj) {
     const value = obj[key]
 
+    if (key.startsWith('$')) continue
     if (key.startsWith('__')) continue
     if (value === undefined) continue
     if (value === null) continue
@@ -64,6 +65,10 @@ function fieldValue (value, currentValue) {
     }
 
     return fieldValues(value, currentValue)
+  } else if (isNumber(value)) {
+    return isNumber(currentValue) && isInteger(value)
+      ? currentValue
+      : value
   }
 
   return currentValue !== undefined ? currentValue : value

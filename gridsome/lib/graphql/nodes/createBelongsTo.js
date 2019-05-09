@@ -1,8 +1,13 @@
 const { mapValues, values } = require('lodash')
 const { nodeInterface } = require('../interfaces')
-const { PER_PAGE } = require('../../utils/constants')
-const { pageInfoType, sortOrderType } = require('../types')
-const { createPagedNodeEdges, createBelongsToKey } = require('./utils')
+const { PER_PAGE, SORT_ORDER } = require('../../utils/constants')
+const { pageInfoType, sortOrderType, sortType } = require('../types')
+
+const {
+  createPagedNodeEdges,
+  createBelongsToKey,
+  createSortOptions
+} = require('./utils')
 
 const {
   createFilterTypes,
@@ -56,10 +61,12 @@ module.exports = function createBelongsTo (contentType, nodeTypes) {
 
   const belongsToArgs = {
     sortBy: { type: GraphQLString, defaultValue: 'date' },
-    order: { type: sortOrderType, defaultValue: 'DESC' },
-    perPage: { type: GraphQLInt, defaultValue: PER_PAGE },
+    order: { type: sortOrderType, defaultValue: SORT_ORDER },
+    perPage: { type: GraphQLInt, description: `Defaults to ${PER_PAGE} when page is provided.` },
     skip: { type: GraphQLInt, defaultValue: 0 },
-    page: { type: GraphQLInt, defaultValue: 1 }
+    limit: { type: GraphQLInt },
+    page: { type: GraphQLInt },
+    sort: { type: new GraphQLList(sortType) }
   }
 
   const filterPrefix = `${contentType.typeName}BelongsToFilter`
@@ -93,6 +100,7 @@ module.exports = function createBelongsTo (contentType, nodeTypes) {
     args: belongsToArgs,
     resolve (node, { filter, ...args }, { store }) {
       const key = createBelongsToKey(node)
+      const sort = createSortOptions(args)
       const query = { [key]: { $eq: true }}
 
       if (filter) {
@@ -102,7 +110,7 @@ module.exports = function createBelongsTo (contentType, nodeTypes) {
 
       const chain = store.chainIndex(query)
 
-      return createPagedNodeEdges(chain, args)
+      return createPagedNodeEdges(chain, args, sort)
     }
   }
 }

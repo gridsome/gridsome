@@ -2,7 +2,6 @@ const url = require('url')
 const path = require('path')
 const mime = require('mime-types')
 const { GraphQLScalarType } = require('graphql')
-const { fieldResolver } = require('../resolvers')
 const { isResolvablePath } = require('../../utils')
 const { SUPPORTED_IMAGE_TYPES } = require('../../utils/constants')
 
@@ -36,8 +35,8 @@ exports.GraphQLFile = new GraphQLScalarType({
 exports.fileType = {
   type: exports.GraphQLFile,
   args: {},
-  async resolve (obj, args, context, info) {
-    const value = fieldResolver(obj, args, context, info)
+  async resolve (obj, args, context, { fieldName }) {
+    const value = obj[fieldName]
 
     if (!value) return null
 

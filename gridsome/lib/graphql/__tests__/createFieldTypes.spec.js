@@ -15,68 +15,62 @@ const {
 
 const nodes = [
   {
-    fields: {
-      string: 'bar',
-      number: 10,
-      float: 1.2,
-      nullValue: null,
-      truthyBoolean: true,
-      stringList: ['item'],
-      numberList: [10],
-      floatList: [1.2],
-      objList: [
-        { a: 'a' },
-        { b: 'b' } // #184
-      ],
-      extendObj: {},
-      refs: [],
-      refList: [
-        { typeName: 'Post1', id: '1' },
-        { typeName: 'Post2', id: '1' },
-        { typeName: 'Post3', id: '1' }
-      ],
-      simpleObj: {
-        foo: 'bar'
-      },
-      obj: {
+    string: 'bar',
+    number: 10,
+    float: 1.2,
+    nullValue: null,
+    truthyBoolean: true,
+    stringList: ['item'],
+    numberList: [10],
+    floatList: [1.2],
+    objList: [
+      { a: 'a' },
+      { b: 'b' } // #184
+    ],
+    extendObj: {},
+    refs: [],
+    refList: [
+      { typeName: 'Post1', id: '1' },
+      { typeName: 'Post2', id: '1' },
+      { typeName: 'Post3', id: '1' }
+    ],
+    simpleObj: {
+      foo: 'bar'
+    },
+    obj: {
+      foo: 'bar'
+    }
+  },
+  {
+    string: true,
+    falsyBoolean: false,
+    booleanList: [false],
+    numberList: [5, 30],
+    emptyList: [],
+    objList: [
+      { c: 'c' }
+    ],
+    emptyObj: {},
+    emptyString: '',
+    refs: [
+      { typeName: 'Post', id: '1' } // #128, #129
+    ],
+    ref: { typeName: 'Post', id: '1' },
+    extendObj: {
+      bar: 'foo'
+    },
+    obj: {
+      bar: 'foo',
+      test: {
         foo: 'bar'
       }
     }
   },
   {
-    fields: {
-      string: true,
-      falsyBoolean: false,
-      booleanList: [false],
-      numberList: [5, 30],
-      emptyList: [],
-      objList: [
-        { c: 'c' }
-      ],
-      emptyObj: {},
-      emptyString: '',
-      refs: [
-        { typeName: 'Post', id: '1' } // #128, #129
-      ],
-      ref: { typeName: 'Post', id: '1' },
-      extendObj: {
-        bar: 'foo'
-      },
-      obj: {
-        bar: 'foo',
-        test: {
-          foo: 'bar'
-        }
-      }
-    }
-  },
-  {
-    fields: {
-      ref: null,
-      refs: [],
-      objList: [],
-      numberList: []
-    }
+    ref: null,
+    refs: [],
+    objList: [],
+    numberList: []
   }
 ]
 
@@ -129,17 +123,40 @@ test('create graphql types from node fields', () => {
   expect(types.emptyObj).toBeUndefined()
 })
 
+test.each([
+  ['number first', [{ number: 1 }, { number: 1.2 }, { number: 2 }]],
+  ['float first', [{ number: 1.2 }, { number: 1 }, { number: 2 }]],
+  ['missing number 1', [{ number: 1 }, {}, { number: 1.2 }]],
+  ['missing number 2', [{ number: 1.2 }, {}, { number: 1 }]],
+  ['mixed type', [{ number: 1.2 }, { number: true }, { number: 'string' }]]
+])('prefer float when mixed number types - %s', (_, nodes) => {
+  const fields = createFieldDefinitions(nodes)
+  const types = createFieldTypes(fields, 'Test')
+
+  expect(types.number.type).toEqual(GraphQLFloat)
+})
+
+test.each([
+  ['number first', [{ numbers: [1, 1.5, 2] }]],
+  ['float first', [{ numbers: [1.5, 1] }]],
+  ['empty list', [{ numbers: [] }, { numbers: [1] }, { numbers: [1.2] }]],
+  ['missing list', [{ numbers: [1.2] }, {}, { numbers: [1] }]]
+])('prefer float when mixed number types in lists - %s', (_, nodes) => {
+  const fields = createFieldDefinitions(nodes)
+  const types = createFieldTypes(fields, 'Test')
+
+  expect(types.numbers.type.ofType).toEqual(GraphQLFloat)
+})
+
 test('infer date fields', () => {
   const fields = createFieldDefinitions([
     {
-      fields: {
-        date: new Date(),
-        date1: '2018',
-        date2: '2018-11',
-        date3: '2018-11-01',
-        date4: '2018-11-01T19:20+01:00',
-        date5: '2018-11-01T19:20:30+01:00'
-      }
+      date: new Date(),
+      date1: '2018',
+      date2: '2018-11',
+      date3: '2018-11-01',
+      date4: '2018-11-01T19:20+01:00',
+      date5: '2018-11-01T19:20:30+01:00'
     }
   ])
 
@@ -156,13 +173,11 @@ test('infer date fields', () => {
 test('infer image fields', () => {
   const fields = createFieldDefinitions([
     {
-      fields: {
-        string: 'image.png',
-        image1: '/image.png',
-        image2: './image.png',
-        url: 'https://www.example.com/images/image.png',
-        path: 'dir/to/image.png'
-      }
+      string: 'image.png',
+      image1: '/image.png',
+      image2: './image.png',
+      url: 'https://www.example.com/images/image.png',
+      path: 'dir/to/image.png'
     }
   ])
 
@@ -178,13 +193,11 @@ test('infer image fields', () => {
 test('infer file fields', () => {
   const fields = createFieldDefinitions([
     {
-      fields: {
-        name: 'document.pdf',
-        file1: './document.pdf',
-        file2: '/assets/document.pdf',
-        file3: 'https://www.example.com/files/document.pdf',
-        file4: 'files/document.pdf'
-      }
+      name: 'document.pdf',
+      file1: './document.pdf',
+      file2: '/assets/document.pdf',
+      file3: 'https://www.example.com/files/document.pdf',
+      file4: 'files/document.pdf'
     }
   ])
 

@@ -9,7 +9,7 @@ const {
 
 module.exports = function (api, options) {
   api.afterBuild(async ({ queue, config }) => {
-    const { outDir: base, pathPrefix } = config
+    const { outDir: base, pathPrefix, publicPath } = config
 
     const pages = queue.filter(page => {
       return micromatch(page.path, options.paths).length
@@ -27,10 +27,11 @@ module.exports = function (api, options) {
           ignore: options.ignore,
           width: options.width,
           height: options.height,
+          // TODO: remove pathPrefix fallback
+          pathPrefix: publicPath || pathPrefix || '/',
           html: sourceHTML,
           inline: false,
           minify: true,
-          pathPrefix,
           base
         })
       } catch (err) {

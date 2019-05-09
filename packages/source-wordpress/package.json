@@ -1,5 +1,5 @@
 {
-  "version": "0.2.1",
+  "version": "0.2.2",
   "name": "@gridsome/source-wordpress",
   "description": "WordPress source for Gridsome",
   "homepage": "https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress#readme",
@@ -13,7 +13,8 @@
   ],
   "dependencies": {
     "axios": "^0.18.0",
-    "lodash": "^4.17.10",
+    "camelcase": "^5.0.0",
+    "lodash": "^4.17.11",
     "p-map": "^1.2.0"
   },
   "publishConfig": {

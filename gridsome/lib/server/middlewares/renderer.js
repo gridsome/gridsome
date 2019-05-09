@@ -1,11 +1,6 @@
 const LRU = require('lru-cache')
-const { execute } = require('graphql')
 const createRenderFn = require('../createRenderFn')
-
-const {
-  contextValues,
-  processPageQuery
-} = require('../../graphql/page-query')
+const { createQueryVariables } = require('../../pages/utils')
 
 module.exports = (app, routes) => {
   const render = createRenderFn({
@@ -23,50 +18,43 @@ module.exports = (app, routes) => {
     const cached = cache.get(url)
 
     if (cached) {
+      console.log('return cached', url)
       return res.end(cached)
     }
 
-    const results = await handleUrl(url, app, routes)
+    const route = routes.find(({ regex }) => regex.test(url))
 
-    if (results.errors) {
-      next(results.errors[0])
-      return
+    if (!route) return next()
+
+    const { page: currentPage, ...params } = route.toParams(url)
+    const page = app.pages.findPage({ path: route.toPath(params) })
+
+    if (!page) {
+      return res
+        .status(404)
+        .send({ code: 404, message: `Could not find ${url}` })
+    }
+
+    const state = { context: page.context, data: null }
+
+    if (page.query.document) {
+      const variables = createQueryVariables(page, currentPage)
+      const results = await app.graphql(page.query.document, variables)
+
+      if (results.errors) {
+        next(results.errors[0])
+        return
+      }
+
+      state.data = results.data
     }
 
     try {
-      const html = await render(url, results.data)
+      const html = await render(page.path, state)
       cache.set(url, html)
       res.end(html)
     } catch (err) {
       next(err)
     }
   }
-}
-
-async function handleUrl (url, app, routes, fallback = null) {
-  const route = routes.find(({ regex }) => regex.test(url))
-  const { page, ...params } = route.toParams(url)
-  const context = app.createSchemaContext()
-  const path = route.toPath(params)
-  let data = {}
-
-  if (route.pageQuery) {
-    const node = app.store.getNodeByPath(path)
-    const pageQuery = processPageQuery(route.pageQuery)
-    const variables = { path }
-
-    if (page) {
-      variables.page = Number(page)
-    }
-
-    if (node) {
-      Object.assign(variables, contextValues(node, pageQuery.variables))
-    }
-
-    data = pageQuery.query
-      ? await execute(app.schema, pageQuery.query, undefined, context, variables)
-      : {}
-  }
-
-  return data
 }

@@ -1,0 +1,6 @@
+{
+  "name": "test",
+  "dependencies": {
+    "gridsome": "*"
+  }
+}

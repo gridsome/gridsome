@@ -1,6 +1,8 @@
 <template>
   <Layout :class="[`tag-${$page.tag.id}`, `tag-page-${$page.tag.belongsTo.pageInfo.currentPage}`]">
     <h1 class="tag-title">{{ $page.tag.title }}</h1>
+    <g-link class="tag-default-link" :to="$page.tag.path">default</g-link>
+    <g-link class="tag-extra-link" :to="`/tag/${$page.tag.id}/extra`">extra</g-link>
     <ul>
       <li v-for="{ node } in $page.tag.belongsTo.edges" :key="node.id" :class="`post-${node.id}`">
         <g-link :class="`post-link-${node.id}`" :to="node.path">{{ node.title }}</g-link>
@@ -11,11 +13,23 @@
 </template>
 
 <page-query>
-query Tag ($path: String!, $page: Int, $perPage: Int = 5) {
+query Tag (
+  $path: String!
+  $page: Int
+  $perPage: Int = 5
+  $skip: Int = 0
+  $limit: Int = 10
+) {
   tag (path: $path) {
     id
     title
-    belongsTo (perPage: $perPage, page: $page) @paginate {
+    path
+    belongsTo (
+      perPage: $perPage
+      page: $page
+      skip: $skip
+      limit: $limit
+    ) @paginate {
       pageInfo {
         totalPages
         currentPage
