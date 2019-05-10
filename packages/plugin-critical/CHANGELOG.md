@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.2](https://github.com/gridsome/gridsome/tree/master/packages/plugin-critical/compare/@gridsome/plugin-critical@0.1.1...@gridsome/plugin-critical@0.1.2) (2019-05-10)
+
+
+### Bug Fixes
+
+* **critical:** use publicPath as path prefix ([e866517](https://github.com/gridsome/gridsome/tree/master/packages/plugin-critical/commit/e866517))
+
+
+
+
+
 <a name="0.1.1"></a>
 ## [0.1.1](https://github.com/gridsome/gridsome/tree/master/packages/plugin-critical/compare/@gridsome/plugin-critical@0.1.0...@gridsome/plugin-critical@0.1.1) (2019-02-26)
 

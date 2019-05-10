@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.1.0](https://github.com/gridsome/gridsome/tree/master/packages/cli/compare/@gridsome/cli@0.0.9...@gridsome/cli@0.1.0) (2019-05-10)
+
+
+### Features
+
+* **cli:** support relative github repository urls ([2df6d80](https://github.com/gridsome/gridsome/tree/master/packages/cli/commit/2df6d80))
+
+
+
+
+
 ## [0.0.9](https://github.com/gridsome/gridsome/tree/master/packages/cli/compare/@gridsome/cli@0.0.8...@gridsome/cli@0.0.9) (2019-03-29)
 
 

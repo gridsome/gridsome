@@ -3,6 +3,35 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.6.0](https://github.com/gridsome/gridsome/compare/gridsome@0.5.8...gridsome@0.6.0) (2019-05-10)
+
+
+### Bug Fixes
+
+* **assets:** encode generated urls ([#393](https://github.com/gridsome/gridsome/issues/393)) ([b6994c8](https://github.com/gridsome/gridsome/commit/b6994c8))
+* **build:** keep dist folder between builds ([#409](https://github.com/gridsome/gridsome/issues/409)) ([1ef584b](https://github.com/gridsome/gridsome/commit/1ef584b))
+* **build:** set correct dest path for files ([#221](https://github.com/gridsome/gridsome/issues/221)) ([f9dad9e](https://github.com/gridsome/gridsome/commit/f9dad9e))
+* **graphql:** do not camelCase field names automatically ([#351](https://github.com/gridsome/gridsome/issues/351)) ([4e54c5c](https://github.com/gridsome/gridsome/commit/4e54c5c))
+* **graphql:** ensure totalPages count is not null ([ae75b39](https://github.com/gridsome/gridsome/commit/ae75b39))
+
+
+### Features
+
+* **api:** helper method for resolving paths ([db3546f](https://github.com/gridsome/gridsome/commit/db3546f))
+* **app:** method for fetching page data ([2a624ab](https://github.com/gridsome/gridsome/commit/2a624ab))
+* **app:** range option for Pager component ([#344](https://github.com/gridsome/gridsome/issues/344)) ([77dab89](https://github.com/gridsome/gridsome/commit/77dab89))
+* **graphql:** add metaData from config ([#225](https://github.com/gridsome/gridsome/issues/225)) ([b90d490](https://github.com/gridsome/gridsome/commit/b90d490))
+* **graphql:** advanced sort argument ([#247](https://github.com/gridsome/gridsome/issues/247)) ([9b0907e](https://github.com/gridsome/gridsome/commit/9b0907e))
+* **graphql:** limit argument for content types and belongsTo ([7756620](https://github.com/gridsome/gridsome/commit/7756620))
+* **pages:** create managed pages ([a9042b0](https://github.com/gridsome/gridsome/commit/a9042b0))
+* **pages:** pages api ([#309](https://github.com/gridsome/gridsome/issues/309)) ([5c6a45c](https://github.com/gridsome/gridsome/commit/5c6a45c))
+* **store:** methods for retrieving nodes ([7b442a2](https://github.com/gridsome/gridsome/commit/7b442a2))
+* **webpack:** configure webpack ([#342](https://github.com/gridsome/gridsome/issues/342)) ([ac9fc5a](https://github.com/gridsome/gridsome/commit/ac9fc5a))
+
+
+
+
+
 ## [0.5.8](https://github.com/gridsome/gridsome/compare/gridsome@0.5.7...gridsome@0.5.8) (2019-04-18)
 
 
