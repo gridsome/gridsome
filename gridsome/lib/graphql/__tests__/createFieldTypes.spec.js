@@ -32,8 +32,10 @@ const nodes = [
     refList: [
       { typeName: 'Post1', id: '1' },
       { typeName: 'Post2', id: '1' },
-      { typeName: 'Post3', id: '1' }
+      { typeName: 'Post3', id: '1' },
+      { typeName: undefined, id: '1' }
     ],
+    invalidRef: { typeName: undefined, id: '1' },
     simpleObj: {
       foo: 'bar'
     },
@@ -94,6 +96,7 @@ test('merge node fields', () => {
   expect(fields.simpleObj).toMatchObject({ foo: 'bar' })
   expect(fields.extendObj).toMatchObject({ bar: 'foo' })
   expect(fields.obj).toMatchObject({ foo: 'bar', bar: 'foo', test: { foo: 'bar' }})
+  expect(fields.invalidRef).toBeUndefined()
 })
 
 test('create graphql types from node fields', () => {

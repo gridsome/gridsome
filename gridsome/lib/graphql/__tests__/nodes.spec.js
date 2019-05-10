@@ -238,7 +238,7 @@ test('create node reference', async () => {
     }
   })
 
-  authors.addNode({
+  const author = authors.addNode({
     id: '2'
   })
 
@@ -252,7 +252,7 @@ test('create node reference', async () => {
 
   posts.addNode({
     id: '2',
-    customRef: api.store.createReference('TestAuthor', '2')
+    customRef: api.store.createReference(author)
   })
 
   const query = `{
@@ -281,9 +281,7 @@ test('create node reference', async () => {
 })
 
 test('create node reference to same typeName', async () => {
-  const { addNode } = api.store.addContentType({
-    typeName: 'TestPost'
-  })
+  const { addNode } = api.store.addContentType('TestPost')
 
   const post = addNode({ id: '1' })
 

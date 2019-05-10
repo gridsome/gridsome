@@ -184,7 +184,11 @@ class PluginStore {
 
   createReference (typeName, id) {
     if (isPlainObject(typeName)) {
-      return { typeName: typeName.typeName, id: typeName.id }
+      if (!typeName.$loki) {
+        throw new Error(`store.createReference() expected a node.`)
+      }
+
+      return { typeName: typeName.internal.typeName, id: typeName.id }
     }
 
     return { typeName, id }
