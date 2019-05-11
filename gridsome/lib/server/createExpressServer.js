@@ -40,9 +40,9 @@ module.exports = async (app, options = {}) => {
         message: err.message,
         stringified: err.toString()
       }),
-      extensions ({ variables: { path }}) {
-        if (path) {
-          const page = app.pages.findPage({ path })
+      extensions ({ variables: { __path }}) {
+        if (__path) {
+          const page = app.pages.findPage({ path: __path })
           return { context: page ? page.context : {}}
         }
       }
