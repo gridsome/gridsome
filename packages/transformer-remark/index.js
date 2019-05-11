@@ -119,11 +119,13 @@ class RemarkTransformer {
   }
 
   createProcessor (options = {}) {
-    return unified()
-      .data('transformer', this)
+    const processor = unified().data('transformer', this)
+    const plugins = createPlugins(this.options, options)
+
+    return processor
       .use(remarkParse)
-      .use(createPlugins(this.options, options))
-      .use(remarkHtml)
+      .use(plugins)
+      .use(options.stringifier || remarkHtml)
   }
 
   _nodeToAST (node) {
