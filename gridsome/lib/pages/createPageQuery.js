@@ -1,5 +1,5 @@
 const { isRefField } = require('../graphql/utils')
-const { memoize, get, trimStart, upperFirst } = require('lodash')
+const { memoize, get, upperFirst } = require('lodash')
 const { visit, parse, BREAK, valueFromASTUntyped } = require('graphql')
 
 const memoized = memoize(parsePageQuery)
