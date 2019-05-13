@@ -108,7 +108,7 @@ module.exports = {
         baseUrl: 'https://somedrupalsite.pantheonsite.io',
         routes: {
           'node--article': '/articles/:slug',
-          'taxonomy_term--tags': '/tags/:slug'
+          'taxonomy_term--tags': '/tags/:name'
         }
       }
     }
@@ -153,7 +153,7 @@ module.exports = {
         exclude: [ ...defaultExcludes, 'user--user' ], // include the defaults
         routes: {
           'node--article': '/articles/:slug',
-          'taxonomy_term--tags': '/tags/:slug'
+          'taxonomy_term--tags': '/tags/:name'
         }
       }
     }
@@ -220,14 +220,13 @@ Get the details of an individual `DrupalNodeArticle` using `<page-query>` in a G
       body {
         processed
       },
-      fieldImage {
-        title,
+      field_image {
         filename,
         uri {
           url
         }
       },
-      fieldTags {
+      field_tags {
         name,
         path
       }
