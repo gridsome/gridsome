@@ -33,7 +33,7 @@ function intersectionHandler ({ intersectionRatio, target }) {
 
         if (!route.meta.data) return
 
-        setTimeout(() => fetch(route, true), 250)
+        setTimeout(() => fetch(route, { shouldPrefetch: true }), 250)
       }
     }
   }
