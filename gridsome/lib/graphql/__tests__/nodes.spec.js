@@ -238,7 +238,7 @@ test('create node reference', async () => {
     }
   })
 
-  authors.addNode({
+  const author = authors.addNode({
     id: '2'
   })
 
@@ -252,7 +252,7 @@ test('create node reference', async () => {
 
   posts.addNode({
     id: '2',
-    customRef: api.store.createReference('TestAuthor', '2')
+    customRef: api.store.createReference(author)
   })
 
   const query = `{
@@ -281,9 +281,7 @@ test('create node reference', async () => {
 })
 
 test('create node reference to same typeName', async () => {
-  const { addNode } = api.store.addContentType({
-    typeName: 'TestPost'
-  })
+  const { addNode } = api.store.addContentType('TestPost')
 
   const post = addNode({ id: '1' })
 
@@ -897,7 +895,7 @@ test('process file types in schema', async () => {
   expect(data.testPost.file2).toEqual('https://www.example.com/assets/document.pdf')
   expect(data.testPost.file3.type).toEqual('file')
   expect(data.testPost.file3.mimeType).toEqual('application/pdf')
-  expect(data.testPost.file3.src).toEqual('/assets/files/dummy.pdf')
+  expect(data.testPost.file3.src).toEqual('/assets/files/dummy.test.pdf')
   expect(data.testPost.url).toEqual('https://www.gridsome.org')
   expect(data.testPost.url2).toEqual('https://www.gridsome.com')
   expect(data.testPost.text).toEqual('pdf')

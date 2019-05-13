@@ -15,10 +15,8 @@ module.exports = async (context, args) => {
 
   await app.events.dispatch('beforeBuild', { context, config })
 
-  await fs.remove(config.outDir)
-  await fs.remove(config.dataDir)
-  await fs.ensureDir(config.dataDir)
-  await fs.ensureDir(config.outDir)
+  await fs.emptyDir(config.outDir)
+  await fs.emptyDir(config.dataDir)
 
   const queue = await createRenderQueue(app)
 
@@ -138,7 +136,7 @@ async function processFiles (files, { outDir }) {
   const totalFiles = files.queue.length
 
   for (const file of files.queue) {
-    await fs.copy(file.filePath, path.join(outDir, file.destination))
+    await fs.copy(file.filePath, file.destPath)
   }
 
   info(`Process files (${totalFiles} files) - ${timer(hirestime.S)}s`)

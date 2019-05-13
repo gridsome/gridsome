@@ -10,7 +10,7 @@ exports.applyChainArgs = function (chain, args = {}, sort = []) {
 }
 
 exports.createBelongsToKey = function (node) {
-  return `belongsTo.${node.typeName}.${safeKey(node.id)}`
+  return `belongsTo.${node.internal.typeName}.${safeKey(node.id)}`
 }
 
 exports.createPagedNodeEdges = function (chain, args = {}, sort = []) {
@@ -48,7 +48,7 @@ exports.createPagedNodeEdges = function (chain, args = {}, sort = []) {
 
   const nodes = chain.data()
   const currentPage = page
-  const totalPages = Math.max(Math.ceil(totalItemsCount / perPage), 1)
+  const totalPages = Math.max(Math.ceil(totalItemsCount / perPage) || 1, 1)
   const hasPreviousPage = page > 1
   const hasNextPage = page < totalPages
 

@@ -2,27 +2,43 @@ import prefetch from './utils/prefetch'
 import { unslashEnd, stripPageParam } from './utils/helpers'
 import { NOT_FOUND_NAME, NOT_FOUND_PATH } from '~/.temp/constants'
 
+const headers = { 'Content-Type': 'application/json' }
 const dataUrl = process.env.DATA_URL
 const isPrefetched = {}
+const isLoaded = {}
 
-export default (route, shouldPrefetch = false) => {
+export default (route, options = {}) => {
+  const { shouldPrefetch = false, force = false } = options
+
   if (!route.meta.data) {
     return Promise.resolve({ data: null, context: {}})
   }
 
   if (!process.isStatic) {
-    return new Promise((resolve, reject) => {
-      fetch(process.env.GRAPHQL_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          page: route.params.page ? Number(route.params.page) : null,
-          path: route.name !== NOT_FOUND_NAME
-            ? stripPageParam(route)
-            : NOT_FOUND_PATH
+    const getJSON = function (route) {
+      return new Promise((resolve, reject) => {
+        fetch(process.env.GRAPHQL_ENDPOINT, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            page: route.params.page ? Number(route.params.page) : null,
+            path: route.name !== NOT_FOUND_NAME
+              ? stripPageParam(route)
+              : NOT_FOUND_PATH
+          })
         })
+          .then(res => res.json())
+          .then(resolve)
+          .catch(reject)
       })
-        .then(res => res.json())
+    }
+
+    return new Promise((resolve, reject) => {
+      if (force || !isLoaded[route.fullPath]) {
+        isLoaded[route.fullPath] = getJSON(route)
+      }
+
+      isLoaded[route.fullPath]
         .then(res => {
           if (res.errors) reject(res.errors[0])
           else if (res.code) resolve({ code: res.code })
@@ -33,14 +49,21 @@ export default (route, shouldPrefetch = false) => {
               : {}
           })
         })
-        .catch(err => {
-          reject(err)
-        })
+        .catch(reject)
     })
   }
 
   return new Promise((resolve, reject) => {
-    const load = ([ group, hash ]) => {
+    const getJSON = function (path) {
+      return new Promise((resolve, reject) => {
+        fetch(path, { headers })
+          .then(res => res.json())
+          .then(resolve)
+          .catch(reject)
+      })
+    }
+
+    const loadJSON = ([ group, hash ]) => {
       const jsonPath = dataUrl + `${group}/${hash}.json` 
 
       if (shouldPrefetch) {
@@ -53,10 +76,11 @@ export default (route, shouldPrefetch = false) => {
           .catch(reject)
       }
 
-      fetch(jsonPath, {
-        headers: { 'Content-Type': 'application/json' }
-      })
-        .then(res => res.json())
+      if (!isLoaded[jsonPath]) {
+        isLoaded[jsonPath] = getJSON(jsonPath)
+      }
+
+      return isLoaded[jsonPath]
         .then(res => {
           if (res.errors) reject(res.errors[0])
           else resolve(res)
@@ -70,11 +94,11 @@ export default (route, shouldPrefetch = false) => {
 
     if (typeof data === 'function') {
       data().then(data => {
-        if (data[path]) load(data[path])
+        if (data[path]) loadJSON(data[path])
         else resolve({ code: 404 })
       }).catch(reject)
     } else {
-      load(data)
+      loadJSON(data)
     }
   })
 }

@@ -51,10 +51,3 @@ Add additional plugins to the parser.
 - Type: `boolean` Default: `true`
 
 Set this option to `false` to disable all built-in plugins.
-
-## API
-
-- `parse` Parse front matter data 
-- `toAST` Parse markdown into a syntax tree
-- `applyPlugins` Transform a syntax tree by applying plugins to it (async)
-- `toHTML` Compile a syntax tree into HTML

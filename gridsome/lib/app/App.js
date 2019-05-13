@@ -150,8 +150,7 @@ class App {
     const createSchema = require('../graphql/createSchema')
     const { createSchemaAPI } = require('../graphql/utils')
 
-    const schema = createSchema(this.store)
-    const schemas = [schema]
+    const schemas = []
 
     const results = await this.events.dispatch('createSchema', () => {
       return createSchemaAPI({
@@ -162,9 +161,11 @@ class App {
     // add custom schemas returned from the hook handlers
     results.forEach(schema => schema && schemas.push(schema))
 
+    const schema = createSchema(this.store)
+
     this._execute = graphql.execute
     this._graphql = graphql.graphql
-    this.schema = mergeSchemas({ schemas })
+    this.schema = mergeSchemas({ schemas: [schema, ...schemas] })
   }
 
   async createPages () {
@@ -172,12 +173,12 @@ class App {
     const digest = hashString(Date.now().toString())
     const { createPagesAPI, createManagedPagesAPI } = require('../pages/utils')
 
-    await this.events.dispatch('createManagedPages', api => {
-      return createManagedPagesAPI(api, { digest })
-    })
-
     await this.events.dispatch('createPages', api => {
       return createPagesAPI(api, { digest })
+    })
+
+    await this.events.dispatch('createManagedPages', api => {
+      return createManagedPagesAPI(api, { digest })
     })
 
     // ensure a /404 page exists
@@ -251,7 +252,7 @@ class App {
       return config
     }, Promise.resolve(resolvedChain.toConfig()))
 
-    if (config.output.publicPath !== this.config.pathPrefix) {
+    if (config.output.publicPath !== this.config.publicPath) {
       throw new Error(
         `Do not modify webpack output.publicPath directly. ` +
         `Use the "pathPrefix" option in gridsome.config.js instead.`

@@ -1,6 +1,5 @@
 const path = require('path')
 const fs = require('fs-extra')
-const { trim } = require('lodash')
 const md5File = require('md5-file/promise')
 const { forwardSlash } = require('../../utils')
 
@@ -30,7 +29,7 @@ class FileProcessQueue {
 
     if (!this._queue.has(asset.src)) {
       this._queue.set(asset.src, {
-        destination: trim(asset.src, this.config.pathPrefix),
+        destPath: asset.destPath,
         filePath
       })
     }
@@ -53,20 +52,20 @@ class FileProcessQueue {
       filename = forwardSlash(relPath)
     } else {
       const { name, ext } = path.parse(relPath)
-      let urlHash = ''
-
-      if (options.hash) {
-        const hash = await md5File(filePath)
-        urlHash = `.${!process.env.GRIDSOME_TEST ? hash : 'test'}`
-      }
+      const hash = await md5File(filePath)
+      const urlHash = `.${!process.env.GRIDSOME_TEST ? hash : 'test'}`
 
       filename = `${name}${urlHash}${ext}`
     }
 
-    const src = forwardSlash(path.join(pathPrefix, filesDir, filename))
+    const src = forwardSlash(path.join(pathPrefix || '/', filesDir, filename))
+    const destPath = process.env.GRIDSOME_MODE !== 'serve'
+      ? path.join(this.config.filesDir, filename)
+      : undefined
 
     return {
-      src: encodeURI(src)
+      src: encodeURI(src),
+      destPath
     }
   }
 }

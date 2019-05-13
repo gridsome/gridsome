@@ -83,7 +83,7 @@ test('add node', () => {
   expect(node).toHaveProperty('$loki')
   expect(node.id).toEqual('test')
   expect(typeof node.$uid).toEqual('string')
-  expect(node.typeName).toEqual('TestPost')
+  expect(node.internal.typeName).toEqual('TestPost')
   expect(node.title).toEqual('Lorem ipsum dolor sit amet')
   expect(node.date).toEqual('2018-09-04T23:20:33.918Z')
   expect(node.customField).toEqual(true)
@@ -129,7 +129,6 @@ test('update node', () => {
   const entry = api.store.store.index.findOne({ uid: node.$uid })
 
   expect(node.id).toEqual('test')
-  expect(node.typeName).toEqual('TestPost')
   expect(node.title).toEqual('New title')
   expect(node.slug).toEqual('new-title')
   expect(node.path).toEqual('/test/foo/new-title')
@@ -137,6 +136,7 @@ test('update node', () => {
   expect(node.content).toEqual('Praesent commodo cursus magna')
   expect(node.excerpt).toEqual('Praesent commodo...')
   expect(node.foo).toEqual('foo')
+  expect(node.internal.typeName).toEqual('TestPost')
   expect(node.internal.timestamp).not.toEqual(oldTimestamp)
   expect(emit).toHaveBeenCalledTimes(2)
   expect(entry.id).toEqual('test')
@@ -161,6 +161,46 @@ test('change node id', () => {
   expect(node2.id).toEqual('test-2')
   expect(node2.$uid).toEqual('test')
   expect(entry.uid).toEqual('test')
+})
+
+test('get node by id', () => {
+  const api = createPlugin()
+  const contentType = api.store.addContentType('TestPost')
+
+  contentType.addNode({ id: 'test' })
+
+  expect(contentType.getNode('test').id).toEqual('test')
+})
+
+test('find node', () => {
+  const api = createPlugin()
+  const contentType = api.store.addContentType('TestPost')
+
+  contentType.addNode({ id: 'test' })
+
+  expect(contentType.findNode({ id: 'test' }).id).toEqual('test')
+})
+
+test('find many nodes', () => {
+  const api = createPlugin()
+  const contentType = api.store.addContentType('TestPost')
+
+  contentType.addNode({ id: '1', value: 1 })
+  contentType.addNode({ id: '2', value: 2 })
+  contentType.addNode({ id: '3', value: 3 })
+
+  expect(contentType.findNodes({ value: { $gt: 1 }})).toHaveLength(2)
+})
+
+test('get all nodes', () => {
+  const api = createPlugin()
+  const contentType = api.store.addContentType('TestPost')
+
+  contentType.addNode({ id: '1' })
+  contentType.addNode({ id: '2' })
+  contentType.addNode({ id: '3' })
+
+  expect(contentType.data()).toHaveLength(3)
 })
 
 test('remove node', () => {

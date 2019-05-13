@@ -10,7 +10,7 @@ sock.onmessage = message => {
 
   switch (data.type) {
     case 'fetch':
-      fetch(router.currentRoute)
+      fetch(router.currentRoute, { force: true })
         .then(res => {
           if (res.errors) {
             formatError(res.errors[0], router.currentRoute)

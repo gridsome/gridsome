@@ -17,8 +17,9 @@ module.exports = async (context, args) => {
   const { config } = app
 
   await app.events.dispatch('beforeServe', { context, config })
+
   await fs.ensureDir(config.cacheDir)
-  await fs.remove(config.outDir)
+  await fs.emptyDir(config.outDir)
 
   const routes = createRoutes(app)
   const server = await createExpressServer(app)
@@ -53,7 +54,7 @@ module.exports = async (context, args) => {
 }
 
 function createRoutes (app) {
-  const pages = uniqBy(app.pages.allPages(), page => page.route)
+  const pages = uniqBy(app.pages.data(), page => page.route)
 
   return pages.map(page => {
     const keys = []

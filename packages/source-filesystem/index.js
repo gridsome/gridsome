@@ -69,8 +69,8 @@ class FilesystemSource {
     for (const fieldName in this.refs) {
       const ref = this.refs[fieldName]
 
-      if (ref.create && node.fields[fieldName]) {
-        const value = node.fields[fieldName]
+      if (ref.create && node[fieldName]) {
+        const value = node[fieldName]
         const typeName = ref.typeName
 
         if (Array.isArray(value)) {

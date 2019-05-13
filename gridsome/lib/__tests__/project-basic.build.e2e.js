@@ -93,8 +93,8 @@ test('render g-link components', () => {
   expect($home('a[href="https://www.gridsome.org/docs"]').attr('target')).toBeUndefined()
   expect($home('a[href="https://www.gridsome.org/docs"]').attr('rel')).toBeUndefined()
 
-  expect($home('a.g-link-file').attr('href')).toEqual('/assets/files/dummy.pdf')
-  expect(exists('dist/assets/files/dummy.pdf')).toBeTruthy()
+  expect($home('a.g-link-file').attr('href')).toEqual('/assets/files/dummy.test.pdf')
+  expect(exists('dist/assets/files/dummy.test.pdf')).toBeTruthy()
 })
 
 test('render g-image components', () => {

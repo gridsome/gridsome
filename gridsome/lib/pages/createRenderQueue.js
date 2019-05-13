@@ -6,7 +6,7 @@ function createRenderQueue (renderQueue, { pages, store, schema }) {
   const queryFields = schema.getQueryType().getFields()
   const queue = renderQueue.slice()
 
-  for (const page of pages.allPages()) {
+  for (const page of pages.data()) {
     if (page.query.paginate) {
       const totalPages = calcTotalPages(page, store, queryFields)
 
