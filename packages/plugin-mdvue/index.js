@@ -42,7 +42,8 @@ class MdVuePlugin {
     this.context = options.baseDir ? api.resolve(options.baseDir) : api.context
 
     this.processor = this.remark.createProcessor({
-      plugins: [sfcSyntax, toMdVueAST, toSFC]
+      plugins: [sfcSyntax, toMdVueAST],
+      stringifier: toSFC
     })
 
     api.transpileDependencies([path.resolve(__dirname, 'src')])
@@ -55,7 +56,7 @@ class MdVuePlugin {
   parseComponent (resourcePath) {
     const pageQueryRE = /<page-query>([^</]+)<\/page-query>/
     const source = fs.readFileSync(resourcePath, 'utf-8')
-    const ast = this.remark.toAST(source)
+    const ast = this.processor.parse(source)
 
     const pageQuery = ast.children
       .filter(node => node.type === 'html' && /^<page-query/.test(node.value))

@@ -43,6 +43,6 @@ function tokenizeVueComponents (eat, value) {
   const subValue = getValue(value)
 
   if (isTag(value)) {
-    return eat(subValue)({ type: 'text', value: subValue })
+    return eat(subValue)({ type: 'html', value: subValue })
   }
 }

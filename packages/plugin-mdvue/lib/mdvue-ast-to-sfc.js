@@ -1,3 +1,4 @@
+const he = require('he')
 const u = require('unist-builder')
 const toHTML = require('hast-util-to-html')
 const toHAST = require('mdast-util-to-hast')
@@ -24,7 +25,7 @@ module.exports = function () {
       allowDangerousHTML: true,
       handlers: {
         text (h, node) {
-          return h.augment(node, u('raw', node.value))
+          return h.augment(node, u('raw', he.encode(node.value)))
         }
       }
     })
