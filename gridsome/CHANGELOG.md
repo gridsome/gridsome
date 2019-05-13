@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.6.1](https://github.com/gridsome/gridsome/compare/gridsome@0.6.0...gridsome@0.6.1) (2019-05-13)
+
+
+### Bug Fixes
+
+* **app:** prevent cyclic dependency ([#421](https://github.com/gridsome/gridsome/issues/421)) ([3574efa](https://github.com/gridsome/gridsome/commit/3574efa))
+* **graphql:** use correct typeName for belongsTo pagination ([#422](https://github.com/gridsome/gridsome/issues/422)) ([b06310f](https://github.com/gridsome/gridsome/commit/b06310f))
+* **pages:** set page context in dev mode ([#417](https://github.com/gridsome/gridsome/issues/417)) ([a7a6e17](https://github.com/gridsome/gridsome/commit/a7a6e17))
+* **store:** create reference to node instance ([81bb047](https://github.com/gridsome/gridsome/commit/81bb047))
+
+
+
+
+
 # [0.6.0](https://github.com/gridsome/gridsome/compare/gridsome@0.5.8...gridsome@0.6.0) (2019-05-10)
 
 
