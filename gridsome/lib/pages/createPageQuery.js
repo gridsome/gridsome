@@ -97,8 +97,11 @@ function parsePageQuery (source) {
             const filterArg = parentArgs.find(node => node.name.value === 'filter')
 
             result.paginate = {
+              // TODO: use visitWithTypeInfo() to get real GraphQL type here instead
               // guess content type by converting root field value into a camel cased string
-              typeName: upperFirst(trimStart(fieldName.value, 'all')),
+              typeName: /^all[A-Z]/.test(fieldName.value)
+                ? fieldName.value.replace(/^all/, '')
+                : upperFirst(fieldName.value),
               perPage: perPageArg && perPageArg.value.value ? Number(perPageArg.value.value) : undefined,
               fieldName: fieldName.value,
               belongsTo: null
