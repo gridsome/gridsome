@@ -14,8 +14,10 @@ module.exports = async (app, defines = {}) => {
       return args
     })
 
-  const serverConfig = await app.resolveWebpackConfig(true)
-  const clientConfig = await app.resolveWebpackConfig(false, clientChain)
+  const [serverConfig, clientConfig] = await Promise.all([
+    app.resolveWebpackConfig(true),
+    app.resolveWebpackConfig(false, clientChain)
+  ])
 
   return new Promise((resolve, reject) => {
     webpack([clientConfig, serverConfig]).run((err, stats) => {
