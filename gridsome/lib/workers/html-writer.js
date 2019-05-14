@@ -22,11 +22,7 @@ exports.render = async function ({
       ? await fs.readJson(page.dataOutput)
       : undefined
 
-    try {
-      html = await render(page.path, state)
-    } catch (err) {
-      throw err
-    }
+    html = await render(page.path, state)
 
     await fs.outputFile(page.htmlOutput, html)
   }
