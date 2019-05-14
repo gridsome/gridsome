@@ -109,7 +109,7 @@ class DatoCmsSource {
           const val = item.readAttribute(field)
 
           if (item.itemType.hasOwnProperty('apiKey')) {
-            fields.apiKey = item.itemType.apiKey
+            fields.model = { apiKey: item.itemType.apiKey }
           }
 
           if (!val) return fields
