@@ -194,7 +194,8 @@ class ContentType {
 
       const field = get(node, path, fieldName)
 
-      if (fieldName === 'year') params.year = date.format('YYYY')
+      if (fieldName === 'id') params.id = node.id
+      else if (fieldName === 'year') params.year = date.format('YYYY')
       else if (fieldName === 'month') params.month = date.format('MM')
       else if (fieldName === 'day') params.day = date.format('DD')
       else {

@@ -335,7 +335,7 @@ test('add type with custom fields in route', () => {
   })
 
   const node = contentType.addNode({
-    id: '1234',
+    id: 'abcDef',
     title: 'Lorem ipsum',
     test: 'My value',
     genre: {
@@ -350,7 +350,7 @@ test('add type with custom fields in route', () => {
     }
   })
 
-  expect(node.path).toEqual('/my-value/My%20value/1234/10/2/thriller/1/missing/lorem-ipsum')
+  expect(node.path).toEqual('/my-value/My%20value/abcDef/10/2/thriller/1/missing/lorem-ipsum')
 })
 
 test('deeply nested field starting with `raw`', () => {
