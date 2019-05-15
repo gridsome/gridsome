@@ -13,6 +13,8 @@ test('create render queue for basic project', async () => {
   const renderPaths = renderQueue.map(entry => entry.path)
 
   expect(renderPaths).toEqual(expect.arrayContaining([
+    '/about',
+    '/about-us',
     '/pages/2',
     '/docs/4/extra',
     '/docs/2/extra',
@@ -30,7 +32,7 @@ test('create render queue for basic project', async () => {
     '/docs/1'
   ]))
 
-  expect(renderPaths).toHaveLength(16)
+  expect(renderPaths).toHaveLength(18)
 })
 
 test('create render queue for blog project', async () => {

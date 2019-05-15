@@ -1,15 +1,23 @@
 const { isRefField } = require('../graphql/utils')
-const { memoize, get, upperFirst } = require('lodash')
+const { memoize, get, upperFirst, isEmpty } = require('lodash')
 const { visit, parse, BREAK, valueFromASTUntyped } = require('graphql')
 
 const memoized = memoize(parsePageQuery)
 
-function createPageQuery (source, context = null) {
+function createPageQuery (source, context = {}) {
   const result = memoized(source)
 
-  const variables = context ? variablesFromContext(context, result.variables) : {}
-  const filters = result.filtersAST ? valueFromASTUntyped(result.filtersAST, variables) : {}
-  const paginate = result.paginate ? { ...result.paginate } : null
+  const variables = !isEmpty(context)
+    ? variablesFromContext(context, result.variables)
+    : {}
+
+  const filters = result.filtersAST
+    ? valueFromASTUntyped(result.filtersAST, variables)
+    : {}
+
+  const paginate = result.paginate
+    ? { ...result.paginate }
+    : null
 
   if (paginate) {
     paginate.skip = result.skipAST
