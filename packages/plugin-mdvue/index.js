@@ -17,7 +17,7 @@ class MdVuePlugin {
       route: undefined,
       index: ['index'],
       refs: {},
-      includePaths: [],
+      includePaths: []
     }
   }
 
