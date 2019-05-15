@@ -1,14 +1,10 @@
-const {
-  GraphQLID,
-  GraphQLNonNull,
-  GraphQLInterfaceType
-} = require('graphql')
+const { schemaComposer } = require('graphql-compose')
 
-const nodeInterface = new GraphQLInterfaceType({
+const nodeInterface = schemaComposer.createInterfaceTC({
   name: 'Node',
-  fields: () => ({
-    id: { type: new GraphQLNonNull(GraphQLID) }
-  })
+  fields: {
+    id: 'ID!'
+  }
 })
 
 module.exports = {

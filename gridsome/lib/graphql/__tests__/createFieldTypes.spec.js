@@ -1,17 +1,6 @@
-const { GraphQLFile } = require('../types/file')
-const { GraphQLDate } = require('../types/date')
-const { GraphQLImage } = require('../types/image')
 const { createFieldTypes } = require('../createFieldTypes')
 const createFieldDefinitions = require('../createFieldDefinitions')
-
-const {
-  GraphQLInt,
-  GraphQLList,
-  GraphQLFloat,
-  GraphQLString,
-  GraphQLBoolean,
-  GraphQLObjectType
-} = require('../graphql')
+const { SchemaComposer, ObjectTypeComposer } = require('graphql-compose')
 
 const nodes = [
   {
@@ -100,27 +89,27 @@ test('merge node fields', () => {
 })
 
 test('create graphql types from node fields', () => {
+  const schemaComposr = new SchemaComposer()
   const fields = createFieldDefinitions(nodes)
-  const types = createFieldTypes(fields, 'TestPost', {})
+  const types = createFieldTypes(schemaComposr, fields, 'TestPost', [])
 
-  expect(types.string.type).toEqual(GraphQLString)
-  expect(types.number.type).toEqual(GraphQLInt)
-  expect(types.float.type).toEqual(GraphQLFloat)
-  expect(types.emptyString.type).toEqual(GraphQLString)
-  expect(types.falsyBoolean.type).toEqual(GraphQLBoolean)
-  expect(types.truthyBoolean.type).toEqual(GraphQLBoolean)
-  expect(types.stringList.type).toBeInstanceOf(GraphQLList)
-  expect(types.stringList.type.ofType).toEqual(GraphQLString)
-  expect(types.numberList.type.ofType).toEqual(GraphQLInt)
-  expect(types.floatList.type.ofType).toEqual(GraphQLFloat)
-  expect(types.booleanList.type.ofType).toEqual(GraphQLBoolean)
-  expect(types.extendObj.type.getFields().bar.type).toEqual(GraphQLString)
-  expect(types.simpleObj.type).toBeInstanceOf(GraphQLObjectType)
-  expect(types.obj.type).toBeInstanceOf(GraphQLObjectType)
-  expect(types.obj.type.name).toEqual('TestPostObj')
-  expect(types.obj.type.getFields().foo.type).toEqual(GraphQLString)
-  expect(types.obj.type.getFields().bar.type).toEqual(GraphQLString)
-  expect(types.obj.type.getFields().test.type).toBeInstanceOf(GraphQLObjectType)
+  expect(types.string.type).toEqual('String')
+  expect(types.number.type).toEqual('Int')
+  expect(types.float.type).toEqual('Float')
+  expect(types.emptyString.type).toEqual('String')
+  expect(types.falsyBoolean.type).toEqual('Boolean')
+  expect(types.truthyBoolean.type).toEqual('Boolean')
+  expect(types.stringList.type).toEqual(['String'])
+  expect(types.numberList.type).toEqual(['Int'])
+  expect(types.floatList.type).toEqual(['Float'])
+  expect(types.booleanList.type).toEqual(['Boolean'])
+  expect(types.extendObj.type.getFields().bar.type.getTypeName()).toEqual('String')
+  expect(types.simpleObj.type).toBeInstanceOf(ObjectTypeComposer)
+  expect(types.obj.type).toBeInstanceOf(ObjectTypeComposer)
+  expect(types.obj.type.getTypeName()).toEqual('TestPostObj')
+  expect(types.obj.type.getFields().foo.type.getTypeName()).toEqual('String')
+  expect(types.obj.type.getFields().bar.type.getTypeName()).toEqual('String')
+  expect(types.obj.type.getFields().test.type).toBeInstanceOf(ObjectTypeComposer)
   expect(types.nullValue).toBeUndefined()
   expect(types.emptyList).toBeUndefined()
   expect(types.emptyObj).toBeUndefined()
@@ -133,10 +122,11 @@ test.each([
   ['missing number 2', [{ number: 1.2 }, {}, { number: 1 }]],
   ['mixed type', [{ number: 1.2 }, { number: true }, { number: 'string' }]]
 ])('prefer float when mixed number types - %s', (_, nodes) => {
+  const schemaComposr = new SchemaComposer()
   const fields = createFieldDefinitions(nodes)
-  const types = createFieldTypes(fields, 'Test')
+  const types = createFieldTypes(schemaComposr, fields, 'Test')
 
-  expect(types.number.type).toEqual(GraphQLFloat)
+  expect(types.number.type).toEqual('Float')
 })
 
 test.each([
@@ -145,10 +135,11 @@ test.each([
   ['empty list', [{ numbers: [] }, { numbers: [1] }, { numbers: [1.2] }]],
   ['missing list', [{ numbers: [1.2] }, {}, { numbers: [1] }]]
 ])('prefer float when mixed number types in lists - %s', (_, nodes) => {
+  const schemaComposr = new SchemaComposer()
   const fields = createFieldDefinitions(nodes)
-  const types = createFieldTypes(fields, 'Test')
+  const types = createFieldTypes(schemaComposr, fields, 'Test')
 
-  expect(types.numbers.type.ofType).toEqual(GraphQLFloat)
+  expect(types.numbers.type).toEqual(['Float'])
 })
 
 test('infer date fields', () => {
@@ -163,14 +154,15 @@ test('infer date fields', () => {
     }
   ])
 
-  const types = createFieldTypes(fields, 'TestPost')
+  const schemaComposr = new SchemaComposer()
+  const types = createFieldTypes(schemaComposr, fields, 'TestPost')
 
-  expect(types.date.type).toEqual(GraphQLDate)
-  expect(types.date1.type).toEqual(GraphQLDate)
-  expect(types.date2.type).toEqual(GraphQLDate)
-  expect(types.date3.type).toEqual(GraphQLDate)
-  expect(types.date4.type).toEqual(GraphQLDate)
-  expect(types.date5.type).toEqual(GraphQLDate)
+  expect(types.date.type).toEqual('Date')
+  expect(types.date1.type).toEqual('Date')
+  expect(types.date2.type).toEqual('Date')
+  expect(types.date3.type).toEqual('Date')
+  expect(types.date4.type).toEqual('Date')
+  expect(types.date5.type).toEqual('Date')
 })
 
 test('infer image fields', () => {
@@ -184,13 +176,14 @@ test('infer image fields', () => {
     }
   ])
 
-  const types = createFieldTypes(fields, 'TestPost')
+  const schemaComposr = new SchemaComposer()
+  const types = createFieldTypes(schemaComposr, fields, 'TestPost')
 
-  expect(types.string.type).toEqual(GraphQLString)
-  expect(types.image1.type).toEqual(GraphQLImage)
-  expect(types.image2.type).toEqual(GraphQLImage)
-  expect(types.url.type).toEqual(GraphQLString)
-  expect(types.path.type).toEqual(GraphQLString)
+  expect(types.string.type).toEqual('String')
+  expect(types.image1.type).toEqual('Image')
+  expect(types.image2.type).toEqual('Image')
+  expect(types.url.type).toEqual('String')
+  expect(types.path.type).toEqual('String')
 })
 
 test('infer file fields', () => {
@@ -204,11 +197,12 @@ test('infer file fields', () => {
     }
   ])
 
-  const types = createFieldTypes(fields, 'TestPost')
+  const schemaComposr = new SchemaComposer()
+  const types = createFieldTypes(schemaComposr, fields, 'TestPost')
 
-  expect(types.name.type).toEqual(GraphQLString)
-  expect(types.file1.type).toEqual(GraphQLFile)
-  expect(types.file2.type).toEqual(GraphQLFile)
-  expect(types.file3.type).toEqual(GraphQLString)
-  expect(types.file4.type).toEqual(GraphQLString)
+  expect(types.name.type).toEqual('String')
+  expect(types.file1.type).toEqual('File')
+  expect(types.file2.type).toEqual('File')
+  expect(types.file3.type).toEqual('String')
+  expect(types.file4.type).toEqual('String')
 })

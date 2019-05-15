@@ -1,65 +1,63 @@
 const { PER_PAGE } = require('../../utils/constants')
-const { pageInfoType, sortOrderType, sortType } = require('../types')
 const { createFilterTypes, createFilterQuery } = require('../createFilterTypes')
 const { createPagedNodeEdges, createSortOptions } = require('./utils')
 
-const {
-  GraphQLInt,
-  GraphQLList,
-  GraphQLString,
-  GraphQLNonNull,
-  GraphQLObjectType,
-  GraphQLInputObjectType
-} = require('graphql')
-
-module.exports = ({ contentType, nodeType, fields }) => {
-  const edgeType = new GraphQLObjectType({
-    name: `${nodeType.name}Edge`,
-    fields: () => ({
-      node: { type: nodeType },
-      next: { type: nodeType },
-      previous: { type: nodeType }
-    })
+module.exports = function createConnection ({
+  schemaComposer,
+  contentType,
+  typeName,
+  fields
+}) {
+  const edgeType = schemaComposer.createObjectTC({
+    name: `${typeName}Edge`,
+    fields: {
+      node: typeName,
+      next: typeName,
+      previous: typeName
+    }
   })
 
-  const connectionType = new GraphQLObjectType({
-    name: `${nodeType.name}Connection`,
-    fields: () => ({
-      totalCount: { type: GraphQLInt },
-      pageInfo: { type: new GraphQLNonNull(pageInfoType) },
-      edges: { type: new GraphQLList(edgeType) }
-    })
+  const connectionType = schemaComposer.createObjectTC({
+    name: `${typeName}Connection`,
+    fields: {
+      totalCount: 'Int!',
+      pageInfo: 'PageInfoType!',
+      edges: () => [edgeType]
+    }
   })
+
+  const filterType = schemaComposer.createInputTC({
+    name: `${typeName}Filters`,
+    fields: createFilterTypes(schemaComposer, { ...fields, id: '' }, `${typeName}Filter`)
+  })
+
+  const filterFields = filterType.getType().getFields()
 
   const { defaultSortBy, defaultSortOrder } = contentType.options
 
   const connectionArgs = {
-    sortBy: { type: GraphQLString, defaultValue: defaultSortBy },
-    order: { type: sortOrderType, defaultValue: defaultSortOrder },
-    perPage: { type: GraphQLInt, description: `Defaults to ${PER_PAGE} when page is provided.` },
-    skip: { type: GraphQLInt, defaultValue: 0 },
-    limit: { type: GraphQLInt },
-    page: { type: GraphQLInt },
-    sort: { type: new GraphQLList(sortType) },
+    sortBy: { type: 'String', defaultValue: defaultSortBy },
+    order: { type: 'SortOrderEnum', defaultValue: defaultSortOrder },
+    perPage: { type: 'Int', description: `Defaults to ${PER_PAGE} when page is provided.` },
+    skip: { type: 'Int', defaultValue: 0 },
+    limit: { type: 'Int' },
+    page: { type: 'Int' },
+    sort: { type: '[SortArgument]' },
+    filter: {
+      type: filterType,
+      description: `Filter for ${typeName} nodes.`
+    },
 
     // TODO: remove before 1.0
-    regex: { type: GraphQLString, deprecationReason: 'Use filter instead.' }
-  }
-
-  connectionArgs.filter = {
-    description: `Filter for ${nodeType.name} nodes.`,
-    type: new GraphQLInputObjectType({
-      name: `${nodeType.name}Filters`,
-      fields: createFilterTypes({ ...fields, id: '' }, `${nodeType.name}Filter`)
-    })
+    regex: { type: 'String', deprecationReason: 'Use filter instead.' }
   }
 
   return {
-    type: connectionType,
+    type: () => connectionType,
     args: connectionArgs,
-    description: `Connection to all ${nodeType.name} nodes`,
-    async resolve (_, { regex, filter, ...args }, { store }, info) {
-      const { collection } = store.getContentType(nodeType.name)
+    description: `Connection to all ${typeName} nodes`,
+    async resolve (_, { regex, filter, ...args }, { store }) {
+      const { collection } = store.getContentType(typeName)
       const sort = createSortOptions(args)
       const query = {}
 
@@ -73,8 +71,7 @@ module.exports = ({ contentType, nodeType, fields }) => {
       }
 
       if (filter) {
-        const fields = connectionArgs.filter.type.getFields()
-        Object.assign(query, createFilterQuery(filter, fields))
+        Object.assign(query, createFilterQuery(filter, filterFields))
       }
 
       const chain = collection.chain().find(query)

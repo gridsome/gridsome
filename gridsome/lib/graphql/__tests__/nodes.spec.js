@@ -218,7 +218,7 @@ test('get nodes by path regex', async () => {
   posts.addNode({ path: '/node-2' })
   posts.addNode({ path: '/some-3' })
 
-  const query = '{ allTestPost (regex: "/node") { edges { node { _id }}}}'
+  const query = '{ allTestPost (regex: "/node") { edges { node { id }}}}'
   const { errors, data } = await createSchemaAndExecute(query)
 
   expect(errors).toBeUndefined()
@@ -317,14 +317,17 @@ test('create references with collection.addReference()', async () => {
 
   posts.addReference('author1', 'Author')
   posts.addReference('author2', { typeName: 'Author' })
+  posts.addReference('authors', { typeName: 'Author' })
 
   authors.addNode({ id: '1', title: 'An Author' })
-  posts.addNode({ id: '1', author1: '1', author2: '1' })
+  authors.addNode({ id: '2', title: 'Another Author' })
+  posts.addNode({ id: '1', author1: '1', author2: '1', authors: ['1'] })
 
   const query = `{
     post (id: "1") {
       author1 { id }
       author2 { id }
+      authors { id }
     }
   }`
 
@@ -333,6 +336,7 @@ test('create references with collection.addReference()', async () => {
   expect(errors).toBeUndefined()
   expect(data.post.author1.id).toEqual('1')
   expect(data.post.author2.id).toEqual('1')
+  expect(data.post.authors).toHaveLength(1)
 })
 
 test('create references with collection.addReference() and camelCased fields', async () => {
@@ -720,11 +724,9 @@ test('collection.addSchemaField', async () => {
   })
 
   contentType.addSchemaField('myField', payload => {
-    const { nodeTypes, nodeType, graphql } = payload
+    const { graphql } = payload
 
     expect(payload.contentType).toEqual(contentType)
-    expect(nodeTypes).toHaveProperty('TestPost')
-    expect(nodeTypes['TestPost']).toEqual(nodeType)
     expect(graphql).toHaveProperty('graphql')
     expect(graphql).toHaveProperty('GraphQLID')
     expect(graphql).toHaveProperty('GraphQLInt')

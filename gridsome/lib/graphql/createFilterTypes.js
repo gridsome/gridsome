@@ -2,23 +2,14 @@ const { isDate } = require('./types/date')
 const { isEmpty, reduce } = require('lodash')
 const { is32BitInt, isRefFieldDefinition, createTypeName } = require('./utils')
 
-const {
-  GraphQLInt,
-  GraphQLList,
-  GraphQLFloat,
-  GraphQLString,
-  GraphQLBoolean,
-  GraphQLInputObjectType
-} = require('graphql')
-
 const OBJ_SUFFIX = '__Object'
 const REF_SUFFIX = '__Reference'
 
-function createFilterTypes (fields, typeName) {
+function createFilterTypes (schemaComposer, fields, typeName) {
   const types = {}
 
   for (const key in fields) {
-    const type = createFilterType(fields[key], key, typeName)
+    const type = createFilterType(schemaComposer, fields[key], key, typeName)
 
     if (type) {
       types[key] = { type }
@@ -28,41 +19,41 @@ function createFilterTypes (fields, typeName) {
   return types
 }
 
-function createFilterType (value, fieldName, typeName) {
+function createFilterType (schemaComposer, value, fieldName, typeName) {
   const defaultDescription = `Filter ${typeName} nodes by ${fieldName}`
 
   if (isRefFieldDefinition(value)) {
-    return new GraphQLInputObjectType({
+    return schemaComposer.createInputTC({
       name: createFilterName(typeName, fieldName) + REF_SUFFIX,
       description: defaultDescription,
       fields: value.isList
         ? {
-          size: { type: GraphQLInt, description: desc.size },
-          contains: { type: new GraphQLList(GraphQLString), description: desc.contains },
-          containsAny: { type: new GraphQLList(GraphQLString), description: desc.containsAny },
-          containsNone: { type: new GraphQLList(GraphQLString), description: desc.containsNone }
+          size: { type: 'Int', description: desc.size },
+          contains: { type: '[String]', description: desc.contains },
+          containsAny: { type: '[String]', description: desc.containsAny },
+          containsNone: { type: '[String]', description: desc.containsNone }
         }
         : {
-          eq: { type: GraphQLString, description: desc.eq },
-          ne: { type: GraphQLString, description: desc.ne },
-          regex: { type: GraphQLString, description: desc.regex },
-          in: { type: new GraphQLList(GraphQLString), description: desc.in },
-          nin: { type: new GraphQLList(GraphQLString), description: desc.nin }
+          eq: { type: 'String', description: desc.eq },
+          ne: { type: 'String', description: desc.ne },
+          regex: { type: 'String', description: desc.regex },
+          in: { type: '[String]', description: desc.in },
+          nin: { type: '[String]', description: desc.nin }
         }
     })
   }
 
   if (isDate(value)) {
-    return new GraphQLInputObjectType({
+    return schemaComposer.createInputTC({
       name: createFilterName(typeName, fieldName),
       description: defaultDescription,
       fields: {
-        dteq: { type: GraphQLString, description: desc.dteq },
-        gt: { type: GraphQLString, description: desc.gt },
-        gte: { type: GraphQLString, description: desc.gte },
-        lt: { type: GraphQLString, description: desc.lt },
-        lte: { type: GraphQLString, description: desc.lte },
-        between: { type: new GraphQLList(GraphQLString), description: desc.between }
+        dteq: { type: 'String', description: desc.dteq },
+        gt: { type: 'String', description: desc.gt },
+        gte: { type: 'String', description: desc.gte },
+        lt: { type: 'String', description: desc.lt },
+        lte: { type: 'String', description: desc.lte },
+        between: { type: '[String]', description: desc.between }
       }
     })
   }
@@ -70,48 +61,48 @@ function createFilterType (value, fieldName, typeName) {
   if (Array.isArray(value)) {
     const valueType = toGraphQLType(value[0])
 
-    return valueType ? new GraphQLInputObjectType({
+    return valueType ? schemaComposer.createInputTC({
       name: createFilterName(typeName, fieldName),
       description: defaultDescription,
       fields: {
-        size: { type: GraphQLInt, description: desc.size },
-        contains: { type: new GraphQLList(valueType), description: desc.contains },
-        containsAny: { type: new GraphQLList(valueType), description: desc.containsAny },
-        containsNone: { type: new GraphQLList(valueType), description: desc.containsNone }
+        size: { type: 'Int', description: desc.size },
+        contains: { type: [valueType], description: desc.contains },
+        containsAny: { type: [valueType], description: desc.containsAny },
+        containsNone: { type: [valueType], description: desc.containsNone }
       }
     }) : null
   }
 
   switch (typeof value) {
     case 'string' :
-      return new GraphQLInputObjectType({
+      return schemaComposer.createInputTC({
         name: createFilterName(typeName, fieldName),
         description: defaultDescription,
         fields: {
-          len: { type: GraphQLInt, description: desc.len },
-          eq: { type: GraphQLString, description: desc.eq },
-          ne: { type: GraphQLString, description: desc.ne },
-          regex: { type: GraphQLString, description: desc.regex },
-          in: { type: new GraphQLList(GraphQLString), description: desc.in },
-          nin: { type: new GraphQLList(GraphQLString), description: desc.nin }
+          len: { type: 'Int', description: desc.len },
+          eq: { type: 'String', description: desc.eq },
+          ne: { type: 'String', description: desc.ne },
+          regex: { type: 'String', description: desc.regex },
+          in: { type: '[String]', description: desc.in },
+          nin: { type: '[String]', description: desc.nin }
         }
       })
 
     case 'boolean' :
-      return new GraphQLInputObjectType({
+      return schemaComposer.createInputTC({
         name: createFilterName(typeName, fieldName),
         fields: {
-          eq: { type: GraphQLBoolean, description: desc.eq },
-          ne: { type: GraphQLBoolean, description: desc.ne },
-          in: { type: new GraphQLList(GraphQLBoolean), description: desc.in },
-          nin: { type: new GraphQLList(GraphQLBoolean), description: desc.nin }
+          eq: { type: 'Boolean', description: desc.eq },
+          ne: { type: 'Boolean', description: desc.ne },
+          in: { type: '[Boolean]', description: desc.in },
+          nin: { type: '[Boolean]', description: desc.nin }
         }
       })
 
     case 'number':
       const numberType = toGraphQLType(value)
 
-      return new GraphQLInputObjectType({
+      return schemaComposer.createInputTC({
         name: createFilterName(typeName, fieldName),
         description: defaultDescription,
         fields: {
@@ -121,23 +112,23 @@ function createFilterType (value, fieldName, typeName) {
           gte: { type: numberType, description: desc.gte },
           lt: { type: numberType, description: desc.lt },
           lte: { type: numberType, description: desc.lte },
-          in: { type: new GraphQLList(numberType), description: desc.in },
-          nin: { type: new GraphQLList(numberType), description: desc.nin },
-          between: { type: new GraphQLList(numberType), description: desc.between }
+          in: { type: [numberType], description: desc.in },
+          nin: { type: [numberType], description: desc.nin },
+          between: { type: [numberType], description: desc.between }
         }
       })
 
     case 'object':
-      return createObjectFilter(value, fieldName, typeName)
+      return createObjectFilter(schemaComposer, value, fieldName, typeName)
   }
 }
 
-function createObjectFilter (obj, fieldName, typeName) {
+function createObjectFilter (schemaComposer, obj, fieldName, typeName) {
   const name = createFilterName(typeName, fieldName) + OBJ_SUFFIX
   const fields = {}
 
   for (const key in obj) {
-    const type = createFilterType(obj[key], `${fieldName} ${key}`, typeName)
+    const type = createFilterType(schemaComposer, obj[key], `${fieldName} ${key}`, typeName)
 
     if (type) {
       fields[key] = { type }
@@ -145,7 +136,7 @@ function createObjectFilter (obj, fieldName, typeName) {
   }
 
   return !isEmpty(fields)
-    ? new GraphQLInputObjectType({ name, fields })
+    ? schemaComposer.createInputTC({ name, fields })
     : null
 }
 
@@ -156,14 +147,10 @@ function createFilterName (typeName, key) {
 function toGraphQLType (value) {
   const type = typeof value
 
-  if (Array.isArray(value)) {
-    return GraphQLList
-  }
-
   switch (type) {
-    case 'string' : return GraphQLString
-    case 'boolean' : return GraphQLBoolean
-    case 'number' : return is32BitInt(value) ? GraphQLInt : GraphQLFloat
+    case 'string' : return 'String'
+    case 'boolean' : return 'Boolean'
+    case 'number' : return is32BitInt(value) ? 'Int' : 'Float'
   }
 }
 

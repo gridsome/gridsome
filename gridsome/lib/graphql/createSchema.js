@@ -1,23 +1,25 @@
-const { omitBy, isEmpty } = require('lodash')
-const { GraphQLSchema, GraphQLObjectType } = require('graphql')
+const { SchemaComposer } = require('graphql-compose')
+const initSharedTypes = require('./types')
 
 module.exports = store => {
-  const directives = require('./directives')
-  const pagesSchema = require('./pages')()
-  const nodesSchema = require('./nodes')(store)
-  const metaData = require('./metaData')(store, nodesSchema.nodeTypes)
+  const schemaComposer = new SchemaComposer()
 
-  return new GraphQLSchema({
-    query: new GraphQLObjectType({
-      name: 'RootQuery',
-      fields: () => omitBy({
-        ...pagesSchema.queries,
-        ...nodesSchema.queries,
-        ...pagesSchema.connections,
-        ...nodesSchema.connections,
-        metaData
-      }, isEmpty)
-    }),
-    directives
+  initSharedTypes(schemaComposer).forEach(typeDef => {
+    schemaComposer.addSchemaMustHaveType(typeDef)
   })
+
+  const directives = require('./directives')
+  const pagesSchema = require('./pages')(schemaComposer)
+  const nodesSchema = require('./nodes')(schemaComposer, store)
+  const metaData = require('./metaData')(schemaComposer, store)
+
+  schemaComposer.Query.addFields(metaData)
+  schemaComposer.Query.addFields(nodesSchema)
+  schemaComposer.Query.addFields(pagesSchema)
+
+  for (const directive of directives) {
+    schemaComposer.addDirective(directive)
+  }
+
+  return schemaComposer.buildSchema()
 }

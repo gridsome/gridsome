@@ -222,7 +222,7 @@ test('get nodes by path regex', async () => {
   posts.addNode({ path: '/node-2' })
   posts.addNode({ path: '/some-3' })
 
-  const query = '{ allTestPost (regex: "/node") { edges { node { _id }}}}'
+  const query = '{ allTestPost (regex: "/node") { edges { node { id }}}}'
   const { errors, data } = await createSchemaAndExecute(query)
 
   expect(errors).toBeUndefined()
@@ -684,11 +684,9 @@ test('collection.addSchemaField', async () => {
   })
 
   contentType.addSchemaField('myField', payload => {
-    const { nodeTypes, nodeType, graphql } = payload
+    const { graphql } = payload
 
     expect(payload.contentType).toEqual(contentType)
-    expect(nodeTypes).toHaveProperty('TestPost')
-    expect(nodeTypes['TestPost']).toEqual(nodeType)
     expect(graphql).toHaveProperty('graphql')
     expect(graphql).toHaveProperty('GraphQLID')
     expect(graphql).toHaveProperty('GraphQLInt')

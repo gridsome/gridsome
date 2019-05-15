@@ -1,20 +1,17 @@
-const { GraphQLString, GraphQLBoolean } = require('graphql')
-
-module.exports = ({ nodeType }) => {
+module.exports = function createQuery ({ typeName }) {
   return {
-    type: nodeType,
+    type: typeName,
     args: {
-      id: { type: GraphQLString },
-      _id: { type: GraphQLString, deprecationReason: 'Use id instead.' },
-      path: { type: GraphQLString, deprecationReason: 'Use id instead.' },
+      id: 'String',
+      path: 'String',
       nullable: {
-        type: GraphQLBoolean,
+        type: 'Boolean',
         defaultValue: false,
         description: 'Will return an error if not nullable.',
         deprecationReason: 'Will always return null if not found.'
       }
     },
-    resolve (object, { _id, id = _id, path }, { store }, { returnType }) {
+    resolve (_, { id, path }, { store }, { returnType }) {
       const { collection } = store.getContentType(returnType)
       let node = null
 

@@ -1,22 +1,26 @@
 const { isEmpty } = require('lodash')
-const { GraphQLObjectType } = require('graphql')
 const { createFieldTypes } = require('../createFieldTypes')
 
-module.exports = (store, nodeTypes) => {
+module.exports = (schemaComposer, store) => {
   const fields = store.metaData.find().reduce((fields, obj) => {
     fields[obj.key] = obj.data
     return fields
   }, {})
 
   if (isEmpty(fields)) {
-    return
+    return {}
   }
 
+  const typeNames = Object.keys(store.collections)
+  const metaDataType = schemaComposer.createObjectTC({
+    name: 'MetaData',
+    fields: () => createFieldTypes(schemaComposer, fields, 'MetaData', typeNames)
+  })
+
   return {
-    resolve: () => fields,
-    type: new GraphQLObjectType({
-      name: 'MetaData',
-      fields: () => createFieldTypes(fields, 'MetaData', nodeTypes)
-    })
+    metaData: {
+      resolve: () => fields,
+      type: () => metaDataType
+    }
   }
 }

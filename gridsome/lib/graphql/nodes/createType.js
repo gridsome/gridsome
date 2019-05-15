@@ -1,53 +1,38 @@
 const graphql = require('../graphql')
-const { nodeInterface } = require('../interfaces')
 const createBelongsTo = require('./createBelongsTo')
 const { createRefResolver } = require('../resolvers')
 const { createFieldTypes, createRefType } = require('../createFieldTypes')
 const { mapValues, isEmpty } = require('lodash')
 
-const {
-  GraphQLID,
-  GraphQLList,
-  GraphQLString,
-  GraphQLNonNull,
-  GraphQLObjectType
-} = graphql
-
-module.exports = ({ contentType, nodeTypes, fields }) => {
-  const nodeType = new GraphQLObjectType({
-    name: contentType.typeName,
-    interfaces: [nodeInterface],
-    isTypeOf: node => node.internal.typeName === contentType.typeName,
-    fields: () => {
-      const fieldTypes = createFieldTypes(fields, contentType.typeName, nodeTypes)
-      const refs = createRefs(contentType, nodeTypes, fieldTypes)
-
-      const nodeFields = {
-        ...fieldTypes,
-        ...refs,
-
-        ...extendNodeType(contentType, nodeType, nodeTypes),
-        ...createFields(contentType, fieldTypes),
-
-        id: { type: new GraphQLNonNull(GraphQLID) },
-        belongsTo: createBelongsTo(contentType, nodeTypes),
-
-        _id: {
-          deprecationReason: 'Use id instead.',
-          type: new GraphQLNonNull(GraphQLID),
-          resolve: node => node.id
-        }
-      }
-
-      return nodeFields
-    }
+module.exports = function createType ({
+  schemaComposer,
+  contentType,
+  typeNames,
+  typeName,
+  fields
+}) {
+  const nodeType = schemaComposer.createObjectTC({
+    name: typeName,
+    interfaces: ['Node'],
+    isTypeOf: node => node.internal.typeName === typeName
   })
+
+  const fieldTypes = createFieldTypes(schemaComposer, fields, typeName, typeNames)
+  const refTypes = createRefs(schemaComposer, contentType, fieldTypes, typeNames)
+  const thirdPartyFields = extendNodeType(contentType)
+  const belongsTo = createBelongsTo({ schemaComposer, typeNames, typeName })
+
+  nodeType.addFields(fieldTypes)
+  nodeType.addFields(refTypes)
+  nodeType.addFields(thirdPartyFields)
+  nodeType.addFields({ belongsTo })
+  nodeType.addFields({ id: 'ID!' })
 
   return nodeType
 }
 
-function extendNodeType (contentType, nodeType, nodeTypes) {
-  const context = { contentType, nodeTypes, nodeType, graphql }
+function extendNodeType (contentType) {
+  const context = { contentType, graphql }
   const fields = {}
 
   for (const mimeType in contentType.options.mimeTypes) {
@@ -67,32 +52,19 @@ function extendNodeType (contentType, nodeType, nodeTypes) {
   return fields
 }
 
-function createFields (contentType, customFields) {
-  if (isEmpty(customFields)) return {}
-
-  const fields = {
-    deprecationReason: 'Get field on node instead.',
-    type: new GraphQLObjectType({
-      name: `${contentType.typeName}Fields`,
-      fields: () => customFields
-    })
-  }
-
-  return { fields }
-}
-
-function createRefs (contentType, nodeTypes, fields) {
-  if (isEmpty(contentType.options.refs)) return null
+function createRefs (schemaComposer, contentType, fieldTypes, typeNames) {
+  if (isEmpty(contentType.options.refs)) return {}
 
   return mapValues(contentType.options.refs, ({ typeName }, fieldName) => {
-    const field = fields[fieldName] || { type: GraphQLString }
-    const isList = field.type instanceof GraphQLList
+    const field = fieldTypes[fieldName] || 'String'
+    const isList = Array.isArray(field.type)
     const ref = { typeName, isList }
+
     const resolve = createRefResolver(ref)
 
     return {
-      ...createRefType(ref, fieldName, contentType.typeName, nodeTypes),
-      resolve: (obj, args, context, info) => {
+      ...createRefType(schemaComposer, ref, fieldName, typeName, typeNames),
+      resolve (obj, args, context, info) {
         const field = {
           [fieldName]: {
             typeName,

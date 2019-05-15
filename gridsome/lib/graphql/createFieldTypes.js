@@ -1,29 +1,17 @@
 const { isEmpty } = require('lodash')
-const { nodeInterface } = require('./interfaces')
 const { isFile, fileType } = require('./types/file')
-const { sortOrderType, sortType } = require('./types')
 const { isImage, imageType } = require('./types/image')
 const { isDate, dateType } = require('./types/date')
-const { fieldResolver, createRefResolver } = require('./resolvers')
+const { createRefResolver } = require('./resolvers')
 const { is32BitInt, isRefFieldDefinition, createTypeName } = require('./utils')
 const { SORT_ORDER } = require('../utils/constants')
 const { warn } = require('../utils/log')
 
-const {
-  GraphQLInt,
-  GraphQLList,
-  GraphQLFloat,
-  GraphQLString,
-  GraphQLBoolean,
-  GraphQLUnionType,
-  GraphQLObjectType
-} = require('graphql')
-
-function createFieldTypes (fields, typeName, nodeTypes) {
+function createFieldTypes (schemaComposer, fields, typeName, typeNames = []) {
   const types = {}
 
   for (const key in fields) {
-    const result = createFieldType(fields[key], key, typeName, nodeTypes)
+    const result = createFieldType(schemaComposer, fields[key], key, typeName, typeNames)
 
     if (result) {
       types[key] = result
@@ -33,17 +21,17 @@ function createFieldTypes (fields, typeName, nodeTypes) {
   return types
 }
 
-function createFieldType (value, key, typeName, nodeTypes) {
+function createFieldType (schemaComposer, value, key, typeName, typeNames) {
   if (value === undefined) return null
   if (value === null) return null
 
   if (Array.isArray(value)) {
-    const type = createFieldType(value[0], key, typeName, nodeTypes)
+    const type = createFieldType(schemaComposer, value[0], key, typeName, typeNames)
 
     return type !== null ? {
-      type: new GraphQLList(type.type),
-      resolve: (obj, args, context, info) => {
-        const value = fieldResolver(obj, args, context, info)
+      type: [type.type],
+      resolve: obj => {
+        const value = obj[key]
         return Array.isArray(value) ? value : []
       }
     } : null
@@ -59,47 +47,40 @@ function createFieldType (value, key, typeName, nodeTypes) {
       if (isFile(value)) return fileType
 
       return {
-        type: GraphQLString,
-        resolve: (...args) => fieldResolver(...args) || ''
+        type: 'String',
+        resolve: obj => obj[key] || ''
       }
     case 'boolean':
-      return {
-        type: GraphQLBoolean,
-        resolve: fieldResolver
-      }
+      return { type: 'Boolean' }
     case 'number':
-      return {
-        type: is32BitInt(value) ? GraphQLInt : GraphQLFloat,
-        resolve: fieldResolver
-      }
+      return { type: is32BitInt(value) ? 'Int' : 'Float' }
     case 'object':
       return isRefFieldDefinition(value)
-        ? createRefType(value, key, typeName, nodeTypes)
-        : createObjectType(value, key, typeName, nodeTypes)
+        ? createRefType(schemaComposer, value, key, typeName, typeNames)
+        : createObjectType(schemaComposer, value, key, typeName, typeNames)
   }
 }
 
-function createObjectType (obj, fieldName, typeName, nodeTypes) {
+function createObjectType (schemaComposer, obj, fieldName, typeName, typeNames) {
   const name = createTypeName(typeName, fieldName)
   const fields = {}
 
   for (const key in obj) {
-    const type = createFieldType(obj[key], key, name, nodeTypes)
+    const type = createFieldType(schemaComposer, obj[key], key, name, typeNames)
 
     if (type) {
       fields[key] = type
     }
   }
 
-  return !isEmpty(fields) ? {
-    type: new GraphQLObjectType({ name, fields }),
-    resolve: fieldResolver
-  } : null
+  return !isEmpty(fields)
+    ? { type: schemaComposer.createObjectTC({ name, fields }) }
+    : null
 }
 
-function createRefType (ref, fieldName, fieldTypeName, nodeTypes) {
+function createRefType (schemaComposer, ref, fieldName, fieldTypeName, typeNames) {
   const typeName = Array.isArray(ref.typeName)
-    ? ref.typeName.filter(typeName => nodeTypes.hasOwnProperty(typeName))
+    ? ref.typeName.filter(typeName => typeNames.includes(typeName))
     : ref.typeName
 
   const res = {
@@ -108,34 +89,34 @@ function createRefType (ref, fieldName, fieldTypeName, nodeTypes) {
 
   if (Array.isArray(typeName)) {
     if (typeName.length > 1) {
-      res.type = new GraphQLUnionType({
-        interfaces: [nodeInterface],
+      res.type = schemaComposer.createUnionTC({
         name: createTypeName(fieldTypeName, fieldName + 'Ref'),
         description: `Reference to ${ref.typeName.join(', ')} nodes`,
-        types: () => typeName.map(typeName => nodeTypes[typeName])
+        interfaces: ['Node'],
+        types: typeName
       })
     } else if (typeName.length === 1) {
-      res.type = nodeTypes[typeName[0]]
+      res.type = typeName[0]
     } else {
       warn(`No reference found for ${fieldName}.`)
       return null
     }
-  } else if (nodeTypes.hasOwnProperty(typeName)) {
-    res.type = nodeTypes[typeName]
+  } else if (typeNames.includes(typeName)) {
+    res.type = typeName
   } else {
     warn(`No reference found for ${fieldName}.`)
     return null
   }
 
   if (ref.isList) {
-    res.type = new GraphQLList(res.type)
+    res.type = [res.type]
 
     res.args = {
-      sortBy: { type: GraphQLString },
-      order: { type: sortOrderType, defaultValue: SORT_ORDER },
-      skip: { type: GraphQLInt, defaultValue: 0 },
-      sort: { type: new GraphQLList(sortType) },
-      limit: { type: GraphQLInt }
+      sortBy: { type: 'String' },
+      order: { type: 'SortOrderEnum', defaultValue: SORT_ORDER },
+      skip: { type: 'Int', defaultValue: 0 },
+      sort: { type: '[SortArgument]' },
+      limit: { type: 'Int' }
     }
   }
 

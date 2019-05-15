@@ -4,34 +4,20 @@ const createQuery = require('./createQuery')
 const createConnection = require('./createConnection')
 const createFieldDefinitions = require('../createFieldDefinitions')
 
-module.exports = store => {
-  const connections = {}
-  const nodeTypes = {}
-  const queries = {}
+module.exports = (schemaComposer, store) => {
+  const typeNames = Object.keys(store.collections)
+  const schema = {}
 
-  for (const typeName in store.collections) {
+  for (const typeName of typeNames) {
     const contentType = store.getContentType(typeName)
     const fields = createFieldDefinitions(contentType.collection.find())
+    const args = { schemaComposer, contentType, typeNames, typeName, fields }
 
-    const nodeType = nodeTypes[typeName] = createType({
-      contentType,
-      nodeTypes,
-      fields
-    })
+    const typeComposer = createType(args)
 
-    const nodeQuery = createQuery({ contentType, nodeType, fields })
-    const nodeConnection = createConnection({ contentType, nodeType, fields })
-
-    queries[camelCase(typeName)] = nodeQuery
-    connections[`all${typeName}`] = nodeConnection
-
-    contentType.graphqlType = nodeType
-    contentType.graphqlConnection = nodeConnection
+    schema[camelCase(typeName)] = createQuery({ ...args, typeComposer })
+    schema[`all${typeName}`] = createConnection({ ...args, typeComposer })
   }
 
-  return {
-    queries,
-    connections,
-    nodeTypes
-  }
+  return schema
 }
