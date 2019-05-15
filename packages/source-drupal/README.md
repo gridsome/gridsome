@@ -107,8 +107,8 @@ module.exports = {
       options: {
         baseUrl: 'https://somedrupalsite.pantheonsite.io',
         routes: {
-          'node--article': '/articles/:slug',
-          'taxonomy_term--tags': '/tags/:name'
+          'node--article': '/articles/:title',
+          'taxonomy_term--tags': '/tags/:title'
         }
       }
     }
@@ -117,7 +117,7 @@ module.exports = {
 ```
 
 Path parameters can be any GraphQL field on that node:
-`node--article: 'aritlces/:langcode/:slug' -> /aritcles/en/lorem-ipsum`
+`node--article: 'aritlces/:langcode/:title' -> /aritcles/en/lorem-ipsum`
 
 ### Contenta CMS
 [Contenta CMS](https://github.com/contentacms/contenta_jsonapi#--contenta-cms--) should work out-of-the-box with @gridsome/source-drupal. The main difference being, Contenta CMS is by default already using [JSON:API Extras](https://www.drupal.org/project/jsonapi_extras). This gives the user more flexibility and control over resources returned by the api. 
@@ -152,8 +152,8 @@ module.exports = {
         baseUrl: 'https://somedrupalsite.pantheon.io',
         exclude: [ ...defaultExcludes, 'user--user' ], // include the defaults
         routes: {
-          'node--article': '/articles/:slug',
-          'taxonomy_term--tags': '/tags/:name'
+          'node--article': '/articles/:title',
+          'taxonomy_term--tags': '/tags/:title'
         }
       }
     }
