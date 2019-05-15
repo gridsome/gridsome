@@ -35,4 +35,39 @@ module.exports = {
 }
 ```
 
+### Adding static urls
+```js
+module.exports = {
+  plugins: [
+    {
+      use: '@gridsome/plugin-sitemap',
+      options: {
+        staticUrls: [
+          {
+            url: '/images/',
+            img: [
+              {
+                url: '/images/img1.jpg',
+                caption: 'Image One',
+                title: 'The Title of Image One',
+                geoLocation: 'Trondheim, Norway',
+                license: 'https://creativecommons.org/licenses/by/4.0/'
+              },
+              {
+                url: '/images/img2.jpg',
+                caption: 'Image Two',
+                title: 'The Title of Image Two',
+                geoLocation: 'Trondheim, Norway',
+                license: 'https://creativecommons.org/licenses/by/4.0/'
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}
+```
+
+
 Your sitemap will be available at `/sitemap.xml` after your site is built.
