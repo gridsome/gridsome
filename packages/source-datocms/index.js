@@ -124,7 +124,7 @@ class DatoCmsSource {
 
             return fields
           } else {
-            fields[camelize(field.apiKey)] = val && val.toMap
+            fields[camelize(field.apiKey)] = val.toMap
               ? withNoEmptyValues(val.toMap())
               : withNoEmptyValues(val)
 
