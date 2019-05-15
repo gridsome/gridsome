@@ -14,6 +14,7 @@
   "dependencies": {
     "@babel/parser": "^7.0.0",
     "@babel/traverse": "^7.0.0",
+    "@gridsome/source-filesystem": "0.4.0",
     "chokidar": "^2.0.4",
     "fs-extra": "^7.0.0",
     "globby": "^8.0.1",

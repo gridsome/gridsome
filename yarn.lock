@@ -768,6 +768,17 @@
     follow-redirects "^1.2.5"
     is-buffer "^1.1.5"
 
+"@gridsome/source-filesystem@0.4.0":
+  version "0.4.0"
+  resolved "https://registry.yarnpkg.com/@gridsome/source-filesystem/-/source-filesystem-0.4.0.tgz#58d6881187bb3dc61f1c99803848dc277b68d6be"
+  integrity sha512-xhm4yXs0Lxl5WNZneaWM1MAHEhyGKdNdVe11xPAeVUUK6LZ1bQ1oc998RKh7ZKEH7Uc1bDYG3fylzcfjDocfBg==
+  dependencies:
+    chokidar "^2.0.4"
+    fs-extra "^7.0.0"
+    globby "^8.0.1"
+    lodash "^4.17.10"
+    slash "^2.0.0"
+
 "@hjvedvik/tasks@^0.0.8":
   version "0.0.8"
   resolved "https://registry.yarnpkg.com/@hjvedvik/tasks/-/tasks-0.0.8.tgz#69440b92fccbe22c20c8d8788e723eac8f60aa59"

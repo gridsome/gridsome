@@ -1,8 +1,6 @@
 const path = require('path')
 const fs = require('fs-extra')
-const glob = require('globby')
-const slash = require('slash')
-const chokidar = require('chokidar')
+const Filesystem = require('@gridsome/source-filesystem')
 
 const sfcSyntax = require('./lib/sfc-syntax')
 const toSFC = require('./lib/mdvue-ast-to-sfc')
@@ -14,12 +12,12 @@ class MdVuePlugin {
   static defaultOptions () {
     return {
       typeName: 'VueMarkdownPage',
-      route: undefined,
       baseDir: undefined,
+      pathPrefix: undefined,
+      route: undefined,
       index: ['index'],
+      refs: {},
       includePaths: [],
-      pathPrefix: '/',
-      plugins: []
     }
   }
 
@@ -38,6 +36,15 @@ class MdVuePlugin {
     this.api = api
     this.store = api.store
     this.options = options
+    this.filesystem = new Filesystem(api, {
+      path: '**/*.md',
+      typeName: options.typeName,
+      baseDir: options.baseDir,
+      pathPrefix: options.pathPrefix,
+      route: options.route,
+      index: options.index,
+      refs: options.refs
+    })
     this.remark = this.store._transformers['text/markdown']
     this.context = options.baseDir ? api.resolve(options.baseDir) : api.context
 
@@ -49,7 +56,6 @@ class MdVuePlugin {
     api.transpileDependencies([path.resolve(__dirname, 'src')])
     api.registerComponentParser({ test: /\.md/, parse: this.parseComponent.bind(this) })
     api.chainWebpack(config => this.chainWebpack(config))
-    api.loadSource(args => this.loadFiles(args))
     api.createPages(args => this.createPages(args))
   }
 
@@ -90,23 +96,6 @@ class MdVuePlugin {
       .options(this)
   }
 
-  async loadFiles (store) {
-    const files = await glob('**/*.md', { cwd: this.context })
-    const contentType = store.addContentType({
-      typeName: this.options.typeName,
-      route: this.options.route
-    })
-
-    await Promise.all(files.map(async file => {
-      const options = await this.createNodeOptions(file)
-      contentType.addNode(options)
-    }))
-
-    if (process.env.NODE_ENV === 'development') {
-      this.watch(contentType)
-    }
-  }
-
   async createPages ({ getContentType, createPage }) {
     const contentType = getContentType(this.options.typeName)
 
@@ -117,49 +106,6 @@ class MdVuePlugin {
         queryVariables: node
       })
     })
-  }
-
-  async createNodeOptions (file) {
-    const { pathPrefix } = this.options
-    const origin = path.join(this.context, file)
-    const relPath = path.relative(this.context, file)
-    const mimeType = this.store.mime.lookup(file)
-    const content = await fs.readFile(origin, 'utf8')
-    const id = this.store.makeUid(relPath)
-    const { dir, name, ext = '' } = path.parse(file)
-    const routePath = this.normalizePath(file, pathPrefix)
-
-    return {
-      id,
-      path: routePath,
-      fileInfo: {
-        extension: ext,
-        directory: dir,
-        path: file,
-        name
-      },
-      internal: {
-        mimeType,
-        content,
-        origin
-      }
-    }
-  }
-
-  normalizePath (file, pathPrefix) {
-    if (this.options.route) return null
-
-    const { dir, name } = path.parse(file)
-    const segments = (pathPrefix + dir)
-      .split('/')
-      .filter(s => s)
-      .map(s => this.store.slugify(s))
-
-    if (!this.options.index.includes(name)) {
-      segments.push(this.store.slugify(name))
-    }
-
-    return `/${segments.join('/')}`
   }
 
   async parse (source, resourcePath = null) {
@@ -187,29 +133,6 @@ class MdVuePlugin {
     const sfc = await this.processor.process(file)
 
     return `${sfc}\n\n${frontMatterBlock}`
-  }
-
-  watch (contentType) {
-    const watcher = chokidar.watch('**/*.md', {
-      ignoreInitial: true,
-      cwd: this.context
-    })
-
-    watcher.on('add', async file => {
-      const options = await this.createNodeOptions(slash(file))
-      contentType.addNode(options)
-    })
-
-    watcher.on('unlink', file => {
-      contentType.removeNode({
-        'internal.origin': path.join(this.context, slash(file))
-      })
-    })
-
-    watcher.on('change', async file => {
-      const options = await this.createNodeOptions(slash(file))
-      contentType.updateNode(options)
-    })
   }
 }
 
