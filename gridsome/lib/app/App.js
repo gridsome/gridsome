@@ -146,26 +146,29 @@ class App {
 
   async createSchema () {
     const graphql = require('../graphql/graphql')
-    const { mergeSchemas } = require('graphql-tools')
     const createSchema = require('../graphql/createSchema')
     const { createSchemaAPI } = require('../graphql/utils')
 
     const schemas = []
+    const resolvers = []
+    const typeDefs = []
 
     const results = await this.events.dispatch('createSchema', () => {
       return createSchemaAPI({
-        addSchema: schema => schemas.push(schema)
+        addSchema: schema => schemas.push(schema),
+        addResolvers: obj => resolvers.push(obj),
+        createTypes: typeDef => typeDefs.push(typeDef)
       })
     })
 
     // add custom schemas returned from the hook handlers
     results.forEach(schema => schema && schemas.push(schema))
 
-    const schema = createSchema(this.store)
+    const schema = createSchema(this.store, { schemas, resolvers, typeDefs })
 
     this._execute = graphql.execute
     this._graphql = graphql.graphql
-    this.schema = mergeSchemas({ schemas: [schema, ...schemas] })
+    this.schema = schema
   }
 
   async createPages () {
