@@ -26,7 +26,7 @@ class FilesystemSource {
     this.refsCache = {}
 
     api.loadSource(async () => {
-      await this.createContentTypes()
+      this.createContentTypes()
       await this.createNodes()
       if (isDev) this.watchFiles()
     })
