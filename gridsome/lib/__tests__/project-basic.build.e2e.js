@@ -143,6 +143,14 @@ test('render template with static routes and pagination', () => {
   expect(exists('dist/docs/3/2/index.html')).toBeFalsy()
 })
 
+test('render page $context', () => {
+  const $page1 = load('dist/about/index.html')
+  const $page2 = load('dist/about-us/index.html')
+
+  expect($page1('h1').text()).toEqual('')
+  expect($page2('h1').text()).toEqual('About us')
+})
+
 test('generate /404.html', () => {
   const $404 = load('dist/404.html')
 

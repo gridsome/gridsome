@@ -38,6 +38,14 @@ module.exports = function (api) {
         }
       })
     })
+
+    createPage({
+      path: '/about-us',
+      component: './src/pages/About.vue',
+      context: {
+        title: 'About us'
+      }
+    })
   })
 
   api.chainWebpack(config => {
