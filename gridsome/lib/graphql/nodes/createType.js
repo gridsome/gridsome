@@ -1,34 +1,67 @@
 const graphql = require('../graphql')
+const { defaultFieldResolver } = require('graphql')
 const createBelongsTo = require('./createBelongsTo')
 const { createRefResolver } = require('../resolvers')
 const { createFieldTypes, createRefType } = require('../createFieldTypes')
-const { mapValues, isEmpty } = require('lodash')
+const { omit, mapValues, isEmpty, isPlainObject } = require('lodash')
+const { isRefFieldDefinition } = require('../utils')
 
 module.exports = function createType ({
   schemaComposer,
   contentType,
   typeNames,
   typeName,
-  fields
+  fieldDefs
 }) {
-  const nodeType = schemaComposer.createObjectTC({
-    name: typeName,
-    interfaces: ['Node'],
-    isTypeOf: node => node.internal.typeName === typeName
-  })
+  if (schemaComposer.has(typeName)) {
+    if (!schemaComposer.get(typeName).hasInterface('Node')) {
+      throw new Error(
+        `The '${typeName}' GraphQL type must implement the 'Node' ` +
+        `interface bacause it will represent a content type.`
+      )
+    }
+  }
 
-  const fieldTypes = createFieldTypes(schemaComposer, fields, typeName, typeNames)
+  const typeComposer = schemaComposer.getOrCreateOTC(typeName)
+
+  const missingFields = omit(fieldDefs, Object.keys(typeComposer.getFields()))
+  const fieldTypes = createFieldTypes(schemaComposer, missingFields, typeName, typeNames)
+
+  processMissingFields(typeComposer, missingFields, fieldTypes)
+
   const refTypes = createRefs(schemaComposer, contentType, fieldTypes, typeNames)
   const thirdPartyFields = extendNodeType(contentType)
   const belongsTo = createBelongsTo({ schemaComposer, typeNames, typeName })
 
-  nodeType.addFields(fieldTypes)
-  nodeType.addFields(refTypes)
-  nodeType.addFields(thirdPartyFields)
-  nodeType.addFields({ belongsTo })
-  nodeType.addFields({ id: 'ID!' })
+  typeComposer.setIsTypeOf(node => node.internal.typeName === typeName)
+  typeComposer.addInterface('Node')
+  typeComposer.addFields(fieldTypes)
+  typeComposer.addFields(refTypes)
+  typeComposer.addFields(thirdPartyFields)
+  typeComposer.addFields({ belongsTo })
+  typeComposer.addFields({ id: 'ID!' })
 
-  return nodeType
+  return typeComposer
+}
+
+function processMissingFields (typeComposer, fieldDefs, fieldTypes) {
+  for (const key in fieldDefs) {
+    const options = fieldDefs[key]
+    const fieldType = fieldTypes[options.fieldName]
+
+    if (options.fieldName !== key) {
+      const resolve = fieldType.resolve || defaultFieldResolver
+
+      // wrap field resolver to use original field name in info.fieldName
+      fieldType.resolve = (obj, args, ctx, info) => {
+        return resolve(obj, args, ctx, { ...info, fieldName: key })
+      }
+    }
+
+    if (isPlainObject(options.value) && !isRefFieldDefinition(options.value)) {
+      processMissingFields(typeComposer, options.value, fieldType.type.getFields())
+    }
+  }
 }
 
 function extendNodeType (contentType) {

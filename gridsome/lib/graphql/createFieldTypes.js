@@ -3,22 +3,24 @@ const { isFile, fileType } = require('./types/file')
 const { isImage, imageType } = require('./types/image')
 const { isDate, dateType } = require('./types/date')
 const { createRefResolver } = require('./resolvers')
+const { ObjectTypeComposer, UnionTypeComposer } = require('graphql-compose')
 const { is32BitInt, isRefFieldDefinition, createTypeName } = require('./utils')
 const { SORT_ORDER } = require('../utils/constants')
 const { warn } = require('../utils/log')
 
 function createFieldTypes (schemaComposer, fields, typeName, typeNames = []) {
-  const types = {}
+  const res = {}
 
   for (const key in fields) {
-    const result = createFieldType(schemaComposer, fields[key], key, typeName, typeNames)
+    const options = fields[key]
+    const result = createFieldType(schemaComposer, options.value, key, typeName, typeNames)
 
     if (result) {
-      types[key] = result
+      res[options.fieldName] = result
     }
   }
 
-  return types
+  return res
 }
 
 function createFieldType (schemaComposer, value, key, typeName, typeNames) {
@@ -48,7 +50,9 @@ function createFieldType (schemaComposer, value, key, typeName, typeNames) {
 
       return {
         type: 'String',
-        resolve: obj => obj[key] || ''
+        resolve (obj, args, ctx, info) {
+          return obj[info.fieldName] || ''
+        }
       }
     case 'boolean':
       return { type: 'Boolean' }
@@ -61,20 +65,21 @@ function createFieldType (schemaComposer, value, key, typeName, typeNames) {
   }
 }
 
-function createObjectType (schemaComposer, obj, fieldName, typeName, typeNames) {
+function createObjectType (schemaComposer, value, fieldName, typeName, typeNames) {
   const name = createTypeName(typeName, fieldName)
   const fields = {}
 
-  for (const key in obj) {
-    const type = createFieldType(schemaComposer, obj[key], key, name, typeNames)
+  for (const key in value) {
+    const options = value[key]
+    const type = createFieldType(schemaComposer, options.value, key, name, typeNames)
 
     if (type) {
-      fields[key] = type
+      fields[options.fieldName] = type
     }
   }
 
   return !isEmpty(fields)
-    ? { type: schemaComposer.createObjectTC({ name, fields }) }
+    ? { type: ObjectTypeComposer.createTemp({ name, fields }, schemaComposer) }
     : null
 }
 
@@ -89,12 +94,12 @@ function createRefType (schemaComposer, ref, fieldName, fieldTypeName, typeNames
 
   if (Array.isArray(typeName)) {
     if (typeName.length > 1) {
-      res.type = schemaComposer.createUnionTC({
+      res.type = UnionTypeComposer.createTemp({
         name: createTypeName(fieldTypeName, fieldName + 'Ref'),
         description: `Reference to ${ref.typeName.join(', ')} nodes`,
         interfaces: ['Node'],
         types: typeName
-      })
+      }, schemaComposer)
     } else if (typeName.length === 1) {
       res.type = typeName[0]
     } else {

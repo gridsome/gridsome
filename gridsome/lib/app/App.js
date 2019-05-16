@@ -150,21 +150,21 @@ class App {
     const { createSchemaAPI } = require('../graphql/utils')
 
     const schemas = []
+    const types = []
     const resolvers = []
-    const typeDefs = []
 
     const results = await this.events.dispatch('createSchema', () => {
       return createSchemaAPI({
         addSchema: schema => schemas.push(schema),
-        addResolvers: obj => resolvers.push(obj),
-        createTypes: typeDef => typeDefs.push(typeDef)
+        addTypes: typeOrSDL => types.push(typeOrSDL),
+        addResolvers: obj => resolvers.push(obj)
       })
     })
 
     // add custom schemas returned from the hook handlers
     results.forEach(schema => schema && schemas.push(schema))
 
-    const schema = createSchema(this.store, { schemas, resolvers, typeDefs })
+    const schema = createSchema(this.store, { schemas, types, resolvers })
 
     this._execute = graphql.execute
     this._graphql = graphql.graphql

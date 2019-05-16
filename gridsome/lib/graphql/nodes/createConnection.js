@@ -1,12 +1,13 @@
 const { PER_PAGE } = require('../../utils/constants')
+const createFieldDefinitions = require('../createFieldDefinitions')
 const { createFilterTypes, createFilterQuery } = require('../createFilterTypes')
 const { createPagedNodeEdges, createSortOptions } = require('./utils')
 
 module.exports = function createConnection ({
   schemaComposer,
   contentType,
-  typeName,
-  fields
+  fieldDefs,
+  typeName
 }) {
   const edgeType = schemaComposer.createObjectTC({
     name: `${typeName}Edge`,
@@ -26,9 +27,10 @@ module.exports = function createConnection ({
     }
   })
 
+  const nodeFieldDefs = createFieldDefinitions([{ id: '' }])
   const filterType = schemaComposer.createInputTC({
     name: `${typeName}Filters`,
-    fields: createFilterTypes(schemaComposer, { ...fields, id: '' }, `${typeName}Filter`)
+    fields: createFilterTypes(schemaComposer, { ...fieldDefs, ...nodeFieldDefs }, `${typeName}Filter`)
   })
 
   const filterFields = filterType.getType().getFields()

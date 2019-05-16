@@ -1,5 +1,7 @@
 const { SchemaComposer, ObjectTypeComposer } = require('graphql-compose')
-const initSharedTypes = require('./types')
+const { CreatedGraphQLType, isCreatedType, createTypeName } = require('./utils')
+const initMustHaveTypes = require('./types')
+const directives = require('./directives')
 
 const {
   isSpecifiedScalarType,
@@ -7,14 +9,22 @@ const {
   defaultFieldResolver
 } = require('graphql')
 
-module.exports = function createSchema (store, { schemas = [], resolvers = [] } = {}) {
+module.exports = function createSchema (store, context = {}) {
+  const { types = [], schemas = [], resolvers = [] } = context
   const schemaComposer = new SchemaComposer()
 
-  initSharedTypes(schemaComposer).forEach(typeDef => {
-    schemaComposer.addSchemaMustHaveType(typeDef)
+  initMustHaveTypes(schemaComposer).forEach(typeComposer => {
+    schemaComposer.addSchemaMustHaveType(typeComposer)
   })
 
-  const directives = require('./directives')
+  directives.forEach(directive => {
+    schemaComposer.addDirective(directive)
+  })
+
+  types.forEach(typeOrSDL => {
+    addTypes(schemaComposer, typeOrSDL)
+  })
+
   const pagesSchema = require('./pages')(schemaComposer)
   const nodesSchema = require('./nodes')(schemaComposer, store)
   const metaData = require('./metaData')(schemaComposer, store)
@@ -23,25 +33,71 @@ module.exports = function createSchema (store, { schemas = [], resolvers = [] } 
   schemaComposer.Query.addFields(nodesSchema)
   schemaComposer.Query.addFields(pagesSchema)
 
-  directives.forEach(directive => {
-    schemaComposer.addDirective(directive)
-  })
-
   schemas.forEach(schema => {
     addSchema(schemaComposer, schema)
   })
 
   resolvers.forEach(resolvers => {
-    addFieldResolvers(schemaComposer, resolvers)
+    addResolvers(schemaComposer, resolvers)
   })
 
   return schemaComposer.buildSchema()
 }
 
+function addTypes (schemaComposer, typeOrSDL) {
+  if (typeof typeOrSDL === 'string') {
+    const sdlTypes = schemaComposer.addTypeDefs(typeOrSDL)
+    sdlTypes.forEach(tempTypeComposer => {
+      addCreatedType(schemaComposer, tempTypeComposer)
+    })
+  } else if (Array.isArray(typeOrSDL)) {
+    typeOrSDL.forEach(type => {
+      const tempTypeComposer = createType(schemaComposer, type)
+      addCreatedType(schemaComposer, tempTypeComposer)
+    })
+  } else {
+    const tempTypeComposer = createType(schemaComposer, typeOrSDL)
+    addCreatedType(schemaComposer, tempTypeComposer)
+  }
+}
+
+function createType (schemaComposer, type, path = [type.options.name]) {
+  if (!type.options.name && path.length === 1) {
+    throw new Error(`Missing required type name.`)
+  }
+
+  switch (type.type) {
+    case CreatedGraphQLType.Object:
+      const name = type.options.name || createTypeName(path.join(' '))
+      const options = { ...type.options, name }
+      const typeComposer = ObjectTypeComposer.createTemp(options, schemaComposer)
+      const fields = {}
+
+      for (const fieldName in type.options.fields) {
+        const field = type.options.fields[fieldName]
+
+        fields[fieldName] = isCreatedType(field)
+          ? createType(schemaComposer, field, path.concat(`ObjectField ${fieldName}`))
+          : field
+      }
+
+      typeComposer.addFields(fields)
+
+      return typeComposer
+  }
+}
+
+function addCreatedType (schemaComposer, type) {
+  const typeName = schemaComposer.add(type)
+  const typeComposer = schemaComposer.get(typeName)
+
+  schemaComposer.addSchemaMustHaveType(typeComposer)
+}
+
 function addSchema (schemaComposer, schema) {
   const typeMap = schema.getTypeMap()
   const queryType = schema.getQueryType()
-  const queryComposer = ObjectTypeComposer.createTemp(queryType)
+  const queryComposer = ObjectTypeComposer.createTemp(queryType, schemaComposer)
   const queryFields = queryComposer.getFields()
 
   schemaComposer.Query.addFields(queryFields)
@@ -58,7 +114,7 @@ function addSchema (schemaComposer, schema) {
   }
 }
 
-function addFieldResolvers (schemaComposer, resolvers = {}) {
+function addResolvers (schemaComposer, resolvers = {}) {
   for (const typeName in resolvers) {
     const fields = resolvers[typeName]
     const typeComposer = schemaComposer.getOTC(typeName)

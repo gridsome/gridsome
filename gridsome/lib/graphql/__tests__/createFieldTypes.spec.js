@@ -4,6 +4,7 @@ const { SchemaComposer, ObjectTypeComposer } = require('graphql-compose')
 
 const nodes = [
   {
+    '123': 1,
     string: 'bar',
     number: 10,
     float: 1.2,
@@ -68,24 +69,29 @@ const nodes = [
 test('merge node fields', () => {
   const fields = createFieldDefinitions(nodes)
 
-  expect(fields.emptyString).toEqual('')
-  expect(fields.numberList).toHaveLength(1)
-  expect(fields.floatList).toHaveLength(1)
-  expect(fields.objList).toHaveLength(1)
-  expect(fields.emptyList).toHaveLength(0)
-  expect(fields.objList[0]).toMatchObject({ a: 'a', b: 'b', c: 'c' })
-  expect(fields.refs.typeName).toHaveLength(1)
-  expect(fields.refs.typeName[0]).toEqual('Post')
-  expect(fields.refs.isList).toEqual(true)
-  expect(fields.refList.typeName).toHaveLength(3)
-  expect(fields.refList.typeName).toEqual(expect.arrayContaining(['Post1', 'Post2', 'Post3']))
-  expect(fields.refList.isList).toEqual(true)
-  expect(fields.ref).toMatchObject({ typeName: 'Post', isList: false })
-  expect(fields.emptyObj).toMatchObject({})
-  expect(fields.simpleObj).toMatchObject({ foo: 'bar' })
-  expect(fields.extendObj).toMatchObject({ bar: 'foo' })
-  expect(fields.obj).toMatchObject({ foo: 'bar', bar: 'foo', test: { foo: 'bar' }})
-  expect(fields.invalidRef).toBeUndefined()
+  expect(fields['123']).toMatchObject({ key: '123', fieldName: '_123', value: 1 })
+  expect(fields.emptyString.value).toEqual('')
+  expect(fields.numberList.value).toHaveLength(1)
+  expect(fields.floatList.value).toHaveLength(1)
+  expect(fields.objList.value).toHaveLength(1)
+  expect(fields.emptyList.value).toHaveLength(0)
+  expect(fields.objList.value[0].a.value).toEqual('a')
+  expect(fields.objList.value[0].b.value).toEqual('b')
+  expect(fields.objList.value[0].c.value).toEqual('c')
+  expect(fields.refs.value.typeName).toHaveLength(1)
+  expect(fields.refs.value.typeName[0]).toEqual('Post')
+  expect(fields.refs.value.isList).toEqual(true)
+  expect(fields.refList.value.typeName).toHaveLength(3)
+  expect(fields.refList.value.typeName).toEqual(expect.arrayContaining(['Post1', 'Post2', 'Post3']))
+  expect(fields.refList.value.isList).toEqual(true)
+  expect(fields.ref.value).toMatchObject({ typeName: 'Post', isList: false })
+  expect(fields.emptyObj.value).toMatchObject({})
+  expect(fields.simpleObj.value.foo.value).toEqual('bar')
+  expect(fields.extendObj.value.bar.value).toEqual('foo')
+  expect(fields.obj.value.foo.value).toEqual('bar')
+  expect(fields.obj.value.bar.value).toEqual('foo')
+  expect(fields.obj.value.test.value.foo.value).toEqual('bar')
+  expect(fields.invalidRef.value).toBeUndefined()
 })
 
 test('create graphql types from node fields', () => {
@@ -93,6 +99,7 @@ test('create graphql types from node fields', () => {
   const fields = createFieldDefinitions(nodes)
   const types = createFieldTypes(schemaComposr, fields, 'TestPost', [])
 
+  expect(types._123.type).toEqual('Int')
   expect(types.string.type).toEqual('String')
   expect(types.number.type).toEqual('Int')
   expect(types.float.type).toEqual('Float')

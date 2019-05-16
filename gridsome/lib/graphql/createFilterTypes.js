@@ -1,18 +1,20 @@
 const { isDate } = require('./types/date')
 const { isEmpty, reduce } = require('lodash')
+const { InputTypeComposer } = require('graphql-compose')
 const { is32BitInt, isRefFieldDefinition, createTypeName } = require('./utils')
 
 const OBJ_SUFFIX = '__Object'
 const REF_SUFFIX = '__Reference'
 
-function createFilterTypes (schemaComposer, fields, typeName) {
+function createFilterTypes (schemaComposer, fieldDefs, typeName) {
   const types = {}
 
-  for (const key in fields) {
-    const type = createFilterType(schemaComposer, fields[key], key, typeName)
+  for (const key in fieldDefs) {
+    const options = fieldDefs[key]
+    const type = createFilterType(schemaComposer, options.value, key, typeName)
 
     if (type) {
-      types[key] = { type }
+      types[options.fieldName] = { type }
     }
   }
 
@@ -23,7 +25,7 @@ function createFilterType (schemaComposer, value, fieldName, typeName) {
   const defaultDescription = `Filter ${typeName} nodes by ${fieldName}`
 
   if (isRefFieldDefinition(value)) {
-    return schemaComposer.createInputTC({
+    return InputTypeComposer.createTemp({
       name: createFilterName(typeName, fieldName) + REF_SUFFIX,
       description: defaultDescription,
       fields: value.isList
@@ -40,11 +42,11 @@ function createFilterType (schemaComposer, value, fieldName, typeName) {
           in: { type: '[String]', description: desc.in },
           nin: { type: '[String]', description: desc.nin }
         }
-    })
+    }, schemaComposer)
   }
 
   if (isDate(value)) {
-    return schemaComposer.createInputTC({
+    return InputTypeComposer.createTemp({
       name: createFilterName(typeName, fieldName),
       description: defaultDescription,
       fields: {
@@ -55,13 +57,13 @@ function createFilterType (schemaComposer, value, fieldName, typeName) {
         lte: { type: 'String', description: desc.lte },
         between: { type: '[String]', description: desc.between }
       }
-    })
+    }, schemaComposer)
   }
 
   if (Array.isArray(value)) {
     const valueType = toGraphQLType(value[0])
 
-    return valueType ? schemaComposer.createInputTC({
+    return valueType ? InputTypeComposer.createTemp({
       name: createFilterName(typeName, fieldName),
       description: defaultDescription,
       fields: {
@@ -70,12 +72,12 @@ function createFilterType (schemaComposer, value, fieldName, typeName) {
         containsAny: { type: [valueType], description: desc.containsAny },
         containsNone: { type: [valueType], description: desc.containsNone }
       }
-    }) : null
+    }, schemaComposer) : null
   }
 
   switch (typeof value) {
     case 'string' :
-      return schemaComposer.createInputTC({
+      return InputTypeComposer.createTemp({
         name: createFilterName(typeName, fieldName),
         description: defaultDescription,
         fields: {
@@ -86,10 +88,10 @@ function createFilterType (schemaComposer, value, fieldName, typeName) {
           in: { type: '[String]', description: desc.in },
           nin: { type: '[String]', description: desc.nin }
         }
-      })
+      }, schemaComposer)
 
     case 'boolean' :
-      return schemaComposer.createInputTC({
+      return InputTypeComposer.createTemp({
         name: createFilterName(typeName, fieldName),
         fields: {
           eq: { type: 'Boolean', description: desc.eq },
@@ -97,12 +99,12 @@ function createFilterType (schemaComposer, value, fieldName, typeName) {
           in: { type: '[Boolean]', description: desc.in },
           nin: { type: '[Boolean]', description: desc.nin }
         }
-      })
+      }, schemaComposer)
 
     case 'number':
       const numberType = toGraphQLType(value)
 
-      return schemaComposer.createInputTC({
+      return InputTypeComposer.createTemp({
         name: createFilterName(typeName, fieldName),
         description: defaultDescription,
         fields: {
@@ -116,7 +118,7 @@ function createFilterType (schemaComposer, value, fieldName, typeName) {
           nin: { type: [numberType], description: desc.nin },
           between: { type: [numberType], description: desc.between }
         }
-      })
+      }, schemaComposer)
 
     case 'object':
       return createObjectFilter(schemaComposer, value, fieldName, typeName)
@@ -128,15 +130,21 @@ function createObjectFilter (schemaComposer, obj, fieldName, typeName) {
   const fields = {}
 
   for (const key in obj) {
-    const type = createFilterType(schemaComposer, obj[key], `${fieldName} ${key}`, typeName)
+    const options = obj[key]
+    const type = createFilterType(
+      schemaComposer,
+      options.value,
+      `${fieldName} ${options.fieldName}`,
+      typeName
+    )
 
     if (type) {
-      fields[key] = { type }
+      fields[options.fieldName] = { type }
     }
   }
 
   return !isEmpty(fields)
-    ? schemaComposer.createInputTC({ name, fields })
+    ? InputTypeComposer.createTemp({ name, fields }, schemaComposer)
     : null
 }
 

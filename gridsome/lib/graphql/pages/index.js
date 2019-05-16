@@ -1,3 +1,5 @@
+const createFieldDefinitions = require('../createFieldDefinitions')
+
 const {
   createFilterTypes,
   createFilterQuery
@@ -12,9 +14,10 @@ module.exports = schemaComposer => {
     }
   })
 
+  const filterFieldDefs = createFieldDefinitions([{ path: '' }])
   const filterType = schemaComposer.createInputTC({
     name: 'PageFilters',
-    fields: createFilterTypes(schemaComposer, { path: '' }, 'PageFilter')
+    fields: createFilterTypes(schemaComposer, filterFieldDefs, 'PageFilter')
   })
 
   const filterFields = filterType.getType().getFields()

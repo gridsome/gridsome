@@ -1,10 +1,10 @@
 const { isDate } = require('lodash')
 const { isRefField } = require('../graphql/utils')
 const { isResolvablePath, safeKey } = require('../utils')
-const { resolvePath, createFieldName } = require('./utils')
+const { resolvePath } = require('./utils')
 
 module.exports = function processFields (fields = {}, refs = {}, options = {}) {
-  const { origin = '', context, resolveAbsolute, camelCased } = options
+  const { origin = '', context, resolveAbsolute } = options
   const belongsTo = {}
 
   const addBelongsTo = ({ typeName, id }) => {
@@ -57,7 +57,7 @@ module.exports = function processFields (fields = {}, refs = {}, options = {}) {
         continue
       }
 
-      res[createFieldName(key, camelCased)] = Array.isArray(fields[key])
+      res[key] = Array.isArray(fields[key])
         ? fields[key].map(value => processField(value))
         : processField(fields[key])
     }

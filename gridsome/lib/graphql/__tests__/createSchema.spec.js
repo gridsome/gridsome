@@ -1,7 +1,103 @@
 const App = require('../../app/App')
 const { BOOTSTRAP_PAGES } = require('../../utils/constants')
 
-test('add custom resolvers for node fields', async () => {
+test('add custom GraphQL object types', async () => {
+  const app = await createApp(function (api) {
+    api.loadSource(store => {
+      store.addContentType('Post').addNode({
+        id: '1',
+        title: 'My Post',
+        content: 'Value'
+      })
+    })
+
+    api.createSchema(({ addTypes, createObjectType }) => {
+      addTypes([
+        createObjectType({
+          name: 'Author',
+          fields: {
+            name: 'String'
+          }
+        }),
+        createObjectType({
+          name: 'Post',
+          interfaces: ['Node'],
+          fields: {
+            id: 'ID!',
+            author: {
+              type: 'Author',
+              resolve: () => ({ name: 'The Author' })
+            }
+          }
+        })
+      ])
+    })
+  })
+
+  const { errors, data } = await app.graphql(`{
+    post(id:"1") {
+      title
+      content
+      author {
+        name
+      }
+    }
+  }`)
+
+  expect(errors).toBeUndefined()
+  expect(data.post.title).toEqual('My Post')
+  expect(data.post.content).toEqual('Value')
+  expect(data.post.author).toMatchObject({ name: 'The Author' })
+})
+
+test('add custom GraphQL types from SDL', async () => {
+  const app = await createApp(function (api) {
+    api.loadSource(store => {
+      store.addContentType('Post').addNode({
+        id: '1',
+        title: 'My Post',
+        content: 'Value'
+      })
+    })
+
+    api.createSchema(({ addTypes, addResolvers }) => {
+      addTypes(`
+        type Author {
+          name: String
+        }
+        type Post implements Node {
+          id: ID!
+          author: Author
+        }
+      `)
+
+      addResolvers({
+        Post: {
+          author: {
+            resolve: () => ({ name: 'The Author' })
+          }
+        }
+      })
+    })
+  })
+
+  const { errors, data } = await app.graphql(`{
+    post(id:"1") {
+      title
+      content
+      author {
+        name
+      }
+    }
+  }`)
+
+  expect(errors).toBeUndefined()
+  expect(data.post.title).toEqual('My Post')
+  expect(data.post.content).toEqual('Value')
+  expect(data.post.author).toMatchObject({ name: 'The Author' })
+})
+
+test('add custom resolvers for content type', async () => {
   const app = await createApp(function (api) {
     api.loadSource(store => {
       const posts = store.addContentType('Post')
@@ -33,7 +129,7 @@ test('add custom resolvers for node fields', async () => {
   expect(data.post.customField).toEqual('value')
 })
 
-test('add custom graphql schema', async () => {
+test('add custom GraphQL schema', async () => {
   const app = await createApp(function (api) {
     api.createSchema(({ addSchema, graphql }) => {
       addSchema(new graphql.GraphQLSchema({

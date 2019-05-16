@@ -1,5 +1,6 @@
 const { nodeInterface } = require('../interfaces')
 const { PER_PAGE, SORT_ORDER } = require('../../utils/constants')
+const createFieldDefinitions = require('../createFieldDefinitions')
 
 const {
   createPagedNodeEdges,
@@ -57,7 +58,8 @@ module.exports = function createBelongsTo ({
   }
 
   const filterPrefix = `${typeName}BelongsToFilter`
-  const filterArgs = createFilterTypes(schemaComposer, { id: '', path: '' }, filterPrefix)
+  const nodeFields = createFieldDefinitions([{ id: '', path: '' }])
+  const filterArgs = createFilterTypes(schemaComposer, nodeFields, filterPrefix)
 
   belongsToArgs.filter = {
     description: `Filter for ${typeName} nodes.`,

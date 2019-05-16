@@ -10,8 +10,8 @@ module.exports = (schemaComposer, store) => {
 
   for (const typeName of typeNames) {
     const contentType = store.getContentType(typeName)
-    const fields = createFieldDefinitions(contentType.collection.find())
-    const args = { schemaComposer, contentType, typeNames, typeName, fields }
+    const fieldDefs = createFieldDefinitions(contentType.data())
+    const args = { schemaComposer, contentType, typeNames, typeName, fieldDefs }
 
     const typeComposer = createType(args)
 
