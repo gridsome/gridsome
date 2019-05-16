@@ -116,11 +116,7 @@ module.exports = async (name, starter = 'default') => {
     }
   ])
 
-  try {
-    await tasks.run()
-  } catch (err) {
-    throw err
-  }
+  await tasks.run()
 
   console.log()
   if (process.cwd() !== dir) {
