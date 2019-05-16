@@ -97,6 +97,56 @@ test('add custom GraphQL types from SDL', async () => {
   expect(data.post.author).toMatchObject({ name: 'The Author' })
 })
 
+test('add custom resolver for invalid field names', async () => {
+  const app = await createApp(function (api) {
+    api.loadSource(store => {
+      store.addContentType('Post').addNode({
+        id: '1',
+        '123': 4,
+        '456-test': 4,
+        '789-test': 10
+      })
+    })
+
+    api.createSchema(({ addTypes, addResolvers, createObjectType }) => {
+      addTypes([
+        createObjectType({
+          name: 'Post',
+          interfaces: ['Node'],
+          fields: {
+            id: 'ID!',
+            _123: {
+              type: 'Int',
+              resolve: obj => obj['123'] + 6
+            }
+          }
+        })
+      ])
+
+      addResolvers({
+        Post: {
+          _456_test: {
+            resolve: obj => obj['456-test'] + 6
+          }
+        }
+      })
+    })
+  })
+
+  const { errors, data } = await app.graphql(`{
+    post(id:"1") {
+      _123
+      _456_test
+      _789_test
+    }
+  }`)
+
+  expect(errors).toBeUndefined()
+  expect(data.post._123).toEqual(10)
+  expect(data.post._456_test).toEqual(10)
+  expect(data.post._789_test).toEqual(10)
+})
+
 test('add custom resolvers for content type', async () => {
   const app = await createApp(function (api) {
     api.loadSource(store => {

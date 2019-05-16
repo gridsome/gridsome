@@ -3,7 +3,7 @@ const { defaultFieldResolver } = require('graphql')
 const createBelongsTo = require('./createBelongsTo')
 const { createRefResolver } = require('../resolvers')
 const { createFieldTypes, createRefType } = require('../createFieldTypes')
-const { omit, mapValues, isEmpty, isPlainObject } = require('lodash')
+const { reduce, mapValues, isEmpty, isPlainObject } = require('lodash')
 const { isRefFieldDefinition } = require('../utils')
 
 module.exports = function createType ({
@@ -23,8 +23,14 @@ module.exports = function createType ({
   }
 
   const typeComposer = schemaComposer.getOrCreateOTC(typeName)
+  const fieldNames = Object.keys(typeComposer.getFields())
+  const missingFields = reduce(fieldDefs, (acc, def) => {
+    if (!fieldNames.includes(def.fieldName)) {
+      acc[def.fieldName] = def
+    }
+    return acc
+  }, {})
 
-  const missingFields = omit(fieldDefs, Object.keys(typeComposer.getFields()))
   const fieldTypes = createFieldTypes(schemaComposer, missingFields, typeName, typeNames)
 
   processMissingFields(typeComposer, missingFields, fieldTypes)
@@ -49,12 +55,12 @@ function processMissingFields (typeComposer, fieldDefs, fieldTypes) {
     const options = fieldDefs[key]
     const fieldType = fieldTypes[options.fieldName]
 
-    if (options.fieldName !== key) {
+    if (options.fieldName !== options.key) {
       const resolve = fieldType.resolve || defaultFieldResolver
 
       // wrap field resolver to use original field name in info.fieldName
       fieldType.resolve = (obj, args, ctx, info) => {
-        return resolve(obj, args, ctx, { ...info, fieldName: key })
+        return resolve(obj, args, ctx, { ...info, fieldName: options.key })
       }
     }
 
