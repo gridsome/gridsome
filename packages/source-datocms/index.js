@@ -107,6 +107,11 @@ class DatoCmsSource {
         updated: new Date(item.updatedAt),
         fields: item.itemType.fields.reduce((fields, field) => {
           const val = item.readAttribute(field)
+
+          if (item.itemType.hasOwnProperty('apiKey')) {
+            fields.model = { apiKey: item.itemType.apiKey }
+          }
+
           if (!val) return fields
 
           if (['link', 'links', 'rich_text'].includes(field.fieldType)) {
@@ -119,7 +124,7 @@ class DatoCmsSource {
 
             return fields
           } else {
-            fields[camelize(field.apiKey)] = val && val.toMap
+            fields[camelize(field.apiKey)] = val.toMap
               ? withNoEmptyValues(val.toMap())
               : withNoEmptyValues(val)
 

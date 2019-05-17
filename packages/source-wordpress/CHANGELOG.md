@@ -3,6 +3,28 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.3.0](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/compare/@gridsome/source-wordpress@0.2.2...@gridsome/source-wordpress@0.3.0) (2019-05-10)
+
+
+### Features
+
+* **wordpress:** camelcase fields and use latest apis ([0c431cf](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/commit/0c431cf))
+
+
+
+
+
+## [0.2.2](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/compare/@gridsome/source-wordpress@0.2.1...@gridsome/source-wordpress@0.2.2) (2019-04-18)
+
+
+### Bug Fixes
+
+* **wordpress:** show error message when api fails ([d47424f](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/commit/d47424f))
+
+
+
+
+
 <a name="0.2.1"></a>
 ## [0.2.1](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/compare/@gridsome/source-wordpress@0.2.0...@gridsome/source-wordpress@0.2.1) (2019-01-26)
 

@@ -4,13 +4,13 @@ const { mapValues } = require('lodash')
 const { createWorker } = require('../../workers')
 const { SUPPORTED_IMAGE_TYPES } = require('../../utils/constants')
 
-module.exports = ({ context, config, queue }) => {
+module.exports = ({ context, config, assets }) => {
   const worker = createWorker('image-processor')
 
   return async (req, res, next) => {
     const relPath = req.params[1].replace(/(%2e|\.){2}/g, '')
     const filePath = path.join(context, relPath)
-    const asset = queue.get(filePath)
+    const asset = assets.get(filePath)
 
     if (
       !filePath.startsWith(context) ||
@@ -40,8 +40,8 @@ module.exports = ({ context, config, queue }) => {
 
     try {
       if (SUPPORTED_IMAGE_TYPES.includes(ext)) {
-        const imageOptions = queue.images.createImageOptions(options)
-        const filename = queue.images.createFileName(filePath, imageOptions, asset.hash)
+        const imageOptions = assets.images.createImageOptions(options)
+        const filename = assets.images.createFileName(filePath, imageOptions, asset.hash)
         const destPath = path.join(config.imageCacheDir, filename)
 
         if (!fs.existsSync(destPath)) {

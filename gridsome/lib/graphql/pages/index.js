@@ -1,46 +1,24 @@
-const { dateType } = require('../types/date')
 const GraphQLJSON = require('graphql-type-json')
 
 const {
-  GraphQLID,
   GraphQLList,
   GraphQLString,
   GraphQLNonNull,
-  GraphQLObjectType
+  GraphQLObjectType,
+  GraphQLInputObjectType
 } = require('graphql')
 
-const pageQuery = new GraphQLObjectType({
-  name: 'PageQuery',
-  fields: () => ({
-    type: { type: GraphQLString },
-    content: { type: GraphQLString },
-    options: { type: GraphQLJSON }
-  })
-})
+const {
+  createFilterTypes,
+  createFilterQuery
+} = require('../createFilterTypes')
 
 module.exports = () => {
   const pageType = new GraphQLObjectType({
     name: 'Page',
     fields: () => ({
-      id: {
-        type: new GraphQLNonNull(GraphQLID),
-        resolve: node => node.$loki
-      },
-
-      type: { type: new GraphQLNonNull(GraphQLString) },
-      title: { type: GraphQLString },
-      slug: { type: GraphQLString },
       path: { type: GraphQLString },
-      component: { type: GraphQLString },
-      pageQuery: { type: pageQuery },
-      content: { type: GraphQLString },
-      date: dateType,
-
-      _id: {
-        deprecationReason: 'Use node.id instead.',
-        type: new GraphQLNonNull(GraphQLID),
-        resolve: node => node.$loki
-      }
+      context: { type: GraphQLJSON }
     })
   })
 
@@ -48,29 +26,37 @@ module.exports = () => {
     page: {
       type: pageType,
       args: {
-        _id: { type: new GraphQLNonNull(GraphQLString) }
+        path: { type: new GraphQLNonNull(GraphQLString) }
       },
-      resolve (_, { _id }, { store }) {
-        return store.pages.find({ _id })
+      resolve (_, { path }, { pages }) {
+        return pages.findPage({ path })
       }
+    }
+  }
+
+  const pageConnectionArgs = {
+    filter: {
+      description: 'Filter for pages.',
+      type: new GraphQLInputObjectType({
+        name: 'PageFilters',
+        fields: createFilterTypes({ path: '' }, 'PageFilter')
+      })
     }
   }
 
   const connections = {
     allPage: {
       type: new GraphQLList(pageType),
-      args: {
-        type: {
-          type: GraphQLString,
-          defaultValue: 'page'
+      args: pageConnectionArgs,
+      resolve (_, { filter }, { pages }) {
+        const query = {}
+
+        if (filter) {
+          const fields = pageConnectionArgs.filter.type.getFields()
+          Object.assign(query, createFilterQuery(filter, fields))
         }
-      },
-      resolve (_, { type }, { store }) {
-        const query = { type }
 
-        if (type === '*') delete query.type
-
-        return store.pages.find(query)
+        return pages.findPages(query)
       }
     }
   }

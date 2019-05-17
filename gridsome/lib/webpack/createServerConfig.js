@@ -22,11 +22,5 @@ module.exports = async app => {
       filename: path.relative(outDir, serverBundlePath)
     }])
 
-  await app.dispatch('chainWebpack', null, config, {
-    context: app.context,
-    isServer: true,
-    isProd
-  })
-
   return config
 }

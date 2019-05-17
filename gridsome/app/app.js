@@ -1,23 +1,27 @@
 import Vue from 'vue'
 import plugins from '~/.temp/plugins-server'
 import main from './main'
-import routes from '~/.temp/routes.js'
 
 import head from './head'
 import router from './router'
+import fetchPath from './fetchPath'
 import { url } from './utils/helpers'
+import gaphqlGuard from './graphql/guard'
+import graphlMixin from './graphql/mixin'
 
 import Link from './components/Link'
 import Image from './components/Image'
 import ClientOnly from './components/ClientOnly'
 
+Vue.mixin(graphlMixin)
 Vue.component('g-link', Link)
 Vue.component('g-image', Image)
 Vue.component('ClientOnly', ClientOnly)
 
 Vue.prototype.$url = url
+Vue.prototype.$fetch = fetchPath
 
-router.addRoutes(routes)
+router.beforeEach(gaphqlGuard)
 
 const context = {
   appOptions: {

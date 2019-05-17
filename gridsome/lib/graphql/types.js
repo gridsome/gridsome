@@ -1,23 +1,29 @@
 const {
   GraphQLInt,
+  GraphQLString,
   GraphQLNonNull,
   GraphQLBoolean,
   GraphQLEnumType,
-  GraphQLObjectType
+  GraphQLObjectType,
+  GraphQLInputObjectType
 } = require('graphql')
 
 const pageInfoType = new GraphQLObjectType({
   name: 'PageInfo',
   fields: () => ({
-    totalPages: { type: new GraphQLNonNull(GraphQLInt) },
+    perPage: { type: new GraphQLNonNull(GraphQLInt) },
     currentPage: { type: new GraphQLNonNull(GraphQLInt) },
+    totalPages: { type: new GraphQLNonNull(GraphQLInt) },
+    totalItems: { type: new GraphQLNonNull(GraphQLInt) },
+    hasPreviousPage: { type: new GraphQLNonNull(GraphQLBoolean) },
+    hasNextPage: { type: new GraphQLNonNull(GraphQLBoolean) },
     isFirst: { type: new GraphQLNonNull(GraphQLBoolean) },
     isLast: { type: new GraphQLNonNull(GraphQLBoolean) }
   })
 })
 
 const sortOrderType = new GraphQLEnumType({
-  name: 'SortOrder',
+  name: 'SortOrderEnum',
   values: {
     ASC: {
       value: 'ASC',
@@ -32,7 +38,22 @@ const sortOrderType = new GraphQLEnumType({
   }
 })
 
+const sortType = new GraphQLInputObjectType({
+  name: 'SortArgument',
+  fields: () => ({
+    by: {
+      type: new GraphQLNonNull(GraphQLString),
+      defaultValue: 'date'
+    },
+    order: {
+      type: sortOrderType,
+      defaultValue: 'DESC'
+    }
+  })
+})
+
 module.exports = {
   pageInfoType,
-  sortOrderType
+  sortOrderType,
+  sortType
 }

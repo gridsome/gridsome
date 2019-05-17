@@ -1,6 +1,5 @@
 const url = require('url')
 const path = require('path')
-const { fieldResolver } = require('../resolvers')
 const { isResolvablePath } = require('../../utils')
 const { SUPPORTED_IMAGE_TYPES } = require('../../utils/constants')
 
@@ -73,14 +72,14 @@ exports.imageType = {
     quality: { type: GraphQLInt, description: 'Quality (default: 75)' },
     blur: { type: GraphQLInt, description: 'Blur level for base64 string' }
   },
-  async resolve (obj, args, context, info) {
-    const value = fieldResolver(obj, args, context, info)
+  async resolve (obj, args, context, { fieldName }) {
+    const value = obj[fieldName]
     let result
 
     if (!value) return null
 
     try {
-      result = await context.queue.add(value, args)
+      result = await context.assets.add(value, args)
     } catch (err) {
       return null
     }

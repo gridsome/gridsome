@@ -3,6 +3,92 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.6.1](https://github.com/gridsome/gridsome/compare/gridsome@0.6.0...gridsome@0.6.1) (2019-05-13)
+
+
+### Bug Fixes
+
+* **app:** prevent cyclic dependency ([#421](https://github.com/gridsome/gridsome/issues/421)) ([3574efa](https://github.com/gridsome/gridsome/commit/3574efa))
+* **graphql:** use correct typeName for belongsTo pagination ([#422](https://github.com/gridsome/gridsome/issues/422)) ([b06310f](https://github.com/gridsome/gridsome/commit/b06310f))
+* **pages:** set page context in dev mode ([#417](https://github.com/gridsome/gridsome/issues/417)) ([a7a6e17](https://github.com/gridsome/gridsome/commit/a7a6e17))
+* **store:** create reference to node instance ([81bb047](https://github.com/gridsome/gridsome/commit/81bb047))
+
+
+
+
+
+# [0.6.0](https://github.com/gridsome/gridsome/compare/gridsome@0.5.8...gridsome@0.6.0) (2019-05-10)
+
+
+### Bug Fixes
+
+* **assets:** encode generated urls ([#393](https://github.com/gridsome/gridsome/issues/393)) ([b6994c8](https://github.com/gridsome/gridsome/commit/b6994c8))
+* **build:** keep dist folder between builds ([#409](https://github.com/gridsome/gridsome/issues/409)) ([1ef584b](https://github.com/gridsome/gridsome/commit/1ef584b))
+* **build:** set correct dest path for files ([#221](https://github.com/gridsome/gridsome/issues/221)) ([f9dad9e](https://github.com/gridsome/gridsome/commit/f9dad9e))
+* **graphql:** do not camelCase field names automatically ([#351](https://github.com/gridsome/gridsome/issues/351)) ([4e54c5c](https://github.com/gridsome/gridsome/commit/4e54c5c))
+* **graphql:** ensure totalPages count is not null ([ae75b39](https://github.com/gridsome/gridsome/commit/ae75b39))
+
+
+### Features
+
+* **api:** helper method for resolving paths ([db3546f](https://github.com/gridsome/gridsome/commit/db3546f))
+* **app:** method for fetching page data ([2a624ab](https://github.com/gridsome/gridsome/commit/2a624ab))
+* **app:** range option for Pager component ([#344](https://github.com/gridsome/gridsome/issues/344)) ([77dab89](https://github.com/gridsome/gridsome/commit/77dab89))
+* **graphql:** add metaData from config ([#225](https://github.com/gridsome/gridsome/issues/225)) ([b90d490](https://github.com/gridsome/gridsome/commit/b90d490))
+* **graphql:** advanced sort argument ([#247](https://github.com/gridsome/gridsome/issues/247)) ([9b0907e](https://github.com/gridsome/gridsome/commit/9b0907e))
+* **graphql:** limit argument for content types and belongsTo ([7756620](https://github.com/gridsome/gridsome/commit/7756620))
+* **pages:** create managed pages ([a9042b0](https://github.com/gridsome/gridsome/commit/a9042b0))
+* **pages:** pages api ([#309](https://github.com/gridsome/gridsome/issues/309)) ([5c6a45c](https://github.com/gridsome/gridsome/commit/5c6a45c))
+* **store:** methods for retrieving nodes ([7b442a2](https://github.com/gridsome/gridsome/commit/7b442a2))
+* **webpack:** configure webpack ([#342](https://github.com/gridsome/gridsome/issues/342)) ([ac9fc5a](https://github.com/gridsome/gridsome/commit/ac9fc5a))
+
+
+
+
+
+## [0.5.8](https://github.com/gridsome/gridsome/compare/gridsome@0.5.7...gridsome@0.5.8) (2019-04-18)
+
+
+### Bug Fixes
+
+* **app:** don’t handle external links with router ([#367](https://github.com/gridsome/gridsome/issues/367)) ([bfb2a79](https://github.com/gridsome/gridsome/commit/bfb2a79))
+
+
+
+
+
+## [0.5.7](https://github.com/gridsome/gridsome/compare/gridsome@0.5.6...gridsome@0.5.7) (2019-04-09)
+
+
+### Bug Fixes
+
+* **app:** don't resolve url for different port ([#350](https://github.com/gridsome/gridsome/issues/350)) ([a6ab23f](https://github.com/gridsome/gridsome/commit/a6ab23f))
+* **g-image:** alt attribute for noscript image ([#353](https://github.com/gridsome/gridsome/issues/353)) ([fcfcf36](https://github.com/gridsome/gridsome/commit/fcfcf36))
+* **graphql:** prefer float when mixed number types ([#332](https://github.com/gridsome/gridsome/issues/332)) ([b311850](https://github.com/gridsome/gridsome/commit/b311850))
+
+
+
+
+
+## [0.5.6](https://github.com/gridsome/gridsome/compare/gridsome@0.5.5...gridsome@0.5.6) (2019-03-29)
+
+
+### Bug Fixes
+
+* **app:** allow absolute path to custom favicon ([53a755c](https://github.com/gridsome/gridsome/commit/53a755c))
+* **app:** allow css.split option to be true ([#266](https://github.com/gridsome/gridsome/issues/266)) ([a0fcd10](https://github.com/gridsome/gridsome/commit/a0fcd10))
+* **app:** make routes appear in vue-devtools ([#322](https://github.com/gridsome/gridsome/issues/322)) ([f1a865c](https://github.com/gridsome/gridsome/commit/f1a865c))
+* **develop:** allow OPTIONS method request to /___graphql ([#271](https://github.com/gridsome/gridsome/issues/271)) ([f1ec997](https://github.com/gridsome/gridsome/commit/f1ec997))
+* **g-image:** increase max image width ([#286](https://github.com/gridsome/gridsome/issues/286)) ([8a7ae89](https://github.com/gridsome/gridsome/commit/8a7ae89))
+* **graphql:** allow requests without variables ([#323](https://github.com/gridsome/gridsome/issues/323)) ([8184834](https://github.com/gridsome/gridsome/commit/8184834))
+* **store:** handle route params starting with raw correctly ([#295](https://github.com/gridsome/gridsome/issues/295)) ([931937c](https://github.com/gridsome/gridsome/commit/931937c))
+* **store:** prioritize node.id over node.fields.id ([3d7c180](https://github.com/gridsome/gridsome/commit/3d7c180))
+* **store:** support repeated segments in dynamic routes ([#279](https://github.com/gridsome/gridsome/issues/279)) ([2259f85](https://github.com/gridsome/gridsome/commit/2259f85))
+
+
+
+
+
 ## [0.5.5](https://github.com/gridsome/gridsome/compare/gridsome@0.5.4...gridsome@0.5.5) (2019-03-08)
 
 

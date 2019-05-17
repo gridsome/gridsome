@@ -227,65 +227,57 @@ async function createSchemaAndExecute (query) {
     id: '1',
     date: '2017-10-08',
     title: 'Cursus Ridiculus Dolor Justo',
-    fields: {
-      price: 99,
-      featured: false,
-      tags: ['one', 'two', 'four'],
-      alternatives: [
-        { typeName: 'Product', id: '2' }
-      ]
-    }
+    price: 99,
+    featured: false,
+    tags: ['one', 'two', 'four'],
+    alternatives: [
+      { typeName: 'Product', id: '2' }
+    ]
   })
 
   posts.addNode({
     id: '2',
     date: '2018-03-28',
     title: 'Dojor Inceptos Venenatis Nibh',
-    fields: {
-      price: 199,
-      featured: false,
-      tags: ['two'],
-      deep: {
-        object: true
-      },
-      alternatives: [
-        { typeName: 'Product', id: '1' },
-        { typeName: 'Product', id: '3' }
-      ]
-    }
+    price: 199,
+    featured: false,
+    tags: ['two'],
+    deep: {
+      object: true
+    },
+    alternatives: [
+      { typeName: 'Product', id: '1' },
+      { typeName: 'Product', id: '3' }
+    ]
   })
 
   posts.addNode({
     id: '3',
     date: '2018-07-14',
     title: 'Bibendum Ornare Pharetra',
-    fields: {
-      price: 149,
-      featured: true,
-      tags: ['three', 'four'],
-      related: {
-        typeName: 'Product',
-        id: '2'
-      },
-      alternatives: [
-        { typeName: 'Product', id: '4' }
-      ]
-    }
+    price: 149,
+    featured: true,
+    tags: ['three', 'four'],
+    related: {
+      typeName: 'Product',
+      id: '2'
+    },
+    alternatives: [
+      { typeName: 'Product', id: '4' }
+    ]
   })
 
   posts.addNode({
     id: '4',
     date: '2018-12-20',
     title: 'Vestibulum Aenean Bibendum Euismod',
-    fields: {
-      price: 119,
-      featured: false,
-      tags: ['one', 'two'],
-      alternatives: [
-        { typeName: 'Product', id: '2' },
-        { typeName: 'Product', id: '3' }
-      ]
-    }
+    price: 119,
+    featured: false,
+    tags: ['one', 'two'],
+    alternatives: [
+      { typeName: 'Product', id: '2' },
+      { typeName: 'Product', id: '3' }
+    ]
   })
 
   const schema = createSchema(app.store)

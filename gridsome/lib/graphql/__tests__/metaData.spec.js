@@ -96,7 +96,7 @@ test('add meta data', async () => {
   expect(errors).toBeUndefined()
   expect(data.metaData.myValue.test).toEqual('Test Value')
   expect(data.metaData.myValue.image.src).toEqual('/assets/static/350x250.5c1e01e.test.png')
-  expect(data.metaData.myValue.file.src).toEqual('/assets/files/dummy.pdf')
+  expect(data.metaData.myValue.file.src).toEqual('/assets/files/dummy.test.pdf')
   expect(data.metaData.myValue.object.list).toHaveLength(3)
   expect(data.metaData.myValue.object.value).toEqual(1000)
   expect(data.metaData.myOtherValue).toEqual('Value')

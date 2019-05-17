@@ -24,7 +24,7 @@ module.exports = function attacher () {
       let noscriptHTML = null
 
       try {
-        const asset = await transformer.queue.add(path, {
+        const asset = await transformer.assets.add(path, {
           alt: props.alt || node.alt,
           width: props.width,
           height: props.height,

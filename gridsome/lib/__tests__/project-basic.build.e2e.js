@@ -29,6 +29,7 @@ afterAll(async () => {
   browser && await browser.close()
   await fs.remove(path.join(context, 'dist'))
   await fs.remove(path.join(context, 'src', '.temp'))
+  await fs.remove(path.join(context, 'node_modules', '.cache'))
   await fs.remove(path.join(context, '.cache'))
 })
 
@@ -52,6 +53,7 @@ test('build basic project', () => {
   expect($home('span.from-env-production').text()).toEqual('PROD_2')
   expect($home('span.from-plugin').text()).toEqual('test 2')
   expect($home('span.from-chain-webpack').text()).toEqual('test 3')
+  expect($home('span.from-metadata').text()).toEqual('test')
   expect($home('.footer span.meta-data-1').text()).toEqual('Test Value')
   expect($home('.footer span.meta-data-2').text()).toEqual('bar')
 })
@@ -63,6 +65,10 @@ test('render custom html template', () => {
 
 test('render favicons', () => {
   expect(exists('dist/assets/static/favicon.1539b60.test.png')).toBeTruthy()
+})
+
+test('copy contents of static folder', () => {
+  expect(exists('dist/external/index.html')).toBeTruthy()
 })
 
 // #163 - no duplicate style links
@@ -87,8 +93,8 @@ test('render g-link components', () => {
   expect($home('a[href="https://www.gridsome.org/docs"]').attr('target')).toBeUndefined()
   expect($home('a[href="https://www.gridsome.org/docs"]').attr('rel')).toBeUndefined()
 
-  expect($home('a.g-link-file').attr('href')).toEqual('/assets/files/dummy.pdf')
-  expect(exists('dist/assets/files/dummy.pdf')).toBeTruthy()
+  expect($home('a.g-link-file').attr('href')).toEqual('/assets/files/dummy.test.pdf')
+  expect(exists('dist/assets/files/dummy.test.pdf')).toBeTruthy()
 })
 
 test('render g-image components', () => {
@@ -103,6 +109,7 @@ test('render g-image components', () => {
   expect($home('img.g-image-2').data('srcset')).toMatch('/assets/static/test.82a2fbd.test.png 480w')
   expect($home('img.g-image-2').data('src')).toEqual('/assets/static/test.97c148e.test.png')
   expect($home('img.g-image-2').attr('class')).not.toEqual('g-image-false')
+  expect($home('img.g-image-2 + noscript').html()).toMatch('alt="Test image"')
   expect($home('img.g-image-static').attr('src')).toEqual('/uploads/test.png')
   expect($home('img.g-image-static').attr('alt')).toEqual('Static image')
   expect($home('img.g-image-immediate').attr('src')).toEqual('/assets/static/test.cbab2cf.test.png')
@@ -136,6 +143,14 @@ test('render template with static routes and pagination', () => {
   expect(exists('dist/docs/3/2/index.html')).toBeFalsy()
 })
 
+test('render page $context', () => {
+  const $page1 = load('dist/about/index.html')
+  const $page2 = load('dist/about-us/index.html')
+
+  expect($page1('h1').text()).toEqual('')
+  expect($page2('h1').text()).toEqual('About us')
+})
+
 test('generate /404.html', () => {
   const $404 = load('dist/404.html')
 
@@ -145,7 +160,7 @@ test('generate /404.html', () => {
 
 test('compile scripts correctly', () => {
   const appJS = content('dist/assets/js/app.js')
-  const homeJS = content('dist/assets/js/component--home.js')
+  const homeJS = content('dist/assets/js/page--src--pages--index-vue.js')
 
   // never include the context path
   expect(appJS).not.toMatch(context)
@@ -194,6 +209,13 @@ test('navigate to /docs/1', async () => {
   await page.waitForSelector('#app.doc-template-1')
 })
 
+test('navigate to /docs/1/extra', async () => {
+  await page.click('.doc-extra-link')
+  await page.waitForSelector('#app.doc-extra-template-1')
+  await page.click('.doc-link')
+  await page.waitForSelector('#app.doc-template-1')
+})
+
 test('navigate to /pages/2', async () => {
   await page.click('.page-link-2')
   await page.waitForSelector('#app.page-template')
@@ -202,6 +224,16 @@ test('navigate to /pages/2', async () => {
 test('navigate to /', async () => {
   await page.click('.home-link')
   await page.waitForSelector('#app.home')
+})
+
+test('fetch /doc/3 data', async () => {
+  await page.click('.fetch-doc-page-3')
+  await page.waitForSelector('.fetched-doc-page-3')
+})
+
+test('fetch /doc/6 data', async () => {
+  await page.click('.fetch-doc-page-6')
+  await page.waitForSelector('.fetched-doc-page-not-found')
 })
 
 test('navigate to /docs/2', async () => {
@@ -217,6 +249,13 @@ test('navigate to /docs/2/2', async () => {
 test('navigate to /docs/2/3', async () => {
   await page.click('nav[role="navigation"] a.active + a')
   await page.waitForSelector('#app.doc-template-2.page-3')
+})
+
+test('navigate to /docs/2/extra', async () => {
+  await page.click('.doc-extra-link')
+  await page.waitForSelector('#app.doc-extra-template-2')
+  await page.click('.doc-link')
+  await page.waitForSelector('#app.doc-template-2')
 })
 
 test('navigate to /pages/1', async () => {
@@ -239,8 +278,18 @@ test('navigate to /', async () => {
   await page.waitForSelector('#app.home')
 })
 
+test('navigate to /external', async () => {
+  await page.click('.external-link')
+  await page.waitForSelector('body.external')
+})
+
 test('open /docs/1/ directly', async () => {
   await page.goto('http://localhost:8080/docs/1/', { waitUntil: 'networkidle2' })
+  await page.waitForSelector('#app.is-mounted')
+})
+
+test('open /docs/1/extra/ directly', async () => {
+  await page.goto('http://localhost:8080/docs/1/extra/', { waitUntil: 'networkidle2' })
   await page.waitForSelector('#app.is-mounted')
 })
 

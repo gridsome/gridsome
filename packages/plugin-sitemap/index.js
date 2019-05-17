@@ -15,22 +15,25 @@ module.exports = function (api, options) {
     const filename = path.join(config.outDir, options.output)
     const pathPrefix = config.pathPrefix !== '/' ? config.pathPrefix : ''
     const pages = queue.filter(page => micromatch(page.path, exclude).length < 1)
+    const staticUrls = options.staticUrls || []
 
-    console.log(`Generate ${options.output} (${pages.length} pages)`)
+    console.log(`Generate ${options.output} (${pages.length + staticUrls.length} pages)`)
+
+    const generatedUrls = pages.map(page => {
+      const pattern = patterns.find(p => micromatch.isMatch(page.path, p))
+      const urlConfig = options.config[pattern] || {}
+
+      return {
+        url: page.path,
+        priority: urlConfig.priority,
+        changefreq: urlConfig.changefreq
+      }
+    })
 
     const sitemap = require('sitemap').createSitemap({
-      hostname: config.siteUrl,
+      hostname: config.siteUrl.replace(/\/+$/, '') + pathPrefix,
       cacheTime: options.cacheTime,
-      urls: pages.map(page => {
-        const pattern = patterns.find(p => micromatch.isMatch(page.path, p))
-        const urlConfig = options.config[pattern] || {}
-
-        return {
-          url: pathPrefix + page.path,
-          priority: urlConfig.priority,
-          changefreq: urlConfig.changefreq
-        }
-      })
+      urls: [...generatedUrls, ...staticUrls]
     })
 
     return fs.outputFile(filename, sitemap.toString())

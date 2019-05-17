@@ -4,22 +4,19 @@ module.exports = ({ nodeType }) => {
   return {
     type: nodeType,
     args: {
-      _id: { type: GraphQLString, deprecationReason: 'Use id instead.' },
       id: { type: GraphQLString },
-      path: { type: GraphQLString },
+      _id: { type: GraphQLString, deprecationReason: 'Use id instead.' },
+      path: { type: GraphQLString, deprecationReason: 'Use id instead.' },
       nullable: {
         type: GraphQLBoolean,
         defaultValue: false,
-        description: 'Will return an error if not nullable.'
+        description: 'Will return an error if not nullable.',
+        deprecationReason: 'Will always return null if not found.'
       }
     },
-    resolve (object, { _id, id = _id, path, nullable }, { store }, { returnType }) {
+    resolve (object, { _id, id = _id, path }, { store }, { returnType }) {
       const { collection } = store.getContentType(returnType)
       let node = null
-
-      if (!id && !path) {
-        return new Error(`Must provide either id or path in order to find a node.`)
-      }
 
       if (id) {
         node = collection.by('id', id)
@@ -29,14 +26,7 @@ module.exports = ({ nodeType }) => {
         node = collection.findOne({ path })
       }
 
-      if (!node && !nullable) {
-        return new Error(id
-          ? `A ${returnType} node with id ${id} could not be found.`
-          : `A ${returnType} node with path ${path} could not be found.`
-        )
-      }
-
-      return node
+      return node || null
     }
   }
 }
