@@ -5,7 +5,7 @@ const createExpressServer = require('./server/createExpressServer')
 
 module.exports = async (context, args) => {
   process.env.NODE_ENV = 'production'
-  process.env.GRIDSOME_MODE === 'serve'
+  process.env.GRIDSOME_MODE = 'serve'
 
   const app = await createApp(context, { args }, BOOTSTRAP_PAGES)
   const server = await createExpressServer(app, { withExplorer: true })
