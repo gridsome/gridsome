@@ -53,7 +53,7 @@ class GhostSource {
 
   async loadTags (store) {
     const tags = store.addContentType({
-      typeName: store.makeTypeName(TYPE_TAG),
+      typeName: this.createTypeName(TYPE_TAG),
       route: this.routes[TYPE_TAG]
     })
 
@@ -62,8 +62,9 @@ class GhostSource {
 
   async loadPages (store) {
     const pages = store.addContentType({
-      typeName: store.makeTypeName(TYPE_PAGE),
-      route: this.routes[TYPE_PAGE]
+      typeName: this.createTypeName(TYPE_PAGE),
+      route: this.routes[TYPE_PAGE],
+      dateField: 'published_at'
     })
 
     await this.loadBasicEntity(pages, this.contentAPI.pages)
@@ -71,7 +72,7 @@ class GhostSource {
 
   async loadAuthors (store) {
     const authors = store.addContentType({
-      typeName: store.makeTypeName(TYPE_AUTHOR),
+      typeName: this.createTypeName(TYPE_AUTHOR),
       route: this.routes[TYPE_AUTHOR]
     })
 
@@ -80,12 +81,13 @@ class GhostSource {
 
   async loadPosts (store) {
     const posts = store.addContentType({
-      typeName: store.makeTypeName(TYPE_POST),
-      route: this.routes[TYPE_POST]
+      typeName: this.createTypeName(TYPE_POST),
+      route: this.routes[TYPE_POST],
+      dateField: 'published_at'
     })
 
-    const tagTypeName = store.makeTypeName(TYPE_TAG)
-    const authorTypeName = store.makeTypeName(TYPE_AUTHOR)
+    const tagTypeName = this.createTypeName(TYPE_TAG)
+    const authorTypeName = this.createTypeName(TYPE_AUTHOR)
 
     let keepGoing = true
     let currentPage = 1
@@ -98,16 +100,15 @@ class GhostSource {
       })
 
       entities.forEach(entity => {
-        const { id, title, slug, tags = [], authors = [], ...fields } = entity
-        const { primary_author = {}, primary_tag = {}} = entity // eslint-disable-line
-        const { published_at: date } = entity // eslint-disable-line
+        const { tags = [], authors = [], ...options } = entity
+        const { primary_author = {}, primary_tag = {}} = options // eslint-disable-line
 
-        fields.primary_tag = store.createReference(tagTypeName, primary_tag.id)
-        fields.primary_author = store.createReference(authorTypeName, primary_author.id)
-        fields.tags = tags.map(tag => store.createReference(tagTypeName, tag.id))
-        fields.authors = authors.map(author => store.createReference(authorTypeName, author.id))
+        options.primary_tag = store.createReference(tagTypeName, primary_tag.id)
+        options.primary_author = store.createReference(authorTypeName, primary_author.id)
+        options.tags = tags.map(tag => store.createReference(tagTypeName, tag.id))
+        options.authors = authors.map(author => store.createReference(authorTypeName, author.id))
 
-        posts.addNode({ id, title, slug, date, fields })
+        posts.addNode(options)
       })
 
       if (currentPage === entities.meta.pagination.pages) {
@@ -136,8 +137,8 @@ class GhostSource {
         page: currentPage
       })
 
-      entities.forEach(({ id, name: title, slug, ...fields }) => {
-        collection.addNode({ id, title, slug, fields })
+      entities.forEach(entity => {
+        collection.addNode(entity)
       })
 
       if (currentPage === entities.meta.pagination.pages) {
@@ -146,6 +147,10 @@ class GhostSource {
 
       currentPage++
     }
+  }
+
+  createTypeName (name = '') {
+    return camelCase(`${this.options.typeName} ${name}`, { pascalCase: true })
   }
 }
 
