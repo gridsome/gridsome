@@ -1,6 +1,6 @@
 import prefetch from './utils/prefetch'
 import { unslashEnd, stripPageParam } from './utils/helpers'
-import { NOT_FOUND_NAME, NOT_FOUND_PATH } from '~/.temp/constants'
+import { NOT_FOUND_PATH } from '~/.temp/constants'
 
 const headers = { 'Content-Type': 'application/json' }
 const dataUrl = process.env.DATA_URL
@@ -22,9 +22,7 @@ export default (route, options = {}) => {
           headers,
           body: JSON.stringify({
             page: route.params.page ? Number(route.params.page) : null,
-            path: route.name !== NOT_FOUND_NAME
-              ? stripPageParam(route)
-              : NOT_FOUND_PATH
+            path: route.name === '*' ? NOT_FOUND_PATH : stripPageParam(route)
           })
         })
           .then(res => res.json())
@@ -89,7 +87,7 @@ export default (route, options = {}) => {
     }
 
     const { name, meta: { data }} = route
-    const usePath = name === NOT_FOUND_NAME ? NOT_FOUND_PATH : route.path
+    const usePath = name === '*' ? NOT_FOUND_PATH : route.path
     const path = unslashEnd(usePath) || '/'
 
     if (typeof data === 'function') {
