@@ -108,7 +108,7 @@ module.exports = {
         baseUrl: 'https://somedrupalsite.pantheonsite.io',
         routes: {
           'node--article': '/articles/:title',
-          'taxonomy_term--tags': '/tags/:title'
+          'taxonomy_term--tags': '/tags/:name'
         }
       }
     }
@@ -153,7 +153,7 @@ module.exports = {
         exclude: [ ...defaultExcludes, 'user--user' ], // include the defaults
         routes: {
           'node--article': '/articles/:title',
-          'taxonomy_term--tags': '/tags/:title'
+          'taxonomy_term--tags': '/tags/:name'
         }
       }
     }
