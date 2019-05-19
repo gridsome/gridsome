@@ -760,6 +760,19 @@
     follow-redirects "^1.2.5"
     is-buffer "^1.1.5"
 
+"@contentful/rich-text-html-renderer@^13.1.0":
+  version "13.1.0"
+  resolved "https://registry.yarnpkg.com/@contentful/rich-text-html-renderer/-/rich-text-html-renderer-13.1.0.tgz#dddc38df0d34bea3ef5f7821d6118b099120d8f8"
+  integrity sha512-4E6O7cYO+6v3fQrBM9Bu/X9QXfNmH/DZevypw+UOJZyUfbYDA9KsPdXKa04hjnc3fMlBW0Kss33wj9DsaCap2g==
+  dependencies:
+    "@contentful/rich-text-types" "^13.1.0"
+    escape-html "^1.0.3"
+
+"@contentful/rich-text-types@^13.1.0":
+  version "13.1.0"
+  resolved "https://registry.yarnpkg.com/@contentful/rich-text-types/-/rich-text-types-13.1.0.tgz#a329b68bb3560514ffcbe07dc115af938a60f201"
+  integrity sha512-/fwELDysqdZdhTW9tLUOtpoBnlaI6WVxtrrmB+lAbYkoC7G9NVaOPwxXqwYidgTl9I1ZJGfU/ZEr8GDyUIcZWg==
+
 "@hjvedvik/tasks@^0.0.8":
   version "0.0.8"
   resolved "https://registry.yarnpkg.com/@hjvedvik/tasks/-/tasks-0.0.8.tgz#69440b92fccbe22c20c8d8788e723eac8f60aa59"

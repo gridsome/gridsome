@@ -89,6 +89,8 @@ class ContentfulSource {
           )
         } else if (typeof value === 'object' && typeof value.sys !== 'undefined') {
           fields[key] = this.createReferenceField(value)
+        } else if (typeof value === 'object' && value.nodeType === 'document') {
+          fields[key] = JSON.stringify(value) // Rich Text
         } else {
           fields[key] = value
         }

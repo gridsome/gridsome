@@ -4,6 +4,7 @@
 API might change before v1 is released.
 
 ## Install
+
 - `yarn add @gridsome/source-contentful`
 - `npm install @gridsome/source-contentful`
 
@@ -27,12 +28,15 @@ module.exports = {
 ```
 
 ## Contentful Content Types
+
 `@gridsome/souce-contentful` currently works with all Contentful Content Types.
 
 ### Rich text
+
 Contentful Rich text content types return a custom JSON response that can only be parsed to HTML with Contentful's package, https://www.npmjs.com/package/@contentful/rich-text-html-renderer
 
 #### Example
+
 A query that returns Contentful Rich Text, where `richArticle` is the Rich Text content type configured in the Contentful _Content model_:
 
 ```graphql
@@ -49,12 +53,10 @@ query RichArticles {
 }
 ```
 
-Rich Text fields returns a JSON document which can be used with '@contentful/rich-text-html-renderer' to generate HTML. If you need to handle different types of content, or render them with a Vue component, e.g., images or other `Embeded Asset Blocks`. See example below.
-
-The content from `richArticle` can then be passed to a Vue `method` from the page `<template>`. In this case, the method name is `richtextToHTML`:
+Rich Text fields returns a JSON document which can be used with `@contentful/rich-text-html-renderer` to generate HTML. The content from `richArticle` can then be passed to a Vue `method` from the page `<template>`. In this case, the method name is `richtextToHTML`:
 
 ```html
-<div v-for="edge in $page.articles.edges" :key="edge.id">
+<div v-for="edge in $page.articles.edges" :key="edge.node.id">
   <p v-html="richtextToHTML(edge.node.richArticle)"></p>
 </div>
 ```
@@ -73,11 +75,12 @@ export default {
 }
 ```
 
-The Contentful renderer is imported, then used to convert a parsed version of the response from the `page-query`.
+The Contentful renderer is imported, then used to convert the JSON response from the `page-query`.
 
 Custom parsing and more configuration details can be found on the [Contentful Rich Text HTML Render package documentation](https://www.npmjs.com/package/@contentful/rich-text-html-renderer)
 
 #### Embeded Assets (images in Rich text)
+
 The Contentful HTML renderer doesn't automatically render embeded assets, instead, you can configure how you want to render them using `BLOCK` types and the configuration options.
 
 To do so, import `BLOCKS` and setup a custom renderer before calling the `documentToHtmlString` method. Here, we're getting the image title and source url (contentful CDN src) and passing it to a string template.
@@ -106,8 +109,8 @@ export default {
 Rich Text fields can take an `html` argument to return generated HTML instead of a Rich Text document. The generated HTML can simply be passed in to an element with `v-html`.
 
 ```graphql
-query Article ($id: String!) {
-  contentfulArticle (id: $id) {
+query Article($id: String!) {
+  contentfulArticle(id: $id) {
     id
     title
     richArticle(html: true)
@@ -120,6 +123,7 @@ query Article ($id: String!) {
 ```
 
 ### Location
+
 Contentful Location data is returned as JSON with `lat` and `lon`. You will need to query the field name and each field in the GraphQL query.
 
 ```graphql
@@ -138,6 +142,7 @@ query Location {
 ```
 
 ### JSON
+
 In Contentful JSON ContentTypes, rather than recieving the entire object when querying for the field, GraphQL requires that you query for each field that you need.
 
 ```graphql
@@ -156,9 +161,11 @@ query Json {
 ```
 
 ### Custom Routes
+
 To add custom routes use the `routes` option with the ContentType name as the key and the custom route as the value.
 
 If you have Contentful ContentTypes named BlogPost and Article you can add new routes like this.
+
 ```js
 module.exports = {
   plugins: [
