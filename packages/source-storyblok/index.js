@@ -38,7 +38,7 @@ class StoryblokSource {
         throw new Error(`No typeName defined for ${key}.`)
       }
 
-      const collection = store.addContentType(config.typeName)
+      const collection = store.addContentType({ dateField: 'published_at', ...config })
 
       const { data } = await this.client.get('cdn/stories', {
         resolve_links: resolveRelations || config.resolveLinks || 1,
@@ -52,13 +52,7 @@ class StoryblokSource {
       })
 
       for (const story of data.stories) {
-        collection.addNode({
-          id: String(story.id),
-          title: story.content.title || story.title,
-          slug: story.slug,
-          date: story.published_at,
-          fields: story.content
-        })
+        collection.addNode({ ...story, id: String(story.id) })
       }
     }
   }
