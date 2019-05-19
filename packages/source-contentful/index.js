@@ -1,4 +1,5 @@
 const contentful = require('contentful')
+const createRichTextType = require('./lib/types/rich-text')
 
 class ContentfulSource {
   static defaultOptions () {
@@ -7,6 +8,7 @@ class ContentfulSource {
       environment: 'master',
       host: 'cdn.contentful.com',
       typeName: 'Contentful',
+      richText: {},
       routes: {}
     }
   }
@@ -32,13 +34,20 @@ class ContentfulSource {
 
   async getContentTypes (store) {
     const contentTypes = await this.fetch('getContentTypes')
+    const richTextType = createRichTextType(this.options)
 
     for (const contentType of contentTypes) {
       const { name, sys: { id }} = contentType
       const typeName = store.makeTypeName(name)
       const route = this.options.routes[name] || `/${store.slugify(name)}/:slug`
 
-      store.addContentType({ typeName, route })
+      const collection = store.addContentType({ typeName, route })
+
+      for (const field of contentType.fields) {
+        if (field.type === 'RichText') {
+          collection.addSchemaField(field.id, () => richTextType)
+        }
+      }
 
       this.typesIndex[id] = { ...contentType, typeName }
     }
@@ -74,12 +83,14 @@ class ContentfulSource {
 
         if (Array.isArray(value)) {
           fields[key] = value.map(item =>
-            typeof item === 'object' && typeof value.sys !== 'undefined'
+            typeof item === 'object' && typeof item.sys !== 'undefined'
               ? this.createReferenceField(item)
               : item
           )
         } else if (typeof value === 'object' && typeof value.sys !== 'undefined') {
           fields[key] = this.createReferenceField(value)
+        } else if (typeof value === 'object' && value.nodeType === 'document') {
+          fields[key] = JSON.stringify(value) // Rich Text
         } else {
           fields[key] = value
         }

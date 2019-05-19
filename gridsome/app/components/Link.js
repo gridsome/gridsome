@@ -1,5 +1,3 @@
-/* global GRIDSOME_MODE */
-
 import config from '~/.temp/config.js'
 
 // @vue/component
@@ -39,7 +37,7 @@ export default {
       attrs.exact = true
     }
 
-    if (GRIDSOME_MODE === 'static' && process.isClient) {
+    if (process.isStatic && process.isClient) {
       directives.push({ name: 'g-link' })
     }
 

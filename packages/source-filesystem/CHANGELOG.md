@@ -3,6 +3,29 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.4.1](https://github.com/gridsome/gridsome/tree/master/packages/source-filesystem/compare/@gridsome/source-filesystem@0.4.0...@gridsome/source-filesystem@0.4.1) (2019-05-10)
+
+
+### Bug Fixes
+
+* **filesystem:** get ref id from node object ([#415](https://github.com/gridsome/gridsome/tree/master/packages/source-filesystem/issues/415)) ([e523b0a](https://github.com/gridsome/gridsome/tree/master/packages/source-filesystem/commit/e523b0a))
+
+
+
+
+
+# [0.4.0](https://github.com/gridsome/gridsome/tree/master/packages/source-filesystem/compare/@gridsome/source-filesystem@0.3.0...@gridsome/source-filesystem@0.4.0) (2019-05-10)
+
+
+### Features
+
+* **filesystem:** baseDir option ([#297](https://github.com/gridsome/gridsome/tree/master/packages/source-filesystem/issues/297)) ([ef0af5a](https://github.com/gridsome/gridsome/tree/master/packages/source-filesystem/commit/ef0af5a))
+* **filesystem:** update for latest changes in core ([2bb8ca1](https://github.com/gridsome/gridsome/tree/master/packages/source-filesystem/commit/2bb8ca1))
+
+
+
+
+
 <a name="0.3.0"></a>
 # [0.3.0](https://github.com/gridsome/gridsome/tree/master/packages/source-filesystem/compare/@gridsome/source-filesystem@0.2.0...@gridsome/source-filesystem@0.3.0) (2019-02-19)
 

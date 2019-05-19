@@ -21,13 +21,7 @@ class ImageProcessQueue {
   }
 
   async add (filePath, options = {}) {
-    let asset
-
-    try {
-      asset = await this.preProcess(filePath, options)
-    } catch (err) {
-      throw err
-    }
+    const asset = await this.preProcess(filePath, options)
 
     if (process.env.GRIDSOME_MODE === 'serve') {
       return asset
@@ -121,7 +115,7 @@ class ImageProcessQueue {
       const filename = this.createFileName(filePath, arr, hash)
       const relPath = createDestPath(filename, arr)
       const destPath = path.join(this.config.outDir, relPath)
-      const src = forwardSlash(path.join(pathPrefix, relPath))
+      const src = encodeURI(forwardSlash(path.join(pathPrefix || '/', relPath)))
 
       return { filename, destPath, src, width, height }
     })

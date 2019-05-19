@@ -8,11 +8,9 @@ class YamlTransformer {
   parse (content) {
     const data = jsYaml.load(content)
 
-    const fields = typeof data !== 'object' || Array.isArray(data)
+    return typeof data !== 'object' || Array.isArray(data)
       ? { data }
       : data
-
-    return { fields }
   }
 }
 
