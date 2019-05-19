@@ -14,11 +14,12 @@ module.exports = {
       use: '@gridsome/source-storyblok',
       options: {
         typeName: 'Post', // Required
-        route: '/blog/:slug', // Optional
-        queryParams: {
-          token: 'STORYBLOK_SPACE_API_TOKEN', // Required
-          starts_with: 'STORYBLOK_FOLDER' // e.g `blog`
-          version: 'VERSION_OF_CONTENT', // e.g `published`
+        accessToken: 'STORYBLOK_SPACE_API_TOKEN', // Required
+        stories: {
+          article: {
+            typeName: 'Article',
+            route: '/blog/:year/:month/:day/:slug'
+          }
         }
       }
     }
