@@ -24,7 +24,12 @@ module.exports = {
         }
       }
     }
-  ]
+  ],
+  transformers: {
+    remark: {
+      // global remark options
+    }
+  }
 }
 ```
 
@@ -32,26 +37,15 @@ module.exports = {
 
 By default this plugin comes with `remark-slug`, `remark-autolink-headings`, `remark-external-links`, `remark-squeeze-paragraphs` and `remark-fix-guillemets` included. Add any additional [Remark plugin](https://github.com/remarkjs/remark/blob/master/doc/plugins.md#list-of-plugins) with a `plugins` option. Included plugins can also be disabled if needed. See more info below.
 
-## Add global remark options
+The following example adds the `remark-attr` plugin globally if it is installed in your project.
 
 ```js
-//gridsome.config.js
-
-module.exports = {
-  plugins: [
-    {
-      use: '@gridsome/source-filesystem',
-      options: {
-        path: 'blog/**/*.md',
-        typeName: 'Post',
-      }
-    }
-  ],
-  transformers: {
-    remark: {
-      // global remark options
-    }
-  },
+{
+  remark: {
+    plugins: [
+      'remark-attr'
+    ]
+  }
 }
 ```
 
@@ -63,6 +57,17 @@ module.exports = {
 - Default: `[]`
 
 Add additional [Remark plugins](https://github.com/remarkjs/remark/blob/master/doc/plugins.md#list-of-plugins).
+
+```js
+{
+  remark: {
+    plugins: [
+      'remark-plugin', // add a simple plugin
+      ['remark-plugin', { /* plugin options */ }]
+    ]
+  }
+}
+```
 
 #### useBuiltIns
 
