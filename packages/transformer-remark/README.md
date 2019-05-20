@@ -6,21 +6,11 @@
 - `yarn add @gridsome/transformer-remark`
 - `npm install @gridsome/transformer-remark`
 
-## Usage
+## Basic usage
 
 ```js
+//gridsome.config.js
 module.exports = {
-  transformers: {
-    remark: {
-      externalLinksTarget: '_blank',
-      externalLinksRel: ['nofollow', 'noopener', 'noreferrer'],
-      anchorClassName: 'icon icon-link',
-      plugins: [
-        // ...global plugins
-      ]
-    }
-  },
-
   plugins: [
     {
       use: '@gridsome/source-filesystem',
@@ -28,8 +18,11 @@ module.exports = {
         path: 'blog/**/*.md',
         typeName: 'Post',
         remark: {
+          externalLinksTarget: '_blank',
+          externalLinksRel: ['nofollow', 'noopener', 'noreferrer'],
+          anchorClassName: 'icon icon-link',
           plugins: [
-            // ...local plugins
+            // ...remark plugins
           ]
         }
       }
@@ -38,13 +31,47 @@ module.exports = {
 }
 ```
 
+## Add additional plugins
+By default this plugin comes with...
+TODO: Write something about included plugins and how to add other external plugins
+
+## Add global remark options
+
+```js
+//gridsome.config.js
+
+module.exports = {
+  transformers: {
+    remark: {
+      externalLinksTarget: '_blank',
+      externalLinksRel: ['nofollow', 'noopener', 'noreferrer'],
+      anchorClassName: 'icon icon-link',
+      plugins: [
+        // ...global remark plugins
+      ]
+    }
+  },
+  plugins: [
+    {
+      use: '@gridsome/source-filesystem',
+      options: {
+        path: 'blog/**/*.md',
+        typeName: 'Post',
+      }
+    }
+  ]
+}
+```
+
+
 ## Options
 
 #### plugins
 
 - Type: `array` Default: `[]`
 
-Add additional plugins to the parser.
+Add additional plugins to the parser. Any Remark plugin can be added here.
+
 
 #### useBuiltIns
 
