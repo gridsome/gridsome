@@ -13,15 +13,13 @@ exports.genTemplateBlock = function (html, file) {
 }
 
 exports.genImportBlock = function (statements, file) {
-  if (file.data.layout.component) {
-    statements.push(
-      `import MdVueLayout from ${
-        JSON.stringify(file.data.layout.component)
-      }`
-    )
-  }
+  const layout = typeof file.data.layout.component === 'string'
+    ? file.data.layout.component
+    : require.resolve('../src/MdVueLayout.vue')
 
   let code = statements.join('\n')
+
+  code += `import MdVueLayout from ${JSON.stringify(layout)}\n`
 
   const ast = parse(code, { sourceType: 'module' })
   const identifiers = {}

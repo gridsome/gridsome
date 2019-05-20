@@ -36,6 +36,9 @@ class MdVuePlugin {
     this.api = api
     this.store = api.store
     this.options = options
+    this.remark = this.store._transformers['text/markdown']
+    this.context = options.baseDir ? api.resolve(options.baseDir) : api.context
+
     this.filesystem = new Filesystem(api, {
       path: '**/*.md',
       typeName: options.typeName,
@@ -45,8 +48,6 @@ class MdVuePlugin {
       index: options.index,
       refs: options.refs
     })
-    this.remark = this.store._transformers['text/markdown']
-    this.context = options.baseDir ? api.resolve(options.baseDir) : api.context
 
     this.processor = this.remark.createProcessor({
       plugins: [sfcSyntax, toMdVueAST],
@@ -56,6 +57,7 @@ class MdVuePlugin {
     api.transpileDependencies([path.resolve(__dirname, 'src')])
     api.registerComponentParser({ test: /\.md/, parse: this.parseComponent.bind(this) })
     api.chainWebpack(config => this.chainWebpack(config))
+    api.loadSource(store => this.loadSource(store))
     api.createPages(args => this.createPages(args))
   }
 
@@ -94,6 +96,14 @@ class MdVuePlugin {
       .use('mdvue-loader')
       .loader(require.resolve('./lib/loader.js'))
       .options(this)
+  }
+
+  loadSource (store) {
+    const contentType = store.getContentType(this.options.typeName)
+
+    if (contentType) {
+      contentType.options.component = null
+    }
   }
 
   async createPages ({ getContentType, createPage }) {
