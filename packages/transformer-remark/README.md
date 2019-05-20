@@ -9,6 +9,8 @@
 
 ## Basic usage
 
+The transformer is automatically used if installed in your project. Custom transformer options can either be set for each source plugin or globally.
+
 ```js
 //gridsome.config.js
 
@@ -62,7 +64,7 @@ Add additional [Remark plugins](https://github.com/remarkjs/remark/blob/master/d
 {
   remark: {
     plugins: [
-      'remark-plugin', // add a simple plugin
+      'remark-plugin', // add plugin without options
       ['remark-plugin', { /* plugin options */ }]
     ]
   }
