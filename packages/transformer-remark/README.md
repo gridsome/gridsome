@@ -1,8 +1,9 @@
 # @gridsome/transformer-remark
 
-> Markdown transformer for Gridsome
+> Markdown transformer for Gridsome with [Remark](https://remark.js.org/).
 
 ## Install
+
 - `yarn add @gridsome/transformer-remark`
 - `npm install @gridsome/transformer-remark`
 
@@ -10,6 +11,7 @@
 
 ```js
 //gridsome.config.js
+
 module.exports = {
   plugins: [
     {
@@ -18,12 +20,7 @@ module.exports = {
         path: 'blog/**/*.md',
         typeName: 'Post',
         remark: {
-          externalLinksTarget: '_blank',
-          externalLinksRel: ['nofollow', 'noopener', 'noreferrer'],
-          anchorClassName: 'icon icon-link',
-          plugins: [
-            // ...remark plugins
-          ]
+          // remark options
         }
       }
     }
@@ -32,8 +29,8 @@ module.exports = {
 ```
 
 ## Add additional plugins
-By default this plugin comes with...
-TODO: Write something about included plugins and how to add other external plugins
+
+By default this plugin comes with `remark-slug`, `remark-autolink-headings`, `remark-external-links`, `remark-squeeze-paragraphs` and `remark-fix-guillemets` included. Add any additional [Remark plugin](https://github.com/remarkjs/remark/blob/master/doc/plugins.md#list-of-plugins) with a `plugins` option. Included plugins can also be disabled if needed. See more info below.
 
 ## Add global remark options
 
@@ -41,16 +38,6 @@ TODO: Write something about included plugins and how to add other external plugi
 //gridsome.config.js
 
 module.exports = {
-  transformers: {
-    remark: {
-      externalLinksTarget: '_blank',
-      externalLinksRel: ['nofollow', 'noopener', 'noreferrer'],
-      anchorClassName: 'icon icon-link',
-      plugins: [
-        // ...global remark plugins
-      ]
-    }
-  },
   plugins: [
     {
       use: '@gridsome/source-filesystem',
@@ -59,22 +46,77 @@ module.exports = {
         typeName: 'Post',
       }
     }
-  ]
+  ],
+  transformers: {
+    remark: {
+      // global remark options
+    }
+  },
 }
 ```
-
 
 ## Options
 
 #### plugins
 
-- Type: `array` Default: `[]`
+- Type: `array`
+- Default: `[]`
 
-Add additional plugins to the parser. Any Remark plugin can be added here.
-
+Add additional [Remark plugins](https://github.com/remarkjs/remark/blob/master/doc/plugins.md#list-of-plugins).
 
 #### useBuiltIns
 
-- Type: `boolean` Default: `true`
+- Type: `boolean`
+- Default: `true`
 
 Set this option to `false` to disable all built-in plugins.
+
+#### squeezeParagraphs
+
+- Type: `boolean`
+- Default: `true`
+
+Remove empty (or white-space only) paragraphs.
+
+#### externalLinks
+
+- Type: `boolean`
+- Default: `true`
+
+Add target and rel attributes to external links.
+
+#### externalLinksTarget
+
+- Type: `string`
+- Default `'_blank'`
+
+#### externalLinksRel
+
+- Type: `Array | string`
+- Default: `['nofollow', 'noopener', 'noreferrer']`
+
+#### slug
+
+- Type: `boolean`
+- Default: `true`
+
+Add anchors to heading.
+
+#### autolinkHeadings
+
+- Type: `boolean`
+- Default: `true`
+
+Automatically add links to headings. Disabled if `slug` is `false`.
+
+#### autolinkClassName
+
+- Type: `string`
+- Default: `'icon icon-link'`
+
+#### fixGuillemets
+
+- Type: `boolean`
+- Default: `true`
+
+Support ASCII guillements (`<<`, `>>`) and mapping them to HTML.
