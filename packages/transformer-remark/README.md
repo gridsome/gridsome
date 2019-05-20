@@ -64,7 +64,11 @@ Add additional [Remark plugins](https://github.com/remarkjs/remark/blob/master/d
 {
   remark: {
     plugins: [
-      'remark-plugin', // add plugin without options
+      // add plugin without options
+      'remark-plugin',
+      // require plugin manually
+      require('remark-plugin'),
+      // add plugin with options
       ['remark-plugin', { /* plugin options */ }]
     ]
   }
