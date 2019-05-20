@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.6.2](https://github.com/gridsome/gridsome/compare/gridsome@0.6.1...gridsome@0.6.2) (2019-05-20)
+
+
+### Bug Fixes
+
+* **app:** include query params in html links ([f0b162e](https://github.com/gridsome/gridsome/commit/f0b162e))
+* **app:** prevent infinite loop for 404 ([#387](https://github.com/gridsome/gridsome/issues/387)) ([698f8b3](https://github.com/gridsome/gridsome/commit/698f8b3))
+* **app:** resolve pagination with trailing slash ([#430](https://github.com/gridsome/gridsome/issues/430)) ([a035311](https://github.com/gridsome/gridsome/commit/a035311))
+* **build:** ensure page context is an object ([#434](https://github.com/gridsome/gridsome/issues/434)) ([65bc3ed](https://github.com/gridsome/gridsome/commit/65bc3ed))
+* **explore:** set correct mode for explore command ([#435](https://github.com/gridsome/gridsome/issues/435)) ([08b312e](https://github.com/gridsome/gridsome/commit/08b312e))
+* **store:** do not slugify id in routes ([#429](https://github.com/gridsome/gridsome/issues/429)) ([308beff](https://github.com/gridsome/gridsome/commit/308beff))
+* **store:** use custom year, month or day fields if they exist ([91728ef](https://github.com/gridsome/gridsome/commit/91728ef))
+
+
+
+
+
 ## [0.6.1](https://github.com/gridsome/gridsome/compare/gridsome@0.6.0...gridsome@0.6.1) (2019-05-13)
 
 
