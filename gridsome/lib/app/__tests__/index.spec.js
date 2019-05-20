@@ -204,7 +204,7 @@ test('modify config in config.configureWebpack', async () => {
 })
 
 test('api.configureWebpack as object', async () => {
-  const { app, api } = await createPlugin()
+  const { app, api } = createPlugin()
 
   api.configureWebpack({ mode: 'test' })
 
@@ -215,7 +215,7 @@ test('api.configureWebpack as object', async () => {
 })
 
 test('create new config in api.configureWebpack', async () => {
-  const { app, api } = await createPlugin()
+  const { app, api } = createPlugin()
 
   api.configureWebpack(() => ({
     mode: 'test',
@@ -235,7 +235,7 @@ test('create new config in api.configureWebpack', async () => {
 })
 
 test('modify config in api.configureWebpack', async () => {
-  const { app, api } = await createPlugin()
+  const { app, api } = createPlugin()
 
   api.configureWebpack(config => {
     config.mode = 'test'

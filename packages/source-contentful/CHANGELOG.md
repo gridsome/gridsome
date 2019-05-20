@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.3.0](https://github.com/gridsome/gridsome/tree/master/packages/source-contentful/compare/@gridsome/source-contentful@0.2.3...@gridsome/source-contentful@0.3.0) (2019-05-20)
+
+
+### Features
+
+* **contentful:** rich text support ([#354](https://github.com/gridsome/gridsome/tree/master/packages/source-contentful/issues/354)) ([bd5905c](https://github.com/gridsome/gridsome/tree/master/packages/source-contentful/commit/bd5905c))
+
+
+
+
+
 ## [0.2.3](https://github.com/gridsome/gridsome/tree/master/packages/source-contentful/compare/@gridsome/source-contentful@0.2.2...@gridsome/source-contentful@0.2.3) (2019-05-10)
 
 

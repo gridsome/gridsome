@@ -227,19 +227,6 @@ module.exports = (app, { isProd, isServer }) => {
       .use(CSSExtractPlugin, [{
         filename: `${assetsDir}/css/styles${useHash ? '.[contenthash:8]' : ''}.css`
       }])
-
-    const cacheGroups = {}
-
-    if (projectConfig.css.split !== true) {
-      cacheGroups.styles = {
-        name: 'styles',
-        test: m => /css\/mini-extract/.test(m.type),
-        chunks: 'all',
-        enforce: true
-      }
-    }
-
-    config.optimization.splitChunks({ cacheGroups })
   }
 
   if (process.env.GRIDSOME_TEST) {

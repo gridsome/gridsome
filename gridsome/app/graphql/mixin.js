@@ -4,20 +4,22 @@ export default {
   computed: {
     $context () {
       if (process.isServer) {
-        return this.$ssrContext.state.context
+        return this.$ssrContext.state.context || {}
       }
 
       const { path } = this.$route
       const results = getResults(path)
-      return results ? results.context : null
+
+      return results ? results.context : {}
     },
     $page () {
       if (process.isServer) {
-        return this.$ssrContext.state.data
+        return this.$ssrContext.state.data || null
       }
 
       const { path } = this.$route
       const results = getResults(path)
+
       return results ? results.data : null
     }
   }

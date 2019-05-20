@@ -1,15 +1,23 @@
 const { isRefField } = require('../graphql/utils')
-const { memoize, get, trimStart, upperFirst } = require('lodash')
+const { memoize, get, upperFirst, isEmpty } = require('lodash')
 const { visit, parse, BREAK, valueFromASTUntyped } = require('graphql')
 
 const memoized = memoize(parsePageQuery)
 
-function createPageQuery (source, context = null) {
+function createPageQuery (source, context = {}) {
   const result = memoized(source)
 
-  const variables = context ? variablesFromContext(context, result.variables) : {}
-  const filters = result.filtersAST ? valueFromASTUntyped(result.filtersAST, variables) : {}
-  const paginate = result.paginate ? { ...result.paginate } : null
+  const variables = !isEmpty(context)
+    ? variablesFromContext(context, result.variables)
+    : {}
+
+  const filters = result.filtersAST
+    ? valueFromASTUntyped(result.filtersAST, variables)
+    : {}
+
+  const paginate = result.paginate
+    ? { ...result.paginate }
+    : null
 
   if (paginate) {
     paginate.skip = result.skipAST
@@ -97,8 +105,11 @@ function parsePageQuery (source) {
             const filterArg = parentArgs.find(node => node.name.value === 'filter')
 
             result.paginate = {
+              // TODO: use visitWithTypeInfo() to get real GraphQL type here instead
               // guess content type by converting root field value into a camel cased string
-              typeName: upperFirst(trimStart(fieldName.value, 'all')),
+              typeName: /^all[A-Z]/.test(fieldName.value)
+                ? fieldName.value.replace(/^all/, '')
+                : upperFirst(fieldName.value),
               perPage: perPageArg && perPageArg.value.value ? Number(perPageArg.value.value) : undefined,
               fieldName: fieldName.value,
               belongsTo: null

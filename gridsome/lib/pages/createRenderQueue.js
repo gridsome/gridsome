@@ -58,6 +58,7 @@ function createRenderEntry (page, currentPage = undefined) {
   }
 
   const originalPath = `/${segments.join('/')}`
+
   return {
     route: page.route,
     path: `/${segments.join('/')}`,

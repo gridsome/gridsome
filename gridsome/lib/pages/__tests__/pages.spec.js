@@ -13,7 +13,7 @@ test('create page', async () => {
 
   expect(page.path).toEqual('/page')
   expect(page.route).toEqual('/page')
-  expect(page.context).toBeNull()
+  expect(page.context).toMatchObject({})
   expect(page.queryVariables).toBeNull()
   expect(page.query.document).toBeNull()
   expect(page.component).toEqual(path.join(__dirname, '__fixtures__', 'DefaultPage.vue'))
@@ -35,7 +35,7 @@ test('create page with plugin api', async () => {
 
       expect(page.path).toEqual('/page')
       expect(page.route).toEqual('/page')
-      expect(page.context).toBeNull()
+      expect(page.context).toMatchObject({})
       expect(page.queryVariables).toBeNull()
       expect(page.query.document).toBeNull()
       expect(page.component).toEqual(path.join(__dirname, '__fixtures__', 'DefaultPage.vue'))
@@ -106,7 +106,7 @@ test('create page with context', async () => {
   })
 
   expect(page.context).toMatchObject({ test: true })
-  expect(page.queryVariables).toMatchObject({ test: true })
+  expect(page.queryVariables).toBeNull()
 })
 
 test('create page with query context', async () => {
@@ -118,7 +118,7 @@ test('create page with query context', async () => {
     queryVariables: { test: true }
   })
 
-  expect(page.context).toBeNull()
+  expect(page.context).toMatchObject({})
   expect(page.queryVariables).toMatchObject({ test: true })
 })
 

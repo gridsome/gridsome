@@ -88,7 +88,7 @@ class PluginStore {
       options.resolveAbsolutePaths = this._resolveAbsolutePaths
     }
 
-    const dateField = 'date'
+    const dateField = options.dateField || 'date'
     const defaultSortBy = dateField
     const defaultSortOrder = 'DESC'
 

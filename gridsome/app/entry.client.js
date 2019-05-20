@@ -34,7 +34,9 @@ document.addEventListener('click', event => {
   ) return
 
   const path = stripPathPrefix($el.pathname)
-  const { route, location } = router.resolve({ path, hash: $el.hash })
+  const { route, location } = router.resolve({
+    path: path + ($el.search || '') + ($el.hash || '')
+  })
 
   if (route.name === '*') {
     return

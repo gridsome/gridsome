@@ -15,6 +15,7 @@ export default (to, from, next) => {
   fetch(to)
     .then(res => {
       if (res.code === 404) {
+        setResults(to.path, { data: null, context: {} })
         next({ name: '*', params: { 0: to.path }})
       } else {
         setResults(to.path, res)

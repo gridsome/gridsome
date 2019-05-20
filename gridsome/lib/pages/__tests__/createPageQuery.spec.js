@@ -158,7 +158,7 @@ test('parse @paginate with perPage default value', () => {
 
 test('parse @paginate directive from belongsTo field with id', () => {
   const query = createPageQuery(`query {
-    testPage (id: "1") {
+    author (id: "1") {
       belongsTo (perPage: 5, skip: 1, limit: 10) @paginate {
         edges {
           node {
@@ -169,8 +169,8 @@ test('parse @paginate directive from belongsTo field with id', () => {
     }
   }`)
 
-  expect(query.paginate.typeName).toEqual('TestPage')
-  expect(query.paginate.fieldName).toEqual('testPage')
+  expect(query.paginate.typeName).toEqual('Author')
+  expect(query.paginate.fieldName).toEqual('author')
   expect(query.paginate.belongsTo).toMatchObject({ id: '1' })
   expect(query.paginate.perPage).toEqual(5)
   expect(query.paginate.limit).toEqual(10)
