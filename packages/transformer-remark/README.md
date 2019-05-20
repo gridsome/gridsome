@@ -99,7 +99,7 @@ Add target and rel attributes to external links.
 #### externalLinksTarget
 
 - Type: `string`
-- Default `'_blank'`
+- Default: `'_blank'`
 
 #### externalLinksRel
 
