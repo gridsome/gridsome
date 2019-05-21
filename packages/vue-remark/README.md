@@ -27,15 +27,16 @@ module.exports = {
 ```jsx
 ---
 title: A cool title
+excerpt: Lorem Ipsum is simply dummy text.
 ---
-import Message from '~/components/Message.md'
-import Button from '~/components/Button.vue'
-import labels from '~/data/labels.json'
+import Youtube from '~/components/Youtube.vue'
+import data from '~/data/youtube.json'
 
 # {{ $frontmatter.title }}
 
-<Message>Lorem ipsum dolor sit amet...</Message>
-<Button @click="send">{{ labels.send }}</Button>
+> {{ $frontmatter.excerpt }}
+
+<Youtube :id="data.id" />
 
 <script>
 export default {
