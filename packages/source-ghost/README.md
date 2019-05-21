@@ -1,7 +1,6 @@
 # @gridsome/source-ghost
 
-> ghost source for Gridsome. This package is under development and
-API might change before v1 is released.
+> Ghost source for Gridsome. This package is under development and API might change before v1 is released.
 
 ## Install
 
@@ -16,8 +15,8 @@ module.exports = {
     {
       use: '@gridsome/source-ghost',
       options: {
-        url: 'http://localhost:2368',
-        key: '0b7050113fba7147f358cc2f4d',
+        baseUrl: 'http://localhost:2368',
+        contentKey: '0b7050113fba7147f358cc2f4d',
         routes: {
           post: '/:year/:month/:day/:slug',
           tag: '/tag/:slug'

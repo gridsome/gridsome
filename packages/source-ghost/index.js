@@ -9,8 +9,8 @@ const TYPE_TAG = 'tag'
 class GhostSource {
   static defaultOptions () {
     return {
-      url: '',
-      key: '',
+      baseUrl: '',
+      contentKey: '',
       perPage: 100,
       version: 'v2',
       typeName: 'Ghost',
@@ -24,8 +24,8 @@ class GhostSource {
     this.restBases = { posts: {}, taxonomies: {}}
 
     this.contentAPI = new GhostContentAPI({
-      url: options.url,
-      key: options.key,
+      url: options.baseUrl,
+      key: options.contentKey,
       version: options.version
     })
 
@@ -95,15 +95,17 @@ class GhostSource {
     while (keepGoing) {
       const entities = await this.contentAPI.posts.browse({
         limit: this.options.perPage,
-        page: currentPage,
-        include: 'tags,authors'
+        include: 'tags,authors',
+        page: currentPage
       })
 
       entities.forEach(entity => {
         const { tags = [], authors = [], ...options } = entity
-        const { primary_author = {}, primary_tag = {}} = options // eslint-disable-line
+        const { primary_tag, primary_author } = options // eslint-disable-line
 
-        options.primary_tag = store.createReference(tagTypeName, primary_tag.id)
+        options.primary_tag = primary_tag // eslint-disable-line
+          ? store.createReference(tagTypeName, primary_tag.id)
+          : null
         options.primary_author = store.createReference(authorTypeName, primary_author.id)
         options.tags = tags.map(tag => store.createReference(tagTypeName, tag.id))
         options.authors = authors.map(author => store.createReference(authorTypeName, author.id))
@@ -149,8 +151,8 @@ class GhostSource {
     }
   }
 
-  createTypeName (name = '') {
-    return camelCase(`${this.options.typeName} ${name}`, { pascalCase: true })
+  createTypeName (typeName = '') {
+    return camelCase(`${this.options.typeName} ${typeName}`, { pascalCase: true })
   }
 }
 
