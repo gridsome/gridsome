@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.5.0](https://github.com/gridsome/gridsome/tree/master/packages/source-filesystem/compare/@gridsome/source-filesystem@0.4.1...@gridsome/source-filesystem@0.5.0) (2019-05-20)
+
+
+### Features
+
+* **filesystem:** pathPrefix option ([88c7e2b](https://github.com/gridsome/gridsome/tree/master/packages/source-filesystem/commit/88c7e2b))
+
+
+
+
+
 ## [0.4.1](https://github.com/gridsome/gridsome/tree/master/packages/source-filesystem/compare/@gridsome/source-filesystem@0.4.0...@gridsome/source-filesystem@0.4.1) (2019-05-10)
 
 

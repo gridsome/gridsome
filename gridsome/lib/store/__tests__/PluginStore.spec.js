@@ -353,6 +353,41 @@ test('add type with custom fields in route', () => {
   expect(node.path).toEqual('/my-value/My%20value/abcDef/10/2/thriller/1/missing/lorem-ipsum')
 })
 
+// TODO: move dateField and route options to global permalinks config
+test('set custom date field name for content type', () => {
+  const contentType = createPlugin().store.addContentType({
+    typeName: 'TestPost',
+    dateField: 'published_at',
+    route: '/:year/:month/:day/:slug'
+  })
+
+  const node = contentType.addNode({
+    id: '1',
+    slug: 'my-post',
+    published_at: '2019-05-19'
+  })
+
+  expect(node.path).toEqual('/2019/05/19/my-post')
+})
+
+test('set custom year, month and day fields', () => {
+  const contentType = createPlugin().store.addContentType({
+    typeName: 'TestPost',
+    route: '/:year/:month/:day/:slug'
+  })
+
+  const node = contentType.addNode({
+    id: '1',
+    slug: 'my-post',
+    date: '2019-05-19',
+    year: 'Twenty Nighteen',
+    month: 'May',
+    day: 'Nighteen'
+  })
+
+  expect(node.path).toEqual('/twenty-nighteen/may/nighteen/my-post')
+})
+
 test('deeply nested field starting with `raw`', () => {
   const contentType = createPlugin().store.addContentType({
     typeName: 'TestPost',
