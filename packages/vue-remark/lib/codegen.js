@@ -1,5 +1,6 @@
 const { parse } = require('@babel/parser')
 const { default: traverse } = require('@babel/traverse')
+const { normalizeLayout } = require('./utils')
 
 exports.genTemplateBlock = function (html, file) {
   const attrs = typeof file.data.layout === 'object'
@@ -8,18 +9,16 @@ exports.genTemplateBlock = function (html, file) {
 
   return '' +
     `<template>\n` +
-    `  <MdVueLayout${attrs}>\n${html}\n</MdVueLayout>\n` +
+    `  <VueRemarkLayout${attrs}>\n${html}\n</VueRemarkLayout>\n` +
     `</template>\n`
 }
 
 exports.genImportBlock = function (statements, file) {
-  const layout = typeof file.data.layout.component === 'string'
-    ? file.data.layout.component
-    : require.resolve('../src/MdVueLayout.vue')
+  const layout = normalizeLayout(file.data.layout)
 
   let code = statements.join('\n')
 
-  code += `import MdVueLayout from ${JSON.stringify(layout)}\n`
+  code += `import VueRemarkLayout from ${JSON.stringify(layout.component)}\n`
 
   const ast = parse(code, { sourceType: 'module' })
   const identifiers = {}
@@ -48,7 +47,7 @@ exports.genImportBlock = function (statements, file) {
     `  })\n` +
     `}`
 
-  return `<mdvue-import>\n${code}\n</mdvue-import>`
+  return `<vue-remark-import>\n${code}\n</vue-remark-import>`
 }
 
 exports.genFrontMatterBlock = function (data) {
@@ -60,10 +59,10 @@ exports.genFrontMatterBlock = function (data) {
     }, {})
 
   return '\n' +
-   `<mdvue-front-matter>\n` +
+   `<vue-remark-frontmatter>\n` +
    `import Vue from 'vue'\n\n` +
    `const strats = Vue.config.optionMergeStrategies\n` +
-   `const key = '__mdVueFrontMatter'\n` +
+   `const key = '__vueRemarkFrontMatter'\n` +
    `const data = ${JSON.stringify(fields)}\n\n` +
    `export default function initFrontMatter (Component) {\n` +
    `  if (Component.options[key]) {\n` +
@@ -76,7 +75,7 @@ exports.genFrontMatterBlock = function (data) {
    `    }\n` +
    `  }, Component.options.computed)\n` +
    `}\n` +
-   `</mdvue-front-matter>\n`
+   `</vue-remark-frontmatter>\n`
 }
 
 function propsToAttrs (props = {}) {

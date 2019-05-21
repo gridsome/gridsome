@@ -1,34 +1,39 @@
 const path = require('path')
 const fs = require('fs-extra')
 const Filesystem = require('@gridsome/source-filesystem')
+const RemarkTransformer = require('@gridsome/transformer-remark')
 
-const sfcSyntax = require('./lib/sfc-syntax')
-const toSFC = require('./lib/mdvue-ast-to-sfc')
-const toMdVueAST = require('./lib/md-ast-to-mdvue-ast')
+const toSFC = require('./lib/toSfc')
+const sfcSyntax = require('./lib/sfcSyntax')
+const toVueRemarkAst = require('./lib/toVueRemarkAst')
 const { genFrontMatterBlock } = require('./lib/codegen')
 const { normalizeLayout, createFile } = require('./lib/utils')
 
-class MdVuePlugin {
+class VueRemark {
   static defaultOptions () {
     return {
-      typeName: 'VueMarkdownPage',
+      typeName: undefined,
       baseDir: undefined,
       pathPrefix: undefined,
       route: undefined,
       index: ['index'],
-      refs: {},
-      includePaths: []
+      includePaths: [],
+      refs: {}
     }
   }
 
   constructor (api, options) {
     if (!options.baseDir) {
-      throw new Error('@gridsome/plugin-mdvue requires the baseDir option')
+      throw new Error(`@gridsome/vue-remark requires the 'baseDir' option.`)
+    }
+
+    if (!options.typeName) {
+      throw new Error(`@gridsome/vue-remark requires the 'typeName' option.`)
     }
 
     if (!api.store._transformers['text/markdown']) {
       throw new Error(
-        '@gridsome/plugin-mdvue requires a Markdown transformer. ' +
+        '@gridsome/vue-remark requires a Markdown transformer. ' +
         'Please install the @gridsome/transformer-remark plugin.'
       )
     }
@@ -36,7 +41,6 @@ class MdVuePlugin {
     this.api = api
     this.store = api.store
     this.options = options
-    this.remark = this.store._transformers['text/markdown']
     this.context = options.baseDir ? api.resolve(options.baseDir) : api.context
 
     this.filesystem = new Filesystem(api, {
@@ -49,8 +53,17 @@ class MdVuePlugin {
       refs: options.refs
     })
 
+    const remarkOptions = api.config.transformers['text/markdown'] || {}
+
+    this.remark = new RemarkTransformer(remarkOptions, {
+      localOptions: options.remark || {},
+      resolveNodeFilePath: api.store._resolveNodeFilePath,
+      context: api.context,
+      assets: api._app.assets
+    })
+
     this.processor = this.remark.createProcessor({
-      plugins: [sfcSyntax, toMdVueAST],
+      plugins: [sfcSyntax, toVueRemarkAst],
       stringifier: toSFC
     })
 
@@ -66,19 +79,19 @@ class MdVuePlugin {
     const source = fs.readFileSync(resourcePath, 'utf-8')
     const ast = this.processor.parse(source)
 
-    const pageQuery = ast.children
-      .filter(node => node.type === 'html' && /^<page-query/.test(node.value))
-      .map(node => pageQueryRE.exec(node.value)[1])
-      .pop()
-
-    return { pageQuery }
+    return {
+      pageQuery: ast.children
+        .filter(node => node.type === 'html' && /^<page-query/.test(node.value))
+        .map(node => pageQueryRE.exec(node.value)[1])
+        .pop()
+    }
   }
 
   chainWebpack (config) {
     const vueLoader = config.module.rule('vue').use('vue-loader')
     const includePaths = this.options.includePaths.map(p => this.api.resolve(p))
 
-    config.module.rule('mdvue')
+    config.module.rule('vue-remark')
       .test(/\.md$/)
       .include
       .add(resourcePath => {
@@ -93,7 +106,7 @@ class MdVuePlugin {
       .loader('vue-loader')
       .options(vueLoader.toConfig().options)
       .end()
-      .use('mdvue-loader')
+      .use('vue-remark-loader')
       .loader(require.resolve('./lib/loader.js'))
       .options(this)
   }
@@ -122,7 +135,7 @@ class MdVuePlugin {
     const { content, ...data } = this.remark.parse(source.trim())
     const defaultLayout = resourcePath.startsWith(this.context)
       ? this.options.layout
-      : require.resolve('./src/MdVueLayout')
+      : require.resolve('./src/VueRemarkLayout.js')
     const layout = normalizeLayout(data.layout || defaultLayout)
     const frontMatterBlock = genFrontMatterBlock(data)
 
@@ -146,4 +159,4 @@ class MdVuePlugin {
   }
 }
 
-module.exports = MdVuePlugin
+module.exports = VueRemark

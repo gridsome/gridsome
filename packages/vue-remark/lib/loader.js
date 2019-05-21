@@ -4,7 +4,7 @@ const loaderUtils = require('loader-utils')
 
 const cache = new LRU({ max: 1000 })
 
-module.exports = async function mdVueLoader (source, map) {
+module.exports = async function vueRemarkLoader (source, map) {
   const callback = this.async()
   const cacheKey = hash(source)
   const cached = cache.get(cacheKey)

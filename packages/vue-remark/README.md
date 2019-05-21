@@ -1,11 +1,9 @@
-# @gridsome/plugin-mdvue
+# @gridsome/vue-remark
 
 ## Install
 
-- `yarn add @gridsome/plugin-mdvue @gridsome/transformer-remark`
-- `npm install @gridsome/plugin-mdvue @gridsome/transformer-remark`
-
-This plugin requires the Remark transformer. Install [@gridsome/transformer-remark](https://www.npmjs.com/package/@gridsome/transformer-remark) as a dev dependency in your project. Gridsome will automatically transform the files for you as long as the transformer is found in your `package.json`.
+- `yarn add @gridsome/vue-remark`
+- `npm install @gridsome/vue-remark`
 
 ## Usage
 
@@ -13,9 +11,10 @@ This plugin requires the Remark transformer. Install [@gridsome/transformer-rema
 module.exports = {
   plugins: [
     {
-      use: '@gridsome/plugin-mdvue',
+      use: '@gridsome/vue-remark',
       options: {
-        baseDir: './src/pages',
+        typeName: 'VueRemarkPage', // required
+        baseDir: './src/pages', // required
         layout: './src/layouts/Default.vue'
       }
     }
@@ -59,8 +58,7 @@ The path to the directory which contains all `.md` files. A relative path will b
 
 #### typeName
 
-- Type: `string`
-- Default: `'VueMarkdownPage'`
+- Type: `string` *required*
 
 The type name to give the pages in the GraphQL schema.
 

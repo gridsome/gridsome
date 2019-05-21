@@ -1,9 +1,9 @@
 {
   "version": "0.0.0",
-  "name": "@gridsome/plugin-mdvue",
-  "description": "Create pages in Markdown for Gridsome",
-  "homepage": "https://github.com/gridsome/gridsome/tree/master/packages/source-mdvue#readme",
-  "repository": "https://github.com/gridsome/gridsome/tree/master/packages/source-mdvue",
+  "name": "@gridsome/vue-remark",
+  "description": "Use Vue Components in Markdown",
+  "homepage": "https://github.com/gridsome/gridsome/tree/master/packages/vue-remark#readme",
+  "repository": "https://github.com/gridsome/gridsome/tree/master/packages/vue-remark",
   "main": "index.js",
   "keywords": [
     "gridsome",
@@ -14,7 +14,8 @@
   "dependencies": {
     "@babel/parser": "^7.0.0",
     "@babel/traverse": "^7.0.0",
-    "@gridsome/source-filesystem": "0.5.0",
+    "@gridsome/source-filesystem": "^0.5.0",
+    "@gridsome/transformer-remark": "^0.3.2",
     "chokidar": "^2.0.4",
     "fs-extra": "^7.0.0",
     "globby": "^8.0.1",
@@ -28,9 +29,6 @@
     "slash": "^2.0.0",
     "unist-builder": "^1.0.3",
     "unist-util-visit": "^1.4.0"
-  },
-  "peerDependencies": {
-    "@gridsome/transformer-remark": "latest"
   },
   "publishConfig": {
     "access": "public"

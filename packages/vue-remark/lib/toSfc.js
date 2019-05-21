@@ -4,7 +4,7 @@ const toHTML = require('hast-util-to-html')
 const toHAST = require('mdast-util-to-hast')
 const { genImportBlock, genTemplateBlock } = require('./codegen')
 
-module.exports = function () {
+module.exports = function toSfc () {
   this.Compiler = compiler
 
   function compiler (node, file) {
@@ -16,8 +16,8 @@ module.exports = function () {
     file.data.layout = file.data.layout || {}
 
     node.children.forEach(node => {
-      if (node.type === 'mdvue:import') importStatements.push(node.value)
-      else if (node.type === 'mdvue:block') blocks.push(node.value)
+      if (node.type === 'vue-remark:import') importStatements.push(node.value)
+      else if (node.type === 'vue-remark:block') blocks.push(node.value)
       else ast.children.push(node)
     })
 

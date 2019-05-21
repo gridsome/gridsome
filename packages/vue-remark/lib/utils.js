@@ -9,8 +9,8 @@ exports.createFile = function (options) {
   return file
 }
 
-exports.normalizeLayout = function (layout, context) {
-  const defaultLayout = require.resolve('../src/MdVueLayout')
+exports.normalizeLayout = function (layout) {
+  const defaultLayout = require.resolve('../src/VueRemarkLayout.js')
 
   if (typeof layout === 'string') {
     return { component: layout, props: {}}

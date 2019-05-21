@@ -27,7 +27,7 @@ function tokenizeImportSyntax (eat, value) {
 
   if (isImport(value)) {
     const lines = subValue.split('\n').filter(line => line.startsWith('import'))
-    return eat(subValue)({ type: 'mdvue:import', value: lines.join('\n') })
+    return eat(subValue)({ type: 'vue-remark:import', value: lines.join('\n') })
   }
 }
 
@@ -35,7 +35,7 @@ function tokenizeSFCBlocks (eat, value) {
   const subValue = getValue(value)
 
   if (isQuery(value) || isScript(value) || isStyle(value)) {
-    return eat(subValue)({ type: 'mdvue:block', value: subValue })
+    return eat(subValue)({ type: 'vue-remark:block', value: subValue })
   }
 }
 
