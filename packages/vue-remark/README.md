@@ -51,17 +51,17 @@ export default {
 
 ## Options
 
-#### baseDir
-
-- Type: `string` *required*
-
-The path to the directory which contains all `.md` files. A relative path will be resolved from the project root directory.
-
 #### typeName
 
 - Type: `string` *required*
 
 The type name to give the pages in the GraphQL schema.
+
+#### baseDir
+
+- Type: `string` *required*
+
+The path to the directory which contains all `.md` files. A relative path will be resolved from the project root directory.
 
 #### layout
 
