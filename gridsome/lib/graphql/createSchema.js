@@ -1,13 +1,23 @@
-const { SchemaComposer, ObjectTypeComposer } = require('graphql-compose')
-const { CreatedGraphQLType, isCreatedType, createTypeName } = require('./utils')
-const initMustHaveTypes = require('./types')
 const directives = require('./directives')
+const initMustHaveTypes = require('./types')
 
 const {
   isSpecifiedScalarType,
   isIntrospectionType,
   defaultFieldResolver
 } = require('graphql')
+
+const {
+  SchemaComposer,
+  ObjectTypeComposer,
+  UnionTypeComposer
+} = require('graphql-compose')
+
+const {
+  CreatedGraphQLType,
+  isCreatedType,
+  createTypeName
+} = require('./utils')
 
 module.exports = function createSchema (store, context = {}) {
   const { types = [], schemas = [], resolvers = [] } = context
@@ -66,10 +76,11 @@ function createType (schemaComposer, type, path = [type.options.name]) {
     throw new Error(`Missing required type name.`)
   }
 
+  const name = type.options.name || createTypeName(path.join(' '))
+  const options = { ...type.options, name }
+
   switch (type.type) {
     case CreatedGraphQLType.Object:
-      const name = type.options.name || createTypeName(path.join(' '))
-      const options = { ...type.options, name }
       const typeComposer = ObjectTypeComposer.createTemp(options, schemaComposer)
       const fields = {}
 
@@ -84,6 +95,9 @@ function createType (schemaComposer, type, path = [type.options.name]) {
       typeComposer.addFields(fields)
 
       return typeComposer
+
+    case CreatedGraphQLType.Union:
+      return UnionTypeComposer.createTemp(options, schemaComposer)
   }
 }
 

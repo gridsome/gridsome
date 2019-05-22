@@ -50,6 +50,64 @@ test('add custom GraphQL object types', async () => {
   expect(data.post.author).toMatchObject({ name: 'The Author' })
 })
 
+test('add custom GraphQL union type', async () => {
+  const app = await createApp(function (api) {
+    api.loadSource(store => {
+      store.addContentType('Track').addNode({ id: '1', name: 'A Track' })
+      store.addContentType('Album').addNode({ id: '1', name: 'An Album' })
+      store.addContentType('Single').addNode({ id: '1', name: 'A Single' })
+    })
+
+    api.createSchema(({ addTypes, createObjectType, createUnionType }) => {
+      addTypes([
+        createObjectType({
+          name: 'Album',
+          interfaces: ['Node'],
+          fields: {
+            name: 'String'
+          }
+        }),
+        createObjectType({
+          name: 'Single',
+          interfaces: ['Node'],
+          fields: {
+            name: 'String'
+          }
+        }),
+        createUnionType({
+          name: 'AppearsOnUnion',
+          interfaces: ['Node'],
+          types: ['Album', 'Single']
+        }),
+        createObjectType({
+          name: 'Track',
+          interfaces: ['Node'],
+          fields: {
+            appearsOn: {
+              type: ['AppearsOnUnion'],
+              resolve: (_, args, ctx) => {
+                const query = { typeName: { $in: ['Album', 'Single'] }}
+                return ctx.store.chainIndex(query).data()
+              }
+            }
+          }
+        })
+      ])
+    })
+  })
+
+  const { errors, data } = await app.graphql(`{
+    track(id:"1") {
+      appearsOn {
+        __typename
+      }
+    }
+  }`)
+
+  expect(errors).toBeUndefined()
+  expect(data.track.appearsOn).toHaveLength(2)
+})
+
 test('add custom GraphQL types from SDL', async () => {
   const app = await createApp(function (api) {
     api.loadSource(store => {

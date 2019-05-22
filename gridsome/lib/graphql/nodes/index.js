@@ -54,6 +54,7 @@ function createTypeComposer (schemaComposer, typeName) {
   return schemaComposer.getOrCreateOTC(typeName)
 }
 
+// TODO: extend existing filter input type
 function createFilterComposer ({ schemaComposer, typeName, fieldDefs }) {
   const fields = createFilterTypes(schemaComposer, fieldDefs, `${typeName}Filter`)
   const name = `${typeName}Filters`
