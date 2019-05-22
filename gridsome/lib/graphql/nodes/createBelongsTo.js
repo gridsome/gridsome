@@ -1,4 +1,3 @@
-const { nodeInterface } = require('../interfaces')
 const { PER_PAGE, SORT_ORDER } = require('../../utils/constants')
 const createFieldDefinitions = require('../createFieldDefinitions')
 
@@ -19,7 +18,7 @@ module.exports = function createBelongsTo ({
   typeName
 }) {
   const belongsToUnionType = schemaComposer.createUnionTC({
-    interfaces: [nodeInterface],
+    interfaces: ['Node'],
     name: `${typeName}BelongsToUnion`,
     types: typeNames
   })

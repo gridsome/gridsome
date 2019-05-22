@@ -1,12 +1,11 @@
 const { PER_PAGE } = require('../../utils/constants')
-const createFieldDefinitions = require('../createFieldDefinitions')
-const { createFilterTypes, createFilterQuery } = require('../createFilterTypes')
+const { createFilterQuery } = require('../createFilterTypes')
 const { createPagedNodeEdges, createSortOptions } = require('./utils')
 
 module.exports = function createConnection ({
   schemaComposer,
+  filterComposer,
   contentType,
-  fieldDefs,
   typeName
 }) {
   const edgeType = schemaComposer.createObjectTC({
@@ -27,15 +26,8 @@ module.exports = function createConnection ({
     }
   })
 
-  const nodeFieldDefs = createFieldDefinitions([{ id: '' }])
-  const filterType = schemaComposer.createInputTC({
-    name: `${typeName}Filters`,
-    fields: createFilterTypes(schemaComposer, { ...fieldDefs, ...nodeFieldDefs }, `${typeName}Filter`)
-  })
-
-  const filterFields = filterType.getType().getFields()
-
   const { defaultSortBy, defaultSortOrder } = contentType.options
+  const filterFields = filterComposer.getType().getFields()
 
   const connectionArgs = {
     sortBy: { type: 'String', defaultValue: defaultSortBy },
@@ -46,7 +38,7 @@ module.exports = function createConnection ({
     page: { type: 'Int' },
     sort: { type: '[SortArgument]' },
     filter: {
-      type: filterType,
+      type: filterComposer,
       description: `Filter for ${typeName} nodes.`
     },
 
