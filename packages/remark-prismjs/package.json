@@ -1,7 +1,7 @@
 {
   "version": "0.0.5",
   "name": "@gridsome/remark-prismjs",
-  "description": "Prism for Gridsome",
+  "description": "Syntax highlighter for markdown code blocks",
   "homepage": "https://github.com/gridsome/gridsome/tree/master/packages/remark-prismjs#readme",
   "repository": "https://github.com/gridsome/gridsome/tree/master/packages/remark-prismjs",
   "main": "index.js",
