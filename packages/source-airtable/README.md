@@ -1,4 +1,4 @@
-# @gridsome/source-datocms
+# @gridsome/source-airtable
 
 > Airtable source for Gridsome.
 
