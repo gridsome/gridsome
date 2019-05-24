@@ -60,6 +60,8 @@ class ContentType {
   }
 
   addNode (options) {
+    options = this._store._app._hooks.node.call(options, this, this._store._app)
+
     const { nodeOptions, fields, belongsTo } = createNodeOptions(options, this)
 
     const { $uid, id } = nodeOptions

@@ -85,6 +85,34 @@ class PluginAPI {
   afterBuild (fn) {
     this._on('afterBuild', fn)
   }
+
+  //
+  // experimental
+  //
+
+  ___onCreateContentType (fn) {
+    const id = this._entry.use || 'onCreateContentType'
+
+    this._app._hooks.contentType.tap(id, (options, app) => {
+      return fn(options, app) || options
+    })
+  }
+
+  ___onCreateNode (fn) {
+    const id = this._entry.use || 'onCreateNode'
+
+    this._app._hooks.node.tap(id, (options, contentType, app) => {
+      return fn(options, contentType, app) || options
+    })
+  }
+
+  ___onCreatePage (fn) {
+    const id = this._entry.use || 'onCreatePage'
+
+    this._app._hooks.page.tap(id, (options, pages, app) => {
+      return fn(options, pages, app) || options
+    })
+  }
 }
 
 module.exports = PluginAPI

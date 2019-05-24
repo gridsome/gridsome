@@ -46,7 +46,7 @@ module.exports = async (context, args) => {
 
 function createRenderQueue (app) {
   return new Promise((resolve, reject) => {
-    app.hooks.createRenderQueue.callAsync([], app, (err, res) => {
+    app._hooks.createRenderQueue.callAsync([], app, (err, res) => {
       if (err) reject(err)
       else resolve(res)
     })

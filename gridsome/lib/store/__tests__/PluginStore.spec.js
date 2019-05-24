@@ -747,3 +747,27 @@ test('generate slug from any string', () => {
   expect(slug3).toEqual('string-with-slashes')
   expect(slug4).toEqual('trim-string')
 })
+
+test('experimental: add transformer', async () => {
+  const api = createPlugin()
+  const posts = api.store.addContentType('TestPost')
+
+  api.store._addTransformer(class {
+    static mimeTypes () {
+      return ['application/test']
+    }
+
+    parse (content) {
+      return JSON.parse(content)
+    }
+  })
+
+  const node = posts.addNode({
+    internal: {
+      mimeType: 'application/test',
+      content: JSON.stringify({ test: true })
+    }
+  })
+
+  expect(node.test).toEqual(true)
+})

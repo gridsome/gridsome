@@ -7,6 +7,7 @@ const isRelative = require('is-relative')
 const { version } = require('../../package.json')
 
 const {
+  SyncWaterfallHook,
   AsyncSeriesWaterfallHook
 } = require('tapable')
 
@@ -29,13 +30,16 @@ class App {
     this.isInitialized = false
     this.isBootstrapped = false
 
-    this.hooks = {
-      createRenderQueue: new AsyncSeriesWaterfallHook(['renderQueue', 'app'])
+    this._hooks = {
+      createRenderQueue: new AsyncSeriesWaterfallHook(['renderQueue', 'app']),
+      contentType: new SyncWaterfallHook(['options', 'app']),
+      node: new SyncWaterfallHook(['options', 'contentType', 'app']),
+      page: new SyncWaterfallHook(['options', 'pages', 'app'])
     }
 
-    this.hooks.createRenderQueue.tap('Gridsome', require('../pages/createRenderQueue'))
-    this.hooks.createRenderQueue.tap('Gridsome', require('../pages/createHTMLPaths'))
-    this.hooks.createRenderQueue.tapPromise('Gridsome', require('../graphql/executeQueries'))
+    this._hooks.createRenderQueue.tap('Gridsome', require('../pages/createRenderQueue'))
+    this._hooks.createRenderQueue.tap('Gridsome', require('../pages/createHTMLPaths'))
+    this._hooks.createRenderQueue.tapPromise('Gridsome', require('../graphql/executeQueries'))
 
     autoBind(this)
   }
