@@ -19,7 +19,7 @@ class PluginStore {
     this._app = app
     this._typeName = typeName
     this._resolveAbsolutePaths = resolveAbsolutePaths || false
-    
+
     this._transformers = mapValues(transformers || app.config.transformers, transformer => {
       return this._createTransformer(
         transformer.TransformerClass,
