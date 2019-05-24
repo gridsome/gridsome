@@ -24,7 +24,7 @@ module.exports = function (api, options) {
       const urlConfig = options.config[pattern] || {}
 
       return {
-        url: page.path,
+        url: `${page.path}/`.replace(/\/+$/, '/'),
         priority: urlConfig.priority,
         changefreq: urlConfig.changefreq
       }
@@ -43,6 +43,7 @@ module.exports = function (api, options) {
 module.exports.defaultOptions = () => ({
   output: '/sitemap.xml',
   cacheTime: 600000,
+  staticUrls: [],
   exclude: [],
   config: {}
 })
