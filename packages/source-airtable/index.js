@@ -1,7 +1,7 @@
 const Airtable = require('airtable')
 
 module.exports = function (api, options) {
-  const base = new Airtable({apiKey: options.apiKey}).base(options.base)
+  const base = new Airtable({ apiKey: options.apiKey }).base(options.base)
 
   api.loadSource(async store => {
     const contentType = store.addContentType({
@@ -13,8 +13,8 @@ module.exports = function (api, options) {
       records.forEach((record) => {
         const item = record._rawJson
         contentType.addNode({
-            id: item.id,
-            ...item.fields
+          id: item.id,
+          ...item.fields
         })
       })
       fetchNextPage()
