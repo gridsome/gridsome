@@ -5,6 +5,7 @@ module.exports = function (api, options) {
 
   api.loadSource(async store => {
     const contentType = store.addContentType({
+      camelCasedFieldNames: true,
       typeName: options.typeName,
       route: options.route
     })
