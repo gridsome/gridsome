@@ -1,6 +1,6 @@
 # @gridsome/vue-remark
 
-> Create pages with Vue Components in Markdown. Perfect for building Documentation, Design Systems, Portfolios, Blogs, etc.
+> Create pages with Vue components in markdown. Perfect for building Documentation, Design Systems, Portfolios, Blogs, etc.
 
 ## Install
 
@@ -15,7 +15,7 @@ module.exports = {
     {
       use: '@gridsome/vue-remark',
       options: {
-        typeName: 'VueRemarkPage', // required
+        typeName: 'MarkdownPage', // required
         baseDir: './src/pages', // required
       }
     }
@@ -86,7 +86,7 @@ It is also possible to use slots inside `VueRemarkContent`.
     <ul>
       <li v-for="tag in $page.post.tags" :key="tag.id">
         <g-link to="tag.path">{{ tag.name }}</g-link>
-      </li>  
+      </li>
     </ul>
   </template>
 </VueRemarkContent>
@@ -125,4 +125,27 @@ Generate paths from a route. The `pathPrefix` option is ignored when using a `ro
 
 Define which files to consider as index files. These files will not have their filename appear in its path and will become the main `index.html` file of the directory. Make sure there is only one possible index file per directory if multiple index names are defined.
 
-## Front-matter config
+#### remark
+
+Custom [Remark](https://remark.js.org/) options. [Read more](https://github.com/gridsome/gridsome/tree/master/packages/transformer-remark#options).
+
+## Set layout for specific page in front matter
+
+The generated Vue template has a simple `div` element as root component. Use a special `layout` option in front matter to specify a custom element to use as root component.
+
+```yaml
+---
+layout: ~/layouts/Default.vue
+---
+```
+
+Passing `props` to the component:
+
+```yaml
+---
+layout:
+  component: ~/layouts/Default.vue
+  props:
+    fullWidth: true
+---
+```
