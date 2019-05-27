@@ -1,7 +1,7 @@
 const { print } = require('graphql')
 const { createQueryVariables } = require('../../pages/utils')
 
-module.exports = ({ store, pages, config }) => {
+module.exports = ({ pages }) => {
   return async function graphqlMiddleware (req, res, next) {
     const { body = {}} = req
 

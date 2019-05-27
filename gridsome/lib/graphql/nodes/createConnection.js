@@ -58,7 +58,7 @@ module.exports = ({ contentType, nodeType, fields }) => {
     type: connectionType,
     args: connectionArgs,
     description: `Connection to all ${nodeType.name} nodes`,
-    async resolve (_, { regex, filter, ...args }, { store }, info) {
+    async resolve (_, { regex, filter, ...args }, { store }) {
       const { collection } = store.getContentType(nodeType.name)
       const sort = createSortOptions(args)
       const query = {}

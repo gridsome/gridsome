@@ -1,4 +1,3 @@
-import TestClass from './test-class'
 import Layout from './layouts/Default.vue'
 
 import './styles/main.css'

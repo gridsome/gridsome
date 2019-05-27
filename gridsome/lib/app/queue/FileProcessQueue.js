@@ -31,7 +31,7 @@ class FileProcessQueue {
     return asset
   }
 
-  async preProcess (filePath, options) {
+  async preProcess (filePath) {
     if (!await fs.exists(filePath)) {
       throw new Error(`${filePath} was not found. `)
     }
