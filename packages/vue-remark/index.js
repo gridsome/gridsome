@@ -15,6 +15,7 @@ class VueRemark {
       typeName: undefined,
       baseDir: undefined,
       pathPrefix: undefined,
+      component: undefined,
       route: undefined,
       index: ['index'],
       includePaths: [],
@@ -31,17 +32,11 @@ class VueRemark {
       throw new Error(`@gridsome/vue-remark requires the 'typeName' option.`)
     }
 
-    if (!api.store._transformers['text/markdown']) {
-      throw new Error(
-        '@gridsome/vue-remark requires a Markdown transformer. ' +
-        'Please install the @gridsome/transformer-remark plugin.'
-      )
-    }
-
     this.api = api
     this.store = api.store
     this.options = options
     this.context = options.baseDir ? api.resolve(options.baseDir) : api.context
+    this.component = options.component ? api.resolve(options.component) : null
 
     this.filesystem = new Filesystem(api, {
       path: '**/*.md',
@@ -53,14 +48,9 @@ class VueRemark {
       refs: options.refs
     })
 
-    const remarkOptions = api.config.transformers['text/markdown'] || {}
+    api.store._addTransformer(RemarkTransformer, options.remark)
 
-    this.remark = new RemarkTransformer(remarkOptions, {
-      localOptions: options.remark || {},
-      resolveNodeFilePath: api.store._resolveNodeFilePath,
-      context: api.context,
-      assets: api._app.assets
-    })
+    this.remark = api.store._transformers['text/markdown']
 
     this.processor = this.remark.createProcessor({
       plugins: [sfcSyntax, toVueRemarkAst],
@@ -68,10 +58,19 @@ class VueRemark {
     })
 
     api.transpileDependencies([path.resolve(__dirname, 'src')])
-    api.registerComponentParser({ test: /\.md/, parse: this.parseComponent.bind(this) })
     api.chainWebpack(config => this.chainWebpack(config))
-    api.loadSource(store => this.loadSource(store))
     api.createPages(args => this.createPages(args))
+
+    api.registerComponentParser({
+      test: /\.md/,
+      parse: this.parseComponent.bind(this)
+    })
+
+    api.___onCreateContentType(options => {
+      if (options.typeName === this.options.typeName) {
+        options.component = false
+      }
+    })
   }
 
   parseComponent (resourcePath) {
@@ -111,31 +110,35 @@ class VueRemark {
       .options(this)
   }
 
-  loadSource (store) {
-    const contentType = store.getContentType(this.options.typeName)
-
-    if (contentType) {
-      contentType.options.component = null
-    }
-  }
-
   async createPages ({ getContentType, createPage }) {
     const contentType = getContentType(this.options.typeName)
 
     contentType.collection.find().forEach(node => {
-      createPage({
-        path: node.path,
-        component: node.internal.origin,
-        queryVariables: node
-      })
+      if (this.component) {
+        createPage({
+          path: node.path,
+          component: this.component,
+          queryVariables: node,
+          _meta: {
+            vueRemark: {
+              type: 'import',
+              path: node.internal.origin
+            }
+          }
+        })
+      } else {
+        createPage({
+          path: node.path,
+          component: node.internal.origin,
+          queryVariables: node
+        })
+      }
     })
   }
 
   async parse (source, resourcePath = null) {
     const { content, ...data } = this.remark.parse(source.trim())
-    const defaultLayout = resourcePath.startsWith(this.context)
-      ? this.options.layout
-      : require.resolve('./src/VueRemarkLayout.js')
+    const defaultLayout = require.resolve('./src/VueRemarkLayout.js')
     const layout = normalizeLayout(data.layout || defaultLayout)
     const frontMatterBlock = genFrontMatterBlock(data)
 

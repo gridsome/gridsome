@@ -1,5 +1,7 @@
 # @gridsome/vue-remark
 
+> Create pages with Vue Components in Markdown. Perfect for building Documentation, Design Systems, Portfolios, Blogs, etc.
+
 ## Install
 
 - `yarn add @gridsome/vue-remark`
@@ -15,7 +17,6 @@ module.exports = {
       options: {
         typeName: 'VueRemarkPage', // required
         baseDir: './src/pages', // required
-        layout: './src/layouts/Default.vue'
       }
     }
   ]
@@ -28,25 +29,16 @@ module.exports = {
 ---
 title: A cool title
 excerpt: Lorem Ipsum is simply dummy text.
+layout: ~/layouts/Default.vue
 ---
-import Youtube from '~/components/Youtube.vue'
+import YouTube from '~/components/YouTube.vue'
 import data from '~/data/youtube.json'
 
 # {{ $frontmatter.title }}
 
+<YouTube :id="data.id" />
+
 > {{ $frontmatter.excerpt }}
-
-<Youtube :id="data.id" />
-
-<script>
-export default {
-  methods: {
-    send () {
-      // ...
-    }
-  }
-}
-</script>
 ```
 
 ## Options
@@ -61,24 +53,49 @@ The type name to give the pages in the GraphQL schema.
 
 - Type: `string` *required*
 
-The path to the directory which contains all `.md` files. A relative path will be resolved from the project root directory.
+The path to the directory which contains all the `.md` files. A relative path will be resolved from the project root directory.
 
-#### layout
+#### component
 
-- Type: `string | object`
+- Type: `string`
 
-Path to the Vue component that will be used as layout for all pages this plugin creates. The option can also be an object with `component` and `props`. Each page can also override this option in their front matter section.
+Use a custom component as template for every page created by this plugin. This option is useful if you for example need to have a shared `page-query` or want to wrap every page in the same layout component. Insert the `VueRemarkContent` component where you want to show the Markdown content.
 
-```js
-layout: './src/layouts/Default.vue'
-```
-```js
-layout: {
-  component: './src/layouts/Default.vue',
-  props: {
-    fullWidth: false
+```html
+<template>
+  <Layout>
+    <h1>{{ $page.vueRemarkPage.title }}</h1>
+    <VueRemarkContent />
+  </Layout>
+</template>
+
+<page-query>
+query VueRemarkPage($id: String!) {
+  vueRemarkPage(id: $id) {
+    title
   }
 }
+</page-query>
+```
+
+It is also possible to use slots inside `VueRemarkContent`.
+
+```html
+<VueRemarkContent>
+  <template v-slot:tags>
+    <ul>
+      <li v-for="tag in $page.post.tags" :key="tag.id">
+        <g-link to="tag.path">{{ tag.name }}</g-link>
+      </li>  
+    </ul>
+  </template>
+</VueRemarkContent>
+```
+
+```md
+# Post title
+
+<slot name="tags">
 ```
 
 #### includePaths
@@ -86,7 +103,7 @@ layout: {
 - Type: `Array`
 - Default: `[]`
 
-Paths or regex that should be parsed by this plugin. Use this option if you want to import `md` files as Vue components. Imported `md` components will not use the `layout` option above.
+Paths or regex that should be parsed by this plugin. Use this option if you want to import `md` files as Vue components.
 
 #### pathPrefix
 
@@ -107,3 +124,5 @@ Generate paths from a route. The `pathPrefix` option is ignored when using a `ro
 - Default: `['index']`
 
 Define which files to consider as index files. These files will not have their filename appear in its path and will become the main `index.html` file of the directory. Make sure there is only one possible index file per directory if multiple index names are defined.
+
+## Front-matter config
