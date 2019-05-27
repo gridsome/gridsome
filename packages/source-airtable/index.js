@@ -1,15 +1,15 @@
 const Airtable = require('airtable')
 
 module.exports = function (api, options) {
-  const base = new Airtable({ apiKey: options.apiKey }).base(options.base)
+  const base = new Airtable({ apiKey: options.apiKey }).base(options.baseId)
 
   api.loadSource(async store => {
     const contentType = store.addContentType({
       typeName: options.typeName,
-      route: `/${options.route}/:id`
+      route: options.route
     })
 
-    await base(options.table).select().eachPage((records, fetchNextPage) => {
+    await base(options.tableName).select().eachPage((records, fetchNextPage) => {
       records.forEach((record) => {
         const item = record._rawJson
         contentType.addNode({

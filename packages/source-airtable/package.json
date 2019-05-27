@@ -13,5 +13,8 @@
   ],
   "dependencies": {
     "airtable": "^0.6.0"
+  },
+  "engines": {
+    "node": ">=8.3"
   }
 }
