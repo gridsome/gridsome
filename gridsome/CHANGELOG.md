@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.6.3](https://github.com/gridsome/gridsome/compare/gridsome@0.6.2...gridsome@0.6.3) (2019-05-27)
+
+
+### Bug Fixes
+
+* **webpack:** externalize included dependencies only ([adbff52](https://github.com/gridsome/gridsome/commit/adbff52))
+
+
+
+
+
 ## [0.6.2](https://github.com/gridsome/gridsome/compare/gridsome@0.6.1...gridsome@0.6.2) (2019-05-20)
 
 
