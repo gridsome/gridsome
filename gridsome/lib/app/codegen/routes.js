@@ -1,4 +1,4 @@
-const { uniqBy } = require('lodash')
+const { uniqBy, isPlainObject } = require('lodash')
 const { NOT_FOUND_NAME } = require('../../utils/constants')
 
 function genRoutes (app, routeMeta = {}) {
@@ -33,7 +33,34 @@ function genRoutes (app, routeMeta = {}) {
       metas.push(`data: true`)
     }
 
-    if (metas.length) props.push(`    meta: { ${metas.join(', ')} }`)
+    for (const key in page.internal.meta) {
+      const value = page.internal.meta[key]
+
+      if (isPlainObject(value)) {
+        switch (value.type) {
+          case 'import': {
+            const path = JSON.stringify(value.path)
+            const chunkName = JSON.stringify(value.chunkName || page.chunkName)
+            const importCode = `import(/* webpackChunkName: ${chunkName} */ ${path})`
+
+            metas.push(`${key}: () => ${importCode}`)
+
+            break
+          }
+          case 'code': {
+            metas.push(`${key}: ${value.code}`)
+
+            break
+          }
+        }
+      } else {
+        metas.push(`${key}: ${JSON.stringify(value)}`)
+      }
+    }
+
+    if (metas.length) {
+      props.push(`    meta: {\n      ${metas.join(',\n      ')}\n    }`)
+    }
 
     if (page.name) {
       props.unshift(`    name: ${JSON.stringify(page.name)}`)

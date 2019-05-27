@@ -150,7 +150,7 @@ class Pages {
 
     options.component = this._app.resolve(input.component)
 
-    return options
+    return this._app._hooks.page.call(options, this, this._app)
   }
 
   _parse (component, useCache = true) {
@@ -190,6 +190,7 @@ function createPage ({ options, context }) {
       digest: null,
       path: { segments },
       route: options.route || null,
+      meta: options._meta || {},
       isDynamic: typeof options.route === 'string',
       isManaged: false
     }
