@@ -160,7 +160,7 @@ test('add custom resolver for invalid field names', async () => {
         id: '1',
         '123': 4,
         '456-test': 4,
-        '789-test': 10
+        '789 test': 10
       })
     })
 
@@ -233,6 +233,69 @@ test('add custom resolvers for content type', async () => {
   expect(errors).toBeUndefined()
   expect(data.post.title).toEqual('My Post')
   expect(data.post.customField).toEqual('value')
+})
+
+test('disable field inference with SDL', async () => {
+  const app = await createApp(function (api) {
+    api.loadSource(({ addContentType, addSchemaTypes }) => {
+      addContentType('Post').addNode({
+        id: '1',
+        title: 'My Post',
+        content: 'Value'
+      })
+
+      addSchemaTypes(`
+        type Post implements Node @dontInfer {
+          title: String
+        }
+      `)
+    })
+  })
+
+  const { errors } = await app.graphql(`{
+    post(id:"1") {
+      title
+      content
+    }
+  }`)
+
+  expect(errors).toHaveLength(1)
+  expect(errors[0].message).toMatch('Cannot query field "content" on type "Post"')
+})
+
+test('disable field inference with createObjectType', async () => {
+  const app = await createApp(function (api) {
+    api.loadSource(({ addContentType, addSchemaTypes, schema }) => {
+      addContentType('Post').addNode({
+        id: '1',
+        title: 'My Post',
+        content: 'Value'
+      })
+
+      addSchemaTypes([
+        schema.createObjectType({
+          name: 'Post',
+          interfaces: ['Node'],
+          fields: {
+            title: 'String'
+          },
+          config: {
+            infer: false
+          }
+        })
+      ])
+    })
+  })
+
+  const { errors } = await app.graphql(`{
+    post(id:"1") {
+      title
+      content
+    }
+  }`)
+
+  expect(errors).toHaveLength(1)
+  expect(errors[0].message).toMatch('Cannot query field "content" on type "Post"')
 })
 
 test('add custom GraphQL schema', async () => {

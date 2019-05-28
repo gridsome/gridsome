@@ -94,6 +94,7 @@ function createType (schemaComposer, type, path = [type.options.name]) {
       const typeOptions = { ...options, fields }
       const typeComposer = ObjectTypeComposer.createTemp(typeOptions, schemaComposer)
 
+      typeComposer.setExtension('config', options.config || {})
       typeComposer.addFields(fields)
 
       return typeComposer

@@ -18,10 +18,19 @@ module.exports = (schemaComposer, store) => {
   for (const typeName of typeNames) {
     const contentType = store.getContentType(typeName)
     const nodes = contentType.data().concat({ id: '' })
-    const fieldDefs = createFieldDefinitions(nodes)
     const typeComposer = createTypeComposer(schemaComposer, typeName)
+    const fieldDefs = createFieldDefinitions(nodes)
+    const config = getConfig(typeComposer)
 
-    const args = { schemaComposer, typeComposer, contentType, fieldDefs, typeNames, typeName }
+    const args = {
+      schemaComposer,
+      typeComposer,
+      contentType,
+      fieldDefs,
+      typeNames,
+      typeName,
+      config
+    }
 
     const filterComposer = createFilterComposer(args)
     const belongsTo = createBelongsTo(args)
@@ -54,6 +63,16 @@ function createTypeComposer (schemaComposer, typeName) {
   return schemaComposer.getOrCreateOTC(typeName)
 }
 
+function getConfig (typeComposer) {
+  const { config = {}} = typeComposer.getExtensions()
+
+  typeComposer.getDirectives().forEach(directive => {
+    config[directive.name] = directive.args
+  })
+
+  return config
+}
+
 // TODO: extend existing filter input type
 function createFilterComposer ({ schemaComposer, typeName, fieldDefs }) {
   const fields = createFilterTypes(schemaComposer, fieldDefs, `${typeName}Filter`)
@@ -67,10 +86,14 @@ function createFields ({
   typeComposer,
   fieldDefs,
   typeName,
-  typeNames
+  typeNames,
+  config
 }) {
   const fieldNames = Object.keys(typeComposer.getFields())
   const inferFields = reduce(fieldDefs, (acc, def) => {
+    if (config.infer === false) return acc
+    if (config.dontInfer) return acc
+
     if (!fieldNames.includes(def.fieldName)) {
       acc[def.fieldName] = def
     }
