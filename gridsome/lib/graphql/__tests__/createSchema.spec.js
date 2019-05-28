@@ -3,23 +3,21 @@ const { BOOTSTRAP_PAGES } = require('../../utils/constants')
 
 test('add custom GraphQL object types', async () => {
   const app = await createApp(function (api) {
-    api.loadSource(store => {
-      store.addContentType('Post').addNode({
+    api.loadSource(({ addContentType, addSchemaTypes, schema }) => {
+      addContentType('Post').addNode({
         id: '1',
         title: 'My Post',
         content: 'Value'
       })
-    })
 
-    api.createSchema(({ addTypes, createObjectType }) => {
-      addTypes([
-        createObjectType({
+      addSchemaTypes([
+        schema.createObjectType({
           name: 'Author',
           fields: {
             name: 'String'
           }
         }),
-        createObjectType({
+        schema.createObjectType({
           name: 'Post',
           interfaces: ['Node'],
           fields: {
@@ -58,28 +56,28 @@ test('add custom GraphQL union type', async () => {
       store.addContentType('Single').addNode({ id: '1', name: 'A Single' })
     })
 
-    api.createSchema(({ addTypes, createObjectType, createUnionType }) => {
-      addTypes([
-        createObjectType({
+    api.createSchema(({ addSchemaTypes, schema }) => {
+      addSchemaTypes([
+        schema.createObjectType({
           name: 'Album',
           interfaces: ['Node'],
           fields: {
             name: 'String'
           }
         }),
-        createObjectType({
+        schema.createObjectType({
           name: 'Single',
           interfaces: ['Node'],
           fields: {
             name: 'String'
           }
         }),
-        createUnionType({
+        schema.createUnionType({
           name: 'AppearsOnUnion',
           interfaces: ['Node'],
           types: ['Album', 'Single']
         }),
-        createObjectType({
+        schema.createObjectType({
           name: 'Track',
           interfaces: ['Node'],
           fields: {
@@ -118,8 +116,8 @@ test('add custom GraphQL types from SDL', async () => {
       })
     })
 
-    api.createSchema(({ addTypes, addResolvers }) => {
-      addTypes(`
+    api.createSchema(({ addSchemaTypes, addSchemaResolvers }) => {
+      addSchemaTypes(`
         type Author {
           name: String
         }
@@ -129,7 +127,7 @@ test('add custom GraphQL types from SDL', async () => {
         }
       `)
 
-      addResolvers({
+      addSchemaResolvers({
         Post: {
           author: {
             resolve: () => ({ name: 'The Author' })
@@ -166,9 +164,9 @@ test('add custom resolver for invalid field names', async () => {
       })
     })
 
-    api.createSchema(({ addTypes, addResolvers, createObjectType }) => {
-      addTypes([
-        createObjectType({
+    api.createSchema(({ addSchemaTypes, addSchemaResolvers, schema }) => {
+      addSchemaTypes([
+        schema.createObjectType({
           name: 'Post',
           interfaces: ['Node'],
           fields: {
@@ -181,7 +179,7 @@ test('add custom resolver for invalid field names', async () => {
         })
       ])
 
-      addResolvers({
+      addSchemaResolvers({
         Post: {
           _456_test: {
             resolve: obj => obj['456-test'] + 6
@@ -211,8 +209,8 @@ test('add custom resolvers for content type', async () => {
       const posts = store.addContentType('Post')
       posts.addNode({ id: '1', title: 'My Post' })
     })
-    api.createSchema(({ addResolvers }) => {
-      addResolvers({
+    api.createSchema(({ addSchemaResolvers }) => {
+      addSchemaResolvers({
         Post: {
           customField: {
             type: 'String',
@@ -239,16 +237,16 @@ test('add custom resolvers for content type', async () => {
 
 test('add custom GraphQL schema', async () => {
   const app = await createApp(function (api) {
-    api.createSchema(({ addSchema, graphql }) => {
-      addSchema(new graphql.GraphQLSchema({
-        query: new graphql.GraphQLObjectType({
+    api.createSchema(({ addSchema, ...actions }) => {
+      addSchema(new actions.GraphQLSchema({
+        query: new actions.GraphQLObjectType({
           name: 'CustomRootQuery',
           fields: {
             customRootValue: {
-              type: graphql.GraphQLString,
+              type: actions.GraphQLString,
               args: {
                 append: {
-                  type: graphql.GraphQLString,
+                  type: actions.GraphQLString,
                   defaultValue: 'foo'
                 }
               },

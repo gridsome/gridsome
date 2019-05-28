@@ -81,16 +81,18 @@ function createType (schemaComposer, type, path = [type.options.name]) {
 
   switch (type.type) {
     case CreatedGraphQLType.Object:
-      const typeComposer = ObjectTypeComposer.createTemp(options, schemaComposer)
       const fields = {}
 
       for (const fieldName in type.options.fields) {
         const field = type.options.fields[fieldName]
 
-        fields[fieldName] = isCreatedType(field)
-          ? createType(schemaComposer, field, path.concat(`ObjectField ${fieldName}`))
+        fields[fieldName] = isCreatedType(field.type)
+          ? createType(schemaComposer, field.type, path.concat(`ObjectField ${fieldName}`))
           : field
       }
+
+      const typeOptions = { ...options, fields }
+      const typeComposer = ObjectTypeComposer.createTemp(typeOptions, schemaComposer)
 
       typeComposer.addFields(fields)
 

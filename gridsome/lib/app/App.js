@@ -141,30 +141,35 @@ class App {
   }
 
   async loadSources () {
-    await this.events.dispatch('loadSource', api => api.store)
+    const { createSchemaActions } = require('./actions')
+
+    this._schema = null
+    this._schemas = []
+    this._schemaTypes = []
+    this._schemaResolvers = []
+
+    await this.events.dispatch('loadSource', api => {
+      return createSchemaActions(api, this)
+    })
   }
 
   async createSchema () {
     const graphql = require('../graphql/graphql')
     const createSchema = require('../graphql/createSchema')
-    const { createSchemaAPI } = require('../graphql/utils')
+    const { createSchemaActions } = require('./actions')
 
-    const schemas = []
-    const types = []
-    const resolvers = []
-
-    const results = await this.events.dispatch('createSchema', () => {
-      return createSchemaAPI({
-        addSchema: schema => schemas.push(schema),
-        addTypes: typeOrSDL => types.push(typeOrSDL),
-        addResolvers: obj => resolvers.push(obj)
-      })
+    const results = await this.events.dispatch('createSchema', api => {
+      return createSchemaActions(api, this)
     })
 
     // add custom schemas returned from the hook handlers
-    results.forEach(schema => schema && schemas.push(schema))
+    results.forEach(schema => schema && this.schemas.push(schema))
 
-    const schema = createSchema(this.store, { schemas, types, resolvers })
+    const schema = createSchema(this.store, {
+      schemas: this._schemas,
+      types: this._schemaTypes,
+      resolvers: this._schemaResolvers
+    })
 
     this._execute = graphql.execute
     this._graphql = graphql.graphql
@@ -172,16 +177,20 @@ class App {
   }
 
   async createPages () {
+    const {
+      createPagesActions,
+      createManagedPagesActions
+    } = require('./actions')
+
     const { hashString } = require('../utils')
     const digest = hashString(Date.now().toString())
-    const { createPagesAPI, createManagedPagesAPI } = require('../pages/utils')
 
     await this.events.dispatch('createPages', api => {
-      return createPagesAPI(api, { digest })
+      return createPagesActions(api, this, { digest })
     })
 
     await this.events.dispatch('createManagedPages', api => {
-      return createManagedPagesAPI(api, { digest })
+      return createManagedPagesActions(api, this, { digest })
     })
 
     // ensure a /404 page exists

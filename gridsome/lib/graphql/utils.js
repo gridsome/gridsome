@@ -1,5 +1,5 @@
-const { pick, isObject } = require('lodash')
 const camelCase = require('camelcase')
+const { isObject } = require('lodash')
 
 const CreatedGraphQLType = {
   Object: 'Object',
@@ -54,45 +54,4 @@ exports.createTypeName = function (prefix, key = '', suffix = '') {
   }
 
   return name
-}
-
-exports.createSchemaAPI = function (extend = {}) {
-  const GraphQLJSON = require('graphql-type-json')
-  const graphql = require('graphql')
-
-  const res = pick(graphql, [
-    // Definitions
-    'GraphQLSchema',
-    'GraphQLScalarType',
-    'GraphQLObjectType',
-    'GraphQLInterfaceType',
-    'GraphQLUnionType',
-    'GraphQLEnumType',
-    'GraphQLInputObjectType',
-    // Type Wrappers
-    'GraphQLList',
-    'GraphQLNonNull',
-    // Built-in Directives defined by the Spec
-    'GraphQLDeprecatedDirective',
-    // Standard Scalars
-    'GraphQLInt',
-    'GraphQLFloat',
-    'GraphQLString',
-    'GraphQLBoolean',
-    'GraphQLID'
-  ])
-
-  return {
-    ...res,
-    ...extend,
-
-    GraphQLJSON,
-    graphql,
-
-    // helpers
-    createObjectType: options => ({ options, type: CreatedGraphQLType.Object }),
-    createUnionType: options => ({ options, type: CreatedGraphQLType.Union }),
-    createInterfaceType: options => ({ options, type: CreatedGraphQLType.Interface }),
-    createInputObjectType: options => ({ options, type: CreatedGraphQLType.InputObject })
-  }
 }
