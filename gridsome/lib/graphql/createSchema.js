@@ -93,9 +93,9 @@ function createType (schemaComposer, type, path = [type.options.name]) {
 
       for (const fieldName in fields) {
         const fieldOptions = type.options.fields[fieldName]
-        const fieldConfig = isPlainObject(fieldOptions) ? fieldOptions.options : {}
+        const fieldExtensions = isPlainObject(fieldOptions) ? fieldOptions.options : {}
 
-        typeComposer.extendFieldExtensions(fieldName, fieldConfig || {})
+        typeComposer.extendFieldExtensions(fieldName, fieldExtensions || {})
       }
 
       return typeComposer
@@ -127,32 +127,18 @@ function addCreatedType (schemaComposer, type, isSDL = false) {
 }
 
 function processObjectFields (schemaComposer, typeComposer) {
-  const isUserDefined = typeComposer.getExtension('isUserDefined')
-
   if (!(typeComposer instanceof ObjectTypeComposer)) return
+  if (!typeComposer.getExtension('isUserDefined')) return
   if (typeComposer === schemaComposer.Query) return
-  if (!isUserDefined) return
 
   const fields = typeComposer.getFields()
 
   for (const fieldName in fields) {
-    const fieldConfig = typeComposer.getFieldConfig(fieldName)
     const extensions = typeComposer.getFieldExtensions(fieldName)
     const resolver = getFieldResolver(typeComposer, fieldName, extensions)
 
     if (resolver) {
-      const originalResolver = resolver.resolve || defaultFieldResolver
-      const resolve = fieldConfig.resolve || originalResolver
-
-      typeComposer.extendField(fieldName, {
-        args: {
-          ...resolver.args,
-          ...fieldConfig.args
-        },
-        resolve (obj, args, ctx, info) {
-          return resolve(obj, args, ctx, { ...info, originalResolver })
-        }
-      })
+      extendFieldResolver(typeComposer, fieldName, resolver)
     }
   }
 }
@@ -171,6 +157,23 @@ function getFieldResolver (typeComposer, fieldName) {
   }
 
   return scalarTypeResolvers[fieldComposer.getTypeName()]
+}
+
+function extendFieldResolver (typeComposer, fieldName, resolver) {
+  const fieldConfig = typeComposer.getFieldConfig(fieldName)
+  const originalResolver = resolver.resolve || defaultFieldResolver
+  const resolve = fieldConfig.resolve || originalResolver
+
+  typeComposer.extendField(fieldName, {
+    type: fieldConfig.type || resolver.type,
+    args: {
+      ...resolver.args,
+      ...fieldConfig.args
+    },
+    resolve (obj, args, ctx, info) {
+      return resolve(obj, args, ctx, { ...info, originalResolver })
+    }
+  })
 }
 
 function addSchema (schemaComposer, schema) {

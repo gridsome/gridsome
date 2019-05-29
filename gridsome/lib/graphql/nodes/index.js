@@ -5,8 +5,8 @@ const createConnection = require('./createConnection')
 const { createFilterTypes } = require('../createFilterTypes')
 const createFieldDefinitions = require('../createFieldDefinitions')
 const { createFieldTypes, createRefType } = require('../createFieldTypes')
+const { isRefField, isRefFieldDefinition } = require('../utils')
 const { createRefResolver } = require('../resolvers')
-const { isRefFieldDefinition } = require('../utils')
 const { defaultFieldResolver } = require('graphql')
 
 const { reduce, mapValues, isEmpty, isPlainObject } = require('lodash')
@@ -153,15 +153,20 @@ function createResolvers ({ typeComposer, contentType }) {
       type: typeComposer,
       resolve (obj, args, ctx, info) {
         const value = obj[info.fieldName]
-        return value ? contentType.getNode(value) : null
+        const id = isRefField(value) ? value.id : value
+
+        return id ? contentType.getNode(id) : null
       }
     },
     {
       name: 'findMany',
       type: [typeComposer],
       resolve (obj, args, ctx, info) {
-        const value = obj[info.fieldName]
-        const ids = Array.isArray(value) ? value : []
+        const values = obj[info.fieldName]
+        const ids = Array.isArray(values)
+          ? values.map(value => isRefField(value) ? value.id : value)
+          : []
+
         return contentType.findNodes({ id: { $in: ids }})
       }
     }

@@ -300,7 +300,7 @@ test('disable field inference with createObjectType', async () => {
 
 test('insert default resolvers for SDL', async () => {
   const app = await createApp(function (api) {
-    api.loadSource(({ addContentType, addSchemaTypes, addSchemaResolvers }) => {
+    api.loadSource(({ addContentType, addSchemaTypes, addSchemaResolvers, store }) => {
       addContentType('Author').addNode({
         id: '1',
         name: 'An Author'
@@ -309,7 +309,9 @@ test('insert default resolvers for SDL', async () => {
       addContentType('Post').addNode({
         id: '1',
         title: 'My Post',
-        authors: ['1'],
+        authors: [
+          store.createReference('Author', '1')
+        ],
         object: {
           year: '2019'
         }
@@ -331,7 +333,9 @@ test('insert default resolvers for SDL', async () => {
         Post: {
           author: {
             resolve (obj, args, ctx, info) {
-              return info.originalResolver({ author: '1' }, args, ctx, info)
+              return info.originalResolver({
+                author: store.createReference('Author', '1')
+              }, args, ctx, info)
             }
           }
         }
@@ -365,15 +369,8 @@ test('insert default resolvers for SDL', async () => {
 test('insert default resolvers with createObjectType', async () => {
   const app = await createApp(function (api) {
     api.loadSource(({ addContentType, addSchemaTypes, addSchemaResolvers, schema }) => {
+      addContentType('Post').addNode({ id: '1', title: 'My Post', authors: ['1'] })
       addContentType('Author').addNode({ id: '1', name: 'An Author' })
-      addContentType('Post').addNode({
-        id: '1',
-        title: 'My Post',
-        authors: ['1'],
-        object: {
-          year: '2019'
-        }
-      })
 
       addSchemaTypes([
         schema.createObjectType({
@@ -389,7 +386,12 @@ test('insert default resolvers with createObjectType', async () => {
             title: 'String',
             author: 'Author',
             authors: ['Author'],
-            object: 'PostObject'
+            object: {
+              type: 'PostObject',
+              resolve: () => ({
+                year: '2019'
+              })
+            }
           }
         })
       ])
