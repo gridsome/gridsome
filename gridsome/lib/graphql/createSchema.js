@@ -1,5 +1,7 @@
 const directives = require('./directives')
 const initMustHaveTypes = require('./types')
+const { scalarTypeResolvers } = require('./resolvers')
+const { isPlainObject } = require('lodash')
 
 const {
   isSpecifiedScalarType,
@@ -9,14 +11,13 @@ const {
 
 const {
   SchemaComposer,
-  ObjectTypeComposer,
-  UnionTypeComposer
+  UnionTypeComposer,
+  ObjectTypeComposer
 } = require('graphql-compose')
 
 const {
-  CreatedGraphQLType,
-  isCreatedType,
-  createTypeName
+  createTypeName,
+  CreatedGraphQLType
 } = require('./utils')
 
 module.exports = function createSchema (store, context = {}) {
@@ -43,6 +44,10 @@ module.exports = function createSchema (store, context = {}) {
   schemaComposer.Query.addFields(nodesSchema)
   schemaComposer.Query.addFields(pagesSchema)
 
+  for (const typeComposer of schemaComposer.values()) {
+    processObjectFields(schemaComposer, typeComposer)
+  }
+
   schemas.forEach(schema => {
     addSchema(schemaComposer, schema)
   })
@@ -58,7 +63,7 @@ function addTypes (schemaComposer, typeOrSDL) {
   if (typeof typeOrSDL === 'string') {
     const sdlTypes = schemaComposer.addTypeDefs(typeOrSDL)
     sdlTypes.forEach(tempTypeComposer => {
-      addCreatedType(schemaComposer, tempTypeComposer)
+      addCreatedType(schemaComposer, tempTypeComposer, true)
     })
   } else if (Array.isArray(typeOrSDL)) {
     typeOrSDL.forEach(type => {
@@ -81,21 +86,17 @@ function createType (schemaComposer, type, path = [type.options.name]) {
 
   switch (type.type) {
     case CreatedGraphQLType.Object:
-      const fields = {}
+      const typeComposer = ObjectTypeComposer.createTemp(options, schemaComposer)
+      const fields = typeComposer.getFields()
 
-      for (const fieldName in type.options.fields) {
-        const field = type.options.fields[fieldName]
+      typeComposer.extendExtensions(options.options || {})
 
-        fields[fieldName] = isCreatedType(field.type)
-          ? createType(schemaComposer, field.type, path.concat(`ObjectField ${fieldName}`))
-          : field
+      for (const fieldName in fields) {
+        const fieldOptions = type.options.fields[fieldName]
+        const fieldConfig = isPlainObject(fieldOptions) ? fieldOptions.options : {}
+
+        typeComposer.extendFieldExtensions(fieldName, fieldConfig || {})
       }
-
-      const typeOptions = { ...options, fields }
-      const typeComposer = ObjectTypeComposer.createTemp(typeOptions, schemaComposer)
-
-      typeComposer.setExtension('config', options.config || {})
-      typeComposer.addFields(fields)
 
       return typeComposer
 
@@ -104,11 +105,72 @@ function createType (schemaComposer, type, path = [type.options.name]) {
   }
 }
 
-function addCreatedType (schemaComposer, type) {
+function addCreatedType (schemaComposer, type, isSDL = false) {
   const typeName = schemaComposer.add(type)
   const typeComposer = schemaComposer.get(typeName)
 
+  typeComposer.setExtension('isUserDefined', true)
+
+  if (isSDL && (typeComposer instanceof ObjectTypeComposer)) {
+    typeComposer.getDirectives().forEach(directive => {
+      typeComposer.setExtension(directive.name, directive.args)
+    })
+
+    Object.keys(typeComposer.getFields()).forEach(fieldName => {
+      typeComposer.getFieldDirectives(fieldName).forEach(directive => {
+        typeComposer.setFieldExtension(fieldName, directive.name, directive.args)
+      })
+    })
+  }
+
   schemaComposer.addSchemaMustHaveType(typeComposer)
+}
+
+function processObjectFields (schemaComposer, typeComposer) {
+  const isUserDefined = typeComposer.getExtension('isUserDefined')
+
+  if (!(typeComposer instanceof ObjectTypeComposer)) return
+  if (typeComposer === schemaComposer.Query) return
+  if (!isUserDefined) return
+
+  const fields = typeComposer.getFields()
+
+  for (const fieldName in fields) {
+    const fieldConfig = typeComposer.getFieldConfig(fieldName)
+    const extensions = typeComposer.getFieldExtensions(fieldName)
+    const resolver = getFieldResolver(typeComposer, fieldName, extensions)
+
+    if (resolver) {
+      const originalResolver = resolver.resolve || defaultFieldResolver
+      const resolve = fieldConfig.resolve || originalResolver
+
+      typeComposer.extendField(fieldName, {
+        args: {
+          ...resolver.args,
+          ...fieldConfig.args
+        },
+        resolve (obj, args, ctx, info) {
+          return resolve(obj, args, ctx, { ...info, originalResolver })
+        }
+      })
+    }
+  }
+}
+
+function getFieldResolver (typeComposer, fieldName) {
+  const fieldComposer = typeComposer.getFieldTC(fieldName)
+
+  if (
+    fieldComposer instanceof ObjectTypeComposer &&
+    fieldComposer.hasInterface('Node')
+  ) {
+    const isPlural = typeComposer.isFieldPlural(fieldName)
+    const resolverName = isPlural ? 'findMany' : 'findOne'
+
+    return fieldComposer.getResolver(resolverName)
+  }
+
+  return scalarTypeResolvers[fieldComposer.getTypeName()]
 }
 
 function addSchema (schemaComposer, schema) {
@@ -141,13 +203,13 @@ function addResolvers (schemaComposer, resolvers = {}) {
 
       if (typeComposer.hasField(fieldName)) {
         const field = typeComposer.getFieldConfig(fieldName)
-        const defaultResolver = field.resolve || defaultFieldResolver
+        const originalResolver = field.resolve || defaultFieldResolver
 
         typeComposer.extendField(fieldName, {
           type: fieldOptions.type || field.type,
           args: fieldOptions.args || field.args,
           resolve (obj, args, ctx, info) {
-            return fieldOptions.resolve(obj, args, ctx, { ...info, defaultResolver })
+            return fieldOptions.resolve(obj, args, ctx, { ...info, originalResolver })
           }
         })
       } else {

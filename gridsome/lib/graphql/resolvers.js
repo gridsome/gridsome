@@ -1,7 +1,12 @@
+const { dateType } = require('./types/date')
+const { fileType } = require('./types/file')
+const { imageType } = require('./types/image')
 const { applyChainArgs, createSortOptions } = require('./nodes/utils')
 
-function fieldResolver (obj, args, ctx, { fieldName }) {
-  return obj[fieldName]
+const scalarTypeResolvers = {
+  Date: dateType,
+  File: fileType,
+  Image: imageType
 }
 
 function createRefResolver ({ typeName, isList = false }) {
@@ -46,6 +51,6 @@ function createRefResolver ({ typeName, isList = false }) {
 }
 
 module.exports = {
-  fieldResolver,
+  scalarTypeResolvers,
   createRefResolver
 }

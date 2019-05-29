@@ -11,7 +11,7 @@ const { defaultFieldResolver } = require('graphql')
 
 const { reduce, mapValues, isEmpty, isPlainObject } = require('lodash')
 
-module.exports = (schemaComposer, store) => {
+module.exports = function createNodesSchema (schemaComposer, store) {
   const typeNames = Object.keys(store.collections)
   const schema = {}
 
@@ -20,7 +20,7 @@ module.exports = (schemaComposer, store) => {
     const nodes = contentType.data().concat({ id: '' })
     const typeComposer = createTypeComposer(schemaComposer, typeName)
     const fieldDefs = createFieldDefinitions(nodes)
-    const config = getConfig(typeComposer)
+    const extensions = typeComposer.getExtensions()
 
     const args = {
       schemaComposer,
@@ -29,7 +29,7 @@ module.exports = (schemaComposer, store) => {
       fieldDefs,
       typeNames,
       typeName,
-      config
+      extensions
     }
 
     const filterComposer = createFilterComposer(args)
@@ -41,8 +41,12 @@ module.exports = (schemaComposer, store) => {
     typeComposer.addFields({ belongsTo })
     typeComposer.addFields({ id: 'ID!' })
 
+    createResolvers(args).forEach(resolver => {
+      typeComposer.addResolver(resolver)
+    })
+
     typeComposer.addInterface('Node')
-    typeComposer.setIsTypeOf(node => node.internal.typeName === typeName)
+    typeComposer.setIsTypeOf(node => node.internal && node.internal.typeName === typeName)
 
     schema[camelCase(typeName)] = createQuery({ ...args, filterComposer })
     schema[`all${typeName}`] = createConnection({ ...args, filterComposer })
@@ -63,16 +67,6 @@ function createTypeComposer (schemaComposer, typeName) {
   return schemaComposer.getOrCreateOTC(typeName)
 }
 
-function getConfig (typeComposer) {
-  const { config = {}} = typeComposer.getExtensions()
-
-  typeComposer.getDirectives().forEach(directive => {
-    config[directive.name] = directive.args
-  })
-
-  return config
-}
-
 // TODO: extend existing filter input type
 function createFilterComposer ({ schemaComposer, typeName, fieldDefs }) {
   const fields = createFilterTypes(schemaComposer, fieldDefs, `${typeName}Filter`)
@@ -87,16 +81,17 @@ function createFields ({
   fieldDefs,
   typeName,
   typeNames,
-  config
+  extensions
 }) {
   const fieldNames = Object.keys(typeComposer.getFields())
   const inferFields = reduce(fieldDefs, (acc, def) => {
-    if (config.infer === false) return acc
-    if (config.dontInfer) return acc
+    if (extensions.infer === false) return acc
+    if (extensions.dontInfer) return acc
 
     if (!fieldNames.includes(def.fieldName)) {
       acc[def.fieldName] = def
     }
+
     return acc
   }, {})
 
@@ -149,6 +144,28 @@ function createThirdPartyFields ({ contentType }) {
   }
 
   return fields
+}
+
+function createResolvers ({ typeComposer, contentType }) {
+  return [
+    {
+      name: 'findOne',
+      type: typeComposer,
+      resolve (obj, args, ctx, info) {
+        const value = obj[info.fieldName]
+        return value ? contentType.getNode(value) : null
+      }
+    },
+    {
+      name: 'findMany',
+      type: [typeComposer],
+      resolve (obj, args, ctx, info) {
+        const value = obj[info.fieldName]
+        const ids = Array.isArray(value) ? value : []
+        return contentType.findNodes({ id: { $in: ids }})
+      }
+    }
+  ]
 }
 
 function createRefFields ({

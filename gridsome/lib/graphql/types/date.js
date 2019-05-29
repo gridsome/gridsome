@@ -25,7 +25,8 @@ exports.dateType = {
     locale: { type: 'String', description: 'Locale' }
   },
   resolve: (obj, args, context, { fieldName }) => {
-    return formatDate(obj[fieldName], args)
+    const value = obj[fieldName]
+    return value ? formatDate(value, args) : null
   }
 }
 

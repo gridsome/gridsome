@@ -279,7 +279,7 @@ test('disable field inference with createObjectType', async () => {
           fields: {
             title: 'String'
           },
-          config: {
+          options: {
             infer: false
           }
         })
@@ -296,6 +296,137 @@ test('disable field inference with createObjectType', async () => {
 
   expect(errors).toHaveLength(1)
   expect(errors[0].message).toMatch('Cannot query field "content" on type "Post"')
+})
+
+test('insert default resolvers for SDL', async () => {
+  const app = await createApp(function (api) {
+    api.loadSource(({ addContentType, addSchemaTypes, addSchemaResolvers }) => {
+      addContentType('Author').addNode({
+        id: '1',
+        name: 'An Author'
+      })
+
+      addContentType('Post').addNode({
+        id: '1',
+        title: 'My Post',
+        authors: ['1'],
+        object: {
+          year: '2019'
+        }
+      })
+
+      addSchemaTypes(`
+        type PostObject {
+          year: Date
+        }
+        type Post implements Node {
+          title: String
+          author: Author
+          authors: [Author]
+          object: PostObject
+        }
+      `)
+
+      addSchemaResolvers({
+        Post: {
+          author: {
+            resolve (obj, args, ctx, info) {
+              return info.originalResolver({ author: '1' }, args, ctx, info)
+            }
+          }
+        }
+      })
+    })
+  })
+
+  const { errors, data } = await app.graphql(`{
+    post(id:"1") {
+      title
+      object {
+        year(format:"DD.MM.YYYY")
+      }
+      author {
+        name
+      }
+      authors {
+        name
+      }
+    }
+  }`)
+
+  expect(errors).toBeUndefined()
+  expect(data.post.title).toEqual('My Post')
+  expect(data.post.author.name).toEqual('An Author')
+  expect(data.post.authors).toHaveLength(1)
+  expect(data.post.authors[0].name).toEqual('An Author')
+  expect(data.post.object.year).toEqual('01.01.2019')
+})
+
+test('insert default resolvers with createObjectType', async () => {
+  const app = await createApp(function (api) {
+    api.loadSource(({ addContentType, addSchemaTypes, addSchemaResolvers, schema }) => {
+      addContentType('Author').addNode({ id: '1', name: 'An Author' })
+      addContentType('Post').addNode({
+        id: '1',
+        title: 'My Post',
+        authors: ['1'],
+        object: {
+          year: '2019'
+        }
+      })
+
+      addSchemaTypes([
+        schema.createObjectType({
+          name: 'PostObject',
+          fields: {
+            year: 'Date'
+          }
+        }),
+        schema.createObjectType({
+          name: 'Post',
+          interfaces: ['Node'],
+          fields: {
+            title: 'String',
+            author: 'Author',
+            authors: ['Author'],
+            object: 'PostObject'
+          }
+        })
+      ])
+
+      addSchemaResolvers({
+        Post: {
+          author: {
+            resolve (obj, args, ctx, info) {
+              return info.originalResolver({ author: '1' }, args, ctx, info)
+            }
+          }
+        }
+      })
+    })
+  })
+
+  const { errors, data } = await app.graphql(`{
+    post(id:"1") {
+      title
+      object {
+        year(format:"DD.MM.YYYY")
+      }
+      author {
+        name
+      }
+      authors {
+        name
+      }
+    }
+  }`)
+
+  expect(errors).toBeUndefined()
+  expect(data.post.title).toEqual('My Post')
+  expect(data.post.author.name).toEqual('An Author')
+  expect(data.post.authors).toHaveLength(1)
+  expect(data.post.authors[0].name).toEqual('An Author')
+  expect(data.post.object.year).toEqual('01.01.2019')
 })
 
 test('add custom GraphQL schema', async () => {
