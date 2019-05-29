@@ -47,6 +47,7 @@ class ContentType {
     return this._events.removeListener(eventName, fn, ctx)
   }
 
+  // TODO: warn when used, use addSchemaTypes instead
   addReference (fieldName, options) {
     if (typeof options === 'string') {
       options = { typeName: options }
@@ -55,6 +56,7 @@ class ContentType {
     this.options.refs[this.createFieldName(fieldName)] = options
   }
 
+  // TODO: warn when used, use addSchemaResolvers instead
   addSchemaField (fieldName, options) {
     this.options.fields[fieldName] = options
   }

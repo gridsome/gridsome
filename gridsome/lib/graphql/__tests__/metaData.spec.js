@@ -2,6 +2,7 @@ const path = require('path')
 const App = require('../../app/App')
 const { graphql } = require('graphql')
 const createSchema = require('../createSchema')
+const createContext = require('../createContext')
 const PluginAPI = require('../../app/PluginAPI')
 
 const context = path.resolve(__dirname, '../../__tests__')
@@ -118,6 +119,6 @@ test('add meta data', async () => {
 
 async function createSchemaAndExecute (query) {
   const schema = createSchema(app.store)
-  const context = app.createSchemaContext()
+  const context = createContext(app)
   return graphql(schema, query, undefined, context)
 }

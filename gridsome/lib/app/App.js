@@ -5,6 +5,7 @@ const hirestime = require('hirestime')
 const { info } = require('../utils/log')
 const isRelative = require('is-relative')
 const { version } = require('../../package.json')
+const createContext = require('../graphql/createContext')
 
 const {
   AsyncSeriesWaterfallHook
@@ -275,9 +276,8 @@ class App {
   }
 
   graphql (docOrQuery, variables = {}) {
-    const context = this.createSchemaContext()
-
     const method = typeof docOrQuery === 'object' ? '_execute' : '_graphql'
+    const context = createContext(this)
 
     if (typeof docOrQuery === 'string') {
       // workaround until query directives
@@ -296,17 +296,6 @@ class App {
     return hotReload
       ? this.codegen.generate('now.js')
       : undefined
-  }
-
-  createSchemaContext () {
-    return {
-      store: this.store,
-      pages: this.pages,
-      config: this.config,
-      assets: this.assets,
-      // TODO: remove before 1.0
-      queue: this.assets
-    }
   }
 }
 

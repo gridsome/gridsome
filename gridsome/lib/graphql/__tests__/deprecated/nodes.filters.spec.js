@@ -2,6 +2,7 @@ const App = require('../../../app/App')
 const { graphql } = require('graphql')
 const PluginAPI = require('../../../app/PluginAPI')
 const createSchema = require('../../createSchema')
+const createContext = require('../../createContext')
 
 let app, api
 
@@ -289,7 +290,7 @@ async function createSchemaAndExecute (query) {
   })
 
   const schema = createSchema(app.store)
-  const context = app.createSchemaContext()
+  const context = createContext(app)
 
   return graphql(schema, query, undefined, context)
 }
