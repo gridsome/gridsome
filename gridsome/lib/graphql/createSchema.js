@@ -1,7 +1,6 @@
 const directives = require('./directives')
 const initMustHaveTypes = require('./types')
 const { scalarTypeResolvers } = require('./resolvers')
-const { isPlainObject } = require('lodash')
 
 const {
   isSpecifiedScalarType,
@@ -86,19 +85,7 @@ function createType (schemaComposer, type, path = [type.options.name]) {
 
   switch (type.type) {
     case CreatedGraphQLType.Object:
-      const typeComposer = ObjectTypeComposer.createTemp(options, schemaComposer)
-      const fields = typeComposer.getFields()
-
-      typeComposer.extendExtensions(options.options || {})
-
-      for (const fieldName in fields) {
-        const fieldOptions = type.options.fields[fieldName]
-        const fieldExtensions = isPlainObject(fieldOptions) ? fieldOptions.options : {}
-
-        typeComposer.extendFieldExtensions(fieldName, fieldExtensions || {})
-      }
-
-      return typeComposer
+      return ObjectTypeComposer.createTemp(options, schemaComposer)
 
     case CreatedGraphQLType.Union:
       return UnionTypeComposer.createTemp(options, schemaComposer)

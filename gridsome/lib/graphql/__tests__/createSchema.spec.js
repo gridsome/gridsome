@@ -279,7 +279,7 @@ test('disable field inference with createObjectType', async () => {
           fields: {
             title: 'String'
           },
-          options: {
+          extensions: {
             infer: false
           }
         })
