@@ -1,5 +1,6 @@
 const directives = require('./directives')
 const initMustHaveTypes = require('./types')
+const { fieldExtensions } = require('./extensions')
 const { scalarTypeResolvers } = require('./resolvers')
 
 const {
@@ -44,7 +45,14 @@ module.exports = function createSchema (store, context = {}) {
   schemaComposer.Query.addFields(pagesSchema)
 
   for (const typeComposer of schemaComposer.values()) {
-    processObjectFields(schemaComposer, typeComposer)
+    if (!(typeComposer instanceof ObjectTypeComposer)) continue
+    if (typeComposer === schemaComposer.Query) continue
+
+    if (typeComposer.getExtension('isUserDefined')) {
+      processObjectFields(schemaComposer, typeComposer)
+    }
+
+    applyFieldExtensions(typeComposer)
   }
 
   schemas.forEach(schema => {
@@ -114,10 +122,6 @@ function addCreatedType (schemaComposer, type, isSDL = false) {
 }
 
 function processObjectFields (schemaComposer, typeComposer) {
-  if (!(typeComposer instanceof ObjectTypeComposer)) return
-  if (!typeComposer.getExtension('isUserDefined')) return
-  if (typeComposer === schemaComposer.Query) return
-
   const fields = typeComposer.getFields()
 
   for (const fieldName in fields) {
@@ -160,6 +164,25 @@ function extendFieldResolver (typeComposer, fieldName, resolver) {
     resolve (obj, args, ctx, info) {
       return resolve(obj, args, ctx, { ...info, originalResolver })
     }
+  })
+}
+
+function applyFieldExtensions (typeComposer) {
+  typeComposer.getFieldNames().forEach(fieldName => {
+    const extensions = typeComposer.getFieldExtensions(fieldName)
+
+    Object.keys(extensions)
+      .sort(key => key === 'proxy')
+      .forEach(key => {
+        const { apply } = fieldExtensions[key] || {}
+
+        if (apply) {
+          const fieldConfig = typeComposer.getFieldConfig(fieldName)
+          const newFieldConfig = apply(extensions[key], fieldConfig)
+
+          typeComposer.extendField(fieldName, newFieldConfig)
+        }
+      })
   })
 }
 

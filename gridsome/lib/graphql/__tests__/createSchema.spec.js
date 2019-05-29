@@ -125,7 +125,7 @@ test('add custom GraphQL types from SDL', async () => {
           name: String
         }
         type Post implements Node @infer {
-          id: ID!
+          proxyContent: String @proxy(fieldName:"content")
           author: Author
         }
       `)
@@ -144,6 +144,7 @@ test('add custom GraphQL types from SDL', async () => {
     post(id:"1") {
       title
       content
+      proxyContent
       author {
         name
       }
@@ -153,6 +154,7 @@ test('add custom GraphQL types from SDL', async () => {
   expect(errors).toBeUndefined()
   expect(data.post.title).toEqual('My Post')
   expect(data.post.content).toEqual('Value')
+  expect(data.post.proxyContent).toEqual('Value')
   expect(data.post.author).toMatchObject({ name: 'The Author' })
 })
 
@@ -180,6 +182,14 @@ test('add custom resolver for invalid field names', async () => {
             _123: {
               type: 'Int',
               resolve: obj => obj['123'] + 6
+            },
+            proxyField: {
+              type: 'Int',
+              extensions: {
+                proxy: {
+                  fieldName: '789 test'
+                }
+              }
             }
           }
         })
@@ -200,6 +210,7 @@ test('add custom resolver for invalid field names', async () => {
       _123
       _456_test
       _789_test
+      proxyField
     }
   }`)
 
@@ -207,6 +218,7 @@ test('add custom resolver for invalid field names', async () => {
   expect(data.post._123).toEqual(10)
   expect(data.post._456_test).toEqual(10)
   expect(data.post._789_test).toEqual(10)
+  expect(data.post.proxyField).toEqual(10)
 })
 
 test('add custom resolvers for content type', async () => {

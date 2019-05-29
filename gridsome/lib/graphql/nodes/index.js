@@ -7,7 +7,6 @@ const createFieldDefinitions = require('../createFieldDefinitions')
 const { createFieldTypes, createRefType } = require('../createFieldTypes')
 const { isRefField, isRefFieldDefinition } = require('../utils')
 const { createRefResolver } = require('../resolvers')
-const { defaultFieldResolver } = require('graphql')
 
 const { reduce, mapValues, isEmpty, isPlainObject } = require('lodash')
 
@@ -93,8 +92,9 @@ function createFields ({
   typeName,
   typeNames
 }) {
-  const fieldNames = Object.keys(typeComposer.getFields())
-  const inferFields = reduce(fieldDefs, (acc, def) => {
+  const fieldNames = typeComposer.getFieldNames()
+
+  const inferFieldDefs = reduce(fieldDefs, (acc, def) => {
     if (!fieldNames.includes(def.fieldName)) {
       acc[def.fieldName] = def
     }
@@ -102,11 +102,11 @@ function createFields ({
     return acc
   }, {})
 
-  const fields = createFieldTypes(schemaComposer, inferFields, typeName, typeNames)
+  const fieldTypes = createFieldTypes(schemaComposer, inferFieldDefs, typeName, typeNames)
 
-  processInferredFields(typeComposer, inferFields, fields)
+  processInferredFields(typeComposer, inferFieldDefs, fieldTypes)
 
-  return fields
+  return fieldTypes
 }
 
 function processInferredFields (typeComposer, fieldDefs, fieldTypes) {
@@ -114,14 +114,7 @@ function processInferredFields (typeComposer, fieldDefs, fieldTypes) {
     const options = fieldDefs[key]
     const fieldType = fieldTypes[options.fieldName]
 
-    if (options.fieldName !== options.key) {
-      const resolve = fieldType.resolve || defaultFieldResolver
-
-      // wrap field resolver to use original field name in info.fieldName
-      fieldType.resolve = (obj, args, ctx, info) => {
-        return resolve(obj, args, ctx, { ...info, fieldName: options.key })
-      }
-    }
+    fieldType.extensions = options.extensions
 
     if (isPlainObject(options.value) && !isRefFieldDefinition(options.value)) {
       processInferredFields(typeComposer, options.value, fieldType.type.getFields())
