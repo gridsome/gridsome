@@ -17,10 +17,8 @@ module.exports = function createNodesSchema (schemaComposer, store) {
 
   for (const typeName of typeNames) {
     const contentType = store.getContentType(typeName)
-    const nodes = contentType.data().concat({ id: '' })
     const typeComposer = createTypeComposer(schemaComposer, typeName)
-    const fieldDefs = createFieldDefinitions(nodes)
-    const extensions = typeComposer.getExtensions()
+    const fieldDefs = inferFields(typeComposer, contentType)
 
     const args = {
       schemaComposer,
@@ -28,8 +26,7 @@ module.exports = function createNodesSchema (schemaComposer, store) {
       contentType,
       fieldDefs,
       typeNames,
-      typeName,
-      extensions
+      typeName
     }
 
     const filterComposer = createFilterComposer(args)
@@ -67,6 +64,20 @@ function createTypeComposer (schemaComposer, typeName) {
   return schemaComposer.getOrCreateOTC(typeName)
 }
 
+function inferFields (typeComposer, contentType) {
+  const extensions = typeComposer.getExtensions()
+  const mustHaveFields = { id: '' }
+
+  // user defined schemas must enable inference
+  if (extensions.isUserDefined && !extensions.infer) {
+    return createFieldDefinitions([mustHaveFields])
+  }
+
+  return createFieldDefinitions(
+    contentType.data().concat(mustHaveFields)
+  )
+}
+
 // TODO: extend existing filter input type
 function createFilterComposer ({ schemaComposer, typeName, fieldDefs }) {
   const fields = createFilterTypes(schemaComposer, fieldDefs, `${typeName}Filter`)
@@ -80,14 +91,10 @@ function createFields ({
   typeComposer,
   fieldDefs,
   typeName,
-  typeNames,
-  extensions
+  typeNames
 }) {
   const fieldNames = Object.keys(typeComposer.getFields())
   const inferFields = reduce(fieldDefs, (acc, def) => {
-    if (extensions.infer === false) return acc
-    if (extensions.dontInfer) return acc
-
     if (!fieldNames.includes(def.fieldName)) {
       acc[def.fieldName] = def
     }

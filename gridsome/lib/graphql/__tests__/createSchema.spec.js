@@ -20,6 +20,9 @@ test('add custom GraphQL object types', async () => {
         schema.createObjectType({
           name: 'Post',
           interfaces: ['Node'],
+          extensions: {
+            infer: true
+          },
           fields: {
             id: 'ID!',
             author: {
@@ -121,7 +124,7 @@ test('add custom GraphQL types from SDL', async () => {
         type Author {
           name: String
         }
-        type Post implements Node {
+        type Post implements Node @infer {
           id: ID!
           author: Author
         }
@@ -169,6 +172,9 @@ test('add custom resolver for invalid field names', async () => {
         schema.createObjectType({
           name: 'Post',
           interfaces: ['Node'],
+          extensions: {
+            infer: true
+          },
           fields: {
             id: 'ID!',
             _123: {
@@ -206,8 +212,7 @@ test('add custom resolver for invalid field names', async () => {
 test('add custom resolvers for content type', async () => {
   const app = await createApp(function (api) {
     api.loadSource(store => {
-      const posts = store.addContentType('Post')
-      posts.addNode({ id: '1', title: 'My Post' })
+      store.addContentType('Post').addNode({ id: '1', title: 'My Post' })
     })
     api.createSchema(({ addSchemaResolvers }) => {
       addSchemaResolvers({
@@ -245,7 +250,7 @@ test('disable field inference with SDL', async () => {
       })
 
       addSchemaTypes(`
-        type Post implements Node @dontInfer {
+        type Post implements Node {
           title: String
         }
       `)
@@ -278,9 +283,6 @@ test('disable field inference with createObjectType', async () => {
           interfaces: ['Node'],
           fields: {
             title: 'String'
-          },
-          extensions: {
-            infer: false
           }
         })
       ])
