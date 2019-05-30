@@ -10,6 +10,7 @@ class Entity {
     this.graphQlContentType // gridsome store api addConentType
     this.url = url // url to fetch, pulled from apiSchema
     this.response = [] // response from this.fetchData
+    this.storedMeta = source.storedMeta // referenced file metadata
   }
 
   get typeName () {
@@ -92,7 +93,11 @@ class Entity {
       const origin = typeof item.links.self === 'object'
         ? item.links.self.href
         : item.links.self
-
+      // check to see whether there is any stored metadata from
+      // a previous reference to this node
+      if (item.id in this.storedMeta) {
+        fields.meta = this.storedMeta[item.id]
+      }
       this.graphQlContentType.addNode({
         title: fields.title || fields.name,
         date: fields.created || fields.changed,
@@ -142,13 +147,26 @@ class Entity {
 
     return reduce(relationships, (result, relationship, key) => {
       const { data } = relationship
-
       if (data !== null) {
         result[key] = Array.isArray(data)
           ? data.map(relation => createReference(this.createTypeName(relation.type), relation.id))
           : createReference(this.createTypeName(data.type), data.id)
       }
 
+      if (data !== null) {
+        if (Array.isArray(data)) {
+          data.map(relation => {
+            if (typeof relation.meta !== 'undefined') {
+              this.storedMeta[relation.id] = relation.meta
+            }
+          })
+        }
+        else {
+          if (typeof data.meta !== 'undefined') {
+            this.storedMeta[data.id] = data.meta
+          }
+        }
+      }
       return result
     }, {})
   }

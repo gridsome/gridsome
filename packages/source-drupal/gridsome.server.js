@@ -24,6 +24,7 @@ class DrupalSource {
     this.defaultExcludes = DEFAULT_EXCLUDES
     this.entities = {}
     this.apiSchema = {}
+    this.storedMeta = {}
 
     api.loadSource(store => this.initialize(store))
   }
@@ -89,7 +90,6 @@ class DrupalSource {
       if (!exclude.includes(entityType)) {
         // creating an instance of the entity class, see ./entities/*
         this.entities[entityType] = new Entity(this, { entityType, url })
-
         capturedEntities.push(this.entities[entityType])
       }
     })
