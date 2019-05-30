@@ -1,5 +1,8 @@
 const directives = require('./directives')
 const initMustHaveTypes = require('./types')
+const createPagesSchema = require('./pages')
+const createNodesSchema = require('./nodes')
+const createMetaDataSchema = require('./metaData')
 const { fieldExtensions } = require('./extensions')
 const { scalarTypeResolvers } = require('./resolvers')
 
@@ -36,32 +39,17 @@ module.exports = function createSchema (store, context = {}) {
     addTypes(schemaComposer, typeOrSDL)
   })
 
-  const pagesSchema = require('./pages')(schemaComposer)
-  const nodesSchema = require('./nodes')(schemaComposer, store)
-  const metaData = require('./metaData')(schemaComposer, store)
+  const pagesSchema = createPagesSchema(schemaComposer)
+  const nodesSchema = createNodesSchema(schemaComposer, store)
+  const metaDataSchema = createMetaDataSchema(schemaComposer, store)
 
-  schemaComposer.Query.addFields(metaData)
+  schemaComposer.Query.addFields(metaDataSchema)
   schemaComposer.Query.addFields(nodesSchema)
   schemaComposer.Query.addFields(pagesSchema)
 
-  for (const typeComposer of schemaComposer.values()) {
-    if (!(typeComposer instanceof ObjectTypeComposer)) continue
-    if (typeComposer === schemaComposer.Query) continue
-
-    if (typeComposer.getExtension('isUserDefined')) {
-      processObjectFields(schemaComposer, typeComposer)
-    }
-
-    applyFieldExtensions(typeComposer)
-  }
-
-  schemas.forEach(schema => {
-    addSchema(schemaComposer, schema)
-  })
-
-  resolvers.forEach(resolvers => {
-    addResolvers(schemaComposer, resolvers)
-  })
+  processObjectTypes(schemaComposer)
+  addSchemas(schemaComposer, schemas)
+  addResolvers(schemaComposer, resolvers)
 
   return schemaComposer.buildSchema()
 }
@@ -121,7 +109,20 @@ function addCreatedType (schemaComposer, type, isSDL = false) {
   schemaComposer.addSchemaMustHaveType(typeComposer)
 }
 
-function processObjectFields (schemaComposer, typeComposer) {
+function processObjectTypes (schemaComposer) {
+  for (const typeComposer of schemaComposer.values()) {
+    if (!(typeComposer instanceof ObjectTypeComposer)) continue
+    if (typeComposer === schemaComposer.Query) continue
+
+    if (typeComposer.getExtension('isUserDefined')) {
+      processObjectFields(typeComposer)
+    }
+
+    applyFieldExtensions(typeComposer)
+  }
+}
+
+function processObjectFields (typeComposer) {
   const fields = typeComposer.getFields()
 
   for (const fieldName in fields) {
@@ -186,52 +187,58 @@ function applyFieldExtensions (typeComposer) {
   })
 }
 
-function addSchema (schemaComposer, schema) {
-  const typeMap = schema.getTypeMap()
-  const queryType = schema.getQueryType()
-  const queryComposer = ObjectTypeComposer.createTemp(queryType, schemaComposer)
-  const queryFields = queryComposer.getFields()
+function addSchemas (schemaComposer, schemas) {
+  schemas.forEach(schema => {
+    const typeMap = schema.getTypeMap()
+    const queryType = schema.getQueryType()
+    const queryComposer = ObjectTypeComposer.createTemp(queryType, schemaComposer)
+    const queryFields = queryComposer.getFields()
 
-  schemaComposer.Query.addFields(queryFields)
+    schemaComposer.Query.addFields(queryFields)
 
-  for (const typeName in typeMap) {
-    const typeDef = typeMap[typeName]
+    for (const typeName in typeMap) {
+      const typeDef = typeMap[typeName]
 
-    if (typeDef === queryType) continue
-    if (isIntrospectionType(typeDef)) continue
-    if (isSpecifiedScalarType(typeDef)) continue
+      if (typeDef === queryType) continue
+      if (isIntrospectionType(typeDef)) continue
+      if (isSpecifiedScalarType(typeDef)) continue
 
-    const typeComposer = schemaComposer.getAnyTC(typeDef.name)
-    schemaComposer.addSchemaMustHaveType(typeComposer)
-  }
+      const typeComposer = schemaComposer.getAnyTC(typeDef.name)
+      schemaComposer.addSchemaMustHaveType(typeComposer)
+    }
+  })
 }
 
 function addResolvers (schemaComposer, resolvers = {}) {
-  for (const typeName in resolvers) {
-    const fields = resolvers[typeName]
-    const typeComposer = schemaComposer.getOTC(typeName)
+  resolvers.forEach(typeMap => {
+    for (const typeName in typeMap) {
+      const fields = typeMap[typeName]
+      const typeComposer = schemaComposer.getOTC(typeName)
 
-    for (const fieldName in fields) {
-      const fieldOptions = fields[fieldName]
+      for (const fieldName in fields) {
+        const fieldOptions = typeof fields[fieldName] === 'function'
+          ? { resolve: fields[fieldName] }
+          : fields[fieldName]
 
-      if (typeComposer.hasField(fieldName)) {
-        const field = typeComposer.getFieldConfig(fieldName)
-        const originalResolver = field.resolve || defaultFieldResolver
+        if (typeComposer.hasField(fieldName)) {
+          const field = typeComposer.getFieldConfig(fieldName)
+          const originalResolver = field.resolve || defaultFieldResolver
 
-        typeComposer.extendField(fieldName, {
-          type: fieldOptions.type || field.type,
-          args: fieldOptions.args || field.args,
-          resolve (obj, args, ctx, info) {
-            return fieldOptions.resolve(obj, args, ctx, { ...info, originalResolver })
+          typeComposer.extendField(fieldName, {
+            type: fieldOptions.type || field.type,
+            args: fieldOptions.args || field.args,
+            resolve (obj, args, ctx, info) {
+              return fieldOptions.resolve(obj, args, ctx, { ...info, originalResolver })
+            }
+          })
+        } else {
+          if (!fieldOptions.type) {
+            throw new Error(`${typeName}.${fieldName} must have a 'type' property.`)
           }
-        })
-      } else {
-        if (!fieldOptions.type) {
-          throw new Error(`${typeName}.${fieldName} must have a 'type' property.`)
-        }
 
-        typeComposer.addFields({ [fieldName]: fieldOptions })
+          typeComposer.addFields({ [fieldName]: fieldOptions })
+        }
       }
     }
-  }
+  })
 }

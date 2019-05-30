@@ -21,7 +21,7 @@ module.exports = function createConnection ({
     name: `${typeName}Connection`,
     fields: {
       totalCount: 'Int!',
-      pageInfo: 'PageInfoType!',
+      pageInfo: 'PageInfo!',
       edges: () => [edgeType]
     }
   })
@@ -31,7 +31,7 @@ module.exports = function createConnection ({
 
   const connectionArgs = {
     sortBy: { type: 'String', defaultValue: defaultSortBy },
-    order: { type: 'SortOrderEnum', defaultValue: defaultSortOrder },
+    order: { type: 'SortOrder', defaultValue: defaultSortOrder },
     perPage: { type: 'Int', description: `Defaults to ${PER_PAGE} when page is provided.` },
     skip: { type: 'Int', defaultValue: 0 },
     limit: { type: 'Int' },

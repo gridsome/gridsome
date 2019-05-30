@@ -16,7 +16,7 @@ module.exports = schemaComposer => {
   const imageFitEnum = createImageFitEnum(schemaComposer)
 
   const pageInfoType = schemaComposer.createObjectTC({
-    name: 'PageInfoType',
+    name: 'PageInfo',
     fields: {
       perPage: 'Int!',
       currentPage: 'Int!',
@@ -30,7 +30,7 @@ module.exports = schemaComposer => {
   })
 
   const sortOrderType = schemaComposer.createEnumTC({
-    name: 'SortOrderEnum',
+    name: 'SortOrder',
     values: {
       ASC: {
         value: 'ASC',
@@ -53,7 +53,7 @@ module.exports = schemaComposer => {
         defaultValue: 'date'
       },
       order: {
-        type: sortOrderType,
+        type: 'SortOrder',
         defaultValue: 'DESC'
       }
     }

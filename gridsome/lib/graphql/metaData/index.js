@@ -14,11 +14,11 @@ module.exports = (schemaComposer, store) => {
 
   const typeNames = Object.keys(store.collections)
   const fieldDefs = createFieldDefinitions([fields])
-  const filterFields = createFieldTypes(schemaComposer, fieldDefs, 'MetaData', typeNames)
+  const fieldTypes = createFieldTypes(schemaComposer, fieldDefs, 'MetaData', typeNames)
 
   const metaDataType = schemaComposer.createObjectTC({
     name: 'MetaData',
-    fields: filterFields
+    fields: fieldTypes
   })
 
   return {

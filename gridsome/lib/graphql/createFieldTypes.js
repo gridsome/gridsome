@@ -118,7 +118,7 @@ function createRefType (schemaComposer, ref, fieldName, fieldTypeName, typeNames
 
     res.args = {
       sortBy: { type: 'String' },
-      order: { type: 'SortOrderEnum', defaultValue: SORT_ORDER },
+      order: { type: 'SortOrder', defaultValue: SORT_ORDER },
       skip: { type: 'Int', defaultValue: 0 },
       sort: { type: '[SortArgument]' },
       limit: { type: 'Int' }

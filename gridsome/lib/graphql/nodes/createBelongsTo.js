@@ -36,7 +36,7 @@ module.exports = function createBelongsTo ({
     name: `${typeName}BelongsTo`,
     fields: {
       totalCount: 'Int!',
-      pageInfo: 'PageInfoType!',
+      pageInfo: 'PageInfo!',
       edges: [belongsToEdgeType]
     }
   })
@@ -48,7 +48,7 @@ module.exports = function createBelongsTo ({
 
   const belongsToArgs = {
     sortBy: { type: 'String', defaultValue: 'date' },
-    order: { type: 'SortOrderEnum', defaultValue: SORT_ORDER },
+    order: { type: 'SortOrder', defaultValue: SORT_ORDER },
     perPage: { type: 'Int', description: `Defaults to ${PER_PAGE} when page is provided.` },
     skip: { type: 'Int', defaultValue: 0 },
     limit: { type: 'Int' },

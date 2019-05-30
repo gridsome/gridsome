@@ -111,8 +111,8 @@ test('add custom GraphQL union type', async () => {
 
 test('add custom GraphQL types from SDL', async () => {
   const app = await createApp(function (api) {
-    api.loadSource(store => {
-      store.addContentType('Post').addNode({
+    api.loadSource(({ addContentType }) => {
+      addContentType('Post').addNode({
         id: '1',
         title: 'My Post',
         content: 'Value'
@@ -132,9 +132,9 @@ test('add custom GraphQL types from SDL', async () => {
 
       addSchemaResolvers({
         Post: {
-          author: {
-            resolve: () => ({ name: 'The Author' })
-          }
+          author: () => ({
+            name: 'The Author'
+          })
         }
       })
     })
@@ -478,8 +478,8 @@ test('add custom GraphQL schema', async () => {
   expect(data.value2).toEqual('custom value bar')
 })
 
-async function createApp (plugin) {
-  const app = await new App(__dirname, {
+function createApp (plugin) {
+  const app = new App(__dirname, {
     localConfig: { plugins: plugin ? [plugin] : [] }
   })
 
