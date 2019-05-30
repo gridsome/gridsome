@@ -16,6 +16,7 @@ exports.createBelongsToKey = function (node) {
 exports.createBelongsTo = function (schemaComposer, store) {
   schemaComposer.createObjectTC({
     name: 'NodeBelongsToEdge',
+    interfaces: ['NodeConnectionEdge'],
     fields: {
       node: 'Node',
       next: 'Node',
@@ -25,6 +26,7 @@ exports.createBelongsTo = function (schemaComposer, store) {
 
   schemaComposer.createObjectTC({
     name: 'NodeBelongsTo',
+    interfaces: ['NodeConnection'],
     fields: {
       totalCount: 'Int!',
       pageInfo: 'PageInfo!',

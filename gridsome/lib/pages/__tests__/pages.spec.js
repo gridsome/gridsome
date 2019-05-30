@@ -83,7 +83,11 @@ test('create managed pages with plugin api', async () => {
 })
 
 test('create page with pagination', async () => {
-  const { pages: { createPage }} = await createApp()
+  const { pages: { createPage }} = await createApp(function (api) {
+    api.loadSource(store => {
+      store.addContentType('Post')
+    })
+  })
 
   const page = createPage({
     path: '/page',
@@ -123,7 +127,11 @@ test('create page with query context', async () => {
 })
 
 test('create page with custom route', async () => {
-  const { pages: { createPage }} = await createApp()
+  const { pages: { createPage }} = await createApp(function (api) {
+    api.loadSource(store => {
+      store.addContentType('Post')
+    })
+  })
 
   const page = createPage({
     path: '/page/1',
@@ -146,7 +154,11 @@ test('allways include a /404 page', async () => {
 })
 
 test('cache parsed components', async () => {
-  const { pages: { _parser, createPage }} = await createApp()
+  const { pages: { _parser, createPage }} = await createApp(function (api) {
+    api.loadSource(store => {
+      store.addContentType('Post')
+    })
+  })
 
   createPage({ path: '/page/1', component: './__fixtures__/PagedPage.vue' })
   createPage({ path: '/page/2', component: './__fixtures__/PagedPage.vue' })
@@ -156,7 +168,11 @@ test('cache parsed components', async () => {
 })
 
 test('update page', async () => {
-  const { pages, pages: { createPage, updatePage }} = await createApp()
+  const { pages, pages: { createPage, updatePage }} = await createApp(function (api) {
+    api.loadSource(store => {
+      store.addContentType('Post')
+    })
+  })
   const emit = jest.spyOn(pages._events, 'emit')
 
   const page1 = createPage({
@@ -276,6 +292,10 @@ test('garbage collect unmanaged pages', async () => {
   let maxPages = 10
 
   const app = await createApp(function (api) {
+    api.loadSource(store => {
+      store.addContentType('Post')
+    })
+
     api.createPages(({ createPage }) => {
       for (let i = 1; i <= maxPages; i++) {
         createPage({ path: `/page-${i}`, component: './__fixtures__/DefaultPage.vue' })
@@ -302,7 +322,11 @@ test('garbage collect unmanaged pages', async () => {
 })
 
 test('override page with equal path', async () => {
-  const { pages, pages: { createPage }} = await createApp()
+  const { pages, pages: { createPage }} = await createApp(function (api) {
+    api.loadSource(store => {
+      store.addContentType('Post')
+    })
+  })
 
   createPage({
     path: '/page',

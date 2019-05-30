@@ -10,6 +10,24 @@ module.exports = schemaComposer => {
     }
   })
 
+  const nodeConnectionEdgeInterface = schemaComposer.createInterfaceTC({
+    name: 'NodeConnectionEdge',
+    fields: {
+      node: 'Node',
+      next: 'Node',
+      previous: 'Node'
+    }
+  })
+
+  const nodeConnectionInterface = schemaComposer.createInterfaceTC({
+    name: 'NodeConnection',
+    fields: () => ({
+      totalCount: 'Int!',
+      pageInfo: 'PageInfo!',
+      edges: ['NodeConnectionEdge']
+    })
+  })
+
   const dateScalarType = createDateScalar(schemaComposer)
   const fileScalarType = createFileScalar(schemaComposer)
   const imageScalarType = createImageScalar(schemaComposer)
@@ -61,6 +79,8 @@ module.exports = schemaComposer => {
 
   return [
     nodeInterface,
+    nodeConnectionEdgeInterface,
+    nodeConnectionInterface,
     dateScalarType,
     fileScalarType,
     imageScalarType,

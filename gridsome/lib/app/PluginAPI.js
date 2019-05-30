@@ -2,14 +2,14 @@ const autoBind = require('auto-bind')
 const PluginStore = require('../store/PluginStore')
 
 class PluginAPI {
-  constructor (app, { entry, transformers }) {
+  constructor (app, { entry = {}, transformers } = {}) {
     this._entry = entry
     this._app = app
 
     this.config = app.config
     this.context = app.context
 
-    this.store = new PluginStore(app, entry.options, { transformers })
+    this.store = new PluginStore(app, entry.options || {}, { transformers })
 
     autoBind(this)
   }

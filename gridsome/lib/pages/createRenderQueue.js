@@ -1,14 +1,14 @@
 const { createQueryVariables } = require('./utils')
 const { toFilterArgs } = require('../graphql/filters/query')
-const { createPagedNodeEdges } = require('../graphql/nodes/utils')
 const { createBelongsToKey } = require('../graphql/nodes/belongsTo')
+const { createPagedNodeEdges } = require('../graphql/nodes/utils')
 
 function createRenderQueue (renderQueue, { pages, store, schema }) {
   const queue = renderQueue.slice()
 
   for (const page of pages.data()) {
     if (page.query.paginate) {
-      const totalPages = calcTotalPages(page, store, schema)
+      const totalPages = calcTotalPages(page.query.paginate, store, schema)
 
       for (let i = 1; i <= totalPages; i++) {
         queue.push(createRenderEntry(page, i))
@@ -21,33 +21,31 @@ function createRenderQueue (renderQueue, { pages, store, schema }) {
   return queue
 }
 
-function calcTotalPages (page, store, schema) {
-  const { belongsTo, fieldName, typeName, perPage, skip, limit } = page.query.paginate
+function calcTotalPages (paginate, store, schema) {
+  const { belongsToArgs, fieldName, typeName, args } = paginate
   const gqlField = schema.getComposer().Query.getField(fieldName)
+  const typeComposer = schema.getComposer().get(typeName)
   const { collection } = store.getContentType(typeName)
 
-  const filterQuery = toFilterArgs(page.query.filters, belongsTo
+  const filterQuery = toFilterArgs(args.filter, belongsToArgs
     ? gqlField.type.getFields().belongsTo.args.filter.type
     : gqlField.args.filter.type
   )
 
   let chain
 
-  if (belongsTo) {
-    const { id, path } = belongsTo
-    const node = id ? collection.by('id', id) : collection.by('path', path)
-    const key = createBelongsToKey(node)
-    const query = { [key]: { $eq: true }}
-
-    Object.assign(query, filterQuery)
-
-    chain = store.chainIndex(query)
+  if (belongsToArgs) {
+    const context = schema.createSchemaContext()
+    const resolver = typeComposer.getResolver('findOne')
+    const node = resolver.resolve({ args: belongsToArgs, context })
+    filterQuery[createBelongsToKey(node)] = { $eq: true }
+    chain = store.chainIndex(filterQuery)
   } else {
     chain = collection.chain().find(filterQuery)
   }
 
-  const args = { page: 1, perPage, skip, limit }
-  const res = createPagedNodeEdges(chain, args)
+  const page = args.page || 1
+  const res = createPagedNodeEdges(chain, { ...args, page })
 
   return res.pageInfo.totalPages
 }

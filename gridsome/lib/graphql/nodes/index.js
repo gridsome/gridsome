@@ -68,6 +68,7 @@ function createTypeComposers (schemaComposer, store) {
 
     schemaComposer.createObjectTC({
       name: edgeTypeName,
+      interfaces: ['NodeConnectionEdge'],
       fields: {
         node: typeName,
         next: typeName,
@@ -77,6 +78,7 @@ function createTypeComposers (schemaComposer, store) {
 
     schemaComposer.createObjectTC({
       name: connectionTypeName,
+      interfaces: ['NodeConnection'],
       fields: {
         totalCount: 'Int!',
         pageInfo: 'PageInfo!',

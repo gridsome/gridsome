@@ -3,6 +3,7 @@ const autoBind = require('auto-bind')
 const { Collection } = require('lokijs')
 const { FSWatcher } = require('chokidar')
 const EventEmitter = require('eventemitter3')
+const parseQuery = require('../graphql/parseQuery')
 const validateOptions = require('./validateOptions')
 const createPageQuery = require('./createPageQuery')
 const { NOT_FOUND_NAME, NOT_FOUND_PATH } = require('../utils/constants')
@@ -30,10 +31,11 @@ class Pages {
     if (process.env.NODE_ENV === 'development') {
       this._watcher.on('change', component => {
         const { pageQuery } = this._parse(component, false)
+        const parsedQuery = this._parseQuery(pageQuery)
 
         this.findPages({ component }).forEach(page => {
           const oldPage = cloneDeep(page)
-          const query = createPageQuery(pageQuery, page.queryVariables || page.context)
+          const query = this._createPageQuery(parsedQuery, page)
 
           Object.assign(page, { query })
           Object.assign(page, createRoute({ page, query }))
@@ -70,9 +72,10 @@ class Pages {
 
     if (oldPage) return this.updatePage(options, internals)
 
-    const { pageQuery } = this._parse(options.component)
     const page = createPage({ options, context: this._context })
-    const query = createPageQuery(pageQuery, page.queryVariables || page.context)
+    const { pageQuery } = this._parse(options.component)
+    const parsedQuery = this._parseQuery(pageQuery)
+    const query = this._createPageQuery(parsedQuery, page)
 
     Object.assign(page, { query })
     Object.assign(page, createRoute({ page, query }))
@@ -93,9 +96,10 @@ class Pages {
     const options = this._normalizeOptions(input)
     const page = this.findPage({ path: options.path })
 
-    const { pageQuery } = this._parse(options.component, false)
     const newPage = createPage({ options, context: this._context })
-    const query = createPageQuery(pageQuery, newPage.queryVariables)
+    const { pageQuery } = this._parse(options.component, false)
+    const parsedQuery = this._parseQuery(pageQuery)
+    const query = this._createPageQuery(parsedQuery, newPage)
 
     const oldPage = cloneDeep(page)
 
@@ -151,6 +155,14 @@ class Pages {
     options.component = this._app.resolve(input.component)
 
     return options
+  }
+
+  _parseQuery (query) {
+    return parseQuery(this._app.schema.getSchema(), query)
+  }
+
+  _createPageQuery (parsedQuery, page) {
+    return createPageQuery(parsedQuery, page.queryVariables || page.context || {})
   }
 
   _parse (component, useCache = true) {
