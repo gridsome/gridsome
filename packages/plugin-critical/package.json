@@ -5,10 +5,6 @@
   "homepage": "https://github.com/gridsome/gridsome/tree/master/packages/plugin-critical#readme",
   "repository": "https://github.com/gridsome/gridsome/tree/master/packages/plugin-critical",
   "main": "index.js",
-  "files": [
-    "lib",
-    "index.js"
-  ],
   "keywords": [
     "gridsome",
     "gridsome-plugin",
