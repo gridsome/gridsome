@@ -28,6 +28,7 @@ export default (to, from, next) => {
         next({ name: '*', params: { 0: to.path }})
       } else {
         formatError(err, to)
+        next(err)
       }
     })
 }

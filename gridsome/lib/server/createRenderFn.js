@@ -17,8 +17,8 @@ module.exports = function createRenderFn ({
     runInNewContext: false
   })
 
-  return async function render (url, state = {}) {
-    const context = { url, state }
+  return async function render (url, state) {
+    const context = { url, state: createState(state) }
 
     let app = ''
 
@@ -45,7 +45,7 @@ module.exports = function createRenderFn ({
       context.renderStyles()
 
     const scripts = '' +
-      context.renderState() +
+      (state ? context.renderState() : '') +
       context.renderScripts() +
       inject.script.text({ body: true })
 
@@ -56,5 +56,12 @@ module.exports = function createRenderFn ({
       head,
       app
     })
+  }
+}
+
+function createState (state = {}) {
+  return {
+    data: state.data || null,
+    context: state.context || {}
   }
 }
