@@ -151,22 +151,21 @@ class Entity {
         result[key] = Array.isArray(data)
           ? data.map(relation => createReference(this.createTypeName(relation.type), relation.id))
           : createReference(this.createTypeName(data.type), data.id)
-      }
-
-      if (data !== null) {
+        // process any meta properties on this relationship and store them
+        // for later use on the related entity
         if (Array.isArray(data)) {
           data.map(relation => {
             if (typeof relation.meta !== 'undefined') {
               this.storedMeta[relation.id] = relation.meta
             }
           })
-        }
-        else {
+        } else {
           if (typeof data.meta !== 'undefined') {
             this.storedMeta[data.id] = data.meta
           }
         }
       }
+
       return result
     }, {})
   }
