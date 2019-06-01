@@ -64,7 +64,7 @@ export default (route, options = {}) => {
     const loadJSON = ([ group, hash ]) => {
       const jsonPath = dataUrl + `${group}/${hash}.json` 
 
-      if (shouldPrefetch) {
+      if (shouldPrefetch && !isLoaded[jsonPath]) {
         if (!isPrefetched[jsonPath]) {
           isPrefetched[jsonPath] = prefetch(jsonPath)
         }
