@@ -95,7 +95,7 @@ class DrupalSource {
     })
 
     // ensure file entities are processed last
-    const entityList = capturedEntities.slice(0);
+    const entityList = capturedEntities.slice(0)
     entityList.sort((a, b) => (a.entityType === 'file--file') ? 1 : 0)
 
     await Promise.all(entityList.map(entity => entity.initialize()))
