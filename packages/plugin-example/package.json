@@ -1,0 +1,22 @@
+{
+  "name": "@gridsome/plugin-example",
+  "homepage": "https://github.com/gridsome/gridsome/tree/master/packages/plugin-example#readme",
+  "repository": "https://github.com/gridsome/gridsome/tree/master/packages/plugin-example",
+  "version": "0.0.0",
+  "main": "gridsome.client.js",
+  "license": "MIT",
+  "files": [
+    "gridsome.client.js",
+    "gridsome.server.js"
+  ],
+  "keywords": [
+    "gridsome",
+    "gridsome-plugin"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=8"
+  }
+}
