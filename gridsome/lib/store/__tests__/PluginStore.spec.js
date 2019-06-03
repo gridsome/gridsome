@@ -172,6 +172,15 @@ test('get node by id', () => {
   expect(contentType.getNode('test').id).toEqual('test')
 })
 
+test('get node by uid', () => {
+  const api = createPlugin()
+  const contentType = api.store.addContentType('TestPost')
+
+  contentType.addNode({ $uid: 'foo', id: '1' })
+
+  expect(api.store.getNodeByUid('foo').id).toEqual('1')
+})
+
 test('find node', () => {
   const api = createPlugin()
   const contentType = api.store.addContentType('TestPost')

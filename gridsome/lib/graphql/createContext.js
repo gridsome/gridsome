@@ -14,6 +14,9 @@ function createStoreActions (store) {
     getContentType (typeName) {
       return store.getContentType(typeName)
     },
+    getNodeByUid (uid) {
+      return store.getNodeByUid(uid)
+    },
     chainIndex (query) {
       return store.chainIndex(query)
     }

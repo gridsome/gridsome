@@ -104,6 +104,10 @@ class ContentType {
     return this._collection.findOne(query)
   }
 
+  getNodeById (id) {
+    return this._collection.by('id', id)
+  }
+
   findNode (query) {
     return this._collection.findOne(query)
   }

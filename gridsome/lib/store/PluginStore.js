@@ -147,6 +147,10 @@ class PluginStore {
     return this.store.getContentType(type)
   }
 
+  getNodeByUid (uid) {
+    return this.store.getNodeByUid(uid)
+  }
+
   //
   // misc
   //
