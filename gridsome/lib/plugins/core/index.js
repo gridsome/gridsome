@@ -13,7 +13,7 @@ function corePlugin (api, config) {
     }
   })
 
-  api.afterBuild(({ queue, config }) => {
+  api.afterBuild(({ config }) => {
     const notFoundPath = path.join(config.outDir, '404', 'index.html')
     const notFoundDest = path.join(config.outDir, '404.html')
 

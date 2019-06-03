@@ -168,13 +168,13 @@ test('add custom attributes to markup', async () => {
 
   expect(result.imageHTML).toMatch(/test-1/)
   expect(result.imageHTML).toMatch(/test-2/)
-  expect(result.imageHTML).toMatch(/height=\"100\"/)
-  expect(result.imageHTML).toMatch(/alt=\"Alternative text\"/)
+  expect(result.imageHTML).toMatch(/height="100"/)
+  expect(result.imageHTML).toMatch(/alt="Alternative text"/)
 
   expect(result.noscriptHTML).toMatch(/test-1/)
   expect(result.noscriptHTML).toMatch(/test-2/)
-  expect(result.noscriptHTML).toMatch(/height=\"100\"/)
-  expect(result.noscriptHTML).toMatch(/alt=\"Alternative text\"/)
+  expect(result.noscriptHTML).toMatch(/height="100"/)
+  expect(result.noscriptHTML).toMatch(/alt="Alternative text"/)
 })
 
 test('respect config.maxImageWidth', async () => {

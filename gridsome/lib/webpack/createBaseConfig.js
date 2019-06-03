@@ -296,7 +296,7 @@ module.exports = (app, { isProd, isServer }) => {
     }
   }
 
-  function createEnv (projectConfig) {
+  function createEnv () {
     const assetsUrl = forwardSlash(path.join(publicPath, assetsDir, '/'))
     const dataUrl = forwardSlash(path.join(assetsUrl, 'data', '/'))
 

@@ -108,7 +108,7 @@ function createFilterType (value, fieldName, typeName) {
         }
       })
 
-    case 'number':
+    case 'number': {
       const numberType = toGraphQLType(value)
 
       return new GraphQLInputObjectType({
@@ -126,7 +126,7 @@ function createFilterType (value, fieldName, typeName) {
           between: { type: new GraphQLList(numberType), description: desc.between }
         }
       })
-
+    }
     case 'object':
       return createObjectFilter(value, fieldName, typeName)
   }

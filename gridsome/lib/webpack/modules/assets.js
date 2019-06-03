@@ -39,7 +39,7 @@ function transformAttrValue (node, attr) {
 }
 
 function isStatic (value) {
-  return /^\"[^"]+\"$/.test(value)
+  return /^"[^"]+"$/.test(value)
 }
 
 function extractValue (value) {

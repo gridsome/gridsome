@@ -27,7 +27,7 @@ class ImageProcessQueue {
       return asset
     }
 
-    asset.sets.forEach(({ filename, destPath, src, width }) => {
+    asset.sets.forEach(({ filename, destPath, width }) => {
       if (!this._queue.has(destPath + asset.cacheKey)) {
         this._queue.set(destPath + asset.cacheKey, {
           options: { ...options, width },

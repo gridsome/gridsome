@@ -1,5 +1,5 @@
 class ComponentParser {
-  constructor (app) {
+  constructor () {
     this._cached = {}
     this._parsers = []
   }

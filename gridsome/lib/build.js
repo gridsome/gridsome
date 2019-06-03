@@ -131,7 +131,7 @@ async function renderHTML (renderQueue, app) {
   info(`Render HTML (${renderQueue.length} files) - ${timer(hirestime.S)}s`)
 }
 
-async function processFiles (files, { outDir }) {
+async function processFiles (files) {
   const timer = hirestime()
   const totalFiles = files.queue.length
 
