@@ -109,6 +109,7 @@ class GhostSource {
         options.primary_author = store.createReference(authorTypeName, primary_author.id)
         options.tags = tags.map(tag => store.createReference(tagTypeName, tag.id))
         options.authors = authors.map(author => store.createReference(authorTypeName, author.id))
+        options.date = options.published_at
 
         posts.addNode(options)
       })
