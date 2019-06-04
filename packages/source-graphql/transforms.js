@@ -1,24 +1,25 @@
 const {
   visitSchema,
-  VisitSchemaKind,
+  VisitSchemaKind
 } = require(`graphql-tools/dist/transforms/visitSchema`)
 const {
   createResolveType,
-  fieldMapToFieldConfigMap,
+  fieldMapToFieldConfigMap
 } = require(`graphql-tools/dist/stitching/schemaRecreation`)
 
 class NamespaceUnderFieldTransform {
-  constructor({ typeName, fieldName, graphql }) {
+  constructor ({ typeName, fieldName, graphql }) {
     this.typeName = typeName
     this.fieldName = fieldName
     this.graphql = graphql
   }
 
-  transformSchema(schema) {
+  transformSchema (schema) {
     const { GraphQLObjectType, GraphQLSchema } = this.graphql
 
     const query = schema.getQueryType()
-    let newQuery
+
+    let newQuery // eslint-disable-line
     const nestedType = new GraphQLObjectType({
       name: this.typeName,
       fields: () =>
@@ -32,7 +33,7 @@ class NamespaceUnderFieldTransform {
             }
           }),
           true
-        ),
+        )
     })
     newQuery = new GraphQLObjectType({
       name: query.name,
@@ -41,9 +42,9 @@ class NamespaceUnderFieldTransform {
           type: nestedType,
           resolve: (parent, args, context, info) => {
             return {}
-          },
-        },
-      },
+          }
+        }
+      }
     })
     const typeMap = schema.getTypeMap()
     const allTypes = Object.keys(typeMap)
@@ -52,25 +53,25 @@ class NamespaceUnderFieldTransform {
 
     return new GraphQLSchema({
       query: newQuery,
-      types: allTypes,
+      types: allTypes
     })
   }
 }
 
 class StripNonQueryTransform {
-  transformSchema(schema) {
+  transformSchema (schema) {
     return visitSchema(schema, {
-      [VisitSchemaKind.MUTATION]() {
+      [VisitSchemaKind.MUTATION] () {
         return null
       },
-      [VisitSchemaKind.SUBSCRIPTION]() {
+      [VisitSchemaKind.SUBSCRIPTION] () {
         return null
-      },
+      }
     })
   }
 }
 
 module.exports = {
   NamespaceUnderFieldTransform,
-  StripNonQueryTransform,
+  StripNonQueryTransform
 }

@@ -10,17 +10,17 @@
     "gridsome-plugin",
     "gridsome-source"
   ],
-  "dependencies": {},
+  "dependencies": {
+    "apollo-link-context": "^1.0.17",
+    "apollo-link-http": "^1.5.14",
+    "graphql-tools": "^4.0.4",
+    "node-fetch": "^2.6.0"
+  },
   "publishConfig": {
     "access": "public"
   },
   "engines": {
     "node": ">=8"
   },
-  "devDependencies": {
-    "apollo-link-context": "^1.0.17",
-    "apollo-link-http": "^1.5.14",
-    "graphql-tools": "^4.0.4",
-    "node-fetch": "^2.6.0"
-  }
+  "devDependencies": {}
 }
