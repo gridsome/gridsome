@@ -19,7 +19,7 @@ function suggestCommands (cmd) {
   const suggestion = didYouMean(cmd, availableCommands)
   if (suggestion) {
     console.log()
-    console.log(`Did you mean ${suggestion}`)
+    console.log(`Did you mean ${suggestion}?`)
   }
 }
 
