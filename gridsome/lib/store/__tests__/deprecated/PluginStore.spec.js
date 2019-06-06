@@ -2,8 +2,8 @@ const App = require('../../../app/App')
 const PluginAPI = require('../../../app/PluginAPI')
 const JSONTransformer = require('../__fixtures__/JSONTransformer')
 
-function createPlugin (context = '/') {
-  const app = new App(context, { config: { plugins: [] }}).init()
+async function createPlugin (context = '/') {
+  const app = await new App(context).init()
   const api = new PluginAPI(app, {
     entry: { options: {}, clientOptions: undefined },
     transformers: {
@@ -18,8 +18,8 @@ function createPlugin (context = '/') {
   return api
 }
 
-test('add type', () => {
-  const api = createPlugin()
+test('add type', async () => {
+  const api = await createPlugin()
 
   const contentType = api.store.addContentType({
     typeName: 'TestPost',
@@ -45,8 +45,8 @@ test('add type', () => {
   expect(contentType.slugify).toBeInstanceOf(Function)
 })
 
-test('add node', () => {
-  const api = createPlugin()
+test('add node', async () => {
+  const api = await createPlugin()
 
   const contentType = api.store.addContentType('TestPost')
 
@@ -56,7 +56,7 @@ test('add node', () => {
     date: '2018-09-04T23:20:33.918Z'
   })
 
-  const entry = api.store.store.index.findOne({ uid: node.$uid })
+  const entry = api.store.store.nodeIndex.getEntry(node.$uid)
 
   expect(node).toHaveProperty('$loki')
   expect(node.id).toEqual('test')
@@ -69,8 +69,8 @@ test('add node', () => {
   expect(entry.typeName).toEqual('TestPost')
 })
 
-test('update node', () => {
-  const api = createPlugin()
+test('update node', async () => {
+  const api = await createPlugin()
 
   const contentType = api.store.addContentType({
     typeName: 'TestPost',
@@ -100,12 +100,11 @@ test('update node', () => {
     }
   })
 
-  const entry = api.store.store.index.findOne({ uid: node.$uid })
+  const entry = api.store.store.nodeIndex.getEntry(node.$uid)
 
   expect(node.id).toEqual('test')
   expect(node.title).toEqual('New title')
   expect(node.path).toEqual('/test/foo/new-title')
-  expect(node.date).toEqual('2018-09-04T23:20:33.918Z')
   expect(node.content).toEqual('Praesent commodo cursus magna')
   expect(node.excerpt).toEqual('Praesent commodo...')
   expect(node.foo).toEqual('foo')
@@ -115,26 +114,26 @@ test('update node', () => {
   expect(entry.uid).toEqual(uid)
 })
 
-test('change node id', () => {
-  const { store } = createPlugin()
-
+test('change node id', async () => {
+  const api = await createPlugin()
+  const contentType = api.store.addContentType('TestPost')
   const uid = 'test'
-  const contentType = store.addContentType('TestPost')
 
   const node1 = contentType.addNode({ $uid: uid, id: 'test' })
 
   expect(node1.id).toEqual('test')
 
   const node2 = contentType.updateNode({ $uid: uid, id: 'test-2' })
-  const entry = store.store.index.findOne({ uid })
+  const entry = api.store.store.nodeIndex.getEntry(uid)
 
   expect(node2.id).toEqual('test-2')
   expect(node2.$uid).toEqual('test')
   expect(entry.uid).toEqual('test')
 })
 
-test('prioritize node.id over fields.id', () => {
-  const contentType = createPlugin().store.addContentType('Test')
+test('prioritize node.id over fields.id', async () => {
+  const api = await createPlugin()
+  const contentType = api.store.addContentType('Test')
 
   const node = contentType.addNode({
     id: 'foo',
@@ -146,8 +145,9 @@ test('prioritize node.id over fields.id', () => {
   expect(node.id).toEqual('foo')
 })
 
-test('get node by id', () => {
-  const posts = createPlugin().store.addContentType('Post')
+test('get node by id', async () => {
+  const api = await createPlugin()
+  const posts = api.store.addContentType('Post')
 
   posts.addNode({ id: '1' })
   posts.addNode({ id: '2' })
@@ -156,23 +156,21 @@ test('get node by id', () => {
   expect(posts.getNode('2').id).toEqual('2')
 })
 
-test('remove node', () => {
-  const api = createPlugin()
-
+test('remove node', async () => {
+  const api = await createPlugin()
   const contentType = api.store.addContentType('TestPost')
   const node = contentType.addNode({ id: 'test' })
 
   contentType.removeNode('test')
 
-  const entry = api.store.store.index.findOne({ uid: node.$uid })
+  const entry = api.store.store.nodeIndex.getEntry(node.$uid)
 
   expect(contentType.getNode('test')).toBeNull()
   expect(entry).toBeNull()
 })
 
-test('add nodes with custom fields', () => {
-  const api = createPlugin()
-
+test('add nodes with custom fields', async () => {
+  const api = await createPlugin()
   const contentType = api.store.addContentType('TestPost')
 
   const node = contentType.addNode({
@@ -203,8 +201,8 @@ test('add nodes with custom fields', () => {
   expect(node.filename).toEqual('image.png')
 })
 
-test('add type with ref', () => {
-  const api = createPlugin()
+test('add type with ref', async () => {
+  const api = await createPlugin()
 
   const contentType = api.store.addContentType({
     typeName: 'TestPost',
@@ -222,8 +220,9 @@ test('add type with ref', () => {
   })
 })
 
-test('add nodes with custom paths', () => {
-  const contentType = createPlugin().store.addContentType('TestPost')
+test('add nodes with custom paths', async () => {
+  const api = await createPlugin()
+  const contentType = api.store.addContentType('TestPost')
 
   const node1 = contentType.addNode({ path: '/lorem-ipsum-dolor-sit-amet' })
   const node2 = contentType.addNode({ path: 'nibh-fermentum-fringilla' })
@@ -233,8 +232,9 @@ test('add nodes with custom paths', () => {
   expect(node2.path).toEqual('/nibh-fermentum-fringilla')
 })
 
-test('add type with dynamic route', () => {
-  const contentType = createPlugin().store.addContentType({
+test('add type with dynamic route', async () => {
+  const api = await createPlugin()
+  const contentType = api.store.addContentType({
     typeName: 'TestPost',
     route: '/:year/:month/:day/:slug'
   })
@@ -248,8 +248,9 @@ test('add type with dynamic route', () => {
   expect(node.path).toEqual('/2018/09/04/lorem-ipsum-dolor-sit-amet')
 })
 
-test('prefix dynamic route with leading slash', () => {
-  const contentType = createPlugin().store.addContentType({
+test('prefix dynamic route with leading slash', async () => {
+  const api = await createPlugin()
+  const contentType = api.store.addContentType({
     typeName: 'TestPost2',
     route: 'blog/:slug'
   })
@@ -263,8 +264,9 @@ test('prefix dynamic route with leading slash', () => {
   expect(node.path).toEqual('/blog/lorem-ipsum-dolor-sit-amet')
 })
 
-test('add type with custom fields in route', () => {
-  const contentType = createPlugin().store.addContentType({
+test('add type with custom fields in route', async () => {
+  const api = await createPlugin()
+  const contentType = api.store.addContentType({
     typeName: 'TestPost',
     route: '/:test/:test_raw/:id/:numeric/:author/:genre__name/:arr__1/:missing/:slug'
   })
@@ -290,8 +292,8 @@ test('add type with custom fields in route', () => {
   expect(node.path).toEqual('/my-value/My%20value/1234/10/2/thriller/1/missing/lorem-ipsum')
 })
 
-test('transform node', () => {
-  const api = createPlugin()
+test('transform node', async () => {
+  const api = await createPlugin()
 
   const contentType = api.store.addContentType('TestPost')
 
@@ -305,8 +307,8 @@ test('transform node', () => {
   expect(node).toMatchObject({ foo: 'bar' })
 })
 
-test('resolve file paths', () => {
-  const api = createPlugin('/absolute/dir/to/project')
+test('resolve file paths', async () => {
+  const api = await createPlugin('/absolute/dir/to/project')
 
   const contentType = api.store.addContentType({
     typeName: 'Test',
@@ -347,8 +349,8 @@ test('resolve file paths', () => {
   expect(node.text3).toEqual('md')
 })
 
-test('resolve absolute file paths with no origin', () => {
-  const api = createPlugin('/absolute/dir/to/project')
+test('resolve absolute file paths with no origin', async () => {
+  const api = await createPlugin('/absolute/dir/to/project')
 
   const contentType = api.store.addContentType({
     typeName: 'Test',
@@ -366,8 +368,8 @@ test('resolve absolute file paths with no origin', () => {
   expect(node.file2).toEqual('/absolute/dir/to/project/image.png')
 })
 
-test('resolve absolute file paths with a custom path', () => {
-  const api = createPlugin('/absolute/dir/to/project')
+test('resolve absolute file paths with a custom path', async () => {
+  const api = await createPlugin('/absolute/dir/to/project')
 
   const contentType = api.store.addContentType({
     typeName: 'C',
@@ -393,8 +395,8 @@ test('resolve absolute file paths with a custom path', () => {
   expect(node2.file).toEqual('/path/to/dir/image.png')
 })
 
-test('don\'t touch absolute paths when resolveAbsolutePaths is not set', () => {
-  const api = createPlugin('/absolute/dir/to/project')
+test('don\'t touch absolute paths when resolveAbsolutePaths is not set', async () => {
+  const api = await createPlugin('/absolute/dir/to/project')
 
   const contentType = api.store.addContentType('A')
 
@@ -414,8 +416,8 @@ test('don\'t touch absolute paths when resolveAbsolutePaths is not set', () => {
   expect(node.file3).toEqual('/absolute/dir/to/image.png')
 })
 
-test('always resolve relative paths from filesytem sources', () => {
-  const api = createPlugin()
+test('always resolve relative paths from filesytem sources', async () => {
+  const api = await createPlugin()
 
   const contentType = api.store.addContentType('A')
 
@@ -431,8 +433,8 @@ test('always resolve relative paths from filesytem sources', () => {
   expect(node.file).toEqual('/absolute/dir/to/image.png')
 })
 
-test('dont resolve relative paths when no origin', () => {
-  const api = createPlugin()
+test('dont resolve relative paths when no origin', async () => {
+  const api = await createPlugin()
 
   const contentType = api.store.addContentType('A')
 
@@ -445,8 +447,8 @@ test('dont resolve relative paths when no origin', () => {
   expect(node.file).toEqual('../image.png')
 })
 
-test('resolve relative paths from external sources', () => {
-  const api = createPlugin()
+test('resolve relative paths from external sources', async () => {
+  const api = await createPlugin()
 
   const contentType1 = api.store.addContentType('A')
 
@@ -466,8 +468,8 @@ test('resolve relative paths from external sources', () => {
   expect(node.file3).toEqual('https://www.example.com/2018/image.png')
 })
 
-test('resolve absolute paths from external sources', () => {
-  const api = createPlugin('/absolute/dir/to/project')
+test('resolve absolute paths from external sources', async () => {
+  const api = await createPlugin('/absolute/dir/to/project')
 
   const contentType2 = api.store.addContentType({
     typeName: 'B',
@@ -490,8 +492,8 @@ test('resolve absolute paths from external sources', () => {
   expect(node3.file3).toEqual('https://www.example.com/2018/11/02/another-blog-post/images/image.png')
 })
 
-test('resolve paths from external sources with a custom url', () => {
-  const api = createPlugin()
+test('resolve paths from external sources with a custom url', async () => {
+  const api = await createPlugin()
 
   const contentType = api.store.addContentType({
     typeName: 'A',

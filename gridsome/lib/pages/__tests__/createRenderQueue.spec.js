@@ -10,26 +10,26 @@ test('create render queue for basic project', async () => {
   const app = await createApp(context, undefined, BOOTSTRAP_PAGES)
 
   const renderQueue = createRenderQueue([], app)
-  const renderPaths = renderQueue.map(entry => entry.path)
+  const renderPaths = renderQueue.map(entry => entry.path).sort()
 
   expect(renderPaths).toEqual(expect.arrayContaining([
+    '/',
+    '/404',
     '/about',
     '/about-us',
-    '/pages/2',
-    '/docs/4/extra',
-    '/docs/2/extra',
+    '/docs/1',
     '/docs/1/extra',
-    '/404',
-    '/',
-    '/docs/3/extra',
-    '/pages/1',
-    '/docs/3',
-    '/docs/4',
-    '/docs/5',
     '/docs/2',
     '/docs/2/2',
     '/docs/2/3',
-    '/docs/1'
+    '/docs/2/extra',
+    '/docs/3',
+    '/docs/3/extra',
+    '/docs/4',
+    '/docs/4/extra',
+    '/docs/5',
+    '/pages/1',
+    '/pages/2'
   ]))
 
   expect(renderPaths).toHaveLength(18)
@@ -40,42 +40,42 @@ test('create render queue for blog project', async () => {
   const app = await createApp(context, undefined, BOOTSTRAP_PAGES)
   const queue = createRenderQueue([], app)
 
-  const renderPaths = queue.map(entry => entry.path)
+  const renderPaths = queue.map(entry => entry.path).sort()
 
   expect(renderPaths).toEqual(expect.arrayContaining([
-    '/404',
-    '/about',
     '/',
     '/2',
+    '/404',
+    '/about',
     '/category/first',
     '/category/first/2',
     '/category/second',
-    '/skip-me',
+    '/exclude-me',
     '/first-post',
-    '/second-post',
-    '/third-post',
     '/fourth-post',
+    '/post-10',
+    '/post-11',
+    '/post-12',
+    '/post-13',
     '/post-4',
     '/post-5',
     '/post-6',
     '/post-7',
     '/post-8',
     '/post-9',
-    '/post-10',
-    '/post-11',
-    '/post-12',
-    '/post-13',
-    '/exclude-me',
-    '/tag/first-tag',
-    '/tag/second-tag',
-    '/tag/third-tag',
-    '/tag/fourth-tag',
-    '/tag/fourth-tag/2',
+    '/second-post',
+    '/skip-me',
     '/tag/1/extra',
     '/tag/2/extra',
     '/tag/3/extra',
     '/tag/4/extra',
-    '/tag/4/extra/2'
+    '/tag/4/extra/2',
+    '/tag/first-tag',
+    '/tag/fourth-tag',
+    '/tag/fourth-tag/2',
+    '/tag/second-tag',
+    '/tag/third-tag',
+    '/third-post'
   ]))
 
   expect(renderPaths).not.toContain('/3')

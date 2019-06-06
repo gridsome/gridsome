@@ -3,10 +3,10 @@ const App = require('../../app/App')
 const { BOOTSTRAP_PAGES } = require('../../utils/constants')
 
 test('create page', async () => {
-  const { pages, pages: { createPage }} = await createApp()
+  const { pages } = await createApp()
   const emit = jest.spyOn(pages._events, 'emit')
 
-  const page = createPage({
+  const page = pages.createPage({
     path: '/page',
     component: './__fixtures__/DefaultPage.vue'
   })
@@ -82,9 +82,9 @@ test('create managed pages with plugin api', async () => {
 })
 
 test('create page with pagination', async () => {
-  const { pages: { createPage }} = await createApp()
+  const { pages } = await createApp()
 
-  const page = createPage({
+  const page = pages.createPage({
     path: '/page',
     component: './__fixtures__/PagedPage.vue'
   })
@@ -95,9 +95,9 @@ test('create page with pagination', async () => {
 })
 
 test('create page with context', async () => {
-  const { pages: { createPage }} = await createApp()
+  const { pages } = await createApp()
 
-  const page = createPage({
+  const page = pages.createPage({
     path: '/page',
     component: './__fixtures__/DefaultPage.vue',
     context: { test: true }
@@ -108,9 +108,9 @@ test('create page with context', async () => {
 })
 
 test('create page with query context', async () => {
-  const { pages: { createPage }} = await createApp()
+  const { pages } = await createApp()
 
-  const page = createPage({
+  const page = pages.createPage({
     path: '/page',
     component: './__fixtures__/DefaultPage.vue',
     queryVariables: { test: true }
@@ -121,9 +121,9 @@ test('create page with query context', async () => {
 })
 
 test('create page with custom route', async () => {
-  const { pages: { createPage }} = await createApp()
+  const { pages } = await createApp()
 
-  const page = createPage({
+  const page = pages.createPage({
     path: '/page/1',
     route: '/page/:id',
     component: './__fixtures__/PagedPage.vue'
@@ -143,20 +143,21 @@ test('allways include a /404 page', async () => {
 })
 
 test('cache parsed components', async () => {
-  const { pages: { _parser, createPage }} = await createApp()
+  const { pages } = await createApp()
+  const parseComponent = jest.spyOn(pages.hooks.parseComponent, 'call')
 
-  createPage({ path: '/page/1', component: './__fixtures__/PagedPage.vue' })
-  createPage({ path: '/page/2', component: './__fixtures__/PagedPage.vue' })
-  createPage({ path: '/page/3', component: './__fixtures__/PagedPage.vue' })
+  pages.createPage({ path: '/page/1', component: './__fixtures__/PagedPage.vue' })
+  pages.createPage({ path: '/page/2', component: './__fixtures__/PagedPage.vue' })
+  pages.createPage({ path: '/page/3', component: './__fixtures__/PagedPage.vue' })
 
-  expect(Object.keys(_parser._cached)).toHaveLength(2) // includes /404
+  expect(parseComponent).toHaveBeenCalledTimes(1)
 })
 
 test('update page', async () => {
-  const { pages, pages: { createPage, updatePage }} = await createApp()
+  const { pages } = await createApp()
   const emit = jest.spyOn(pages._events, 'emit')
 
-  const page1 = createPage({
+  const page1 = pages.createPage({
     path: '/page',
     component: './__fixtures__/DefaultPage.vue'
   })
@@ -165,7 +166,7 @@ test('update page', async () => {
   expect(page1.route).toEqual('/page')
   expect(page1.component).toEqual(path.join(__dirname, '__fixtures__', 'DefaultPage.vue'))
 
-  const page2 = updatePage({
+  const page2 = pages.updatePage({
     path: '/page',
     chunkName: 'page',
     component: './__fixtures__/PagedPage.vue'
@@ -260,12 +261,48 @@ test('api.createManagedPages() should only be called once', async () => {
     api.createManagedPages(createManagedPages)
   })
 
-  await app.createPages()
-  await app.createPages()
-  await app.createPages()
+  await app.pages.createPages()
+  await app.pages.createPages()
+  await app.pages.createPages()
 
   expect(createPages.mock.calls).toHaveLength(4)
   expect(createManagedPages.mock.calls).toHaveLength(1)
+})
+
+test('modify pages with api.onCreatePage()', async () => {
+  const app = await createApp(function (api) {
+    api.onCreatePage(page => {
+      if (page.path === '/my-page') {
+        return { ...page, name: 'myPage' }
+      }
+      return page
+    })
+  })
+
+  const page = app.pages.createPage({
+    path: '/my-page',
+    component: './__fixtures__/DefaultPage.vue'
+  })
+
+  expect(page.name).toEqual('myPage')
+})
+
+test('exclude page with api.onCreatePage()', async () => {
+  const app = await createApp(function (api) {
+    api.onCreatePage(page => {
+      if (page.path === '/my-page') {
+        return null
+      }
+      return page
+    })
+  })
+
+  const page = app.pages.createPage({
+    path: '/my-page',
+    component: './__fixtures__/DefaultPage.vue'
+  })
+
+  expect(page).toBeNull()
 })
 
 test('garbage collect unmanaged pages', async () => {
@@ -287,25 +324,25 @@ test('garbage collect unmanaged pages', async () => {
   expect(app.pages.data()).toHaveLength(13)
 
   maxPages = 5
-  await app.createPages()
+  await app.pages.createPages()
 
   expect(app.pages.data()).toHaveLength(8)
 
   maxPages = 1
-  await app.createPages()
+  await app.pages.createPages()
 
   expect(app.pages.data()).toHaveLength(4)
 })
 
 test('override page with equal path', async () => {
-  const { pages, pages: { createPage }} = await createApp()
+  const { pages } = await createApp()
 
-  createPage({
+  pages.createPage({
     path: '/page',
     component: './__fixtures__/DefaultPage.vue'
   })
 
-  createPage({
+  pages.createPage({
     path: '/page',
     chunkName: 'page',
     component: './__fixtures__/PagedPage.vue'

@@ -188,6 +188,7 @@ function normalizePlugins (context, plugins) {
     return defaultsDeep(plugin, {
       server: true,
       clientOptions: undefined,
+      name: undefined,
       options: {},
       entries,
       index,

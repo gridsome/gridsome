@@ -1,61 +1,113 @@
-const autoBind = require('auto-bind')
-const Loki = require('lokijs')
+const path = require('path')
+const fs = require('fs-extra')
+const { Collection } = require('lokijs')
 const { FSWatcher } = require('chokidar')
+const { SyncBailHook } = require('tapable')
 const EventEmitter = require('eventemitter3')
 const validateOptions = require('./validateOptions')
 const createPageQuery = require('./createPageQuery')
-const { NOT_FOUND_NAME, NOT_FOUND_PATH } = require('../utils/constants')
+const { slugify, hashString } = require('../utils')
+const SyncBailWaterfallHook = require('../app/SyncBailWaterfallHook')
+const { debounce } = require('lodash')
 
-const isDev = process.env.NODE_ENV === 'development'
+const {
+  BOOTSTRAP_PAGES,
+  NOT_FOUND_NAME,
+  NOT_FOUND_PATH
+} = require('../utils/constants')
 
 class Pages {
   constructor (app) {
     this._app = app
     this._context = app.context
-    this._parser = app.parser
-    this._cached = new Map()
     this._events = new EventEmitter()
     this._watcher = new FSWatcher({ disableGlobbing: true })
-    this._watched = {}
+    this._watched = new Map()
+    this._cached = new Map()
 
-    const db = new Loki()
-
-    this._collection = db.addCollection('pages', {
+    this._collection = new Collection({
       indices: ['path'],
-      unique: ['path']
+      unique: ['path'],
+      disableMeta: true
     })
 
-    autoBind(this)
+    this.hooks = {
+      parseComponent: new SyncBailHook(['source', 'resource']),
+      createPage: new SyncBailWaterfallHook(['options'])
+    }
 
-    if (isDev) {
-      this._watcher.on('change', component => {
-        const pages = this._collection.find({ component })
-        const length = pages.length
+    app.hooks.renderQueue.tap(
+      { name: 'GridsomePages', before: 'GridsomeSchema' },
+      require('./createRenderQueue')
+    )
 
-        this._cached.delete(component)
-        this._collection.adaptiveBinaryIndices = false
+    app.hooks.renderQueue.tap(
+      { name: 'GridsomePages', before: 'GridsomeSchema' },
+      require('./createHTMLPaths')
+    )
 
-        for (let i = 0; i < length; i++) {
-          const page = pages[i]
+    app.hooks.bootstrap.tapPromise(
+      {
+        name: 'GridsomePages',
+        label: 'Create pages and templates',
+        phase: BOOTSTRAP_PAGES
+      },
+      () => this.createPages()
+    )
 
-          this.updatePage({
-            path: page.path,
-            component: page.component,
-            chunkName: page.chunkName || null,
-            name: page.name || null,
-            context: page.context || {},
-            queryVariables: page.queryVariables || null,
-            route: page.internal.route || null,
-            _meta: page.internal.meta || null
-          }, {
-            digest: page.internal.digest,
-            isManaged: page.internal.isManaged
-          })
+    if (process.env.NODE_ENV === 'development') {
+      const createPages = debounce(() => this.createPages(), 16)
+      const fetchQueries = debounce(() => app.broadcast({ type: 'fetch' }), 16)
+      const generateRoutes = debounce(() => app.codegen.generate('routes.js'), 16)
+
+      app.store.on('change', createPages)
+      this.on('create', generateRoutes)
+      this.on('remove', generateRoutes)
+
+      this.on('update', (page, oldPage) => {
+        const { path: oldPath, query: oldQuery } = oldPage
+        const { path, query } = page
+
+        if (
+          (path !== oldPath && !page.internal.isDynamic) ||
+          // pagination was added or removed in page-query
+          (query.paginate && !oldQuery.paginate) ||
+          (!query.paginate && oldQuery.paginate) ||
+          // page-query was created or removed
+          (query.document && !oldQuery.document) ||
+          (!query.document && oldQuery.document)
+        ) {
+          return generateRoutes()
         }
 
-        this._collection.adaptiveBinaryIndices = true
-        this._collection.ensureAllIndexes(true)
+        fetchQueries()
       })
+
+      this._watcher.on('change', filePath => {
+        const component = this._parse(filePath, false)
+
+        this.findPages({ component: filePath }).forEach(oldPage => {
+          const normalized = this._createPage(oldPage.internal.input, component)
+          const page = app.hooks.createPage.call(normalized)
+
+          if (!page) {
+            this.removePage(oldPage)
+          }
+
+          page.meta = oldPage.meta
+          page.$loki = oldPage.$loki
+          page.internal = { ...oldPage.internal, ...page.internal }
+
+          this._collection.update(page)
+          this._events.emit('update', page, oldPage)
+        })
+      })
+    }
+  }
+
+  getHooksContext () {
+    return {
+      hooks: this.hooks
     }
   }
 
@@ -79,48 +131,76 @@ class Pages {
     return this._collection.findOne(query)
   }
 
+  async createPages () {
+    const digest = hashString(Date.now().toString())
+    const { createPagesAPI, createManagedPagesAPI } = require('../pages/utils')
+
+    await this._app.events.dispatch('createPages', api => {
+      return createPagesAPI(api, { digest })
+    })
+
+    await this._app.events.dispatch('createManagedPages', api => {
+      return createManagedPagesAPI(api, { digest })
+    })
+
+    // ensure a /404 page exists
+    if (!this.findPage({ path: '/404' })) {
+      this.createPage({
+        path: '/404',
+        component: path.join(this._app.config.appPath, 'pages', '404.vue')
+      }, { digest, isManaged: true })
+    }
+
+    // remove unmanaged pages created
+    // in earlier digest cycles
+    this.findAndRemovePages({
+      'internal.digest': { $ne: digest },
+      'internal.isManaged': { $eq: false }
+    })
+  }
+
   createPage (input, internals = {}) {
     const options = this._normalizeOptions(input)
+    const oldPage = this.findPage({ path: options.path })
 
-    const oldPage = this._collection.by('path', options.path)
-    if (oldPage) return this.updatePage(options, internals, options)
+    if (oldPage) {
+      return this.updatePage(options, internals, oldPage)
+    }
 
-    const { pageQuery } = this._parse(options.component)
-    const page = createPage(options)
-    const query = createPageQuery(pageQuery, page.queryVariables || page.context)
+    const component = this._parse(options.component)
+    const normalized = this._createPage(options, component)
+    const page = this.hooks.createPage.call(normalized)
 
-    Object.assign(page, { query })
-    Object.assign(page, createRoute({ page, query }))
-    Object.assign(page.internal, internals)
+    if (!page) return null
+
+    page.internal = { ...page.internal, ...internals, input }
 
     this._collection.insert(page)
     this._events.emit('create', page)
 
-    if (isDev) {
+    if (process.env.NODE_ENV === 'development') {
       this._watch(options.component)
     }
 
     return page
   }
 
-  updatePage (input, internals = {}, normalizeOptions = null) {
-    const options = normalizeOptions || this._normalizeOptions(input)
-    const oldPage = this._collection.by('path', options.path)
+  updatePage (input, internals = {}, oldPage = this.findPage({ path: input.path })) {
+    const options = this._normalizeOptions(input)
+    const component = this._parse(options.component, false)
+    const normalized = this._createPage(options, component)
+    const page = this.hooks.createPage.call(normalized)
 
-    const useCache = this._cached.has(options.component)
-    const { pageQuery } = this._parse(options.component, useCache)
-    const page = createPage(options)
-    const query = createPageQuery(pageQuery, page.queryVariables || page.context)
+    if (!page) {
+      this.removePage(oldPage)
+      return null
+    }
 
-    Object.assign(page, { query })
-    Object.assign(page, createRoute({ page, query }))
-    Object.assign(page.internal, internals)
-
-    page.$loki = oldPage.$loki
     page.meta = oldPage.meta
+    page.$loki = oldPage.$loki
+    page.internal = { ...page.internal, ...internals, input }
 
     this._collection.update(page)
-    this._cached.set(options.component, true)
     this._events.emit('update', page, oldPage)
 
     return page
@@ -167,29 +247,51 @@ class Pages {
 
     options.component = this._app.resolve(input.component)
 
-    return this._app._hooks.page.call(options, this, this._app)
+    return options
   }
 
   _parse (component, useCache = true) {
-    return this._parser.parse(component, useCache)
+    if (useCache && this._cached.has(component)) {
+      return this._cached.get(component)
+    }
+
+    const source = fs.readFileSync(component, 'utf-8')
+    const results = this.hooks.parseComponent.call(source, {
+      resourcePath: component
+    })
+
+    this._cached.set(component, results)
+
+    return results
+  }
+
+  _createPage (options, component) {
+    const page = createPage({ options, context: this._context })
+    const queryVariables = page.queryVariables || page.context
+    const query = createPageQuery(component.pageQuery, queryVariables)
+
+    Object.assign(page, { query })
+    Object.assign(page, createRoute({ page, query }))
+
+    return page
   }
 
   _watch (component) {
-    if (!this._watched[component]) {
-      this._watched[component] = true
+    if (!this._watched.has(component)) {
+      this._watched.set(component, true)
       this._watcher.add(component)
     }
   }
 
   _unwatch (component) {
     if (this._collection.find({ component }).length <= 0) {
-      delete this._watched[component]
+      this._watched.delete(component)
       this._watcher.unwatch(component)
     }
   }
 }
 
-function createPage (options) {
+function createPage ({ options, context }) {
   const segments = options.path.split('/').filter(segment => !!segment)
   const path = `/${segments.join('/')}`
 
@@ -202,7 +304,7 @@ function createPage (options) {
     component: options.component,
     context: options.context || {},
     queryVariables: options.queryVariables || null,
-    chunkName: options.chunkName || null,
+    chunkName: options.chunkName || genChunkName(options.component, context),
     internal: {
       digest: null,
       path: { segments },
@@ -212,6 +314,16 @@ function createPage (options) {
       isManaged: false
     }
   }
+}
+
+function genChunkName (component, context) {
+  const chunkName = path.relative(context, component)
+    .split('/')
+    .filter(s => s !== '..')
+    .map(s => slugify(s))
+    .join('--')
+
+  return `page--${chunkName}`
 }
 
 function createRoute ({ page, query }) {

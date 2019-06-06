@@ -20,7 +20,7 @@ module.exports = async (context, args) => {
   await fs.emptyDir(config.outDir)
   await fs.emptyDir(config.dataDir)
 
-  const queue = await createRenderQueue(app)
+  const queue = await app.hooks.renderQueue.promise([], app)
 
   await writePageData(queue, app)
   await runWebpack(app)
@@ -44,15 +44,6 @@ module.exports = async (context, args) => {
   log()
 
   return app
-}
-
-function createRenderQueue (app) {
-  return new Promise((resolve, reject) => {
-    app._hooks.createRenderQueue.callAsync([], app, (err, res) => {
-      if (err) reject(err)
-      else resolve(res)
-    })
-  })
 }
 
 async function writePageData (renderQueue, app) {

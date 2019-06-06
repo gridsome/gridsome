@@ -51,6 +51,8 @@ class PluginStore {
       options = { typeName: options }
     }
 
+    options = this.store.hooks.addContentType.call(options)
+
     if (typeof options.typeName !== 'string') {
       throw new Error(`«typeName» option is required.`)
     }
@@ -62,8 +64,6 @@ class PluginStore {
     if (this.store.collections.hasOwnProperty(options.typeName)) {
       return this.store.getContentType(options.typeName)
     }
-
-    options = this._app._hooks.contentType.call(options, this._app)
 
     let createPath = () => null
     const routeKeys = []
@@ -106,6 +106,7 @@ class PluginStore {
     }
 
     return this.store.addContentType(this, {
+      ...options,
       route: options.route,
       fields: options.fields || {},
       typeName: options.typeName,
