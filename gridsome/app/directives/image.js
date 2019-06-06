@@ -68,19 +68,9 @@ function loadImage (el) {
     return // src is already switched
   }
 
-  const image = new Image()
-
-  image.onload = function () {
-    el.classList.remove('g-image--loading')
-    el.classList.add('g-image--loaded')
-    
-    el.src = src
-    el.sizes = sizes
-    el.srcset = srcset
-  }
-
-  image.src = src
-
-  el.classList.add('g-image--loading')
-  el.classList.remove('g-image--loaded')
+  el.srcset = srcset
+  el.sizes = sizes
+  el.src = src
+  el.classList.remove('g-image--loading')
+  el.classList.add('g-image--loaded')
 }
