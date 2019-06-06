@@ -7,24 +7,24 @@ export default {
   props: {
     to: { type: [Object, String], default: null },
     page: { type: Number, default: 0 },
-    activeClass: { type: String, default: 'active' },
-    exactActiveClass: { type: String, default: 'active--exact' }
+    activeClass: { type: String, default: undefined },
+    exactActiveClass: { type: String, default: undefined }
   },
 
-  render: (h, { data, props, children }) => {
+  render: (h, { data, props, children, parent }) => {
     const directives = data.directives || []
     const attrs = data.attrs || {}
 
     if (props.to && props.to.type === 'file') {
       attrs.href = props.to.src
-      
+
       return h('a', data, children)
     }
 
     if (isExternalLink(attrs.href)){
       attrs.target = attrs.target || '_blank'
       attrs.rel = attrs.rel || 'noopener'
-      
+
       return h('a', data, children)
     }
 
@@ -41,9 +41,13 @@ export default {
       directives.push({ name: 'g-link' })
     }
 
+    const { linkActiveClass, linkExactActiveClass } = parent.$router.options
+    const activeClass = props.activeClass || linkActiveClass || 'active'
+    const exactActiveClass = props.exactActiveClass || linkExactActiveClass || 'active--exact'
+
     attrs.to = to
-    attrs.activeClass = props.activeClass
-    attrs.exactActiveClass = props.exactActiveClass
+    attrs.activeClass = activeClass
+    attrs.exactActiveClass = exactActiveClass
 
     return h('router-link', {
       ...data,

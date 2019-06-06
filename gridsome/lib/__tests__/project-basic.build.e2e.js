@@ -79,7 +79,9 @@ test('do not render duplicate style links', () => {
 test('render g-link components', () => {
   const $home = load('dist/index.html')
 
+  expect($home('a.g-link-1.is-active.active--exact').attr('href')).toEqual('/')
   expect($home('a.g-link-2.test-active.active--exact').attr('href')).toEqual('/')
+  expect($home('a.router-link.is-active.router-link-exact-active').attr('href')).toEqual('/')
 
   expect($home('a[href="http://outsidelink1.com"]').attr('target')).toEqual('_blank')
   expect($home('a[href="http://outsidelink1.com"]').attr('rel')).toEqual('noopener')
@@ -242,12 +244,12 @@ test('navigate to /docs/2', async () => {
 })
 
 test('navigate to /docs/2/2', async () => {
-  await page.click('nav[role="navigation"] a.active + a')
+  await page.click('nav[role="navigation"] a.is-active + a')
   await page.waitForSelector('#app.doc-template-2.page-2')
 })
 
 test('navigate to /docs/2/3', async () => {
-  await page.click('nav[role="navigation"] a.active + a')
+  await page.click('nav[role="navigation"] a.is-active + a')
   await page.waitForSelector('#app.doc-template-2.page-3')
 })
 
