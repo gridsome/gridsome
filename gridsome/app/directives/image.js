@@ -67,10 +67,13 @@ function loadImage (el) {
   if (!src || el.src.endsWith(src)) {
     return // src is already switched
   }
-
+  
+  el.onload = function() {
+    el.classList.remove('g-image--loading')
+    el.classList.add('g-image--loaded')
+  }
+  
   el.srcset = srcset
   el.sizes = sizes
   el.src = src
-  el.classList.remove('g-image--loading')
-  el.classList.add('g-image--loaded')
 }
