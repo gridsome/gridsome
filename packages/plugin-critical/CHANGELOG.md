@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.3](https://github.com/gridsome/gridsome/tree/master/packages/plugin-critical/compare/@gridsome/plugin-critical@0.1.2...@gridsome/plugin-critical@0.1.3) (2019-06-07)
+
+**Note:** Version bump only for package @gridsome/plugin-critical
+
+
+
+
+
 ## [0.1.2](https://github.com/gridsome/gridsome/tree/master/packages/plugin-critical/compare/@gridsome/plugin-critical@0.1.1...@gridsome/plugin-critical@0.1.2) (2019-05-10)
 
 
