@@ -16,11 +16,13 @@
     "graphql-tools": "^4.0.4",
     "node-fetch": "^2.6.0"
   },
+  "peerDependencies": {
+    "gridsome": "0.x"
+  },
   "publishConfig": {
     "access": "public"
   },
   "engines": {
     "node": ">=8"
-  },
-  "devDependencies": {}
+  }
 }

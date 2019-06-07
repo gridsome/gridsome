@@ -1,22 +1,25 @@
 const {
+  GraphQLObjectType,
+  GraphQLSchema
+} = require('gridsome/graphql')
+
+const {
   visitSchema,
   VisitSchemaKind
 } = require(`graphql-tools/dist/transforms/visitSchema`)
+
 const {
   createResolveType,
   fieldMapToFieldConfigMap
 } = require(`graphql-tools/dist/stitching/schemaRecreation`)
 
 class NamespaceUnderFieldTransform {
-  constructor ({ typeName, fieldName, graphql }) {
+  constructor (typeName, fieldName) {
     this.typeName = typeName
     this.fieldName = fieldName
-    this.graphql = graphql
   }
 
   transformSchema (schema) {
-    const { GraphQLObjectType, GraphQLSchema } = this.graphql
-
     const query = schema.getQueryType()
 
     let newQuery // eslint-disable-line

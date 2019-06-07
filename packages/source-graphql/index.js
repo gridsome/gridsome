@@ -1,12 +1,13 @@
 const { setContext } = require('apollo-link-context')
 const { HttpLink } = require('apollo-link-http')
+const fetch = require('node-fetch')
+
 const {
   introspectSchema,
   makeRemoteExecutableSchema,
   transformSchema,
   RenameTypes
 } = require('graphql-tools')
-const fetch = require('node-fetch')
 
 const {
   NamespaceUnderFieldTransform,
@@ -24,7 +25,6 @@ class GraphQLSource {
   }
 
   constructor (api, options) {
-    this.api = api
     const { url, fieldName, headers } = options
     let typeName = options.typeName
 
@@ -45,48 +45,35 @@ class GraphQLSource {
     }
 
     // Fetch schema, namespace it, and merge it into local schema
-    api.createSchema(async ({ addSchema, graphql }) => {
+    api.createSchema(async ({ addSchema }) => {
       const remoteSchema = await this.getRemoteExecutableSchema(url, headers)
       const namespacedSchema = await this.namespaceSchema(
         remoteSchema,
         fieldName,
-        typeName,
-        graphql
+        typeName
       )
 
-      return namespacedSchema
+      addSchema(namespacedSchema)
     })
   }
 
-  async getRemoteExecutableSchema (url, headers) {
-    const http = new HttpLink({
-      uri: url,
-      fetch
-    })
-    const link = setContext((request, previousContext) => ({ headers })).concat(
-      http
-    )
+  async getRemoteExecutableSchema (uri, headers) {
+    const http = new HttpLink({ uri, fetch })
+    const link = setContext(() => ({ headers })).concat(http)
     const remoteSchema = await introspectSchema(link)
-    const remoteExecutableSchema = await makeRemoteExecutableSchema({
+
+    return makeRemoteExecutableSchema({
       schema: remoteSchema,
       link
     })
-
-    return remoteExecutableSchema
   }
 
-  async namespaceSchema (schema, fieldName, typeName, graphql) {
-    const namespacedSchema = transformSchema(schema, [
+  namespaceSchema (schema, fieldName, typeName) {
+    return transformSchema(schema, [
       new StripNonQueryTransform(),
       new RenameTypes(name => `${typeName}_${name}`),
-      new NamespaceUnderFieldTransform({
-        typeName,
-        fieldName,
-        graphql
-      })
+      new NamespaceUnderFieldTransform(typeName, fieldName)
     ])
-
-    return namespacedSchema
   }
 }
 
