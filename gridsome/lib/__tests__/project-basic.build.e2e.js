@@ -180,10 +180,14 @@ test('compile scripts correctly', () => {
   // env variables
   expect(homeJS).toMatch('GRIDSOME_PROD_VARIABLE: "PROD_1"')
   expect(homeJS).toMatch('PROD_VARIABLE: process.env.PROD_VARIABLE')
+})
 
-  // polyfills
+test('compile scripts includes polyfills', () => {
+  const appJS = content('dist/assets/js/app.js')
 
-  expect(appJS).toMatch('// ECMAScript 6 symbols shim')
+  expect(appJS).toMatch('core-js/modules/es6.promise.js')
+  expect(appJS).toMatch('core-js/modules/es6.symbol.js')
+  expect(appJS).toMatch('core-js/modules/es6.string.ends-with.js')
 })
 
 test('compile a single css file', () => {
