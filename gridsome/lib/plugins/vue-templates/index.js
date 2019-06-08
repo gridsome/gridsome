@@ -80,7 +80,7 @@ class VueTemplates {
   createNodePage (node) {
     const contentType = this.store.getContentType(node.internal.typeName)
     const component = path.join(this.templatesDir, `${node.internal.typeName}.vue`)
-    const { route } = contentType.options
+    const { route } = contentType.options.route ? contentType.options.route : {}
 
     return this.pages.createPage({
       queryVariables: node,
@@ -93,7 +93,7 @@ class VueTemplates {
   updateNodePage (node, oldNode) {
     const contentType = this.store.getContentType(node.internal.typeName)
     const component = path.join(this.templatesDir, `${node.internal.typeName}.vue`)
-    const { route } = contentType.options
+    const { route } = contentType.options.route ? contentType.options.route : {}
 
     if (node.path !== oldNode.path && !route) {
       this.removeNodePage(oldNode)
