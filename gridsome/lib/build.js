@@ -15,7 +15,27 @@ module.exports = async (context, args) => {
 
   await app.events.dispatch('beforeBuild', { context, config })
 
-  await fs.emptyDir(config.outDir)
+  if (typeof (args.keep) === 'undefined') {
+    await fs.emptyDir(config.outDir) //Default behavior is to clear the outDir completely
+  } else {
+    //Or move files we want to keep to a tmp directory
+    //and later move it back do .dist directory
+    const keepFilesFromPreviousBuild = args.keep ? args.keep.split(',') : []
+    await fs.emptyDir(config.buildTmpDir)
+    keepFilesFromPreviousBuild.forEach((file) => {
+      fs.move(config.outDir+'/'+file, config.buildTmpDir+'/'+file, err => {
+        if (err) return console.error(err)
+      })
+    })
+    await fs.emptyDir(config.outDir)
+    keepFilesFromPreviousBuild.forEach((file) => {
+      fs.move(config.buildTmpDir+'/'+file, config.outDir+'/'+file, err => {
+        if (err) return console.error(err)
+      })
+    })
+  }
+
+  await fs.emptyDir(config.buildTmpDir)
   await fs.emptyDir(config.dataDir)
 
   const queue = await createRenderQueue(app)

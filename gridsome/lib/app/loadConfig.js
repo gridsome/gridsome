@@ -83,6 +83,7 @@ module.exports = (context, options = {}) => {
   config.filesDir = path.join(config.assetsDir, 'files')
   config.appPath = path.resolve(__dirname, '../../app')
   config.tmpDir = resolve('src/.temp')
+  config.buildTmpDir = resolve('./.buildTmpDir')
   config.cacheDir = resolve('.cache')
   config.dataDir = path.join(config.cacheDir, 'data')
   config.imageCacheDir = resolve('.cache', assetsDir, 'static')

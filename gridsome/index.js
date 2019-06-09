@@ -11,8 +11,9 @@ module.exports = ({ context, program }) => {
   program
     .command('build')
     .description('build site for production')
-    .action(() => {
-      wrapCommand(require('./lib/build'))(context, {})
+    .option('-k, --keep <keep>', 'what should be kept from previous build (default: false)')
+    .action(args => {
+      wrapCommand(require('./lib/build'))(context, args)
     })
 
   program
