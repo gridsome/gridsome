@@ -29,10 +29,6 @@ module.exports = (app, { isProd, isServer }) => {
     .chunkFilename(`${assetsDir}/js/${filename}`)
     .filename(`${assetsDir}/js/${filename}`)
 
-  if (process.env.NODE_ENV === 'test') {
-    config.output.pathinfo(true)
-  }
-
   config.resolve
     .set('symlinks', true)
     .alias
@@ -56,7 +52,7 @@ module.exports = (app, { isProd, isServer }) => {
     .add(resolve('../../../packages'))
     .add('node_modules')
 
-  config.module.noParse(/^(vue|vue-router)$/)
+  config.module.noParse(/^(vue|vue-router|vue-meta)$/)
 
   if (app.config.runtimeCompiler) {
     config.resolve.alias.set('vue$', 'vue/dist/vue.esm.js')
@@ -94,10 +90,10 @@ module.exports = (app, { isProd, isServer }) => {
   // js
 
   config.module.rule('js')
-    .test(/\.jsx?$/)
+    .test(/\.js?$/)
     .exclude
     .add(filepath => {
-      if (/\.vue\.jsx?$/.test(filepath)) {
+      if (/\.vue\.js?$/.test(filepath)) {
         return false
       }
 
@@ -131,7 +127,12 @@ module.exports = (app, { isProd, isServer }) => {
     .loader('babel-loader')
     .options({
       presets: [
-        require.resolve('@vue/babel-preset-app')
+        [require.resolve('@vue/babel-preset-app'), {
+          entryFiles: [
+            resolve('../../app/entry.server.js'),
+            resolve('../../app/entry.client.js')
+          ]
+        }]
       ]
     })
 
@@ -204,9 +205,6 @@ module.exports = (app, { isProd, isServer }) => {
   config.plugin('case-sensitive-paths')
     .use(require('case-sensitive-paths-webpack-plugin'))
 
-  // config.plugin('friendly-errors')
-  //   .use(require('friendly-errors-webpack-plugin'))
-
   if (!isProd) {
     config.plugin('html')
       .use(require('html-webpack-plugin'), [{
@@ -230,6 +228,7 @@ module.exports = (app, { isProd, isServer }) => {
   }
 
   if (process.env.GRIDSOME_TEST) {
+    config.output.pathinfo(true)
     config.optimization.minimize(false)
   }
 

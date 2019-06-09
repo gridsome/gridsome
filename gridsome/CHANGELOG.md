@@ -3,6 +3,21 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.6.4](https://github.com/gridsome/gridsome/compare/gridsome@0.6.3...gridsome@0.6.4) (2019-06-07)
+
+
+### Bug Fixes
+
+* **app:** don’t prefetch already loaded data ([025ab83](https://github.com/gridsome/gridsome/commit/025ab83))
+* **app:** prevent images from loading twice ([#486](https://github.com/gridsome/gridsome/issues/486)) ([d44b5ac](https://github.com/gridsome/gridsome/commit/d44b5ac)), closes [#438](https://github.com/gridsome/gridsome/issues/438)
+* **app:** respect active link class options ([#478](https://github.com/gridsome/gridsome/issues/478)) ([f27cfd6](https://github.com/gridsome/gridsome/commit/f27cfd6))
+* **build:** don’t write out empty data files ([55f323d](https://github.com/gridsome/gridsome/commit/55f323d))
+* **webpack:** inject promise polyfill ([#480](https://github.com/gridsome/gridsome/issues/480)) ([ae29fea](https://github.com/gridsome/gridsome/commit/ae29fea))
+
+
+
+
+
 ## [0.6.3](https://github.com/gridsome/gridsome/compare/gridsome@0.6.2...gridsome@0.6.3) (2019-05-27)
 
 

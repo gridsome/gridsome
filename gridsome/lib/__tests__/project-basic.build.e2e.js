@@ -79,7 +79,9 @@ test('do not render duplicate style links', () => {
 test('render g-link components', () => {
   const $home = load('dist/index.html')
 
+  expect($home('a.g-link-1.is-active.active--exact').attr('href')).toEqual('/')
   expect($home('a.g-link-2.test-active.active--exact').attr('href')).toEqual('/')
+  expect($home('a.router-link.is-active.router-link-exact-active').attr('href')).toEqual('/')
 
   expect($home('a[href="http://outsidelink1.com"]').attr('target')).toEqual('_blank')
   expect($home('a[href="http://outsidelink1.com"]').attr('rel')).toEqual('noopener')
@@ -178,10 +180,14 @@ test('compile scripts correctly', () => {
   // env variables
   expect(homeJS).toMatch('GRIDSOME_PROD_VARIABLE: "PROD_1"')
   expect(homeJS).toMatch('PROD_VARIABLE: process.env.PROD_VARIABLE')
+})
 
-  // polyfills
+test('compile scripts includes polyfills', () => {
+  const appJS = content('dist/assets/js/app.js')
 
-  expect(appJS).toMatch('// ECMAScript 6 symbols shim')
+  expect(appJS).toMatch('core-js/modules/es6.promise.js')
+  expect(appJS).toMatch('core-js/modules/es6.symbol.js')
+  expect(appJS).toMatch('core-js/modules/es6.string.ends-with.js')
 })
 
 test('compile a single css file', () => {
@@ -242,12 +248,12 @@ test('navigate to /docs/2', async () => {
 })
 
 test('navigate to /docs/2/2', async () => {
-  await page.click('nav[role="navigation"] a.active + a')
+  await page.click('nav[role="navigation"] a.is-active + a')
   await page.waitForSelector('#app.doc-template-2.page-2')
 })
 
 test('navigate to /docs/2/3', async () => {
-  await page.click('nav[role="navigation"] a.active + a')
+  await page.click('nav[role="navigation"] a.is-active + a')
   await page.waitForSelector('#app.doc-template-2.page-3')
 })
 
