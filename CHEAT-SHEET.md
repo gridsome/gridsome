@@ -7,11 +7,11 @@
 - [GitHub](https://github.com/gridsome/gridsome)
 - [Discord chat](https://discordapp.com/invite/daeay6n)
 
-# Gridsome CL Commands
+# Gridsome CLI Commands
 
-- `gridsome create new-project` — create a new local Gridsome site using the default starter 
+- `gridsome create new-project` — create a new local Gridsome site using the default starter.
+- `gridsome develop` — start the Gridsome development server.
 - `gridsome build` — compile your application and make it ready for deployment.
-- `gridsome develop` — start the Gridsome development server 
 
 # Helpful File Definitions
 
