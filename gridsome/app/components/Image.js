@@ -24,6 +24,11 @@ export default {
     const attrs = data.attrs || {}
     const hook = data.hook || {}
     const res = []
+    
+    if (props.src === null) {
+      console.error('Image src prop can not be null')
+      return null
+    }
 
     switch (typeof props.src) {
       case 'string':
