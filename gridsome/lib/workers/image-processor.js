@@ -1,13 +1,13 @@
 const path = require('path')
 const fs = require('fs-extra')
-const processQueue = require('queue')
-const os = require('os')
+const pMap = require('p-map')
 const sharp = require('sharp')
 const imagemin = require('imagemin')
 const colorString = require('color-string')
 const imageminWebp = require('imagemin-webp')
 const imageminMozjpeg = require('imagemin-mozjpeg')
 const imageminPngquant = require('imagemin-pngquant')
+const sysinfo = require('../utils/sysinfo')
 
 sharp.simd(true)
 
@@ -93,33 +93,18 @@ exports.processImage = async function ({
   await fs.outputFile(destPath, buffer)
 }
 
-exports.process = function ({ queue, cacheDir, backgroundColor }) {
-  const Q = processQueue()
-  const cpuCount = os.cpus().length
-  Q.concurrency = cpuCount * 2
-  Q.timeout = 60000
-
-  queue.forEach(set => {
+exports.process = async function ({ queue, cacheDir, backgroundColor }) {
+  await pMap(queue, async set => {
     const cachePath = cacheDir ? path.join(cacheDir, set.filename) : null
-    Q.push(function() {
-      return exports.processImage({
-        destPath: set.destPath,
-        backgroundColor,
-        cachePath,
-        ...set
-      }).catch(err => {
-        console.error(err)
-      })
+    await exports.processImage({
+      destPath: set.destPath,
+      backgroundColor,
+      cachePath,
+      ...set
+    }).catch(err => {
+      console.error(err)
     })
-  })
-
-  return new Promise((resolve, reject) => {
-    Q.start((err) => {
-      if (err) {
-        worker.end()
-        return reject(err)
-      }
-      return resolve()
-    })
+  }, {
+    concurrency: sysinfo.cpus.physical * 2
   })
 }

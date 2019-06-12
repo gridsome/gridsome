@@ -1,10 +1,10 @@
 const path = require('path')
 const fs = require('fs-extra')
-const processQueue = require('queue')
-const os = require('os')
+const pMap = require('p-map')
 const readline = require('readline')
 const hirestime = require('hirestime')
 const { chunk, groupBy } = require('lodash')
+const sysinfo = require('./utils/sysinfo')
 const { log, info } = require('./utils/log')
 
 module.exports = async (context, args) => {
@@ -148,51 +148,41 @@ async function processFiles (files) {
 async function processImages (images, config) {
   const { createWorker } = require('./workers')
   const timer = hirestime()
-  const cpuCount = os.cpus().length
+  const cpuCount = sysinfo.cpus.physical
   const chunks = chunk(images.queue, cpuCount*10)
   const worker = createWorker('image-processor')
   const totalAssets = images.queue.length
-  const Q = processQueue()
+  const totalJobs = chunks.length
 
-  Q.concurrency = cpuCount
-  Q.timeout = 60000 // 1 minute
-
-  console.log(`Starting processing of ${totalAssets} images on ${cpuCount} cpus`)
-
-  chunks.forEach(queue => {
-    Q.push(() => {
-      return worker.process({
-        queue,
-        outDir: config.outDir,
-        cacheDir: config.imageCacheDir,
-        backgroundColor: config.images.backgroundColor
-      }).catch(err => {
-        worker.end()
-        throw err
-      })
-    })
-  })
-
-  const totalJobs = Q.length
   let progress = 0
-
-  Q.on('success', () => {
+  function advanceProgress() {
     progress++
     readline.clearLine(process.stdout, 0)
     readline.cursorTo(process.stdout, 0, null)
-    process.stdout.write(`Progress of Queue: ${Math.round(progress*100/totalJobs)}%`);
+    process.stdout.write(`Progress of Queue: ${Math.round(progress*100/totalJobs)}%`)
+    return progress
+  }
+
+  console.log(`Starting processing of ${totalAssets} images on ${cpuCount} cpus`)
+
+  await pMap(chunks, async queue => {
+    await worker.process({
+      queue,
+      outDir: config.outDir,
+      cacheDir: config.imageCacheDir,
+      backgroundColor: config.images.backgroundColor
+    })
+
+    return advanceProgress()
+  }, {
+    concurrency: cpuCount
+  }).catch(err => {
+    worker.end()
+    console.log(' 𐄂')
+    throw err
   })
 
-  await new Promise((resolve) => {
-    Q.start((err) => {
-      if (err) {
-        worker.end()
-        throw err
-      }
-      console.log(' ✔︎')
-      resolve()
-    })
-  })
+  console.log(' ✔︎')
 
   info(`Process images (${totalAssets} images) - ${timer(hirestime.S)}s`)
 }
