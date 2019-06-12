@@ -1,5 +1,8 @@
 const path = require('path')
 const fs = require('fs-extra')
+const processQueue = require('queue')
+const os = require('os')
+const readline = require('readline')
 const hirestime = require('hirestime')
 const { chunk, groupBy } = require('lodash')
 const { log, info } = require('./utils/log')
@@ -145,25 +148,51 @@ async function processFiles (files) {
 async function processImages (images, config) {
   const { createWorker } = require('./workers')
   const timer = hirestime()
-  const chunks = chunk(images.queue, 100)
+  const cpuCount = os.cpus().length
+  const chunks = chunk(images.queue, cpuCount*10)
   const worker = createWorker('image-processor')
   const totalAssets = images.queue.length
+  const Q = processQueue()
 
-  await Promise.all(chunks.map(async queue => {
-    try {
-      await worker.process({
+  Q.concurrency = cpuCount
+  Q.timeout = 60000 // 1 minute
+
+  console.log(`Starting processing of ${totalAssets} images on ${cpuCount} cpus`)
+
+  chunks.forEach(queue => {
+    Q.push(() => {
+      return worker.process({
         queue,
         outDir: config.outDir,
         cacheDir: config.imageCacheDir,
         backgroundColor: config.images.backgroundColor
+      }).catch(err => {
+        worker.end()
+        throw err
       })
-    } catch (err) {
-      worker.end()
-      throw err
-    }
-  }))
+    })
+  })
 
-  worker.end()
+  const totalJobs = Q.length
+  let progress = 0
+
+  Q.on('success', () => {
+    progress++
+    readline.clearLine(process.stdout, 0)
+    readline.cursorTo(process.stdout, 0, null)
+    process.stdout.write(`Progress of Queue: ${Math.round(progress*100/totalJobs)}%`);
+  })
+
+  await new Promise((resolve) => {
+    Q.start((err) => {
+      if (err) {
+        worker.end()
+        throw err
+      }
+      console.log(' ✔︎')
+      resolve()
+    })
+  })
 
   info(`Process images (${totalAssets} images) - ${timer(hirestime.S)}s`)
 }

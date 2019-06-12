@@ -1,5 +1,7 @@
 const path = require('path')
 const fs = require('fs-extra')
+const processQueue = require('queue')
+const os = require('os')
 const sharp = require('sharp')
 const imagemin = require('imagemin')
 const colorString = require('color-string')
@@ -91,15 +93,33 @@ exports.processImage = async function ({
   await fs.outputFile(destPath, buffer)
 }
 
-exports.process = async function ({ queue, cacheDir, backgroundColor }) {
-  return Promise.all(queue.map(set => {
-    const cachePath = cacheDir ? path.join(cacheDir, set.filename) : null
+exports.process = function ({ queue, cacheDir, backgroundColor }) {
+  const Q = processQueue()
+  const cpuCount = os.cpus().length
+  Q.concurrency = cpuCount * 2
+  Q.timeout = 60000
 
-    return exports.processImage({
-      destPath: set.destPath,
-      backgroundColor,
-      cachePath,
-      ...set
+  queue.forEach(set => {
+    const cachePath = cacheDir ? path.join(cacheDir, set.filename) : null
+    Q.push(function() {
+      return exports.processImage({
+        destPath: set.destPath,
+        backgroundColor,
+        cachePath,
+        ...set
+      }).catch(err => {
+        console.error(err)
+      })
     })
-  }))
+  })
+
+  return new Promise((resolve, reject) => {
+    Q.start((err) => {
+      if (err) {
+        worker.end()
+        return reject(err)
+      }
+      return resolve()
+    })
+  })
 }
