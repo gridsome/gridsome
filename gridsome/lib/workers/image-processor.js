@@ -105,6 +105,6 @@ exports.process = async function ({ queue, cacheDir, backgroundColor }) {
       console.error(err)
     })
   }, {
-    concurrency: sysinfo.cpus.physical * 2
+    concurrency: sysinfo.cpus.logical
   })
 }
