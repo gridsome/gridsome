@@ -182,6 +182,7 @@ async function processImages (images, config) {
     throw err
   })
 
+  worker.end()
   console.log(' ✔︎')
 
   info(`Process images (${totalAssets} images) - ${timer(hirestime.S)}s`)
