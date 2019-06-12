@@ -148,40 +148,40 @@ async function processFiles (files) {
 async function processImages (images, config) {
   const { createWorker } = require('./workers')
   const timer = hirestime()
-  const cpuCount = sysinfo.cpus.logical
-  const chunks = chunk(images.queue, cpuCount*10)
+  const chunks = chunk(images.queue, 25)
   const worker = createWorker('image-processor')
   const totalAssets = images.queue.length
   const totalJobs = chunks.length
 
   let progress = 0
-  function status(msg) {
+
+  function status (msg) {
     readline.clearLine(process.stdout, 0)
     readline.cursorTo(process.stdout, 0, null)
     process.stdout.write(msg)
   }
 
-  status(`Starting processing of ${totalAssets} images on ${cpuCount} cpus`)
+  status(`Processing images (${totalAssets} images) - 0%`)
 
-  await pMap(chunks, async queue => {
-    await worker.process({
-      queue,
-      outDir: config.outDir,
-      cacheDir: config.imageCacheDir,
-      backgroundColor: config.images.backgroundColor
+  try {
+    await pMap(chunks, async queue => {
+      await worker.process({
+        queue,
+        outDir: config.outDir,
+        cacheDir: config.imageCacheDir,
+        backgroundColor: config.images.backgroundColor
+      })
+
+      status(`Processing images (${totalAssets} images) - ${Math.round((++progress) * 100 / totalJobs)}%`)
+    }, {
+      concurrency: sysinfo.cpus.logical
     })
-
-    return status(`Progress of Queue: ${Math.round((++progress)*100/totalJobs)}%`)
-  }, {
-    concurrency: cpuCount
-  }).catch(err => {
+  } catch (err) {
     worker.end()
-    info(` 𐄂 - ${timer(hirestime.S)}s`)
     throw err
-  })
+  }
 
   worker.end()
 
-  status(`Processed images (${totalAssets} images)`)
-  info(` ✔︎ - ${timer(hirestime.S)}s`)
+  status(`Process images (${totalAssets} images) - ${timer(hirestime.S)}s\n`)
 }
