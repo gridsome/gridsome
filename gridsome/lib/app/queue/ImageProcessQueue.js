@@ -8,6 +8,7 @@ const md5File = require('md5-file/promise')
 const imageSize = require('probe-image-size')
 const svgDataUri = require('mini-svg-data-uri')
 const { forwardSlash } = require('../../utils')
+const { warmupSharp } = require('../../utils/sharp')
 
 class ImageProcessQueue {
   constructor ({ context, config }) {
@@ -247,7 +248,8 @@ async function createDataUri (buffer, type, width, height, options = {}) {
 async function createBlurSvg (buffer, mimeType, width, height, blur, resize = {}) {
   const blurWidth = 64
   const blurHeight = Math.round(height * (blurWidth / width))
-  const blurBuffer = await sharp(buffer).resize(blurWidth, blurHeight, resize).toBuffer()
+  const warmSharp = await warmupSharp(sharp)
+  const blurBuffer = await warmSharp(buffer).resize(blurWidth, blurHeight, resize).toBuffer()
   const base64 = blurBuffer.toString('base64')
   const id = `__svg-blur-${ImageProcessQueue.uid++}`
 
