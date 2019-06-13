@@ -52,7 +52,7 @@
     "fs-extra": "^7.0.1",
     "globby": "^9.0.0",
     "graphql": "^14.3.0",
-    "graphql-compose": "^7.0.1",
+    "graphql-compose": "^7.1.0",
     "graphql-playground-middleware-express": "^1.7.12",
     "graphql-type-json": "^0.3.0",
     "hash-sum": "^1.0.2",

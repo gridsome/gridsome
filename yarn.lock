@@ -6157,10 +6157,10 @@ graceful-fs@^4.1.10, graceful-fs@^4.1.11, graceful-fs@^4.1.15, graceful-fs@^4.1.
   resolved "https://registry.yarnpkg.com/graceful-readlink/-/graceful-readlink-1.0.1.tgz#4cafad76bc62f02fa039b2f94e9a3dd3a391a725"
   integrity sha1-TK+tdrxi8C+gObL5Tpo906ORpyU=
 
-graphql-compose@^7.0.1:
-  version "7.0.1"
-  resolved "https://registry.yarnpkg.com/graphql-compose/-/graphql-compose-7.0.1.tgz#de5ba35cf6c71dedb4c16fb6038fbe10c633c02c"
-  integrity sha512-u8vdbWlDzC8KyQqmLKOxzLoBGKIOhnvrFYJ0biAX8SuA9MWCmkIJL15pwuOb7uRSTY4B/jKU8GOhCD66MFR3kQ==
+graphql-compose@^7.1.0:
+  version "7.1.0"
+  resolved "https://registry.yarnpkg.com/graphql-compose/-/graphql-compose-7.1.0.tgz#059b7c709f3adc3eb129fede164ed0ddc546576b"
+  integrity sha512-wIf7r5mSdswq0BakiXo78k/PHgfa5GaV/zkIIZfvCW4S8OnSYHxKV6nGy/PjmVQ6Vh1NFNCHf+pM2owomCCv1Q==
   dependencies:
     graphql-type-json "^0.3.0"
     object-path "^0.11.4"
