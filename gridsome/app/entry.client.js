@@ -1,3 +1,5 @@
+import './polyfills'
+
 import Vue from 'vue'
 import createApp, { runPlugins, runMain } from './app'
 import plugins from '~/.temp/plugins-client'
