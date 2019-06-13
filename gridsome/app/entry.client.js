@@ -13,6 +13,25 @@ runMain()
 
 const { app, router } = createApp()
 
+if (process.env.NODE_ENV === 'production') {
+  router.beforeEach((to, from, next) => {
+    const components = router.getMatchedComponents(to).map(
+      c => typeof c === 'function' ? c() : c
+    )
+
+    Promise.all(components)
+      .then(() => next())
+      .catch(err => {
+        // reload page if a component failed to load
+        if (err.request && to.path !== window.location.pathname) {
+          window.location.assign(to.fullPath)
+        } else {
+          next(err)
+        }
+      })
+  })
+}
+
 // let Vue router handle internal URLs for anchors in innerHTML
 document.addEventListener('click', event => {
   const $el = event.target.closest('a')

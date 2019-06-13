@@ -21,14 +21,12 @@ export function clearAllResults (currentPath) {
 export function formatError (err, route) {
   const matched = route.matched[0]
   const options = matched ? matched.components.default : {}
-  
+
   if (err.stringified && options.__file) {
-    return console.error( // eslint-disable-line
+    console.error(
       `An error occurred while executing ` +
       `query for ${options.__file}\n\n` +
       `Error: ${err.stringified}`
     )
   }
-
-  console.error(err.message) // eslint-disable-line
 }

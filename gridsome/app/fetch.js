@@ -60,8 +60,8 @@ export default (route, options = {}) => {
         }
 
         return isPrefetched[jsonPath]
-          .then(resolve)
-          .catch(reject)
+          .then(() => resolve())
+          .catch(() => resolve())
       }
 
       if (!isLoaded[jsonPath]) {
@@ -102,12 +102,18 @@ function fetchJSON (jsonPath) {
       const contentType = req.getResponseHeader('Content-Type')
 
       switch (req.status) {
-        case 200:
+        case 200: {
           if (contentType && /application\/json/.test(contentType)) {
             return resolve(JSON.parse(req.responseText))
           } else {
             return reject(new Error(`Resource at ${jsonPath} is not JSON.`))
           }
+        }
+        case 404: {
+          const error = new Error(req.statusText)
+          error.code = req.status
+          return reject(error)
+        }
       }
 
       reject(new Error(`Failed to fetch ${jsonPath}.`))

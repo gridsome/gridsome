@@ -90,14 +90,18 @@ module.exports = (app, { isProd, isServer }) => {
   // js
 
   config.module.rule('js')
-    .test(/\.js?$/)
+    .test(/\.js$/)
     .exclude
     .add(filepath => {
-      if (/\.vue\.js?$/.test(filepath)) {
+      if (/\.vue\.js$/.test(filepath)) {
         return false
       }
 
       if (/gridsome\.client\.js$/.test(filepath)) {
+        return false
+      }
+
+      if (filepath.startsWith(projectConfig.appPath)) {
         return false
       }
 
@@ -106,10 +110,6 @@ module.exports = (app, { isProd, isServer }) => {
           ? filepath.includes(path.normalize(dep))
           : filepath.match(dep)
       })) {
-        return false
-      }
-
-      if (filepath.startsWith(projectConfig.appPath)) {
         return false
       }
 
