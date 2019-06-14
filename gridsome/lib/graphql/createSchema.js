@@ -7,6 +7,8 @@ const { fieldExtensions } = require('./extensions')
 const { scalarTypeResolvers } = require('./resolvers')
 
 const {
+  parse,
+  isType,
   isSpecifiedScalarType,
   isIntrospectionType,
   defaultFieldResolver
@@ -14,12 +16,13 @@ const {
 
 const {
   SchemaComposer,
+  InputTypeComposer,
   UnionTypeComposer,
   ObjectTypeComposer
 } = require('graphql-compose')
 
 const {
-  createTypeName,
+  isCreatedType,
   CreatedGraphQLType
 } = require('./utils')
 
@@ -56,45 +59,22 @@ module.exports = function createSchema (store, context = {}) {
 
 function addTypes (schemaComposer, typeOrSDL) {
   if (typeof typeOrSDL === 'string') {
-    const sdlTypes = schemaComposer.addTypeDefs(typeOrSDL)
-    sdlTypes.forEach(tempTypeComposer => {
-      addCreatedType(schemaComposer, tempTypeComposer, true)
+    parse(typeOrSDL).definitions.forEach(typeNode => {
+      addTypeDefNode(schemaComposer, typeNode)
     })
-  } else if (Array.isArray(typeOrSDL)) {
-    typeOrSDL.forEach(type => {
-      const tempTypeComposer = createType(schemaComposer, type)
-      addCreatedType(schemaComposer, tempTypeComposer)
-    })
-  } else {
-    const tempTypeComposer = createType(schemaComposer, typeOrSDL)
-    addCreatedType(schemaComposer, tempTypeComposer)
+  } else if (isCreatedType(typeOrSDL)) {
+    addCreatedType(schemaComposer, typeOrSDL)
+  } else if (isType(typeOrSDL)) {
+    // TODO: addGraphQLType(schemaComposer, typeOrSDL)
   }
 }
 
-function createType (schemaComposer, type, path = [type.options.name]) {
-  if (!type.options.name && path.length === 1) {
-    throw new Error(`Missing required type name.`)
-  }
+function addTypeDefNode (schemaComposer, typeNode) {
+  const { value: typeName } = typeNode.name
+  const existingTypeComposer = getTypeComposer(schemaComposer, typeName)
+  const typeComposer = schemaComposer.typeMapper.makeSchemaDef(typeNode)
 
-  const name = type.options.name || createTypeName(path.join(' '))
-  const options = { ...type.options, name }
-
-  switch (type.type) {
-    case CreatedGraphQLType.Object:
-      return ObjectTypeComposer.createTemp(options, schemaComposer)
-
-    case CreatedGraphQLType.Union:
-      return UnionTypeComposer.createTemp(options, schemaComposer)
-  }
-}
-
-function addCreatedType (schemaComposer, type, isSDL = false) {
-  const typeName = schemaComposer.add(type)
-  const typeComposer = schemaComposer.get(typeName)
-
-  typeComposer.setExtension('isUserDefined', true)
-
-  if (isSDL && (typeComposer instanceof ObjectTypeComposer)) {
+  if (typeComposer instanceof ObjectTypeComposer) {
     typeComposer.getDirectives().forEach(directive => {
       typeComposer.setExtension(directive.name, directive.args)
     })
@@ -106,7 +86,48 @@ function addCreatedType (schemaComposer, type, isSDL = false) {
     })
   }
 
+  if (existingTypeComposer) {
+    mergeTypes(schemaComposer, existingTypeComposer, typeComposer)
+  } else {
+    addType(schemaComposer, typeComposer)
+  }
+}
+
+function addCreatedType (schemaComposer, { type, options }) {
+  const existingTypeComposer = getTypeComposer(schemaComposer, options.name)
+  const typeComposer = createType(schemaComposer, type, options)
+
+  if (existingTypeComposer) {
+    mergeTypes(schemaComposer, existingTypeComposer, typeComposer)
+  } else {
+    addType(schemaComposer, typeComposer)
+  }
+}
+
+function addType (schemaComposer, typeComposer) {
+  typeComposer.setExtension('isUserDefined', true)
+
+  schemaComposer.add(typeComposer)
   schemaComposer.addSchemaMustHaveType(typeComposer)
+}
+
+function createType (schemaComposer, type, options) {
+  switch (type) {
+    case CreatedGraphQLType.Object:
+      return ObjectTypeComposer.createTemp(options, schemaComposer)
+
+    case CreatedGraphQLType.Union:
+      return UnionTypeComposer.createTemp(options, schemaComposer)
+
+    case CreatedGraphQLType.InputObject:
+      return InputTypeComposer.createTemp(options, schemaComposer)
+  }
+}
+
+function mergeTypes (schemaComposer, existingTC, newTC) {
+  existingTC.merge(newTC)
+  existingTC.extendExtensions(newTC.getExtensions())
+  schemaComposer.set(existingTC.getTypeName(), existingTC)
 }
 
 function processObjectTypes (schemaComposer) {
@@ -241,4 +262,10 @@ function addResolvers (schemaComposer, resolvers = {}) {
       }
     }
   })
+}
+
+function getTypeComposer (schemaComposer, typeName) {
+  return schemaComposer.has(typeName)
+    ? schemaComposer.get(typeName)
+    : null
 }

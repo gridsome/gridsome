@@ -1,5 +1,5 @@
 const App = require('../../app/App')
-const { BOOTSTRAP_PAGES } = require('../../utils/constants')
+const { BOOTSTRAP_CONFIG, BOOTSTRAP_PAGES } = require('../../utils/constants')
 
 test('add custom GraphQL object types', async () => {
   const app = await createApp(function (api) {
@@ -478,10 +478,38 @@ test('add custom GraphQL schema', async () => {
   expect(data.value2).toEqual('custom value bar')
 })
 
-function createApp (plugin) {
+const createSchema = require('../createSchema')
+const { createObjectType } = require('../utils')
+
+test('merge types', async () => {
+  const app = await createApp(null, BOOTSTRAP_CONFIG)
+  const schema = createSchema(app.store, {
+    types: [
+      'type Post { title: String }',
+      'type Post { content: String meta: PostMeta }',
+      'type PostMeta { published: Boolean }',
+      createObjectType({
+        name: 'Post',
+        fields: {
+          authorId: 'String'
+        }
+      })
+    ]
+  })
+
+  const typeDefs = schema.getTypeMap()
+  const fields = typeDefs.Post.getFields()
+
+  expect(fields.title).toBeDefined()
+  expect(fields.content).toBeDefined()
+  expect(fields.meta).toBeDefined()
+  expect(fields.authorId).toBeDefined()
+})
+
+function createApp (plugin, phase = BOOTSTRAP_PAGES) {
   const app = new App(__dirname, {
     localConfig: { plugins: plugin ? [plugin] : [] }
   })
 
-  return app.bootstrap(BOOTSTRAP_PAGES)
+  return app.bootstrap(phase)
 }

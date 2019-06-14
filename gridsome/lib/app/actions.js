@@ -1,7 +1,5 @@
-
 const crypto = require('crypto')
 const { pick } = require('lodash')
-const { CreatedGraphQLType } = require('../graphql/utils')
 
 function createBaseActions (api, app) {
   return {
@@ -60,6 +58,13 @@ function createStoreActions (api, app) {
   }
 }
 
+const {
+  createObjectType,
+  createUnionType,
+  createInterfaceType,
+  createInputObjectType
+} = require('../graphql/utils')
+
 function createSchemaActions (api, app) {
   const baseActions = createStoreActions(api, app)
   const GraphQLJSON = require('graphql-type-json')
@@ -99,7 +104,11 @@ function createSchemaActions (api, app) {
     },
 
     addSchemaTypes (typesOrSDL) {
-      app._schemaTypes.push(typesOrSDL)
+      if (Array.isArray(typesOrSDL)) {
+        app._schemaTypes.push(...typesOrSDL)
+      } else {
+        app._schemaTypes.push(typesOrSDL)
+      }
     },
 
     addSchemaResolvers (resolvers) {
@@ -107,10 +116,10 @@ function createSchemaActions (api, app) {
     },
 
     schema: {
-      createObjectType: options => ({ options, type: CreatedGraphQLType.Object }),
-      createUnionType: options => ({ options, type: CreatedGraphQLType.Union }),
-      createInterfaceType: options => ({ options, type: CreatedGraphQLType.Interface }),
-      createInputObjectType: options => ({ options, type: CreatedGraphQLType.InputObject })
+      createObjectType,
+      createUnionType,
+      createInterfaceType,
+      createInputObjectType
     }
   }
 }

@@ -36,6 +36,11 @@ exports.isCreatedType = function (value) {
   return isObject(value) && CreatedGraphQLType.hasOwnProperty(value.type)
 }
 
+exports.createObjectType = options => ({ options, type: CreatedGraphQLType.Object })
+exports.createUnionType = options => ({ options, type: CreatedGraphQLType.Union })
+exports.createInterfaceType = options => ({ options, type: CreatedGraphQLType.Interface })
+exports.createInputObjectType = options => ({ options, type: CreatedGraphQLType.InputObject })
+
 exports.isObjectType = value => isObject(value) && value.type === CreatedGraphQLType.Object
 exports.isUnionType = value => isObject(value) && value.type === CreatedGraphQLType.Union
 exports.isInterfaceType = value => isObject(value) && value.type === CreatedGraphQLType.Interface
