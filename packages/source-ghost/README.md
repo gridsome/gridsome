@@ -20,6 +20,11 @@ module.exports = {
         routes: {
           post: '/:year/:month/:day/:slug',
           tag: '/tag/:slug'
+        },
+        // Optional override metaData
+        metaData: {
+          siteName: 'title',
+          siteDescription: 'description'
         }
       }
     }

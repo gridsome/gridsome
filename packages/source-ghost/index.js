@@ -22,6 +22,9 @@ class GhostSource {
     this.api = api
     this.options = options
     this.restBases = { posts: {}, taxonomies: {}}
+    const { settingsName, typeName, metaData } = this.options
+    this.options.metaName = settingsName || camelCase(typeName)
+    this.options.metaData = metaData || this.options.metaName
 
     this.contentAPI = new GhostContentAPI({
       url: options.baseUrl,
@@ -42,12 +45,12 @@ class GhostSource {
     }
 
     api.loadSource(async store => {
-      console.log(`Loading data from ${options.url}`)
+      console.log(`Loading data from ${options.baseUrl}`)
+      await this.loadSettings(store)
       await this.loadAuthors(store)
       await this.loadPosts(store)
       await this.loadTags(store)
       await this.loadPages(store)
-      await this.loadSettings(store)
     })
   }
 
@@ -122,11 +125,20 @@ class GhostSource {
   }
 
   async loadSettings (store) {
-    const { settingsName, typeName } = this.options
+    const { metaData, metaName } = this.options
     const settings = await this.contentAPI.settings.browse()
-    const fieldName = settingsName || camelCase(typeName)
 
-    store.addMetaData(fieldName, settings)
+    store.addMetaData(metaName, settings)
+
+    if (typeof metaData === 'object') {
+      for (const key in metaData) {
+        const metaValue = metaData[key]
+        store.addMetaData(key, settings[metaValue])
+        if (key === 'siteName') {
+          store.addMetaData('titleTemplate', `%s - ${settings[metaValue]}`)
+        }
+      }
+    }
   }
 
   async loadBasicEntity (collection, contentEntity) {
