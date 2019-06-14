@@ -31,7 +31,7 @@ function resolveValues (obj, currentObj = {}, path = []) {
 
     if (fieldName !== key) {
       extensions.proxy = {
-        fieldName: key
+        from: key
       }
     }
 

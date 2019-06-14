@@ -125,7 +125,7 @@ test('add custom GraphQL types from SDL', async () => {
           name: String
         }
         type Post implements Node @infer {
-          proxyContent: String @proxy(fieldName:"content")
+          proxyContent: String @proxy(from:"content")
           author: Author
         }
       `)
@@ -158,6 +158,42 @@ test('add custom GraphQL types from SDL', async () => {
   expect(data.post.author).toMatchObject({ name: 'The Author' })
 })
 
+test('add @reference directive', async () => {
+  const app = await createApp(function (api) {
+    api.loadSource(({ addContentType, addSchemaTypes }) => {
+      const tracks = addContentType('Track')
+      const albums = addContentType('Album')
+
+      tracks.addNode({ id: '1', name: 'A Track', album: 'first-album', albums: ['second-album', 'third-album'] })
+      albums.addNode({ id: '1', name: 'First Album', slug: 'first-album' })
+      albums.addNode({ id: '2', name: 'Second Album', slug: 'second-album' })
+      albums.addNode({ id: '3', name: 'Third Album', slug: 'third-album' })
+
+      addSchemaTypes(`
+        type Track implements Node {
+          album: Album @reference(by:"slug")
+          albums: [Album]
+        }
+      `)
+    })
+  })
+
+  const { errors, data } = await app.graphql(`{
+    track(id:"1") {
+      album {
+        name
+      }
+      albums(by:"slug") {
+        name
+      }
+    }
+  }`)
+
+  expect(errors).toBeUndefined()
+  expect(data.track.album.name).toEqual('First Album')
+  expect(data.track.albums).toHaveLength(2)
+})
+
 test('add custom resolver for invalid field names', async () => {
   const app = await createApp(function (api) {
     api.loadSource(store => {
@@ -187,7 +223,7 @@ test('add custom resolver for invalid field names', async () => {
               type: 'Int',
               extensions: {
                 proxy: {
-                  fieldName: '789 test'
+                  from: '789 test'
                 }
               }
             }

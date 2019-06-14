@@ -151,23 +151,41 @@ function createResolvers ({ typeComposer, contentType }) {
     {
       name: 'findOne',
       type: typeComposer,
-      resolve (obj, args, ctx, info) {
-        const value = obj[info.fieldName]
-        const id = isRefField(value) ? value.id : value
+      args: {
+        by: { type: 'String', defaultValue: 'id' }
+      },
+      resolve (obj, { by }, ctx, info) {
+        const fieldValue = obj[info.fieldName]
+        const referenceValue = isRefField(fieldValue)
+          ? fieldValue.id
+          : fieldValue
 
-        return id ? contentType.getNode(id) : null
+        if (!fieldValue) return null
+
+        if (by === 'id') {
+          return contentType.getNode(referenceValue)
+        } else {
+          return contentType.findNode({ [by]: referenceValue })
+        }
       }
     },
     {
       name: 'findMany',
       type: [typeComposer],
-      resolve (obj, args, ctx, info) {
-        const values = obj[info.fieldName]
-        const ids = Array.isArray(values)
-          ? values.map(value => isRefField(value) ? value.id : value)
+      args: {
+        by: { type: 'String', defaultValue: 'id' }
+      },
+      resolve (obj, { by }, ctx, info) {
+        const fieldValue = obj[info.fieldName]
+        const referenceValues = Array.isArray(fieldValue)
+          ? fieldValue.map(value => isRefField(value) ? value.id : value)
           : []
 
-        return contentType.findNodes({ id: { $in: ids }})
+        if (referenceValues.length < 1) return []
+
+        return contentType.findNodes({
+          [by]: { $in: referenceValues }
+        })
       }
     }
   ]
