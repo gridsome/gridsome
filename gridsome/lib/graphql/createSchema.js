@@ -3,8 +3,8 @@ const initMustHaveTypes = require('./types')
 const createPagesSchema = require('./pages')
 const createNodesSchema = require('./nodes')
 const createMetaDataSchema = require('./metaData')
-const { fieldExtensions } = require('./extensions')
 const { scalarTypeResolvers } = require('./resolvers')
+const { fieldExtensions, addDirectives } = require('./extensions')
 
 const {
   parse,
@@ -33,6 +33,8 @@ module.exports = function createSchema (store, context = {}) {
   initMustHaveTypes(schemaComposer).forEach(typeComposer => {
     schemaComposer.addSchemaMustHaveType(typeComposer)
   })
+
+  addDirectives(schemaComposer)
 
   directives.forEach(directive => {
     schemaComposer.addDirective(directive)
