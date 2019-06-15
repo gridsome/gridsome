@@ -137,6 +137,18 @@ test('create page with custom route', async () => {
   expect(page.internal.isDynamic).toEqual(true)
 })
 
+test('create page with meta', async () => {
+  const { pages: { createPage }} = await createApp()
+
+  const page = createPage({
+    path: '/page',
+    component: './__fixtures__/DefaultPage.vue',
+    meta: { test: true }
+  })
+
+  expect(page.internal.meta).toMatchObject({ test: true })
+})
+
 test('allways include a /404 page', async () => {
   const app = await createApp()
   const notFound = app.pages.findPage({ path: '/404' })

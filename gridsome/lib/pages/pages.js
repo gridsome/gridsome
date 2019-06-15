@@ -190,7 +190,7 @@ function createPage ({ options, context }) {
       digest: null,
       path: { segments },
       route: options.route || null,
-      meta: options._meta || {},
+      meta: options.meta || {},
       isDynamic: typeof options.route === 'string',
       isManaged: false
     }
