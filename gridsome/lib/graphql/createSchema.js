@@ -161,7 +161,7 @@ function getFieldResolver (typeComposer, fieldName) {
     fieldComposer.hasInterface('Node')
   ) {
     const isPlural = typeComposer.isFieldPlural(fieldName)
-    const resolverName = isPlural ? 'findMany' : 'findOne'
+    const resolverName = isPlural ? 'referenceMany' : 'referenceOne'
 
     return fieldComposer.getResolver(resolverName)
   }

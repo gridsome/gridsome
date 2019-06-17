@@ -1,12 +1,11 @@
 const camelCase = require('camelcase')
-const createQuery = require('./createQuery')
-const createBelongsTo = require('./createBelongsTo')
-const createConnection = require('./createConnection')
+const { createBelongsTo } = require('./belongsTo')
+const { PER_PAGE } = require('../../utils/constants')
+const { createRefResolver } = require('../resolvers')
+const { createFilterInput } = require('../filters/input')
 const createFieldDefinitions = require('../createFieldDefinitions')
 const { createFieldTypes, createRefType } = require('../createFieldTypes')
-const { isRefField, isRefFieldDefinition } = require('../utils')
-const { createFilterInput } = require('../filters/input')
-const { createRefResolver } = require('../resolvers')
+const { isRefFieldDefinition } = require('../utils')
 
 const { reduce, mapValues, isEmpty, isPlainObject } = require('lodash')
 
@@ -35,21 +34,16 @@ module.exports = function createNodesSchema (schemaComposer, store) {
       typeName
     }
 
-    typeComposer.addFields({ id: 'ID!' })
-    typeComposer.addFields(createFields(args))
-    typeComposer.addFields(createRefFields(args))
-
-    const filterComposer = createFilterInput(schemaComposer, typeComposer)
+    createFields(args)
+    createRefFields(args)
+    createFilterInput(schemaComposer, typeComposer)
+    createResolvers(typeComposer, contentType)
 
     typeComposer.addFields(createThirdPartyFields(args))
 
-    createResolvers(args).forEach(resolver => {
-      typeComposer.addResolver(resolver)
-    })
-
     schemaComposer.Query.addFields({
-      [camelCase(typeName)]: createQuery({ ...args, filterComposer }),
-      [camelCase(`all ${typeName}`)]: createConnection({ ...args, filterComposer })
+      [camelCase(typeName)]: typeComposer.getResolver('findOne'),
+      [camelCase(`all ${typeName}`)]: typeComposer.getResolver('findManyPaginated')
     })
   }
 
@@ -69,6 +63,26 @@ function createTypeComposers (schemaComposer, store) {
     }
 
     const typeComposer = schemaComposer.getOrCreateOTC(typeName)
+    const connectionTypeName = `${typeName}Connection`
+    const edgeTypeName = `${typeName}Edge`
+
+    schemaComposer.createObjectTC({
+      name: edgeTypeName,
+      fields: {
+        node: typeName,
+        next: typeName,
+        previous: typeName
+      }
+    })
+
+    schemaComposer.createObjectTC({
+      name: connectionTypeName,
+      fields: {
+        totalCount: 'Int!',
+        pageInfo: 'PageInfo!',
+        edges: [edgeTypeName]
+      }
+    })
 
     typeComposer.addInterface('Node')
     typeComposer.setIsTypeOf(node => node.internal && node.internal.typeName === typeName)
@@ -107,7 +121,8 @@ function createFields ({
 
   processInferredFields(typeComposer, inferFieldDefs, fieldTypes)
 
-  return fieldTypes
+  typeComposer.addFields(fieldTypes)
+  typeComposer.addFields({ id: 'ID!' })
 }
 
 function processInferredFields (typeComposer, fieldDefs, fieldTypes) {
@@ -147,60 +162,124 @@ function createThirdPartyFields ({ contentType }) {
   return fields
 }
 
-function createResolvers ({ typeComposer, contentType }) {
-  return [
-    {
-      name: 'findOne',
-      type: typeComposer,
-      args: {
-        by: { type: 'String', defaultValue: 'id' }
-      },
-      resolve (obj, { by }, ctx, info) {
-        const fieldValue = obj[info.fieldName]
-        const referenceValue = isRefField(fieldValue)
-          ? fieldValue.id
-          : fieldValue
+const {
+  createFindOneResolver,
+  createFindManyPaginatedResolver,
+  createReferenceOneResolver,
+  createReferenceManyResolver
+} = require('./resolvers')
 
-        if (!fieldValue) return null
+function createResolvers (typeComposer, contentType) {
+  const inputTypeComposer = typeComposer.getInputTypeComposer()
+  const typeName = typeComposer.getTypeName()
 
-        if (by === 'id') {
-          return contentType.getNode(referenceValue)
-        } else {
-          return contentType.findNode({ [by]: referenceValue })
-        }
+  const { defaultSortBy, defaultSortOrder } = contentType.options
+
+  typeComposer.addResolver({
+    name: 'findOne',
+    type: typeName,
+    args: {
+      id: 'ID',
+      path: 'String',
+      nullable: {
+        type: 'Boolean',
+        defaultValue: false,
+        description: 'Will return an error if not nullable.',
+        deprecationReason: 'Will always return null if not found.'
       }
     },
-    {
-      name: 'findMany',
-      type: [typeComposer],
-      args: {
-        by: { type: 'String', defaultValue: 'id' }
+    resolve: createFindOneResolver(typeComposer)
+  })
+
+  typeComposer.addResolver({
+    name: 'findManyPaginated',
+    type: `${typeName}Connection`,
+    args: {
+      sortBy: { type: 'String', defaultValue: defaultSortBy },
+      order: { type: 'SortOrder', defaultValue: defaultSortOrder },
+      perPage: { type: 'Int', description: `Defaults to ${PER_PAGE} when page is provided.` },
+      skip: { type: 'Int', defaultValue: 0 },
+      limit: { type: 'Int' },
+      page: { type: 'Int' },
+      sort: { type: '[SortArgument]' },
+      filter: {
+        type: inputTypeComposer,
+        description: `Filter for ${typeName} nodes.`
       },
-      resolve (obj, { by }, ctx, info) {
-        const fieldValue = obj[info.fieldName]
-        const referenceValues = Array.isArray(fieldValue)
-          ? fieldValue.map(value => isRefField(value) ? value.id : value)
-          : []
 
-        if (referenceValues.length < 1) return []
+      // TODO: remove before 1.0
+      regex: { type: 'String', deprecationReason: 'Use filter instead.' }
+    },
+    resolve: createFindManyPaginatedResolver(typeComposer)
+  })
 
-        return contentType.findNodes({
-          [by]: { $in: referenceValues }
-        })
-      }
-    }
-  ]
+  typeComposer.addResolver({
+    name: 'findManyPaginated',
+    type: `${typeName}Connection`,
+    args: {
+      sortBy: { type: 'String', defaultValue: defaultSortBy },
+      order: { type: 'SortOrder', defaultValue: defaultSortOrder },
+      perPage: { type: 'Int', description: `Defaults to ${PER_PAGE} when page is provided.` },
+      skip: { type: 'Int', defaultValue: 0 },
+      limit: { type: 'Int' },
+      page: { type: 'Int' },
+      sort: { type: '[SortArgument]' },
+      filter: {
+        type: inputTypeComposer,
+        description: `Filter for ${typeName} nodes.`
+      },
+
+      // TODO: remove before 1.0
+      regex: { type: 'String', deprecationReason: 'Use filter instead.' }
+    },
+    resolve: createFindManyPaginatedResolver(typeComposer)
+  })
+
+  typeComposer.addResolver({
+    name: 'findManyPaginated',
+    type: `${typeName}Connection`,
+    args: {
+      sortBy: { type: 'String', defaultValue: defaultSortBy },
+      order: { type: 'SortOrder', defaultValue: defaultSortOrder },
+      perPage: { type: 'Int', description: `Defaults to ${PER_PAGE} when page is provided.` },
+      skip: { type: 'Int', defaultValue: 0 },
+      limit: { type: 'Int' },
+      page: { type: 'Int' },
+      sort: { type: '[SortArgument]' },
+      filter: {
+        type: inputTypeComposer,
+        description: `Filter for ${typeName} nodes.`
+      },
+
+      // TODO: remove before 1.0
+      regex: { type: 'String', deprecationReason: 'Use filter instead.' }
+    },
+    resolve: createFindManyPaginatedResolver(typeComposer)
+  })
+
+  typeComposer.addResolver({
+    name: 'referenceOne',
+    type: typeName,
+    resolve: createReferenceOneResolver(typeComposer)
+  })
+
+  typeComposer.addResolver({
+    name: 'referenceMany',
+    type: [typeName],
+    resolve: createReferenceManyResolver(typeComposer)
+  })
 }
 
 function createRefFields ({
   schemaComposer,
+  typeComposer,
   contentType,
   fieldDefs,
   typeNames
 }) {
   if (isEmpty(contentType.options.refs)) return {}
 
-  return mapValues(contentType.options.refs, ({ typeName }, fieldName) => {
+  const refs = mapValues(contentType.options.refs, ({ typeName }, fieldName) => {
     const isList = Array.isArray(fieldDefs[fieldName].value)
     const ref = { typeName, isList }
 
@@ -220,4 +299,6 @@ function createRefFields ({
       }
     }
   })
+
+  typeComposer.addFields(refs)
 }

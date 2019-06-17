@@ -2,14 +2,18 @@ const { ObjectTypeComposer } = require('graphql-compose')
 const { PER_PAGE, SORT_ORDER } = require('../../utils/constants')
 const { createFilterInput } = require('../filters/input')
 const { toFilterArgs } = require('../filters/query')
+const { safeKey } = require('../../utils')
 
 const {
-  createPagedNodeEdges,
-  createBelongsToKey,
-  createSortOptions
+  createSortOptions,
+  createPagedNodeEdges
 } = require('./utils')
 
-module.exports = function createBelongsTo (schemaComposer, store) {
+exports.createBelongsToKey = function (node) {
+  return `belongsTo.${node.internal.typeName}.${safeKey(node.id)}`
+}
+
+exports.createBelongsTo = function (schemaComposer, store) {
   schemaComposer.createObjectTC({
     name: 'NodeBelongsToEdge',
     fields: {
@@ -47,7 +51,7 @@ module.exports = function createBelongsTo (schemaComposer, store) {
       type: 'NodeBelongsTo',
       args: belongsToArgs,
       resolve (node, { filter, ...args }, { store }) {
-        const key = createBelongsToKey(node)
+        const key = exports.createBelongsToKey(node)
         const sort = createSortOptions(args)
         const query = { [key]: { $eq: true }}
 

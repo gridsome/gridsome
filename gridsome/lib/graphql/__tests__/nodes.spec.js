@@ -76,8 +76,9 @@ test('create node type with custom fields', async () => {
     }
   }`
 
-  const { data } = await createSchemaAndExecute(query)
+  const { errors, data } = await createSchemaAndExecute(query)
 
+  expect(errors).toBeUndefined()
   expect(data.testPost.foo).toEqual('bar')
   expect(data.testPost.emptyString).toEqual('')
   expect(data.testPost.price).toEqual('198.00')
