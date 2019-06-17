@@ -5,7 +5,6 @@ const hirestime = require('hirestime')
 const { info } = require('../utils/log')
 const isRelative = require('is-relative')
 const { version } = require('../../package.json')
-const createContext = require('../graphql/createContext')
 
 const {
   AsyncSeriesWaterfallHook
@@ -77,6 +76,7 @@ class App {
   init () {
     const Events = require('./Events')
     const Store = require('../store/Store')
+    const Schema = require('./Schema')
     const AssetsQueue = require('./queue/AssetsQueue')
     const Codegen = require('./codegen')
     const ComponentParser = require('./ComponentParser')
@@ -84,6 +84,7 @@ class App {
 
     this.events = new Events()
     this.store = new Store(this)
+    this.schema = new Schema(this)
     this.assets = new AssetsQueue(this)
     this.codegen = new Codegen(this)
     this.parser = new ComponentParser(this)
@@ -144,7 +145,6 @@ class App {
   async loadSources () {
     const { createSchemaActions } = require('./actions')
 
-    this._schema = null
     this._schemas = []
     this._schemaTypes = []
     this._schemaResolvers = []
@@ -155,8 +155,6 @@ class App {
   }
 
   async createSchema () {
-    const graphql = require('../graphql/graphql')
-    const createSchema = require('../graphql/createSchema')
     const { createSchemaActions } = require('./actions')
 
     const results = await this.events.dispatch('createSchema', api => {
@@ -166,15 +164,11 @@ class App {
     // add custom schemas returned from the hook handlers
     results.forEach(schema => schema && this.schemas.push(schema))
 
-    const schema = createSchema(this.store, {
+    this.schema.buildSchema({
+      resolvers: this._schemaResolvers,
       schemas: this._schemas,
-      types: this._schemaTypes,
-      resolvers: this._schemaResolvers
+      types: this._schemaTypes
     })
-
-    this._execute = graphql.execute
-    this._graphql = graphql.graphql
-    this.schema = schema
   }
 
   async createPages () {
@@ -276,16 +270,7 @@ class App {
   }
 
   graphql (docOrQuery, variables = {}) {
-    const method = typeof docOrQuery === 'object' ? '_execute' : '_graphql'
-    const context = createContext(this)
-
-    if (typeof docOrQuery === 'string') {
-      // workaround until query directives
-      // works in mergeSchema from graphql-tools
-      docOrQuery = docOrQuery.replace(/@paginate/g, '')
-    }
-
-    return this[method](this.schema, docOrQuery, undefined, context, variables)
+    return this.schema.runQuery(docOrQuery, variables)
   }
 
   broadcast (message, hotReload = true) {

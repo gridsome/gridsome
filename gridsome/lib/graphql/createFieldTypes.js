@@ -97,7 +97,6 @@ function createRefType (schemaComposer, ref, fieldName, fieldTypeName, typeNames
       res.type = UnionTypeComposer.createTemp({
         name: createTypeName(fieldTypeName, fieldName + 'Ref'),
         description: `Reference to ${ref.typeName.join(', ')} nodes`,
-        interfaces: ['Node'],
         types: typeName
       }, schemaComposer)
     } else if (typeName.length === 1) {

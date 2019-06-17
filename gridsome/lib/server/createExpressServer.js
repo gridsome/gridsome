@@ -3,7 +3,6 @@ const express = require('express')
 const resolvePort = require('./resolvePort')
 const graphqlHTTP = require('express-graphql')
 const graphqlMiddleware = require('./middlewares/graphql')
-const createContext = require('../graphql/createContext')
 const { default: playground } = require('graphql-playground-middleware-express')
 const { forwardSlash } = require('../utils')
 
@@ -35,8 +34,8 @@ module.exports = async (app, options = {}) => {
     express.json(),
     graphqlMiddleware(app),
     graphqlHTTP({
-      schema,
-      context: createContext(app),
+      schema: schema.getSchema(),
+      context: schema.createSchemaContext(),
       formatError: err => ({
         message: err.message,
         stringified: err.toString()

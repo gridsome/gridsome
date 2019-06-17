@@ -172,7 +172,7 @@ test('add @reference directive', async () => {
       addSchemaTypes(`
         type Track implements Node {
           album: Album @reference(by:"slug")
-          albums: [Album]
+          albums: [Album] @reference(by:"slug")
         }
       `)
     })
@@ -183,7 +183,7 @@ test('add @reference directive', async () => {
       album {
         name
       }
-      albums(by:"slug") {
+      albums {
         name
       }
     }
@@ -514,16 +514,16 @@ test('add custom GraphQL schema', async () => {
   expect(data.value2).toEqual('custom value bar')
 })
 
-const createSchema = require('../createSchema')
-const { createObjectType } = require('../utils')
-
-test('merge types', async () => {
+test('merge object types', async () => {
+  const { createObjectType } = require('../utils')
   const app = await createApp(null, BOOTSTRAP_CONFIG)
-  const schema = createSchema(app.store, {
+
+  app.schema.buildSchema({
     types: [
       'type Post { title: String }',
       'type Post { content: String meta: PostMeta }',
-      'type PostMeta { published: Boolean }',
+      'type PostMeta { status: Boolean }',
+      'type PostMeta { id: Boolean }',
       createObjectType({
         name: 'Post',
         fields: {
@@ -533,13 +533,16 @@ test('merge types', async () => {
     ]
   })
 
-  const typeDefs = schema.getTypeMap()
+  const typeDefs = app.schema.getSchema().getTypeMap()
   const fields = typeDefs.Post.getFields()
+  const metaFields = fields.meta.type.getFields()
 
   expect(fields.title).toBeDefined()
   expect(fields.content).toBeDefined()
   expect(fields.meta).toBeDefined()
   expect(fields.authorId).toBeDefined()
+  expect(metaFields.status).toBeDefined()
+  expect(metaFields.id).toBeDefined()
 })
 
 function createApp (plugin, phase = BOOTSTRAP_PAGES) {

@@ -1,5 +1,7 @@
+const { ObjectTypeComposer } = require('graphql-compose')
 const { PER_PAGE, SORT_ORDER } = require('../../utils/constants')
-const createFieldDefinitions = require('../createFieldDefinitions')
+const { createFilterInput } = require('../filters/input')
+const { toFilterArgs } = require('../filters/query')
 
 const {
   createPagedNodeEdges,
@@ -7,99 +9,71 @@ const {
   createSortOptions
 } = require('./utils')
 
-const {
-  createFilterTypes,
-  createFilterQuery
-} = require('../createFilterTypes')
-
-module.exports = function createBelongsTo ({
-  schemaComposer,
-  typeNames,
-  typeName
-}) {
-  const belongsToUnionType = schemaComposer.createUnionTC({
-    interfaces: ['Node'],
-    name: `${typeName}BelongsToUnion`,
-    types: typeNames
-  })
-
-  const belongsToEdgeType = schemaComposer.createObjectTC({
-    name: `${typeName}BelongsToEdge`,
+module.exports = function createBelongsTo (schemaComposer, store) {
+  schemaComposer.createObjectTC({
+    name: 'NodeBelongsToEdge',
     fields: {
-      node: belongsToUnionType,
-      next: belongsToUnionType,
-      previous: belongsToUnionType
+      node: 'Node',
+      next: 'Node',
+      previous: 'Node'
     }
   })
 
-  const belongsToType = schemaComposer.createObjectTC({
-    name: `${typeName}BelongsTo`,
+  schemaComposer.createObjectTC({
+    name: 'NodeBelongsTo',
     fields: {
       totalCount: 'Int!',
       pageInfo: 'PageInfo!',
-      edges: [belongsToEdgeType]
+      edges: ['NodeBelongsToEdge']
     }
   })
 
-  const typeNameEnum = schemaComposer.createEnumTC({
-    name: `${typeName}BelongsToTypeNameEnum`,
-    values: typeNames.reduce((acc, value) => (acc[value] = { value } && acc), {})
-  })
+  for (const typeName in store.collections) {
+    const typeComposer = schemaComposer.get(typeName)
+    const filterTypeComposer = createFilterComposer(schemaComposer)
 
-  const belongsToArgs = {
-    sortBy: { type: 'String', defaultValue: 'date' },
-    order: { type: 'SortOrder', defaultValue: SORT_ORDER },
-    perPage: { type: 'Int', description: `Defaults to ${PER_PAGE} when page is provided.` },
-    skip: { type: 'Int', defaultValue: 0 },
-    limit: { type: 'Int' },
-    page: { type: 'Int' },
-    sort: '[SortArgument!]'
-  }
+    const belongsToArgs = {
+      sortBy: { type: 'String', defaultValue: 'date' },
+      order: { type: 'SortOrder', defaultValue: SORT_ORDER },
+      perPage: { type: 'Int', description: `Defaults to ${PER_PAGE} when page is provided.` },
+      skip: { type: 'Int', defaultValue: 0 },
+      limit: { type: 'Int' },
+      page: { type: 'Int' },
+      sort: '[SortArgument!]',
+      filter: filterTypeComposer
+    }
 
-  const filterPrefix = `${typeName}BelongsToFilter`
-  const nodeFields = createFieldDefinitions([{ id: '', path: '' }])
-  const filterArgs = createFilterTypes(schemaComposer, nodeFields, filterPrefix)
+    const belongsTo = {
+      type: 'NodeBelongsTo',
+      args: belongsToArgs,
+      resolve (node, { filter, ...args }, { store }) {
+        const key = createBelongsToKey(node)
+        const sort = createSortOptions(args)
+        const query = { [key]: { $eq: true }}
 
-  belongsToArgs.filter = {
-    description: `Filter for ${typeName} nodes.`,
-    type: schemaComposer.createInputTC({
-      name: `${typeName}BelongsToFilters`,
-      fields: {
-        ...filterArgs,
-        typeName: {
-          type: schemaComposer.createInputTC({
-            name: `${filterPrefix}TypeName`,
-            description: 'Filter nodes by typeName.',
-            fields: {
-              regex: 'String',
-              eq: typeNameEnum,
-              ne: typeNameEnum,
-              in: [typeNameEnum],
-              nin: [typeNameEnum]
-            }
-          })
+        if (filter) {
+          Object.assign(query, toFilterArgs(filter, filterTypeComposer))
         }
+
+        const chain = store.chainIndex(query)
+
+        return createPagedNodeEdges(chain, args, sort)
       }
-    })
-  }
-
-  const filterFields = belongsToArgs.filter.type.getType().getFields()
-
-  return {
-    type: () => belongsToType,
-    args: belongsToArgs,
-    resolve (node, { filter, ...args }, { store }) {
-      const key = createBelongsToKey(node)
-      const sort = createSortOptions(args)
-      const query = { [key]: { $eq: true }}
-
-      if (filter) {
-        Object.assign(query, createFilterQuery(filter, filterFields))
-      }
-
-      const chain = store.chainIndex(query)
-
-      return createPagedNodeEdges(chain, args, sort)
     }
+
+    typeComposer.addFields({ belongsTo })
   }
+}
+
+function createFilterComposer (schemaComposer) {
+  const typeComposer = ObjectTypeComposer.createTemp({
+    name: 'BelongsTo',
+    fields: {
+      id: 'ID',
+      path: 'String',
+      typeName: 'TypeName'
+    }
+  }, schemaComposer)
+
+  return createFilterInput(schemaComposer, typeComposer)
 }

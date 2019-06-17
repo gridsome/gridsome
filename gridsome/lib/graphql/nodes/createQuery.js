@@ -2,7 +2,7 @@ module.exports = function createQuery ({ typeName }) {
   return {
     type: typeName,
     args: {
-      id: 'String',
+      id: 'ID',
       path: 'String',
       nullable: {
         type: 'Boolean',

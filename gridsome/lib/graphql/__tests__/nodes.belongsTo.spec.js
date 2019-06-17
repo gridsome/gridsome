@@ -1,8 +1,5 @@
 const App = require('../../app/App')
-const { graphql } = require('graphql')
 const PluginAPI = require('../../app/PluginAPI')
-const createSchema = require('../createSchema')
-const createContext = require('../createContext')
 
 let app, api
 
@@ -156,8 +153,6 @@ test('handle pagination for filtered belongsTo', async () => {
   expect(data.author.belongsTo.edges[0].node.__typename).toEqual('Book')
 })
 
-async function createSchemaAndExecute (query) {
-  const schema = createSchema(app.store)
-  const context = createContext(app)
-  return graphql(schema, query, undefined, context)
+function createSchemaAndExecute (query) {
+  return app.schema.buildSchema().runQuery(query)
 }

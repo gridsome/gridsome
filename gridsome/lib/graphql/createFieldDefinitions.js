@@ -27,7 +27,7 @@ function resolveValues (obj, currentObj = {}, path = []) {
     const fieldName = createFieldName(key)
     const currentValue = currentObj[key] ? currentObj[key].value : undefined
     const resolvedValue = resolveValue(value, currentValue, path.concat(key))
-    const extensions = {}
+    const extensions = { isInferred: true }
 
     if (fieldName !== key) {
       extensions.proxy = {

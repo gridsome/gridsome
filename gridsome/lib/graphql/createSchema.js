@@ -4,7 +4,7 @@ const createPagesSchema = require('./pages')
 const createNodesSchema = require('./nodes')
 const createMetaDataSchema = require('./metaData')
 const { scalarTypeResolvers } = require('./resolvers')
-const { fieldExtensions, addDirectives } = require('./extensions')
+const { addDirectives, applyFieldExtensions } = require('./extensions')
 
 const {
   parse,
@@ -44,19 +44,14 @@ module.exports = function createSchema (store, context = {}) {
     addTypes(schemaComposer, typeOrSDL)
   })
 
-  const pagesSchema = createPagesSchema(schemaComposer)
-  const nodesSchema = createNodesSchema(schemaComposer, store)
-  const metaDataSchema = createMetaDataSchema(schemaComposer, store)
-
-  schemaComposer.Query.addFields(metaDataSchema)
-  schemaComposer.Query.addFields(nodesSchema)
-  schemaComposer.Query.addFields(pagesSchema)
-
+  createNodesSchema(schemaComposer, store)
+  createPagesSchema(schemaComposer)
+  createMetaDataSchema(schemaComposer, store)
   processObjectTypes(schemaComposer)
   addSchemas(schemaComposer, schemas)
   addResolvers(schemaComposer, resolvers)
 
-  return schemaComposer.buildSchema()
+  return schemaComposer
 }
 
 function addTypes (schemaComposer, typeOrSDL) {
@@ -188,25 +183,6 @@ function extendFieldResolver (typeComposer, fieldName, resolver) {
     resolve (obj, args, ctx, info) {
       return resolve(obj, args, ctx, { ...info, originalResolver })
     }
-  })
-}
-
-function applyFieldExtensions (typeComposer) {
-  typeComposer.getFieldNames().forEach(fieldName => {
-    const extensions = typeComposer.getFieldExtensions(fieldName)
-
-    Object.keys(extensions)
-      .sort(key => key === 'proxy')
-      .forEach(key => {
-        const { apply } = fieldExtensions[key] || {}
-
-        if (apply) {
-          const fieldConfig = typeComposer.getFieldConfig(fieldName)
-          const newFieldConfig = apply(extensions[key], fieldConfig)
-
-          typeComposer.extendField(fieldName, newFieldConfig)
-        }
-      })
   })
 }
 

@@ -1,9 +1,6 @@
 const path = require('path')
 const App = require('../../app/App')
-const { graphql } = require('../graphql')
 const PluginAPI = require('../../app/PluginAPI')
-const createSchema = require('../createSchema')
-const createContext = require('../createContext')
 const JSONTransformer = require('./__fixtures__/JSONTransformer')
 
 const context = path.resolve(__dirname, '../../__tests__')
@@ -849,8 +846,6 @@ test('process file types in schema', async () => {
   expect(data.testPost.text).toEqual('pdf')
 })
 
-async function createSchemaAndExecute (query) {
-  const schema = createSchema(app.store)
-  const context = createContext(app)
-  return graphql(schema, query, undefined, context)
+function createSchemaAndExecute (query) {
+  return app.schema.buildSchema().runQuery(query)
 }

@@ -22,7 +22,7 @@ module.exports = function (source, map) {
   }
 
   try {
-    const errors = validate(schema, source)
+    const errors = validate(schema.getSchema(), source)
 
     if (errors && errors.length) {
       this.callback(new Error(errors[0]), source, map)

@@ -1,12 +1,8 @@
-const createFieldDefinitions = require('../createFieldDefinitions')
-
-const {
-  createFilterTypes,
-  createFilterQuery
-} = require('../createFilterTypes')
+const { createFilterInput } = require('../filters/input')
+const { toFilterArgs } = require('../filters/query')
 
 module.exports = schemaComposer => {
-  const pageType = schemaComposer.createObjectTC({
+  const typeComposer = schemaComposer.createObjectTC({
     name: 'Page',
     fields: {
       path: 'String!',
@@ -14,17 +10,11 @@ module.exports = schemaComposer => {
     }
   })
 
-  const filterFieldDefs = createFieldDefinitions([{ path: '' }])
-  const filterType = schemaComposer.createInputTC({
-    name: 'PageFilters',
-    fields: createFilterTypes(schemaComposer, filterFieldDefs, 'PageFilter')
-  })
+  const filterComposer = createFilterInput(schemaComposer, typeComposer)
 
-  const filterFields = filterType.getType().getFields()
-
-  return {
+  schemaComposer.Query.addFields({
     page: {
-      type: () => pageType,
+      type: () => typeComposer,
       args: {
         path: 'String!'
       },
@@ -33,10 +23,10 @@ module.exports = schemaComposer => {
       }
     },
     allPage: {
-      type: () => [pageType],
+      type: () => [typeComposer],
       args: {
         filter: {
-          type: filterType,
+          type: filterComposer,
           description: 'Filter pages.'
         }
       },
@@ -44,11 +34,11 @@ module.exports = schemaComposer => {
         const query = {}
 
         if (filter) {
-          Object.assign(query, createFilterQuery(filter, filterFields))
+          Object.assign(query, toFilterArgs(filter, filterComposer))
         }
 
         return pages.findPages(query)
       }
     }
-  }
+  })
 }

@@ -2,10 +2,10 @@ const camelCase = require('camelcase')
 const createQuery = require('./createQuery')
 const createBelongsTo = require('./createBelongsTo')
 const createConnection = require('./createConnection')
-const { createFilterTypes } = require('../createFilterTypes')
 const createFieldDefinitions = require('../createFieldDefinitions')
 const { createFieldTypes, createRefType } = require('../createFieldTypes')
 const { isRefField, isRefFieldDefinition } = require('../utils')
+const { createFilterInput } = require('../filters/input')
 const { createRefResolver } = require('../resolvers')
 
 const { reduce, mapValues, isEmpty, isPlainObject } = require('lodash')
@@ -14,9 +14,16 @@ module.exports = function createNodesSchema (schemaComposer, store) {
   const typeNames = Object.keys(store.collections)
   const schema = {}
 
+  schemaComposer.createEnumTC({
+    name: 'TypeName',
+    values: typeNames.reduce((acc, value) => (acc[value] = { value } && acc), {})
+  })
+
+  createTypeComposers(schemaComposer, store)
+
   for (const typeName of typeNames) {
     const contentType = store.getContentType(typeName)
-    const typeComposer = createTypeComposer(schemaComposer, typeName)
+    const typeComposer = schemaComposer.get(typeName)
     const fieldDefs = inferFields(typeComposer, contentType)
 
     const args = {
@@ -28,61 +35,55 @@ module.exports = function createNodesSchema (schemaComposer, store) {
       typeName
     }
 
-    const filterComposer = createFilterComposer(args)
-    const belongsTo = createBelongsTo(args)
-
+    typeComposer.addFields({ id: 'ID!' })
     typeComposer.addFields(createFields(args))
     typeComposer.addFields(createRefFields(args))
+
+    const filterComposer = createFilterInput(schemaComposer, typeComposer)
+
     typeComposer.addFields(createThirdPartyFields(args))
-    typeComposer.addFields({ belongsTo })
-    typeComposer.addFields({ id: 'ID!' })
 
     createResolvers(args).forEach(resolver => {
       typeComposer.addResolver(resolver)
     })
 
-    typeComposer.addInterface('Node')
-    typeComposer.setIsTypeOf(node => node.internal && node.internal.typeName === typeName)
-
-    schema[camelCase(typeName)] = createQuery({ ...args, filterComposer })
-    schema[`all${typeName}`] = createConnection({ ...args, filterComposer })
+    schemaComposer.Query.addFields({
+      [camelCase(typeName)]: createQuery({ ...args, filterComposer }),
+      [camelCase(`all ${typeName}`)]: createConnection({ ...args, filterComposer })
+    })
   }
+
+  createBelongsTo(schemaComposer, store)
 
   return schema
 }
 
-function createTypeComposer (schemaComposer, typeName) {
-  if (schemaComposer.has(typeName)) {
-    if (!schemaComposer.get(typeName).hasInterface('Node')) {
-      throw new Error(
-        `The '${typeName}' GraphQL type must implement the 'Node' interface`
-      )
+function createTypeComposers (schemaComposer, store) {
+  for (const typeName in store.collections) {
+    if (schemaComposer.has(typeName)) {
+      if (!schemaComposer.get(typeName).hasInterface('Node')) {
+        throw new Error(
+          `The '${typeName}' GraphQL type must implement the 'Node' interface`
+        )
+      }
     }
-  }
 
-  return schemaComposer.getOrCreateOTC(typeName)
+    const typeComposer = schemaComposer.getOrCreateOTC(typeName)
+
+    typeComposer.addInterface('Node')
+    typeComposer.setIsTypeOf(node => node.internal && node.internal.typeName === typeName)
+  }
 }
 
 function inferFields (typeComposer, contentType) {
   const extensions = typeComposer.getExtensions()
-  const mustHaveFields = { id: '' }
 
   // user defined schemas must enable inference
   if (extensions.isUserDefined && !extensions.infer) {
-    return createFieldDefinitions([mustHaveFields])
+    return {}
   }
 
-  return createFieldDefinitions(
-    contentType.data().concat(mustHaveFields)
-  )
-}
-
-// TODO: extend existing filter input type
-function createFilterComposer ({ schemaComposer, typeName, fieldDefs }) {
-  const fields = createFilterTypes(schemaComposer, fieldDefs, `${typeName}Filter`)
-  const name = `${typeName}Filters`
-
-  return schemaComposer.createInputTC({ name, fields })
+  return createFieldDefinitions(contentType.data())
 }
 
 function createFields ({

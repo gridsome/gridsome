@@ -1,14 +1,13 @@
 const { createQueryVariables } = require('./utils')
-const { createFilterQuery } = require('../graphql/createFilterTypes')
+const { toFilterArgs } = require('../graphql/filters/query')
 const { createBelongsToKey, createPagedNodeEdges } = require('../graphql/nodes/utils')
 
 function createRenderQueue (renderQueue, { pages, store, schema }) {
-  const queryFields = schema.getQueryType().getFields()
   const queue = renderQueue.slice()
 
   for (const page of pages.data()) {
     if (page.query.paginate) {
-      const totalPages = calcTotalPages(page, store, queryFields)
+      const totalPages = calcTotalPages(page, store, schema)
 
       for (let i = 1; i <= totalPages; i++) {
         queue.push(createRenderEntry(page, i))
@@ -21,27 +20,29 @@ function createRenderQueue (renderQueue, { pages, store, schema }) {
   return queue
 }
 
-function calcTotalPages (page, store, queryFields) {
+function calcTotalPages (page, store, schema) {
   const { belongsTo, fieldName, typeName, perPage, skip, limit } = page.query.paginate
+  const gqlField = schema.getComposer().Query.getField(fieldName)
   const { collection } = store.getContentType(typeName)
+
+  const filterQuery = toFilterArgs(page.query.filters, belongsTo
+    ? gqlField.type.getFields().belongsTo.args.filter.type
+    : gqlField.args.filter.type
+  )
 
   let chain
 
   if (belongsTo) {
     const { id, path } = belongsTo
-    const { args } = queryFields[fieldName].type.getFields().belongsTo
     const node = id ? collection.by('id', id) : collection.by('path', path)
     const key = createBelongsToKey(node)
     const query = { [key]: { $eq: true }}
 
-    Object.assign(query, createCollectionQuery(args, page.query.filters))
+    Object.assign(query, filterQuery)
 
     chain = store.chainIndex(query)
   } else {
-    const { args } = queryFields[fieldName]
-    const query = createCollectionQuery(args, page.query.filters)
-
-    chain = collection.chain().find(query)
+    chain = collection.chain().find(filterQuery)
   }
 
   const args = { page: 1, perPage, skip, limit }
@@ -73,13 +74,6 @@ function createRenderEntry (page, currentPage = undefined) {
       pathSegments: segments
     }
   }
-}
-
-function createCollectionQuery (args, filters) {
-  const filter = args.find(arg => arg.name === 'filter')
-  const fields = filter.type.getFields()
-
-  return createFilterQuery(filters, fields)
 }
 
 module.exports = createRenderQueue

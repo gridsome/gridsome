@@ -1,5 +1,5 @@
 const { PER_PAGE } = require('../../utils/constants')
-const { createFilterQuery } = require('../createFilterTypes')
+const { toFilterArgs } = require('../filters/query')
 const { createPagedNodeEdges, createSortOptions } = require('./utils')
 
 module.exports = function createConnection ({
@@ -27,7 +27,6 @@ module.exports = function createConnection ({
   })
 
   const { defaultSortBy, defaultSortOrder } = contentType.options
-  const filterFields = filterComposer.getType().getFields()
 
   const connectionArgs = {
     sortBy: { type: 'String', defaultValue: defaultSortBy },
@@ -65,7 +64,7 @@ module.exports = function createConnection ({
       }
 
       if (filter) {
-        Object.assign(query, createFilterQuery(filter, filterFields))
+        Object.assign(query, toFilterArgs(filter, filterComposer))
       }
 
       const chain = collection.chain().find(query)

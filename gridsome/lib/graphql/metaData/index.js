@@ -16,15 +16,15 @@ module.exports = (schemaComposer, store) => {
   const fieldDefs = createFieldDefinitions([fields])
   const fieldTypes = createFieldTypes(schemaComposer, fieldDefs, 'MetaData', typeNames)
 
-  const metaDataType = schemaComposer.createObjectTC({
+  schemaComposer.createObjectTC({
     name: 'MetaData',
     fields: fieldTypes
   })
 
-  return {
+  schemaComposer.Query.addFields({
     metaData: {
-      resolve: () => fields,
-      type: () => metaDataType
+      type: 'MetaData',
+      resolve: () => fields
     }
-  }
+  })
 }

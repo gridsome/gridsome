@@ -4,21 +4,19 @@ const {
   DirectiveLocation
 } = require('graphql')
 
-const types = {
-  ObjectExtension: 'ObjectExtension',
-  FieldExtension: 'FieldExtension'
-}
+const ObjectExtension = 'ObjectExtension'
+const FieldExtension = 'FieldExtension'
 
 const objectExtensions = {
   infer: {
-    type: types.ObjectExtension,
+    type: ObjectExtension,
     description: 'Add fields from field values.'
   }
 }
 
 const fieldExtensions = {
   reference: {
-    type: types.FieldExtension,
+    type: FieldExtension,
     description: 'Reference node by a custom field value.',
     args: {
       by: { type: 'String', defaultValue: 'id' }
@@ -34,7 +32,7 @@ const fieldExtensions = {
     }
   },
   proxy: {
-    type: types.FieldExtension,
+    type: FieldExtension,
     description: 'Return value from another field.',
     args: {
       from: 'String'
@@ -51,6 +49,25 @@ const fieldExtensions = {
   }
 }
 
+function applyFieldExtensions (typeComposer) {
+  typeComposer.getFieldNames().forEach(fieldName => {
+    const extensions = typeComposer.getFieldExtensions(fieldName)
+
+    Object.keys(extensions)
+      .sort(key => key === 'proxy')
+      .forEach(key => {
+        const { apply } = fieldExtensions[key] || {}
+
+        if (apply) {
+          const fieldConfig = typeComposer.getFieldConfig(fieldName)
+          const newFieldConfig = apply(extensions[key], fieldConfig)
+
+          typeComposer.extendField(fieldName, newFieldConfig)
+        }
+      })
+  })
+}
+
 function addDirectives (schemaComposer, customExtensions = {}) {
   const allExtensions = {
     ...customExtensions,
@@ -60,7 +77,7 @@ function addDirectives (schemaComposer, customExtensions = {}) {
 
   for (const name in allExtensions) {
     const extension = allExtensions[name]
-    const location = extension.type === types.FieldExtension
+    const location = extension.type === FieldExtension
       ? DirectiveLocation.FIELD_DEFINITION
       : DirectiveLocation.OBJECT
 
@@ -97,6 +114,6 @@ function normalizeArgs (schemaComposer, args = {}) {
 }
 
 module.exports = {
-  fieldExtensions,
+  applyFieldExtensions,
   addDirectives
 }
