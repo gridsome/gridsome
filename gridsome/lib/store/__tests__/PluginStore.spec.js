@@ -369,10 +369,8 @@ test('deeply nested field starting with `raw`', () => {
   })
 
   const node = contentType.addNode({
-    fields: {
-      foo: {
-        rawValue: 'BAR'
-      }
+    foo: {
+      rawValue: 'BAR'
     }
   })
 
@@ -440,13 +438,13 @@ test.each([
     { segments: ['a', 'b', 'c'] },
     '/path/a%2Cb%2Cc'
   ]
-])('dynamic route with repeated segments', (route, fields, path) => {
+])('dynamic route with repeated segments', (route, options, path) => {
   const contentType = createPlugin().store.addContentType({
     typeName: 'TestPost',
     route
   })
 
-  const node = contentType.addNode({ fields })
+  const node = contentType.addNode(options)
 
   expect(node.path).toEqual(path)
 })
@@ -458,9 +456,7 @@ test('dynamic route with non-optional repeated segments', () => {
   })
 
   expect(() => contentType.addNode({
-    fields: {
-      segments: []
-    }
+    segments: []
   })).toThrow(TypeError, 'Expected "segments" to not be empty')
 })
 
