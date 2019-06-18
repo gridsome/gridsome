@@ -514,6 +514,34 @@ test('add custom GraphQL schema', async () => {
   expect(data.value2).toEqual('custom value bar')
 })
 
+test('add custom MetaData schema', async () => {
+  const app = await createApp(function (api) {
+    api.createSchema(({ addMetaData, addSchemaTypes }) => {
+      addMetaData('myCustomData', true)
+      addMetaData('some_value', 10)
+      addSchemaTypes(`
+        type MetaData {
+          myCustomData: String
+          someValue: Int @proxy(from:"some_value")
+        }
+      `)
+    })
+  })
+
+  const { errors, data } = await app.graphql(`
+    query {
+      metaData {
+        myCustomData
+        someValue
+      }
+    }
+  `)
+
+  expect(errors).toBeUndefined()
+  expect(data.metaData.myCustomData).toEqual('true')
+  expect(data.metaData.someValue).toEqual(10)
+})
+
 test('merge object types', async () => {
   const { createObjectType } = require('../utils')
   const app = await createApp(null, BOOTSTRAP_CONFIG)
@@ -545,6 +573,7 @@ test('merge object types', async () => {
   expect(metaFields.id).toBeDefined()
 })
 
+// TODO: remove this before 1.0
 test('add deprecated collection field', async () => {
   const app = await createApp(function (api) {
     api.loadSource(store => store.addContentType('test_post'))

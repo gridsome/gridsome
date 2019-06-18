@@ -139,8 +139,13 @@ function createFields ({
 
   processInferredFields(typeComposer, inferFieldDefs, fieldTypes)
 
-  typeComposer.addFields(fieldTypes)
-  typeComposer.addFields({ id: 'ID!' })
+  for (const fieldName in fieldTypes) {
+    if (!typeComposer.hasField(fieldName)) {
+      typeComposer.setField(fieldName, fieldTypes[fieldName])
+    }
+  }
+
+  typeComposer.setField('id', 'ID!')
 }
 
 function processInferredFields (typeComposer, fieldDefs, fieldTypes) {
