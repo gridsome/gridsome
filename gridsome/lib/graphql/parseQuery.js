@@ -1,3 +1,5 @@
+const { fixIncorrectVariableUsage } = require('./transforms')
+
 const {
   Kind,
   parse,
@@ -25,18 +27,17 @@ module.exports = function parseQuery (schema, source) {
   }
 
   const typeInfo = new TypeInfo(schema)
+  const variableDefs = []
   const typeNames = {}
 
   res.document = visit(ast, visitWithTypeInfo(typeInfo, {
-    VariableDefinition (node) {
-      const { name: { value: name }} = node.variable
-      const defaultValue = node.defaultValue
-        ? valueFromASTUntyped(node.defaultValue)
-        : null
+    VariableDefinition (variableDef) {
+      if (variableDef.variable.name.value !== 'page') {
+        // TODO: remove this fix before 1.0
+        fixIncorrectVariableUsage(schema, ast, variableDef)
 
-      if (name === 'page') return
-
-      res.variables.push({ name, defaultValue, path: name.split('__') })
+        variableDefs.push(variableDef)
+      }
     },
     Field (node) {
       const fieldDef = typeInfo.getFieldDef()
@@ -57,9 +58,7 @@ module.exports = function parseQuery (schema, source) {
           `Cannot use @paginate on the '${parentField.name.value}' field.`
         )
       } else if (fieldDef.type instanceof GraphQLObjectType) {
-        const interfaces = fieldDef.type.getInterfaces()
-
-        if (!interfaces.some(({ name }) => name === 'NodeConnection')) {
+        if (!hasInterface(fieldDef.type, 'NodeConnection')) {
           throw new Error(
             `Cannot use @paginate on the '${parentField.name.value}' field. ` +
             `The @paginate directive can only be used on connection fields ` +
@@ -109,5 +108,24 @@ module.exports = function parseQuery (schema, source) {
     }
   }))
 
+  res.variables = variableDefs.map(node => {
+    const { name: { value: name }} = node.variable
+
+    return {
+      name,
+      path: name.split('__'),
+      defaultValue: node.defaultValue
+        ? valueFromASTUntyped(node.defaultValue)
+        : null
+    }
+  })
+
   return res
+}
+
+function hasInterface (typeDef, interfaceName) {
+  return (
+    typeDef instanceof GraphQLObjectType &&
+    typeDef.getInterfaces().some(({ name }) => name === interfaceName)
+  )
 }

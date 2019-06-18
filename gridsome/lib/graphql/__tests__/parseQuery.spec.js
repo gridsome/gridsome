@@ -129,3 +129,17 @@ describe('give useful error messages', () => {
     expect(() => parseQuery(app.schema.getSchema(), query)).toThrow(`Cannot use @paginate on the 'page' field`)
   })
 })
+
+describe('transform incorrect queries', () => {
+  test('transform String to ID', () => {
+    const query = `
+      query ($id: String!) {
+        customContentType(id: $id)
+      }
+    `
+
+    const res = parseQuery(app.schema.getSchema(), query)
+
+    expect(print(res.document)).toMatch('($id: ID!)')
+  })
+})
