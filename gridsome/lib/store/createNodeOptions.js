@@ -63,9 +63,6 @@ function normalizeOptions (options, contentType, useFallbacks) {
     if (!nodeOptions.$uid) nodeOptions.$uid = genUid(contentType.typeName + nodeOptions.id)
   }
 
-  // TODO: remove before 1.0
-  if (nodeOptions._id) nodeOptions.id = nodeOptions._id
-
   return { nodeOptions, customFields }
 }
 
