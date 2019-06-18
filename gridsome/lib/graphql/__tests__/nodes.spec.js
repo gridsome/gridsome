@@ -217,8 +217,17 @@ test('get nodes by path regex', async () => {
   posts.addNode({ path: '/node-2' })
   posts.addNode({ path: '/some-3' })
 
-  const query = '{ allTestPost (regex: "/node") { edges { node { id }}}}'
-  const { errors, data } = await createSchemaAndExecute(query)
+  const { errors, data } = await createSchemaAndExecute(`
+    query {
+      allTestPost (filter: { path: { regex: "/node" }}) {
+        edges {
+          node {
+            id
+          }
+        }
+      }
+    }
+  `)
 
   expect(errors).toBeUndefined()
   expect(data.allTestPost.edges.length).toEqual(2)

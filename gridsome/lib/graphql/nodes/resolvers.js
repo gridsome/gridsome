@@ -30,15 +30,8 @@ exports.createFindManyPaginatedResolver = function (typeComposer) {
     const sort = createSortOptions(args)
     const query = {}
 
-    // _, { regex, filter, ...args }, { store }
-
     for (const [fieldName] of sort) {
       collection.ensureIndex(fieldName)
-    }
-
-    if (args.regex) {
-      // TODO: remove before 1.0
-      query.path = { $regex: new RegExp(args.regex) }
     }
 
     if (args.filter) {

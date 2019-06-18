@@ -1,5 +1,6 @@
 const camelCase = require('camelcase')
 const { isObject } = require('lodash')
+const { ObjectTypeComposer } = require('graphql-compose')
 
 const CreatedGraphQLType = {
   Object: 'Object',
@@ -59,4 +60,18 @@ exports.createTypeName = function (prefix, key = '', suffix = '') {
   }
 
   return name
+}
+
+exports.addObjectTypeExtensions = function (typeComposer) {
+  if (typeComposer instanceof ObjectTypeComposer) {
+    typeComposer.getDirectives().forEach(directive => {
+      typeComposer.setExtension(directive.name, directive.args)
+    })
+
+    Object.keys(typeComposer.getFields()).forEach(fieldName => {
+      typeComposer.getFieldDirectives(fieldName).forEach(directive => {
+        typeComposer.setFieldExtension(fieldName, directive.name, directive.args)
+      })
+    })
+  }
 }

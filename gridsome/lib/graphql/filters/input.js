@@ -33,6 +33,9 @@ function createFilterInput (schemaComposer, typeComposer) {
         )
       })
     }
+
+    const extensions = typeComposer.getFieldExtensions(fieldName)
+    inputTypeComposer.setFieldExtensions(fieldName, extensions)
   })
 
   typeComposer.setInputTypeComposer(inputTypeComposer)

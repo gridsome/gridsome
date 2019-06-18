@@ -23,7 +23,8 @@ const {
 
 const {
   isCreatedType,
-  CreatedGraphQLType
+  CreatedGraphQLType,
+  addObjectTypeExtensions
 } = require('./utils')
 
 module.exports = function createSchema (store, context = {}) {
@@ -71,17 +72,7 @@ function addTypeDefNode (schemaComposer, typeNode) {
   const existingTypeComposer = getTypeComposer(schemaComposer, typeName)
   const typeComposer = schemaComposer.typeMapper.makeSchemaDef(typeNode)
 
-  if (typeComposer instanceof ObjectTypeComposer) {
-    typeComposer.getDirectives().forEach(directive => {
-      typeComposer.setExtension(directive.name, directive.args)
-    })
-
-    Object.keys(typeComposer.getFields()).forEach(fieldName => {
-      typeComposer.getFieldDirectives(fieldName).forEach(directive => {
-        typeComposer.setFieldExtension(fieldName, directive.name, directive.args)
-      })
-    })
-  }
+  addObjectTypeExtensions(typeComposer)
 
   if (existingTypeComposer) {
     mergeTypes(schemaComposer, existingTypeComposer, typeComposer)

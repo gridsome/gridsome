@@ -1,16 +1,20 @@
 const { reduce } = require('lodash')
 const { InputTypeComposer } = require('graphql-compose')
 
-function toFilterArgs (filter, filterComposer, currentKey = '') {
+function toFilterArgs (filter, typeComposer, currentKey = '') {
   const args = {}
 
-  for (const key in filter) {
+  for (let key in filter) {
     const value = filter[key]
 
     if (value === undefined) continue
 
-    const field = filterComposer.getFieldTC(key)
-    const extensions = filterComposer.getFieldExtensions(key)
+    const field = typeComposer.getFieldTC(key)
+    const extensions = typeComposer.getFieldExtensions(key)
+
+    if (extensions.proxy) {
+      key = extensions.proxy.from || key
+    }
 
     if (extensions.isNodeReference) {
       // pick the id for reference inferred from store.createReference()

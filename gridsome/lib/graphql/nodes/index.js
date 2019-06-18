@@ -49,13 +49,16 @@ module.exports = function createNodesSchema (schemaComposer, store) {
       [allFieldName]: typeComposer.getResolver('findManyPaginated')
     })
 
-    // TODO: remove this before 1.0
-    if (allFieldName !== `all${typeName}`) {
-      schemaComposer.Query.addFields({
-        [`all${typeName}`]: {
-          ...typeComposer.getResolver('findManyPaginated'),
-          deprecationReason: `Use '${allFieldName}' instead.`
-        }
+    // TODO: remove this field before 1.0
+    const oldAllFieldName = `all${typeName}`
+
+    if (
+      allFieldName !== oldAllFieldName &&
+      !schemaComposer.Query.hasField(oldAllFieldName)
+    ) {
+      schemaComposer.Query.setField(oldAllFieldName, {
+        ...typeComposer.getResolver('findManyPaginated'),
+        deprecationReason: `Use '${allFieldName}' instead.`
       })
     }
   }
@@ -242,10 +245,7 @@ function createResolvers (typeComposer, contentType) {
       filter: {
         type: inputTypeComposer,
         description: `Filter for ${typeName} nodes.`
-      },
-
-      // TODO: remove before 1.0
-      regex: { type: 'String', deprecationReason: 'Use filter instead.' }
+      }
     },
     resolve: createFindManyPaginatedResolver(typeComposer)
   })
