@@ -41,10 +41,23 @@ module.exports = function createNodesSchema (schemaComposer, store) {
 
     typeComposer.addFields(createThirdPartyFields(args))
 
+    const fieldName = camelCase(typeName)
+    const allFieldName = camelCase(`all ${typeName}`)
+
     schemaComposer.Query.addFields({
-      [camelCase(typeName)]: typeComposer.getResolver('findOne'),
-      [camelCase(`all ${typeName}`)]: typeComposer.getResolver('findManyPaginated')
+      [fieldName]: typeComposer.getResolver('findOne'),
+      [allFieldName]: typeComposer.getResolver('findManyPaginated')
     })
+
+    // TODO: remove this before 1.0
+    if (allFieldName !== `all${typeName}`) {
+      schemaComposer.Query.addFields({
+        [`all${typeName}`]: {
+          ...typeComposer.getResolver('findManyPaginated'),
+          deprecationReason: `Use '${allFieldName}' instead.`
+        }
+      })
+    }
   }
 
   createBelongsTo(schemaComposer, store)
