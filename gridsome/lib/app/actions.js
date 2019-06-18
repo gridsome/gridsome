@@ -4,10 +4,7 @@ const { pick } = require('lodash')
 function createBaseActions (api, app) {
   return {
     graphql (docOrQuery, variables = {}) {
-      if (!app.schema) {
-        throw new Error(`actions.graphql() called before schema is generated.`)
-      }
-      return app.graphql(docOrQuery, variables)
+      return app.schema.runQuery(docOrQuery, variables)
     },
     resolve (...args) {
       return app.resolve(...args)
@@ -67,7 +64,7 @@ const {
 
 function createSchemaActions (api, app) {
   const baseActions = createStoreActions(api, app)
-  const GraphQLJSON = require('graphql-type-json')
+  const { GraphQLJSON } = require('graphql-compose')
   const graphql = require('graphql')
 
   // TODO: these should just be imported from gridsome/graphql instead

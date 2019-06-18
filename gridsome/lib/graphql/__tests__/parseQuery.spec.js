@@ -49,24 +49,6 @@ describe('pagination with @paginate directive', () => {
     expect(res.directives.paginate.args).toHaveProperty('perPage')
     expect(res.directives.paginate.args.perPage.value).toEqual('5')
   })
-
-  test('remove @paginate directive from ast', () => {
-    const query = `
-      query {
-        allCustomContentType(perPage: 5) @paginate {
-          edges {
-            node {
-              id
-            }
-          }
-        }
-      }
-    `
-
-    const res = parseQuery(app.schema.getSchema(), query)
-
-    expect(print(res.document)).not.toMatch('@paginate')
-  })
 })
 
 describe('pagination belongsTo with @paginate directive', () => {

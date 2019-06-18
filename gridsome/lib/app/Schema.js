@@ -34,13 +34,11 @@ class Schema {
   }
 
   runQuery (docOrQuery, variables = {}) {
-    const func = typeof docOrQuery === 'object' ? execute : graphql
     const context = this.createSchemaContext()
+    const func = typeof docOrQuery === 'string' ? graphql : execute
 
-    if (typeof docOrQuery === 'string') {
-      // workaround until query directives
-      // works in mergeSchema from graphql-tools
-      docOrQuery = docOrQuery.replace(/@paginate/g, '')
+    if (!this._schema) {
+      throw new Error(`GraphQL schema is not generated yet...`)
     }
 
     return func(this._schema, docOrQuery, undefined, context, variables)

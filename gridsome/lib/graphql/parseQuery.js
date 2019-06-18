@@ -103,8 +103,6 @@ module.exports = function parseQuery (schema, source) {
       }
 
       res.directives.paginate = paginate
-
-      return null
     }
   }))
 

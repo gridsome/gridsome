@@ -14,13 +14,6 @@ function parseQuery (schema, query) {
         // TODO: remove this fix before 1.0
         fixIncorrectVariableUsage(schema, ast, variableDef)
       }
-    },
-    Directive (node) {
-      // remove @paginate directive from schema
-      // beause mergeSchemas doesn't include it
-      if (node.name.value === 'paginate') {
-        return null
-      }
     }
   })
 }
