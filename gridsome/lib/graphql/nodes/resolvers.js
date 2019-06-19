@@ -118,7 +118,7 @@ exports.createReferenceManyAdvancedResolver = function (typeComposer) {
   }
 }
 
-exports.createReferenceOneUnionResolver = function (typeComposer) {
+exports.createReferenceOneUnionResolver = function () {
   return function referenceOneUnionResolver (source, args, context, info) {
     const fieldValue = source[info.fieldName]
 
@@ -130,7 +130,7 @@ exports.createReferenceOneUnionResolver = function (typeComposer) {
   }
 }
 
-exports.createReferenceManyUnionResolver = function (typeComposer) {
+exports.createReferenceManyUnionResolver = function () {
   return function referenceManyUnionResolver (source, args, context, info) {
     const fieldValue = source[info.fieldName] || []
 

@@ -756,6 +756,27 @@ describe('create input types', () => {
   })
 })
 
+test('output field value as JSON', async () => {
+  const app = await initApp(({ addSchemaTypes }) => {
+    addSchemaTypes(`
+      type Track implements Node @infer {
+        albumsBySlug: JSON
+      }
+    `)
+  })
+
+  const { errors, data } = await app.graphql(`{
+    track(id:"1") {
+      albumsBySlug
+    }
+  }`)
+
+  expect(errors).toBeUndefined()
+  expect(data.track.albumsBySlug).toEqual(
+    expect.arrayContaining(['second-album', 'third-album'])
+  )
+})
+
 // TODO: remove this before 1.0
 test('add deprecated collection field', async () => {
   const app = await createApp(function (api) {
