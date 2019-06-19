@@ -668,7 +668,8 @@ test('merge object types', async () => {
     types: [
       'type Post { title: String }',
       'type Post { content: String meta: PostMeta }',
-      'type PostMeta { status: Boolean }',
+      'type PostMeta @foo { status: Boolean @proxy(from:"foo") }',
+      'type PostMeta @bar { status: Boolean @proxy(from:"bar") }',
       'type PostMeta { id: Boolean }',
       createObjectType({
         name: 'Post',
@@ -679,6 +680,8 @@ test('merge object types', async () => {
     ]
   })
 
+  const schemaComposer = app.schema.getComposer()
+  const postMetaComposer = schemaComposer.get('PostMeta')
   const typeDefs = app.schema.getSchema().getTypeMap()
   const fields = typeDefs.Post.getFields()
   const metaFields = fields.meta.type.getFields()
@@ -687,14 +690,17 @@ test('merge object types', async () => {
   expect(fields.content).toBeDefined()
   expect(fields.meta).toBeDefined()
   expect(fields.authorId).toBeDefined()
-  expect(metaFields.status).toBeDefined()
   expect(metaFields.id).toBeDefined()
+  expect(metaFields.status).toBeDefined()
+  expect(metaFields.status.extensions.proxy.from).toEqual('bar')
+  expect(postMetaComposer.getExtensions().foo).toBeDefined()
+  expect(postMetaComposer.getExtensions().bar).toBeDefined()
 })
 
 describe('create input types', () => {
   test('create input types with SDL', async () => {
     const app = await createApp(function (api) {
-      api.loadSource(({ addSchemaTypes, addSchemaResolvers, schema }) => {
+      api.loadSource(({ addSchemaTypes, addSchemaResolvers }) => {
         addSchemaTypes(`input SomeInput { value: String! }`)
         addSchemaResolvers({
           Query: {

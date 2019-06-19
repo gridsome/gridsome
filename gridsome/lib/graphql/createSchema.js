@@ -36,8 +36,8 @@ const {
   createReferenceManyUnionResolver
 } = require('./nodes/resolvers')
 
-module.exports = function createSchema (store, context = {}) {
-  const { types = [], schemas = [], resolvers = [] } = context
+module.exports = function createSchema (store, options = {}) {
+  const { types = [], schemas = [], resolvers = [] } = options
   const schemaComposer = new SchemaComposer()
 
   initMustHaveTypes(schemaComposer).forEach(typeComposer => {
