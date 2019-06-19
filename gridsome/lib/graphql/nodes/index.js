@@ -209,51 +209,7 @@ function createResolvers (typeComposer, contentType) {
       filter: {
         type: inputTypeComposer,
         description: `Filter for ${typeName} nodes.`
-      },
-
-      // TODO: remove before 1.0
-      regex: { type: 'String', deprecationReason: 'Use filter instead.' }
-    },
-    resolve: createFindManyPaginatedResolver(typeComposer)
-  })
-
-  typeComposer.addResolver({
-    name: 'findManyPaginated',
-    type: `${typeName}Connection`,
-    args: {
-      sortBy: { type: 'String', defaultValue: defaultSortBy },
-      order: { type: 'SortOrder', defaultValue: defaultSortOrder },
-      perPage: { type: 'Int', description: `Defaults to ${PER_PAGE} when page is provided.` },
-      skip: { type: 'Int', defaultValue: 0 },
-      limit: { type: 'Int' },
-      page: { type: 'Int' },
-      sort: { type: '[SortArgument]' },
-      filter: {
-        type: inputTypeComposer,
-        description: `Filter for ${typeName} nodes.`
       }
-    },
-    resolve: createFindManyPaginatedResolver(typeComposer)
-  })
-
-  typeComposer.addResolver({
-    name: 'findManyPaginated',
-    type: `${typeName}Connection`,
-    args: {
-      sortBy: { type: 'String', defaultValue: defaultSortBy },
-      order: { type: 'SortOrder', defaultValue: defaultSortOrder },
-      perPage: { type: 'Int', description: `Defaults to ${PER_PAGE} when page is provided.` },
-      skip: { type: 'Int', defaultValue: 0 },
-      limit: { type: 'Int' },
-      page: { type: 'Int' },
-      sort: { type: '[SortArgument]' },
-      filter: {
-        type: inputTypeComposer,
-        description: `Filter for ${typeName} nodes.`
-      },
-
-      // TODO: remove before 1.0
-      regex: { type: 'String', deprecationReason: 'Use filter instead.' }
     },
     resolve: createFindManyPaginatedResolver(typeComposer)
   })
