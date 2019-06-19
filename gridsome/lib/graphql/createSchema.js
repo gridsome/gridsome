@@ -180,6 +180,8 @@ function processFields (schemaComposer, typeComposer) {
   for (const fieldName in fields) {
     const fieldConfig = typeComposer.getFieldConfig(fieldName)
     const fieldTypeComposer = typeComposer.getFieldTC(fieldName)
+    const extensions = typeComposer.getFieldExtensions(fieldName)
+    const typeName = fieldTypeComposer.getTypeName()
 
     if (
       fieldTypeComposer instanceof ObjectTypeComposer &&
@@ -208,19 +210,13 @@ function processFields (schemaComposer, typeComposer) {
           ? createReferenceManyUnionResolver(fieldTypeComposer)
           : createReferenceOneUnionResolver(fieldTypeComposer)
       })
-    }
-
-    const extensions = typeComposer.getFieldExtensions(fieldName)
-    const fieldComposer = typeComposer.getFieldTC(fieldName)
-    const typeName = fieldComposer.getTypeName()
-
-    if (
-      fieldComposer instanceof ObjectTypeComposer &&
-      fieldComposer.hasInterface('Node')
+    } else if (
+      fieldTypeComposer instanceof ObjectTypeComposer &&
+      fieldTypeComposer.hasInterface('Node')
     ) {
       const isPlural = typeComposer.isFieldPlural(fieldName)
       const resolverName = isPlural ? 'referenceMany' : 'referenceOne'
-      const resolver = fieldComposer.getResolver(resolverName)
+      const resolver = fieldTypeComposer.getResolver(resolverName)
 
       typeComposer.setField(fieldName, resolver)
     } else if (scalarTypeResolvers[typeName]) {

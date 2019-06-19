@@ -63,7 +63,10 @@ function createTypeComposers (schemaComposer, store) {
     if (schemaComposer.has(typeName)) {
       if (!schemaComposer.get(typeName).hasInterface('Node')) {
         throw new Error(
-          `The '${typeName}' GraphQL type must implement the 'Node' interface`
+          `The '${typeName}' GraphQL type must implement the 'Node' interface. Example:\n\n` +
+          `type ${typeName} implements Node {\n` +
+          `  title: String!\n` +
+          `}\n`
         )
       }
     }
