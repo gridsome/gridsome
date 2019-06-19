@@ -95,8 +95,32 @@ function addCreatedType (schemaComposer, { type, options }) {
 function addType (schemaComposer, typeComposer) {
   typeComposer.setExtension('isUserDefined', true)
 
+  validateTypeName(typeComposer)
+
   schemaComposer.add(typeComposer)
   schemaComposer.addSchemaMustHaveType(typeComposer)
+}
+
+const ReservedTypeNames = ['Page', 'Node', 'Image', 'File', 'Date']
+const ReservedRules = {
+  'FilterInput$': `Type name cannot end with 'FilterInput'.`,
+  'QueryOperatorInput$': `Type name cannot end with 'QueryOperatorInput'`,
+  '^MetaData[A-Z]': `Type name cannot start with 'MetaData'`,
+  '^Node[A-Z]': `Type name cannot start with 'Node'`
+}
+
+function validateTypeName (typeComposer) {
+  const typeName = typeComposer.getTypeName()
+
+  if (ReservedTypeNames.includes(typeName)) {
+    throw new Error(`'${typeName}' is a reserved type name.`)
+  }
+
+  for (const rule in ReservedRules) {
+    if (new RegExp(rule).test(typeName)) {
+      throw new Error(ReservedRules[rule])
+    }
+  }
 }
 
 function createType (schemaComposer, type, options) {
