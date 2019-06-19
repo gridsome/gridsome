@@ -288,6 +288,49 @@ describe('add reference resolvers', () => {
     // should not inherit args because it has custom args
     expect(Object.keys(fields.customAlbum.args)).toHaveLength(1)
   })
+
+  test('add default union resolvers', async () => {
+    const app = await initApp(({ addSchemaTypes }) => {
+      addSchemaTypes(`
+        union AppearsOn = Album | Single
+        type Track implements Node {
+          union: AppearsOn
+          unions: [AppearsOn]
+          unionRef: AppearsOn
+          unionRefs: [AppearsOn]
+        }
+      `)
+    })
+
+    const { errors, data } = await app.graphql(`{
+      track(id:"1") {
+        union {
+          ... on Single { name }
+        }
+        unions {
+          ... on Album { name }
+          ... on Single { name }
+        }
+        unionRef {
+          ... on Single { name }
+        }
+        unionRefs {
+          ... on Album { name }
+          ... on Single { name }
+        }
+      }
+    }`)
+
+    expect(errors).toBeUndefined()
+    expect(data.track.union.name).toEqual('Second Single')
+    expect(data.track.unions).toHaveLength(2)
+    expect(data.track.unions[0].name).toEqual('Second Album')
+    expect(data.track.unions[1].name).toEqual('Second Single')
+    expect(data.track.unionRef.name).toEqual('Second Single')
+    expect(data.track.unionRefs).toHaveLength(2)
+    expect(data.track.unionRefs[0].name).toEqual('First Album')
+    expect(data.track.unionRefs[1].name).toEqual('Second Single')
+  })
 })
 
 test('add custom resolver for invalid field names', async () => {
@@ -735,10 +778,14 @@ function initApp (fn) {
     api.loadSource(actions => {
       const tracks = actions.addContentType('Track')
       const albums = actions.addContentType('Album')
+      const singles = actions.addContentType('Single')
 
-      albums.addNode({ id: '1', name: 'First Album', slug: 'first-album' })
-      albums.addNode({ id: '2', name: 'Second Album', slug: 'second-album' })
-      albums.addNode({ id: '3', name: 'Third Album', slug: 'third-album' })
+      albums.addNode({ $uid: '1', id: '1', name: 'First Album', slug: 'first-album' })
+      albums.addNode({ $uid: '2', id: '2', name: 'Second Album', slug: 'second-album' })
+      albums.addNode({ $uid: '3', id: '3', name: 'Third Album', slug: 'third-album' })
+      singles.addNode({ $uid: '4', id: '1', name: 'First Single', slug: 'first-single' })
+      singles.addNode({ $uid: '5', id: '2', name: 'Second Single', slug: 'second-single' })
+      singles.addNode({ $uid: '6', id: '3', name: 'Third Single', slug: 'third-single' })
 
       tracks.addNode({
         id: '1',
@@ -748,7 +795,14 @@ function initApp (fn) {
         albumsBySlug: ['second-album', 'third-album'],
         anotherAlbum: '2',
         otherAlbums: ['2', '3'],
-        overiddenAlbum: '2'
+        overiddenAlbum: '2',
+        union: '5',
+        unionRef: actions.createReference('Single', '2'),
+        unions: ['2', '5'],
+        unionRefs: [
+          actions.createReference('Album', '1'),
+          actions.createReference('Single', '2')
+        ]
       })
 
       fn(actions)

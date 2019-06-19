@@ -17,16 +17,24 @@ const {
 
 const {
   SchemaComposer,
+  EnumTypeComposer,
   InputTypeComposer,
   UnionTypeComposer,
-  ObjectTypeComposer
+  ObjectTypeComposer,
+  InterfaceTypeComposer
 } = require('graphql-compose')
 
 const {
   isCreatedType,
+  hasNodeReference,
   CreatedGraphQLType,
   addObjectTypeExtensions
 } = require('./utils')
+
+const {
+  createReferenceOneUnionResolver,
+  createReferenceManyUnionResolver
+} = require('./nodes/resolvers')
 
 module.exports = function createSchema (store, context = {}) {
   const { types = [], schemas = [], resolvers = [] } = context
@@ -102,7 +110,8 @@ function addType (schemaComposer, typeComposer) {
   schemaComposer.addSchemaMustHaveType(typeComposer)
 }
 
-const ReservedTypeNames = ['Page', 'Node', 'Image', 'File', 'Date']
+const ReservedTypeNames = ['Page', 'Node']
+const ReservedScalarNames = ['Boolean', 'Date', 'File', 'Float', 'ID', 'Image', 'Int', 'JSON', 'String']
 const ReservedRules = {
   'FilterInput$': `Type name cannot end with 'FilterInput'.`,
   'QueryOperatorInput$': `Type name cannot end with 'QueryOperatorInput'`,
@@ -115,6 +124,10 @@ function validateTypeName (typeComposer) {
 
   if (ReservedTypeNames.includes(typeName)) {
     throw new Error(`'${typeName}' is a reserved type name.`)
+  }
+
+  if (ReservedScalarNames.includes(typeName)) {
+    throw new Error(`'${typeName}' is a reserved scalar type.`)
   }
 
   for (const rule in ReservedRules) {
@@ -134,6 +147,12 @@ function createType (schemaComposer, type, options) {
 
     case CreatedGraphQLType.Input:
       return InputTypeComposer.createTemp(options, schemaComposer)
+
+    case CreatedGraphQLType.Interface:
+      return InterfaceTypeComposer.createTemp(options, schemaComposer)
+
+    case CreatedGraphQLType.Enum:
+      return EnumTypeComposer.createTemp(options, schemaComposer)
   }
 }
 
@@ -149,13 +168,13 @@ function processTypes (schemaComposer) {
   for (const [typeComposer] of schemaComposer.entries()) {
     switch (typeComposer.constructor) {
       case ObjectTypeComposer:
-        processFields(typeComposer)
+        processFields(schemaComposer, typeComposer)
         break
     }
   }
 }
 
-function processFields (typeComposer) {
+function processFields (schemaComposer, typeComposer) {
   const fields = typeComposer.getFields()
 
   for (const fieldName in fields) {
@@ -166,7 +185,7 @@ function processFields (typeComposer) {
       fieldTypeComposer instanceof ObjectTypeComposer &&
       fieldTypeComposer !== typeComposer
     ) {
-      processFields(fieldTypeComposer)
+      processFields(schemaComposer, fieldTypeComposer)
     }
 
     if (
@@ -177,6 +196,18 @@ function processFields (typeComposer) {
       fieldConfig.resolve
     ) {
       continue
+    }
+
+    if (
+      fieldTypeComposer instanceof UnionTypeComposer &&
+      fieldTypeComposer !== typeComposer &&
+      hasNodeReference(fieldTypeComposer)
+    ) {
+      typeComposer.extendField(fieldName, {
+        resolve: typeComposer.isFieldPlural(fieldName)
+          ? createReferenceManyUnionResolver(fieldTypeComposer)
+          : createReferenceOneUnionResolver(fieldTypeComposer)
+      })
     }
 
     const extensions = typeComposer.getFieldExtensions(fieldName)

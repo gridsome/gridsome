@@ -1,3 +1,5 @@
+const { hasNodeReference } = require('../utils')
+
 const {
   EnumTypeComposer,
   UnionTypeComposer,
@@ -69,6 +71,10 @@ function createInputTypeComposer (schemaComposer, typeComposer, fieldName) {
     operators = listOperators
   }
 
+  if (fieldTypeComposer instanceof UnionTypeComposer) {
+    // console.log(hasNodeReference(fieldTypeComposer), fieldTypeComposer)
+  }
+
   operatorTypeComposer.addFields(
     createInputFields(
       typeComposer,
@@ -104,19 +110,6 @@ function createInputFields (typeComposer, fieldName, typeName, operators) {
   }
 
   return toOperatorConfig(operators, typeName, extensions)
-}
-
-function hasNodeReference (typeComposer) {
-  switch (typeComposer.constructor) {
-    case ObjectTypeComposer:
-      return typeComposer.hasInterface('Node')
-    case UnionTypeComposer:
-      return typeComposer.getTypes().some(typeComposer => {
-        return typeComposer.hasInterface('Node')
-      })
-    default:
-      return false
-  }
 }
 
 module.exports = {

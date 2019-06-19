@@ -118,3 +118,28 @@ exports.createReferenceManyAdvancedResolver = function (typeComposer) {
   }
 }
 
+exports.createReferenceOneUnionResolver = function (typeComposer) {
+  return function referenceOneUnionResolver (source, args, context, info) {
+    const fieldValue = source[info.fieldName]
+
+    if (!fieldValue) return null
+
+    return isRefField(fieldValue)
+      ? context.store.getNode(fieldValue.typeName, fieldValue.id)
+      : context.store.getNodeByUid(fieldValue)
+  }
+}
+
+exports.createReferenceManyUnionResolver = function (typeComposer) {
+  return function referenceManyUnionResolver (source, args, context, info) {
+    const fieldValue = source[info.fieldName] || []
+
+    if (fieldValue.length < 1) return []
+
+    return fieldValue.map(fieldValue => {
+      return isRefField(fieldValue)
+        ? context.store.getNode(fieldValue.typeName, fieldValue.id)
+        : context.store.getNodeByUid(fieldValue)
+    })
+  }
+}

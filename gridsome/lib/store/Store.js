@@ -83,6 +83,10 @@ class Store {
       : null
   }
 
+  getNode (typeName, id) {
+    return this.getContentType(typeName).getNodeById(id)
+  }
+
   chainIndex (query = {}) {
     return this.index.chain().find(query).map(entry => {
       const contentType = this.collections[entry.typeName]
