@@ -59,7 +59,7 @@ const {
   createObjectType,
   createUnionType,
   createInterfaceType,
-  createInputObjectType
+  createInputType
 } = require('../graphql/utils')
 
 function createSchemaActions (api, app) {
@@ -116,7 +116,7 @@ function createSchemaActions (api, app) {
       createObjectType,
       createUnionType,
       createInterfaceType,
-      createInputObjectType
+      createInputType
     }
   }
 }

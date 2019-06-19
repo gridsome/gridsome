@@ -132,7 +132,7 @@ function createType (schemaComposer, type, options) {
     case CreatedGraphQLType.Union:
       return UnionTypeComposer.createTemp(options, schemaComposer)
 
-    case CreatedGraphQLType.InputObject:
+    case CreatedGraphQLType.Input:
       return InputTypeComposer.createTemp(options, schemaComposer)
   }
 }

@@ -648,6 +648,65 @@ test('merge object types', async () => {
   expect(metaFields.id).toBeDefined()
 })
 
+describe('create input types', () => {
+  test('create input types with SDL', async () => {
+    const app = await createApp(function (api) {
+      api.loadSource(({ addSchemaTypes, addSchemaResolvers, schema }) => {
+        addSchemaTypes(`input SomeInput { value: String! }`)
+        addSchemaResolvers({
+          Query: {
+            myResolver: {
+              type: 'String',
+              args: { string: 'SomeInput' },
+              resolve: (_, args) => args.string.value
+            }
+          }
+        })
+      })
+    })
+
+    const { errors, data } = await app.graphql(`
+      query {
+        myResolver(string: { value: "foo" })
+      }
+    `)
+
+    expect(errors).toBeUndefined()
+    expect(data.myResolver).toEqual('foo')
+  })
+
+  test('create input types with JS', async () => {
+    const app = await createApp(function (api) {
+      api.loadSource(({ addSchemaTypes, addSchemaResolvers, schema }) => {
+        addSchemaTypes([
+          schema.createInputType({
+            name: 'SomeInput',
+            fields: { value: 'String!' }
+          })
+        ])
+        addSchemaResolvers({
+          Query: {
+            myResolver: {
+              type: 'String',
+              args: { string: 'SomeInput' },
+              resolve: (_, args) => args.string.value
+            }
+          }
+        })
+      })
+    })
+
+    const { errors, data } = await app.graphql(`
+      query {
+        myResolver(string: { value: "foo" })
+      }
+    `)
+
+    expect(errors).toBeUndefined()
+    expect(data.myResolver).toEqual('foo')
+  })
+})
+
 // TODO: remove this before 1.0
 test('add deprecated collection field', async () => {
   const app = await createApp(function (api) {
