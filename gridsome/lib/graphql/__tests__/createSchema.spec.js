@@ -158,40 +158,106 @@ test('add custom GraphQL types from SDL', async () => {
   expect(data.post.author).toMatchObject({ name: 'The Author' })
 })
 
-test('add reference resolvers', async () => {
-  const app = await createApp(function (api) {
-    api.loadSource(({ addContentType, addSchemaTypes, addSchemaResolvers }) => {
-      const tracks = addContentType('Track')
-      const albums = addContentType('Album')
-
-      albums.addNode({ id: '1', name: 'First Album', slug: 'first-album' })
-      albums.addNode({ id: '2', name: 'Second Album', slug: 'second-album' })
-      albums.addNode({ id: '3', name: 'Third Album', slug: 'third-album' })
-
-      tracks.addNode({
-        id: '1',
-        album: '2',
-        albums: ['1', '2'],
-        albumBySlug: 'third-album',
-        albumsBySlug: ['second-album', 'third-album'],
-        anotherAlbum: '2',
-        otherAlbums: ['2', '3'],
-        overiddenAlbum: '2'
-      })
-
+describe('add reference resolvers', () => {
+  test('simple references', async () => {
+    const app = await initApp(({ addSchemaTypes }) => {
       addSchemaTypes(`
         type Track implements Node {
           album: Album
           albums: [Album]
-          albumBySlug: Album @reference(by:"slug")
-          albumsBySlug: [Album] @reference(by:"slug")
+        }
+      `)
+    })
+
+    const { errors, data } = await app.graphql(`{
+      track(id:"1") {
+        album { name }
+        albums { name }
+      }
+    }`)
+
+    const schemaComposer = app.schema.getComposer()
+    const typeComposer = schemaComposer.get('Track')
+    const fields = typeComposer.getFields()
+
+    expect(errors).toBeUndefined()
+    expect(data.track.album.name).toEqual('Second Album')
+    expect(data.track.albums).toHaveLength(2)
+    expect(data.track.albums[0].name).toEqual('First Album')
+    expect(data.track.albums[1].name).toEqual('Second Album')
+
+    expect(Object.keys(fields.albums.args)).toHaveLength(0)
+  })
+
+  test('add reference args with @reference', async () => {
+    const app = await initApp(({ addSchemaTypes }) => {
+      addSchemaTypes(`
+        type Track implements Node {
           anotherAlbum: Album @reference
           otherAlbums: [Album] @reference
+        }
+      `)
+    })
+
+    const { errors, data } = await app.graphql(`{
+      track(id:"1") {
+        anotherAlbum { name }
+        otherAlbums(limit:1, skip:1) { name }
+      }
+    }`)
+
+    const schemaComposer = app.schema.getComposer()
+    const typeComposer = schemaComposer.get('Track')
+    const fields = typeComposer.getFields()
+
+    expect(errors).toBeUndefined()
+    expect(data.track.anotherAlbum.name).toEqual('Second Album')
+    expect(data.track.otherAlbums).toHaveLength(1)
+    expect(data.track.otherAlbums[0].name).toEqual('Third Album')
+
+    expect(Object.keys(fields.anotherAlbum.args)).toHaveLength(0)
+    expect(Object.keys(fields.otherAlbums.args)).toHaveLength(5)
+  })
+
+  test('reference by custom field with @reference', async () => {
+    const app = await initApp(({ addSchemaTypes }) => {
+      addSchemaTypes(`
+        type Track implements Node {
+          albumBySlug: Album @reference(by:"slug")
+          albumsBySlug: [Album] @reference(by:"slug")
+        }
+      `)
+    })
+
+    const { errors, data } = await app.graphql(`{
+      track(id:"1") {
+        albumBySlug { name }
+        albumsBySlug { name }
+      }
+    }`)
+
+    const schemaComposer = app.schema.getComposer()
+    const typeComposer = schemaComposer.get('Track')
+    const fields = typeComposer.getFields()
+
+    expect(errors).toBeUndefined()
+    expect(data.track.albumBySlug.name).toEqual('Third Album')
+    expect(data.track.albumsBySlug).toHaveLength(2)
+    expect(data.track.albumsBySlug[0].name).toEqual('Second Album')
+    expect(data.track.albumsBySlug[1].name).toEqual('Third Album')
+
+    expect(Object.keys(fields.albumBySlug.args)).toHaveLength(0)
+    expect(Object.keys(fields.albumsBySlug.args)).toHaveLength(5)
+  })
+
+  test('add custom reference resolvers', async () => {
+    const app = await initApp(({ addSchemaTypes, addSchemaResolvers }) => {
+      addSchemaTypes(`
+        type Track implements Node {
           overiddenAlbum: Album
           customAlbum(id: ID!): Album
         }
       `)
-
       addSchemaResolvers({
         Track: {
           overiddenAlbum (source, args, context) {
@@ -203,45 +269,25 @@ test('add reference resolvers', async () => {
         }
       })
     })
+
+    const { errors, data } = await app.graphql(`{
+      track(id:"1") {
+        overiddenAlbum { name }
+        customAlbum(id:"2") { name }
+      }
+    }`)
+
+    const schemaComposer = app.schema.getComposer()
+    const typeComposer = schemaComposer.get('Track')
+    const fields = typeComposer.getFields()
+
+    expect(errors).toBeUndefined()
+    expect(data.track.overiddenAlbum.name).toEqual('Second Album')
+    expect(data.track.customAlbum.name).toEqual('Second Album')
+
+    // should not inherit args because it has custom args
+    expect(Object.keys(fields.customAlbum.args)).toHaveLength(1)
   })
-
-  const { errors, data } = await app.graphql(`{
-    track(id:"1") {
-      album { name }
-      albums { name }
-      albumBySlug { name }
-      albumsBySlug { name }
-      anotherAlbum { name }
-      otherAlbums(limit:1, skip:1) { name }
-      overiddenAlbum { name }
-      customAlbum(id:"2") { name }
-    }
-  }`)
-
-  const schemaComposer = app.schema.getComposer()
-  const typeComposer = schemaComposer.get('Track')
-  const fields = typeComposer.getFields()
-
-  expect(errors).toBeUndefined()
-  expect(data.track.album.name).toEqual('Second Album')
-  expect(data.track.albums).toHaveLength(2)
-  expect(data.track.albums[0].name).toEqual('First Album')
-  expect(data.track.albums[1].name).toEqual('Second Album')
-  expect(data.track.albumBySlug.name).toEqual('Third Album')
-  expect(data.track.albumsBySlug).toHaveLength(2)
-  expect(data.track.albumsBySlug[0].name).toEqual('Second Album')
-  expect(data.track.albumsBySlug[1].name).toEqual('Third Album')
-  expect(data.track.anotherAlbum.name).toEqual('Second Album')
-  expect(data.track.otherAlbums).toHaveLength(1)
-  expect(data.track.otherAlbums[0].name).toEqual('Third Album')
-  expect(data.track.overiddenAlbum.name).toEqual('Second Album')
-  expect(data.track.customAlbum.name).toEqual('Second Album')
-
-  expect(Object.keys(fields.albums.args)).toHaveLength(0)
-  // should not inherit args because it has custom args
-  expect(Object.keys(fields.customAlbum.args)).toEqual(
-    expect.arrayContaining(['id'])
-  )
 })
 
 test('add custom resolver for invalid field names', async () => {
@@ -623,4 +669,30 @@ function createApp (plugin, phase = BOOTSTRAP_PAGES) {
   })
 
   return app.bootstrap(phase)
+}
+
+function initApp (fn) {
+  return createApp(function (api) {
+    api.loadSource(actions => {
+      const tracks = actions.addContentType('Track')
+      const albums = actions.addContentType('Album')
+
+      albums.addNode({ id: '1', name: 'First Album', slug: 'first-album' })
+      albums.addNode({ id: '2', name: 'Second Album', slug: 'second-album' })
+      albums.addNode({ id: '3', name: 'Third Album', slug: 'third-album' })
+
+      tracks.addNode({
+        id: '1',
+        album: '2',
+        albums: ['1', '2'],
+        albumBySlug: 'third-album',
+        albumsBySlug: ['second-album', 'third-album'],
+        anotherAlbum: '2',
+        otherAlbums: ['2', '3'],
+        overiddenAlbum: '2'
+      })
+
+      fn(actions)
+    })
+  })
 }
