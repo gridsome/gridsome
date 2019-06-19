@@ -5,6 +5,7 @@ const createNodesSchema = require('./nodes')
 const createMetaDataSchema = require('./metaData')
 const { scalarTypeResolvers } = require('./resolvers')
 const { addDirectives, applyFieldExtensions } = require('./extensions')
+const { isEmpty } = require('lodash')
 
 const {
   parse,
@@ -46,11 +47,11 @@ module.exports = function createSchema (store, context = {}) {
   })
 
   createNodesSchema(schemaComposer, store)
-  createPagesSchema(schemaComposer)
   createMetaDataSchema(schemaComposer, store)
-  processObjectTypes(schemaComposer)
+  createPagesSchema(schemaComposer)
   addSchemas(schemaComposer, schemas)
   addResolvers(schemaComposer, resolvers)
+  processTypes(schemaComposer)
 
   return schemaComposer
 }
@@ -136,69 +137,69 @@ function createType (schemaComposer, type, options) {
   }
 }
 
-function mergeTypes (schemaComposer, existingTC, newTC) {
-  existingTC.merge(newTC)
-  existingTC.extendExtensions(newTC.getExtensions())
-  schemaComposer.set(existingTC.getTypeName(), existingTC)
+function mergeTypes (schemaComposer, typeA, typeB) {
+  const typeName = typeA.getTypeName()
+
+  typeA.merge(typeB)
+  typeA.extendExtensions(typeB.getExtensions())
+  schemaComposer.set(typeName, typeA)
 }
 
-function processObjectTypes (schemaComposer) {
-  for (const typeComposer of schemaComposer.values()) {
-    if (!(typeComposer instanceof ObjectTypeComposer)) continue
-    if (typeComposer === schemaComposer.Query) continue
-
-    if (typeComposer.getExtension('isUserDefined')) {
-      processObjectFields(typeComposer)
+function processTypes (schemaComposer) {
+  for (const [typeComposer] of schemaComposer.entries()) {
+    switch (typeComposer.constructor) {
+      case ObjectTypeComposer:
+        processFields(typeComposer)
+        break
     }
-
-    applyFieldExtensions(typeComposer)
   }
 }
 
-function processObjectFields (typeComposer) {
+function processFields (typeComposer) {
   const fields = typeComposer.getFields()
 
   for (const fieldName in fields) {
+    const fieldConfig = typeComposer.getFieldConfig(fieldName)
+    const fieldTypeComposer = typeComposer.getFieldTC(fieldName)
+
+    if (
+      fieldTypeComposer instanceof ObjectTypeComposer &&
+      fieldTypeComposer !== typeComposer
+    ) {
+      processFields(fieldTypeComposer)
+    }
+
+    if (
+      !typeComposer.getExtension('isUserDefined') ||
+      // field has custom arguments, expecting custom resolver
+      !isEmpty(fieldConfig.args) ||
+      // already has a custom resolver
+      fieldConfig.resolve
+    ) {
+      continue
+    }
+
     const extensions = typeComposer.getFieldExtensions(fieldName)
-    const resolver = getFieldResolver(typeComposer, fieldName, extensions)
+    const fieldComposer = typeComposer.getFieldTC(fieldName)
+    const typeName = fieldComposer.getTypeName()
 
-    if (resolver) {
-      extendFieldResolver(typeComposer, fieldName, resolver)
+    if (
+      fieldComposer instanceof ObjectTypeComposer &&
+      fieldComposer.hasInterface('Node')
+    ) {
+      const isPlural = typeComposer.isFieldPlural(fieldName)
+      const resolverName = isPlural ? 'referenceMany' : 'referenceOne'
+      const resolver = fieldComposer.getResolver(resolverName)
+
+      typeComposer.setField(fieldName, resolver)
+    } else if (scalarTypeResolvers[typeName]) {
+      typeComposer.setField(fieldName, scalarTypeResolvers[typeName])
     }
-  }
-}
 
-function getFieldResolver (typeComposer, fieldName) {
-  const fieldComposer = typeComposer.getFieldTC(fieldName)
-
-  if (
-    fieldComposer instanceof ObjectTypeComposer &&
-    fieldComposer.hasInterface('Node')
-  ) {
-    const isPlural = typeComposer.isFieldPlural(fieldName)
-    const resolverName = isPlural ? 'referenceMany' : 'referenceOne'
-
-    return fieldComposer.getResolver(resolverName)
+    typeComposer.setFieldExtensions(fieldName, extensions)
   }
 
-  return scalarTypeResolvers[fieldComposer.getTypeName()]
-}
-
-function extendFieldResolver (typeComposer, fieldName, resolver) {
-  const fieldConfig = typeComposer.getFieldConfig(fieldName)
-  const originalResolver = resolver.resolve || defaultFieldResolver
-  const resolve = fieldConfig.resolve || originalResolver
-
-  typeComposer.extendField(fieldName, {
-    type: fieldConfig.type || resolver.type,
-    args: {
-      ...resolver.args,
-      ...fieldConfig.args
-    },
-    resolve (obj, args, ctx, info) {
-      return resolve(obj, args, ctx, { ...info, originalResolver })
-    }
-  })
+  applyFieldExtensions(typeComposer)
 }
 
 function addSchemas (schemaComposer, schemas) {
@@ -238,19 +239,17 @@ function addResolvers (schemaComposer, resolvers = {}) {
           const field = typeComposer.getFieldConfig(fieldName)
           const originalResolver = field.resolve || defaultFieldResolver
 
-          typeComposer.extendField(fieldName, {
+          typeComposer.setField(fieldName, {
             type: fieldOptions.type || field.type,
             args: fieldOptions.args || field.args,
-            resolve (obj, args, ctx, info) {
-              return fieldOptions.resolve(obj, args, ctx, { ...info, originalResolver })
-            }
+            resolve: fieldOptions.resolve || originalResolver
           })
         } else {
           if (!fieldOptions.type) {
             throw new Error(`${typeName}.${fieldName} must have a 'type' property.`)
           }
 
-          typeComposer.addFields({ [fieldName]: fieldOptions })
+          typeComposer.setField(fieldName, fieldOptions)
         }
       }
     }

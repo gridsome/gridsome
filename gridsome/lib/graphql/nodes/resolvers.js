@@ -1,6 +1,11 @@
 const { isRefField } = require('../utils')
 const { toFilterArgs } = require('../filters/query')
-const { createPagedNodeEdges, createSortOptions } = require('./utils')
+
+const {
+  applyChainArgs,
+  createSortOptions,
+  createPagedNodeEdges
+} = require('./utils')
 
 exports.createFindOneResolver = function (typeComposer) {
   const typeName = typeComposer.getTypeName()
@@ -47,14 +52,16 @@ exports.createFindManyPaginatedResolver = function (typeComposer) {
 exports.createReferenceOneResolver = function (typeComposer) {
   const typeName = typeComposer.getTypeName()
 
-  return function referenceOneResolver (obj, { by = 'id' }, ctx, info) {
-    const contentType = ctx.store.getContentType(typeName)
-    const fieldValue = obj[info.fieldName]
+  return function referenceOneResolver ({ source, args, context, info }) {
+    const contentType = context.store.getContentType(typeName)
+    const fieldValue = source[info.fieldName]
     const referenceValue = isRefField(fieldValue)
       ? fieldValue.id
       : fieldValue
 
     if (!fieldValue) return null
+
+    const { by = 'id' } = args
 
     if (by === 'id') {
       return contentType.getNode(referenceValue)
@@ -67,17 +74,47 @@ exports.createReferenceOneResolver = function (typeComposer) {
 exports.createReferenceManyResolver = function (typeComposer) {
   const typeName = typeComposer.getTypeName()
 
-  return function referenceManyResolver (obj, { by = 'id' }, ctx, info) {
-    const contentType = ctx.store.getContentType(typeName)
-    const fieldValue = obj[info.fieldName]
+  return function referenceManyResolver ({ source, args, context, info }) {
+    const contentType = context.store.getContentType(typeName)
+    const fieldValue = source[info.fieldName]
     const referenceValues = Array.isArray(fieldValue)
       ? fieldValue.map(value => isRefField(value) ? value.id : value)
       : []
 
     if (referenceValues.length < 1) return []
 
+    const { by = 'id' } = args
+
     return contentType.findNodes({
       [by]: { $in: referenceValues }
     })
   }
 }
+
+exports.createReferenceManyAdvancedResolver = function (typeComposer) {
+  const typeName = typeComposer.getTypeName()
+
+  return function referenceManyAdvancedResolver ({ source, args, context, info }) {
+    const { collection } = context.store.getContentType(typeName)
+    const fieldValue = source[info.fieldName]
+    const referenceValues = Array.isArray(fieldValue)
+      ? fieldValue.map(value => isRefField(value) ? value.id : value)
+      : []
+
+    if (referenceValues.length < 1) return []
+
+    const sort = createSortOptions(args)
+    const { by = 'id' } = args
+
+    for (const [fieldName] of sort) {
+      collection.ensureIndex(fieldName)
+    }
+
+    const chain = collection.chain().find({
+      [by]: { $in: referenceValues }
+    })
+
+    return applyChainArgs(chain, args, sort).data()
+  }
+}
+

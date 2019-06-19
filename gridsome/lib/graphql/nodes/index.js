@@ -1,13 +1,14 @@
+const graphql = require('../graphql')
 const camelCase = require('camelcase')
 const { createBelongsTo } = require('./belongsTo')
 const { PER_PAGE } = require('../../utils/constants')
-const { createRefResolver } = require('../resolvers')
 const { createFilterInput } = require('../filters/input')
 const createFieldDefinitions = require('../createFieldDefinitions')
-const { createFieldTypes, createRefType } = require('../createFieldTypes')
+const { createFieldTypes } = require('../createFieldTypes')
+const { SORT_ORDER } = require('../../utils/constants')
 const { isRefFieldDefinition } = require('../utils')
 
-const { reduce, mapValues, isEmpty, isPlainObject } = require('lodash')
+const { mapValues, isEmpty, isPlainObject } = require('lodash')
 
 module.exports = function createNodesSchema (schemaComposer, store) {
   const typeNames = Object.keys(store.collections)
@@ -23,23 +24,12 @@ module.exports = function createNodesSchema (schemaComposer, store) {
   for (const typeName of typeNames) {
     const contentType = store.getContentType(typeName)
     const typeComposer = schemaComposer.get(typeName)
-    const fieldDefs = inferFields(typeComposer, contentType)
 
-    const args = {
-      schemaComposer,
-      typeComposer,
-      contentType,
-      fieldDefs,
-      typeNames,
-      typeName
-    }
-
-    createFields(args)
-    createRefFields(args)
+    createFields(schemaComposer, typeComposer, contentType)
     createFilterInput(schemaComposer, typeComposer)
     createResolvers(typeComposer, contentType)
-
-    typeComposer.addFields(createThirdPartyFields(args))
+    createReferenceFields(schemaComposer, typeComposer, contentType)
+    createThirdPartyFields(typeComposer, contentType)
 
     const fieldName = camelCase(typeName)
     const allFieldName = camelCase(`all ${typeName}`)
@@ -103,8 +93,26 @@ function createTypeComposers (schemaComposer, store) {
     })
 
     typeComposer.addInterface('Node')
-    typeComposer.setIsTypeOf(node => node.internal && node.internal.typeName === typeName)
+    typeComposer.setIsTypeOf(node =>
+      node.internal && node.internal.typeName === typeName
+    )
   }
+}
+
+function createFields (schemaComposer, typeComposer, contentType) {
+  const typeName = typeComposer.getTypeName()
+  const fieldDefs = inferFields(typeComposer, contentType)
+  const fieldTypes = createFieldTypes(schemaComposer, fieldDefs, typeName)
+
+  processInferredFields(typeComposer, fieldDefs, fieldTypes)
+
+  for (const fieldName in fieldTypes) {
+    if (!typeComposer.hasField(fieldName)) {
+      typeComposer.setField(fieldName, fieldTypes[fieldName])
+    }
+  }
+
+  typeComposer.setField('id', 'ID!')
 }
 
 function inferFields (typeComposer, contentType) {
@@ -116,36 +124,6 @@ function inferFields (typeComposer, contentType) {
   }
 
   return createFieldDefinitions(contentType.data())
-}
-
-function createFields ({
-  schemaComposer,
-  typeComposer,
-  fieldDefs,
-  typeName,
-  typeNames
-}) {
-  const fieldNames = typeComposer.getFieldNames()
-
-  const inferFieldDefs = reduce(fieldDefs, (acc, def) => {
-    if (!fieldNames.includes(def.fieldName)) {
-      acc[def.fieldName] = def
-    }
-
-    return acc
-  }, {})
-
-  const fieldTypes = createFieldTypes(schemaComposer, inferFieldDefs, typeName, typeNames)
-
-  processInferredFields(typeComposer, inferFieldDefs, fieldTypes)
-
-  for (const fieldName in fieldTypes) {
-    if (!typeComposer.hasField(fieldName)) {
-      typeComposer.setField(fieldName, fieldTypes[fieldName])
-    }
-  }
-
-  typeComposer.setField('id', 'ID!')
 }
 
 function processInferredFields (typeComposer, fieldDefs, fieldTypes) {
@@ -161,8 +139,7 @@ function processInferredFields (typeComposer, fieldDefs, fieldTypes) {
   }
 }
 
-function createThirdPartyFields ({ contentType }) {
-  const graphql = require('../graphql')
+function createThirdPartyFields (typeComposer, contentType) {
   const context = { contentType, graphql }
   const fields = {}
 
@@ -182,14 +159,15 @@ function createThirdPartyFields ({ contentType }) {
     }
   }
 
-  return fields
+  typeComposer.addFields(fields)
 }
 
 const {
   createFindOneResolver,
   createFindManyPaginatedResolver,
   createReferenceOneResolver,
-  createReferenceManyResolver
+  createReferenceManyResolver,
+  createReferenceManyAdvancedResolver
 } = require('./resolvers')
 
 function createResolvers (typeComposer, contentType) {
@@ -288,36 +266,30 @@ function createResolvers (typeComposer, contentType) {
     type: [typeName],
     resolve: createReferenceManyResolver(typeComposer)
   })
+
+  typeComposer.addResolver({
+    name: 'referenceManyAdvanced',
+    type: [typeName],
+    args: {
+      sortBy: { type: 'String' },
+      order: { type: 'SortOrder', defaultValue: SORT_ORDER },
+      skip: { type: 'Int', defaultValue: 0 },
+      sort: { type: '[SortArgument]' },
+      limit: { type: 'Int' }
+    },
+    resolve: createReferenceManyAdvancedResolver(typeComposer)
+  })
 }
 
-function createRefFields ({
-  schemaComposer,
-  typeComposer,
-  contentType,
-  fieldDefs,
-  typeNames
-}) {
-  if (isEmpty(contentType.options.refs)) return {}
+function createReferenceFields (schemaComposer, typeComposer, contentType) {
+  if (isEmpty(contentType.options.refs)) return
 
   const refs = mapValues(contentType.options.refs, ({ typeName }, fieldName) => {
-    const isList = Array.isArray(fieldDefs[fieldName].value)
-    const ref = { typeName, isList }
+    const refTypeComposer = schemaComposer.get(typeName)
 
-    const resolve = createRefResolver(ref)
-
-    return {
-      ...createRefType(schemaComposer, ref, fieldName, typeName, typeNames),
-      resolve (obj, args, context, info) {
-        const field = {
-          [fieldName]: {
-            typeName,
-            id: obj[fieldName]
-          }
-        }
-
-        return resolve(field, args, context, info)
-      }
-    }
+    return typeComposer.isFieldPlural(fieldName)
+      ? refTypeComposer.getResolver('referenceMany')
+      : refTypeComposer.getResolver('referenceOne')
   })
 
   typeComposer.addFields(refs)

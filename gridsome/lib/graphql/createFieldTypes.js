@@ -8,12 +8,12 @@ const { is32BitInt, isRefFieldDefinition, createTypeName } = require('./utils')
 const { SORT_ORDER } = require('../utils/constants')
 const { warn } = require('../utils/log')
 
-function createFieldTypes (schemaComposer, fields, typeName, typeNames = []) {
+function createFieldTypes (schemaComposer, fields, prefix = '') {
   const res = {}
 
   for (const key in fields) {
     const options = fields[key]
-    const result = createFieldType(schemaComposer, options.value, key, typeName, typeNames)
+    const result = createFieldType(schemaComposer, options.value, key, prefix)
 
     if (result) {
       res[options.fieldName] = result
@@ -23,12 +23,12 @@ function createFieldTypes (schemaComposer, fields, typeName, typeNames = []) {
   return res
 }
 
-function createFieldType (schemaComposer, value, key, typeName, typeNames) {
+function createFieldType (schemaComposer, value, key, prefix) {
   if (value === undefined) return null
   if (value === null) return null
 
   if (Array.isArray(value)) {
-    const type = createFieldType(schemaComposer, value[0], key, typeName, typeNames)
+    const type = createFieldType(schemaComposer, value[0], key, prefix)
 
     return type !== null ? {
       type: [type.type],
@@ -60,18 +60,18 @@ function createFieldType (schemaComposer, value, key, typeName, typeNames) {
       return { type: is32BitInt(value) ? 'Int' : 'Float' }
     case 'object':
       return isRefFieldDefinition(value)
-        ? createRefType(schemaComposer, value, key, typeName, typeNames)
-        : createObjectType(schemaComposer, value, key, typeName, typeNames)
+        ? createRefType(schemaComposer, value, key, prefix)
+        : createObjectType(schemaComposer, value, key, prefix)
   }
 }
 
-function createObjectType (schemaComposer, value, fieldName, typeName, typeNames) {
-  const name = createTypeName(typeName, fieldName)
+function createObjectType (schemaComposer, value, fieldName, prefix) {
+  const name = createTypeName(prefix, fieldName)
   const fields = {}
 
   for (const key in value) {
     const options = value[key]
-    const type = createFieldType(schemaComposer, options.value, key, name, typeNames)
+    const type = createFieldType(schemaComposer, options.value, key, name)
 
     if (type) {
       fields[options.fieldName] = type
@@ -83,9 +83,9 @@ function createObjectType (schemaComposer, value, fieldName, typeName, typeNames
     : null
 }
 
-function createRefType (schemaComposer, ref, fieldName, fieldTypeName, typeNames) {
+function createRefType (schemaComposer, ref, fieldName, fieldTypeName) {
   const typeName = Array.isArray(ref.typeName)
-    ? ref.typeName.filter(typeName => typeNames.includes(typeName))
+    ? ref.typeName.filter(typeName => schemaComposer.has(typeName))
     : ref.typeName
 
   const res = {
@@ -105,7 +105,7 @@ function createRefType (schemaComposer, ref, fieldName, fieldTypeName, typeNames
       warn(`No reference found for ${fieldName}.`)
       return null
     }
-  } else if (typeNames.includes(typeName)) {
+  } else if (schemaComposer.has(typeName)) {
     res.type = typeName
   } else {
     warn(`No reference found for ${fieldName}.`)

@@ -158,40 +158,90 @@ test('add custom GraphQL types from SDL', async () => {
   expect(data.post.author).toMatchObject({ name: 'The Author' })
 })
 
-test('add @reference directive', async () => {
+test('add reference resolvers', async () => {
   const app = await createApp(function (api) {
-    api.loadSource(({ addContentType, addSchemaTypes }) => {
+    api.loadSource(({ addContentType, addSchemaTypes, addSchemaResolvers }) => {
       const tracks = addContentType('Track')
       const albums = addContentType('Album')
 
-      tracks.addNode({ id: '1', name: 'A Track', album: 'first-album', albums: ['second-album', 'third-album'] })
       albums.addNode({ id: '1', name: 'First Album', slug: 'first-album' })
       albums.addNode({ id: '2', name: 'Second Album', slug: 'second-album' })
       albums.addNode({ id: '3', name: 'Third Album', slug: 'third-album' })
 
+      tracks.addNode({
+        id: '1',
+        album: '2',
+        albums: ['1', '2'],
+        albumBySlug: 'third-album',
+        albumsBySlug: ['second-album', 'third-album'],
+        anotherAlbum: '2',
+        otherAlbums: ['2', '3'],
+        overiddenAlbum: '2'
+      })
+
       addSchemaTypes(`
         type Track implements Node {
-          album: Album @reference(by:"slug")
-          albums: [Album] @reference(by:"slug")
+          album: Album
+          albums: [Album]
+          albumBySlug: Album @reference(by:"slug")
+          albumsBySlug: [Album] @reference(by:"slug")
+          anotherAlbum: Album @reference
+          otherAlbums: [Album] @reference
+          overiddenAlbum: Album
+          customAlbum(id: ID!): Album
         }
       `)
+
+      addSchemaResolvers({
+        Track: {
+          overiddenAlbum (source, args, context) {
+            return context.store.getContentType('Album').getNode('2')
+          },
+          customAlbum (source, { id }, context) {
+            return context.store.getContentType('Album').getNode(id)
+          }
+        }
+      })
     })
   })
 
   const { errors, data } = await app.graphql(`{
     track(id:"1") {
-      album {
-        name
-      }
-      albums {
-        name
-      }
+      album { name }
+      albums { name }
+      albumBySlug { name }
+      albumsBySlug { name }
+      anotherAlbum { name }
+      otherAlbums(limit:1, skip:1) { name }
+      overiddenAlbum { name }
+      customAlbum(id:"2") { name }
     }
   }`)
 
+  const schemaComposer = app.schema.getComposer()
+  const typeComposer = schemaComposer.get('Track')
+  const fields = typeComposer.getFields()
+
   expect(errors).toBeUndefined()
-  expect(data.track.album.name).toEqual('First Album')
+  expect(data.track.album.name).toEqual('Second Album')
   expect(data.track.albums).toHaveLength(2)
+  expect(data.track.albums[0].name).toEqual('First Album')
+  expect(data.track.albums[1].name).toEqual('Second Album')
+  expect(data.track.albumBySlug.name).toEqual('Third Album')
+  expect(data.track.albumsBySlug).toHaveLength(2)
+  expect(data.track.albumsBySlug[0].name).toEqual('Second Album')
+  expect(data.track.albumsBySlug[1].name).toEqual('Third Album')
+  expect(data.track.anotherAlbum.name).toEqual('Second Album')
+  expect(data.track.otherAlbums).toHaveLength(1)
+  expect(data.track.otherAlbums[0].name).toEqual('Third Album')
+  expect(data.track.overiddenAlbum.name).toEqual('Second Album')
+  expect(data.track.customAlbum.name).toEqual('Second Album')
+
+  expect(Object.keys(fields.albums.args)).toHaveLength(0)
+  // should not inherit args because it has custom args
+  expect(Object.keys(fields.customAlbum.args)).toEqual(
+    expect.arrayContaining(['id'])
+  )
 })
 
 test('add custom resolver for invalid field names', async () => {
@@ -359,6 +409,7 @@ test('insert default resolvers for SDL', async () => {
       addContentType('Post').addNode({
         id: '1',
         title: 'My Post',
+        author: '1',
         authors: [
           store.createReference('Author', '1')
         ],
@@ -378,18 +429,6 @@ test('insert default resolvers for SDL', async () => {
           object: PostObject
         }
       `)
-
-      addSchemaResolvers({
-        Post: {
-          author: {
-            resolve (obj, args, ctx, info) {
-              return info.originalResolver({
-                author: store.createReference('Author', '1')
-              }, args, ctx, info)
-            }
-          }
-        }
-      })
     })
   })
 
@@ -419,7 +458,7 @@ test('insert default resolvers for SDL', async () => {
 test('insert default resolvers with createObjectType', async () => {
   const app = await createApp(function (api) {
     api.loadSource(({ addContentType, addSchemaTypes, addSchemaResolvers, schema }) => {
-      addContentType('Post').addNode({ id: '1', title: 'My Post', authors: ['1'] })
+      addContentType('Post').addNode({ id: '1', title: 'My Post', author: '1', authors: ['1'] })
       addContentType('Author').addNode({ id: '1', name: 'An Author' })
 
       addSchemaTypes([
@@ -445,16 +484,6 @@ test('insert default resolvers with createObjectType', async () => {
           }
         })
       ])
-
-      addSchemaResolvers({
-        Post: {
-          author: {
-            resolve (obj, args, ctx, info) {
-              return info.originalResolver({ author: '1' }, args, ctx, info)
-            }
-          }
-        }
-      })
     })
   })
 

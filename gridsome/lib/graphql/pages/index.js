@@ -10,7 +10,7 @@ module.exports = schemaComposer => {
     }
   })
 
-  const filterComposer = createFilterInput(schemaComposer, typeComposer)
+  const inputTypeComposer = createFilterInput(schemaComposer, typeComposer)
 
   schemaComposer.Query.addFields({
     page: {
@@ -26,7 +26,7 @@ module.exports = schemaComposer => {
       type: () => [typeComposer],
       args: {
         filter: {
-          type: filterComposer,
+          type: inputTypeComposer,
           description: 'Filter pages.'
         }
       },
@@ -34,7 +34,7 @@ module.exports = schemaComposer => {
         const query = {}
 
         if (filter) {
-          Object.assign(query, toFilterArgs(filter, filterComposer))
+          Object.assign(query, toFilterArgs(filter, inputTypeComposer))
         }
 
         return pages.findPages(query)

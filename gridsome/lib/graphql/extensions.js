@@ -21,12 +21,26 @@ const fieldExtensions = {
     args: {
       by: { type: 'String', defaultValue: 'id' }
     },
-    apply (ext, config) {
+    apply (ext, config, { typeComposer, fieldName }) {
       const resolve = config.resolve || defaultFieldResolver
+      const isPlural = typeComposer.isFieldPlural(fieldName)
+
+      if (isPlural) {
+        const refTypeComposer = typeComposer.getFieldTC(fieldName)
+        const referenceManyAdvanced = refTypeComposer.getResolver('referenceManyAdvanced')
+        const resolve = referenceManyAdvanced.getResolve()
+
+        return {
+          args: referenceManyAdvanced.getArgs(),
+          resolve (source, args, context, info) {
+            return resolve({ source, args: { ...args, by: ext.by }, context, info })
+          }
+        }
+      }
 
       return {
-        resolve (obj, args, ctx, info) {
-          return resolve(obj, { ...args, ...ext }, ctx, info)
+        resolve (source, args, context, info) {
+          return resolve(source, { ...args, by: ext.by }, context, info)
         }
       }
     }
@@ -60,7 +74,10 @@ function applyFieldExtensions (typeComposer) {
 
         if (apply) {
           const fieldConfig = typeComposer.getFieldConfig(fieldName)
-          const newFieldConfig = apply(extensions[key], fieldConfig)
+          const newFieldConfig = apply(extensions[key], fieldConfig, {
+            typeComposer,
+            fieldName
+          })
 
           typeComposer.extendField(fieldName, newFieldConfig)
         }

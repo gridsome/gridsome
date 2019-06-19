@@ -19,14 +19,13 @@ module.exports = (schemaComposer, store) => {
     return addQueryField(schemaComposer, typeCompoer, metaData)
   }
 
-  inferMetaData(schemaComposer, typeCompoer, store, metaData)
+  inferMetaData(schemaComposer, typeCompoer, metaData)
   addQueryField(schemaComposer, typeCompoer, metaData)
 }
 
-function inferMetaData (schemaComposer, typeCompoer, store, metaData) {
-  const typeNames = Object.keys(store.collections)
+function inferMetaData (schemaComposer, typeCompoer, metaData) {
   const fieldDefs = createFieldDefinitions([metaData])
-  const fieldTypes = createFieldTypes(schemaComposer, fieldDefs, 'MetaData', typeNames)
+  const fieldTypes = createFieldTypes(schemaComposer, fieldDefs, 'MetaData')
 
   for (const fieldName in fieldTypes) {
     if (!typeCompoer.hasField(fieldName)) {
