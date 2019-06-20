@@ -5,6 +5,7 @@
   "homepage": "https://github.com/gridsome/gridsome/tree/master/packages/cli#readme",
   "repository": "https://github.com/gridsome/gridsome/tree/master/packages/cli",
   "main": "bin/gridsome.js",
+  "license": "MIT",
   "bin": {
     "gridsome": "./bin/gridsome.js"
   },
