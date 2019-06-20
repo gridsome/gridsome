@@ -1,4 +1,4 @@
-const { isRefField } = require('../utils')
+const { isRefField } = require('../../store/utils')
 const { toFilterArgs } = require('../filters/query')
 
 const {

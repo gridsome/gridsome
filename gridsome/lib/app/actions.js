@@ -97,19 +97,19 @@ function createSchemaActions (api, app) {
     GraphQLJSON,
 
     addSchema (schema) {
-      app._schemas.push(schema)
+      app.schema._schemas.push(schema)
     },
 
     addSchemaTypes (typesOrSDL) {
       if (Array.isArray(typesOrSDL)) {
-        app._schemaTypes.push(...typesOrSDL)
+        app.schema._types.push(...typesOrSDL)
       } else {
-        app._schemaTypes.push(typesOrSDL)
+        app.schema._types.push(typesOrSDL)
       }
     },
 
     addSchemaResolvers (resolvers) {
-      app._schemaResolvers.push(resolvers)
+      app.schema._resolvers.push(resolvers)
     },
 
     schema: {

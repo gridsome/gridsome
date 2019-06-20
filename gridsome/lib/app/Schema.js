@@ -1,12 +1,15 @@
 const autoBind = require('auto-bind')
+const { createSchema } = require('../graphql')
 const { graphql, execute } = require('graphql')
-const createSchemaComposer = require('../graphql/createSchema')
 
 class Schema {
   constructor (app) {
     this._app = app
     this._schema = null
     this._composer = null
+    this._resolvers = []
+    this._schemas = []
+    this._types = []
 
     autoBind(this)
   }
@@ -20,10 +23,17 @@ class Schema {
   }
 
   buildSchema (options = {}) {
-    const schemaComposer = createSchemaComposer(this._app.store, options)
+    const schemaComposer = createSchema(this._app.store, {
+      resolvers: this._resolvers.concat(options.resolvers || []),
+      schemas: this._schemas.concat(options.schemas || []),
+      types: this._types.concat(options.types || [])
+    })
 
-    this._composer = schemaComposer
     this._schema = schemaComposer.buildSchema()
+    this._composer = schemaComposer
+    this._resolvers = []
+    this._schemas = []
+    this._types = []
 
     return this
   }

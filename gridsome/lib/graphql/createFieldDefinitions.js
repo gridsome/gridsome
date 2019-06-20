@@ -1,5 +1,6 @@
 const { omit, isPlainObject, isNumber, isInteger } = require('lodash')
-const { isRefField, isRefFieldDefinition } = require('./utils')
+const { isRefFieldDefinition } = require('./utils')
+const { isRefField } = require('../store/utils')
 const { warn } = require('../utils/log')
 
 module.exports = function createFieldDefinitions (nodes) {

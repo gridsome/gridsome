@@ -1,9 +1,9 @@
 const path = require('path')
 const { Kind } = require('graphql')
-const App = require('../../app/App')
-const createApp = require('../../app/index')
-const createRenderQueue = require('../createRenderQueue')
+const App = require('../App')
+const createApp = require('../index')
 const { BOOTSTRAP_PAGES } = require('../../utils/constants')
+const createRenderQueue = require('../build/createRenderQueue')
 
 test('create render queue for basic project', async () => {
   const context = path.resolve(__dirname, '../../__tests__/__fixtures__/project-basic')

@@ -2,8 +2,8 @@ const path = require('path')
 const pMap = require('p-map')
 const hashSum = require('hash-sum')
 const hirestime = require('hirestime')
-const sysinfo = require('../utils/sysinfo')
-const { error, info } = require('../utils/log')
+const sysinfo = require('../../utils/sysinfo')
+const { error, info } = require('../../utils/log')
 
 async function executeQueries (renderQueue, app) {
   const timer = hirestime()

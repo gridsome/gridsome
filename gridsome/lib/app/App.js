@@ -33,9 +33,9 @@ class App {
       createRenderQueue: new AsyncSeriesWaterfallHook(['renderQueue', 'app'])
     }
 
-    this.hooks.createRenderQueue.tap('Gridsome', require('../pages/createRenderQueue'))
-    this.hooks.createRenderQueue.tap('Gridsome', require('../pages/createHTMLPaths'))
-    this.hooks.createRenderQueue.tapPromise('Gridsome', require('../graphql/executeQueries'))
+    this.hooks.createRenderQueue.tap('Gridsome', require('./build/createRenderQueue'))
+    this.hooks.createRenderQueue.tap('Gridsome', require('./build/createHTMLPaths'))
+    this.hooks.createRenderQueue.tapPromise('Gridsome', require('./build/executeQueries'))
 
     autoBind(this)
   }
@@ -143,10 +143,6 @@ class App {
   async loadSources () {
     const { createSchemaActions } = require('./actions')
 
-    this._schemas = []
-    this._schemaTypes = []
-    this._schemaResolvers = []
-
     await this.events.dispatch('loadSource', api => {
       return createSchemaActions(api, this)
     })
@@ -160,13 +156,11 @@ class App {
     })
 
     // add custom schemas returned from the hook handlers
-    results.forEach(schema => schema && this.schemas.push(schema))
+    results.forEach(schema =>
+      schema && this.schema._schemas.push(schema)
+    )
 
-    this.schema.buildSchema({
-      resolvers: this._schemaResolvers,
-      schemas: this._schemas,
-      types: this._schemaTypes
-    })
+    this.schema.buildSchema()
   }
 
   async createPages () {

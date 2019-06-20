@@ -1,6 +1,6 @@
-const { isRefField } = require('../graphql/utils')
 const { valueFromASTUntyped } = require('graphql')
 const { PER_PAGE } = require('../utils/constants')
+const { isRefField } = require('../store/utils')
 const { get } = require('lodash')
 
 module.exports = function createPageQuery (parsed, context = {}) {

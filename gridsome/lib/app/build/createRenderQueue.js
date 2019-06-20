@@ -1,7 +1,10 @@
-const { createQueryVariables } = require('./utils')
-const { toFilterArgs } = require('../graphql/filters/query')
-const { createBelongsToKey } = require('../graphql/nodes/belongsTo')
-const { createPagedNodeEdges } = require('../graphql/nodes/utils')
+const { createQueryVariables } = require('../../pages/utils')
+
+const {
+  toFilterArgs,
+  createBelongsToKey,
+  createPagedNodeEdges
+} = require('../../graphql')
 
 function createRenderQueue (renderQueue, { pages, store, schema }) {
   const queue = renderQueue.slice()

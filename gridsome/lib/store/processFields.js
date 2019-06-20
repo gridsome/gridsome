@@ -1,7 +1,6 @@
 const { isDate } = require('lodash')
-const { isRefField } = require('../graphql/utils')
+const { resolvePath, isRefField } = require('./utils')
 const { isResolvablePath, safeKey } = require('../utils')
-const { resolvePath } = require('./utils')
 
 module.exports = function processFields (fields = {}, refs = {}, options = {}) {
   const { origin = '', context, resolveAbsolute } = options
