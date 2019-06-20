@@ -2,7 +2,6 @@ const { hasNodeReference } = require('../utils')
 
 const {
   EnumTypeComposer,
-  UnionTypeComposer,
   ObjectTypeComposer
 } = require('graphql-compose')
 
@@ -69,10 +68,6 @@ function createInputTypeComposer (schemaComposer, typeComposer, fieldName) {
 
   if (typeComposer.isFieldPlural(fieldName)) {
     operators = listOperators
-  }
-
-  if (fieldTypeComposer instanceof UnionTypeComposer) {
-    // console.log(hasNodeReference(fieldTypeComposer), fieldTypeComposer)
   }
 
   operatorTypeComposer.addFields(

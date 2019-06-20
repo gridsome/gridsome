@@ -27,7 +27,6 @@ exports.createFindOneResolver = function (typeComposer) {
 }
 
 exports.createFindManyPaginatedResolver = function (typeComposer) {
-  const inputTypeComposer = typeComposer.getInputTypeComposer()
   const typeName = typeComposer.getTypeName()
 
   return function findManyPaginatedResolver ({ args, context }) {
@@ -40,6 +39,7 @@ exports.createFindManyPaginatedResolver = function (typeComposer) {
     }
 
     if (args.filter) {
+      const inputTypeComposer = typeComposer.getInputTypeComposer()
       Object.assign(query, toFilterArgs(args.filter, inputTypeComposer))
     }
 
@@ -77,9 +77,14 @@ exports.createReferenceManyResolver = function (typeComposer) {
   return function referenceManyResolver ({ source, args, context, info }) {
     const contentType = context.store.getContentType(typeName)
     const fieldValue = source[info.fieldName]
-    const referenceValues = Array.isArray(fieldValue)
+    let referenceValues = Array.isArray(fieldValue)
       ? fieldValue.map(value => isRefField(value) ? value.id : value)
       : []
+
+    // createReference('Post', ['1', '2', '3'])
+    if (isRefField(fieldValue) && Array.isArray(fieldValue.id)) {
+      referenceValues = fieldValue.id
+    }
 
     if (referenceValues.length < 1) return []
 
@@ -97,9 +102,14 @@ exports.createReferenceManyAdvancedResolver = function (typeComposer) {
   return function referenceManyAdvancedResolver ({ source, args, context, info }) {
     const { collection } = context.store.getContentType(typeName)
     const fieldValue = source[info.fieldName]
-    const referenceValues = Array.isArray(fieldValue)
+    let referenceValues = Array.isArray(fieldValue)
       ? fieldValue.map(value => isRefField(value) ? value.id : value)
       : []
+
+    // createReference('Post', ['1', '2', '3'])
+    if (isRefField(fieldValue) && Array.isArray(fieldValue.id)) {
+      referenceValues = fieldValue.id
+    }
 
     if (referenceValues.length < 1) return []
 

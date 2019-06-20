@@ -35,7 +35,7 @@ function calcTotalPages (paginate, store, schema) {
   let chain
 
   if (belongsToArgs) {
-    const context = schema.createSchemaContext()
+    const context = schema.createContext()
     const resolver = typeComposer.getResolver('findOne')
     const node = resolver.resolve({ args: belongsToArgs, context })
     filterQuery[createBelongsToKey(node)] = { $eq: true }

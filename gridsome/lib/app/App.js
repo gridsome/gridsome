@@ -79,7 +79,6 @@ class App {
     const Schema = require('./Schema')
     const AssetsQueue = require('./queue/AssetsQueue')
     const Codegen = require('./codegen')
-    const ComponentParser = require('./ComponentParser')
     const Pages = require('../pages/pages')
 
     this.events = new Events()
@@ -87,7 +86,6 @@ class App {
     this.schema = new Schema(this)
     this.assets = new AssetsQueue(this)
     this.codegen = new Codegen(this)
-    this.parser = new ComponentParser(this)
     this.pages = new Pages(this)
 
     // TODO: remove before 1.0

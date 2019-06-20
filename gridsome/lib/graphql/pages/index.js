@@ -6,7 +6,7 @@ module.exports = schemaComposer => {
     name: 'Page',
     fields: {
       path: 'String!',
-      context: 'JSON'
+      context: 'JSON!'
     }
   })
 

@@ -402,42 +402,6 @@ test('create node list reference', async () => {
   expect(data.testPost.customRefs.authors[1].title).toEqual('B')
 })
 
-test('create node list reference with missing types', async () => {
-  const authors = api.store.addContentType('TestAuthor')
-  const posts = api.store.addContentType('TestPost')
-
-  authors.addNode({ id: '1', title: 'First Author' })
-  authors.addNode({ id: '2', title: 'Second Author' })
-  authors.addNode({ id: '3', title: 'Third Author' })
-
-  posts.addNode({
-    id: '1',
-    customRefs: {
-      authors: [
-        api.store.createReference('TestUser', '1'),
-        api.store.createReference('TestAuthor', '2'),
-        api.store.createReference('TestUser', '3')
-      ]
-    }
-  })
-
-  const query = `{
-    testPost (id: "1") {
-      customRefs {
-        authors {
-          title
-        }
-      }
-    }
-  }`
-
-  const { errors, data } = await createSchemaAndExecute(query)
-
-  expect(errors).toBeUndefined()
-  expect(data.testPost.customRefs.authors).toHaveLength(1)
-  expect(data.testPost.customRefs.authors[0].title).toEqual('Second Author')
-})
-
 test('create node list reference with id as array', async () => {
   const authors = api.store.addContentType('TestAuthor')
   const posts = api.store.addContentType('TestPost')

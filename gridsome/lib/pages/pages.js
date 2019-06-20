@@ -1,4 +1,5 @@
 const path = require('path')
+const Parser = require('./Parser')
 const autoBind = require('auto-bind')
 const { Collection } = require('lokijs')
 const { FSWatcher } = require('chokidar')
@@ -14,9 +15,12 @@ class Pages {
   constructor (app) {
     this._app = app
     this._context = app.context
-    this._parser = app.parser
+    this._parser = new Parser(app)
     this._events = new EventEmitter()
-    this._watcher = new FSWatcher({ disableGlobbing: true })
+    this._watcher = new FSWatcher({
+      disableGlobbing: true
+    })
+
     this._watched = {}
     this._created = []
 

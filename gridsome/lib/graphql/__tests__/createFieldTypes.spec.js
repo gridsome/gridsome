@@ -1,3 +1,4 @@
+const App = require('../../app/App')
 const { createFieldTypes } = require('../createFieldTypes')
 const createFieldDefinitions = require('../createFieldDefinitions')
 const { SchemaComposer, ObjectTypeComposer } = require('graphql-compose')
@@ -94,10 +95,16 @@ test('merge node fields', () => {
   expect(fields.invalidRef.value).toBeUndefined()
 })
 
-test('create graphql types from node fields', () => {
-  const schemaComposr = new SchemaComposer()
+test('create graphql types from node fields', async () => {
+  const app = await createApp(function (api) {
+    api.loadSource(actions => {
+      actions.addContentType('Post')
+    })
+  })
+
+  const schemaComposr = app.schema.getComposer()
   const fields = createFieldDefinitions(nodes)
-  const types = createFieldTypes(schemaComposr, fields, 'TestPost', [])
+  const types = createFieldTypes(schemaComposr, fields, 'TestPost')
 
   expect(types._123.type).toEqual('Int')
   expect(types.string.type).toEqual('String')
@@ -213,3 +220,13 @@ test('infer file fields', () => {
   expect(types.file3.type).toEqual('String')
   expect(types.file4.type).toEqual('String')
 })
+
+const { BOOTSTRAP_PAGES } = require('../../utils/constants')
+
+function createApp (plugin, phase = BOOTSTRAP_PAGES) {
+  const app = new App(__dirname, {
+    localConfig: { plugins: plugin ? [plugin] : [] }
+  })
+
+  return app.bootstrap(phase)
+}

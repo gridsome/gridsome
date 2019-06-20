@@ -1,8 +1,16 @@
 const { reduce } = require('lodash')
-const { InputTypeComposer } = require('graphql-compose')
+
+const {
+  InputTypeComposer,
+  ThunkComposer
+} = require('graphql-compose')
 
 function toFilterArgs (filter, typeComposer, currentKey = '') {
   const args = {}
+
+  if (typeComposer instanceof ThunkComposer) {
+    typeComposer = typeComposer.getUnwrappedTC()
+  }
 
   for (let key in filter) {
     const value = filter[key]

@@ -20,6 +20,7 @@ module.exports = function createNodesSchema (schemaComposer, store) {
   })
 
   createTypeComposers(schemaComposer, store)
+  createResolvers(schemaComposer, store)
 
   for (const typeName of typeNames) {
     const contentType = store.getContentType(typeName)
@@ -27,7 +28,6 @@ module.exports = function createNodesSchema (schemaComposer, store) {
 
     createFields(schemaComposer, typeComposer, contentType)
     createFilterInput(schemaComposer, typeComposer)
-    createResolvers(typeComposer, contentType)
     createReferenceFields(schemaComposer, typeComposer, contentType)
     createThirdPartyFields(typeComposer, contentType)
 
@@ -173,8 +173,16 @@ const {
   createReferenceManyAdvancedResolver
 } = require('./resolvers')
 
-function createResolvers (typeComposer, contentType) {
-  const inputTypeComposer = typeComposer.getInputTypeComposer()
+function createResolvers (schemaComposer, store) {
+  for (const typeName in store.collections) {
+    const typeComposer = schemaComposer.get(typeName)
+    const contentType = store.getContentType(typeName)
+
+    createTypeResolvers(typeComposer, contentType)
+  }
+}
+
+function createTypeResolvers (typeComposer, contentType) {
   const typeName = typeComposer.getTypeName()
 
   const { defaultSortBy, defaultSortOrder } = contentType.options
@@ -207,7 +215,7 @@ function createResolvers (typeComposer, contentType) {
       page: { type: 'Int' },
       sort: { type: '[SortArgument]' },
       filter: {
-        type: inputTypeComposer,
+        type: `${typeName}FilterInput`,
         description: `Filter for ${typeName} nodes.`
       }
     },
@@ -247,7 +255,7 @@ function createReferenceFields (schemaComposer, typeComposer, contentType) {
     const refTypeComposer = schemaComposer.get(typeName)
 
     return typeComposer.isFieldPlural(fieldName)
-      ? refTypeComposer.getResolver('referenceMany')
+      ? refTypeComposer.getResolver('referenceManyAdvanced')
       : refTypeComposer.getResolver('referenceOne')
   })
 

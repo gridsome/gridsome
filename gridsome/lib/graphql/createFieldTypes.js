@@ -2,11 +2,8 @@ const { isEmpty } = require('lodash')
 const { isFile, fileType } = require('./types/file')
 const { isImage, imageType } = require('./types/image')
 const { isDate, dateType } = require('./types/date')
-const { createRefResolver } = require('./resolvers')
-const { ObjectTypeComposer, UnionTypeComposer } = require('graphql-compose')
+const { ObjectTypeComposer } = require('graphql-compose')
 const { is32BitInt, isRefFieldDefinition, createTypeName } = require('./utils')
-const { SORT_ORDER } = require('../utils/constants')
-const { warn } = require('../utils/log')
 
 function createFieldTypes (schemaComposer, fields, prefix = '') {
   const res = {}
@@ -83,48 +80,34 @@ function createObjectType (schemaComposer, value, fieldName, prefix) {
     : null
 }
 
+const {
+  createReferenceOneUnionResolver,
+  createReferenceManyUnionResolver
+} = require('./nodes/resolvers')
+
 function createRefType (schemaComposer, ref, fieldName, fieldTypeName) {
-  const typeName = Array.isArray(ref.typeName)
-    ? ref.typeName.filter(typeName => schemaComposer.has(typeName))
-    : ref.typeName
+  const typeNames = Array.isArray(ref.typeName) ? ref.typeName : [ref.typeName]
 
-  const res = {
-    resolve: createRefResolver({ ...ref, typeName })
-  }
+  if (typeNames.length > 1) {
+    const typeComposer = schemaComposer.createUnionTC({
+      name: createTypeName(fieldTypeName, fieldName + 'Ref'),
+      types: typeNames
+    })
 
-  if (Array.isArray(typeName)) {
-    if (typeName.length > 1) {
-      res.type = UnionTypeComposer.createTemp({
-        name: createTypeName(fieldTypeName, fieldName + 'Ref'),
-        description: `Reference to ${ref.typeName.join(', ')} nodes`,
-        types: typeName
-      }, schemaComposer)
-    } else if (typeName.length === 1) {
-      res.type = typeName[0]
-    } else {
-      warn(`No reference found for ${fieldName}.`)
-      return null
-    }
-  } else if (schemaComposer.has(typeName)) {
-    res.type = typeName
-  } else {
-    warn(`No reference found for ${fieldName}.`)
-    return null
-  }
-
-  if (ref.isList) {
-    res.type = [res.type]
-
-    res.args = {
-      sortBy: { type: 'String' },
-      order: { type: 'SortOrder', defaultValue: SORT_ORDER },
-      skip: { type: 'Int', defaultValue: 0 },
-      sort: { type: '[SortArgument]' },
-      limit: { type: 'Int' }
+    return {
+      type: ref.isList
+        ? [typeComposer]
+        : typeComposer,
+      resolve: ref.isList
+        ? createReferenceManyUnionResolver(typeComposer)
+        : createReferenceOneUnionResolver(typeComposer)
     }
   }
 
-  return res
+  const typeComposer = schemaComposer.get(typeNames[0])
+  const resolverName = ref.isList ? 'referenceManyAdvanced' : 'referenceOne'
+
+  return typeComposer.getResolver(resolverName)
 }
 
 module.exports = {
