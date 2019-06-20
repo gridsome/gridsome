@@ -37,14 +37,14 @@ const {
 } = require('./nodes/resolvers')
 
 module.exports = function createSchema (store, options = {}) {
-  const { types = [], schemas = [], resolvers = [] } = options
+  const { types = [], schemas = [], resolvers = [], extensions = [] } = options
   const schemaComposer = new SchemaComposer()
 
   initMustHaveTypes(schemaComposer).forEach(typeComposer => {
     schemaComposer.addSchemaMustHaveType(typeComposer)
   })
 
-  addDirectives(schemaComposer)
+  addDirectives(schemaComposer, extensions)
 
   directives.forEach(directive => {
     schemaComposer.addDirective(directive)
@@ -59,7 +59,7 @@ module.exports = function createSchema (store, options = {}) {
   createPagesSchema(schemaComposer)
   addSchemas(schemaComposer, schemas)
   addResolvers(schemaComposer, resolvers)
-  processTypes(schemaComposer)
+  processTypes(schemaComposer, extensions)
 
   return schemaComposer
 }
@@ -164,17 +164,17 @@ function mergeTypes (schemaComposer, typeA, typeB) {
   schemaComposer.set(typeName, typeA)
 }
 
-function processTypes (schemaComposer) {
+function processTypes (schemaComposer, extensions) {
   for (const [typeComposer] of schemaComposer.entries()) {
     switch (typeComposer.constructor) {
       case ObjectTypeComposer:
-        processFields(schemaComposer, typeComposer)
+        processFields(schemaComposer, typeComposer, extensions)
         break
     }
   }
 }
 
-function processFields (schemaComposer, typeComposer) {
+function processFields (schemaComposer, typeComposer, extensions) {
   const fields = typeComposer.getFields()
 
   for (const fieldName in fields) {
@@ -226,7 +226,7 @@ function processFields (schemaComposer, typeComposer) {
     typeComposer.setFieldExtensions(fieldName, extensions)
   }
 
-  applyFieldExtensions(typeComposer)
+  applyFieldExtensions(typeComposer, extensions)
 }
 
 function addSchemas (schemaComposer, schemas) {

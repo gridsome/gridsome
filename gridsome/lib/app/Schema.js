@@ -7,6 +7,7 @@ class Schema {
     this._app = app
     this._schema = null
     this._composer = null
+    this._extensions = {}
     this._resolvers = []
     this._schemas = []
     this._types = []
@@ -24,6 +25,7 @@ class Schema {
 
   buildSchema (options = {}) {
     const schemaComposer = createSchema(this._app.store, {
+      extensions: { ...this._extensions, ...options.extensions },
       resolvers: this._resolvers.concat(options.resolvers || []),
       schemas: this._schemas.concat(options.schemas || []),
       types: this._types.concat(options.types || [])
@@ -31,6 +33,7 @@ class Schema {
 
     this._schema = schemaComposer.buildSchema()
     this._composer = schemaComposer
+    this._extensions = {}
     this._resolvers = []
     this._schemas = []
     this._types = []

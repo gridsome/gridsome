@@ -11,33 +11,23 @@ const fieldExtensions = {
   proxy: require('./proxy')
 }
 
-function applyFieldExtensions (typeComposer) {
-  typeComposer.getFieldNames().forEach(fieldName => {
-    const extensions = typeComposer.getFieldExtensions(fieldName)
-
-    Object.keys(extensions)
-      .sort(key => key === 'proxy')
-      .forEach(key => {
-        const { apply } = fieldExtensions[key] || {}
-
-        if (apply) {
-          const fieldConfig = typeComposer.getFieldConfig(fieldName)
-          const newFieldConfig = apply(extensions[key], fieldConfig, {
-            typeComposer,
-            fieldName
-          })
-
-          typeComposer.extendField(fieldName, newFieldConfig)
-        }
-      })
-  })
-}
-
-function addDirectives (schemaComposer) {
+// TODO: validate allowed field types for custom extensions
+function addDirectives (schemaComposer, customExtensions = {}) {
   const { OBJECT, FIELD_DEFINITION } = DirectiveLocation
 
+  for (const key in customExtensions) {
+    if (fieldExtensions[key]) {
+      throw new Error(`Cannot add the '${key}' extension because it already exist.`)
+    }
+  }
+
+  const allFieldExtensions = {
+    ...customExtensions,
+    ...fieldExtensions
+  }
+
   addExtensionDirectives(schemaComposer, objectExtensions, OBJECT)
-  addExtensionDirectives(schemaComposer, fieldExtensions, FIELD_DEFINITION)
+  addExtensionDirectives(schemaComposer, allFieldExtensions, FIELD_DEFINITION)
 }
 
 function addExtensionDirectives (schemaComposer, extensions, location) {
@@ -76,7 +66,34 @@ function normalizeArgs (schemaComposer, args = {}) {
   return res
 }
 
+function applyFieldExtensions (typeComposer, customExtensions = {}) {
+  const allFieldExtensions = {
+    ...customExtensions,
+    ...fieldExtensions
+  }
+
+  typeComposer.getFieldNames().forEach(fieldName => {
+    const extensions = typeComposer.getFieldExtensions(fieldName)
+
+    Object.keys(extensions)
+      .sort(key => key === 'proxy')
+      .forEach(key => {
+        const { apply } = allFieldExtensions[key] || {}
+
+        if (apply) {
+          const fieldConfig = typeComposer.getFieldConfig(fieldName)
+          const newFieldConfig = apply(extensions[key], fieldConfig, {
+            typeComposer,
+            fieldName
+          })
+
+          typeComposer.extendField(fieldName, newFieldConfig)
+        }
+      })
+  })
+}
+
 module.exports = {
-  applyFieldExtensions,
-  addDirectives
+  addDirectives,
+  applyFieldExtensions
 }

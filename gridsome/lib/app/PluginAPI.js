@@ -85,6 +85,14 @@ class PluginAPI {
   afterBuild (fn) {
     this._on('afterBuild', fn)
   }
+
+  //
+  // experimental
+  //
+
+  __addSchemaFieldExtension (config) {
+    this._app.schema._extensions[config.name] = config
+  }
 }
 
 module.exports = PluginAPI
