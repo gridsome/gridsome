@@ -19,6 +19,7 @@ function genRoutes (app, routeMeta = {}) {
     const component = JSON.stringify(page.component)
     const chunkName = JSON.stringify(page.chunkName)
     const dataInfo = page.dataInfo || routeMeta[page.route]
+    const hasContext = Object.keys(page.context).length > 0
     const props = []
     const metas = []
 
@@ -29,7 +30,7 @@ function genRoutes (app, routeMeta = {}) {
       metas.push(`data: () => import(/* webpackChunkName: ${chunkName} */ ${JSON.stringify(dataInfo)})`)
     } else if (Array.isArray(dataInfo)) {
       metas.push(`data: ${JSON.stringify(dataInfo)}`)
-    } else if (process.env.GRIDSOME_MODE !== 'static' && (page.query.document || page.context)) {
+    } else if (process.env.GRIDSOME_MODE !== 'static' && (page.query.document || hasContext)) {
       metas.push(`data: true`)
     }
 
