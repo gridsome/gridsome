@@ -32,8 +32,5 @@
   "engines": {
     "node": ">=8.3",
     "yarn": "^1.5.1"
-  },
-  "dependencies": {
-    "queue": "^6.0.1"
   }
 }

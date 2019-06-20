@@ -8,6 +8,7 @@ const imageminWebp = require('imagemin-webp')
 const imageminMozjpeg = require('imagemin-mozjpeg')
 const imageminPngquant = require('imagemin-pngquant')
 const sysinfo = require('../utils/sysinfo')
+const { warmupSharp } = require('../utils/sharp')
 
 sharp.simd(true)
 
@@ -94,6 +95,7 @@ exports.processImage = async function ({
 }
 
 exports.process = async function ({ queue, cacheDir, backgroundColor }) {
+  await warmupSharp(sharp)
   await pMap(queue, async set => {
     const cachePath = cacheDir ? path.join(cacheDir, set.filename) : null
     await exports.processImage({
