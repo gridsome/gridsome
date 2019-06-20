@@ -112,10 +112,15 @@ test('add custom GraphQL union type', async () => {
 test('add custom GraphQL types from SDL', async () => {
   const app = await createApp(function (api) {
     api.loadSource(({ addContentType }) => {
+      addContentType('Tag').addNode({ id: '1', foo: { slug: 'tag-one' }})
       addContentType('Post').addNode({
         id: '1',
         title: 'My Post',
-        content: 'Value'
+        content: 'Value1',
+        foo: {
+          bar: 'Value2',
+          tag: 'tag-one'
+        }
       })
     })
 
@@ -126,7 +131,9 @@ test('add custom GraphQL types from SDL', async () => {
         }
         type Post implements Node @infer {
           proxyContent: String @proxy(from:"content")
-          author: Author
+          proxyDeep: String @proxy(from:"foo.bar")
+          proxyRef: Tag @reference(by:"foo.slug") @proxy(from:"foo.tag")
+          author: Author @proxy
         }
       `)
 
@@ -145,6 +152,10 @@ test('add custom GraphQL types from SDL', async () => {
       title
       content
       proxyContent
+      proxyDeep
+      proxyRef {
+        id
+      }
       author {
         name
       }
@@ -153,8 +164,10 @@ test('add custom GraphQL types from SDL', async () => {
 
   expect(errors).toBeUndefined()
   expect(data.post.title).toEqual('My Post')
-  expect(data.post.content).toEqual('Value')
-  expect(data.post.proxyContent).toEqual('Value')
+  expect(data.post.content).toEqual('Value1')
+  expect(data.post.proxyContent).toEqual('Value1')
+  expect(data.post.proxyDeep).toEqual('Value2')
+  expect(data.post.proxyRef).toMatchObject({ id: '1' })
   expect(data.post.author).toMatchObject({ name: 'The Author' })
 })
 
