@@ -16,9 +16,9 @@ exports.genTemplateBlock = function (html, file) {
 exports.genImportBlock = function (statements, file) {
   const layout = normalizeLayout(file.data.layout)
 
-  let code = statements.join('\n')
-
-  code += `import VueRemarkLayout from ${JSON.stringify(layout.component)}\n`
+  let code = statements.concat(
+    `import VueRemarkLayout from ${JSON.stringify(layout.component)}`
+  ).join('\n')
 
   const ast = parse(code, { sourceType: 'module' })
   const identifiers = {}
