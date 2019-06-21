@@ -1,11 +1,13 @@
 const path = require('path')
 const fs = require('fs-extra')
+const pMap = require('p-map')
 const sharp = require('sharp')
 const imagemin = require('imagemin')
 const colorString = require('color-string')
 const imageminWebp = require('imagemin-webp')
 const imageminMozjpeg = require('imagemin-mozjpeg')
 const imageminPngquant = require('imagemin-pngquant')
+const sysinfo = require('../utils/sysinfo')
 const { warmupSharp } = require('../utils/sharp')
 
 exports.processImage = async function ({
@@ -92,8 +94,7 @@ exports.processImage = async function ({
 
 exports.process = async function ({ queue, cacheDir, backgroundColor }) {
   await warmupSharp(sharp)
-
-  return Promise.all(queue.map(set => {
+  await pMap(queue, async set => {
     const cachePath = cacheDir ? path.join(cacheDir, set.filename) : null
 
     return exports.processImage({
@@ -102,5 +103,7 @@ exports.process = async function ({ queue, cacheDir, backgroundColor }) {
       cachePath,
       ...set
     })
-  }))
+  }, {
+    concurrency: sysinfo.cpus.logical
+  })
 }

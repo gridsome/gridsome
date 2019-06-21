@@ -1,7 +1,10 @@
 const path = require('path')
 const fs = require('fs-extra')
+const pMap = require('p-map')
+const readline = require('readline')
 const hirestime = require('hirestime')
 const { chunk, groupBy } = require('lodash')
+const sysinfo = require('./utils/sysinfo')
 const { log, info } = require('./utils/log')
 
 module.exports = async (context, args) => {
@@ -145,25 +148,40 @@ async function processFiles (files) {
 async function processImages (images, config) {
   const { createWorker } = require('./workers')
   const timer = hirestime()
-  const chunks = chunk(images.queue, 100)
+  const chunks = chunk(images.queue, 25)
   const worker = createWorker('image-processor')
   const totalAssets = images.queue.length
+  const totalJobs = chunks.length
 
-  await Promise.all(chunks.map(async queue => {
-    try {
+  let progress = 0
+
+  function status (msg) {
+    readline.clearLine(process.stdout, 0)
+    readline.cursorTo(process.stdout, 0, null)
+    process.stdout.write(msg)
+  }
+
+  status(`Processing images (${totalAssets} images) - 0%`)
+
+  try {
+    await pMap(chunks, async queue => {
       await worker.process({
         queue,
         outDir: config.outDir,
         cacheDir: config.imageCacheDir,
         backgroundColor: config.images.backgroundColor
       })
-    } catch (err) {
-      worker.end()
-      throw err
-    }
-  }))
+
+      status(`Processing images (${totalAssets} images) - ${Math.round((++progress) * 100 / totalJobs)}%`)
+    }, {
+      concurrency: sysinfo.cpus.logical
+    })
+  } catch (err) {
+    worker.end()
+    throw err
+  }
 
   worker.end()
 
-  info(`Process images (${totalAssets} images) - ${timer(hirestime.S)}s`)
+  status(`Process images (${totalAssets} images) - ${timer(hirestime.S)}s\n`)
 }
