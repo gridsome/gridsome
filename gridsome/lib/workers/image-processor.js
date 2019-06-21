@@ -96,13 +96,12 @@ exports.process = async function ({ queue, cacheDir, backgroundColor }) {
   await warmupSharp(sharp)
   await pMap(queue, async set => {
     const cachePath = cacheDir ? path.join(cacheDir, set.filename) : null
-    await exports.processImage({
+
+    return exports.processImage({
       destPath: set.destPath,
       backgroundColor,
       cachePath,
       ...set
-    }).catch(err => {
-      console.error(err)
     })
   }, {
     concurrency: sysinfo.cpus.logical
