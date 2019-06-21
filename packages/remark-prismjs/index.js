@@ -35,5 +35,10 @@ function highlight ({ value, lang }, tag = 'pre') {
     code = escapeHtml(code)
   }
 
-  return `<${tag} class="language-${lang}">${code}</${tag}>`
+  const className = `language-${lang}`
+  const codeTag = `<code class="${className}">${code}</code>`
+
+  return tag === 'pre'
+    ? `<pre class="${className}">${codeTag}</pre>`
+    : codeTag
 }

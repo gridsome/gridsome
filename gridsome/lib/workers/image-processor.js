@@ -6,8 +6,7 @@ const colorString = require('color-string')
 const imageminWebp = require('imagemin-webp')
 const imageminMozjpeg = require('imagemin-mozjpeg')
 const imageminPngquant = require('imagemin-pngquant')
-
-sharp.simd(true)
+const { warmupSharp } = require('../utils/sharp')
 
 exports.processImage = async function ({
   size,
@@ -92,6 +91,8 @@ exports.processImage = async function ({
 }
 
 exports.process = async function ({ queue, cacheDir, backgroundColor }) {
+  await warmupSharp(sharp)
+
   return Promise.all(queue.map(set => {
     const cachePath = cacheDir ? path.join(cacheDir, set.filename) : null
 

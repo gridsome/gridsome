@@ -13,7 +13,7 @@ const builtInPlugins = [
 ]
 
 // TODO: use joi to define and validate config schema
-module.exports = (context, options = {}, pkg = {}) => {
+module.exports = (context, options = {}) => {
   const env = resolveEnv(context)
 
   Object.assign(process.env, env)
@@ -156,7 +156,9 @@ function resolvePkg (context) {
   try {
     const content = fs.readFileSync(pkgPath, 'utf-8')
     pkg = Object.assign(pkg, JSON.parse(content))
-  } catch (err) {}
+  } catch (err) {
+    // continue regardless of error
+  }
 
   if (
     !Object.keys(pkg.dependencies).includes('gridsome') &&

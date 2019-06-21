@@ -14,7 +14,7 @@ module.exports = {
   BOOTSTRAP_PAGES: 'pages',
   BOOTSTRAP_CODE: 'code',
 
-  internalRE: /^internal\:\/\//,
+  internalRE: /^internal:\/\//,
   transformerRE: /(?:^@?gridsome[/-]|\/)transformer-([\w-]+)/,
 
   NODE_FIELDS: ['$uid', '$loki', 'internal', 'id', '_id'],

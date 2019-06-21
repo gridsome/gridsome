@@ -23,11 +23,15 @@ export default (to, from, next) => {
       }
     })
     .catch(err => {
-      if (err.code === 'MODULE_NOT_FOUND' || err.code === 404) {
+      if (err.code === 'MODULE_NOT_FOUND') {
         console.error(err) // eslint-disable-line
         next({ name: '*', params: { 0: to.path }})
+      } if (err.code === 404 && to.path !== window.location.pathname) {
+        // reload page if coming from another page and data doesn't exist
+        window.location.assign(to.fullPath)
       } else {
         formatError(err, to)
+        next(err)
       }
     })
 }

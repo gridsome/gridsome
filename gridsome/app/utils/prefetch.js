@@ -11,7 +11,7 @@ export default function prefetch (url) {
     if (isSupported) {
       const link = document.createElement('link')
       const removeLink = () => document.head.removeChild(link)
-      
+
       link.onerror = err => {
         removeLink()
         reject(err)
@@ -21,16 +21,22 @@ export default function prefetch (url) {
         removeLink()
         resolve()
       }
-      
+
       link.setAttribute('rel', 'prefetch')
       link.setAttribute('href', url)
 
       document.head.appendChild(link)
     } else {
       const req = new XMLHttpRequest()
-      req.onload = () => req.status === 200 ? resolve() : reject()
-      req.withCredentials = true
       req.open('GET', url, true)
+      req.withCredentials = true
+
+      req.onload = () => {
+        if (req.status === 200) resolve()
+        else reject(new Error(req.statusText))
+      }
+
+      req.send(null)
     }
   })
 }

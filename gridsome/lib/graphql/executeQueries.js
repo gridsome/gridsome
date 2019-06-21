@@ -4,6 +4,7 @@ const hashSum = require('hash-sum')
 const hirestime = require('hirestime')
 const sysinfo = require('../utils/sysinfo')
 const { error, info } = require('../utils/log')
+const { isEmpty } = require('lodash')
 
 async function executeQueries (renderQueue, app) {
   const timer = hirestime()
@@ -13,6 +14,10 @@ async function executeQueries (renderQueue, app) {
   let group = 0
 
   const res = await pMap(renderQueue, async entry => {
+    if (!entry.query && isEmpty(entry.context)) {
+      return entry
+    }
+
     if (count % (groupSize - 1) === 0) group++
     count++
 
