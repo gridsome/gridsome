@@ -10,8 +10,6 @@ const imageminPngquant = require('imagemin-pngquant')
 const sysinfo = require('../utils/sysinfo')
 const { warmupSharp } = require('../utils/sharp')
 
-sharp.simd(true)
-
 exports.processImage = async function ({
   size,
   filePath,
