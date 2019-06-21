@@ -5,18 +5,25 @@ const loaderUtils = require('loader-utils')
 const cache = new LRU({ max: 1000 })
 
 module.exports = async function vueRemarkLoader (source, map) {
-  const callback = this.async()
-  const cacheKey = hash(source)
+  const plugin = loaderUtils.getOptions(this)
+  const cacheKey = hash(source + this.resourcePath)
   const cached = cache.get(cacheKey)
+  const callback = this.async()
+
+  let res = null
 
   if (cached) {
     callback(null, cached, map)
     return
   }
 
-  const plugin = loaderUtils.getOptions(this)
-  const sfc = await plugin.parse(source, this.resourcePath)
+  try {
+    res = await plugin.parse(source, this.resourcePath)
+  } catch (err) {
+    callback(err, source, map)
+    return
+  }
 
-  cache.set(cacheKey, sfc)
-  callback(null, sfc, map)
+  cache.set(cacheKey, res)
+  callback(null, res, map)
 }
