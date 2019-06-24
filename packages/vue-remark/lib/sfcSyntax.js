@@ -2,6 +2,7 @@ const isImport = value => /^import/.test(value)
 const isStyle = value => /^<style/.test(value)
 const isScript = value => /^<script/.test(value)
 const isTag = value => /^<\/?[A-Za-z][^>]*>/.test(value)
+const isSelfClosingTag = value => /\/>$/.test(value)
 const isQuery = value => /^<(page|static)-query/.test(value)
 
 module.exports = function sfcSyntax () {
@@ -22,27 +23,39 @@ function getValue (value) {
   return index !== -1 ? value.slice(0, index) : value
 }
 
-function tokenizeImportSyntax (eat, value) {
-  const subValue = getValue(value)
+function getTag (value) {
+  const [tag, name] = value.match(/^<([a-zA-Z0-9_-]+)[^>]*>/)
 
+  if (isSelfClosingTag(tag)) {
+    return tag
+  }
+
+  const re = new RegExp(`^<${name}[^>]*>(.|\\n|\\t)*?<\\/${name}>`)
+  const matches = value.match(re)
+
+  return matches ? matches[0] : ''
+}
+
+function tokenizeImportSyntax (eat, value) {
   if (isImport(value)) {
-    const lines = subValue.split('\n').filter(line => line.startsWith('import'))
-    return eat(subValue)({ type: 'vue-remark:import', value: lines.join('\n') })
+    const lines = getValue(value).split('\n')
+    const statements = lines.filter(line => line.startsWith('import'))
+    const portion = statements.join('\n')
+
+    return eat(portion)({ type: 'vue-remark:import', value: portion })
   }
 }
 
 function tokenizeSFCBlocks (eat, value) {
-  const subValue = getValue(value)
-
   if (isQuery(value) || isScript(value) || isStyle(value)) {
-    return eat(subValue)({ type: 'vue-remark:block', value: subValue })
+    const portion = getTag(value)
+    return eat(portion)({ type: 'vue-remark:block', value: portion })
   }
 }
 
 function tokenizeVueComponents (eat, value) {
-  const subValue = getValue(value)
-
   if (isTag(value)) {
-    return eat(subValue)({ type: 'html', value: subValue })
+    const portion = getTag(value)
+    return eat(portion)({ type: 'html', value: portion })
   }
 }
