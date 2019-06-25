@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.6.5](https://github.com/gridsome/gridsome/compare/gridsome@0.6.4...gridsome@0.6.5) (2019-06-25)
+
+
+### Bug Fixes
+
+* **app:** don’t fetch data if no context in development ([0850875](https://github.com/gridsome/gridsome/commit/0850875))
+* **app:** don’t use empty siteDescription ([#511](https://github.com/gridsome/gridsome/issues/511), [#516](https://github.com/gridsome/gridsome/issues/516)) ([346279d](https://github.com/gridsome/gridsome/commit/346279d))
+* **app:** improve IE11 compatibility ([39b5114](https://github.com/gridsome/gridsome/commit/39b5114))
+* **app:** reload when assets are missing ([#488](https://github.com/gridsome/gridsome/issues/488)) ([db86a09](https://github.com/gridsome/gridsome/commit/db86a09))
+* **app:** use xhr for better IE compatibility ([81b5e84](https://github.com/gridsome/gridsome/commit/81b5e84))
+* **build:** stabilize image processing worker ([#501](https://github.com/gridsome/gridsome/issues/501)) ([9d66273](https://github.com/gridsome/gridsome/commit/9d66273))
+* **build:** warm up sharp to prevent xmllib error ([918e76b](https://github.com/gridsome/gridsome/commit/918e76b))
+* **develop:** request graphql endpoint without page path ([#518](https://github.com/gridsome/gridsome/issues/518)) ([d9c0eec](https://github.com/gridsome/gridsome/commit/d9c0eec))
+* **graphql:** resolve deprecated node.fields field ([#477](https://github.com/gridsome/gridsome/issues/477)) ([36911bd](https://github.com/gridsome/gridsome/commit/36911bd))
+
+
+
+
+
 ## [0.6.4](https://github.com/gridsome/gridsome/compare/gridsome@0.6.3...gridsome@0.6.4) (2019-06-07)
 
 
