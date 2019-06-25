@@ -10,7 +10,7 @@ module.exports = ({ pages }) => {
       return res.sendStatus(200)
     }
 
-    if (body.query) {
+    if (body.query || !body.path) {
       return next()
     }
 
