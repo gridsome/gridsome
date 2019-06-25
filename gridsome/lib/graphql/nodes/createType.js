@@ -71,6 +71,7 @@ function createFields (contentType, customFields) {
   if (isEmpty(customFields)) return {}
 
   const fields = {
+    resolve: obj => obj,
     deprecationReason: 'Get field on node instead.',
     type: new GraphQLObjectType({
       name: `${contentType.typeName}Fields`,
