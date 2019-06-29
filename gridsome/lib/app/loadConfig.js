@@ -271,14 +271,14 @@ function normalizeIconsConfig (config = {}) {
   res.favicon = typeof icon.favicon === 'string'
     ? { src: icon.favicon, sizes: faviconSizes }
     : Object.assign({}, icon.favicon, {
-      sizes: faviconSizes,
-      src: defaultIcon
+      sizes: icon.favicon.sizes || faviconSizes,
+      src: icon.favicon.src || defaultIcon
     })
 
   res.touchicon = typeof icon.touchicon === 'string'
     ? { src: icon.touchicon, sizes: touchiconSizes, precomposed: false }
     : Object.assign({}, icon.touchicon, {
-      sizes: touchiconSizes,
+      sizes: icon.touchicon.sizes || touchiconSizes,
       src: res.favicon.src,
       precomposed: false
     })
