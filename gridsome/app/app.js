@@ -1,6 +1,8 @@
 import Vue from 'vue'
 import plugins from '~/.temp/plugins-server'
-import main from './main'
+
+import main from '~/main'
+import App from '~/App.vue'
 
 import head from './head'
 import router from './router'
@@ -9,11 +11,13 @@ import { url } from './utils/helpers'
 import graphqlGuard from './graphql/guard'
 import graphqlMixin from './graphql/mixin'
 
+import View from './components/View'
 import Link from './components/Link'
 import Image from './components/Image'
 import ClientOnly from './components/ClientOnly'
 
 Vue.mixin(graphqlMixin)
+Vue.component('g-view', View)
 Vue.component('g-link', Link)
 Vue.component('g-image', Image)
 Vue.component('ClientOnly', ClientOnly)
@@ -25,7 +29,7 @@ router.beforeEach(graphqlGuard)
 
 const context = {
   appOptions: {
-    render: h => h('router-view', { attrs: { id: 'app' } }),
+    render: h => h(App, { attrs: { id: 'app' }}),
     metaInfo: head,
     methods: {},
     data: {},

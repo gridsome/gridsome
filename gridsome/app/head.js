@@ -10,7 +10,6 @@ Vue.use(Meta, {
 })
 
 const head = {
-  title: config.siteName,
   titleTemplate: config.titleTemplate,
   __dangerouslyDisableSanitizers: ['style', 'script', 'noscript'],
   __dangerouslyDisableSanitizersByTagID: {},
@@ -36,14 +35,6 @@ const head = {
   script: [],
   style: [],
   link: []
-}
-
-if (config.siteDescription) {
-  head.meta.push({
-    key: 'description',
-    name: 'description',
-    content: config.siteDescription
-  })
 }
 
 icons.favicons.forEach(({ width, height, src: href }) => {

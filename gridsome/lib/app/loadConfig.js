@@ -25,7 +25,6 @@ module.exports = (context, options = {}) => {
   const resolve = (...p) => path.resolve(context, ...p)
   const isProd = process.env.NODE_ENV === 'production'
   const configPath = resolve('gridsome.config.js')
-  const localIndex = resolve('src/index.html')
   const args = options.args || {}
   const config = {}
   const plugins = []
@@ -123,7 +122,9 @@ module.exports = (context, options = {}) => {
 
   config.icon = normalizeIconsConfig(localConfig.icon)
 
-  config.templatePath = fs.existsSync(localIndex) ? localIndex : path.resolve(config.appPath, 'index.html')
+  const localIndex = resolve('src/index.html')
+  const fallbackIndex = path.resolve(config.appPath, 'fallbacks', 'index.html')
+  config.templatePath = fs.existsSync(localIndex) ? localIndex : fallbackIndex
   config.htmlTemplate = fs.readFileSync(config.templatePath, 'utf-8')
 
   config.css = defaultsDeep(localConfig.css || {}, css)
