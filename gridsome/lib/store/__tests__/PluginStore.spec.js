@@ -524,6 +524,7 @@ test('resolve file paths', () => {
     url3: 'git@github.com:gridsome/gridsome.git',
     url4: 'ftp://ftp.example.com',
     email: 'email@example.com',
+    email2: 'mailto:email@example.me',
     text: 'Lorem ipsum dolor sit amet.',
     text2: 'example.com',
     text3: 'md',
@@ -541,6 +542,7 @@ test('resolve file paths', () => {
   expect(node.url3).toEqual('git@github.com:gridsome/gridsome.git')
   expect(node.url4).toEqual('ftp://ftp.example.com')
   expect(node.email).toEqual('email@example.com')
+  expect(node.email2).toEqual('mailto:email@example.me')
   expect(node.text).toEqual('Lorem ipsum dolor sit amet.')
   expect(node.text2).toEqual('example.com')
   expect(node.text3).toEqual('md')

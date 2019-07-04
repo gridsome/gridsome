@@ -4,6 +4,7 @@ const isUrl = require('is-url')
 const mime = require('mime-types')
 const camelCase = require('camelcase')
 const isRelative = require('is-relative')
+const { isResolvablePath } = require('../utils')
 
 const nonValidCharsRE = new RegExp('[^a-zA-Z0-9_]', 'g')
 const leadingNumberRE = new RegExp('^([0-9])')
@@ -34,10 +35,13 @@ exports.resolvePath = function (origin, toPath, options = {}) {
 
   if (typeof toPath !== 'string') return toPath
   if (typeof origin !== 'string') return toPath
-  if (path.extname(toPath).length <= 1) return toPath
   if (isUrl(toPath)) return toPath
-  if (mime.lookup(toPath) === 'application/x-msdownload') return toPath
-  if (!mime.lookup(toPath)) return toPath
+  if (!isResolvablePath(toPath)) return toPath
+
+  const mimeType = mime.lookup(toPath)
+
+  if (!mimeType) return toPath
+  if (mimeType === 'application/x-msdownload') return toPath
 
   const url = isUrl(origin) ? exports.parseUrl(origin) : null
   const contextPath = url && resolveAbsolute === true ? url.baseUrl : context
