@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.6.6](https://github.com/gridsome/gridsome/compare/gridsome@0.6.5...gridsome@0.6.6) (2019-07-05)
+
+
+### Bug Fixes
+
+* **app:** parse json regardless of content-type ([#534](https://github.com/gridsome/gridsome/issues/534)) ([f2d2d40](https://github.com/gridsome/gridsome/commit/f2d2d40))
+* **develop:** show 404 for page/1 in development ([#515](https://github.com/gridsome/gridsome/issues/515)) ([9a10a37](https://github.com/gridsome/gridsome/commit/9a10a37))
+* **store:** do not resolve emails ([#500](https://github.com/gridsome/gridsome/issues/500)) ([6105069](https://github.com/gridsome/gridsome/commit/6105069))
+
+
+
+
+
 ## [0.6.5](https://github.com/gridsome/gridsome/compare/gridsome@0.6.4...gridsome@0.6.5) (2019-06-25)
 
 
