@@ -60,7 +60,7 @@ module.exports = async (context, args) => {
   async function createWebpackConfig (app) {
     const { SOCKJS_ENDPOINT, GRAPHQL_ENDPOINT, GRAPHQL_WS_ENDPOINT } = process.env
 
-    const config = await app.resolveChainableWebpackConfig()
+    const config = await app.compiler.resolveChainableWebpackConfig()
 
     config
       .plugin('friendly-errors')
@@ -85,6 +85,6 @@ module.exports = async (context, args) => {
         .prepend('webpack/hot/dev-server')
     })
 
-    return app.resolveWebpackConfig(false, config)
+    return app.compiler.resolveWebpackConfig(false, config)
   }
 }

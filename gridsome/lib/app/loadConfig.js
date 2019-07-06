@@ -9,7 +9,8 @@ const { internalRE, transformerRE, SUPPORTED_IMAGE_TYPES } = require('../utils/c
 const builtInPlugins = [
   path.resolve(__dirname, '../plugins/vue-components'),
   path.resolve(__dirname, '../plugins/vue-pages'),
-  path.resolve(__dirname, '../plugins/vue-templates')
+  path.resolve(__dirname, '../plugins/vue-templates'),
+  path.resolve(__dirname, '../plugins/NodePathPlugin.js')
 ]
 
 // TODO: use joi to define and validate config schema
@@ -201,16 +202,26 @@ function resolvePluginEntries (id, context) {
   let dirName = ''
 
   if (typeof id === 'function') {
-    return {
+    return Object.freeze({
       clientEntry: null,
       serverEntry: id
-    }
+    })
   } else if (path.isAbsolute(id)) {
     dirName = id
   } else if (id.startsWith('~/')) {
     dirName = path.join(context, id.replace(/^~\//, ''))
   } else {
     dirName = path.dirname(require.resolve(id))
+  }
+
+  if (
+    fs.existsSync(dirName) &&
+    fs.lstatSync(dirName).isFile()
+  ) {
+    return Object.freeze({
+      clientEntry: null,
+      serverEntry: dirName
+    })
   }
 
   const entryPath = entry => {

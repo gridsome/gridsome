@@ -111,8 +111,6 @@ class App {
       this.createSchema
     )
 
-    this.hooks.renderQueue.tap('GridsomeSchema', require('../graphql/executeQueries'))
-
     this.assets = new AssetsQueue(this)
     this.pages = new Pages(this)
     this.codegen = new Codegen(this)

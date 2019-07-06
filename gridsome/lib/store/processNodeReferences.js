@@ -6,8 +6,8 @@ const { NODE_FIELDS } = require('../utils/constants')
 module.exports = function processNodeReferences (entry, node, contentType) {
   const obj = omit(node, NODE_FIELDS)
 
-  for (const fieldName in contentType.options.refs) {
-    const ref = contentType.options.refs[fieldName]
+  for (const fieldName in contentType._refs) {
+    const ref = contentType._refs[fieldName]
 
     obj[fieldName] = {
       typeName: ref.typeName,

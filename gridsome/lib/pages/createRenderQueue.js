@@ -1,28 +1,40 @@
-const { createQueryVariables } = require('./utils')
+const path = require('path')
+const { pathToFilePath } = require('./utils')
 const { createFilterQuery } = require('../graphql/createFilterTypes')
 const { createBelongsToKey, createPagedNodeEdges } = require('../graphql/nodes/utils')
 
-function createRenderQueue (renderQueue, { pages, store, schema }) {
-  const queryFields = schema.getQueryType().getFields()
-  const queue = renderQueue.slice()
+function createRenderQueue ({ renderQueue }) {
+  const options = { name: 'GridsomePages', before: 'GridsomeSchema' }
 
-  for (const page of pages.data()) {
-    if (page.query.paginate) {
-      const totalPages = calcTotalPages(page, store, queryFields)
+  renderQueue.tap(options, (renderQueue, { pages, store, schema, config }) => {
+    const queryFields = schema.getQueryType().getFields()
+    const queue = renderQueue.slice()
+    const { outDir } = config
 
-      for (let i = 1; i <= totalPages; i++) {
-        queue.push(createRenderEntry(page, i))
+    for (const route of pages.routes()) {
+      for (const page of route.pages()) {
+        if (page.internal.query.paginate) {
+          const totalPages = calcTotalPages(
+            page.internal.query,
+            store,
+            queryFields
+          )
+
+          for (let i = 1; i <= totalPages; i++) {
+            queue.push(createRenderEntry(page, i, outDir))
+          }
+        } else {
+          queue.push(createRenderEntry(page, 0, outDir))
+        }
       }
-    } else {
-      queue.push(createRenderEntry(page))
     }
-  }
 
-  return queue
+    return queue
+  })
 }
 
-function calcTotalPages (page, store, queryFields) {
-  const { belongsTo, fieldName, typeName, perPage, skip, limit } = page.query.paginate
+function calcTotalPages (query, store, queryFields) {
+  const { belongsTo, fieldName, typeName, perPage, skip, limit } = query.paginate
   const { collection } = store.getContentType(typeName)
 
   let chain
@@ -32,16 +44,16 @@ function calcTotalPages (page, store, queryFields) {
     const { args } = queryFields[fieldName].type.getFields().belongsTo
     const node = id ? collection.by('id', id) : collection.by('path', path)
     const key = createBelongsToKey(node)
-    const query = { [key]: { $eq: true }}
+    const searchQuery = { [key]: { $eq: true }}
 
-    Object.assign(query, createCollectionQuery(args, page.query.filters))
+    Object.assign(searchQuery, createCollectionQuery(args, query.filters))
 
-    chain = store.chainIndex(query)
+    chain = store.chainIndex(searchQuery)
   } else {
     const { args } = queryFields[fieldName]
-    const query = createCollectionQuery(args, page.query.filters)
+    const searchQuery = createCollectionQuery(args, query.filters)
 
-    chain = collection.chain().find(query)
+    chain = collection.chain().find(searchQuery)
   }
 
   const args = { page: 1, perPage, skip, limit }
@@ -50,27 +62,23 @@ function calcTotalPages (page, store, queryFields) {
   return res.pageInfo.totalPages
 }
 
-function createRenderEntry (page, currentPage = undefined) {
-  const segments = page.internal.path.segments.slice()
+function createRenderEntry (page, currentPage, outDir) {
+  const segments = page.path.split('/').filter(Boolean)
 
   if (currentPage > 1) {
     segments.push(currentPage)
   }
 
-  const originalPath = `/${segments.join('/')}`
+  const normalizedPath = `/${segments.join('/')}`
 
   return {
-    route: page.route,
-    path: `/${segments.join('/')}`,
-    component: page.component,
-    context: page.context,
-    query: page.query.document ? {
-      document: page.query.document,
-      variables: createQueryVariables(page, currentPage)
-    } : null,
+    path: normalizedPath,
+    dataOutput: null,
+    htmlOutput: path.join(outDir, pathToFilePath(normalizedPath)),
     internal: {
-      originalPath,
-      pathSegments: segments
+      pageId: page.id,
+      routeId: page.internal.route,
+      currentPage
     }
   }
 }

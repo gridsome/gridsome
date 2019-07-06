@@ -1,5 +1,5 @@
 const { print } = require('graphql')
-const { createQueryVariables } = require('../../pages/utils')
+const { createQueryVariables } = require('../../graphql/utils')
 
 module.exports = ({ pages }) => {
   return async function graphqlMiddleware (req, res, next) {
@@ -14,7 +14,7 @@ module.exports = ({ pages }) => {
       return next()
     }
 
-    const page = pages.findPage({ path: body.path })
+    const page = pages._pages.findOne({ path: body.path })
 
     // page/1/index.html is not statically generated
     // in production and should return 404 in develop
@@ -24,13 +24,24 @@ module.exports = ({ pages }) => {
         .send({ code: 404, message: `Could not find ${body.path}` })
     }
 
-    if (!page.query.document) {
-      return res.json({ extensions: { context: page.context }, data: null })
+    const route = pages.getRoute(page.internal.route)
+
+    if (!route.internal.query.document) {
+      return res.json({
+        extensions: {
+          context: page.context
+        },
+        data: null
+      })
     }
 
     req.body = {
-      query: print(page.query.document),
-      variables: createQueryVariables(page, body.page)
+      query: print(route.internal.query.document),
+      variables: createQueryVariables(
+        page.path,
+        page.internal.query.variables,
+        body.page
+      )
     }
 
     next()

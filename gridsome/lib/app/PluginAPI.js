@@ -27,8 +27,8 @@ class PluginAPI {
     this._app.events.on(eventName, { api: this, handler, options })
   }
 
-  resolve (value) {
-    return this._app.resolve(value)
+  resolve (...args) {
+    return this._app.resolve(...args)
   }
 
   setClientOptions (options) {
@@ -96,29 +96,12 @@ class PluginAPI {
     this._app.store.hooks.addNode.tap(name, fn)
   }
 
-  onCreatePage (fn) {
-    const { name = 'OnCreatePage' } = this._entry
-    this._app.pages.hooks.createPage.tap(name, fn)
-  }
-
   //
   // build hooks
   //
 
   beforeBuild (fn) {
     this._on('beforeBuild', fn)
-  }
-
-  beforeRenderQueries (fn) {
-    this._on('beforeRenderQueries', fn)
-  }
-
-  beforeRenderHTML (fn) {
-    this._on('beforeRenderHTML', fn)
-  }
-
-  beforeProcessAssets (fn) {
-    this._on('beforeProcessAssets', fn)
   }
 
   afterBuild (fn) {

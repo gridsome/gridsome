@@ -50,15 +50,15 @@ function extendNodeType (contentType, nodeType, nodeTypes) {
   const context = { contentType, nodeTypes, nodeType, graphql }
   const fields = {}
 
-  for (const mimeType in contentType.options.mimeTypes) {
-    const transformer = contentType.options.mimeTypes[mimeType]
+  for (const mimeType in contentType._mimeTypes) {
+    const transformer = contentType._mimeTypes[mimeType]
     if (typeof transformer.extendNodeType === 'function') {
       Object.assign(fields, transformer.extendNodeType(context))
     }
   }
 
-  for (const fieldName in contentType.options.fields) {
-    const field = contentType.options.fields[fieldName]
+  for (const fieldName in contentType._fields) {
+    const field = contentType._fields[fieldName]
     if (typeof field === 'function') {
       fields[fieldName] = field(context)
     }
@@ -83,9 +83,9 @@ function createFields (contentType, customFields) {
 }
 
 function createRefs (contentType, nodeTypes, fields) {
-  if (isEmpty(contentType.options.refs)) return null
+  if (isEmpty(contentType._refs)) return null
 
-  return mapValues(contentType.options.refs, ({ typeName }, fieldName) => {
+  return mapValues(contentType._refs, ({ typeName }, fieldName) => {
     const field = fields[fieldName] || { type: GraphQLString }
     const isList = field.type instanceof GraphQLList
     const ref = { typeName, isList }

@@ -1,15 +1,13 @@
 const path = require('path')
-const { Kind } = require('graphql')
 const App = require('../../app/App')
 const createApp = require('../../app/index')
-const createRenderQueue = require('../createRenderQueue')
 const { BOOTSTRAP_PAGES } = require('../../utils/constants')
 
 test('create render queue for basic project', async () => {
   const context = path.resolve(__dirname, '../../__tests__/__fixtures__/project-basic')
   const app = await createApp(context, undefined, BOOTSTRAP_PAGES)
 
-  const renderQueue = createRenderQueue([], app)
+  const renderQueue = await app.hooks.renderQueue.promise([], app)
   const renderPaths = renderQueue.map(entry => entry.path).sort()
 
   expect(renderPaths).toEqual(expect.arrayContaining([
@@ -38,7 +36,7 @@ test('create render queue for basic project', async () => {
 test('create render queue for blog project', async () => {
   const context = path.resolve(__dirname, '../../__tests__/__fixtures__/project-blog')
   const app = await createApp(context, undefined, BOOTSTRAP_PAGES)
-  const queue = createRenderQueue([], app)
+  const queue = await app.hooks.renderQueue.promise([], app)
 
   const renderPaths = queue.map(entry => entry.path).sort()
 
@@ -172,7 +170,7 @@ test('create render queue for createPages hook', async () => {
     })
   })
 
-  const renderQueue = createRenderQueue([], app)
+  const renderQueue = await app.hooks.renderQueue.promise([], app)
   const paths = renderQueue.map(entry => entry.path)
 
   expect(paths).toEqual(expect.arrayContaining([
@@ -191,18 +189,10 @@ test('create render queue for createPages hook', async () => {
   expect(paths).toHaveLength(11)
 
   renderQueue.forEach(entry => {
-    expect(entry.route).toBeDefined()
     expect(entry.path).toBeDefined()
-    expect(entry.component).toBeDefined()
-
-    if (entry.context) expect(typeof entry.context).toEqual('object')
-    else expect(entry.context).toBeNull()
-
-    if (entry.query) {
-      expect(entry.query.document.kind).toEqual(Kind.DOCUMENT)
-    } else {
-      expect(entry.query).toBeNull()
-    }
+    expect(entry.htmlOutput).toBeDefined()
+    expect(entry.internal.pageId).toBeDefined()
+    expect(entry.internal.routeId).toBeDefined()
   })
 })
 

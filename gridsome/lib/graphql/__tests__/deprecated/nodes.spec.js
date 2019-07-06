@@ -92,29 +92,6 @@ test('create node type with custom fields', async () => {
   expect(data.testPost.obj.foo).toEqual('bar')
 })
 
-// TODO: remove test before 1.0
-test('use deprectaded node fields as custom fields', async () => {
-  const posts = api.store.addContentType({
-    typeName: 'TestPost',
-    route: '/test/:slug'
-  })
-
-  posts.addNode({
-    id: '1',
-    title: 'Slug fallback',
-    content: 'Content',
-    excerpt: 'Excerpt'
-  })
-
-  const query = '{ testPost (id: "1") { id path content excerpt }}'
-  const { errors, data } = await createSchemaAndExecute(query)
-
-  expect(errors).toBeUndefined()
-  expect(data.testPost.path).toEqual('/test/slug-fallback')
-  expect(data.testPost.content).toEqual('Content')
-  expect(data.testPost.excerpt).toEqual('Excerpt')
-})
-
 test('get node by path', async () => {
   const posts = api.store.addContentType({
     typeName: 'TestPost'

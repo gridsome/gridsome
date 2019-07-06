@@ -1,4 +1,4 @@
-const Loki = require('lokijs')
+const { Collection } = require('lokijs')
 const autoBind = require('auto-bind')
 const NodeIndex = require('./NodeIndex')
 const EventEmitter = require('eventemitter3')
@@ -12,18 +12,16 @@ const SyncBailWaterfallHook = require('../app/SyncBailWaterfallHook')
 class Store {
   constructor (app) {
     this.app = app
-    this.store = new Loki()
     this.collections = {}
-    this.taxonomies = {}
-    this.lastUpdate = null
     this.nodeIndex = new NodeIndex(app)
     this._events = new EventEmitter()
 
+    this.lastUpdate = null
     this.setUpdateTime()
 
     autoBind(this)
 
-    this.metaData = this.store.addCollection('core/metaData', {
+    this.metaData = new Collection('MetaData', {
       unique: ['key'],
       autoupdate: true
     })
@@ -35,7 +33,6 @@ class Store {
 
     this.hooks.addNode.tap('TransformNodeContent', require('./transformNodeContent'))
     this.hooks.addNode.tap('ProcessNodeFields', require('./processNodeFields'))
-    this.hooks.addNode.tap('GenerateNodePath', require('./generateNodePath'))
 
     app.hooks.bootstrap.tapPromise(
       {
@@ -85,14 +82,18 @@ class Store {
 
   // nodes
 
-  addContentType (pluginStore, options) {
-    const collection = this.store.addCollection(options.typeName, {
-      indices: ['id', 'path', 'internal.typeName'],
-      unique: ['id', 'path'],
-      disableMeta: true
-    })
+  addContentType (options, store) {
+    options = this.hooks.addContentType.call(options)
 
-    const contentType = new ContentType(pluginStore, collection, options)
+    if (this.collections.hasOwnProperty(options.typeName)) {
+      return this.getContentType(options.typeName)
+    }
+
+    const contentType = new ContentType(
+      options.typeName,
+      options,
+      store
+    )
 
     contentType.on('add', node => {
       this.nodeIndex.addEntry(node, contentType)

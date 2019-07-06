@@ -55,6 +55,7 @@
     "imagemin-mozjpeg": "^8.0.0",
     "imagemin-pngquant": "^7.0.0",
     "imagemin-webp": "^5.0.0",
+    "invariant": "^2.2.4",
     "is-relative": "^1.0.0",
     "is-url": "^1.2.4",
     "jest-worker": "24.0.0",

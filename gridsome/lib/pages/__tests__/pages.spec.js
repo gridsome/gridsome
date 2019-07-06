@@ -1,53 +1,86 @@
 const path = require('path')
 const App = require('../../app/App')
+const { pathToFilePath } = require('../utils')
 const { BOOTSTRAP_PAGES } = require('../../utils/constants')
+
+describe('utilities', () => {
+  test('pathToFilePath()', () => {
+    expect(pathToFilePath('')).toEqual('/index.html')
+    expect(pathToFilePath('/')).toEqual('/index.html')
+    expect(pathToFilePath('foo')).toEqual('/foo/index.html')
+    expect(pathToFilePath('/foo')).toEqual('/foo/index.html')
+    expect(pathToFilePath('/foo/')).toEqual('/foo/index.html')
+    expect(pathToFilePath('/foo bar')).toEqual('/foo bar/index.html')
+    expect(pathToFilePath('/foo/:bar')).toEqual('/foo/_bar.html')
+    expect(pathToFilePath('/:foo/')).toEqual('/_foo.html')
+    expect(pathToFilePath('/:foo-bar/')).toEqual('/_foo_bar.html')
+    expect(pathToFilePath('/:foo/:bar')).toEqual('/_foo/_bar.html')
+    expect(pathToFilePath('/:foo(\\d+)')).toEqual('/_foo_d_plus.html')
+    expect(pathToFilePath('/:foo/(.*)')).toEqual('/_foo/_dot_star.html')
+    expect(pathToFilePath('/route/:foo/(.*)')).toEqual('/route/_foo/_dot_star.html')
+    expect(pathToFilePath('/icon-:foo(\\d+)')).toEqual('/_icon_foo_d_plus.html')
+    expect(pathToFilePath('/(user|u)')).toEqual('/_user_pipe_u.html')
+    expect(pathToFilePath('/:foo*')).toEqual('/_foo_star.html')
+    expect(pathToFilePath('/:foo+')).toEqual('/_foo_plus.html')
+    expect(pathToFilePath('/(.*)')).toEqual('/_dot_star.html')
+  })
+})
 
 test('create page', async () => {
   const { pages } = await createApp()
-  const emit = jest.spyOn(pages._events, 'emit')
 
-  const page = pages.createPage({
-    path: '/page',
-    component: './__fixtures__/DefaultPage.vue'
+  const component = './__fixtures__/DefaultPage.vue'
+  const page = pages.createPage({ path: '/page', component })
+
+  expect(page.id).toEqual('76a99cb48c7cfa8dbb91bba1ced599cd')
+  expect(page.path).toEqual('/page')
+  expect(page.context).toMatchObject({})
+  expect(page.internal.isDynamic).toEqual(false)
+  expect(page.internal.route).toEqual('6823d06059b8ddddbf443e850beecbe9')
+  expect(page.internal.query).toMatchObject({
+    paginate: null,
+    variables: {},
+    filters: {}
   })
 
-  expect(page.path).toEqual('/page')
-  expect(page.route).toEqual('/page')
-  expect(page.context).toMatchObject({})
-  expect(page.queryVariables).toBeNull()
-  expect(page.query.document).toBeNull()
-  expect(page.component).toEqual(path.join(__dirname, '__fixtures__', 'DefaultPage.vue'))
-  expect(page.chunkName).toBeNull()
+  const route = pages.getRoute(page.internal.route)
 
-  expect(emit).toHaveBeenCalledWith('create', page)
-  expect(emit).toHaveBeenCalledTimes(1)
+  expect(route.type).toEqual('static')
+  expect(route.path).toEqual('/page')
+  expect(route.id).toEqual('6823d06059b8ddddbf443e850beecbe9')
+  expect(route.component).toEqual(path.join(__dirname, '__fixtures__', 'DefaultPage.vue'))
+  expect(route.internal.regexp).toEqual(/^\/page(?:\/)?$/i)
+  expect(route.internal.query.document).toBeNull()
+  expect(route.internal.isDynamic).toEqual(false)
+
+  expect(pages._routes.count()).toEqual(2)
+  expect(pages._pages.count()).toEqual(2)
+  expect(pages._watched.size).toEqual(2)
 })
 
 test('create page with plugin api', async () => {
   await createApp(function (api) {
     api.createPages(pages => {
-      const emit = jest.spyOn(api._app.pages._events, 'emit')
-
-      const page = pages.createPage({
-        path: '/page',
-        component: './__fixtures__/DefaultPage.vue'
-      })
-
-      expect(page.path).toEqual('/page')
-      expect(page.route).toEqual('/page')
-      expect(page.context).toMatchObject({})
-      expect(page.queryVariables).toBeNull()
-      expect(page.query.document).toBeNull()
-      expect(page.component).toEqual(path.join(__dirname, '__fixtures__', 'DefaultPage.vue'))
-      expect(page.internal.isManaged).toEqual(false)
-
       expect(pages.graphql).toBeInstanceOf(Function)
       expect(pages.getContentType).toBeInstanceOf(Function)
       expect(pages.createPage).toBeInstanceOf(Function)
       expect(pages.updatePage).toBeUndefined()
 
-      expect(emit).toHaveBeenCalledWith('create', page)
-      expect(emit).toHaveBeenCalledTimes(1)
+      pages.createPage({
+        path: '/page',
+        component: './__fixtures__/DefaultPage.vue'
+      })
+
+      const page = api._app.pages._pages.by('path', '/page')
+      const route = api._app.pages.getRoute(page.internal.route)
+
+      expect(page.path).toEqual('/page')
+      expect(page.context).toMatchObject({})
+      expect(page.internal.isManaged).toEqual(false)
+
+      expect(route.component).toEqual(path.join(__dirname, '__fixtures__', 'DefaultPage.vue'))
+      expect(route.internal.query.document).toBeNull()
+      expect(route.pages()).toHaveLength(1)
     })
   })
 })
@@ -55,14 +88,16 @@ test('create page with plugin api', async () => {
 test('create managed pages with plugin api', async () => {
   await createApp(function (api) {
     api.createManagedPages((pages) => {
-      const emit = jest.spyOn(api._app.pages._events, 'emit')
-
-      const page = pages.createPage({
+      pages.createPage({
         path: '/page',
         component: './__fixtures__/DefaultPage.vue'
       })
 
+      const page = api._app.pages._pages.by('path', '/page')
+      const route = api._app.pages.getRoute(page.internal.route)
+
       expect(page.internal.isManaged).toEqual(true)
+      expect(route.internal.isManaged).toEqual(true)
 
       expect(pages.graphql).toBeInstanceOf(Function)
       expect(pages.getContentType).toBeInstanceOf(Function)
@@ -72,11 +107,6 @@ test('create managed pages with plugin api', async () => {
       expect(pages.removePageByPath).toBeInstanceOf(Function)
       expect(pages.removePagesByComponent).toBeInstanceOf(Function)
       expect(pages.findAndRemovePages).toBeInstanceOf(Function)
-      expect(pages.findPages).toBeInstanceOf(Function)
-      expect(pages.findPage).toBeInstanceOf(Function)
-
-      expect(emit).toHaveBeenCalledWith('create', page)
-      expect(emit).toHaveBeenCalledTimes(1)
     })
   })
 })
@@ -89,12 +119,19 @@ test('create page with pagination', async () => {
     component: './__fixtures__/PagedPage.vue'
   })
 
+  expect(page.id).toEqual('76a99cb48c7cfa8dbb91bba1ced599cd')
   expect(page.path).toEqual('/page')
-  expect(page.route).toEqual('/page/:page(\\d+)?')
-  expect(page.query.paginate.typeName).toEqual('Post')
+  expect(page.internal.query.paginate.typeName).toEqual('Post')
+
+  const route = pages.getRoute(page.internal.route)
+
+  expect(route.path).toEqual('/page/:page(\\d+)?')
+  expect(route.internal.path).toEqual('/page')
+  expect(route.internal.regexp).toEqual(/^\/page(?:\/)?$/i)
+  expect(route.internal.query.paginate).toEqual(true)
 })
 
-test('create page with context', async () => {
+test('create page with custom context', async () => {
   const { pages } = await createApp()
 
   const page = pages.createPage({
@@ -104,7 +141,6 @@ test('create page with context', async () => {
   })
 
   expect(page.context).toMatchObject({ test: true })
-  expect(page.queryVariables).toBeNull()
 })
 
 test('create page with query context', async () => {
@@ -112,34 +148,77 @@ test('create page with query context', async () => {
 
   const page = pages.createPage({
     path: '/page',
-    component: './__fixtures__/DefaultPage.vue',
-    queryVariables: { test: true }
+    component: './__fixtures__/MovieTemplate.vue',
+    queryVariables: { id: '1' }
   })
+
 
   expect(page.context).toMatchObject({})
-  expect(page.queryVariables).toMatchObject({ test: true })
+  expect(page.internal.query.variables).toMatchObject({ id: '1' })
 })
 
-test('create page with custom route', async () => {
-  const { pages } = await createApp()
+describe('createRoute()', () => {
+  test('add entry to page with dynamic route', async () => {
+    const { pages } = await createApp()
 
-  const page = pages.createPage({
-    path: '/page/1',
-    route: '/page/:id',
-    component: './__fixtures__/PagedPage.vue'
+    const component = './__fixtures__/MovieTemplate.vue'
+    const meta = { digest: 'foo', isManaged: true }
+    const route = pages.createRoute({ component, path: '/page/:id' }, meta)
+    const page1 = route.addPage({ path: '/page/1', queryVariables: { id: '1' } })
+    const page2 = route.addPage({ path: '/page/2', context: { id: '2' } })
+
+    expect(page1.id).toEqual('af9e829db29d3cd654b677ef8e8de2fb')
+    expect(page1.path).toEqual('/page/1')
+    expect(page1.context).toEqual({})
+    expect(page1.internal.digest).toEqual(route.internal.digest)
+    expect(page1.internal.isManaged).toEqual(route.internal.isManaged)
+    expect(page1.internal.query.variables).toMatchObject({ id: '1' })
+    expect(page2.internal.query.variables).toMatchObject({ id: '2' })
   })
 
-  expect(page.path).toEqual('/page/1')
-  expect(page.route).toEqual('/page/:id/:page(\\d+)?')
-  expect(page.internal.route).toEqual('/page/:id')
-  expect(page.internal.isDynamic).toEqual(true)
+  test('add multiple entries to page with dynamic route', async () => {
+    const { pages } = await createApp()
+
+    const component = './__fixtures__/DefaultPage.vue'
+    const meta = { digest: 'foo', isManaged: true }
+    const route = pages.createRoute({ component, path: '/page/:id' }, meta)
+
+    route.addPage({ path: '/page/1' })
+    route.addPage({ path: '/page/2' })
+    route.addPage({ path: '/page/3' })
+    route.addPage({ path: '/page/4' })
+
+    expect(route.pages()).toHaveLength(4)
+  })
+
+  test('fail if path doesn\'t math route path', async () => {
+    const { pages } = await createApp()
+
+    const route = pages.createRoute({
+      component: './__fixtures__/DefaultPage.vue',
+      path: '/page/:id(\\d+)'
+    })
+
+    expect(() => route.addPage({ path: '/page/test' })).toThrow('does not match')
+  })
+
+  test('fail if adding entry with dynamic route', async () => {
+    const { pages } = await createApp()
+
+    const route = pages.createRoute({
+      component: './__fixtures__/DefaultPage.vue',
+      path: '/page/:id'
+    })
+
+    expect(() => route.addPage({ path: '/page/:id' })).toThrow('not allowed')
+  })
 })
 
-test('allways include a /404 page', async () => {
+test('always include a /404 page', async () => {
   const app = await createApp()
-  const notFound = app.pages.findPage({ path: '/404' })
+  const page = app.pages._pages.findOne({ path: '/404' })
 
-  expect(notFound.path).toEqual('/404')
+  expect(page.path).toEqual('/404')
 })
 
 test('cache parsed components', async () => {
@@ -155,101 +234,148 @@ test('cache parsed components', async () => {
 
 test('update page', async () => {
   const { pages } = await createApp()
-  const emit = jest.spyOn(pages._events, 'emit')
 
   const page1 = pages.createPage({
     path: '/page',
     component: './__fixtures__/DefaultPage.vue'
   })
 
+  const route1 = pages.getRoute(page1.internal.route)
+
   expect(page1.path).toEqual('/page')
-  expect(page1.route).toEqual('/page')
-  expect(page1.component).toEqual(path.join(__dirname, '__fixtures__', 'DefaultPage.vue'))
+  expect(route1.component).toEqual(path.join(__dirname, '__fixtures__', 'DefaultPage.vue'))
+  expect(pages._watched.size).toEqual(2)
 
   const page2 = pages.updatePage({
     path: '/page',
-    chunkName: 'page',
     component: './__fixtures__/PagedPage.vue'
   })
 
-  expect(page2.path).toEqual('/page')
-  expect(page2.route).toEqual('/page/:page(\\d+)?')
-  expect(page2.chunkName).toEqual('page')
-  expect(page2.component).toEqual(path.join(__dirname, '__fixtures__', 'PagedPage.vue'))
-  expect(pages.data()).toHaveLength(2) // includes /404
-  expect(emit).toHaveBeenCalledTimes(2)
+  const route2 = pages.getRoute(page2.internal.route)
 
-  emit.mockRestore()
+  expect(page2.id).toEqual(page1.id)
+  expect(page2.path).toEqual('/page')
+  expect(route2.component).toEqual(path.join(__dirname, '__fixtures__', 'PagedPage.vue'))
+  expect(route2.path).toEqual('/page/:page(\\d+)?')
+  expect(pages.pages()).toHaveLength(2) // includes /404
+  expect(pages._watched.size).toEqual(2)
 })
 
 test('remove page', async () => {
   const { pages } = await createApp()
-  const emit = jest.spyOn(pages._events, 'emit')
 
   const page = pages.createPage({
     path: '/page',
     component: './__fixtures__/DefaultPage.vue'
   })
 
-  expect(pages.data()).toHaveLength(2)
+  expect(pages._pages.data).toHaveLength(2)
+  expect(pages._watched.size).toEqual(2)
 
-  pages.removePage(page)
+  pages.removePage(page.id)
 
-  expect(pages.data()).toHaveLength(1)
-  expect(emit).toHaveBeenCalledTimes(2)
+  expect(pages._pages.data).toHaveLength(1)
+  expect(pages._watched.size).toEqual(1)
 })
 
 test('remove page by path', async () => {
   const { pages } = await createApp()
-  const emit = jest.spyOn(pages._events, 'emit')
 
   pages.createPage({
     path: '/page',
     component: './__fixtures__/DefaultPage.vue'
   })
 
-  expect(pages.data()).toHaveLength(2)
+  expect(pages.pages()).toHaveLength(2)
 
   pages.removePageByPath('/page')
 
-  expect(pages.data()).toHaveLength(1)
-  expect(emit).toHaveBeenCalledTimes(2)
+  expect(pages.pages()).toHaveLength(1)
+})
+
+describe('add route pages', () => {
+  test('remove route and its entries', async () => {
+    const { pages } = await createApp()
+
+    const route = pages.createRoute({
+      path: '/user/:id',
+      component: './__fixtures__/DefaultPage.vue'
+    })
+
+    route.addPage({ path: '/user/1' })
+    route.addPage({ path: '/user/2' })
+    route.addPage({ path: '/user/3' })
+
+    expect(route.pages()).toHaveLength(3)
+
+    const emit = jest.spyOn(pages._events, 'emit')
+
+    pages.removeRoute(route.id)
+
+    expect(route.pages()).toHaveLength(0)
+    expect(pages.pages()).toHaveLength(1)
+    expect(emit).toHaveBeenCalledTimes(4)
+  })
+
+  test('remove page by path', async () => {
+    const { pages } = await createApp()
+
+    const route = pages.createRoute({
+      path: '/user/:id',
+      component: './__fixtures__/DefaultPage.vue'
+    })
+
+    route.addPage({ path: '/user/1' })
+    route.addPage({ path: '/user/2' })
+    route.addPage({ path: '/user/3' })
+
+    expect(route.pages()).toHaveLength(3)
+
+    const emit = jest.spyOn(pages._events, 'emit')
+
+    pages.removePageByPath('/user/2')
+
+    expect(pages.pages()).toHaveLength(3)
+    expect(emit).toHaveBeenCalledTimes(1)
+  })
+
+  test('remove page by id', async () => {
+    const { pages } = await createApp()
+
+    const route = pages.createRoute({
+      path: '/user/:id',
+      component: './__fixtures__/DefaultPage.vue'
+    })
+
+    route.addPage({ path: '/user/1' })
+    const remove = route.addPage({ path: '/user/2' })
+    route.addPage({ path: '/user/3' })
+
+    expect(route.pages()).toHaveLength(3)
+
+    const emit = jest.spyOn(pages._events, 'emit')
+
+    route.removePage(remove.id)
+
+    expect(route.pages()).toHaveLength(2)
+    expect(emit).toHaveBeenCalledTimes(1)
+  })
 })
 
 test('remove pages by component', async () => {
   const { resolve, pages } = await createApp()
-  const emit = jest.spyOn(pages._events, 'emit')
   const component = resolve('./__fixtures__/DefaultPage.vue')
 
   pages.createPage({ path: '/page-1', component })
   pages.createPage({ path: '/page-2', component })
   pages.createPage({ path: '/page-3', component })
 
-  expect(pages.data()).toHaveLength(4)
+  expect(pages.pages()).toHaveLength(4)
 
   pages.removePagesByComponent(component)
 
   expect(pages._watched[component]).toBeUndefined()
-  expect(pages.data()).toHaveLength(1)
-  expect(emit).toHaveBeenCalledTimes(6)
-})
-
-test('find and reomve pages', async () => {
-  const { resolve, pages } = await createApp()
-  const emit = jest.spyOn(pages._events, 'emit')
-  const component = resolve('./__fixtures__/DefaultPage.vue')
-
-  pages.createPage({ path: '/page-1', component })
-  pages.createPage({ path: '/page-2', component })
-  pages.createPage({ path: '/page-3', component })
-
-  expect(pages.data()).toHaveLength(4)
-
-  pages.findAndRemovePages({ component })
-
-  expect(pages._watched[component]).toBeUndefined()
-  expect(pages.data()).toHaveLength(1)
-  expect(emit).toHaveBeenCalledTimes(6)
+  expect(pages.pages()).toHaveLength(1)
 })
 
 test('api.createManagedPages() should only be called once', async () => {
@@ -269,42 +395,6 @@ test('api.createManagedPages() should only be called once', async () => {
   expect(createManagedPages.mock.calls).toHaveLength(1)
 })
 
-test('modify pages with api.onCreatePage()', async () => {
-  const app = await createApp(function (api) {
-    api.onCreatePage(page => {
-      if (page.path === '/my-page') {
-        return { ...page, name: 'myPage' }
-      }
-      return page
-    })
-  })
-
-  const page = app.pages.createPage({
-    path: '/my-page',
-    component: './__fixtures__/DefaultPage.vue'
-  })
-
-  expect(page.name).toEqual('myPage')
-})
-
-test('exclude page with api.onCreatePage()', async () => {
-  const app = await createApp(function (api) {
-    api.onCreatePage(page => {
-      if (page.path === '/my-page') {
-        return null
-      }
-      return page
-    })
-  })
-
-  const page = app.pages.createPage({
-    path: '/my-page',
-    component: './__fixtures__/DefaultPage.vue'
-  })
-
-  expect(page).toBeNull()
-})
-
 test('garbage collect unmanaged pages', async () => {
   let maxPages = 10
 
@@ -315,26 +405,43 @@ test('garbage collect unmanaged pages', async () => {
       }
     })
 
-    api.createManagedPages(({ createPage }) => {
+    api.createManagedPages(({ createPage, _createRoute }) => {
       createPage({ path: '/managed-page-1', component: './__fixtures__/PagedPage.vue' })
       createPage({ path: '/managed-page-2', component: './__fixtures__/PagedPage.vue' })
+
+      const pages = _createRoute({ path: '/managed/:id', component: './__fixtures__/PagedPage.vue' })
+
+      pages.addPage({ path: '/managed/one' })
+      pages.addPage({ path: '/managed/two' })
     })
   })
 
-  expect(app.pages.data()).toHaveLength(13)
+  expect(app.pages.routes()).toHaveLength(14)
+  expect(app.pages.pages()).toHaveLength(15)
+  expect(app.pages._watched.size).toEqual(3)
 
   maxPages = 5
   await app.pages.createPages()
 
-  expect(app.pages.data()).toHaveLength(8)
+  expect(app.pages.routes()).toHaveLength(9)
+  expect(app.pages.pages()).toHaveLength(10)
+  expect(app.pages._watched.size).toEqual(3)
 
   maxPages = 1
   await app.pages.createPages()
 
-  expect(app.pages.data()).toHaveLength(4)
+  expect(app.pages.routes()).toHaveLength(5)
+  expect(app.pages.pages()).toHaveLength(6)
+  expect(app.pages._watched.size).toEqual(3)
+
+  maxPages = 2
+  await app.pages.createPages()
+
+  expect(app.pages.routes()).toHaveLength(6)
+  expect(app.pages.pages()).toHaveLength(7)
 })
 
-test('override page with equal path', async () => {
+test('override page with similar path', async () => {
   const { pages } = await createApp()
 
   pages.createPage({
@@ -343,12 +450,53 @@ test('override page with equal path', async () => {
   })
 
   pages.createPage({
-    path: '/page',
-    chunkName: 'page',
+    path: '/page/',
     component: './__fixtures__/PagedPage.vue'
   })
 
-  expect(pages.data()).toHaveLength(2) // includes /404
+  expect(pages.pages()).toHaveLength(2) // includes /404
+})
+
+test('sort routes', async () => {
+  const { pages } = await createApp()
+  const component = './__fixtures__/DefaultPage.vue'
+
+  pages.createRoute({ path: '/a/:b(.*)', component })
+  pages.createPage({ path: '/', component })
+  pages.createRoute({ path: '/:rest(\\d+)', component })
+  pages.createRoute({ path: '/a/:b', component })
+  pages.createRoute({ path: '/a/:b/:c+', component })
+  pages.createRoute({ path: '/a/:b/:c(\\d+)?', component })
+  pages.createRoute({ path: '/:a-:b', component })
+  pages.createRoute({ path: '/a-:b-c', component })
+  pages.createRoute({ path: '/:rest', component })
+  pages.createPage({ path: '/a', component })
+  pages.createPage({ path: '/a-b-c', component })
+  pages.createRoute({ path: '/a-:b', component })
+  pages.createRoute({ path: '/a/:b/c', component })
+  pages.createPage({ path: '/a/b', component })
+  pages.createPage({ path: '/a/b/c', component })
+
+  const paths = pages.routes().map(route => route.path)
+
+  expect(paths).toEqual([
+    '/a/b/c',
+    '/a/:b/c',
+    '/a/:b/:c(\\d+)?',
+    '/a/:b/:c+',
+    '/a/b',
+    '/a/:b(.*)',
+    '/a/:b',
+    '/404',
+    '/',
+    '/a-b-c',
+    '/a',
+    '/a-:b',
+    '/a-:b-c',
+    '/:rest(\\d+)',
+    '/:rest',
+    '/:a-:b'
+  ])
 })
 
 async function createApp (plugin) {

@@ -1,24 +1,39 @@
 const Joi = require('joi')
 
-const schema = Joi.object()
-  .label('Page options')
-  .keys({
-    path: Joi.string().regex(/^\//, 'leading slash').required(),
-    component: Joi.string().required(),
-    chunkName: Joi.string().allow(null),
-    route: Joi.string().allow(null),
-    name: Joi.string().allow(null),
-    context: Joi.object().default({}),
-    queryVariables: Joi.object().allow(null),
-    _meta: Joi.object()
-  })
+const schemas = {
+  route: Joi.object()
+    .label('Route options')
+    .keys({
+      name: Joi.string(),
+      path: Joi.string().regex(/^\//, 'missing leading slash').required(),
+      component: Joi.string().required()
+    }),
 
-module.exports = function vaidateOptions (options) {
-  const { error, value } = Joi.validate(options, schema)
+  page: Joi.object()
+    .label('Page options')
+    .keys({
+      path: Joi.string().regex(/^\//, 'leading slash').required(),
+      context: Joi.object().default({}),
+      queryVariables: Joi.object().default(null).allow(null)
+    }),
+
+  component: Joi.object()
+    .label('Parsed component results')
+    .keys({
+      pageQuery: Joi.string().allow(null)
+    })
+}
+
+function validate (schema, options) {
+  const { error, value } = Joi.validate(options, schemas[schema])
 
   if (error) {
     throw new Error(error.message)
   }
 
   return value
+}
+
+module.exports = {
+  validate
 }

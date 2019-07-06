@@ -3,7 +3,7 @@ const normalizeNodeOptions = require('./normalizeNodeOptions')
 
 module.exports = function transformNodeContent (node, contentType) {
   const { mimeType, content } = node.internal
-  const { mimeTypes } = contentType.options
+  const { _mimeTypes } = contentType
 
   if (mimeType) {
     const transformer = contentType._transformers[mimeType]
@@ -14,8 +14,8 @@ module.exports = function transformNodeContent (node, contentType) {
 
     // add transformer to content type to let it
     // extend the node type when creating schema
-    if (mimeType && !mimeTypes.hasOwnProperty(mimeType)) {
-      mimeTypes[mimeType] = transformer
+    if (mimeType && !_mimeTypes.hasOwnProperty(mimeType)) {
+      _mimeTypes[mimeType] = transformer
     }
 
     const results = content ? transformer.parse(content) : {}

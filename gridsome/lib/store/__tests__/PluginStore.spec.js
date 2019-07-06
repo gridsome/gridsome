@@ -42,13 +42,12 @@ test('add content type', async () => {
 
   expect(contentType.typeName).toEqual('TestPost')
   expect(contentType.route).toBeUndefined()
-  expect(contentType.options.refs).toMatchObject({})
-  expect(contentType.options.fields).toMatchObject({})
-  expect(contentType.options.belongsTo).toMatchObject({})
+  expect(contentType._refs).toMatchObject({})
+  expect(contentType._fields).toMatchObject({})
+  expect(contentType._resolveAbsolutePaths).toEqual(false)
   expect(contentType.options.routeKeys[0]).toMatchObject({ name: 'id', path: ['id'], fieldName: 'id', repeat: false })
   expect(contentType.options.routeKeys[1]).toMatchObject({ name: 'bar', path: ['bar'], fieldName: 'bar', repeat: false })
   expect(contentType.options.routeKeys[2]).toMatchObject({ name: 'foo_raw', path: ['foo'], fieldName: 'foo', repeat: false })
-  expect(contentType.options.resolveAbsolutePaths).toEqual(false)
 
   expect(contentType.addNode).toBeInstanceOf(Function)
   expect(contentType.updateNode).toBeInstanceOf(Function)
@@ -279,7 +278,7 @@ test('add type with ref', async () => {
     }
   })
 
-  expect(contentType.options.refs.author).toMatchObject({
+  expect(contentType._refs.author).toMatchObject({
     typeName: 'TestAuthor',
     fieldName: 'author'
   })

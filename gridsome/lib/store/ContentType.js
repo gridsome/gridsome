@@ -7,17 +7,34 @@ const EventEmitter = require('eventemitter3')
 const normalizeNodeOptions = require('./normalizeNodeOptions')
 const { parseUrl, createFieldName } = require('./utils')
 const { warn } = require('../utils/log')
+const { mapValues } = require('lodash')
+const { Collection } = require('lokijs')
 
 class ContentType {
-  constructor (store, collection, options = {}) {
-    this._collection = collection
-    this._events = new EventEmitter()
-
-    this.options = { refs: {}, fields: {}, ...options }
-    this.typeName = options.typeName
+  constructor (typeName, options, store) {
+    this.typeName = typeName
+    this.options = options || {}
 
     this._store = store
     this._transformers = store._transformers
+    this._events = new EventEmitter()
+    this._collection = new Collection(typeName, {
+      indices: ['id', 'path', 'internal.typeName'],
+      unique: ['id', 'path'],
+      disableMeta: true
+    })
+
+    this._refs = mapValues(options.refs, (ref, key) => ({
+      typeName: ref.typeName || options.typeName,
+      fieldName: key
+    }))
+
+    this._mimeTypes = {}
+    this._fields = options.fields || {}
+    this._dateField = options.dateField || 'date'
+    this._defaultSortBy = this._dateField
+    this._defaultSortOrder = 'DESC'
+
     this._camelCasedFieldNames = options.camelCasedFieldNames || false
     this._resolveAbsolutePaths = options.resolveAbsolutePaths || false
     this._assetsContext = typeof options.resolveAbsolutePaths === 'string'
@@ -49,11 +66,11 @@ class ContentType {
       options = { typeName: options }
     }
 
-    this.options.refs[this.createFieldName(fieldName)] = options
+    this._refs[this.createFieldName(fieldName)] = options
   }
 
   addSchemaField (fieldName, options) {
-    this.options.fields[fieldName] = options
+    this._fields[fieldName] = options
   }
 
   addNode (options) {
@@ -80,8 +97,9 @@ class ContentType {
   }
 
   getNode (id) {
-    const query = typeof id === 'string' ? { id } : id
-    return this._collection.findOne(query)
+    return this._collection.findOne(
+      typeof id === 'string' ? { id } : id
+    )
   }
 
   findNode (query) {
@@ -93,8 +111,9 @@ class ContentType {
   }
 
   removeNode (id) {
-    const query = typeof id === 'string' ? { id } : id
-    const node = this._collection.findOne(query)
+    const node = this._collection.findOne(
+      typeof id === 'string' ? { id } : id
+    )
 
     this._collection.findAndRemove({ $uid: node.$uid })
     this._events.emit('remove', node)
