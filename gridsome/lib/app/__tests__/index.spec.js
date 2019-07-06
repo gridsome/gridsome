@@ -73,6 +73,74 @@ test('setup custom favicon and touchicon config', () => {
   expect(config.icon.touchicon).toHaveProperty('src', 'src/new-favicon.png')
 })
 
+test('setup templates config from string', () => {
+  const config = loadConfig(context, {
+    localConfig: {
+      templates: {
+        Post: '/:year/:month/:day/:slug'
+      }
+    }
+  })
+
+  expect(config.templates.Post).toHaveLength(1)
+  expect(config.templates.Post[0]).toMatchObject({
+    typeName: 'Post',
+    path: '/:year/:month/:day/:slug',
+    component: path.join(context, 'src/templates/Post.vue'),
+    fieldName: 'path'
+  })
+})
+
+test('setup templates config from array', () => {
+  const genPath = node => `/test/${node.id}`
+  const config = loadConfig(context, {
+    localConfig: {
+      templates: {
+        Post: [
+          '/:year/:month/:day/:slug',
+          {
+            path: '/:year/:month/:day/:slug/info',
+            component: './src/templates/PostInfo.vue'
+          },
+          {
+            path: '/:year/:month/:day/:slug/author',
+            component: './src/templates/PostAuthor.vue',
+            fieldName: 'author'
+          },
+          {
+            path: genPath,
+            component: './src/templates/PostAuthor.vue'
+          }
+        ]
+      }
+    }
+  })
+
+  expect(config.templates.Post).toHaveLength(4)
+  expect(config.templates.Post[0]).toMatchObject({
+    typeName: 'Post',
+    path: '/:year/:month/:day/:slug',
+    component: path.join(context, 'src/templates/Post.vue'),
+    fieldName: 'path'
+  })
+  expect(config.templates.Post[1]).toMatchObject({
+    typeName: 'Post',
+    path: '/:year/:month/:day/:slug/info',
+    component: path.join(context, 'src/templates/PostInfo.vue'),
+    fieldName: 'path2'
+  })
+  expect(config.templates.Post[2]).toMatchObject({
+    typeName: 'Post',
+    path: '/:year/:month/:day/:slug/author',
+    component: path.join(context, 'src/templates/PostAuthor.vue'),
+    fieldName: 'author'
+  })
+  expect(config.templates.Post[3]).toMatchObject({
+    path: genPath,
+    component: path.join(context, 'src/templates/PostAuthor.vue')
+  })
+})
+
 test('setup webpack client config', async () => {
   const app = await createApp(context, undefined, BOOTSTRAP_CONFIG)
   const config = await app.compiler.resolveWebpackConfig()

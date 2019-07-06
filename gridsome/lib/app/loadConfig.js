@@ -2,6 +2,7 @@ const path = require('path')
 const fs = require('fs-extra')
 const crypto = require('crypto')
 const dotenv = require('dotenv')
+const isRelative = require('is-relative')
 const colorString = require('color-string')
 const { defaultsDeep, camelCase } = require('lodash')
 const { internalRE, transformerRE, SUPPORTED_IMAGE_TYPES } = require('../utils/constants')
@@ -9,9 +10,8 @@ const { internalRE, transformerRE, SUPPORTED_IMAGE_TYPES } = require('../utils/c
 const builtInPlugins = [
   path.resolve(__dirname, '../plugins/vue-components'),
   path.resolve(__dirname, '../plugins/vue-pages'),
-  path.resolve(__dirname, '../plugins/vue-templates'),
-  path.resolve(__dirname, '../plugins/NodePathPlugin.js'),
-  path.resolve(__dirname, '../plugins/RedirectsPlugin.js')
+  path.resolve(__dirname, '../plugins/RedirectsPlugin.js'),
+  path.resolve(__dirname, '../plugins/TemplatesPlugin.js')
 ]
 
 // TODO: use joi to define and validate config schema
@@ -24,7 +24,7 @@ module.exports = (context, options = {}) => {
     return options.config
   }
 
-  const resolve = (...p) => path.resolve(context, ...p)
+  const resolve = (...p) => path.join(context, ...p)
   const isProd = process.env.NODE_ENV === 'production'
   const configPath = resolve('gridsome.config.js')
   const localIndex = resolve('src/index.html')
@@ -90,8 +90,9 @@ module.exports = (context, options = {}) => {
   config.imageCacheDir = resolve('.cache', assetsDir, 'static')
   config.maxImageWidth = localConfig.maxImageWidth || 2560
   config.imageExtensions = SUPPORTED_IMAGE_TYPES
-  config.pagesDir = resolve('src/pages')
-  config.templatesDir = resolve('src/templates')
+  config.pagesDir = resolve(localConfig._pagesDir || './src/pages')
+  config.templatesDir = resolve(localConfig._templatesDir || './src/templates')
+  config.templates = normalizeTemplates(context, config, localConfig)
   config.componentParsers = []
 
   config.chainWebpack = localConfig.chainWebpack
@@ -175,6 +176,46 @@ function resolvePkg (context) {
 function normalizePathPrefix (pathPrefix = '') {
   const segments = pathPrefix.split('/').filter(s => !!s)
   return segments.length ? `/${segments.join('/')}` : ''
+}
+
+function normalizeTemplates (context, config, localConfig) {
+  const { templates = {}} = localConfig
+  const { templatesDir } = config
+  const res = {}
+
+  const normalize = (typeName, template, index) => {
+    if (typeof template === 'string') {
+      return {
+        typeName,
+        path: template,
+        component: path.join(templatesDir, `${typeName}.vue`),
+        fieldName: 'path',
+        dateField: 'date'
+      }
+    }
+
+    return {
+      typeName,
+      path: template.path,
+      component: template.component
+        ? isRelative(template.component)
+          ? path.join(context, template.component)
+          : template.component
+        : path.join(templatesDir, `${typeName}.vue`),
+      fieldName: template.fieldName || ('path' + (index > 0 ? index + 1 : '')),
+      dateField: template.dateField || 'date'
+    }
+  }
+
+  for (const typeName in templates) {
+    const options = templates[typeName]
+
+    res[typeName] = Array.isArray(options)
+      ? options.map((template, i) => normalize(typeName, template, i))
+      : [normalize(typeName, options, 0)]
+  }
+
+  return res
 }
 
 function normalizePlugins (context, plugins) {

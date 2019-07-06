@@ -31,9 +31,6 @@ test('add type', async () => {
   expect(contentType._refs).toMatchObject({})
   expect(contentType._fields).toMatchObject({})
   expect(contentType._resolveAbsolutePaths).toEqual(false)
-  expect(contentType.options.routeKeys[0]).toMatchObject({ name: 'id', path: ['id'], fieldName: 'id', repeat: false })
-  expect(contentType.options.routeKeys[1]).toMatchObject({ name: 'bar', path: ['bar'], fieldName: 'bar', repeat: false })
-  expect(contentType.options.routeKeys[2]).toMatchObject({ name: 'foo_raw', path: ['foo'], fieldName: 'foo', repeat: false })
 
   expect(contentType.addNode).toBeInstanceOf(Function)
   expect(contentType.updateNode).toBeInstanceOf(Function)
