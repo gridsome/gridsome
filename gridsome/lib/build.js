@@ -25,7 +25,7 @@ module.exports = async (context, args) => {
   await writePageData(queue, app)
   await runWebpack(app)
   await renderHTML(queue, app)
-  await processFiles(app.assets.files, app.config)
+  await processFiles(app.assets.files)
   await processImages(app.assets.images, app.config)
 
   // copy static files
