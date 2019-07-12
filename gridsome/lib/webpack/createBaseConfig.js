@@ -218,7 +218,7 @@ module.exports = (app, { isProd, isServer }) => {
   }
 
   config.plugin('injections')
-    .use(require('webpack/lib/DefinePlugin'), [createEnv(projectConfig)])
+    .use(require('webpack/lib/DefinePlugin'), [createEnv()])
 
   if (isProd && !isServer) {
     config.plugin('extract-css')
