@@ -102,6 +102,8 @@ exports.process = async function ({ queue, cacheDir, backgroundColor }) {
       backgroundColor,
       cachePath,
       ...set
+    }).catch(err => {
+      console.error(err)
     })
   }, {
     concurrency: sysinfo.cpus.logical
