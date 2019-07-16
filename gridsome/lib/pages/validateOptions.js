@@ -5,11 +5,11 @@ const schema = Joi.object()
   .keys({
     path: Joi.string().regex(/^\//, 'leading slash').required(),
     component: Joi.string().required(),
-    chunkName: Joi.string(),
-    route: Joi.string(),
-    name: Joi.string(),
-    context: Joi.object(),
-    queryVariables: Joi.object(),
+    chunkName: Joi.string().allow(null),
+    route: Joi.string().allow(null),
+    name: Joi.string().allow(null),
+    context: Joi.object().default({}),
+    queryVariables: Joi.object().allow(null),
     _meta: Joi.object()
   })
 

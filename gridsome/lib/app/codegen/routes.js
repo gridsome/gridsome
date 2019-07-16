@@ -1,5 +1,7 @@
+const path = require('path')
 const { uniqBy, isPlainObject } = require('lodash')
 const { NOT_FOUND_NAME } = require('../../utils/constants')
+const { slugify } = require('../../utils')
 
 function genRoutes (app, routeMeta = {}) {
   let res = ''
@@ -17,7 +19,7 @@ function genRoutes (app, routeMeta = {}) {
 
   res += `export default [${pages.map(page => {
     const component = JSON.stringify(page.component)
-    const chunkName = JSON.stringify(page.chunkName)
+    const chunkName = JSON.stringify(page.chunkName || genChunkName(page.component, app.context))
     const dataInfo = page.dataInfo || routeMeta[page.route]
     const hasContext = Object.keys(page.context).length > 0
     const props = []
@@ -71,6 +73,16 @@ function genRoutes (app, routeMeta = {}) {
   }).join(',')}\n]\n\n`
 
   return res
+}
+
+function genChunkName (component, context) {
+  const chunkName = path.relative(context, component)
+    .split('/')
+    .filter(s => s !== '..')
+    .map(s => slugify(s))
+    .join('--')
+
+  return `page--${chunkName}`
 }
 
 module.exports = genRoutes

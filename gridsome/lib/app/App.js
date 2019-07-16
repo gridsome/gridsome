@@ -177,6 +177,9 @@ class App {
     const digest = hashString(Date.now().toString())
     const { createPagesAPI, createManagedPagesAPI } = require('../pages/utils')
 
+    this.pages._cached.clear()
+    this.pages._collection.adaptiveBinaryIndices = false
+
     await this.events.dispatch('createPages', api => {
       return createPagesAPI(api, { digest })
     })
@@ -184,6 +187,9 @@ class App {
     await this.events.dispatch('createManagedPages', api => {
       return createManagedPagesAPI(api, { digest })
     })
+
+    this.pages._collection.adaptiveBinaryIndices = true
+    this.pages._collection.ensureAllIndexes(true)
 
     // ensure a /404 page exists
     if (!this.pages.findPage({ path: '/404' })) {

@@ -64,7 +64,6 @@ async function writePageData (renderQueue, app) {
   let count = 0
 
   for (const entry of queryQueue) {
-    if (!entry.dataOutput) continue
     await fs.outputFile(entry.dataOutput, JSON.stringify(entry.data))
   }
 
