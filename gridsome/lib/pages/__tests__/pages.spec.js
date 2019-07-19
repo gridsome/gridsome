@@ -157,63 +157,6 @@ test('create page with query context', async () => {
   expect(page.internal.query.variables).toMatchObject({ id: '1' })
 })
 
-describe('createRoute()', () => {
-  test('add entry to page with dynamic route', async () => {
-    const { pages } = await createApp()
-
-    const component = './__fixtures__/MovieTemplate.vue'
-    const meta = { digest: 'foo', isManaged: true }
-    const route = pages.createRoute({ component, path: '/page/:id' }, meta)
-    const page1 = route.addPage({ path: '/page/1', queryVariables: { id: '1' } })
-    const page2 = route.addPage({ path: '/page/2', context: { id: '2' } })
-
-    expect(page1.id).toEqual('af9e829db29d3cd654b677ef8e8de2fb')
-    expect(page1.path).toEqual('/page/1')
-    expect(page1.context).toEqual({})
-    expect(page1.internal.digest).toEqual(route.internal.digest)
-    expect(page1.internal.isManaged).toEqual(route.internal.isManaged)
-    expect(page1.internal.query.variables).toMatchObject({ id: '1' })
-    expect(page2.internal.query.variables).toMatchObject({ id: '2' })
-  })
-
-  test('add multiple entries to page with dynamic route', async () => {
-    const { pages } = await createApp()
-
-    const component = './__fixtures__/DefaultPage.vue'
-    const meta = { digest: 'foo', isManaged: true }
-    const route = pages.createRoute({ component, path: '/page/:id' }, meta)
-
-    route.addPage({ path: '/page/1' })
-    route.addPage({ path: '/page/2' })
-    route.addPage({ path: '/page/3' })
-    route.addPage({ path: '/page/4' })
-
-    expect(route.pages()).toHaveLength(4)
-  })
-
-  test('fail if path doesn\'t math route path', async () => {
-    const { pages } = await createApp()
-
-    const route = pages.createRoute({
-      component: './__fixtures__/DefaultPage.vue',
-      path: '/page/:id(\\d+)'
-    })
-
-    expect(() => route.addPage({ path: '/page/test' })).toThrow('does not match')
-  })
-
-  test('fail if adding entry with dynamic route', async () => {
-    const { pages } = await createApp()
-
-    const route = pages.createRoute({
-      component: './__fixtures__/DefaultPage.vue',
-      path: '/page/:id'
-    })
-
-    expect(() => route.addPage({ path: '/page/:id' })).toThrow('not allowed')
-  })
-})
-
 test('always include a /404 page', async () => {
   const app = await createApp()
   const page = app.pages._pages.findOne({ path: '/404' })
@@ -291,75 +234,6 @@ test('remove page by path', async () => {
   pages.removePageByPath('/page')
 
   expect(pages.pages()).toHaveLength(1)
-})
-
-describe('add route pages', () => {
-  test('remove route and its entries', async () => {
-    const { pages } = await createApp()
-
-    const route = pages.createRoute({
-      path: '/user/:id',
-      component: './__fixtures__/DefaultPage.vue'
-    })
-
-    route.addPage({ path: '/user/1' })
-    route.addPage({ path: '/user/2' })
-    route.addPage({ path: '/user/3' })
-
-    expect(route.pages()).toHaveLength(3)
-
-    const emit = jest.spyOn(pages._events, 'emit')
-
-    pages.removeRoute(route.id)
-
-    expect(route.pages()).toHaveLength(0)
-    expect(pages.pages()).toHaveLength(1)
-    expect(emit).toHaveBeenCalledTimes(4)
-  })
-
-  test('remove page by path', async () => {
-    const { pages } = await createApp()
-
-    const route = pages.createRoute({
-      path: '/user/:id',
-      component: './__fixtures__/DefaultPage.vue'
-    })
-
-    route.addPage({ path: '/user/1' })
-    route.addPage({ path: '/user/2' })
-    route.addPage({ path: '/user/3' })
-
-    expect(route.pages()).toHaveLength(3)
-
-    const emit = jest.spyOn(pages._events, 'emit')
-
-    pages.removePageByPath('/user/2')
-
-    expect(pages.pages()).toHaveLength(3)
-    expect(emit).toHaveBeenCalledTimes(1)
-  })
-
-  test('remove page by id', async () => {
-    const { pages } = await createApp()
-
-    const route = pages.createRoute({
-      path: '/user/:id',
-      component: './__fixtures__/DefaultPage.vue'
-    })
-
-    route.addPage({ path: '/user/1' })
-    const remove = route.addPage({ path: '/user/2' })
-    route.addPage({ path: '/user/3' })
-
-    expect(route.pages()).toHaveLength(3)
-
-    const emit = jest.spyOn(pages._events, 'emit')
-
-    route.removePage(remove.id)
-
-    expect(route.pages()).toHaveLength(2)
-    expect(emit).toHaveBeenCalledTimes(1)
-  })
 })
 
 test('remove pages by component', async () => {
@@ -457,7 +331,7 @@ test('override page with similar path', async () => {
   expect(pages.pages()).toHaveLength(2) // includes /404
 })
 
-test('sort routes', async () => {
+test('sort routes by priority', async () => {
   const { pages } = await createApp()
   const component = './__fixtures__/DefaultPage.vue'
 
@@ -497,6 +371,142 @@ test('sort routes', async () => {
     '/:rest',
     '/:a-:b'
   ])
+})
+
+describe('dynamic pages', () => {
+  test('create dynamic page', async () => {
+    const { pages } = await createApp()
+
+    const component = './__fixtures__/DefaultPage.vue'
+    const page = pages.createPage({ path: '/user/:id', component })
+
+    expect(page.id).toEqual('511565311da1006b674794018b58b80d')
+    expect(page.path).toEqual('/user/:id')
+    expect(page.context).toMatchObject({})
+    expect(page.internal.isDynamic).toEqual(true)
+    expect(page.internal.route).toEqual('9c1d306d222b94fa197459d7b9a32712')
+
+    const route = pages.getRoute(page.internal.route)
+
+    expect(route.type).toEqual('dynamic')
+    expect(route.path).toEqual('/user/:id')
+    expect(route.id).toEqual('9c1d306d222b94fa197459d7b9a32712')
+    expect(route.options.name).toEqual('__user_id')
+    expect(route.internal.regexp).toEqual(/^\/user\/([^/]+?)(?:\/)?$/i)
+    expect(route.internal.isDynamic).toEqual(true)
+  })
+})
+
+describe('create routes', () => {
+  test('create route', async () => {
+    const { pages } = await createApp()
+
+    const component = './__fixtures__/PagedTemplate.vue'
+    const route = pages.createRoute({ component, path: '/page/:id' })
+
+    expect(route.type).toEqual('static')
+    expect(route.id).toEqual('97634d90358baad1bc2499987699ca68')
+    expect(route.path).toEqual('/page/:id/:page(\\d+)?')
+    expect(route.internal.path).toEqual('/page/:id')
+    expect(route.internal.isDynamic).toEqual(true)
+    expect(route.internal.regexp).toEqual(/^\/page\/([^/]+?)(?:\/)?$/i)
+  })
+
+  test('add pages to route', async () => {
+    const { pages } = await createApp()
+
+    const component = './__fixtures__/MovieTemplate.vue'
+    const meta = { digest: 'foo', isManaged: true }
+    const route = pages.createRoute({ component, path: '/page/:id' }, meta)
+    const page1 = route.addPage({ path: '/page/1', queryVariables: { id: '1' } })
+    const page2 = route.addPage({ path: '/page/2', context: { id: '2' } })
+
+    expect(page1.id).toEqual('af9e829db29d3cd654b677ef8e8de2fb')
+    expect(page1.path).toEqual('/page/1')
+    expect(page1.context).toEqual({})
+    expect(page1.internal.digest).toEqual(route.internal.digest)
+    expect(page1.internal.isManaged).toEqual(route.internal.isManaged)
+    expect(page1.internal.query.variables).toMatchObject({ id: '1' })
+    expect(page2.internal.query.variables).toMatchObject({ id: '2' })
+  })
+
+  test('fail if route path doesn\'t have params', async () => {
+    const { pages } = await createApp()
+
+    expect(() => pages.createRoute({
+      component: './__fixtures__/DefaultPage.vue',
+      path: '/foo/bar'
+    })).toThrow('missing route params')
+  })
+
+  test('fail if path doesn\'t math route path', async () => {
+    const { pages } = await createApp()
+
+    const route = pages.createRoute({
+      component: './__fixtures__/DefaultPage.vue',
+      path: '/page/:id(\\d+)'
+    })
+
+    expect(() => route.addPage({ path: '/page/test' })).toThrow('does not match')
+  })
+
+  test('remove route and its pages', async () => {
+    const { pages } = await createApp()
+
+    const route = pages.createRoute({
+      path: '/user/:id',
+      component: './__fixtures__/PagedTemplate.vue'
+    })
+
+    route.addPage({ path: '/user/1' })
+    route.addPage({ path: '/user/2' })
+    route.addPage({ path: '/user/3' })
+
+    expect(route.pages()).toHaveLength(3)
+
+    pages.removeRoute(route.id)
+
+    expect(route.pages()).toHaveLength(0)
+    expect(pages.pages()).toHaveLength(1)
+  })
+
+  test('remove page by path', async () => {
+    const { pages } = await createApp()
+
+    const route = pages.createRoute({
+      path: '/user/:id',
+      component: './__fixtures__/DefaultPage.vue'
+    })
+
+    route.addPage({ path: '/user/1' })
+    route.addPage({ path: '/user/2' })
+    route.addPage({ path: '/user/3' })
+
+    expect(route.pages()).toHaveLength(3)
+
+    pages.removePageByPath('/user/2')
+
+    expect(route.pages()).toHaveLength(2)
+  })
+
+  test('remove page by id', async () => {
+    const { pages } = await createApp()
+
+    const route = pages.createRoute({
+      path: '/user/:id',
+      component: './__fixtures__/DefaultPage.vue'
+    })
+
+    route.addPage({ path: '/user/1' })
+    const remove = route.addPage({ path: '/user/2' })
+    route.addPage({ path: '/user/3' })
+
+    expect(route.pages()).toHaveLength(3)
+
+    route.removePage(remove.id)
+
+    expect(route.pages()).toHaveLength(2)
+  })
 })
 
 async function createApp (plugin) {

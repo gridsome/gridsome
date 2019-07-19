@@ -17,15 +17,19 @@ module.exports = function createRenderFn ({
     runInNewContext: false
   })
 
-  return async function render (url, state) {
-    const context = { url, state: createState(state) }
+  return async function render (page, state) {
+    const context = {
+      path: page.path,
+      location: page.location,
+      state: createState(state)
+    }
 
     let app = ''
 
     try {
       app = await renderer.renderToString(context)
     } catch (err) {
-      error(chalk.red(`Failed to render ${url}`))
+      error(chalk.red(`Failed to render ${page.path}`))
       throw err
     }
 

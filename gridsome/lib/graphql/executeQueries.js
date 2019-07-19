@@ -6,8 +6,6 @@ const hirestime = require('hirestime')
 const sysinfo = require('../utils/sysinfo')
 const { error, info } = require('../utils/log')
 
-const { createQueryVariables } = require('./utils')
-
 async function executeQueries (renderQueue, { context, config, pages, graphql }) {
   const assetsDir = config.assetsDir
   const timer = hirestime()

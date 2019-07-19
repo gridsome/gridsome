@@ -5,11 +5,24 @@ const schemas = {
     .label('Route options')
     .keys({
       name: Joi.string(),
-      path: Joi.string().regex(/^\//, 'missing leading slash').required(),
+      path: Joi.string()
+        .regex(/^\//, 'missing leading slash')
+        .regex(/:/, 'missing route params')
+        .required(),
       component: Joi.string().required()
     }),
 
   page: Joi.object()
+    .label('Page options')
+    .keys({
+      name: Joi.string(),
+      path: Joi.string().regex(/^\//, 'leading slash').required(),
+      component: Joi.string().required(),
+      context: Joi.object().default({}),
+      queryVariables: Joi.object().default(null).allow(null)
+    }),
+
+  routePage: Joi.object()
     .label('Page options')
     .keys({
       path: Joi.string().regex(/^\//, 'leading slash').required(),
@@ -34,6 +47,4 @@ function validate (schema, options) {
   return value
 }
 
-module.exports = {
-  validate
-}
+module.exports = validate

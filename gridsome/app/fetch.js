@@ -14,6 +14,12 @@ export default (route, options = {}) => {
   }
 
   if (!process.isStatic) {
+    const path = route.meta.dynamic
+      ? route.matched[0].path
+      : route.name === '*'
+        ? NOT_FOUND_PATH
+        : stripPageParam(route)
+
     const getJSON = function (route) {
       return new Promise((resolve, reject) => {
         fetch(process.env.GRAPHQL_ENDPOINT, {
@@ -21,7 +27,7 @@ export default (route, options = {}) => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             page: route.params.page ? Number(route.params.page) : null,
-            path: route.name === '*' ? NOT_FOUND_PATH : stripPageParam(route)
+            path
           })
         })
           .then(res => res.json())

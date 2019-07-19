@@ -1,5 +1,6 @@
 const path = require('path')
 const { pathToFilePath } = require('./utils')
+const { createQueryVariables } = require('../graphql/utils')
 const { createFilterQuery } = require('../graphql/createFilterTypes')
 const { createBelongsToKey, createPagedNodeEdges } = require('../graphql/nodes/utils')
 
@@ -13,18 +14,16 @@ function createRenderQueue ({ renderQueue }) {
 
     for (const route of pages.routes()) {
       for (const page of route.pages()) {
-        if (page.internal.query.paginate) {
-          const totalPages = calcTotalPages(
-            page.internal.query,
-            store,
-            queryFields
-          )
+        const { isDynamic, query } = page.internal
+
+        if (!isDynamic && query.paginate) {
+          const totalPages = calcTotalPages(query, store, queryFields)
 
           for (let i = 1; i <= totalPages; i++) {
-            queue.push(createRenderEntry(page, i, outDir))
+            queue.push(createRenderEntry(page, i, route, outDir))
           }
         } else {
-          queue.push(createRenderEntry(page, 0, outDir))
+          queue.push(createRenderEntry(page, 0, route, outDir))
         }
       }
     }
@@ -62,7 +61,7 @@ function calcTotalPages (query, store, queryFields) {
   return res.pageInfo.totalPages
 }
 
-function createRenderEntry (page, currentPage, outDir) {
+function createRenderEntry (page, currentPage, route, outDir) {
   const segments = page.path.split('/').filter(Boolean)
 
   if (currentPage > 1) {
@@ -70,16 +69,24 @@ function createRenderEntry (page, currentPage, outDir) {
   }
 
   const normalizedPath = `/${segments.join('/')}`
+  const htmlOutput = path.join(outDir, pathToFilePath(normalizedPath))
+
+  const location = route.type === 'dynamic'
+    ? { name: route.name }
+    : { path: normalizedPath }
+
+  const queryVariables = route.internal.query.document
+    ? createQueryVariables(normalizedPath, page.internal.query.variables, currentPage)
+    : {}
 
   return {
+    location,
+    htmlOutput,
+    queryVariables,
+    type: route.type,
     path: normalizedPath,
-    dataOutput: null,
-    htmlOutput: path.join(outDir, pathToFilePath(normalizedPath)),
-    internal: {
-      pageId: page.id,
-      routeId: page.internal.route,
-      currentPage
-    }
+    routeId: page.internal.route,
+    pageId: page.id
   }
 }
 

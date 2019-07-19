@@ -35,6 +35,9 @@ exports.createManagedPagesAPI = function (api, { digest }) {
     _createRoute (options) {
       return pages.createRoute(options, internals)
     },
+    _removeRoute (id) {
+      pages.removeRoute(id)
+    },
     createPage (options) {
       pages.createPage(options, internals)
     },

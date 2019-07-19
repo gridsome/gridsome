@@ -7,7 +7,8 @@ const { version } = require('../../package.json')
 
 const {
   AsyncSeriesHook,
-  AsyncSeriesWaterfallHook
+  AsyncSeriesWaterfallHook,
+  SyncWaterfallHook
 } = require('tapable')
 
 const {
@@ -29,7 +30,9 @@ class App {
     this.hooks = {
       beforeBootstrap: new AsyncSeriesHook([]),
       bootstrap: new AsyncSeriesHook(['app']),
-      renderQueue: new AsyncSeriesWaterfallHook(['renderQueue', 'app'])
+      renderQueue: new AsyncSeriesWaterfallHook(['renderQueue', 'app']),
+      dynamicRenderQueue: new SyncWaterfallHook(['renderQueue', 'app']),
+      redirects: new SyncWaterfallHook(['redirects', 'renderQueue'])
     }
 
     autoBind(this)

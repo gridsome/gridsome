@@ -10,11 +10,13 @@ const { SyncWaterfallHook, SyncBailHook } = require('tapable')
 const SyncBailWaterfallHook = require('../app/SyncBailWaterfallHook')
 const { BOOTSTRAP_PAGES } = require('../utils/constants')
 const createRenderQueue = require('./createRenderQueue')
-const { validate } = require('./validateOptions')
+const validateInput = require('./schemas')
 const { normalizePath } = require('./utils')
 const { hashString } = require('../utils')
+const { snakeCase } = require('lodash')
 
 const isDev = process.env.NODE_ENV === 'development'
+const getRouteType = value => /:/.test(value) ? 'dynamic' : 'static'
 
 class Pages {
   constructor (app) {
@@ -129,8 +131,9 @@ class Pages {
     this._pages.findAndRemove(query)
   }
 
-  createRoute (input, meta = {}) {
-    const options = this._createRouteOptions(input, meta)
+  createRoute (input, meta = {}, validate = true) {
+    const validated = validate ? validateInput('route', input) : input
+    const options = this._createRouteOptions(validated, meta)
     const oldRoute = this._routes.by('id', options.id)
 
     if (oldRoute) {
@@ -148,8 +151,9 @@ class Pages {
     return new Route(options, this)
   }
 
-  updateRoute (input, meta = {}) {
-    const options = this._createRouteOptions(input, meta)
+  updateRoute (input, meta = {}, validate = true) {
+    const validated = validate ? validateInput('route', input) : input
+    const options = this._createRouteOptions(validated, meta)
     const route = this._routes.by('id', options.id)
 
     options.$loki = route.$loki
@@ -162,39 +166,43 @@ class Pages {
 
   removeRoute (id) {
     const options = this._routes.by('id', id)
-    const route = new Route(options, this)
 
-    route.pages().forEach(page => {
-      route.removePage(page.id)
-    })
-
+    this._pages.findAndRemove({ 'internal.route': id })
     this._routes.findAndRemove({ id })
-    this._unwatchComponent(route.component)
+    this._unwatchComponent(options.component)
   }
 
   createPage (input, meta = {}) {
+    const options = validateInput('page', input)
+    const type = getRouteType(options.path)
+
     const route = this.createRoute({
-      path: input.path,
-      component: input.component
-    }, meta)
+      name: options.name,
+      path: options.path,
+      component: options.component
+    }, { ...meta, type }, false)
 
     return route.addPage({
-      path: input.path,
-      context: input.context,
-      queryVariables: input.queryVariables
+      path: options.path,
+      context: options.context,
+      queryVariables: options.queryVariables
     })
   }
 
   updatePage (input, meta = {}) {
+    const options = validateInput('page', input)
+    const type = getRouteType(options.path)
+
     const route = this.updateRoute({
-      path: input.path,
-      component: input.component
-    }, meta)
+      name: options.name,
+      path: options.path,
+      component: options.component
+    }, { ...meta, type }, false)
 
     return route.updatePage({
-      path: input.path,
-      context: input.context,
-      queryVariables: input.queryVariables
+      path: options.path,
+      context: options.context,
+      queryVariables: options.queryVariables
     })
   }
 
@@ -236,14 +244,16 @@ class Pages {
     return this._pages.by('id', id)
   }
 
-  _createRouteOptions (input, meta = {}, op = 'create') {
-    const options = validate('route', input)
+  _createRouteOptions (options, meta = {}, op = 'create') {
     const component = this.app.resolve(options.component)
     const { pageQuery } = this._parseComponent(component, op === 'create')
     const { source, document, paginate } = createPageQuery(pageQuery)
-    const { type, name } = options
+    const { type = 'static', ...internal } = meta
 
-    let path = normalizePath(options.path)
+    const normalPath = normalizePath(options.path)
+    const isDynamic = /:/.test(normalPath)
+    let name = options.name
+    let path = normalPath
 
     const regexp = pathToRegexp(path)
     const id = crypto.createHash('md5').update(`route-${path}`).digest('hex')
@@ -251,6 +261,10 @@ class Pages {
     if (paginate) {
       const segments = path.split('/').filter(Boolean)
       path = `/${segments.concat(':page(\\d+)?').join('/')}`
+    }
+
+    if (type === 'dynamic') {
+      name = name || `__${snakeCase(normalPath)}`
     }
 
     const priority = this._resolvePriority(path)
@@ -261,7 +275,9 @@ class Pages {
       name,
       path,
       component,
-      internal: Object.assign({}, meta, {
+      internal: Object.assign({}, internal, {
+        path: normalPath,
+        isDynamic,
         priority,
         regexp,
         query: {
@@ -298,7 +314,7 @@ class Pages {
       resourcePath: component
     })
 
-    this._cache.set(component, validate('component', results))
+    this._cache.set(component, validateInput('component', results))
 
     return results
   }
@@ -377,15 +393,17 @@ class Route {
 
   _createPageOptions (input) {
     const { regexp, digest, isManaged, query } = this.internal
-    const { path: _path, context, queryVariables } = validate('page', input)
+    const { path: _path, context, queryVariables } = validateInput('routePage', input)
     const normalPath = normalizePath(_path)
+    const isDynamic = /:/.test(normalPath)
     const id = crypto.createHash('md5').update(`page-${normalPath}`).digest('hex')
 
-    if (normalPath !== this.path) {
-      invariant(regexp.test(normalPath), `Page path does not match route path: ${normalPath}`)
+    if (this.type === 'static') {
+      invariant(
+        regexp.test(normalPath),
+        `Page path does not match route path: ${normalPath}`
+      )
     }
-
-    invariant(!/:/.test(normalPath), `Path params for route pages are not allowed: ${normalPath}`)
 
     const { paginate, variables, filters } = createPageQuery(
       query.source,
@@ -400,6 +418,7 @@ class Route {
         route: this.id,
         digest,
         isManaged,
+        isDynamic,
         query: {
           paginate,
           variables,

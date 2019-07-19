@@ -3,14 +3,15 @@ const { slugify } = require('../../utils')
 const { isPlainObject } = require('lodash')
 const { NOT_FOUND_NAME } = require('../../utils/constants')
 
-function genRoutes (app, routeMeta = {}) {
+function genRoutes (app, routeMeta = new Map()) {
   const createRouteItem = (route, name = route.options.name, path = route.path) => ({
     name,
     path,
     component: route.component,
     chunkName: genChunkName(app.context, route),
-    routeMeta: routeMeta[route.path],
-    meta: route.internal.meta
+    routeMeta: routeMeta.get(route.id),
+    meta: route.internal.meta,
+    type: route.type
   })
 
   const items = app.pages.routes().map(route => {
@@ -45,6 +46,10 @@ function genRoute (item) {
     metas.push(`data: ${JSON.stringify(routeMeta)}`)
   } else if (process.env.GRIDSOME_MODE !== 'static') {
     metas.push(`data: true`)
+  }
+
+  if (item.type === 'dynamic') {
+    metas.push(`dynamic: true`)
   }
 
   if (item.meta) {

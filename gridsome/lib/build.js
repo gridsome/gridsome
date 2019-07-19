@@ -22,6 +22,7 @@ module.exports = async (context, args) => {
   await fs.emptyDir(config.dataDir)
 
   const renderQueue = await app.hooks.renderQueue.promise([], app)
+  const redirects = app.hooks.redirects.call([], renderQueue)
   const queue = await executeQueries(renderQueue, app)
 
   await writePageData(queue, app)
@@ -35,7 +36,7 @@ module.exports = async (context, args) => {
     await fs.copy(config.staticDir, config.outDir)
   }
 
-  await app.events.dispatch('afterBuild', () => ({ context, config, queue }))
+  await app.events.dispatch('afterBuild', () => ({ context, config, queue, redirects }))
 
   // clean up
   await fs.remove(config.manifestsDir)
@@ -51,8 +52,8 @@ module.exports = async (context, args) => {
 async function writePageData (renderQueue, app) {
   const timer = hirestime()
   const queryQueue = renderQueue.filter(entry => entry.dataOutput)
-  const routeIds = groupBy(queryQueue, entry => entry.internal.routeId)
-  const meta = {}
+  const routeIds = groupBy(queryQueue, entry => entry.routeId)
+  const meta = new Map()
 
   let count = 0
 
@@ -62,7 +63,7 @@ async function writePageData (renderQueue, app) {
 
   for (const id in routeIds) {
     const entries = routeIds[id]
-    const route = app.pages._routes.findOne({ id })
+    const route = app.pages._routes.by('id', id)
     const content = entries.reduce((acc, { path, dataInfo }) => {
       acc[path] = [dataInfo.group, dataInfo.hash]
       return acc
@@ -71,9 +72,9 @@ async function writePageData (renderQueue, app) {
     if (entries.length > 1) {
       const output = path.join(app.config.dataDir, 'route-meta', `${count++}.json`)
       await fs.outputFile(output, JSON.stringify(content))
-      meta[route.id] = output
+      meta.set(route.id, output)
     } else {
-      meta[route.id] = content[entries[0].path]
+      meta.set(route.id, content[entries[0].path])
     }
   }
 
@@ -106,7 +107,6 @@ async function renderHTML (renderQueue, app) {
   const timer = hirestime()
   const worker = createWorker('html-writer')
   const { htmlTemplate, clientManifestPath, serverBundlePath } = app.config
-
 
   await Promise.all(chunk(renderQueue, 350).map(async pages => {
     try {

@@ -10,7 +10,8 @@ const builtInPlugins = [
   path.resolve(__dirname, '../plugins/vue-components'),
   path.resolve(__dirname, '../plugins/vue-pages'),
   path.resolve(__dirname, '../plugins/vue-templates'),
-  path.resolve(__dirname, '../plugins/NodePathPlugin.js')
+  path.resolve(__dirname, '../plugins/NodePathPlugin.js'),
+  path.resolve(__dirname, '../plugins/RedirectsPlugin.js')
 ]
 
 // TODO: use joi to define and validate config schema

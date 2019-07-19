@@ -189,12 +189,89 @@ test('create render queue for createPages hook', async () => {
   expect(paths).toHaveLength(11)
 
   renderQueue.forEach(entry => {
+    expect(entry.type).toBeDefined()
     expect(entry.path).toBeDefined()
     expect(entry.htmlOutput).toBeDefined()
-    expect(entry.internal.pageId).toBeDefined()
-    expect(entry.internal.routeId).toBeDefined()
+    expect(entry.queryVariables).toBeDefined()
+    expect(entry.pageId).toBeDefined()
+    expect(entry.routeId).toBeDefined()
   })
 })
+
+
+describe('dynamic pages', () => {
+  const createRenderQueue = async () => {
+    const app = await _createApp()
+    const component = './__fixtures__/DefaultPage.vue'
+
+    app.pages.createPage({ path: '/', component })
+    app.pages.createPage({ path: '/a', component })
+    app.pages.createPage({ path: '/a/b', component })
+    app.pages.createPage({ path: '/a/:b', component })
+    app.pages.createPage({ path: '/a/:b(\\d+)', component })
+    app.pages.createPage({ path: '/a/:b*', component })
+    app.pages.createPage({ path: '/a/:b+', component })
+
+    const renderQueue = await app.hooks.renderQueue.promise([], app)
+    const dynamicRenderQueue = await app.hooks.dynamicRenderQueue.promise([], app)
+
+    return { app, renderQueue, dynamicRenderQueue }
+  }
+
+  test('render queue for dynamic pages', async () => {
+    const { renderQueue } = await createRenderQueue()
+    const paths = renderQueue.map(entry => entry.path)
+
+    expect(paths).toEqual([
+      '/a/b',
+      '/a/:b(\\d+)',
+      '/a/:b',
+      '/a/:b*',
+      '/a/:b+',
+      '/404',
+      '/',
+      '/a'
+    ])
+  })
+
+  test('html output paths for dynamic pages', async () => {
+    const { app, renderQueue } = await createRenderQueue()
+
+    const outputs = renderQueue.map(entry =>
+      path.relative(app.config.outDir, entry.htmlOutput)
+    )
+
+    expect(outputs).toEqual([
+      'a/b/index.html',
+      'a/_b_d_plus.html',
+      'a/_b.html',
+      'a/_b_star.html',
+      'a/_b_plus.html',
+      '404/index.html',
+      'index.html',
+      'a/index.html'
+    ])
+  })
+
+  test('redirects for dynamic pages', async () => {
+    const { app, renderQueue, dynamicRenderQueue } = await createRenderQueue()
+    const redirects = app.hooks.redirects.call([], [...renderQueue, ...dynamicRenderQueue])
+
+    const expected = [
+      ['/a/:b(\\d+)', '/a/_b_d_plus.html', 200],
+      ['/a/:b', '/a/_b.html', 200],
+      ['/a/:b*', '/a/_b_star.html', 200],
+      ['/a/:b+', '/a/_b_plus.html', 200]
+    ]
+
+    expect(redirects).toHaveLength(4)
+
+    for (const [index, [from, to, status]] of expected.entries()) {
+      expect(redirects[index]).toMatchObject({ from, to, status })
+    }
+  })
+})
+
 
 async function _createApp (plugin) {
   const app = await new App(__dirname, {
