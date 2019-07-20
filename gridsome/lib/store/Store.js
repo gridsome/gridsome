@@ -3,6 +3,7 @@ const autoBind = require('auto-bind')
 const EventEmitter = require('eventemitter3')
 const { omit, isArray, isPlainObject } = require('lodash')
 const ContentType = require('./ContentType')
+const { safeKey } = require('../utils')
 
 class Store {
   constructor (app) {
@@ -85,6 +86,18 @@ class Store {
 
   getNode (typeName, id) {
     return this.getContentType(typeName).getNodeById(id)
+  }
+
+  // TODO: move this to internal plugin
+  setBelongsTo (node, typeName, id) {
+    const entry = this.index.by('uid', node.$uid)
+    const belongsTo = entry.belongsTo
+    const key = safeKey(id)
+
+    belongsTo[typeName] = belongsTo[typeName] || {}
+    belongsTo[typeName][key] = true
+
+    this.index.update({ ...entry, belongsTo })
   }
 
   chainIndex (query = {}) {

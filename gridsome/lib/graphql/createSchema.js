@@ -5,7 +5,8 @@ const createNodesSchema = require('./nodes')
 const createMetaDataSchema = require('./metaData')
 const { scalarTypeResolvers } = require('./resolvers')
 const { addDirectives, applyFieldExtensions } = require('./extensions')
-const { isEmpty } = require('lodash')
+const { isEmpty, get } = require('lodash')
+const { isRefField } = require('../store/utils')
 
 const {
   parse,
@@ -60,8 +61,79 @@ module.exports = function createSchema (store, options = {}) {
   addSchemas(schemaComposer, schemas)
   addResolvers(schemaComposer, resolvers)
   processTypes(schemaComposer, extensions)
+  setupBelongsTo(schemaComposer, store)
 
   return schemaComposer
+}
+
+function setupBelongsTo (schemaComposer, store) {
+  const typeNames = Object.keys(store.collections)
+
+  for (const typeName of typeNames) {
+    const contentType = store.getContentType(typeName)
+    const typeComposer = schemaComposer.get(typeName)
+    const nodes = contentType.data()
+    const length = nodes.length
+
+    const references = getNodeReferenceFields(typeComposer)
+    typeComposer.setExtension('references', references)
+
+    // TODO: move this to internal plugin
+    for (let i = 0; i < length; i++) {
+      const node = nodes[i]
+
+      for (const item of references) {
+        const fieldValue = get(node, item.path)
+
+        if (!fieldValue) continue
+
+        const values = Array.isArray(fieldValue)
+          ? fieldValue
+          : [fieldValue]
+
+        values.forEach(value => {
+          const id = isRefField(value) ? value.id : value
+
+          store.setBelongsTo(node, item.typeName, id)
+        })
+      }
+    }
+  }
+}
+
+function getNodeReferenceFields (typeComposer, currentPath = []) {
+  let res = []
+
+  if (typeComposer instanceof ObjectTypeComposer) {
+    const fields = typeComposer.getFields()
+
+    for (const fieldName in fields) {
+      const fieldTypeComposer = typeComposer.getFieldTC(fieldName)
+      const extensions = typeComposer.getFieldExtensions(fieldName)
+      const isList = typeComposer.isFieldPlural(fieldName)
+
+      if (fieldTypeComposer instanceof ObjectTypeComposer) {
+        if (fieldTypeComposer.hasInterface('Node')) {
+          const typeName = fieldTypeComposer.getTypeName()
+          const reference = extensions.reference || {}
+          const path = currentPath.concat(fieldName)
+          const config = { typeName, reference, isList, path }
+
+          // TODO: support custom fields
+          if (reference.by === 'id') res.push(config)
+        } else {
+          res = res.concat(
+            getNodeReferenceFields(
+              fieldTypeComposer,
+              currentPath.concat(fieldName)
+            )
+          )
+        }
+      }
+    }
+  }
+
+  return res
 }
 
 function addTypes (schemaComposer, typeOrSDL) {

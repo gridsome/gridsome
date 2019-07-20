@@ -1,9 +1,9 @@
-const { isDate } = require('lodash')
+const { isDate, get } = require('lodash')
 const { resolvePath, isRefField } = require('./utils')
 const { isResolvablePath, safeKey } = require('../utils')
 
 module.exports = function processFields (fields = {}, refs = {}, options = {}) {
-  const { origin = '', context, resolveAbsolute } = options
+  const { origin = '', context, references, resolveAbsolute } = options
   const belongsTo = {}
 
   const addBelongsTo = ({ typeName, id }) => {
@@ -72,6 +72,19 @@ module.exports = function processFields (fields = {}, refs = {}, options = {}) {
     const id = res[fieldName]
 
     if (id) addBelongsTo({ id, typeName })
+  }
+
+  for (const item of references) {
+    const fieldValue = get(fields, item.path)
+
+    if (!fieldValue) continue
+
+    const values = Array.isArray(fieldValue) ? fieldValue : [fieldValue]
+
+    values.forEach(value => {
+      const id = isRefField(value) ? value.id : value
+      addBelongsTo({ typeName: item.typeName, id })
+    })
   }
 
   return { fields: res, belongsTo }

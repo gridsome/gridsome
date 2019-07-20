@@ -32,11 +32,15 @@ module.exports = function createNodeOptions (options, contentType, useFallbacks 
     }
   }
 
+  const composer = contentType._store._app.schema.getComposer()
+  const references = composer ? composer.get(contentType.typeName) : []
+
   const { fields, belongsTo } = processFields(customFields, contentType.options.refs, {
     origin: nodeOptions.internal.origin,
     context: contentType._assetsContext,
     camelCased: contentType._camelCasedFieldNames,
-    resolveAbsolute: contentType._resolveAbsolutePaths
+    resolveAbsolute: contentType._resolveAbsolutePaths,
+    references
   })
 
   return { nodeOptions, fields, belongsTo }

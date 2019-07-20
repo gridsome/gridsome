@@ -81,6 +81,45 @@ test('create node reference', async () => {
   expect(data.author.belongsTo.edges[2].node.__typename).toEqual('Book')
 })
 
+test('get references from custom schema', async () => {
+  const authors = api.store.addContentType('Author')
+  const books = api.store.addContentType('Book')
+
+  authors.addNode({ id: '1', title: 'Author 1', slug: 'author-1' })
+  books.addNode({ id: '1', title: 'Book 1', author: '1' })
+  books.addNode({ id: '2', title: 'Book 2', authors: ['1'] })
+  books.addNode({ id: '3', title: 'Book 3', authors: ['2'] })
+
+  const query = `query {
+    author (id: "1") {
+      belongsTo (sortBy: "title", order: ASC) {
+        totalCount
+        pageInfo {
+          totalPages
+        }
+        edges {
+          node {
+            __typename
+          }
+        }
+      }
+    }
+  }`
+
+  const types = `
+    type Book implements Node {
+      author: Author @reference
+      authors: [Author] @reference
+    }
+  `
+
+  const { errors, data } = await createSchemaAndExecute(query, { types })
+
+  expect(errors).toBeUndefined()
+  expect(data.author.belongsTo.edges).toHaveLength(2)
+  expect(data.author.belongsTo.totalCount).toEqual(2)
+})
+
 test('sort belongsTo by multiple fields', async () => {
   const authors = api.store.addContentType('Author')
   const books = api.store.addContentType('Book')
@@ -153,6 +192,6 @@ test('handle pagination for filtered belongsTo', async () => {
   expect(data.author.belongsTo.edges[0].node.__typename).toEqual('Book')
 })
 
-function createSchemaAndExecute (query) {
-  return app.schema.buildSchema().runQuery(query)
+function createSchemaAndExecute (query, options) {
+  return app.schema.buildSchema(options).runQuery(query)
 }
