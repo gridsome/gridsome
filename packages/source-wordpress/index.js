@@ -1,10 +1,13 @@
 const pMap = require('p-map')
 const axios = require('axios')
+const fs = require('fs')
+const path = require('path')
 const camelCase = require('camelcase')
-const { mapKeys, isPlainObject, trimEnd } = require('lodash')
+const { mapKeys, isPlainObject, trimEnd, map, find } = require('lodash')
 
 const TYPE_AUTHOR = 'author'
 const TYPE_ATTACHEMENT = 'attachment'
+const TMPDIR = '.temp/downloads'
 
 class WordPressSource {
   static defaultOptions () {
@@ -13,8 +16,16 @@ class WordPressSource {
       apiBase: 'wp-json',
       perPage: 100,
       concurrent: 10,
-      routes: {},
-      typeName: 'WordPress'
+      routes: {
+        post: '/:slug',
+        category: '/category/:slug'
+      },
+      typeName: 'WordPress',
+      splitPostsIntoFragments: false,
+      downloadRemoteImagesFromPosts: false,
+      postImagesLocalPath: 'wp-images/',
+      downloadRemoteFeaturedImages: false,
+      featuredImagesLocalPath: 'wp-images/'
     }
   }
 
@@ -44,6 +55,12 @@ class WordPressSource {
       ...this.options.routes
     }
 
+    /* Create image directories */
+    if (this.options.postImagesLocalPath) this.createDirectory(this.options.postImagesLocalPath)
+    if (this.options.featuredImagesLocalPath) this.createDirectory(this.options.featuredImagesLocalPath)
+    this.createDirectory(TMPDIR)
+    this.tmpCount = 0
+
     api.loadSource(async store => {
       this.store = store
 
@@ -54,6 +71,16 @@ class WordPressSource {
       await this.getTaxonomies(store)
       await this.getPosts(store)
     })
+  }
+
+  createDirectory (dir) {
+    const pwd = path.resolve(dir)
+    if (!fs.existsSync(pwd)) {
+      console.log(`Creating directory: ${pwd}`)
+      fs.mkdirSync(pwd, { recursive: true })
+    }
+
+    return pwd
   }
 
   async getPostTypes (store) {
@@ -118,6 +145,91 @@ class WordPressSource {
     }
   }
 
+  extractImagesFromPostHtml (string) {
+    var regex = /<img[^>]* src=\"([^\"]*)\" alt=\"([^\"]*)\"[^>]*>/gm
+
+    var matches = []
+    var match = regex.exec(string)
+    while (match.length >= 3) {
+      matches.push({
+        url: match[1],
+        alt: match[2]
+      })
+    }
+    return matches
+  }
+
+  async downloadImage (url, destPath, fileName) {
+    const imagePath = path.resolve(destPath, fileName)
+
+    try {
+      if (fs.existsSync(imagePath)) return
+    } catch (err) {
+      console.log(err)
+    }
+
+    const tmpPath = path.resolve(TMPDIR, `${++this.tmpCount}.tmp`)
+    const writer = fs.createWriteStream(tmpPath)
+    try {
+      const response = await axios({
+        url,
+        method: 'GET',
+        responseType: 'stream'
+      })
+      response.data.pipe(writer)
+
+      return new Promise((resolve, reject) => {
+        writer.on('finish', () => {
+          writer.close()
+          fs.rename(tmpPath, imagePath, resolve)
+        })
+        writer.on('error', reject)
+      })
+    } catch (e) {
+      fs.unlinkSync(tmpPath) // Cleanup blank file
+    }
+  }
+
+  processPostFragments (post) {
+    var postImages = this.extractImagesFromPostHtml(post)
+
+    var regex = /<img[^>]* src=\"([^\"]*)\"[^>]*>/
+    var fragments = post.split(regex)
+
+    return map(fragments, (fragment, index) => {
+      var image = find(postImages, (image) => { return image.url === fragment })
+      if (image) {
+        var fileName = fragment.split('/').pop()
+        var imageData = {
+          type: 'img',
+          order: index + 1,
+          fragmentData: {
+            remoteUrl: fragment,
+            fileName: fileName,
+            image: path.resolve(this.options.postImagesLocalPath, fileName),
+            alt: image.alt
+          }
+        }
+        if (this.options.downloadRemoteImagesFromPosts && this.options.postImagesLocalPath) {
+          this.downloadImage(
+            imageData.fragmentData.remoteUrl,
+            this.options.postImagesLocalPath,
+            imageData.fragmentData.fileName
+          )
+        }
+        return imageData
+      } else {
+        return {
+          type: 'html',
+          order: index + 1,
+          fragmentData: {
+            html: fragment
+          }
+        }
+      }
+    })
+  }
+
   async getPosts (store) {
     const { getContentType, createReference } = store
 
@@ -129,11 +241,10 @@ class WordPressSource {
       const typeName = this.createTypeName(type)
       const posts = getContentType(typeName)
 
-      const data = await this.fetchPaged(`wp/v2/${restBase}`)
+      const data = await this.fetchPaged(`wp/v2/${restBase}?_embed`)
 
       for (const post of data) {
         const fields = this.normalizeFields(post)
-
         fields.author = createReference(AUTHOR_TYPE_NAME, post.author || '0')
 
         if (post.type !== TYPE_ATTACHEMENT) {
@@ -150,6 +261,23 @@ class WordPressSource {
             const key = camelCase(propName)
 
             fields[key] = ref
+          }
+        }
+
+        if (this.options.splitPostsIntoFragments && fields['content']) { fields.postFragments = this.processPostFragments(fields['content']) }
+
+        // download the featured image
+        if (this.options.downloadRemoteFeaturedImages && this.options.featuredImagesLocalPath && post._embedded && post._embedded['wp:featuredmedia']) {
+          try {
+            var featuredImageFileName = post._embedded['wp:featuredmedia']['0'].source_url.split('/').pop()
+            await this.downloadImage(
+              post._embedded['wp:featuredmedia']['0'].source_url,
+              this.options.featuredImagesLocalPath,
+              featuredImageFileName
+            )
+            fields.featuredMediaImage = path.resolve(this.options.featuredImagesLocalPath, featuredImageFileName)
+          } catch (err) {
+            console.log('WARNING - No featured image for post ' + post.slug)
           }
         }
 
