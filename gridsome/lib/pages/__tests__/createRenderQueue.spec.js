@@ -198,7 +198,6 @@ test('create render queue for createPages hook', async () => {
   })
 })
 
-
 describe('dynamic pages', () => {
   const createRenderQueue = async () => {
     const app = await _createApp()
