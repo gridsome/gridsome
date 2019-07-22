@@ -62,13 +62,14 @@ class TemplatesPlugin {
 
       if (typeTemplates) {
         // TODO: add path fields with schema API instead
-        const template = typeTemplates.values().next().value
-        const fieldValue = options[template.fieldName]
+        for (const template of typeTemplates) {
+          const fieldValue = options[template.fieldName]
 
-        if (fieldValue) {
-          options[template.fieldName] = '/' + trim(fieldValue, '/')
-        } else if (template.path) {
-          options[template.fieldName] = makePath(options, template)
+          if (fieldValue) {
+            options[template.fieldName] = '/' + trim(fieldValue, '/')
+          } else if (template.path) {
+            options[template.fieldName] = makePath(options, template)
+          }
         }
       }
     })
@@ -234,10 +235,7 @@ class Template {
   createPage (node) {
     const { fieldName, component } = this.template
     const queryVariables = node
-
-    const path = this.template.path
-      ? makePath(node, this.template)
-      : node[fieldName]
+    const path = node[fieldName]
 
     if (this.route) this.route.addPage({ path, queryVariables })
     else this.actions.createPage({ path, component, queryVariables })
