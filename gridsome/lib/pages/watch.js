@@ -29,15 +29,12 @@ module.exports = (app, pages) => {
     pages.disableIndices()
 
     for (let i = 0; i < length; i++) {
-      const route = routes[i]
+      const { type, name, path, internal } = routes[i]
+      const options = { type, name, path, component }
 
-      pages.updateRoute({
-        name: route.name,
-        path: route.path,
-        component
-      }, {
-        digest: route.internal.digest,
-        isManaged: route.internal.isManaged
+      pages.updateRoute(options, {
+        digest: internal.digest,
+        isManaged: internal.isManaged
       })
     }
 

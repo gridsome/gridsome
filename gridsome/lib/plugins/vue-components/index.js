@@ -15,8 +15,8 @@ class VueComponents {
       this.createGraphQLRule(config, 'static-query', './lib/loaders/static-query')
     })
 
-    api._app.pages.hooks.parseComponent.tap('VueComponentsPlugin', (source, { resourcePath }) => {
-      if (/\.vue$/.test(resourcePath)) {
+    api._app.pages.hooks.parseComponent.for('vue')
+      .tap('VueComponentsPlugin', (source, { resourcePath }) => {
         const filename = path.parse(resourcePath).name
         const { customBlocks } = parse({ filename, source, compiler })
         const pageQuery = customBlocks.find(block => block.type === 'page-query')
@@ -24,8 +24,7 @@ class VueComponents {
         return {
           pageQuery: pageQuery ? pageQuery.content : null
         }
-      }
-    })
+      })
   }
 
   createGraphQLRule (config, type, loader) {

@@ -7,21 +7,22 @@ describe('utilities', () => {
   test('pathToFilePath()', () => {
     expect(pathToFilePath('')).toEqual('/index.html')
     expect(pathToFilePath('/')).toEqual('/index.html')
-    expect(pathToFilePath('foo')).toEqual('/foo/index.html')
-    expect(pathToFilePath('/foo')).toEqual('/foo/index.html')
-    expect(pathToFilePath('/foo/')).toEqual('/foo/index.html')
-    expect(pathToFilePath('/foo bar')).toEqual('/foo bar/index.html')
-    expect(pathToFilePath('/foo/:bar')).toEqual('/foo/_bar.html')
-    expect(pathToFilePath('/:foo/')).toEqual('/_foo.html')
-    expect(pathToFilePath('/:foo-bar/')).toEqual('/_foo_bar.html')
-    expect(pathToFilePath('/:foo/:bar')).toEqual('/_foo/_bar.html')
-    expect(pathToFilePath('/:foo(\\d+)')).toEqual('/_foo_d_plus.html')
-    expect(pathToFilePath('/:foo/(.*)')).toEqual('/_foo/_dot_star.html')
-    expect(pathToFilePath('/route/:foo/(.*)')).toEqual('/route/_foo/_dot_star.html')
-    expect(pathToFilePath('/icon-:foo(\\d+)')).toEqual('/_icon_foo_d_plus.html')
-    expect(pathToFilePath('/(user|u)')).toEqual('/_user_pipe_u.html')
-    expect(pathToFilePath('/:foo*')).toEqual('/_foo_star.html')
-    expect(pathToFilePath('/:foo+')).toEqual('/_foo_plus.html')
+    expect(pathToFilePath('a')).toEqual('/a/index.html')
+    expect(pathToFilePath('/a')).toEqual('/a/index.html')
+    expect(pathToFilePath('/a/')).toEqual('/a/index.html')
+    expect(pathToFilePath('/a b')).toEqual('/a b/index.html')
+    expect(pathToFilePath('/a/:b')).toEqual('/a/_b.html')
+    expect(pathToFilePath('/:a/')).toEqual('/_a.html')
+    expect(pathToFilePath('/:a-b/')).toEqual('/_a_b.html')
+    expect(pathToFilePath('/:a/:b')).toEqual('/_a/_b.html')
+    expect(pathToFilePath('/:a(\\d+)')).toEqual('/_a_d_plus.html')
+    expect(pathToFilePath('/:a/(.*)')).toEqual('/_a/_dot_star.html')
+    expect(pathToFilePath('/a/:b/:c?')).toEqual('/a/_b/_c_qn.html')
+    expect(pathToFilePath('/a/:b/(.*)')).toEqual('/a/_b/_dot_star.html')
+    expect(pathToFilePath('/a-:b(\\d+)')).toEqual('/_a_b_d_plus.html')
+    expect(pathToFilePath('/(a|b)')).toEqual('/_a_pipe_b.html')
+    expect(pathToFilePath('/:a*')).toEqual('/_a_star.html')
+    expect(pathToFilePath('/:a+')).toEqual('/_a_plus.html')
     expect(pathToFilePath('/(.*)')).toEqual('/_dot_star.html')
   })
 })
@@ -166,7 +167,7 @@ test('always include a /404 page', async () => {
 
 test('cache parsed components', async () => {
   const { pages } = await createApp()
-  const parseComponent = jest.spyOn(pages.hooks.parseComponent, 'call')
+  const parseComponent = jest.spyOn(pages.hooks.parseComponent.for('vue'), 'call')
 
   pages.createPage({ path: '/page/1', component: './__fixtures__/PagedPage.vue' })
   pages.createPage({ path: '/page/2', component: './__fixtures__/PagedPage.vue' })
@@ -428,15 +429,6 @@ describe('create routes', () => {
     expect(page1.internal.isManaged).toEqual(route.internal.isManaged)
     expect(page1.internal.query.variables).toMatchObject({ id: '1' })
     expect(page2.internal.query.variables).toMatchObject({ id: '2' })
-  })
-
-  test('fail if route path doesn\'t have params', async () => {
-    const { pages } = await createApp()
-
-    expect(() => pages.createRoute({
-      component: './__fixtures__/DefaultPage.vue',
-      path: '/foo/bar'
-    })).toThrow('missing route params')
   })
 
   test('fail if path doesn\'t math route path', async () => {

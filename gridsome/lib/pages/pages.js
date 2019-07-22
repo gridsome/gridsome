@@ -1,22 +1,25 @@
+const path = require('path')
 const fs = require('fs-extra')
-const Loki = require('lokijs')
 const crypto = require('crypto')
 const invariant = require('invariant')
 const initWatcher = require('./watch')
+const { Collection } = require('lokijs')
 const { FSWatcher } = require('chokidar')
 const pathToRegexp = require('path-to-regexp')
 const createPageQuery = require('./createPageQuery')
-const { SyncWaterfallHook, SyncBailHook } = require('tapable')
-const SyncBailWaterfallHook = require('../app/SyncBailWaterfallHook')
+const { HookMap, SyncWaterfallHook, SyncBailHook } = require('tapable')
 const { BOOTSTRAP_PAGES } = require('../utils/constants')
-const createRenderQueue = require('./createRenderQueue')
 const validateInput = require('./schemas')
 const { normalizePath } = require('./utils')
 const { hashString } = require('../utils')
 const { snakeCase } = require('lodash')
 
+const TYPE_STATIC = 'static'
+const TYPE_DYNAMIC = 'dynamic'
 const isDev = process.env.NODE_ENV === 'development'
-const getRouteType = value => /:/.test(value) ? 'dynamic' : 'static'
+
+const createHash = value => crypto.createHash('md5').update(value).digest('hex')
+const getRouteType = value => /:/.test(value) ? TYPE_DYNAMIC : TYPE_STATIC
 
 class Pages {
   constructor (app) {
@@ -32,30 +35,21 @@ class Pages {
     )
 
     this.hooks = {
-      parseComponent: new SyncBailHook(['source', 'resource']),
+      parseComponent: new HookMap(() => new SyncBailHook(['source', 'resource'])),
       createRoute: new SyncWaterfallHook(['options']),
-      createPage: new SyncWaterfallHook(['options']),
-      addEntry: new SyncBailWaterfallHook(['options'])
+      createPage: new SyncWaterfallHook(['options'])
     }
-
-    createRenderQueue(app.hooks)
 
     this._watched = new Map()
     this._cache = new Map()
     this._watcher = null
 
-    const db = new Loki()
-
-    this._routes = db.addCollection('routes', {
-      indices: ['id'],
-      unique: ['id', 'path'],
-      disableMeta: true
-    })
-
-    this._pages = db.addCollection('pages', {
-      indices: ['id'],
-      unique: ['id', 'path'],
-      disableMeta: true
+    ;['routes', 'pages'].forEach(name => {
+      this[`_${name}`] = new Collection(name, {
+        indices: ['id'],
+        unique: ['id', 'path'],
+        disableMeta: true
+      })
     })
 
     if (isDev) {
@@ -90,15 +84,20 @@ class Pages {
   }
 
   disableIndices () {
-    this._routes.adaptiveBinaryIndices = false
-    this._pages.adaptiveBinaryIndices = false
+    ['_routes', '_pages'].forEach(prop => {
+      this[prop].configureOptions({
+        adaptiveBinaryIndices: false
+      })
+    })
   }
 
   enableIndices () {
-    this._routes.ensureAllIndexes()
-    this._pages.ensureAllIndexes()
-    this._routes.adaptiveBinaryIndices = true
-    this._pages.adaptiveBinaryIndices = true
+    ['_routes', '_pages'].forEach(prop => {
+      this[prop].ensureAllIndexes()
+      this[prop].configureOptions({
+        adaptiveBinaryIndices: true
+      })
+    })
   }
 
   async createPages () {
@@ -115,11 +114,11 @@ class Pages {
       return createPagesAPI(api, { digest })
     })
 
+    this.enableIndices()
+
     await this.app.events.dispatch('createManagedPages', api => {
       return createManagedPagesAPI(api, { digest })
     })
-
-    this.enableIndices()
 
     // remove unmanaged pages created in earlier digest cycles
     const query = {
@@ -131,18 +130,20 @@ class Pages {
     this._pages.findAndRemove(query)
   }
 
-  createRoute (input, meta = {}, validate = true) {
-    const validated = validate ? validateInput('route', input) : input
+  createRoute (input, meta = {}) {
+    const validated = validateInput('route', input)
     const options = this._createRouteOptions(validated, meta)
     const oldRoute = this._routes.by('id', options.id)
 
     if (oldRoute) {
-      options.$loki = oldRoute.$loki
-      options.meta = oldRoute.meta
+      const newOptions = Object.assign({}, options, {
+        $loki: oldRoute.$loki,
+        meta: oldRoute.meta
+      })
 
-      this._routes.update(options)
+      this._routes.update(newOptions)
 
-      return new Route(options, this)
+      return new Route(newOptions, this)
     }
 
     this._routes.insert(options)
@@ -151,17 +152,18 @@ class Pages {
     return new Route(options, this)
   }
 
-  updateRoute (input, meta = {}, validate = true) {
-    const validated = validate ? validateInput('route', input) : input
+  updateRoute (input, meta = {}) {
+    const validated = validateInput('route', input)
     const options = this._createRouteOptions(validated, meta)
     const route = this._routes.by('id', options.id)
+    const newOptions = Object.assign({}, options, {
+      $loki: route.$loki,
+      meta: route.meta
+    })
 
-    options.$loki = route.$loki
-    options.meta = route.meta
+    this._routes.update(newOptions)
 
-    this._routes.update(options)
-
-    return new Route(options, this)
+    return new Route(newOptions, this)
   }
 
   removeRoute (id) {
@@ -200,10 +202,11 @@ class Pages {
     const type = getRouteType(options.path)
 
     const route = this.createRoute({
+      type,
       name: options.name,
       path: options.path,
       component: options.component
-    }, { ...meta, type }, false)
+    }, meta)
 
     return route.addPage({
       path: options.path,
@@ -217,10 +220,11 @@ class Pages {
     const type = getRouteType(options.path)
 
     const route = this.updateRoute({
+      type,
       name: options.name,
       path: options.path,
       component: options.component
-    }, { ...meta, type }, false)
+    }, meta)
 
     return route.updatePage({
       path: options.path,
@@ -233,11 +237,11 @@ class Pages {
     const page = this.getPage(id)
     const route = this.getRoute(page.internal.route)
 
-    if (page.path === route.path) {
-      return this.removeRoute(route.id)
+    if (route.internal.isDynamic) {
+      route.removePage(id)
+    } else {
+      this.removeRoute(route.id)
     }
-
-    route.removePage(id)
   }
 
   removePageByPath (path) {
@@ -267,26 +271,26 @@ class Pages {
     return this._pages.by('id', id)
   }
 
-  _createRouteOptions (options, meta = {}, op = 'create') {
+  _createRouteOptions (options, meta = {}) {
     const component = this.app.resolve(options.component)
-    const { pageQuery } = this._parseComponent(component, op === 'create')
+    const { pageQuery } = this._parseComponent(component)
     const { source, document, paginate } = createPageQuery(pageQuery)
-    const { type = 'static', ...internal } = meta
 
+    const type = options.type
     const normalPath = normalizePath(options.path)
     const isDynamic = /:/.test(normalPath)
     let name = options.name
     let path = normalPath
 
     const regexp = pathToRegexp(path)
-    const id = crypto.createHash('md5').update(`route-${path}`).digest('hex')
+    const id = createHash(`route-${path}`)
 
     if (paginate) {
       const segments = path.split('/').filter(Boolean)
       path = `/${segments.concat(':page(\\d+)?').join('/')}`
     }
 
-    if (type === 'dynamic') {
+    if (type === TYPE_DYNAMIC) {
       name = name || `__${snakeCase(normalPath)}`
     }
 
@@ -298,7 +302,7 @@ class Pages {
       name,
       path,
       component,
-      internal: Object.assign({}, internal, {
+      internal: Object.assign({}, meta, {
         path: normalPath,
         isDynamic,
         priority,
@@ -332,12 +336,16 @@ class Pages {
       return this._cache.get(component)
     }
 
-    const source = fs.readFileSync(component, 'utf-8')
-    const results = this.hooks.parseComponent.call(source, {
-      resourcePath: component
-    })
+    const ext = path.extname(component).substring(1)
+    const hook = this.hooks.parseComponent.get(ext)
+    let results
 
-    this._cache.set(component, validateInput('component', results))
+    if (hook) {
+      const source = fs.readFileSync(component, 'utf8')
+      results = hook.call(source, { resourcePath: component })
+    }
+
+    this._cache.set(component, validateInput('component', results || {}))
 
     return results
   }
@@ -367,28 +375,27 @@ class Route {
     this.internal = options.internal
     this.options = options
 
-    Object.defineProperty(this, '_factory', {
-      value: factory
-    })
+    Object.defineProperty(this, '_pages', { value: factory._pages })
+    Object.defineProperty(this, '_createPage', { value: factory.hooks.createPage })
   }
 
   pages () {
-    return this._factory._pages.find({
+    return this._pages.find({
       'internal.route': this.id
     })
   }
 
   addPage (input) {
     const options = this._createPageOptions(input)
-    const oldPage = this._factory._pages.by('id', options.id)
+    const oldPage = this._pages.by('id', options.id)
 
     if (oldPage) {
       options.$loki = oldPage.$loki
       options.meta = oldPage.meta
 
-      this._factory._pages.update(options)
+      this._pages.update(options)
     } else {
-      this._factory._pages.insert(options)
+      this._pages.insert(options)
     }
 
     return options
@@ -396,22 +403,19 @@ class Route {
 
   updatePage (input) {
     const options = input.id ? input : this._createPageOptions(input)
-    const oldOptions = this._factory._pages.by('id', options.id)
+    const oldOptions = this._pages.by('id', options.id)
+    const newOptions = Object.assign({}, options, {
+      $loki: oldOptions.$loki,
+      meta: oldOptions.meta
+    })
 
-    options.$loki = oldOptions.$loki
-    options.meta = oldOptions.meta
+    this._pages.update(newOptions)
 
-    this._factory._pages.update(options)
-
-    return options
+    return newOptions
   }
 
   removePage (id) {
-    const options = this._factory.getPage(id)
-
-    invariant(options.internal.route === this.id, `Cannot remove ${options.path}`)
-
-    this._factory._pages.findAndRemove({ id })
+    this._pages.findAndRemove({ id, 'internal.route': this.id })
   }
 
   _createPageOptions (input) {
@@ -419,12 +423,19 @@ class Route {
     const { path: _path, context, queryVariables } = validateInput('routePage', input)
     const normalPath = normalizePath(_path)
     const isDynamic = /:/.test(normalPath)
-    const id = crypto.createHash('md5').update(`page-${normalPath}`).digest('hex')
+    const id = createHash(`page-${normalPath}`)
 
-    if (this.type === 'static') {
+    if (this.type === TYPE_STATIC) {
       invariant(
         regexp.test(normalPath),
         `Page path does not match route path: ${normalPath}`
+      )
+    }
+
+    if (this.type === TYPE_DYNAMIC) {
+      invariant(
+        this.internal.path === normalPath,
+        `Dynamic page must equal the route path: ${this.internal.path}`
       )
     }
 
@@ -433,7 +444,7 @@ class Route {
       queryVariables || context
     )
 
-    return this._factory.hooks.createPage.call({
+    return this._createPage.call({
       id,
       path: normalPath,
       context,
