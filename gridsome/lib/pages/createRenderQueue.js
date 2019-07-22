@@ -4,32 +4,28 @@ const { createQueryVariables } = require('../graphql/utils')
 const { createFilterQuery } = require('../graphql/createFilterTypes')
 const { createBelongsToKey, createPagedNodeEdges } = require('../graphql/nodes/utils')
 
-function createRenderQueue ({ renderQueue }) {
-  const options = { name: 'GridsomePages', before: 'GridsomeSchema' }
+function createRenderQueue ({ hooks, pages, store, schema, config }) {
+  const queryFields = schema.getQueryType().getFields()
+  const { outDir } = config
+  const queue = []
 
-  renderQueue.tap(options, (renderQueue, { pages, store, schema, config }) => {
-    const queryFields = schema.getQueryType().getFields()
-    const queue = renderQueue.slice()
-    const { outDir } = config
+  for (const route of pages.routes()) {
+    for (const page of route.pages()) {
+      const { query } = page.internal
 
-    for (const route of pages.routes()) {
-      for (const page of route.pages()) {
-        const { isDynamic, query } = page.internal
+      if (route.type === 'static' && query.paginate) {
+        const totalPages = calcTotalPages(query, store, queryFields)
 
-        if (!isDynamic && query.paginate) {
-          const totalPages = calcTotalPages(query, store, queryFields)
-
-          for (let i = 1; i <= totalPages; i++) {
-            queue.push(createRenderEntry(page, i, route, outDir))
-          }
-        } else {
-          queue.push(createRenderEntry(page, 0, route, outDir))
+        for (let i = 1; i <= totalPages; i++) {
+          queue.push(createRenderEntry(page, i, route, outDir))
         }
+      } else {
+        queue.push(createRenderEntry(page, 0, route, outDir))
       }
     }
+  }
 
-    return queue
-  })
+  return hooks.renderQueue.call(queue)
 }
 
 function calcTotalPages (query, store, queryFields) {
@@ -76,7 +72,11 @@ function createRenderEntry (page, currentPage, route, outDir) {
     : { path: normalizedPath }
 
   const queryVariables = route.internal.query.document
-    ? createQueryVariables(normalizedPath, page.internal.query.variables, currentPage)
+    ? createQueryVariables(
+        normalizedPath,
+        page.internal.query.variables,
+        currentPage
+      )
     : {}
 
   return {

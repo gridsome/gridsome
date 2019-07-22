@@ -5,6 +5,7 @@ const hirestime = require('hirestime')
 const { chunk, groupBy } = require('lodash')
 const sysinfo = require('./utils/sysinfo')
 const executeQueries = require('./graphql/executeQueries')
+const createRenderQueue = require('./pages/createRenderQueue')
 const { log, info, writeLine } = require('./utils/log')
 
 module.exports = async (context, args) => {
@@ -21,7 +22,7 @@ module.exports = async (context, args) => {
   await fs.emptyDir(config.outDir)
   await fs.emptyDir(config.dataDir)
 
-  const renderQueue = await app.hooks.renderQueue.promise([], app)
+  const renderQueue = createRenderQueue(app)
   const redirects = app.hooks.redirects.call([], renderQueue)
   const queue = await executeQueries(renderQueue, app)
 

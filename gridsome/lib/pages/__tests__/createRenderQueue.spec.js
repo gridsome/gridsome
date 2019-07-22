@@ -1,13 +1,14 @@
 const path = require('path')
 const App = require('../../app/App')
 const createApp = require('../../app/index')
+const createRenderQueue = require('../createRenderQueue')
 const { BOOTSTRAP_PAGES } = require('../../utils/constants')
 
 test('create render queue for basic project', async () => {
   const context = path.resolve(__dirname, '../../__tests__/__fixtures__/project-basic')
   const app = await createApp(context, undefined, BOOTSTRAP_PAGES)
 
-  const renderQueue = await app.hooks.renderQueue.promise([], app)
+  const renderQueue = createRenderQueue(app)
   const renderPaths = renderQueue.map(entry => entry.path).sort()
 
   expect(renderPaths).toEqual(expect.arrayContaining([
@@ -36,7 +37,7 @@ test('create render queue for basic project', async () => {
 test('create render queue for blog project', async () => {
   const context = path.resolve(__dirname, '../../__tests__/__fixtures__/project-blog')
   const app = await createApp(context, undefined, BOOTSTRAP_PAGES)
-  const queue = await app.hooks.renderQueue.promise([], app)
+  const queue = createRenderQueue(app)
 
   const renderPaths = queue.map(entry => entry.path).sort()
 
@@ -170,7 +171,7 @@ test('create render queue for createPages hook', async () => {
     })
   })
 
-  const renderQueue = await app.hooks.renderQueue.promise([], app)
+  const renderQueue = createRenderQueue(app)
   const paths = renderQueue.map(entry => entry.path)
 
   expect(paths).toEqual(expect.arrayContaining([
@@ -199,7 +200,7 @@ test('create render queue for createPages hook', async () => {
 })
 
 describe('dynamic pages', () => {
-  const createRenderQueue = async () => {
+  const _createRenderQueue = async () => {
     const app = await _createApp()
     const component = './__fixtures__/DefaultPage.vue'
 
@@ -211,14 +212,13 @@ describe('dynamic pages', () => {
     app.pages.createPage({ path: '/a/:b*', component })
     app.pages.createPage({ path: '/a/:b+', component })
 
-    const renderQueue = await app.hooks.renderQueue.promise([], app)
-    const dynamicRenderQueue = await app.hooks.dynamicRenderQueue.promise([], app)
+    const renderQueue = createRenderQueue(app)
 
-    return { app, renderQueue, dynamicRenderQueue }
+    return { app, renderQueue }
   }
 
   test('render queue for dynamic pages', async () => {
-    const { renderQueue } = await createRenderQueue()
+    const { renderQueue } = await _createRenderQueue()
     const paths = renderQueue.map(entry => entry.path)
 
     expect(paths).toEqual([
@@ -234,7 +234,7 @@ describe('dynamic pages', () => {
   })
 
   test('html output paths for dynamic pages', async () => {
-    const { app, renderQueue } = await createRenderQueue()
+    const { app, renderQueue } = await _createRenderQueue()
 
     const outputs = renderQueue.map(entry =>
       path.relative(app.config.outDir, entry.htmlOutput)
@@ -253,8 +253,8 @@ describe('dynamic pages', () => {
   })
 
   test('redirects for dynamic pages', async () => {
-    const { app, renderQueue, dynamicRenderQueue } = await createRenderQueue()
-    const redirects = app.hooks.redirects.call([], [...renderQueue, ...dynamicRenderQueue])
+    const { app, renderQueue } = await _createRenderQueue()
+    const redirects = app.hooks.redirects.call([], renderQueue)
 
     const expected = [
       ['/a/:b(\\d+)', '/a/_b_d_plus.html', 200],

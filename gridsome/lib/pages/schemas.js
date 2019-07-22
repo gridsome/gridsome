@@ -4,10 +4,10 @@ const schemas = {
   route: Joi.object()
     .label('Route options')
     .keys({
+      type: Joi.string().valid('static', 'dynamic').default('static'),
       name: Joi.string(),
       path: Joi.string()
         .regex(/^\//, 'missing leading slash')
-        .regex(/:/, 'missing route params')
         .required(),
       component: Joi.string().required()
     }),
