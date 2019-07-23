@@ -270,7 +270,9 @@ function normalizeRedirects (config) {
 const permalinksSchema = Joi.object()
   .label('Permalinks config')
   .keys({
-    trailingSlash: Joi.boolean().default(true),
+    trailingSlash: Joi.boolean()
+      .valid(true, false, 'always')
+      .default(true),
     slugify: Joi.alternatives()
       .try([
         Joi.object().keys({
