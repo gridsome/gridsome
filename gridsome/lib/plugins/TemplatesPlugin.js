@@ -5,7 +5,6 @@ const moment = require('moment')
 const chokidar = require('chokidar')
 const didYouMean = require('didyoumean')
 const pathToRegexp = require('path-to-regexp')
-const slugify = require('@sindresorhus/slugify')
 const { ISO_8601_FORMAT } = require('../utils/constants')
 const { isPlainObject, trim, get } = require('lodash')
 const { GraphQLString } = require('../graphql/graphql')
@@ -70,7 +69,11 @@ class TemplatesPlugin {
           if (fieldValue) {
             options[template.fieldName] = '/' + trim(fieldValue, '/')
           } else if (template.path) {
-            options[template.fieldName] = makePath(options, template)
+            options[template.fieldName] = makePath(
+              options,
+              template,
+              api._app.slugify
+            )
           }
         }
       }
@@ -279,7 +282,9 @@ class Template {
   }
 }
 
-const makePath = (object, { path, dateField, routeKeys, createPath }) => {
+const makePath = (object, tempalte, slugify) => {
+  const { path, dateField, routeKeys, createPath } = tempalte
+
   if (typeof path === 'function') {
     return path(object)
   }
@@ -323,7 +328,7 @@ const makePath = (object, { path, dateField, routeKeys, createPath }) => {
         } else if (!isPlainObject(value)) {
           return suffix === 'raw'
             ? String(value)
-            : slugify(String(value), { separator: '-' })
+            : slugify(String(value))
         } else {
           return ''
         }

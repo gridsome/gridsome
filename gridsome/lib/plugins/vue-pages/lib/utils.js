@@ -1,5 +1,4 @@
 const path = require('path')
-const slugify = require('@sindresorhus/slugify')
 
 const indexRE = /^[iI]ndex$/
 const dynamicValuesRE = /\[([^\]]+)\]/g
@@ -8,7 +7,7 @@ const dynamicParamRE = /^:/
 
 exports.dynamicPathRE = dynamicValuesRE
 
-exports.createPagePath = function (filePath) {
+exports.createPagePath = function (filePath, slugify = false) {
   const { dir, name } = path.parse(filePath)
   const segments = dir.split('/')
 
@@ -18,11 +17,11 @@ exports.createPagePath = function (filePath) {
 
   return '/' + segments
     .filter(Boolean)
-    .map(processSegment)
+    .map(s => processSegment(s, slugify))
     .join('/')
 }
 
-function processSegment (value) {
+function processSegment (value, slugify) {
   if (dynamicParamRE.test(value)) return value
   if (!value) return value
 
@@ -30,7 +29,9 @@ function processSegment (value) {
     return processDynamicSegment(value)
   }
 
-  return slugify(value)
+  return typeof slugify === 'function'
+    ? slugify(value)
+    : value
 }
 
 function processDynamicSegment (value) {

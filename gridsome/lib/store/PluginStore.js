@@ -3,7 +3,6 @@ const crypto = require('crypto')
 const mime = require('mime-types')
 const autoBind = require('auto-bind')
 const camelCase = require('camelcase')
-const slugify = require('@sindresorhus/slugify')
 const { mapValues, isPlainObject } = require('lodash')
 const { cache, nodeCache } = require('../utils/cache')
 const { resolvePath } = require('./utils')
@@ -124,8 +123,8 @@ class PluginStore {
     return { typeName, id }
   }
 
-  slugify (string = '') {
-    return slugify(string, { separator: '-' })
+  slugify (value) {
+    return this._app.slugify(value)
   }
 
   //

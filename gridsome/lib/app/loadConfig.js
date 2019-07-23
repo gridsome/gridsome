@@ -21,12 +21,9 @@ module.exports = (context, options = {}) => {
 
   Object.assign(process.env, env)
 
-  if (options.config) {
-    return options.config
-  }
-
   const resolve = (...p) => path.join(context, ...p)
   const isProd = process.env.NODE_ENV === 'production'
+  const customConfig = options.config || options.localConfig
   const configPath = resolve('gridsome.config.js')
   const localIndex = resolve('src/index.html')
   const args = options.args || {}
@@ -45,8 +42,8 @@ module.exports = (context, options = {}) => {
     }
   }
 
-  const localConfig = options.localConfig
-    ? options.localConfig
+  const localConfig = customConfig
+    ? customConfig
     : fs.existsSync(configPath)
       ? require(configPath)
       : {}
@@ -95,11 +92,9 @@ module.exports = (context, options = {}) => {
   config.pagesDir = resolve(localConfig._pagesDir || './src/pages')
   config.templatesDir = resolve(localConfig._templatesDir || './src/templates')
   config.templates = normalizeTemplates(context, config, localConfig)
+  config.permalinks = normalizePermalinks(localConfig.permalinks)
   config.componentParsers = []
 
-  config.permalinks = Object.assign({}, {
-    trailingSlash: true
-  }, localConfig.permalinks)
 
   config.chainWebpack = localConfig.chainWebpack
   config.configureWebpack = localConfig.configureWebpack
@@ -246,8 +241,8 @@ function normalizePlugins (context, plugins) {
   })
 }
 
-const redirect = Joi.object()
-  .label('Redirect')
+const redirectsSchema = Joi.object()
+  .label('Redirect options')
   .keys({
     from: Joi.string().required(),
     to: Joi.string().required(),
@@ -259,7 +254,7 @@ function normalizeRedirects (config) {
 
   if (Array.isArray(config.redirects)) {
     return config.redirects.map(rule => {
-      const { error, value } = Joi.validate(rule, redirect)
+      const { error, value } = Joi.validate(rule, redirectsSchema)
 
       if (error) {
         throw new Error(error.message)
@@ -270,6 +265,44 @@ function normalizeRedirects (config) {
   }
 
   return redirects
+}
+
+const permalinksSchema = Joi.object()
+  .label('Permalinks config')
+  .keys({
+    trailingSlash: Joi.boolean().default(true),
+    slugify: Joi.alternatives()
+      .try([
+        Joi.object().keys({
+          use: Joi.alternatives().try([
+            Joi.string(),
+            Joi.func()
+          ]),
+          options: Joi.object()
+        }),
+        Joi.func()
+      ])
+      .default({
+        use: '@sindresorhus/slugify',
+        options: {}
+      })
+      .allow(false)
+  })
+
+function normalizePermalinks (permalinks = {}) {
+  const { error, value } = Joi.validate(permalinks, permalinksSchema)
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  if (value.slugify && typeof value.slugify.use === 'string') {
+    value.slugify.use = require(value.slugify.use)
+  } else if (typeof value.slugify === 'function') {
+    value.slugify = { use: value.slugify, options: {}}
+  }
+
+  return Object.freeze(value)
 }
 
 function resolvePluginEntries (id, context) {

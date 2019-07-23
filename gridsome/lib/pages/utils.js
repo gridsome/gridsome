@@ -6,10 +6,11 @@ exports.normalizePath = value => {
 }
 
 exports.createPagesAPI = function (api, { digest }) {
-  const { graphql, store, pages } = api._app
+  const { slugify, graphql, store, pages } = api._app
 
   return {
     graphql,
+    slugify,
     getContentTypes () {
       return store.collections
     },
