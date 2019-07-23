@@ -182,6 +182,7 @@ test('update page', async () => {
   const { pages } = await createApp()
 
   const page1 = pages.createPage({
+    id: '1',
     path: '/page',
     component: './__fixtures__/DefaultPage.vue'
   })
@@ -193,6 +194,7 @@ test('update page', async () => {
   expect(pages._watched.size).toEqual(2)
 
   const page2 = pages.updatePage({
+    id: '1',
     path: '/page',
     component: './__fixtures__/PagedPage.vue'
   })

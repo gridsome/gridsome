@@ -229,6 +229,7 @@ class Pages {
     }, meta)
 
     return route.updatePage({
+      id: options.id,
       path: options.path,
       context: options.context,
       queryVariables: options.queryVariables
@@ -412,8 +413,16 @@ class Route {
   }
 
   updatePage (input) {
-    const options = input.id ? input : this._createPageOptions(input)
+    const options = this._createPageOptions(input)
     const oldOptions = this._pages.by('id', options.id)
+
+    if (!oldOptions) {
+      throw new Error(
+        `Cannot update page "${options.path}". ` +
+        `Existing page with id "${options.id}" could not be found.`
+      )
+    }
+
     const newOptions = Object.assign({}, options, {
       $loki: oldOptions.$loki,
       meta: oldOptions.meta
