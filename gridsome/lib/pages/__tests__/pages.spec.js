@@ -348,6 +348,7 @@ test('sort routes by priority', async () => {
   pages.createPage({ path: '/a', component })
   pages.createPage({ path: '/a-b-c', component })
   pages.createRoute({ path: '/a-:b', component })
+  pages.createRoute({ path: '/:rest(\\d+)?', component })
   pages.createRoute({ path: '/a/:b/c', component })
   pages.createPage({ path: '/a/b', component })
   pages.createPage({ path: '/a/b/c', component })
@@ -360,17 +361,18 @@ test('sort routes by priority', async () => {
     '/a/:b/:c(\\d+)?',
     '/a/:b/:c+',
     '/a/b',
-    '/a/:b(.*)',
     '/a/:b',
-    '/404',
-    '/',
+    '/a/:b(.*)',
     '/a-b-c',
     '/a',
-    '/a-:b',
+    '/404',
+    '/',
     '/a-:b-c',
+    '/a-:b',
     '/:rest(\\d+)',
-    '/:rest',
-    '/:a-:b'
+    '/:rest(\\d+)?',
+    '/:a-:b',
+    '/:rest'
   ])
 })
 
