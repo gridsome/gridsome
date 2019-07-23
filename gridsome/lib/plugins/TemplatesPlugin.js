@@ -1,6 +1,7 @@
 const path = require('path')
 const glob = require('globby')
 const slash = require('slash')
+const crypto = require('crypto')
 const moment = require('moment')
 const chokidar = require('chokidar')
 const didYouMean = require('didyoumean')
@@ -246,28 +247,38 @@ class Template {
 
   createPage (node) {
     const { fieldName, component } = this.template
+    const id = makeId(node, this.template)
     const queryVariables = node
     const path = node[fieldName]
 
-    if (this.route) this.route.addPage({ path, queryVariables })
-    else this.actions.createPage({ path, component, queryVariables })
+    if (this.route) this.route.addPage({ id, path, queryVariables })
+    else this.actions.createPage({ id, path, component, queryVariables })
   }
 
   updatePage (node, oldNode) {
     const { path, fieldName } = this.template
 
     if (node[fieldName] !== oldNode[fieldName] && !path) {
-      this.actions.removePageByPath(node[fieldName])
+      this.actions.removePage(
+        makeId(node, this.template)
+      )
     }
 
     this.createPage(node)
   }
 
   removePage (node) {
-    this.actions.removePageByPath(
-      node[this.template.fieldName]
+    this.actions.removePage(
+      makeId(node, this.template)
     )
   }
+}
+
+const makeId = (node, template) => {
+  return crypto
+    .createHash('md5')
+    .update(node.$uid + template.fieldName)
+    .digest('hex')
 }
 
 const makePath = (object, { path, dateField, routeKeys, createPath }) => {
