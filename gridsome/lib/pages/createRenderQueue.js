@@ -6,7 +6,6 @@ const { createBelongsToKey, createPagedNodeEdges } = require('../graphql/nodes/u
 
 function createRenderQueue ({ hooks, pages, store, schema, config }) {
   const queryFields = schema.getQueryType().getFields()
-  const { outDir } = config
   const queue = []
 
   for (const route of pages.routes()) {
@@ -17,10 +16,10 @@ function createRenderQueue ({ hooks, pages, store, schema, config }) {
         const totalPages = calcTotalPages(query, store, queryFields)
 
         for (let i = 1; i <= totalPages; i++) {
-          queue.push(createRenderEntry(page, i, route, outDir))
+          queue.push(createRenderEntry(page, route, config, i))
         }
       } else {
-        queue.push(createRenderEntry(page, 0, route, outDir))
+        queue.push(createRenderEntry(page, route, config))
       }
     }
   }
@@ -57,34 +56,42 @@ function calcTotalPages (query, store, queryFields) {
   return res.pageInfo.totalPages
 }
 
-function createRenderEntry (page, currentPage, route, outDir) {
+function createRenderEntry (page, route, config, currentPage = 1) {
+  const { outDir, publicPath, permalinks: { trailingSlash }} = config
   const segments = page.path.split('/').filter(Boolean)
 
   if (currentPage > 1) {
     segments.push(currentPage)
   }
 
-  const normalizedPath = `/${segments.join('/')}`
-  const htmlOutput = path.join(outDir, pathToFilePath(normalizedPath))
+  let currentPath = `/${segments.join('/')}`
+  const htmlOutput = path.join(outDir, pathToFilePath(currentPath))
+  const prettyPath = currentPath
 
   const location = route.type === 'dynamic'
     ? { name: route.name }
-    : { path: normalizedPath }
+    : { path: currentPath }
 
   const queryVariables = route.internal.query.document
     ? createQueryVariables(
-        normalizedPath,
+        currentPath,
         page.internal.query.variables,
         currentPage
       )
     : {}
 
+  if (route.type === 'static' && currentPath !== '/' && trailingSlash) {
+    currentPath += '/'
+  }
+
   return {
     location,
     htmlOutput,
+    prettyPath,
     queryVariables,
     type: route.type,
-    path: normalizedPath,
+    path: currentPath,
+    publicPath: publicPath + currentPath,
     routeId: page.internal.route,
     pageId: page.id
   }

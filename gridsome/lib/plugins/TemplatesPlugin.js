@@ -21,6 +21,7 @@ class TemplatesPlugin {
 
   constructor (api) {
     const templates = this.setupTemplates(api.config.templates)
+    const permalinks = api.config.permalinks || {}
 
     // TODO: deprecate route and component option
     api.onCreateContentType(options => {
@@ -78,6 +79,7 @@ class TemplatesPlugin {
     api.createSchema(() => {
       const contentTypes = api._app.store.collections
       const typeNames = Object.keys(contentTypes)
+      const { trailingSlash } = permalinks
 
       for (const typeName of templates.byTypeName.keys()) {
         if (!typeNames.includes(typeName)) {
@@ -94,7 +96,14 @@ class TemplatesPlugin {
           contentTypes[typeName].addSchemaField(template.fieldName, () => ({
             type: GraphQLString,
             resolve: node => {
-              return node[template.fieldName]
+              const fieldValue = node[template.fieldName]
+              const trailingValue = trailingSlash ? '/' : ''
+
+              return fieldValue
+                ? fieldValue !== '/'
+                  ? fieldValue + trailingValue
+                  : fieldValue
+                : null
             }
           }))
         })

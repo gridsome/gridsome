@@ -1,4 +1,5 @@
 import config from '~/.temp/config.js'
+import { normalizePath } from '../utils/helpers'
 
 // @vue/component
 export default {
@@ -8,7 +9,8 @@ export default {
     to: { type: [Object, String], default: null },
     page: { type: Number, default: 0 },
     activeClass: { type: String, default: undefined },
-    exactActiveClass: { type: String, default: undefined }
+    exactActiveClass: { type: String, default: undefined },
+    normalize: { type: Boolean, default: true }
   },
 
   render: (h, { data, props, children, parent }) => {
@@ -35,6 +37,10 @@ export default {
     if (props.page) {
       to.params.page = props.page > 1 ? props.page : null
       attrs.exact = true
+    }
+
+    if (to.path && props.normalize !== false) {
+      to.path = normalizePath(to.path)
     }
 
     if (process.isStatic && process.isClient) {

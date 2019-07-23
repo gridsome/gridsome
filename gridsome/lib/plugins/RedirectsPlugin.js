@@ -11,9 +11,9 @@ class RedirectsPlugin {
         const dirname = slash(path.dirname(relative))
         const url = dirname === '.' ? '/' : `/${dirname}`
 
-        if (entry.path !== '/' && entry.path !== url) {
+        if (entry.prettyPath !== '/' && entry.prettyPath !== url) {
           res.push({
-            from: entry.path,
+            from: entry.prettyPath,
             to: `/${slash(relative)}`,
             status: 200
           })

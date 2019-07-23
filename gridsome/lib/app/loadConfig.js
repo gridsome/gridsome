@@ -97,6 +97,10 @@ module.exports = (context, options = {}) => {
   config.templates = normalizeTemplates(context, config, localConfig)
   config.componentParsers = []
 
+  config.permalinks = Object.assign({}, {
+    trailingSlash: true
+  }, localConfig.permalinks)
+
   config.chainWebpack = localConfig.chainWebpack
   config.configureWebpack = localConfig.configureWebpack
   config.configureServer = localConfig.configureServer
