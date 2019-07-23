@@ -8,6 +8,7 @@ const pathToRegexp = require('path-to-regexp')
 const slugify = require('@sindresorhus/slugify')
 const { ISO_8601_FORMAT } = require('../utils/constants')
 const { isPlainObject, trim, get } = require('lodash')
+const { GraphQLString } = require('../graphql/graphql')
 
 const isDev = process.env.NODE_ENV === 'development'
 const FROM_CONTENT_TYPE = 'content-type'
@@ -74,11 +75,10 @@ class TemplatesPlugin {
       }
     })
 
-    api.createManagedPages(actions => {
-      const contentTypes = actions.getContentTypes()
+    api.createSchema(() => {
+      const contentTypes = api._app.store.collections
       const typeNames = Object.keys(contentTypes)
 
-      // check if content types for defined templates exist
       for (const typeName of templates.byTypeName.keys()) {
         if (!typeNames.includes(typeName)) {
           const suggestion = didYouMean(typeName, typeNames)
@@ -88,8 +88,20 @@ class TemplatesPlugin {
             (suggestion ? ` Did you mean ${suggestion}?` : '')
           )
         }
-      }
 
+        // TODO: move this to schema API
+        templates.byTypeName.get(typeName).forEach(template => {
+          contentTypes[typeName].addSchemaField(template.fieldName, () => ({
+            type: GraphQLString,
+            resolve: node => {
+              return node[template.fieldName]
+            }
+          }))
+        })
+      }
+    })
+
+    api.createManagedPages(actions => {
       return this.createTemplates(actions, templates)
     })
   }
