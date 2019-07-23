@@ -317,18 +317,26 @@ class Pages {
   }
 
   _resolvePriority (path) {
-    let priority = (path.match(/\//g) || []).length * 10
+    const segments = path.substring(1).split('/')
+    const scores = segments.map(segment => {
+      let score = Math.max(segment.charCodeAt(0) || 0, 90)
+      const parts = (segment.match(/-/g) || []).length
 
-    if (/:/.test(path)) {
-      priority -= 5
+      if (/^:/.test(segment)) score -= 10
+      if (/:/.test(segment)) score -= 10
+      if (/\(.*\)/.test(segment)) score += 5
+      if (/\/[^:]$/.test(segment)) score += 3
+      if (/(\?|\+|\*)$/.test(segment)) score -= 3
+      if (/\(\.\*\)/.test(segment)) score -= 10
+      if (parts) score += parts
 
-      if (path.indexOf(':') === 1) priority -= 2
-      if (/\(.*\)/.test(path)) priority += 1
-      if (/(\?|\+|\*)$/.test(path)) priority -= 1
-      if (/\/[^:]$/.test(path)) priority += 1
-    }
+      return score
+    })
 
-    return priority
+    return scores.reduce(
+      (sum, score) => sum + score,
+      segments.length * 100
+    )
   }
 
   _parseComponent (component) {

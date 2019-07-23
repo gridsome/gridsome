@@ -1,3 +1,4 @@
+const Joi = require('joi')
 const path = require('path')
 const fs = require('fs-extra')
 const crypto = require('crypto')
@@ -75,6 +76,7 @@ module.exports = (context, options = {}) => {
   config.host = args.host || localConfig.host || 'localhost'
   config.port = parseInt(args.port || localConfig.port, 10) || 8080
   config.plugins = normalizePlugins(context, plugins)
+  config.redirects = normalizeRedirects(localConfig)
   config.transformers = resolveTransformers(config.pkg, localConfig)
   config.pathPrefix = normalizePathPrefix(isProd ? localConfig.pathPrefix : '')
   config.publicPath = config.pathPrefix ? `${config.pathPrefix}/` : '/'
@@ -238,6 +240,32 @@ function normalizePlugins (context, plugins) {
       uid
     })
   })
+}
+
+const redirect = Joi.object()
+  .label('Redirect')
+  .keys({
+    from: Joi.string().required(),
+    to: Joi.string().required(),
+    status: Joi.number().integer().default(301)
+  })
+
+function normalizeRedirects (config) {
+  const redirects = []
+
+  if (Array.isArray(config.redirects)) {
+    return config.redirects.map(rule => {
+      const { error, value } = Joi.validate(rule, redirect)
+
+      if (error) {
+        throw new Error(error.message)
+      }
+
+      return value
+    })
+  }
+
+  return redirects
 }
 
 function resolvePluginEntries (id, context) {

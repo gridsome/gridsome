@@ -227,9 +227,9 @@ describe('dynamic pages', () => {
       '/a/:b',
       '/a/:b*',
       '/a/:b+',
+      '/a',
       '/404',
-      '/',
-      '/a'
+      '/'
     ])
   })
 
@@ -246,9 +246,9 @@ describe('dynamic pages', () => {
       'a/_b.html',
       'a/_b_star.html',
       'a/_b_plus.html',
+      'a/index.html',
       '404/index.html',
-      'index.html',
-      'a/index.html'
+      'index.html'
     ])
   })
 

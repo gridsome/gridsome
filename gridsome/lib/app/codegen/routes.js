@@ -14,19 +14,39 @@ function genRoutes (app, routeMeta = new Map()) {
     type: route.type
   })
 
-  const items = app.pages.routes().map(route => {
-    return createRouteItem(route)
-  })
+  const redirects = app.config.redirects.filter(rule => rule.status === 301)
+  const fallback = app.pages._routes.findOne({ name: NOT_FOUND_NAME })
+  const items = []
+
+  for (const redirect of redirects) {
+    items.push(redirect)
+  }
+
+  for (const route of app.pages.routes()) {
+    items.push(createRouteItem(route))
+  }
 
   // use the /404 page as fallback route
-  const fallback = app.pages._routes.findOne({ name: NOT_FOUND_NAME })
   items.push(createRouteItem(fallback, '*', '*'))
 
-  const res = items.map(items => {
-    return genRoute(items, routeMeta[items.path])
+  const routes = items.map(item => {
+    if (item.from && item.to) {
+      return genRedirect(item)
+    }
+
+    return genRoute(item, routeMeta[items.path])
   })
 
-  return `export default [${res.join(',')}\n]\n\n`
+  return `export default [${routes.join(',')}\n]\n\n`
+}
+
+function genRedirect (rule) {
+  const props = []
+
+  props.push(`    path: ${JSON.stringify(rule.from)}`)
+  props.push(`    redirect: ${JSON.stringify(rule.to)}`)
+
+  return `\n  {\n${props.join(',\n')}\n  }`
 }
 
 function genRoute (item) {
