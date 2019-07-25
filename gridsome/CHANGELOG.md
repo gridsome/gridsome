@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.6.7](https://github.com/gridsome/gridsome/compare/gridsome@0.6.6...gridsome@0.6.7) (2019-07-25)
+
+
+### Bug Fixes
+
+* **build:** don’t inline large data sets ([#462](https://github.com/gridsome/gridsome/issues/462)) ([88f28a7](https://github.com/gridsome/gridsome/commit/88f28a7))
+* **config:** load custom favicon config ([#526](https://github.com/gridsome/gridsome/issues/526)) ([73a4c38](https://github.com/gridsome/gridsome/commit/73a4c38))
+* **graphql:** return null if date value is null or falsy ([#527](https://github.com/gridsome/gridsome/issues/527)) ([3b4de3a](https://github.com/gridsome/gridsome/commit/3b4de3a))
+
+
+### Performance Improvements
+
+* **pages:** improve pages api performance ([#548](https://github.com/gridsome/gridsome/issues/548)) ([9bc4ddb](https://github.com/gridsome/gridsome/commit/9bc4ddb))
+
+
+
+
+
 ## [0.6.6](https://github.com/gridsome/gridsome/compare/gridsome@0.6.5...gridsome@0.6.6) (2019-07-05)
 
 
