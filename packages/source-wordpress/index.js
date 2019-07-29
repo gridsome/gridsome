@@ -146,16 +146,25 @@ class WordPressSource {
   }
 
   extractImagesFromPostHtml (string) {
-    var regex = /<img[^>]* src=\"([^\"]*)\" alt=\"([^\"]*)\"[^>]*>/gm
+    const regex = /<img[^>]* src=\"([^\"]*)\" alt=\"([^\"]*)\"[^>]*>/gm
 
-    var matches = []
-    var match = regex.exec(string)
-    while (match.length >= 3) {
-      matches.push({
-        url: match[1],
-        alt: match[2]
+    const matches = []
+    let m
+    while ((m = regex.exec(string)) !== null) {
+      // This is necessary to avoid infinite loops with zero-width matches
+      if (m.index === regex.lastIndex) {
+        regex.lastIndex++
+      }
+
+      // The result can be accessed through the `m`-variable.
+      m.forEach((match, groupIndex) => {
+        matches.push({
+          url: match[1],
+          alt: match[2]
+        })
       })
     }
+
     return matches
   }
 
