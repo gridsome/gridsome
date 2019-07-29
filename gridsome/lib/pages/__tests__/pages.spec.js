@@ -376,6 +376,29 @@ test('sort routes by priority', async () => {
   ])
 })
 
+test('get matched route by path', async () => {
+  const { pages } = await createApp()
+  const component = './__fixtures__/DefaultPage.vue'
+
+  const home = pages.createRoute({ path: '/:page(\\d+)?', component })
+  home.addPage({ path: '/' })
+  home.addPage({ path: '/2' })
+  home.addPage({ path: '/3' })
+
+  pages.createPage({ path: '/about', component })
+
+  const user = pages.createRoute({ path: '/:foo', component })
+  user.addPage({ path: '/bar' })
+
+  const match1 = pages.getMatch('/2')
+  const match2 = pages.getMatch('/bar')
+  const match3 = pages.getMatch('/about')
+
+  expect(match1.params.page).toEqual('2')
+  expect(match2.params.foo).toEqual('bar')
+  expect(match3.params).toMatchObject({})
+})
+
 describe('dynamic pages', () => {
   test('create dynamic page', async () => {
     const { pages } = await createApp()

@@ -267,6 +267,40 @@ class Pages {
     return options ? new Route(options, this) : null
   }
 
+  getMatch (path) {
+    let route = this._routes.by('path', path)
+
+    if (!route) {
+      const chain = this._routes.chain().simplesort('internal.priority', true)
+      route = chain.data().find(route => route.internal.regexp.test(path))
+    }
+
+    if (route) {
+      const { internal } = route
+      const length = internal.keys.length
+      const m = internal.regexp.exec(path)
+      const params = {}
+
+      for (var i = 0; i < length; i++) {
+        const key = internal.keys[i]
+        const param = m[i + 1]
+
+        if (!param) continue
+
+        params[key.name] = decodeURIComponent(param)
+
+        if (key.repeat) {
+          params[key.name] = params[key.name].split(key.delimiter)
+        }
+      }
+
+      return {
+        route: new Route(route, this),
+        params
+      }
+    }
+  }
+
   getPage (id) {
     return this._pages.by('id', id)
   }
@@ -282,7 +316,8 @@ class Pages {
     let name = options.name
     let path = normalPath
 
-    const regexp = pathToRegexp(path)
+    const keys = []
+    const regexp = pathToRegexp(path, keys)
     const id = createHash(`route-${path}`)
 
     if (paginate) {
@@ -307,6 +342,7 @@ class Pages {
         isDynamic,
         priority,
         regexp,
+        keys,
         query: {
           source,
           document,
