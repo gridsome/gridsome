@@ -4,6 +4,7 @@ const schemas = {
   route: Joi.object()
     .label('Route options')
     .keys({
+      id: Joi.string(),
       type: Joi.string().valid('static', 'dynamic').default('static'),
       name: Joi.string(),
       path: Joi.string()
@@ -15,6 +16,7 @@ const schemas = {
   page: Joi.object()
     .label('Page options')
     .keys({
+      id: Joi.string(),
       name: Joi.string(),
       path: Joi.string().regex(/^\//, 'leading slash').required(),
       component: Joi.string().required(),
@@ -25,6 +27,7 @@ const schemas = {
   routePage: Joi.object()
     .label('Page options')
     .keys({
+      id: Joi.string(),
       path: Joi.string().regex(/^\//, 'leading slash').required(),
       context: Joi.object().default({}),
       queryVariables: Joi.object().default(null).allow(null)

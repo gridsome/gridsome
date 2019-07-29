@@ -68,6 +68,7 @@ test('create page with plugin api', async () => {
       expect(pages.updatePage).toBeUndefined()
 
       pages.createPage({
+        id: '1',
         path: '/page',
         component: './__fixtures__/DefaultPage.vue'
       })
@@ -75,6 +76,7 @@ test('create page with plugin api', async () => {
       const page = api._app.pages._pages.by('path', '/page')
       const route = api._app.pages.getRoute(page.internal.route)
 
+      expect(page.id).toEqual('1')
       expect(page.path).toEqual('/page')
       expect(page.context).toMatchObject({})
       expect(page.internal.isManaged).toEqual(false)
@@ -180,6 +182,7 @@ test('update page', async () => {
   const { pages } = await createApp()
 
   const page1 = pages.createPage({
+    id: '1',
     path: '/page',
     component: './__fixtures__/DefaultPage.vue'
   })
@@ -191,6 +194,7 @@ test('update page', async () => {
   expect(pages._watched.size).toEqual(2)
 
   const page2 = pages.updatePage({
+    id: '1',
     path: '/page',
     component: './__fixtures__/PagedPage.vue'
   })
@@ -420,11 +424,12 @@ describe('create routes', () => {
 
     const component = './__fixtures__/MovieTemplate.vue'
     const meta = { digest: 'foo', isManaged: true }
-    const route = pages.createRoute({ component, path: '/page/:id' }, meta)
-    const page1 = route.addPage({ path: '/page/1', queryVariables: { id: '1' } })
-    const page2 = route.addPage({ path: '/page/2', context: { id: '2' } })
+    const route = pages.createRoute({ id: '1', component, path: '/page/:id' }, meta)
+    const page1 = route.addPage({ id: '1', path: '/page/1', queryVariables: { id: '1' } })
+    const page2 = route.addPage({ id: '2', path: '/page/2', context: { id: '2' } })
 
-    expect(page1.id).toEqual('af9e829db29d3cd654b677ef8e8de2fb')
+    expect(route.id).toEqual('1')
+    expect(page1.id).toEqual('1')
     expect(page1.path).toEqual('/page/1')
     expect(page1.context).toEqual({})
     expect(page1.internal.digest).toEqual(route.internal.digest)

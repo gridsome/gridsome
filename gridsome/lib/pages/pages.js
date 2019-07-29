@@ -188,6 +188,7 @@ class Pages {
       }
 
       route.addPage({
+        id: input.id,
         path: input.path,
         context: input.context,
         queryVariables: input.queryVariables
@@ -209,6 +210,7 @@ class Pages {
     }, meta)
 
     return route.addPage({
+      id: options.id,
       path: options.path,
       context: options.context,
       queryVariables: options.queryVariables
@@ -227,6 +229,7 @@ class Pages {
     }, meta)
 
     return route.updatePage({
+      id: options.id,
       path: options.path,
       context: options.context,
       queryVariables: options.queryVariables
@@ -283,7 +286,7 @@ class Pages {
     let path = normalPath
 
     const regexp = pathToRegexp(path)
-    const id = createHash(`route-${path}`)
+    const id = options.id || createHash(`route-${path}`)
 
     if (paginate) {
       const segments = path.split('/').filter(Boolean)
@@ -410,8 +413,16 @@ class Route {
   }
 
   updatePage (input) {
-    const options = input.id ? input : this._createPageOptions(input)
+    const options = this._createPageOptions(input)
     const oldOptions = this._pages.by('id', options.id)
+
+    if (!oldOptions) {
+      throw new Error(
+        `Cannot update page "${options.path}". ` +
+        `Existing page with id "${options.id}" could not be found.`
+      )
+    }
+
     const newOptions = Object.assign({}, options, {
       $loki: oldOptions.$loki,
       meta: oldOptions.meta
@@ -428,10 +439,10 @@ class Route {
 
   _createPageOptions (input) {
     const { regexp, digest, isManaged, query } = this.internal
-    const { path: _path, context, queryVariables } = validateInput('routePage', input)
+    const { id: _id, path: _path, context, queryVariables } = validateInput('routePage', input)
     const normalPath = normalizePath(_path)
     const isDynamic = /:/.test(normalPath)
-    const id = createHash(`page-${normalPath}`)
+    const id = _id || createHash(`page-${normalPath}`)
 
     if (this.type === TYPE_STATIC) {
       invariant(
