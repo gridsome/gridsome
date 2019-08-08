@@ -5,6 +5,7 @@ const { SUPPORTED_IMAGE_TYPES } = require('../../utils/constants')
 
 const {
   GraphQLInt,
+  GraphQLString,
   GraphQLEnumType,
   GraphQLScalarType
 } = require('graphql')
@@ -70,7 +71,8 @@ exports.imageType = {
     height: { type: GraphQLInt, description: 'Height' },
     fit: { type: imageFitType, description: 'Fit', defaultValue: 'cover' },
     quality: { type: GraphQLInt, description: 'Quality (default: 75)' },
-    blur: { type: GraphQLInt, description: 'Blur level for base64 string' }
+    blur: { type: GraphQLInt, description: 'Blur level for base64 string' },
+    background: { type: GraphQLString, description: 'Background color for \'contain\''}
   },
   async resolve (obj, args, context, { fieldName }) {
     const value = obj[fieldName]
