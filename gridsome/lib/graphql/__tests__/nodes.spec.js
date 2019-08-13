@@ -860,6 +860,28 @@ test('process image types in schema', async () => {
   expect(data.testPost2.image5).toEqual('350x250.png')
 })
 
+test('set background color for contain', async () => {
+  const posts = api.store.addContentType('Post')
+
+  posts.addNode({
+    id: '1',
+    image: './350x250.png',
+    internal: {
+      origin: `${context}/assets/file.md`
+    }
+  })
+
+  const { errors, data } = await createSchemaAndExecute(`{
+    post (id: "1") {
+      image (width: 260, height: 70, fit:contain, background:"blue")
+    }
+  }`)
+
+  expect(errors).toBeUndefined()
+  expect(data.post.image.src).toEqual('/assets/static/350x250.e38261d.test.png')
+  expect(data.post.image.size).toMatchObject({ width: 260, height: 70 })
+})
+
 test('process file types in schema', async () => {
   const posts = api.store.addContentType('TestPost')
 
