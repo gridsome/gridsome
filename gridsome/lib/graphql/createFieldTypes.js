@@ -42,6 +42,7 @@ function createFieldType (value, key, typeName, nodeTypes) {
 
     return type !== null ? {
       type: new GraphQLList(type.type),
+      args: type.args,
       resolve: (obj, args, context, info) => {
         const arr = fieldResolver(obj, args, context, info)
         return arr.map((_, i) => type.resolve(arr, args, context, {...info, fieldName: i}))
