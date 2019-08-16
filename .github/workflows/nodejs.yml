@@ -1,0 +1,30 @@
+name: Node.js
+
+on:
+  push:
+    branches:
+    - github-actions
+#  pull_request:
+#    branches:
+#    - master
+
+jobs:
+  test:
+    name: Test on ${{ matrix.os }} with Node.js ${{ matrix.node-version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        node-version: [8.x, 10.x, 12.x]
+        os: [windows-latest, macOS-latest]
+    steps:
+    - uses: actions/checkout@v1
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
+    - name: Install Yarn
+      run: npm install --global yarn
+    - name: Install dependencies
+      run: yarn install
+    - name: Run unit tests
+      run: yarn test:unit
