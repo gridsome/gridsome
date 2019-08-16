@@ -233,6 +233,50 @@ test('do not resize if image is too small', async () => {
   expect(result.srcset).toHaveLength(1)
 })
 
+test('calculate correct image size for fit=inside ', async () => {
+  const filePath = path.resolve(context, 'assets/1000x600.png')
+  const queue = new AssetsQueue({ context, config: baseconfig })
+
+  const resultFixedSize = await queue.add(filePath, { width: 600, height: 300, fit: 'inside' })
+  const resultAutoHeight = await queue.add(filePath, { width: 600, fit: 'inside' })
+  const resultAutoWidth = await queue.add(filePath, { height: 300, fit: 'inside' })
+  const resultAuto = await queue.add(filePath, { fit: 'inside' })
+
+  expect(resultFixedSize.size.width).toBe(500)
+  expect(resultFixedSize.size.height).toBe(300)
+
+  expect(resultAutoHeight.size.width).toBe(600)
+  expect(resultAutoHeight.size.height).toBe(360)
+
+  expect(resultAutoWidth.size.width).toBe(500)
+  expect(resultAutoWidth.size.height).toBe(300)
+
+  expect(resultAuto.size.width).toBe(1000)
+  expect(resultAuto.size.height).toBe(600)
+})
+
+test('calculate correct image size for fit=outside', async () => {
+  const filePath = path.resolve(context, 'assets/1000x600.png')
+  const queue = new AssetsQueue({ context, config: baseconfig })
+
+  const resultFixedSize = await queue.add(filePath, { width: 600, height: 300, fit: 'outside' })
+  const resultAutoHeight = await queue.add(filePath, { width: 600, fit: 'outside' })
+  const resultAutoWidth = await queue.add(filePath, { height: 300, fit: 'outside' })
+  const resultAuto = await queue.add(filePath, { fit: 'outside' })
+
+  expect(resultFixedSize.size.width).toBe(600)
+  expect(resultFixedSize.size.height).toBe(360)
+
+  expect(resultAutoHeight.size.width).toBe(1000)
+  expect(resultAutoHeight.size.height).toBe(600)
+
+  expect(resultAutoWidth.size.width).toBe(1000)
+  expect(resultAutoWidth.size.height).toBe(600)
+
+  expect(resultAuto.size.width).toBe(1000)
+  expect(resultAuto.size.height).toBe(600)
+})
+
 test('get url for server in serve mode', async () => {
   const relPath = 'assets/1000x600.png'
   const absPath = path.resolve(context, relPath)
