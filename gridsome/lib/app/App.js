@@ -174,7 +174,8 @@ class App {
 
   async createPages () {
     const { hashString } = require('../utils')
-    const digest = hashString(Date.now().toString())
+    const time = Date.now() + process.hrtime()[1]
+    const digest = hashString(time.toString())
     const { createPagesAPI, createManagedPagesAPI } = require('../pages/utils')
 
     this.pages._cached.clear()
