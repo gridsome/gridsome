@@ -9,6 +9,21 @@ on:
 #    - master
 
 jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions/setup-node@v1
+      with:
+        node-version: 12.x
+    - name: Install Yarn
+      run: npm install --global yarn
+    - name: Install dependencies
+      run: yarn install
+    - name: Run linter
+      run: yarn lint
+
   test:
     name: Test with Node.js ${{ matrix.node-version }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
