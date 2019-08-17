@@ -89,7 +89,6 @@ test('update node', () => {
     }
   })
 
-  const oldTimestamp = oldNode.internal.timestamp
   const uid = oldNode.$uid
 
   const node = contentType.updateNode({
@@ -112,7 +111,6 @@ test('update node', () => {
   expect(node.excerpt).toEqual('Praesent commodo...')
   expect(node.foo).toEqual('foo')
   expect(node.internal.typeName).toEqual('TestPost')
-  expect(node.internal.timestamp).not.toEqual(oldTimestamp)
   expect(entry.id).toEqual('test')
   expect(entry.uid).toEqual(uid)
 })
