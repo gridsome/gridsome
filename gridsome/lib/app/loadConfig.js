@@ -70,8 +70,8 @@ module.exports = (context, options = {}) => {
   const assetsDir = localConfig.assetsDir || 'assets'
 
   config.pkg = options.pkg || resolvePkg(context)
-  config.host = args.host || localConfig.host || 'localhost'
-  config.port = parseInt(args.port || localConfig.port, 10) || null
+  config.host = args.host || localConfig.host || '0.0.0.0'
+  config.port = parseInt(args.port || localConfig.port, 10) || undefined
   config.plugins = normalizePlugins(context, plugins)
   config.redirects = normalizeRedirects(localConfig)
   config.transformers = resolveTransformers(config.pkg, localConfig)
