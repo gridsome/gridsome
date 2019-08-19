@@ -71,7 +71,7 @@ module.exports = (context, options = {}) => {
 
   config.pkg = options.pkg || resolvePkg(context)
   config.host = args.host || localConfig.host || 'localhost'
-  config.port = parseInt(args.port || localConfig.port, 10) || 8080
+  config.port = parseInt(args.port || localConfig.port, 10) || null
   config.plugins = normalizePlugins(context, plugins)
   config.transformers = resolveTransformers(config.pkg, localConfig)
   config.pathPrefix = normalizePathPrefix(isProd ? localConfig.pathPrefix : '')

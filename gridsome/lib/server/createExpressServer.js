@@ -12,7 +12,7 @@ const endpoint = {
 }
 
 module.exports = async (app, options = {}) => {
-  const port = await resolvePort(app.config.port)
+  const port = app.config.port || await resolvePort()
   const { config, schema } = app
   const server = express()
 
