@@ -38,15 +38,15 @@ class Server {
       express.json(),
       graphqlMiddleware(this._app),
       graphqlHTTP({
-        schema: this._app.schema,
-        context: this._app.createSchemaContext(),
-        formatError: err => ({
+        schema: this._app.schema.getSchema(),
+        context: this._app.schema.createContext(),
+        customFormatErrorFn: err => ({
           message: err.message,
           stringified: err.toString()
         }),
         extensions: ({ variables }) => {
           if (variables && variables.__path) {
-            const page = this._app.pages.findPage({
+            const page = this._app.pages._pages.findOne({
               path: variables.__path
             })
 

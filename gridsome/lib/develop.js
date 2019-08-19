@@ -45,7 +45,13 @@ module.exports = async (context, args) => {
     }
 
     console.log()
-    console.log(`  Site running at:          ${chalk.cyan(urls.local.pretty)}`)
+    if (urls.lan.pretty) {
+      console.log(`  Site running at:`)
+      console.log(`  - Local:                  ${chalk.cyan(urls.local.pretty)}`)
+      console.log(`  - Network:                ${chalk.cyan(urls.lan.pretty)}\n`)
+    } else {
+      console.log(`  Site running at:          ${chalk.cyan(urls.local.pretty)}`)
+    }
     console.log(`  Explore GraphQL data at:  ${chalk.cyan(urls.explore.pretty)}`)
     console.log()
   })
@@ -59,7 +65,7 @@ module.exports = async (context, args) => {
   //
 
   async function createWebpackConfig (app) {
-    const config = await app.resolveChainableWebpackConfig()
+    const config = await app.compiler.resolveChainableWebpackConfig()
 
     config
       .plugin('friendly-errors')
@@ -71,8 +77,8 @@ module.exports = async (context, args) => {
         const definitions = args[0]
         args[0] = {
           ...definitions,
-          'process.env.SOCKJS_ENDPOINT': JSON.stringify(urls.sockjs.url),
-          'process.env.GRAPHQL_ENDPOINT': JSON.stringify(urls.graphql.url)
+          'process.env.SOCKJS_ENDPOINT': JSON.stringify(urls.sockjs.endpoint),
+          'process.env.GRAPHQL_ENDPOINT': JSON.stringify(urls.graphql.endpoint)
         }
         return args
       })
