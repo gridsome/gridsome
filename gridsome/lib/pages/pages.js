@@ -101,7 +101,8 @@ class Pages {
   }
 
   async createPages () {
-    const digest = hashString(Date.now().toString())
+    const now = Date.now() + process.hrtime()[1]
+    const digest = hashString(now.toString())
     const { createPagesAPI, createManagedPagesAPI } = require('./utils')
 
     this.clearCache()
@@ -175,7 +176,7 @@ class Pages {
   }
 
   createPage (input, meta = {}) {
-    if (input.route) {
+    if (typeof input.route === 'string') {
       // TODO: remove this route workaround
       const options = this._routes.by('path', input.route)
       let route = options ? new Route(options, this) : null
@@ -196,8 +197,6 @@ class Pages {
       return
     }
 
-    delete input.route
-
     const options = validateInput('page', input)
     const type = getRouteType(options.path)
 
@@ -205,7 +204,8 @@ class Pages {
       type,
       name: options.name,
       path: options.path,
-      component: options.component
+      component: options.component,
+      meta: options.route.meta
     }, meta)
 
     return route.addPage({
@@ -223,7 +223,8 @@ class Pages {
       type,
       name: options.name,
       path: options.path,
-      component: options.component
+      component: options.component,
+      meta: options.route.meta
     }, meta)
 
     return route.updatePage({
@@ -338,6 +339,7 @@ class Pages {
       path,
       component,
       internal: Object.assign({}, meta, {
+        meta: options.meta || {},
         path: normalPath,
         isDynamic,
         priority,

@@ -7,6 +7,7 @@ exports.normalizePath = value => {
 
 exports.createPagesAPI = function (api, { digest }) {
   const { graphql, store, pages } = api._app
+  const internals = { digest, isManaged: false }
 
   return {
     graphql,
@@ -16,11 +17,11 @@ exports.createPagesAPI = function (api, { digest }) {
     getContentType (typeName) {
       return store.getContentType(typeName)
     },
-    _createRoute (options) {
-      return pages.createRoute(options, { digest, isManaged: false })
-    },
     createPage (options) {
-      pages.createPage(options, { digest, isManaged: false })
+      pages.createPage(options, internals)
+    },
+    createRoute (options) {
+      return pages.createRoute(options, internals)
     }
   }
 }
@@ -32,12 +33,6 @@ exports.createManagedPagesAPI = function (api, { digest }) {
 
   return {
     ...basePagesAPI,
-    _createRoute (options) {
-      return pages.createRoute(options, internals)
-    },
-    _removeRoute (id) {
-      pages.removeRoute(id)
-    },
     createPage (options) {
       pages.createPage(options, internals)
     },
@@ -55,6 +50,12 @@ exports.createManagedPagesAPI = function (api, { digest }) {
     },
     findAndRemovePages (query) {
       pages.findAndRemovePages(query)
+    },
+    createRoute (options) {
+      return pages.createRoute(options, internals)
+    },
+    removeRoute (id) {
+      pages.removeRoute(id)
     }
   }
 }

@@ -280,11 +280,11 @@ test('garbage collect unmanaged pages', async () => {
       }
     })
 
-    api.createManagedPages(({ createPage, _createRoute }) => {
+    api.createManagedPages(({ createPage, createRoute }) => {
       createPage({ path: '/managed-page-1', component: './__fixtures__/PagedPage.vue' })
       createPage({ path: '/managed-page-2', component: './__fixtures__/PagedPage.vue' })
 
-      const pages = _createRoute({ path: '/managed/:id', component: './__fixtures__/PagedPage.vue' })
+      const pages = createRoute({ path: '/managed/:id', component: './__fixtures__/PagedPage.vue' })
 
       pages.addPage({ path: '/managed/one' })
       pages.addPage({ path: '/managed/two' })

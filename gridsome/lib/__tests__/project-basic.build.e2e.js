@@ -125,6 +125,13 @@ test('render g-image components', () => {
   expect(uniq(classes).length - classes.length).toEqual(0)
 })
 
+test('render custom route meta', () => {
+  const appJS = content('dist/assets/js/app.js')
+
+  expect(appJS).toMatch('aboutUsMeta1: true')
+  expect(appJS).toMatch('$aboutUsMeta2: [1, 2, 3]')
+})
+
 test('render template with static routes', () => {
   const $page1 = load('dist/pages/1/index.html')
   const $page2 = load('dist/pages/2/index.html')
