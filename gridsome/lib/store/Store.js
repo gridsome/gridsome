@@ -24,7 +24,7 @@ class Store {
       disableMeta: true
     })
 
-    this.metaData = this.store.addCollection('core/metaData', {
+    this.metadata = this.store.addCollection('core/metadata', {
       unique: ['key'],
       autoupdate: true
     })
@@ -40,8 +40,8 @@ class Store {
 
   // site
 
-  addMetaData (key, data) {
-    let node = this.metaData.findOne({ key })
+  addMetadata (key, data) {
+    let node = this.metadata.findOne({ key })
 
     if (node && isArray(node.data) && isArray(data)) {
       node.data = node.data.concat(data)
@@ -50,7 +50,7 @@ class Store {
     } else if (node) {
       node.data = data
     } else {
-      node = this.metaData.insert({ key, data })
+      node = this.metadata.insert({ key, data })
     }
 
     return node

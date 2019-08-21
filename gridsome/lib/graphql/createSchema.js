@@ -2,7 +2,7 @@ const directives = require('./directives')
 const initMustHaveTypes = require('./types')
 const createPagesSchema = require('./pages')
 const createNodesSchema = require('./nodes')
-const createMetaDataSchema = require('./metaData')
+const createMetadataSchema = require('./metadata')
 const { scalarTypeResolvers } = require('./resolvers')
 const { addDirectives, applyFieldExtensions } = require('./extensions')
 const { isEmpty, get } = require('lodash')
@@ -56,7 +56,7 @@ module.exports = function createSchema (store, options = {}) {
   })
 
   createNodesSchema(schemaComposer, store)
-  createMetaDataSchema(schemaComposer, store)
+  createMetadataSchema(schemaComposer, store)
   createPagesSchema(schemaComposer)
   addSchemas(schemaComposer, schemas)
   addResolvers(schemaComposer, resolvers)
@@ -187,7 +187,7 @@ const ReservedScalarNames = ['Boolean', 'Date', 'File', 'Float', 'ID', 'Image', 
 const ReservedRules = {
   'FilterInput$': `Type name cannot end with 'FilterInput'.`,
   'QueryOperatorInput$': `Type name cannot end with 'QueryOperatorInput'`,
-  '^MetaData[A-Z]': `Type name cannot start with 'MetaData'`,
+  '^Metadata[A-Z]': `Type name cannot start with 'Metadata'`,
   '^Node[A-Z]': `Type name cannot start with 'Node'`
 }
 

@@ -18,8 +18,8 @@ function createStoreActions (api, app) {
   return {
     ...baseActions,
 
-    addMetaData (key, data) {
-      return api.store.addMetaData(key, data)
+    addMetadata (key, data) {
+      return api.store.addMetadata(key, data)
     },
     addContentType (options) {
       return api.store.addContentType(options)
@@ -40,6 +40,9 @@ function createStoreActions (api, app) {
     // deprecated actions
     // TODO: warn when used
 
+    addMetaData (key, data) {
+      return api.store.addMetadata(key, data)
+    },
     createTypeName (typeName) {
       return api.store.createTypeName(typeName)
     },

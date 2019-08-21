@@ -645,13 +645,13 @@ test('add custom GraphQL schema', async () => {
   expect(data.value2).toEqual('custom value bar')
 })
 
-test('add custom MetaData schema', async () => {
+test('add custom Metadata schema', async () => {
   const app = await createApp(function (api) {
-    api.createSchema(({ addMetaData, addSchemaTypes }) => {
-      addMetaData('myCustomData', true)
-      addMetaData('some_value', 10)
+    api.createSchema(({ addMetadata, addSchemaTypes }) => {
+      addMetadata('myCustomData', true)
+      addMetadata('some_value', 10)
       addSchemaTypes(`
-        type MetaData {
+        type Metadata {
           myCustomData: String
           someValue: Int @proxy(from:"some_value")
         }
@@ -661,7 +661,7 @@ test('add custom MetaData schema', async () => {
 
   const { errors, data } = await app.graphql(`
     query {
-      metaData {
+      metadata {
         myCustomData
         someValue
       }
@@ -669,8 +669,8 @@ test('add custom MetaData schema', async () => {
   `)
 
   expect(errors).toBeUndefined()
-  expect(data.metaData.myCustomData).toEqual('true')
-  expect(data.metaData.someValue).toEqual(10)
+  expect(data.metadata.myCustomData).toEqual('true')
+  expect(data.metadata.someValue).toEqual(10)
 })
 
 test('merge object types', async () => {

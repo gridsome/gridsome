@@ -3,7 +3,7 @@ module.exports = {
   siteUrl: 'https://www.gridsome.org',
   titleTemplate: '%s | Test',
 
-  metaData: {
+  metadata: {
     someMeta: 'test'
   },
 

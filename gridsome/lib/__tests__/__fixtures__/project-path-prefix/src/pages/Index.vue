@@ -1,6 +1,6 @@
 <template>
   <Layout class="home">
-    <h1>{{ $page.metaData.siteName }}</h1>
+    <h1>{{ $page.metadata.siteName }}</h1>
     <g-link class="g-link-home" to="/" active-class="test-active">Home</g-link>
     <g-link class="g-link-about" to="/about">About</g-link>
     <g-link class="g-link-file" to="~/assets/dummy.pdf">Download</g-link>
@@ -10,7 +10,7 @@
 
 <page-query>
 query Home {
-  metaData {
+  metadata {
     siteName
   }
 }

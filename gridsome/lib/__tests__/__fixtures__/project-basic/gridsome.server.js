@@ -1,6 +1,6 @@
 module.exports = function (api) {
   api.loadSource(store => {
-    store.addMetaData('myTest', {
+    store.addMetadata('myTest', {
       value: 'Test Value'
     })
 
