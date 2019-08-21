@@ -10,7 +10,8 @@ const schemas = {
       path: Joi.string()
         .regex(/^\//, 'missing leading slash')
         .required(),
-      component: Joi.string().required()
+      component: Joi.string().required(),
+      meta: Joi.object().default(null).allow(null)
     }),
 
   page: Joi.object()
@@ -21,7 +22,10 @@ const schemas = {
       path: Joi.string().regex(/^\//, 'leading slash').required(),
       component: Joi.string().required(),
       context: Joi.object().default({}),
-      queryVariables: Joi.object().default(null).allow(null)
+      queryVariables: Joi.object().default(null).allow(null),
+      route: Joi.object().default({}).keys({
+        meta: Joi.object().default({}).allow(null)
+      })
     }),
 
   routePage: Joi.object()

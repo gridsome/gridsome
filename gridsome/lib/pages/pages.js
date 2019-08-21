@@ -101,7 +101,8 @@ class Pages {
   }
 
   async createPages () {
-    const digest = hashString(Date.now().toString())
+    const now = Date.now() + process.hrtime()[1]
+    const digest = hashString(now.toString())
     const { createPagesAPI, createManagedPagesAPI } = require('./utils')
 
     this.clearCache()
@@ -175,7 +176,7 @@ class Pages {
   }
 
   createPage (input, meta = {}) {
-    if (input.route) {
+    if (typeof input.route === 'string') {
       // TODO: remove this route workaround
       const options = this._routes.by('path', input.route)
       let route = options ? new Route(options, this) : null
@@ -197,8 +198,6 @@ class Pages {
       return
     }
 
-    delete input.route
-
     const options = validateInput('page', input)
     const type = getRouteType(options.path)
 
@@ -206,7 +205,8 @@ class Pages {
       type,
       name: options.name,
       path: options.path,
-      component: options.component
+      component: options.component,
+      meta: options.route.meta
     }, meta)
 
     return route.addPage({
@@ -225,7 +225,8 @@ class Pages {
       type,
       name: options.name,
       path: options.path,
-      component: options.component
+      component: options.component,
+      meta: options.route.meta
     }, meta)
 
     return route.updatePage({
@@ -270,6 +271,40 @@ class Pages {
     return options ? new Route(options, this) : null
   }
 
+  getMatch (path) {
+    let route = this._routes.by('path', path)
+
+    if (!route) {
+      const chain = this._routes.chain().simplesort('internal.priority', true)
+      route = chain.data().find(route => route.internal.regexp.test(path))
+    }
+
+    if (route) {
+      const { internal } = route
+      const length = internal.keys.length
+      const m = internal.regexp.exec(path)
+      const params = {}
+
+      for (var i = 0; i < length; i++) {
+        const key = internal.keys[i]
+        const param = m[i + 1]
+
+        if (!param) continue
+
+        params[key.name] = decodeURIComponent(param)
+
+        if (key.repeat) {
+          params[key.name] = params[key.name].split(key.delimiter)
+        }
+      }
+
+      return {
+        route: new Route(route, this),
+        params
+      }
+    }
+  }
+
   getPage (id) {
     return this._pages.by('id', id)
   }
@@ -285,7 +320,8 @@ class Pages {
     let name = options.name
     let path = normalPath
 
-    const regexp = pathToRegexp(path)
+    const keys = []
+    const regexp = pathToRegexp(path, keys)
     const id = options.id || createHash(`route-${path}`)
 
     if (paginate) {
@@ -306,10 +342,12 @@ class Pages {
       path,
       component,
       internal: Object.assign({}, meta, {
+        meta: options.meta || {},
         path: normalPath,
         isDynamic,
         priority,
         regexp,
+        keys,
         query: {
           source,
           document,

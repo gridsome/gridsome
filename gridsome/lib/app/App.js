@@ -6,6 +6,8 @@ const isRelative = require('is-relative')
 const { version } = require('../../package.json')
 
 const {
+  HookMap,
+  SyncHook,
   AsyncSeriesHook,
   SyncWaterfallHook
 } = require('tapable')
@@ -30,7 +32,8 @@ class App {
       beforeBootstrap: new AsyncSeriesHook([]),
       bootstrap: new AsyncSeriesHook(['app']),
       renderQueue: new SyncWaterfallHook(['renderQueue']),
-      redirects: new SyncWaterfallHook(['redirects', 'renderQueue'])
+      redirects: new SyncWaterfallHook(['redirects', 'renderQueue']),
+      plugin: new HookMap(() => new SyncHook(['plugin']))
     }
 
     autoBind(this)
@@ -150,6 +153,14 @@ class App {
       const instance = new Plugin(api, entry.options, { context })
 
       this.plugins.push({ api, entry, instance })
+    })
+
+    this.plugins.forEach(({ entry, instance }) => {
+      const hookByName = this.hooks.plugin.get(entry.name)
+      const hookByUse = this.hooks.plugin.get(entry.use)
+
+      if (hookByName) hookByName.call(instance)
+      if (hookByUse) hookByUse.call(instance)
     })
 
     // run config.chainWebpack after all plugins
