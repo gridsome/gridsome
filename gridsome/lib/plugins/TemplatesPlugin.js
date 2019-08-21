@@ -216,7 +216,7 @@ class Template {
     this.actions = actions
 
     if (typeof template.path === 'string') {
-      this.route = actions._createRoute({
+      this.route = actions.createRoute({
         path: template.path,
         component: template.component
       })
@@ -241,7 +241,7 @@ class Template {
     this.contentType.off('update', this.updatePage, this)
     this.contentType.off('remove', this.removePage, this)
 
-    if (this.route) this.actions._removeRoute(this.route.id)
+    if (this.route) this.actions.removeRoute(this.route.id)
     else this.actions.removePagesByComponent(component)
   }
 
