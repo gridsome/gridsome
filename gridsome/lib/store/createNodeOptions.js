@@ -54,6 +54,12 @@ function normalizeOptions (options, contentType, useFallbacks) {
   const nodeOptions = pick(options, NODE_FIELDS)
   const customFields = omit(options, NODE_FIELDS)
 
+  // TODO: remove before 1.0
+  if (customFields.fields) {
+    Object.assign(customFields, customFields.fields)
+    delete customFields.fields
+  }
+
   nodeOptions.internal = createInternal(contentType, nodeOptions.internal)
 
   if (useFallbacks) {
