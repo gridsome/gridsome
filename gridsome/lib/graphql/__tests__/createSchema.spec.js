@@ -771,24 +771,24 @@ describe('create input types', () => {
 
 test('add a experimental field extension', async () => {
   const app = await createApp(function (api) {
-    api.__addSchemaFieldExtension({
-      name: 'myExtension',
-      args: { value: 'String' },
-      apply (ext, config) {
-        return {
-          resolve: (source, args, context, info) => {
-            return source[info.fieldName] + ext.value
-          }
-        }
-      }
-    })
-    api.loadSource(({ addContentType, addSchemaTypes }) => {
+    api.loadSource(({ addContentType, addSchemaTypes, addSchemaFieldExtension }) => {
       addContentType('Post').addNode({ id: '1', title: 'test' })
       addSchemaTypes(`
         type Post implements Node {
           title: String @myExtension(value:"-test")
         }
       `)
+      addSchemaFieldExtension({
+        name: 'myExtension',
+        args: { value: 'String' },
+        apply (ext, config) {
+          return {
+            resolve: (source, args, context, info) => {
+              return source[info.fieldName] + ext.value
+            }
+          }
+        }
+      })
     })
   })
 
@@ -803,6 +803,7 @@ test('add a experimental field extension', async () => {
   expect(errors).toBeUndefined()
   expect(data.post.title).toEqual('test-test')
 })
+
 test('output field value as JSON', async () => {
   const app = await initApp(({ addSchemaTypes }) => {
     addSchemaTypes(`

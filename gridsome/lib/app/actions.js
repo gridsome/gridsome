@@ -115,6 +115,14 @@ function createSchemaActions (api, app) {
       app.schema._resolvers.push(resolvers)
     },
 
+    addSchemaFieldExtension (options) {
+      if (app.schema._extensions[options.name]) {
+        throw new Error(`Field extension already exist: ${options.name}`)
+      }
+
+      app.schema._extensions[options.name] = options
+    },
+
     schema: {
       createObjectType,
       createUnionType,
