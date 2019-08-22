@@ -36,7 +36,7 @@ module.exports = async (app, options = {}) => {
     graphqlHTTP({
       schema: schema.getSchema(),
       context: schema.createContext(),
-      formatError: err => ({
+      customFormatErrorFn: err => ({
         message: err.message,
         stringified: err.toString()
       }),
