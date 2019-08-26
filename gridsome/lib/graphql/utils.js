@@ -48,8 +48,10 @@ exports.isInputType = value => isObject(value) && value.type === CreatedGraphQLT
 
 const typeNameCounter = {}
 
-exports.createTypeName = function (prefix, key = '', suffix = '') {
-  let name = camelCase(`${prefix} ${key} ${suffix}`, { pascalCase: true })
+exports.createTypeName = function (typeName, suffix = '') {
+  suffix = camelCase(suffix, { pascalCase: true })
+
+  let name = suffix ? `${typeName}_${suffix}` : typeName
 
   if (typeNameCounter[name]) {
     typeNameCounter[name]++

@@ -169,6 +169,11 @@ test('add custom GraphQL types from SDL', async () => {
   expect(data.post.proxyDeep).toEqual('Value2')
   expect(data.post.proxyRef).toMatchObject({ id: '1' })
   expect(data.post.author).toMatchObject({ name: 'The Author' })
+
+  const composer = app.schema.getComposer()
+  expect(composer.getAnyTC('Post').getTypeName()).toEqual('Post')
+  expect(composer.getAnyTC('Post').getField('foo').type.getTypeName()).toEqual('Post_Foo')
+  expect(() => composer.getAnyTC('Author').getField('foo')).toThrow()
 })
 
 describe('add reference resolvers', () => {
