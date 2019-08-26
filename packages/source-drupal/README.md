@@ -15,6 +15,9 @@
 
 ### Quick Overview
 
+**BREAKING CHANGE FROM 0.2.1 to 0.3.0**
+The shape for accessing relationships on a node via GraphQL has changed. See [Example Page Queries](#example-page-queries).
+
 This is the source plugin for pulling in data from the Drupal content management system for Gridsome. The Drupal module [JSON:API](https://www.drupal.org/project/jsonapi) is required for this plugin to work correctly. 
 
 ### Install
@@ -221,16 +224,26 @@ Get the details of an individual `DrupalNodeArticle` using `<page-query>` in a G
         processed
       },
       field_image {
-        filename,
-        uri {
-          url
+        node {
+          filename,
+          uri {
+            url
+          }
+        },
+        meta {
+          alt,
+          title
         }
       },
       field_tags {
-        name,
-        path
+        node {
+          name,
+          path
+        }
       }
     }
   }
 </page-query>
 ```
+
+Any `relationships` containing a `meta` object in the JSON:API response will be merged as a sibling object alongside `node`. See `field_image` above as an example.
