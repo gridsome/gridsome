@@ -620,22 +620,38 @@ test('insert default resolvers with createObjectType', async () => {
 test('add custom GraphQL schema', async () => {
   const app = await createApp(function (api) {
     api.createSchema(({ addSchema, ...actions }) => {
-      addSchema(new actions.GraphQLSchema({
-        query: new actions.GraphQLObjectType({
-          name: 'CustomRootQuery',
-          fields: {
-            customRootValue: {
-              type: actions.GraphQLString,
-              args: {
-                append: {
-                  type: actions.GraphQLString,
-                  defaultValue: 'foo'
-                }
-              },
-              resolve: (_, args) => 'custom value ' + args.append
+      const queryType = new actions.GraphQLObjectType({
+        name: 'CustomRootQuery',
+        fields: () => ({
+          customRootValue: {
+            type: actions.GraphQLString,
+            args: {
+              append: {
+                type: actions.GraphQLString,
+                defaultValue: 'foo'
+              }
+            },
+            resolve: (obj, args, ctx, info) => {
+              return (obj ? obj[info.fieldName] : 'custom value ') + args.append
             }
+          },
+          nestedObject: {
+            type: new actions.GraphQLObjectType({
+              name: 'NestedObject',
+              fields: {
+                subField: {
+                  type: queryType,
+                  resolve: () => ({ customRootValue: 'subField ' })
+                }
+              }
+            }),
+            resolve: () => ({ subField: true })
           }
         })
+      })
+
+      addSchema(new actions.GraphQLSchema({
+        query: queryType
       }))
     })
   })
@@ -643,11 +659,17 @@ test('add custom GraphQL schema', async () => {
   const { errors, data } = await app.graphql(`{
     value1: customRootValue
     value2: customRootValue(append:"bar")
+    nestedObject {
+      subField {
+        customRootValue
+      }
+    }
   }`)
 
   expect(errors).toBeUndefined()
   expect(data.value1).toEqual('custom value foo')
   expect(data.value2).toEqual('custom value bar')
+  expect(data.nestedObject.subField.customRootValue).toEqual('subField foo')
 })
 
 test('add custom Metadata schema', async () => {

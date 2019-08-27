@@ -15,7 +15,7 @@ module.exports = (schemaComposer, store) => {
   const typeCompoer = schemaComposer.get('Metadata')
   const extensions = typeCompoer.getExtensions()
 
-  if (extensions.isUserDefined && !extensions.infer) {
+  if (extensions.isCustomType && !extensions.infer) {
     return addQueryField(schemaComposer, typeCompoer, metadata)
   }
 

@@ -122,7 +122,7 @@ function inferFields (typeComposer, contentType) {
   const extensions = typeComposer.getExtensions()
 
   // user defined schemas must enable inference
-  if (extensions.isUserDefined && !extensions.infer) {
+  if (extensions.isCustomType && !extensions.infer) {
     return {}
   }
 

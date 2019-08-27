@@ -11,6 +11,7 @@ const { isRefField } = require('../store/utils')
 const {
   parse,
   isType,
+  getNamedType,
   isSpecifiedScalarType,
   isIntrospectionType,
   defaultFieldResolver
@@ -174,7 +175,7 @@ function addCreatedType (schemaComposer, { type, options }) {
 }
 
 function addType (schemaComposer, typeComposer) {
-  typeComposer.setExtension('isUserDefined', true)
+  typeComposer.setExtension('isCustomType', true)
 
   validateTypeName(typeComposer)
 
@@ -256,6 +257,7 @@ function processFields (schemaComposer, typeComposer, extensions) {
     const typeName = fieldTypeComposer.getTypeName()
 
     if (
+      !typeComposer.getExtension('isExternalType') &&
       fieldTypeComposer instanceof ObjectTypeComposer &&
       fieldTypeComposer !== typeComposer
     ) {
@@ -263,11 +265,11 @@ function processFields (schemaComposer, typeComposer, extensions) {
     }
 
     if (
-      !typeComposer.getExtension('isUserDefined') ||
-      // field has custom arguments, expecting custom resolver
-      !isEmpty(fieldConfig.args) ||
+      !typeComposer.getExtension('isCustomType') ||
       // already has a custom resolver
-      fieldConfig.resolve
+      typeof fieldConfig.resolve === 'function' ||
+      // field has custom arguments, expecting custom resolver
+      !isEmpty(fieldConfig.args)
     ) {
       continue
     }
@@ -305,8 +307,10 @@ function addSchemas (schemaComposer, schemas) {
   schemas.forEach(schema => {
     const typeMap = schema.getTypeMap()
     const queryType = schema.getQueryType()
-    const queryComposer = ObjectTypeComposer.createTemp(queryType, schemaComposer)
-    const queryFields = queryComposer.getFields()
+    const tempTypeComposer = schemaComposer.createTempTC(queryType)
+    const queryFields = tempTypeComposer.getFields()
+
+    processSchemaFields(queryType, tempTypeComposer)
 
     schemaComposer.Query.addFields(queryFields)
 
@@ -314,13 +318,42 @@ function addSchemas (schemaComposer, schemas) {
       const typeDef = typeMap[typeName]
 
       if (typeDef === queryType) continue
+      if (typeDef.name === 'JSON') continue
+      if (typeDef.name === 'Date') continue
       if (isIntrospectionType(typeDef)) continue
       if (isSpecifiedScalarType(typeDef)) continue
 
-      const typeComposer = schemaComposer.getAnyTC(typeDef.name)
+      const typeComposer = schemaComposer.createTC(typeDef)
+
+      typeComposer.setExtension('isExternalType', true)
+
+      if (
+        typeComposer instanceof ObjectTypeComposer ||
+        typeComposer instanceof InterfaceTypeComposer
+      ) {
+        processSchemaFields(queryType, typeComposer)
+      }
+
       schemaComposer.addSchemaMustHaveType(typeComposer)
     }
   })
+}
+
+function processSchemaFields (queryType, typeComposer) {
+  if (
+    typeComposer instanceof ObjectTypeComposer ||
+    typeComposer instanceof InterfaceTypeComposer
+  ) {
+    typeComposer.getFieldNames().forEach(fieldName => {
+      const fieldType = typeComposer.getFieldType(fieldName)
+
+      if (getNamedType(fieldType) === queryType) {
+        typeComposer.extendField(fieldName, {
+          type: fieldType.toString().replace(queryType.name, 'Query')
+        })
+      }
+    })
+  }
 }
 
 function addResolvers (schemaComposer, resolvers = {}) {
