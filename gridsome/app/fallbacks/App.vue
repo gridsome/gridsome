@@ -1,5 +1,5 @@
 <template>
-  <g-view />
+  <router-view />
 </template>
 
 <static-query>
