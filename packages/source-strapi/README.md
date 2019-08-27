@@ -3,6 +3,7 @@
 > [Strapi](https://strapi.io/) source for Gridsome
 
 ## Install
+
 - `yarn add @gridsome/source-strapi`
 - `npm install @gridsome/source-strapi`
 
@@ -14,14 +15,15 @@ export default {
     {
       use: '@gridsome/source-strapi',
       options: {
-        apiURL: `http://localhost:1337`,
+        apiURL: 'http://localhost:1337',
         queryLimit: 1000, // Defaults to 100
-        contentTypes: [`article`, `user`],
-        // Possibility to login with a Strapi user, when content types are not publicly available (optional).
+        contentTypes: ['article', 'user'],
+        // Possibility to login with a Strapi user,
+        // when content types are not publicly available (optional).
         loginData: {
           identifier: '',
-          password: '',
-        },
+          password: ''
+        }
       }
     }
   ]
