@@ -32,38 +32,24 @@ class RemarkTransformer {
     return ['text/markdown', 'text/x-markdown']
   }
 
-  constructor (options, { localOptions, resolveNodeFilePath, queue }) {
+  constructor (options, { localOptions, resolveNodeFilePath, assets, queue }) {
     this.options = defaultsDeep(localOptions, options)
+    this.processor = this.createProcessor(localOptions)
     this.resolveNodeFilePath = resolveNodeFilePath
-    this.queue = queue
-
-    const plugins = (options.plugins || []).concat(localOptions.plugins || [])
-
-    this.plugins = createPlugins(this.options, plugins)
-    this.toAST = unified().use(remarkParse).parse
-    this.applyPlugins = unified().data('transformer', this).use(this.plugins).run
-    this.toHTML = unified().use(remarkHtml).stringify
+    this.assets = assets || queue
   }
 
   parse (source) {
-    const { data: fields, content, excerpt } = parse(source)
+    const { data, content, excerpt } = parse(source)
 
     // if no title was found by gray-matter,
     // try to find the first one in the content
-    if (!fields.title) {
+    if (!data.title) {
       const title = content.trim().match(/^#+\s+(.*)/)
-      if (title) fields.title = title[1]
+      if (title) data.title = title[1]
     }
 
-    return {
-      title: fields.title,
-      slug: fields.slug,
-      path: fields.path,
-      date: fields.date,
-      content,
-      excerpt,
-      fields
-    }
+    return { content, excerpt, ...data }
   }
 
   extendNodeType () {
@@ -132,18 +118,14 @@ class RemarkTransformer {
     }
   }
 
-  createProcessor (options) {
-    let processor = unified()
-      .data('transformer', this)
-      .use(remarkParse)
-
-    processor = processor.use(this.plugins)
-
-    if (Array.isArray(options.plugins)) {
-      processor = processor.use(options.plugins)
-    }
+  createProcessor (options = {}) {
+    const processor = unified().data('transformer', this)
+    const plugins = createPlugins(this.options, options)
 
     return processor
+      .use(remarkParse)
+      .use(plugins)
+      .use(options.stringifier || remarkHtml)
   }
 
   _nodeToAST (node) {
@@ -152,9 +134,9 @@ class RemarkTransformer {
 
     if (!cached) {
       const file = createFile(node)
-      const ast = this.toAST(file)
+      const ast = this.processor.parse(file)
 
-      cached = this.applyPlugins(ast, file)
+      cached = this.processor.run(ast, file)
       cache.set(key, cached)
     }
 
@@ -170,7 +152,7 @@ class RemarkTransformer {
         const file = createFile(node)
         const ast = await this._nodeToAST(node)
 
-        return this.toHTML(ast, file)
+        return this.processor.stringify(ast, file)
       })()
 
       cache.set(key, cached)

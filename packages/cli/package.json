@@ -1,10 +1,11 @@
 {
-  "version": "0.0.8",
+  "version": "0.2.2",
   "name": "@gridsome/cli",
   "description": "A command line tool for creating new Gridsome projects.",
   "homepage": "https://github.com/gridsome/gridsome/tree/master/packages/cli#readme",
   "repository": "https://github.com/gridsome/gridsome/tree/master/packages/cli",
   "main": "bin/gridsome.js",
+  "license": "MIT",
   "bin": {
     "gridsome": "./bin/gridsome.js"
   },
@@ -16,6 +17,7 @@
     "@hjvedvik/tasks": "^0.0.8",
     "chalk": "^2.4.1",
     "commander": "^2.15.1",
+    "didyoumean": "^1.2.1",
     "execa": "^0.10.0",
     "find-up": "^2.1.0",
     "fs-extra": "^6.0.1",

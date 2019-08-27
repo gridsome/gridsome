@@ -11,9 +11,9 @@ const resolve = (p, c) => path.resolve(c || __dirname, p)
 
 module.exports = (app, { isProd, isServer }) => {
   const { config: projectConfig } = app
+  const { publicPath } = projectConfig
   const { cacheDirectory, cacheIdentifier } = createCacheOptions()
   const assetsDir = path.relative(projectConfig.outDir, projectConfig.assetsDir)
-  const pathPrefix = forwardSlash(path.join(projectConfig.pathPrefix, '/'))
   const config = new Config()
 
   const useHash = isProd && !process.env.GRIDSOME_TEST
@@ -24,14 +24,10 @@ module.exports = (app, { isProd, isServer }) => {
   config.mode(isProd ? 'production' : 'development')
 
   config.output
-    .publicPath(pathPrefix)
+    .publicPath(publicPath)
     .path(projectConfig.outDir)
     .chunkFilename(`${assetsDir}/js/${filename}`)
     .filename(`${assetsDir}/js/${filename}`)
-
-  if (process.env.NODE_ENV === 'test') {
-    config.output.pathinfo(true)
-  }
 
   config.resolve
     .set('symlinks', true)
@@ -56,7 +52,7 @@ module.exports = (app, { isProd, isServer }) => {
     .add(resolve('../../../packages'))
     .add('node_modules')
 
-  config.module.noParse(/^(vue|vue-router)$/)
+  config.module.noParse(/^(vue|vue-router|vue-meta)$/)
 
   if (app.config.runtimeCompiler) {
     config.resolve.alias.set('vue$', 'vue/dist/vue.esm.js')
@@ -94,14 +90,18 @@ module.exports = (app, { isProd, isServer }) => {
   // js
 
   config.module.rule('js')
-    .test(/\.jsx?$/)
+    .test(/\.js$/)
     .exclude
     .add(filepath => {
-      if (/\.vue\.jsx?$/.test(filepath)) {
+      if (/\.vue\.js$/.test(filepath)) {
         return false
       }
 
       if (/gridsome\.client\.js$/.test(filepath)) {
+        return false
+      }
+
+      if (filepath.startsWith(projectConfig.appPath)) {
         return false
       }
 
@@ -110,10 +110,6 @@ module.exports = (app, { isProd, isServer }) => {
           ? filepath.includes(path.normalize(dep))
           : filepath.match(dep)
       })) {
-        return false
-      }
-
-      if (filepath.startsWith(projectConfig.appPath)) {
         return false
       }
 
@@ -131,7 +127,12 @@ module.exports = (app, { isProd, isServer }) => {
     .loader('babel-loader')
     .options({
       presets: [
-        require.resolve('@vue/babel-preset-app')
+        [require.resolve('@vue/babel-preset-app'), {
+          entryFiles: [
+            resolve('../../app/entry.server.js'),
+            resolve('../../app/entry.client.js')
+          ]
+        }]
       ]
     })
 
@@ -191,12 +192,6 @@ module.exports = (app, { isProd, isServer }) => {
     .use('yaml-loader')
     .loader('yaml-loader')
 
-  // graphql
-  // TODO: remove graphql loader before v1.0
-  createGraphQLRule('graphql', './loaders/page-query')
-  createGraphQLRule('page-query', './loaders/page-query')
-  createGraphQLRule('static-query', './loaders/static-query')
-
   // plugins
 
   if (process.stdout.isTTY && !process.env.GRIDSOME_TEST) {
@@ -209,9 +204,6 @@ module.exports = (app, { isProd, isServer }) => {
 
   config.plugin('case-sensitive-paths')
     .use(require('case-sensitive-paths-webpack-plugin'))
-
-  // config.plugin('friendly-errors')
-  //   .use(require('friendly-errors-webpack-plugin'))
 
   if (!isProd) {
     config.plugin('html')
@@ -226,37 +218,17 @@ module.exports = (app, { isProd, isServer }) => {
   }
 
   config.plugin('injections')
-    .use(require('webpack/lib/DefinePlugin'), [createEnv(projectConfig)])
+    .use(require('webpack/lib/DefinePlugin'), [createEnv()])
 
   if (isProd && !isServer) {
     config.plugin('extract-css')
       .use(CSSExtractPlugin, [{
         filename: `${assetsDir}/css/styles${useHash ? '.[contenthash:8]' : ''}.css`
       }])
-
-    const cacheGroups = {
-      data: {
-        test: m => m.resource && m.request.startsWith(`${projectConfig.cacheDir}/data`),
-        name: false,
-        chunks: 'all',
-        maxSize: 60000,
-        minSize: 5000
-      }
-    }
-
-    if (projectConfig.css.split !== true) {
-      cacheGroups.styles = {
-        name: 'styles',
-        test: m => /css\/mini-extract/.test(m.type),
-        chunks: 'all',
-        enforce: true
-      }
-    }
-
-    config.optimization.splitChunks({ cacheGroups })
   }
 
   if (process.env.GRIDSOME_TEST) {
+    config.output.pathinfo(true)
     config.optimization.minimize(false)
   }
 
@@ -279,23 +251,6 @@ module.exports = (app, { isProd, isServer }) => {
       cacheDirectory: app.resolve('node_modules/.cache/gridsome'),
       cacheIdentifier: hash(values)
     }
-  }
-
-  function createGraphQLRule (type, loader) {
-    const re = new RegExp(`blockType=(${type})`)
-
-    config.module.rule(type)
-      .resourceQuery(re)
-      .use('babel-loader')
-      .loader('babel-loader')
-      .options({
-        presets: [
-          require.resolve('@vue/babel-preset-app')
-        ]
-      })
-      .end()
-      .use(`${type}-loader`)
-      .loader(require.resolve(loader))
   }
 
   function createCSSRule (config, lang, test, loader = null, options = {}) {
@@ -340,16 +295,19 @@ module.exports = (app, { isProd, isServer }) => {
     }
   }
 
-  function createEnv (projectConfig) {
+  function createEnv () {
+    const assetsUrl = forwardSlash(path.join(publicPath, assetsDir, '/'))
+    const dataUrl = forwardSlash(path.join(assetsUrl, 'data', '/'))
+
     const baseEnv = {
-      'process.env.PUBLIC_PATH': JSON.stringify(pathPrefix),
+      'process.env.PUBLIC_PATH': JSON.stringify(publicPath),
+      'process.env.ASSETS_URL': JSON.stringify(assetsUrl),
+      'process.env.DATA_URL': JSON.stringify(dataUrl),
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || ''),
-      'GRIDSOME_CACHE_DIR': JSON.stringify(projectConfig.cacheDir),
-      'GRIDSOME_DATA_DIR': JSON.stringify(projectConfig.dataDir),
-      'GRIDSOME_MODE': JSON.stringify(process.env.GRIDSOME_MODE || ''),
       'process.isClient': !isServer,
       'process.isServer': isServer,
-      'process.isProduction': process.env.NODE_ENV === 'production'
+      'process.isProduction': process.env.NODE_ENV === 'production',
+      'process.isStatic': process.env.GRIDSOME_MODE === 'static'
     }
 
     // merge variables start with GRIDSOME_ENV to config.env

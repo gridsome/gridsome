@@ -1,6 +1,5 @@
 const path = require('path')
 const fs = require('fs-extra')
-const { trim } = require('lodash')
 const md5File = require('md5-file/promise')
 const { forwardSlash } = require('../../utils')
 
@@ -16,13 +15,7 @@ class FileProcessQueue {
   }
 
   async add (filePath, options = {}) {
-    let asset
-
-    try {
-      asset = await this.preProcess(filePath, options)
-    } catch (err) {
-      throw err
-    }
+    const asset = await this.preProcess(filePath, options)
 
     if (process.env.GRIDSOME_MODE === 'serve') {
       return asset
@@ -30,7 +23,7 @@ class FileProcessQueue {
 
     if (!this._queue.has(asset.src)) {
       this._queue.set(asset.src, {
-        destination: trim(asset.src, this.config.pathPrefix),
+        destPath: asset.destPath,
         filePath
       })
     }
@@ -38,7 +31,7 @@ class FileProcessQueue {
     return asset
   }
 
-  async preProcess (filePath, options) {
+  async preProcess (filePath) {
     if (!await fs.exists(filePath)) {
       throw new Error(`${filePath} was not found. `)
     }
@@ -53,18 +46,20 @@ class FileProcessQueue {
       filename = forwardSlash(relPath)
     } else {
       const { name, ext } = path.parse(relPath)
-      let urlHash = ''
-
-      if (options.hash) {
-        const hash = await md5File(filePath)
-        urlHash = `.${!process.env.GRIDSOME_TEST ? hash : 'test'}`
-      }
+      const hash = await md5File(filePath)
+      const urlHash = `.${!process.env.GRIDSOME_TEST ? hash : 'test'}`
 
       filename = `${name}${urlHash}${ext}`
     }
 
+    const src = forwardSlash(path.join(pathPrefix || '/', filesDir, filename))
+    const destPath = process.env.GRIDSOME_MODE !== 'serve'
+      ? path.join(this.config.filesDir, filename)
+      : undefined
+
     return {
-      src: forwardSlash(path.join(pathPrefix, filesDir, filename))
+      src: encodeURI(src),
+      destPath
     }
   }
 }

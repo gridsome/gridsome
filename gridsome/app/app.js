@@ -4,21 +4,28 @@ import main from './main'
 
 import head from './head'
 import router from './router'
+import fetchPath from './fetchPath'
 import { url } from './utils/helpers'
+import graphqlGuard from './graphql/guard'
+import graphqlMixin from './graphql/mixin'
 
 import Link from './components/Link'
 import Image from './components/Image'
 import ClientOnly from './components/ClientOnly'
 
+Vue.mixin(graphqlMixin)
 Vue.component('g-link', Link)
 Vue.component('g-image', Image)
 Vue.component('ClientOnly', ClientOnly)
 
 Vue.prototype.$url = url
+Vue.prototype.$fetch = fetchPath
+
+router.beforeEach(graphqlGuard)
 
 const context = {
   appOptions: {
-    render: h => h('router-view', { attrs: { id: 'app' }}),
+    render: h => h('router-view', { attrs: { id: 'app' } }),
     metaInfo: head,
     methods: {},
     data: {},
@@ -32,7 +39,7 @@ const context = {
 
 runPlugins(plugins)
 
-export function runPlugins (plugins) {
+export function runPlugins(plugins) {
   for (const { run, options } of plugins) {
     if (typeof run === 'function') {
       run(Vue, options, context)
@@ -40,13 +47,13 @@ export function runPlugins (plugins) {
   }
 }
 
-export function runMain () {
+export function runMain() {
   if (typeof main === 'function') {
     main(Vue, context)
   }
 }
 
-export default function createApp () {
+export default function createApp() {
   return {
     app: new Vue(context.appOptions),
     router

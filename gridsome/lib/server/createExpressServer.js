@@ -12,11 +12,11 @@ const endpoint = {
 }
 
 module.exports = async (app, options = {}) => {
-  const port = await resolvePort(app.config.port)
+  const port = app.config.port || await resolvePort()
   const { config, schema } = app
   const server = express()
 
-  await app.dispatch('configureServer', null, server, {
+  await app.events.dispatch('configureServer', null, server, {
     host: config.host,
     port
   })
@@ -31,6 +31,7 @@ module.exports = async (app, options = {}) => {
 
   server.use(
     endpoint.graphql,
+    express.json(),
     graphqlMiddleware(app),
     graphqlHTTP({
       schema,
@@ -38,7 +39,18 @@ module.exports = async (app, options = {}) => {
       formatError: err => ({
         message: err.message,
         stringified: err.toString()
-      })
+      }),
+      extensions ({ variables }) {
+        if (variables && variables.__path) {
+          const page = app.pages.findPage({
+            path: variables.__path
+          })
+
+          return {
+            context: page ? page.context : {}
+          }
+        }
+      }
     })
   )
 

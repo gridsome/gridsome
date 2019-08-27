@@ -1,5 +1,6 @@
 const path = require('path')
 const fs = require('fs-extra')
+const slash = require('slash')
 const { mapValues } = require('lodash')
 
 const isDev = process.env.NODE_ENV === 'development'
@@ -7,8 +8,10 @@ const isDev = process.env.NODE_ENV === 'development'
 class FilesystemSource {
   static defaultOptions () {
     return {
+      baseDir: undefined,
       path: undefined,
       route: undefined,
+      pathPrefix: undefined,
       index: ['index'],
       typeName: 'FileNode',
       refs: {}
@@ -18,12 +21,14 @@ class FilesystemSource {
   constructor (api, options) {
     this.api = api
     this.options = options
-    this.context = api.context
     this.store = api.store
+    this.context = options.baseDir
+      ? api.resolve(options.baseDir)
+      : api.context
     this.refsCache = {}
 
     api.loadSource(async () => {
-      await this.createContentTypes()
+      this.createContentTypes()
       await this.createNodes()
       if (isDev) this.watchFiles()
     })
@@ -38,9 +43,7 @@ class FilesystemSource {
     })
 
     mapValues(this.refs, (ref, key) => {
-      this.contentType.addReference(key, {
-        typeName: ref.typeName
-      })
+      this.contentType.addReference(key, ref.typeName)
 
       if (ref.create) {
         this.store.addContentType({
@@ -68,8 +71,8 @@ class FilesystemSource {
     for (const fieldName in this.refs) {
       const ref = this.refs[fieldName]
 
-      if (ref.create && node.fields[fieldName]) {
-        const value = node.fields[fieldName]
+      if (ref.create && node[fieldName]) {
+        const value = node[fieldName]
         const typeName = ref.typeName
 
         if (Array.isArray(value)) {
@@ -84,7 +87,6 @@ class FilesystemSource {
   }
 
   watchFiles () {
-    const slash = require('slash')
     const chokidar = require('chokidar')
 
     const watcher = chokidar.watch(this.options.path, {
@@ -118,30 +120,27 @@ class FilesystemSource {
   // helpers
 
   async createNodeOptions (file) {
-    const absPath = path.join(this.context, file)
+    const origin = path.join(this.context, file)
     const relPath = path.relative(this.context, file)
     const mimeType = this.store.mime.lookup(file)
-    const content = await fs.readFile(absPath, 'utf8')
-    const uid = this.store.makeUid(relPath)
+    const content = await fs.readFile(origin, 'utf8')
+    const id = this.store.makeUid(relPath)
     const { dir, name, ext = '' } = path.parse(file)
     const routePath = this.createPath({ dir, name })
 
     return {
-      uid,
-      id: uid,
+      id,
       path: routePath,
-      fields: {
-        fileInfo: {
-          extension: ext,
-          directory: dir,
-          path: file,
-          name
-        }
+      fileInfo: {
+        extension: ext,
+        directory: dir,
+        path: file,
+        name
       },
       internal: {
         mimeType,
         content,
-        origin: absPath
+        origin
       }
     }
   }
@@ -159,9 +158,15 @@ class FilesystemSource {
   }
 
   createPath ({ dir, name }) {
-    if (this.options.route) return
+    const { route, pathPrefix = '/' } = this.options
 
-    const segments = dir.split('/').map(s => this.store.slugify(s))
+    if (route) return
+
+    const joinedPath = path.join(pathPrefix, dir)
+    const segments = slash(joinedPath)
+      .split('/')
+      .filter(v => v)
+      .map(s => this.store.slugify(s))
 
     if (!this.options.index.includes(name)) {
       segments.push(this.store.slugify(name))

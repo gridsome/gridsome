@@ -1,11 +1,12 @@
 const { isEmpty } = require('lodash')
-const { sortOrderType } = require('./types')
 const { nodeInterface } = require('./interfaces')
 const { isFile, fileType } = require('./types/file')
+const { sortOrderType, sortType } = require('./types')
 const { isImage, imageType } = require('./types/image')
-const { isDate, dateTypeField } = require('./types/date')
+const { isDate, dateType } = require('./types/date')
 const { fieldResolver, createRefResolver } = require('./resolvers')
 const { is32BitInt, isRefFieldDefinition, createTypeName } = require('./utils')
+const { SORT_ORDER } = require('../utils/constants')
 const { warn } = require('../utils/log')
 
 const {
@@ -41,15 +42,16 @@ function createFieldType (value, key, typeName, nodeTypes) {
 
     return type !== null ? {
       type: new GraphQLList(type.type),
+      args: type.args,
       resolve: (obj, args, context, info) => {
-        const value = fieldResolver(obj, args, context, info)
-        return Array.isArray(value) ? value : []
+        const arr = fieldResolver(obj, args, context, info)
+        return arr.map((_, i) => type.resolve(arr, args, context, {...info, fieldName: i}))
       }
     } : null
   }
 
   if (isDate(value)) {
-    return dateTypeField
+    return dateType
   }
 
   switch (typeof value) {
@@ -131,8 +133,9 @@ function createRefType (ref, fieldName, fieldTypeName, nodeTypes) {
 
     res.args = {
       sortBy: { type: GraphQLString },
-      order: { type: sortOrderType, defaultValue: 'DESC' },
+      order: { type: sortOrderType, defaultValue: SORT_ORDER },
       skip: { type: GraphQLInt, defaultValue: 0 },
+      sort: { type: new GraphQLList(sortType) },
       limit: { type: GraphQLInt }
     }
   }

@@ -1,40 +1,49 @@
 const path = require('path')
+const App = require('../App')
 const createApp = require('../index')
+const PluginAPI = require('../PluginAPI')
 const loadConfig = require('../loadConfig')
-const createClientConfig = require('../../webpack/createClientConfig')
-const createServerConfig = require('../../webpack/createServerConfig')
 const { BOOTSTRAP_CONFIG } = require('../../utils/constants')
 
 const context = path.join(__dirname, '../../__tests__/__fixtures__/project-basic')
+const originalEnv = { ...process.env }
 
-let originalEnv
-
-beforeAll(() => {
-  originalEnv = { ...process.env }
+beforeEach(() => {
+  Object.assign(process.env, originalEnv, { NODE_ENV: 'production' })
 })
 
 afterEach(() => {
-  process.env = originalEnv
+  Object.assign(process.env, originalEnv)
 })
 
 test('setup basic config', () => {
   const config = loadConfig(context)
 
   expect(config.chainWebpack).toHaveLength(1)
-  expect(config.pathPrefix).toEqual('/')
+  expect(config.pathPrefix).toEqual('')
+  expect(config.publicPath).toEqual('/')
   expect(config.runtimeCompiler).toEqual(false)
   expect(config.siteUrl).toEqual('https://www.gridsome.org')
-  expect(config.baseUrl).toEqual('/')
   expect(config.siteName).toEqual('Gridsome')
   expect(config.titleTemplate).toEqual('%s | Test')
   expect(config.icon.favicon).toHaveProperty('sizes')
-  expect(config.icon.favicon).toHaveProperty('src', 'src/favicon.png')
+  expect(config.icon.favicon).toHaveProperty('src', './src/favicon.png')
   expect(config.icon.touchicon).toHaveProperty('sizes')
   expect(config.icon.touchicon).toHaveProperty('precomposed')
-  expect(config.icon.touchicon).toHaveProperty('src', 'src/favicon.png')
+  expect(config.icon.touchicon).toHaveProperty('src', './src/favicon.png')
+})
+
+test('setup basic config for path prefix', () => {
+  const context = path.join(__dirname, '../../__tests__/__fixtures__/project-path-prefix')
+  const config = loadConfig(context)
+
+  expect(config.pathPrefix).toEqual('/sub/-/dir')
+  expect(config.publicPath).toEqual('/sub/-/dir/')
 })
 
 test('load env variables', () => {
+  process.env.NODE_ENV = 'development'
+
   loadConfig(context)
 
   expect(process.env.GRIDSOME_TEST_VARIABLE).toEqual('TEST_1')
@@ -53,21 +62,44 @@ test('load env variables by NODE_ENV', () => {
 test('setup custom favicon and touchicon config', () => {
   const config = loadConfig(context, {
     localConfig: {
-      icon: 'src/new-favicon.png'
+      icon: './src/new-favicon.png'
     }
   })
 
   expect(config.icon.favicon).toHaveProperty('sizes')
-  expect(config.icon.favicon).toHaveProperty('src', 'src/new-favicon.png')
+  expect(config.icon.favicon).toHaveProperty('src', './src/new-favicon.png')
   expect(config.icon.touchicon).toHaveProperty('sizes')
   expect(config.icon.touchicon).toHaveProperty('precomposed')
-  expect(config.icon.touchicon).toHaveProperty('src', 'src/new-favicon.png')
+  expect(config.icon.touchicon).toHaveProperty('src', './src/new-favicon.png')
+})
+
+test('set custom favicon sizes', () => {
+  const config = loadConfig(context, {
+    localConfig: {
+      icon: {
+        favicon: {
+          src: './src/new-favicon.png',
+          sizes: [16, 32]
+        }
+      }
+    }
+  })
+
+  expect(config.icon.favicon).toMatchObject({
+    src: './src/new-favicon.png',
+    sizes: [16, 32]
+  })
+
+  expect(config.icon.touchicon).toMatchObject({
+    src: './src/new-favicon.png',
+    sizes: [76, 152, 120, 167, 180],
+    precomposed: false
+  })
 })
 
 test('setup webpack client config', async () => {
   const app = await createApp(context, undefined, BOOTSTRAP_CONFIG)
-  const chain = await createClientConfig(app)
-  const config = chain.toConfig()
+  const config = await app.resolveWebpackConfig()
 
   expect(config.output.publicPath).toEqual('/')
   expect(config.entry.app).toHaveLength(1)
@@ -77,15 +109,16 @@ test('setup webpack client config', async () => {
   expect(config.resolve.alias['@']).toEqual(path.join(context, 'src'))
   expect(config.resolve.alias['gridsome$']).toEqual(path.resolve(__dirname, '../../../app/index.js'))
 
+  const chain = await app.resolveChainableWebpackConfig()
   const postcss = chain.module.rule('postcss').oneOf('normal').use('postcss-loader').toConfig()
+
   expect(postcss.options.plugins).toHaveLength(1)
   expect(postcss.options.plugins[0]).toBeInstanceOf(Function)
 })
 
 test('setup webpack server config', async () => {
   const app = await createApp(context, undefined, BOOTSTRAP_CONFIG)
-  const chain = await createServerConfig(app)
-  const config = chain.toConfig()
+  const config = await app.resolveWebpackConfig(true)
 
   expect(config.target).toEqual('node')
   expect(config.output.publicPath).toEqual('/')
@@ -117,7 +150,7 @@ test('setup style loader options', async () => {
     }
   }, BOOTSTRAP_CONFIG)
 
-  const chain = await createClientConfig(app)
+  const chain = await app.resolveChainableWebpackConfig()
   const oneOf = ['normal', 'modules']
 
   expect(app.config.css.split).toEqual(true)
@@ -141,3 +174,121 @@ test('setup style loader options', async () => {
     expect(stylus.options.use[0]).toEqual('plugin')
   })
 })
+
+test('config.configureWebpack as object', async () => {
+  const app = await createApp(context, {
+    localConfig: {
+      configureWebpack: {
+        mode: 'test'
+      }
+    }
+  }, BOOTSTRAP_CONFIG)
+
+  const config = await app.resolveWebpackConfig()
+
+  expect(config.entry.app).toBeDefined()
+  expect(config.mode).toEqual('test')
+})
+
+test('create new config in config.configureWebpack', async () => {
+  const app = await createApp(context, {
+    localConfig: {
+      configureWebpack: () => ({
+        mode: 'test',
+        output: {
+          publicPath: '/'
+        }
+      })
+    }
+  }, BOOTSTRAP_CONFIG)
+
+  const config = await app.resolveWebpackConfig()
+
+  expect(config).toMatchObject({
+    mode: 'test',
+    output: {
+      publicPath: '/'
+    }
+  })
+})
+
+test('modify config in config.configureWebpack', async () => {
+  const app = await createApp(context, {
+    localConfig: {
+      configureWebpack: config => {
+        config.mode = 'test'
+      }
+    }
+  }, BOOTSTRAP_CONFIG)
+
+  const config = await app.resolveWebpackConfig()
+
+  expect(config.entry.app).toBeDefined()
+  expect(config.mode).toEqual('test')
+})
+
+test('api.configureWebpack as object', async () => {
+  const { app, api } = createPlugin()
+
+  api.configureWebpack({ mode: 'test' })
+
+  const config = await app.resolveWebpackConfig()
+
+  expect(config.entry.app).toBeDefined()
+  expect(config.mode).toEqual('test')
+})
+
+test('create new config in api.configureWebpack', async () => {
+  const { app, api } = createPlugin()
+
+  api.configureWebpack(() => ({
+    mode: 'test',
+    output: {
+      publicPath: '/'
+    }
+  }))
+
+  const config = await app.resolveWebpackConfig()
+
+  expect(config).toMatchObject({
+    mode: 'test',
+    output: {
+      publicPath: '/'
+    }
+  })
+})
+
+test('modify config in api.configureWebpack', async () => {
+  const { app, api } = createPlugin()
+
+  api.configureWebpack(config => {
+    config.mode = 'test'
+  })
+
+  const config = await app.resolveWebpackConfig()
+
+  expect(config.entry.app).toBeDefined()
+  expect(config.mode).toEqual('test')
+})
+
+test('do not allow a custom publicPath', async () => {
+  const app = await createApp(context, {
+    localConfig: {
+      pathPrefix: '/test',
+      configureWebpack: {
+        output: {
+          publicPath: '/testing/'
+        }
+      }
+    }
+  }, BOOTSTRAP_CONFIG)
+
+  await expect(app.resolveWebpackConfig()).rejects.toThrow('pathPrefix')
+})
+
+function createPlugin (context = '/') {
+  const app = new App(context).init()
+  const api = new PluginAPI(app, { entry: { options: {}, clientOptions: undefined }})
+
+  return { app, api }
+}

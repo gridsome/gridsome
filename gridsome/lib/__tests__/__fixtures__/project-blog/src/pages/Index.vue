@@ -16,8 +16,10 @@
 <page-query>
 query Blog ($page: Int) {
   posts: allPost (
-    perPage: 2,
-    page: $page,
+    skip: 1
+    limit: 4
+    perPage: 2
+    page: $page
     filter: {
       excluded: {
         ne: true

@@ -11,7 +11,7 @@ module.exports = async app => {
   config.entry('app').add(resolve('../../app/entry.server.js'))
 
   config.target('node')
-  config.externals([/^vue|vue-router$/])
+  config.externals([/^(vue|vue-router|vue-meta)$/])
   config.devtool('source-map')
 
   config.optimization.minimize(false)
@@ -21,12 +21,6 @@ module.exports = async app => {
     .use(require('vue-server-renderer/server-plugin'), [{
       filename: path.relative(outDir, serverBundlePath)
     }])
-
-  await app.dispatch('chainWebpack', null, config, {
-    context: app.context,
-    isServer: true,
-    isProd
-  })
 
   return config
 }

@@ -3,6 +3,8 @@ const createHTMLRenderer = require('./createHTMLRenderer')
 const { createBundleRenderer } = require('vue-server-renderer')
 const { error } = require('../utils/log')
 
+const MAX_STATE_SIZE = 25000
+
 module.exports = function createRenderFn ({
   htmlTemplate,
   clientManifestPath,
@@ -14,15 +16,12 @@ module.exports = function createRenderFn ({
 
   const renderer = createBundleRenderer(serverBundle, {
     clientManifest,
-    runInNewContext: false,
-    shouldPrefetch (file, type) {
-      // don't prefetch page data since we preload it with the g-link component
-      return type === 'script' && !/js\/data(?:[^/]+)?\//.test(file)
-    }
+    runInNewContext: false
   })
 
-  return async function render (url, data = {}) {
-    const context = { url, pageQuery: { data }}
+  return async function render (url, state, stateSize) {
+    const context = { url, state: createState(state) }
+
     let app = ''
 
     try {
@@ -47,7 +46,12 @@ module.exports = function createRenderFn ({
       context.renderResourceHints() +
       context.renderStyles()
 
+    const renderedState = state && stateSize <= MAX_STATE_SIZE
+      ? context.renderState()
+      : ''
+
     const scripts = '' +
+      renderedState +
       context.renderScripts() +
       inject.script.text({ body: true })
 
@@ -58,5 +62,12 @@ module.exports = function createRenderFn ({
       head,
       app
     })
+  }
+}
+
+function createState (state = {}) {
+  return {
+    data: state.data || null,
+    context: state.context || {}
   }
 }

@@ -1,4 +1,5 @@
 import caniuse from '../utils/caniuse'
+import { addClass, removeClass } from '../utils/class'
 import { createObserver } from '../utils/intersectionObserver'
 
 const observer = caniuse.IntersectionObserver
@@ -68,19 +69,12 @@ function loadImage (el) {
     return // src is already switched
   }
 
-  const image = new Image()
-
-  image.onload = function () {
-    el.classList.remove('g-image--loading')
-    el.classList.add('g-image--loaded')
-    
-    el.src = src
-    el.sizes = sizes
-    el.srcset = srcset
+  el.onload = () => {
+    removeClass(el, 'g-image--loading')
+    addClass(el, 'g-image--loaded')
   }
 
-  image.src = src
-
-  el.classList.add('g-image--loading')
-  el.classList.remove('g-image--loaded')
+  el.srcset = srcset
+  el.sizes = sizes
+  el.src = src
 }

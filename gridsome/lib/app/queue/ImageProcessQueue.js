@@ -8,6 +8,7 @@ const md5File = require('md5-file/promise')
 const imageSize = require('probe-image-size')
 const svgDataUri = require('mini-svg-data-uri')
 const { forwardSlash } = require('../../utils')
+const { warmupSharp } = require('../../utils/sharp')
 
 class ImageProcessQueue {
   constructor ({ context, config }) {
@@ -21,19 +22,13 @@ class ImageProcessQueue {
   }
 
   async add (filePath, options = {}) {
-    let asset
-
-    try {
-      asset = await this.preProcess(filePath, options)
-    } catch (err) {
-      throw err
-    }
+    const asset = await this.preProcess(filePath, options)
 
     if (process.env.GRIDSOME_MODE === 'serve') {
       return asset
     }
 
-    asset.sets.forEach(({ filename, destPath, src, width }) => {
+    asset.sets.forEach(({ filename, destPath, width }) => {
       if (!this._queue.has(destPath + asset.cacheKey)) {
         this._queue.set(destPath + asset.cacheKey, {
           options: { ...options, width },
@@ -69,17 +64,9 @@ class ImageProcessQueue {
 
     const hash = await md5File(filePath)
     const buffer = await fs.readFile(filePath)
-    const { width, height } = imageSize.sync(buffer)
+    const originalSize = imageSize.sync(buffer)
 
-    const imageWidth = Math.min(
-      parseInt(options.width || width, 10),
-      maxImageWidth,
-      width
-    )
-
-    const imageHeight = options.height !== undefined
-      ? parseInt(options.height, 10)
-      : Math.ceil(height * (imageWidth / width))
+    const { imageWidth, imageHeight } = computeScaledImageSize(originalSize, options, maxImageWidth)
 
     const allSizes = options.sizes || [480, 1024, 1920, 2560]
     const imageSizes = allSizes.filter(size => size <= imageWidth)
@@ -121,7 +108,7 @@ class ImageProcessQueue {
       const filename = this.createFileName(filePath, arr, hash)
       const relPath = createDestPath(filename, arr)
       const destPath = path.join(this.config.outDir, relPath)
-      const src = forwardSlash(path.join(pathPrefix, relPath))
+      const src = encodeURI(forwardSlash(path.join(pathPrefix || '/', relPath)))
 
       return { filename, destPath, src, width, height }
     })
@@ -222,6 +209,46 @@ class ImageProcessQueue {
   }
 }
 
+function computeScaledImageSize (originalSize, options, maxImageWidth) {
+  // Special handling for fit inside and fit outside to prevent blurry images
+  // and page reflow when the images are loaded lazily.
+  // Calculates the scaled size of the image according to the equations found in
+  // https://github.com/lovell/sharp/blob/master/src/pipeline.cc (see MIN and MAX)
+  if (options.fit === 'inside' || options.fit === 'outside') {
+
+    const targetWidth = options.width || originalSize.width
+    const targetHeight = options.height || originalSize.height
+
+    const xFactor = originalSize.width / targetWidth
+    const yFactor = originalSize.height / targetHeight
+
+    let imageWidth = targetWidth
+    let imageHeight = targetHeight
+
+    if (options.fit === 'inside' && xFactor > yFactor
+      || options.fit === 'outside' && xFactor < yFactor) {
+      imageHeight = Math.round(originalSize.height / xFactor)
+    } else {
+      imageWidth = Math.round(originalSize.width / yFactor )
+    }
+
+    return {imageWidth, imageHeight}
+  }
+
+  // original code
+  const imageWidth = Math.min(
+    parseInt(options.width || originalSize.width, 10),
+    maxImageWidth,
+    originalSize.width
+  )
+
+  const imageHeight = options.height !== undefined
+    ? parseInt(options.height, 10)
+    : Math.ceil(originalSize.height * (imageWidth / originalSize.width))
+
+  return {imageWidth, imageHeight}
+}
+
 ImageProcessQueue.uid = 0
 
 function genHash (string) {
@@ -253,7 +280,8 @@ async function createDataUri (buffer, type, width, height, options = {}) {
 async function createBlurSvg (buffer, mimeType, width, height, blur, resize = {}) {
   const blurWidth = 64
   const blurHeight = Math.round(height * (blurWidth / width))
-  const blurBuffer = await sharp(buffer).resize(blurWidth, blurHeight, resize).toBuffer()
+  const warmSharp = await warmupSharp(sharp)
+  const blurBuffer = await warmSharp(buffer).resize(blurWidth, blurHeight, resize).toBuffer()
   const base64 = blurBuffer.toString('base64')
   const id = `__svg-blur-${ImageProcessQueue.uid++}`
 

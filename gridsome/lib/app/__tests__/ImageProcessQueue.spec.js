@@ -46,6 +46,37 @@ test('generate srcset for image', async () => {
   expect(result.srcset[1]).toEqual('/assets/static/1000x600.97c148e.test.png 1000w')
 })
 
+test('encode src', async () => {
+  const filePath = path.resolve(context, 'assets/folder name/350 250.png')
+  const queue = new AssetsQueue({ context, config: baseconfig })
+
+  const result = await queue.add(filePath)
+
+  expect(result.filePath).toEqual(filePath)
+  expect(result.src).toEqual('/assets/static/350%20250.096da6d.test.png')
+  expect(result.sets[0].src).toEqual('/assets/static/350%20250.096da6d.test.png')
+  expect(result.sets[0].destPath).toEqual(path.join(imagesDir, '350 250.096da6d.test.png'))
+  expect(result.srcset[0]).toEqual('/assets/static/350%20250.096da6d.test.png 350w')
+})
+
+test('encode src in serve mode', async () => {
+  const filePath = path.resolve(context, 'assets/folder name/350 250.png')
+  const queue = new AssetsQueue({ context, config: baseconfig })
+  const mode = process.env.GRIDSOME_MODE
+
+  process.env.GRIDSOME_MODE = 'serve'
+
+  const result = await queue.add(filePath)
+
+  process.env.GRIDSOME_MODE = mode
+
+  expect(result.filePath).toEqual(filePath)
+  expect(result.src).toEqual('/assets/static/assets/folder%20name/350%20250.png?width=350')
+  expect(result.sets[0].src).toEqual('/assets/static/assets/folder%20name/350%20250.png?width=350')
+  expect(result.sets[0].destPath).toEqual(path.join(imagesDir, 'assets/folder name/350 250.png?width=350'))
+  expect(result.srcset[0]).toEqual('/assets/static/assets/folder%20name/350%20250.png?width=350 350w')
+})
+
 test('generate srcset for image with path prefix', async () => {
   const filePath = path.resolve(context, 'assets/1000x600.png')
   const config = { ...baseconfig, pathPrefix: '/site-art' }
@@ -137,13 +168,13 @@ test('add custom attributes to markup', async () => {
 
   expect(result.imageHTML).toMatch(/test-1/)
   expect(result.imageHTML).toMatch(/test-2/)
-  expect(result.imageHTML).toMatch(/height=\"100\"/)
-  expect(result.imageHTML).toMatch(/alt=\"Alternative text\"/)
+  expect(result.imageHTML).toMatch(/height="100"/)
+  expect(result.imageHTML).toMatch(/alt="Alternative text"/)
 
   expect(result.noscriptHTML).toMatch(/test-1/)
   expect(result.noscriptHTML).toMatch(/test-2/)
-  expect(result.noscriptHTML).toMatch(/height=\"100\"/)
-  expect(result.noscriptHTML).toMatch(/alt=\"Alternative text\"/)
+  expect(result.noscriptHTML).toMatch(/height="100"/)
+  expect(result.noscriptHTML).toMatch(/alt="Alternative text"/)
 })
 
 test('respect config.maxImageWidth', async () => {
@@ -200,6 +231,50 @@ test('do not resize if image is too small', async () => {
   expect(result.src).toEqual('/assets/static/350x250.096da6d.test.png')
   expect(result.sets).toHaveLength(1)
   expect(result.srcset).toHaveLength(1)
+})
+
+test('calculate correct image size for fit=inside ', async () => {
+  const filePath = path.resolve(context, 'assets/1000x600.png')
+  const queue = new AssetsQueue({ context, config: baseconfig })
+
+  const resultFixedSize = await queue.add(filePath, { width: 600, height: 300, fit: 'inside' })
+  const resultAutoHeight = await queue.add(filePath, { width: 600, fit: 'inside' })
+  const resultAutoWidth = await queue.add(filePath, { height: 300, fit: 'inside' })
+  const resultAuto = await queue.add(filePath, { fit: 'inside' })
+
+  expect(resultFixedSize.size.width).toBe(500)
+  expect(resultFixedSize.size.height).toBe(300)
+
+  expect(resultAutoHeight.size.width).toBe(600)
+  expect(resultAutoHeight.size.height).toBe(360)
+
+  expect(resultAutoWidth.size.width).toBe(500)
+  expect(resultAutoWidth.size.height).toBe(300)
+
+  expect(resultAuto.size.width).toBe(1000)
+  expect(resultAuto.size.height).toBe(600)
+})
+
+test('calculate correct image size for fit=outside', async () => {
+  const filePath = path.resolve(context, 'assets/1000x600.png')
+  const queue = new AssetsQueue({ context, config: baseconfig })
+
+  const resultFixedSize = await queue.add(filePath, { width: 600, height: 300, fit: 'outside' })
+  const resultAutoHeight = await queue.add(filePath, { width: 600, fit: 'outside' })
+  const resultAutoWidth = await queue.add(filePath, { height: 300, fit: 'outside' })
+  const resultAuto = await queue.add(filePath, { fit: 'outside' })
+
+  expect(resultFixedSize.size.width).toBe(600)
+  expect(resultFixedSize.size.height).toBe(360)
+
+  expect(resultAutoHeight.size.width).toBe(1000)
+  expect(resultAutoHeight.size.height).toBe(600)
+
+  expect(resultAutoWidth.size.width).toBe(1000)
+  expect(resultAutoWidth.size.height).toBe(600)
+
+  expect(resultAuto.size.width).toBe(1000)
+  expect(resultAuto.size.height).toBe(600)
 })
 
 test('get url for server in serve mode', async () => {

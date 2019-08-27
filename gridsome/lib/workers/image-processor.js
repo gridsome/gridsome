@@ -1,13 +1,14 @@
 const path = require('path')
 const fs = require('fs-extra')
+const pMap = require('p-map')
 const sharp = require('sharp')
 const imagemin = require('imagemin')
 const colorString = require('color-string')
 const imageminWebp = require('imagemin-webp')
 const imageminMozjpeg = require('imagemin-mozjpeg')
 const imageminPngquant = require('imagemin-pngquant')
-
-sharp.simd(true)
+const sysinfo = require('../utils/sysinfo')
+const { warmupSharp } = require('../utils/sharp')
 
 exports.processImage = async function ({
   size,
@@ -36,11 +37,11 @@ exports.processImage = async function ({
     const plugins = []
     let pipeline = sharp(buffer)
 
-    if (config.width && config.width <= size.width) {
-      const ratio = size.height / size.width
-      const height = Math.round(config.width * ratio)
+    if (config.width && config.width <= size.width || config.height && config.height <= size.height) {
       const resizeOptions = {}
 
+      if (config.height) resizeOptions.height = config.height
+      if (config.width) resizeOptions.width = config.width
       if (options.fit) resizeOptions.fit = sharp.fit[options.fit]
       if (options.position) resizeOptions.position = sharp.position[options.position]
       if (options.background && colorString.get(options.background)) {
@@ -49,7 +50,7 @@ exports.processImage = async function ({
         resizeOptions.background = backgroundColor
       }
 
-      pipeline = pipeline.resize(config.width, height, resizeOptions)
+      pipeline = pipeline.resize(resizeOptions)
     }
 
     if (/\.png$/.test(ext)) {
@@ -92,7 +93,8 @@ exports.processImage = async function ({
 }
 
 exports.process = async function ({ queue, cacheDir, backgroundColor }) {
-  return Promise.all(queue.map(set => {
+  await warmupSharp(sharp)
+  await pMap(queue, async set => {
     const cachePath = cacheDir ? path.join(cacheDir, set.filename) : null
 
     return exports.processImage({
@@ -101,5 +103,7 @@ exports.process = async function ({ queue, cacheDir, backgroundColor }) {
       cachePath,
       ...set
     })
-  }))
+  }, {
+    concurrency: sysinfo.cpus.logical
+  })
 }

@@ -2,9 +2,23 @@
 
 > Drupal source for Gridsome.
 
+### Table of Contents
+* [Install](#install)
+* [Usage](#usage)
+* [API Schema to GraphQL Conversion](#api-schema-to-graphql-conversion)
+* [Contenta CMS](#contenta-cms)
+* [Routing](#routing)
+* [Excludes](#excludes)
+* [Auth](#auth)
+* [Example Page Queries](#example-page-queries)
+* [Starter project](https://github.com/matt-e-king/gridsome-starter-drupal)
+
 ### Quick Overview
 
-This is the source plugin for pulling in data from the Drupal content management system for Gridsome. The Drupal module [JSON:API](https://www.drupal.org/project/jsonapi) is required for this plugin to work correctly. 
+**BREAKING CHANGE FROM 0.2.1 to 0.3.0**
+The shape for accessing relationships on a node via GraphQL has changed. See [Example Page Queries](#example-page-queries).
+
+This is the source plugin for pulling in data from the Drupal content management system for Gridsome. The Drupal module [JSON:API](https://www.drupal.org/project/jsonapi) is required for this plugin to work correctly.
 
 ### Install
 * `yarn add @gridsome/source-drupal`
@@ -96,8 +110,8 @@ module.exports = {
       options: {
         baseUrl: 'https://somedrupalsite.pantheonsite.io',
         routes: {
-          'node--article': '/articles/:slug',
-          'taxonomy_term--tags': '/tags/:slug'
+          'node--article': '/articles/:title',
+          'taxonomy_term--tags': '/tags/:name'
         }
       }
     }
@@ -106,7 +120,22 @@ module.exports = {
 ```
 
 Path parameters can be any GraphQL field on that node:
-`node--article: 'aritlces/:langcode/:slug' -> /aritcles/en/lorem-ipsum`
+`node--article: 'aritlces/:langcode/:title' -> /aritcles/en/lorem-ipsum`
+
+### Contenta CMS
+[Contenta CMS](https://github.com/contentacms/contenta_jsonapi#--contenta-cms--) should work out-of-the-box with @gridsome/source-drupal. The main difference being, Contenta CMS is by default already using [JSON:API Extras](https://www.drupal.org/project/jsonapi_extras). This gives the user more flexibility and control over resources returned by the api.
+
+JSON:API has a clear finite list of features which are listed on its [Drupal project page](https://www.drupal.org/project/jsonapi_extras).
+
+This has the biggest impact in regards to the [API Schema to GraphQL Conversion](#api-schema-to-graphql-conversion) mentioned above. Custom types/nodes won't be return with the prefixed `node--`, which will affect your `routes` configuration in `gridsome.config.js`. Look closely at the payload returned by `/api` and make adjustments accordingly.
+
+Here is an [example `gridsome.config.js`](https://github.com/matt-e-king/gridsome-starter-drupal/blob/master/gridsome.config.js) in the Drupal Source Starter, see the commented out section at the bottom for Contenta CMS.
+
+**NOTE:** This will also affect your GraphQL queries:
+```
+article -> DrupalArticle
+recipies -> DrupalRecipes
+```
 
 ### Excludes
 A majority of the endpoints returned in the api schema are not necessary so `@gridsome/source-drupal` exclude some by default. See those defaults in `lib/constants.js`.
@@ -123,11 +152,11 @@ module.exports = {
     {
       use: '@gridsome/source-drupal',
       options: {
-        baseUrl: 'https://dev-cctd8.pantheonsite.io',
+        baseUrl: 'https://somedrupalsite.pantheon.io',
         exclude: [ ...defaultExcludes, 'user--user' ], // include the defaults
         routes: {
-          'node--article': '/articles/:slug',
-          'taxonomy_term--tags': '/tags/:slug'
+          'node--article': '/articles/:title',
+          'taxonomy_term--tags': '/tags/:name'
         }
       }
     }
@@ -149,7 +178,7 @@ module.exports = {
     {
       use: '@gridsome/source-drupal',
       options: {
-        baseUrl: 'https://dev-cctd8.pantheonsite.io',
+        baseUrl: 'https://somedrupalsite.pantheon.io',
         requestConfig: {
           auth: {
             username: process.env.BASIC_AUTH_USERNAME,
@@ -170,11 +199,11 @@ List all `DrupalNodeArticle` using `<page-query>` in a Gridsome page:
 ```
 <page-query>
   query Articles {
-    allDrupalNodeArticle (perPage:100) {
+    allDrupalNodeArticle(perPage:100) {
       edges {
         node {
-          id,
-          title,
+          id
+          title
           path
         }
       }
@@ -187,27 +216,34 @@ Get the details of an individual `DrupalNodeArticle` using `<page-query>` in a G
 
 ```
 <page-query>
-  query Article ($path: String!) {
-    drupalNodeArticles (path: $path) {
-      title,
-      date,
+  query Article($id: String!) {
+    drupalNodeArticle(id: $id) {
+      title
+      date
       body {
         processed
-      },
-      fieldImage {
-        title,
-        filename,
-        url
-      },
-      fieldTags {
-        name,
-        path
+      }
+      field_image {
+        node {
+          filename
+          uri {
+            url
+          }
+        }
+        meta {
+          alt
+          title
+        }
+      }
+      field_tags {
+        node {
+          name
+          path
+        }
       }
     }
   }
 </page-query>
 ```
 
-### Starter project
-
-Coming soon...
+Any `relationships` containing a `meta` object in the JSON:API response will be merged as a sibling object alongside `node`. See `field_image` above as an example.

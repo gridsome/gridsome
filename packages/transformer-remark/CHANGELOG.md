@@ -3,6 +3,41 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.2](https://github.com/gridsome/gridsome/tree/master/packages/transformer-remark/compare/@gridsome/transformer-remark@0.3.1...@gridsome/transformer-remark@0.3.2) (2019-05-20)
+
+**Note:** Version bump only for package @gridsome/transformer-remark
+
+
+
+
+
+## [0.3.1](https://github.com/gridsome/gridsome/tree/master/packages/transformer-remark/compare/@gridsome/transformer-remark@0.3.0...@gridsome/transformer-remark@0.3.1) (2019-05-13)
+
+
+### Bug Fixes
+
+* **remark:** let plugins set custom stringifier ([f2d3acc](https://github.com/gridsome/gridsome/tree/master/packages/transformer-remark/commit/f2d3acc))
+
+
+
+
+
+# [0.3.0](https://github.com/gridsome/gridsome/tree/master/packages/transformer-remark/compare/@gridsome/transformer-remark@0.2.1...@gridsome/transformer-remark@0.3.0) (2019-05-10)
+
+
+### Bug Fixes
+
+* **remark:** support all remark plugins ([#18](https://github.com/gridsome/gridsome/tree/master/packages/transformer-remark/issues/18)) ([9b4ea5b](https://github.com/gridsome/gridsome/tree/master/packages/transformer-remark/commit/9b4ea5b))
+
+
+### Features
+
+* update for latests changes in core ([8abcbf4](https://github.com/gridsome/gridsome/tree/master/packages/transformer-remark/commit/8abcbf4))
+
+
+
+
+
 <a name="0.2.1"></a>
 ## [0.2.1](https://github.com/gridsome/gridsome/tree/master/packages/transformer-remark/compare/@gridsome/transformer-remark@0.2.0...@gridsome/transformer-remark@0.2.1) (2019-02-26)
 
