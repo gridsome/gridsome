@@ -1,51 +1,65 @@
-const path = require('path')
-const Parser = require('./Parser')
 const autoBind = require('auto-bind')
-const { Collection } = require('lokijs')
+const Parser = require('./Parser')
+const Loki = require('lokijs')
 const { FSWatcher } = require('chokidar')
 const { parseQuery } = require('../graphql')
 const EventEmitter = require('eventemitter3')
 const validateOptions = require('./validateOptions')
 const createPageQuery = require('./createPageQuery')
 const { NOT_FOUND_NAME, NOT_FOUND_PATH } = require('../utils/constants')
-const { cloneDeep } = require('lodash')
-const { slugify } = require('../utils')
+
+const isDev = process.env.NODE_ENV === 'development'
 
 class Pages {
   constructor (app) {
     this._app = app
     this._context = app.context
     this._parser = new Parser(app)
+    this._cached = new Map()
     this._events = new EventEmitter()
     this._watcher = new FSWatcher({
       disableGlobbing: true
     })
 
     this._watched = {}
-    this._created = []
 
-    this._collection = new Collection({
+    const db = new Loki()
+
+    this._collection = db.addCollection('pages', {
       indices: ['path'],
-      unique: ['path'],
-      autoupdate: true
+      unique: ['path']
     })
 
     autoBind(this)
 
-    if (process.env.NODE_ENV === 'development') {
+    if (isDev) {
       this._watcher.on('change', component => {
-        const { pageQuery } = this._parse(component, false)
-        const parsedQuery = this._parseQuery(pageQuery)
+        const pages = this._collection.find({ component })
+        const length = pages.length
 
-        this.findPages({ component }).forEach(page => {
-          const oldPage = cloneDeep(page)
-          const query = this._createPageQuery(parsedQuery, page)
+        this._cached.delete(component)
+        this._collection.adaptiveBinaryIndices = false
 
-          Object.assign(page, { query })
-          Object.assign(page, createRoute({ page, query }))
+        for (let i = 0; i < length; i++) {
+          const page = pages[i]
 
-          this._events.emit('update', page, oldPage)
-        })
+          this.updatePage({
+            path: page.path,
+            component: page.component,
+            chunkName: page.chunkName || null,
+            name: page.name || null,
+            context: page.context || {},
+            queryVariables: page.queryVariables || null,
+            route: page.internal.route || null,
+            _meta: page.internal.meta || null
+          }, {
+            digest: page.internal.digest,
+            isManaged: page.internal.isManaged
+          })
+        }
+
+        this._collection.adaptiveBinaryIndices = true
+        this._collection.ensureAllIndexes(true)
       })
     }
   }
@@ -72,11 +86,11 @@ class Pages {
 
   createPage (input, internals = {}) {
     const options = this._normalizeOptions(input)
-    const oldPage = this.findPage({ path: options.path })
 
-    if (oldPage) return this.updatePage(options, internals)
+    const oldPage = this._collection.by('path', options.path)
+    if (oldPage) return this.updatePage(options, internals, options)
 
-    const page = createPage({ options, context: this._context })
+    const page = createPage(options)
     const { pageQuery } = this._parse(options.component)
     const parsedQuery = this._parseQuery(pageQuery)
     const query = this._createPageQuery(parsedQuery, page)
@@ -85,33 +99,35 @@ class Pages {
     Object.assign(page, createRoute({ page, query }))
     Object.assign(page.internal, internals)
 
-    this._created.push(page)
     this._collection.insert(page)
     this._events.emit('create', page)
 
-    if (process.env.NODE_ENV === 'development') {
+    if (isDev) {
       this._watch(options.component)
     }
 
     return page
   }
 
-  updatePage (input, internals = {}) {
-    const options = this._normalizeOptions(input)
-    const page = this.findPage({ path: options.path })
+  updatePage (input, internals = {}, normalizeOptions = null) {
+    const options = normalizeOptions || this._normalizeOptions(input)
+    const oldPage = this._collection.by('path', options.path)
 
-    const newPage = createPage({ options, context: this._context })
-    const { pageQuery } = this._parse(options.component, false)
+    const page = createPage(options)
+    const useCache = this._cached.has(options.component)
+    const { pageQuery } = this._parse(options.component, useCache)
     const parsedQuery = this._parseQuery(pageQuery)
-    const query = this._createPageQuery(parsedQuery, newPage)
-
-    const oldPage = cloneDeep(page)
+    const query = this._createPageQuery(parsedQuery, page)
 
     Object.assign(page, { query })
-    Object.assign(page, newPage)
     Object.assign(page, createRoute({ page, query }))
     Object.assign(page.internal, internals)
 
+    page.$loki = oldPage.$loki
+    page.meta = oldPage.meta
+
+    this._collection.update(page)
+    this._cached.set(options.component, true)
     this._events.emit('update', page, oldPage)
 
     return page
@@ -158,7 +174,7 @@ class Pages {
 
     options.component = this._app.resolve(input.component)
 
-    return options
+    return this._app._hooks.page.call(options, this, this._app)
   }
 
   _parseQuery (query) {
@@ -188,7 +204,7 @@ class Pages {
   }
 }
 
-function createPage ({ options, context }) {
+function createPage (options) {
   const segments = options.path.split('/').filter(segment => !!segment)
   const path = `/${segments.join('/')}`
 
@@ -201,25 +217,16 @@ function createPage ({ options, context }) {
     component: options.component,
     context: options.context || {},
     queryVariables: options.queryVariables || null,
-    chunkName: options.chunkName || genChunkName(options.component, context),
+    chunkName: options.chunkName || null,
     internal: {
       digest: null,
       path: { segments },
       route: options.route || null,
+      meta: options._meta || {},
       isDynamic: typeof options.route === 'string',
       isManaged: false
     }
   }
-}
-
-function genChunkName (component, context) {
-  const chunkName = path.relative(context, component)
-    .split('/')
-    .filter(s => s !== '..')
-    .map(s => slugify(s))
-    .join('--')
-
-  return `page--${chunkName}`
 }
 
 function createRoute ({ page, query }) {

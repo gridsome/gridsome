@@ -68,7 +68,8 @@ exports.imageType = {
     height: { type: 'Int', description: 'Height' },
     fit: { type: 'ImageFit', description: 'Fit', defaultValue: 'cover' },
     quality: { type: 'Int', description: 'Quality (default: 75)' },
-    blur: { type: 'Int', description: 'Blur level for base64 string' }
+    blur: { type: 'Int', description: 'Blur level for base64 string' },
+    background: { type: 'String', description: 'Background color for \'contain\''}
   },
   async resolve (obj, args, context, { fieldName }) {
     const value = obj[fieldName]

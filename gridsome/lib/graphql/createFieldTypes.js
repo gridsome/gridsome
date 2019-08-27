@@ -29,9 +29,14 @@ function createFieldType (schemaComposer, value, key, prefix) {
 
     return type !== null ? {
       type: [type.type],
-      resolve: obj => {
-        const value = obj[key]
-        return Array.isArray(value) ? value : []
+      args: type.args,
+      resolve: (obj, args, context, info) => {
+        const arr = obj[key]
+        return arr.map((_, i) => {
+          return typeof type.resolve === 'function'
+            ? type.resolve(arr, args, context, { ...info, fieldName: i })
+            : arr[i]
+        })
       }
     } : null
   }

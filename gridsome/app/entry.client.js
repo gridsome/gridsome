@@ -1,3 +1,5 @@
+import './polyfills'
+
 import Vue from 'vue'
 import createApp, { runPlugins, runMain } from './app'
 import plugins from '~/.temp/plugins-client'
@@ -12,6 +14,25 @@ runPlugins(plugins)
 runMain()
 
 const { app, router } = createApp()
+
+if (process.env.NODE_ENV === 'production') {
+  router.beforeEach((to, from, next) => {
+    const components = router.getMatchedComponents(to).map(
+      c => typeof c === 'function' ? c() : c
+    )
+
+    Promise.all(components)
+      .then(() => next())
+      .catch(err => {
+        // reload page if a component failed to load
+        if (err.request && to.path !== window.location.pathname) {
+          window.location.assign(to.fullPath)
+        } else {
+          next(err)
+        }
+      })
+  })
+}
 
 // let Vue router handle internal URLs for anchors in innerHTML
 document.addEventListener('click', event => {
@@ -34,7 +55,9 @@ document.addEventListener('click', event => {
   ) return
 
   const path = stripPathPrefix($el.pathname)
-  const { route, location } = router.resolve({ path, hash: $el.hash })
+  const { route, location } = router.resolve({
+    path: path + ($el.search || '') + ($el.hash || '')
+  })
 
   if (route.name === '*') {
     return

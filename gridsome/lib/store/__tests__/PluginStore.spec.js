@@ -344,7 +344,7 @@ test('add type with custom fields in route', () => {
   })
 
   const node = contentType.addNode({
-    id: '1234',
+    id: 'abcDef',
     title: 'Lorem ipsum',
     test: 'My value',
     genre: {
@@ -359,7 +359,42 @@ test('add type with custom fields in route', () => {
     }
   })
 
-  expect(node.path).toEqual('/my-value/My%20value/1234/10/2/thriller/1/missing/lorem-ipsum')
+  expect(node.path).toEqual('/my-value/My%20value/abcDef/10/2/thriller/1/missing/lorem-ipsum')
+})
+
+// TODO: move dateField and route options to global permalinks config
+test('set custom date field name for content type', () => {
+  const contentType = createPlugin().store.addContentType({
+    typeName: 'TestPost',
+    dateField: 'published_at',
+    route: '/:year/:month/:day/:slug'
+  })
+
+  const node = contentType.addNode({
+    id: '1',
+    slug: 'my-post',
+    published_at: '2019-05-19'
+  })
+
+  expect(node.path).toEqual('/2019/05/19/my-post')
+})
+
+test('set custom year, month and day fields', () => {
+  const contentType = createPlugin().store.addContentType({
+    typeName: 'TestPost',
+    route: '/:year/:month/:day/:slug'
+  })
+
+  const node = contentType.addNode({
+    id: '1',
+    slug: 'my-post',
+    date: '2019-05-19',
+    year: 'Twenty Nighteen',
+    month: 'May',
+    day: 'Nighteen'
+  })
+
+  expect(node.path).toEqual('/twenty-nighteen/may/nighteen/my-post')
 })
 
 test('deeply nested field starting with `raw`', () => {
@@ -494,6 +529,7 @@ test('resolve file paths', () => {
     url3: 'git@github.com:gridsome/gridsome.git',
     url4: 'ftp://ftp.example.com',
     email: 'email@example.com',
+    email2: 'mailto:email@example.me',
     text: 'Lorem ipsum dolor sit amet.',
     text2: 'example.com',
     text3: 'md',
@@ -511,6 +547,7 @@ test('resolve file paths', () => {
   expect(node.url3).toEqual('git@github.com:gridsome/gridsome.git')
   expect(node.url4).toEqual('ftp://ftp.example.com')
   expect(node.email).toEqual('email@example.com')
+  expect(node.email2).toEqual('mailto:email@example.me')
   expect(node.text).toEqual('Lorem ipsum dolor sit amet.')
   expect(node.text2).toEqual('example.com')
   expect(node.text3).toEqual('md')
@@ -716,4 +753,28 @@ test('generate slug from any string', () => {
   expect(slug2).toEqual('string-with-aeoa-characters')
   expect(slug3).toEqual('string-with-slashes')
   expect(slug4).toEqual('trim-string')
+})
+
+test('experimental: add transformer', async () => {
+  const api = createPlugin()
+  const posts = api.store.addContentType('TestPost')
+
+  api.store._addTransformer(class {
+    static mimeTypes () {
+      return ['application/test']
+    }
+
+    parse (content) {
+      return JSON.parse(content)
+    }
+  })
+
+  const node = posts.addNode({
+    internal: {
+      mimeType: 'application/test',
+      content: JSON.stringify({ test: true })
+    }
+  })
+
+  expect(node.test).toEqual(true)
 })

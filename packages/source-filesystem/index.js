@@ -1,5 +1,6 @@
 const path = require('path')
 const fs = require('fs-extra')
+const slash = require('slash')
 const { mapValues } = require('lodash')
 
 const isDev = process.env.NODE_ENV === 'development'
@@ -10,6 +11,7 @@ class FilesystemSource {
       baseDir: undefined,
       path: undefined,
       route: undefined,
+      pathPrefix: undefined,
       index: ['index'],
       typeName: 'FileNode',
       refs: {}
@@ -26,7 +28,7 @@ class FilesystemSource {
     this.refsCache = {}
 
     api.loadSource(async () => {
-      await this.createContentTypes()
+      this.createContentTypes()
       await this.createNodes()
       if (isDev) this.watchFiles()
     })
@@ -85,7 +87,6 @@ class FilesystemSource {
   }
 
   watchFiles () {
-    const slash = require('slash')
     const chokidar = require('chokidar')
 
     const watcher = chokidar.watch(this.options.path, {
@@ -157,9 +158,15 @@ class FilesystemSource {
   }
 
   createPath ({ dir, name }) {
-    if (this.options.route) return
+    const { route, pathPrefix = '/' } = this.options
 
-    const segments = dir.split('/').map(s => this.store.slugify(s))
+    if (route) return
+
+    const joinedPath = path.join(pathPrefix, dir)
+    const segments = slash(joinedPath)
+      .split('/')
+      .filter(v => v)
+      .map(s => this.store.slugify(s))
 
     if (!this.options.index.includes(name)) {
       segments.push(this.store.slugify(name))

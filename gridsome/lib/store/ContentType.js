@@ -62,6 +62,8 @@ class ContentType {
   }
 
   addNode (options) {
+    options = this._store._app._hooks.node.call(options, this, this._store._app)
+
     const { nodeOptions, fields, belongsTo } = createNodeOptions(options, this)
 
     const { $uid, id } = nodeOptions
@@ -200,9 +202,10 @@ class ContentType {
 
       const field = get(node, path, fieldName)
 
-      if (fieldName === 'year') params.year = date.format('YYYY')
-      else if (fieldName === 'month') params.month = date.format('MM')
-      else if (fieldName === 'day') params.day = date.format('DD')
+      if (fieldName === 'id') params.id = node.id
+      else if (fieldName === 'year' && !node.year) params.year = date.format('YYYY')
+      else if (fieldName === 'month' && !node.month) params.month = date.format('MM')
+      else if (fieldName === 'day' && !node.day) params.day = date.format('DD')
       else {
         const repeated = repeat && Array.isArray(field)
         const values = repeated ? field : [field]

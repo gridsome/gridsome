@@ -7,6 +7,7 @@ const puppeteer = require('puppeteer')
 
 const context = path.join(__dirname, '__fixtures__', 'project-simple')
 const content = file => fs.readFileSync(path.join(context, file), 'utf8')
+const exists = file => fs.existsSync(path.join(context, file))
 const load = file => cheerio.load(content(file))
 const app = express()
 
@@ -34,6 +35,15 @@ afterAll(async () => {
 test('build simple project', () => {
   const $home = load('dist/index.html')
   expect($home('h1').text()).toEqual('Index.vue')
+})
+
+test('don\'t render empty siteDescription ', () => {
+  const $home = load('dist/index.html')
+  expect($home('meta[data-key="description"]').length).toEqual(0)
+})
+
+test('data dir should be empty', () => {
+  expect(exists('dist/assets/data/1')).toBeFalsy()
 })
 
 test('open homepage in browser', async () => {

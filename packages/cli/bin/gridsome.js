@@ -3,12 +3,25 @@
 const path = require('path')
 const chalk = require('chalk')
 const program = require('commander')
+const didYouMean = require('didyoumean')
 const resolveCwd = require('resolve-cwd')
 const resolveVersions = require('../lib/utils/version')
 const pkgPath = require('find-up').sync('package.json')
 
-const context = pkgPath ? path.dirname(pkgPath) : process.cwd()
+const context = pkgPath ? path.resolve(path.dirname(pkgPath)) : process.cwd()
 const version = resolveVersions(pkgPath)
+
+function suggestCommands (cmd) {
+  const availableCommands = program.commands.map(cmd => {
+    return cmd._name
+  })
+
+  const suggestion = didYouMean(cmd, availableCommands)
+  if (suggestion) {
+    console.log()
+    console.log(`Did you mean ${suggestion}?`)
+  }
+}
 
 program
   .version(version, '-v, --version')
@@ -44,6 +57,7 @@ program.arguments('<command>').action(async command => {
     console.log()
   } else {
     console.log(chalk.red(`Unknown command ${chalk.bold(command)}`))
+    suggestCommands(command)
   }
 })
 

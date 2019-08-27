@@ -1,7 +1,7 @@
 const { print } = require('graphql')
 const { createQueryVariables } = require('../../pages/utils')
 
-module.exports = ({ store, pages, config }) => {
+module.exports = ({ pages }) => {
   return async function graphqlMiddleware (req, res, next) {
     const { body = {}} = req
 
@@ -10,13 +10,15 @@ module.exports = ({ store, pages, config }) => {
       return res.sendStatus(200)
     }
 
-    if (body.query) {
+    if (body.query || !body.path) {
       return next()
     }
 
     const page = pages.findPage({ path: body.path })
 
-    if (!page) {
+    // page/1/index.html is not statically generated
+    // in production and should return 404 in develop
+    if (!page || body.page === 1) {
       return res
         .status(404)
         .send({ code: 404, message: `Could not find ${body.path}` })

@@ -13,20 +13,22 @@ exports.render = async function ({
     serverBundlePath
   })
 
-  let page, html, state
+  let page, html, state, stateSize
   const length = pages.length
 
   for (let i = 0; i < length; i++) {
     page = pages[i]
-    state = page.dataOutput
-      ? await fs.readJson(page.dataOutput)
-      : undefined
+    state = undefined
+    stateSize = undefined
 
-    try {
-      html = await render(page.path, state)
-    } catch (err) {
-      throw err
+    if (page.dataOutput) {
+      const content = await fs.readFile(page.dataOutput, 'utf8')
+
+      stateSize = content.length
+      state = JSON.parse(content)
     }
+
+    html = await render(page.path, state, stateSize)
 
     await fs.outputFile(page.htmlOutput, html)
   }

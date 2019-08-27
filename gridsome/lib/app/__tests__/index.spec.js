@@ -62,15 +62,39 @@ test('load env variables by NODE_ENV', () => {
 test('setup custom favicon and touchicon config', () => {
   const config = loadConfig(context, {
     localConfig: {
-      icon: 'src/new-favicon.png'
+      icon: './src/new-favicon.png'
     }
   })
 
   expect(config.icon.favicon).toHaveProperty('sizes')
-  expect(config.icon.favicon).toHaveProperty('src', 'src/new-favicon.png')
+  expect(config.icon.favicon).toHaveProperty('src', './src/new-favicon.png')
   expect(config.icon.touchicon).toHaveProperty('sizes')
   expect(config.icon.touchicon).toHaveProperty('precomposed')
-  expect(config.icon.touchicon).toHaveProperty('src', 'src/new-favicon.png')
+  expect(config.icon.touchicon).toHaveProperty('src', './src/new-favicon.png')
+})
+
+test('set custom favicon sizes', () => {
+  const config = loadConfig(context, {
+    localConfig: {
+      icon: {
+        favicon: {
+          src: './src/new-favicon.png',
+          sizes: [16, 32]
+        }
+      }
+    }
+  })
+
+  expect(config.icon.favicon).toMatchObject({
+    src: './src/new-favicon.png',
+    sizes: [16, 32]
+  })
+
+  expect(config.icon.touchicon).toMatchObject({
+    src: './src/new-favicon.png',
+    sizes: [76, 152, 120, 167, 180],
+    precomposed: false
+  })
 })
 
 test('setup webpack client config', async () => {
@@ -204,7 +228,7 @@ test('modify config in config.configureWebpack', async () => {
 })
 
 test('api.configureWebpack as object', async () => {
-  const { app, api } = await createPlugin()
+  const { app, api } = createPlugin()
 
   api.configureWebpack({ mode: 'test' })
 
@@ -215,7 +239,7 @@ test('api.configureWebpack as object', async () => {
 })
 
 test('create new config in api.configureWebpack', async () => {
-  const { app, api } = await createPlugin()
+  const { app, api } = createPlugin()
 
   api.configureWebpack(() => ({
     mode: 'test',
@@ -235,7 +259,7 @@ test('create new config in api.configureWebpack', async () => {
 })
 
 test('modify config in api.configureWebpack', async () => {
-  const { app, api } = await createPlugin()
+  const { app, api } = createPlugin()
 
   api.configureWebpack(config => {
     config.mode = 'test'

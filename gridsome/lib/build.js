@@ -1,8 +1,10 @@
 const path = require('path')
 const fs = require('fs-extra')
+const pMap = require('p-map')
 const hirestime = require('hirestime')
 const { chunk, groupBy } = require('lodash')
-const { log, info } = require('./utils/log')
+const sysinfo = require('./utils/sysinfo')
+const { log, info, writeLine } = require('./utils/log')
 
 module.exports = async (context, args) => {
   process.env.NODE_ENV = 'production'
@@ -23,7 +25,7 @@ module.exports = async (context, args) => {
   await writePageData(queue, app)
   await runWebpack(app)
   await renderHTML(queue, app)
-  await processFiles(app.assets.files, app.config)
+  await processFiles(app.assets.files)
   await processImages(app.assets.images, app.config)
 
   // copy static files
@@ -46,7 +48,7 @@ module.exports = async (context, args) => {
 
 function createRenderQueue (app) {
   return new Promise((resolve, reject) => {
-    app.hooks.createRenderQueue.callAsync([], app, (err, res) => {
+    app._hooks.createRenderQueue.callAsync([], app, (err, res) => {
       if (err) reject(err)
       else resolve(res)
     })
@@ -62,7 +64,6 @@ async function writePageData (renderQueue, app) {
   let count = 0
 
   for (const entry of queryQueue) {
-    if (!entry.dataOutput) continue
     await fs.outputFile(entry.dataOutput, JSON.stringify(entry.data))
   }
 
@@ -131,7 +132,7 @@ async function renderHTML (renderQueue, app) {
   info(`Render HTML (${renderQueue.length} files) - ${timer(hirestime.S)}s`)
 }
 
-async function processFiles (files, { outDir }) {
+async function processFiles (files) {
   const timer = hirestime()
   const totalFiles = files.queue.length
 
@@ -145,25 +146,34 @@ async function processFiles (files, { outDir }) {
 async function processImages (images, config) {
   const { createWorker } = require('./workers')
   const timer = hirestime()
-  const chunks = chunk(images.queue, 100)
+  const chunks = chunk(images.queue, 25)
   const worker = createWorker('image-processor')
   const totalAssets = images.queue.length
+  const totalJobs = chunks.length
 
-  await Promise.all(chunks.map(async queue => {
-    try {
+  let progress = 0
+
+  writeLine(`Processing images (${totalAssets} images) - 0%`)
+
+  try {
+    await pMap(chunks, async queue => {
       await worker.process({
         queue,
         outDir: config.outDir,
         cacheDir: config.imageCacheDir,
         backgroundColor: config.images.backgroundColor
       })
-    } catch (err) {
-      worker.end()
-      throw err
-    }
-  }))
+
+      writeLine(`Processing images (${totalAssets} images) - ${Math.round((++progress) * 100 / totalJobs)}%`)
+    }, {
+      concurrency: sysinfo.cpus.logical
+    })
+  } catch (err) {
+    worker.end()
+    throw err
+  }
 
   worker.end()
 
-  info(`Process images (${totalAssets} images) - ${timer(hirestime.S)}s`)
+  writeLine(`Process images (${totalAssets} images) - ${timer(hirestime.S)}s\n`)
 }

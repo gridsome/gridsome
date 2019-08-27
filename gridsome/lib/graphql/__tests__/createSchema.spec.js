@@ -507,7 +507,7 @@ test('disable field inference with createObjectType', async () => {
 
 test('insert default resolvers for SDL', async () => {
   const app = await createApp(function (api) {
-    api.loadSource(({ addContentType, addSchemaTypes, addSchemaResolvers, store }) => {
+    api.loadSource(({ addContentType, addSchemaTypes, store }) => {
       addContentType('Author').addNode({
         id: '1',
         name: 'An Author'
@@ -564,7 +564,7 @@ test('insert default resolvers for SDL', async () => {
 
 test('insert default resolvers with createObjectType', async () => {
   const app = await createApp(function (api) {
-    api.loadSource(({ addContentType, addSchemaTypes, addSchemaResolvers, schema }) => {
+    api.loadSource(({ addContentType, addSchemaTypes, schema }) => {
       addContentType('Post').addNode({ id: '1', title: 'My Post', author: '1', authors: ['1'] })
       addContentType('Author').addNode({ id: '1', name: 'An Author' })
 
@@ -786,7 +786,7 @@ test('add a experimental field extension', async () => {
       addSchemaFieldExtension({
         name: 'myExtension',
         args: { value: 'String' },
-        apply (ext, config) {
+        apply (ext) {
           return {
             resolve: (source, args, context, info) => {
               return source[info.fieldName] + ext.value

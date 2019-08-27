@@ -1,14 +1,10 @@
 {
-  "version": "0.1.2",
+  "version": "0.1.3",
   "name": "@gridsome/plugin-critical",
   "description": "Extracts and inlines critical-path (above-the-fold) CSS",
   "homepage": "https://github.com/gridsome/gridsome/tree/master/packages/plugin-critical#readme",
   "repository": "https://github.com/gridsome/gridsome/tree/master/packages/plugin-critical",
   "main": "index.js",
-  "files": [
-    "lib",
-    "index.js"
-  ],
   "keywords": [
     "gridsome",
     "gridsome-plugin",

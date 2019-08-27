@@ -11,7 +11,7 @@ const { resolvePath } = require('./utils')
 const { log } = require('../utils/log')
 
 class PluginStore {
-  constructor (app, pluginOptions, { transformers }) {
+  constructor (app, pluginOptions = {}, { transformers }) {
     autoBind(this)
 
     const { typeName, resolveAbsolutePaths } = pluginOptions
@@ -19,17 +19,13 @@ class PluginStore {
     this._app = app
     this._typeName = typeName
     this._resolveAbsolutePaths = resolveAbsolutePaths || false
+
     this._transformers = mapValues(transformers || app.config.transformers, transformer => {
-      return new transformer.TransformerClass(transformer.options, {
-        localOptions: pluginOptions[transformer.name] || {},
-        resolveNodeFilePath: this._resolveNodeFilePath,
-        context: app.context,
-        assets: app.assets,
-        // TODO: remove before 1.0
-        cache,
-        nodeCache,
-        queue: app.assets
-      })
+      return this._createTransformer(
+        transformer.TransformerClass,
+        transformer.options,
+        pluginOptions[transformer.name]
+      )
     })
 
     this.context = app.context
@@ -72,6 +68,8 @@ class PluginStore {
       return this.store.getContentType(options.typeName)
     }
 
+    options = this._app._hooks.contentType.call(options, this._app)
+
     let createPath = () => null
     const routeKeys = []
 
@@ -93,7 +91,7 @@ class PluginStore {
       options.resolveAbsolutePaths = this._resolveAbsolutePaths
     }
 
-    const dateField = 'date'
+    const dateField = options.dateField || 'date'
     const defaultSortBy = dateField
     const defaultSortOrder = 'DESC'
 
@@ -177,6 +175,28 @@ class PluginStore {
       context: contentType._assetsContext,
       resolveAbsolute: contentType._resolveAbsolutePaths
     })
+  }
+
+  _createTransformer (TransformerClass, options, localOptions = {}) {
+    return new TransformerClass(options, {
+      resolveNodeFilePath: this._resolveNodeFilePath,
+      context: this._app.context,
+      assets: this._app.assets,
+      localOptions,
+      // TODO: remove before 1.0
+      queue: this._app.assets,
+      nodeCache,
+      cache
+    })
+  }
+
+  _addTransformer (TransformerClass, options = {}) {
+    for (const mimeType of TransformerClass.mimeTypes()) {
+      this._transformers[mimeType] = this._createTransformer(
+        TransformerClass,
+        options
+      )
+    }
   }
 
   //

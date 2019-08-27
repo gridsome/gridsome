@@ -7,6 +7,7 @@ const isRelative = require('is-relative')
 const { version } = require('../../package.json')
 
 const {
+  SyncWaterfallHook,
   AsyncSeriesWaterfallHook
 } = require('tapable')
 
@@ -29,13 +30,16 @@ class App {
     this.isInitialized = false
     this.isBootstrapped = false
 
-    this.hooks = {
-      createRenderQueue: new AsyncSeriesWaterfallHook(['renderQueue', 'app'])
+    this._hooks = {
+      createRenderQueue: new AsyncSeriesWaterfallHook(['renderQueue', 'app']),
+      contentType: new SyncWaterfallHook(['options', 'app']),
+      node: new SyncWaterfallHook(['options', 'contentType', 'app']),
+      page: new SyncWaterfallHook(['options', 'pages', 'app'])
     }
 
-    this.hooks.createRenderQueue.tap('Gridsome', require('./build/createRenderQueue'))
-    this.hooks.createRenderQueue.tap('Gridsome', require('./build/createHTMLPaths'))
-    this.hooks.createRenderQueue.tapPromise('Gridsome', require('./build/executeQueries'))
+    this._hooks.createRenderQueue.tap('Gridsome', require('./build/createRenderQueue'))
+    this._hooks.createRenderQueue.tap('Gridsome', require('./build/createHTMLPaths'))
+    this._hooks.createRenderQueue.tapPromise('Gridsome', require('./build/executeQueries'))
 
     autoBind(this)
   }
@@ -172,6 +176,9 @@ class App {
     const { hashString } = require('../utils')
     const digest = hashString(Date.now().toString())
 
+    this.pages._cached.clear()
+    this.pages._collection.adaptiveBinaryIndices = false
+
     await this.events.dispatch('createPages', api => {
       return createPagesActions(api, this, { digest })
     })
@@ -179,6 +186,9 @@ class App {
     await this.events.dispatch('createManagedPages', api => {
       return createManagedPagesActions(api, this, { digest })
     })
+
+    this.pages._collection.adaptiveBinaryIndices = true
+    this.pages._collection.ensureAllIndexes(true)
 
     // ensure a /404 page exists
     if (!this.pages.findPage({ path: '/404' })) {

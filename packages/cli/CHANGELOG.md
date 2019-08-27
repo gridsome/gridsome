@@ -3,6 +3,44 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.2](https://github.com/gridsome/gridsome/tree/master/packages/cli/compare/@gridsome/cli@0.2.1...@gridsome/cli@0.2.2) (2019-08-19)
+
+
+### Bug Fixes
+
+* **cli:** resolve context with package.json ([17c282e](https://github.com/gridsome/gridsome/tree/master/packages/cli/commit/17c282e))
+
+
+
+
+
+## [0.2.1](https://github.com/gridsome/gridsome/tree/master/packages/cli/compare/@gridsome/cli@0.2.0...@gridsome/cli@0.2.1) (2019-06-25)
+
+**Note:** Version bump only for package @gridsome/cli
+
+
+
+
+
+# [0.2.0](https://github.com/gridsome/gridsome/tree/master/packages/cli/compare/@gridsome/cli@0.1.1...@gridsome/cli@0.2.0) (2019-06-07)
+
+
+### Features
+
+* **cli:** suggest matching commands ([#481](https://github.com/gridsome/gridsome/tree/master/packages/cli/issues/481)) ([1b8df18](https://github.com/gridsome/gridsome/tree/master/packages/cli/commit/1b8df18))
+
+
+
+
+
+## [0.1.1](https://github.com/gridsome/gridsome/tree/master/packages/cli/compare/@gridsome/cli@0.1.0...@gridsome/cli@0.1.1) (2019-05-20)
+
+**Note:** Version bump only for package @gridsome/cli
+
+
+
+
+
 # [0.1.0](https://github.com/gridsome/gridsome/tree/master/packages/cli/compare/@gridsome/cli@0.0.9...@gridsome/cli@0.1.0) (2019-05-10)
 
 

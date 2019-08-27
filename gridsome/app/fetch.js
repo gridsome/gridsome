@@ -2,7 +2,6 @@ import prefetch from './utils/prefetch'
 import { unslashEnd, stripPageParam } from './utils/helpers'
 import { NOT_FOUND_PATH } from '~/.temp/constants'
 
-const headers = { 'Content-Type': 'application/json' }
 const dataUrl = process.env.DATA_URL
 const isPrefetched = {}
 const isLoaded = {}
@@ -19,7 +18,7 @@ export default (route, options = {}) => {
       return new Promise((resolve, reject) => {
         fetch(process.env.GRAPHQL_ENDPOINT, {
           method: 'POST',
-          headers,
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             page: route.params.page ? Number(route.params.page) : null,
             path: route.name === '*' ? NOT_FOUND_PATH : stripPageParam(route)
@@ -52,30 +51,21 @@ export default (route, options = {}) => {
   }
 
   return new Promise((resolve, reject) => {
-    const getJSON = function (path) {
-      return new Promise((resolve, reject) => {
-        fetch(path, { headers })
-          .then(res => res.json())
-          .then(resolve)
-          .catch(reject)
-      })
-    }
-
     const loadJSON = ([ group, hash ]) => {
-      const jsonPath = dataUrl + `${group}/${hash}.json` 
+      const jsonPath = dataUrl + `${group}/${hash}.json`
 
-      if (shouldPrefetch) {
+      if (shouldPrefetch && !isLoaded[jsonPath]) {
         if (!isPrefetched[jsonPath]) {
           isPrefetched[jsonPath] = prefetch(jsonPath)
         }
 
         return isPrefetched[jsonPath]
-          .then(resolve)
-          .catch(reject)
+          .then(() => resolve())
+          .catch(() => resolve())
       }
 
       if (!isLoaded[jsonPath]) {
-        isLoaded[jsonPath] = getJSON(jsonPath)
+        isLoaded[jsonPath] = fetchJSON(jsonPath)
       }
 
       return isLoaded[jsonPath]
@@ -98,5 +88,41 @@ export default (route, options = {}) => {
     } else {
       loadJSON(data)
     }
+  })
+}
+
+function fetchJSON (jsonPath) {
+  return new Promise((resolve, reject) => {
+    const req = new XMLHttpRequest()
+
+    req.open('GET', jsonPath, true)
+    req.withCredentials = true
+
+    req.onload = () => {
+      switch (req.status) {
+        case 200: {
+          let results
+
+          try {
+            results = JSON.parse(req.responseText)
+          } catch (err) {
+            return reject(
+              new Error(`Failed to parse JSON from ${jsonPath}. ${err.message}.`)
+            )
+          }
+
+          return resolve(results)
+        }
+        case 404: {
+          const error = new Error(req.statusText)
+          error.code = req.status
+          return reject(error)
+        }
+      }
+
+      reject(new Error(`Failed to fetch ${jsonPath}.`))
+    }
+
+    req.send(null)
   })
 }

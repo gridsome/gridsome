@@ -41,12 +41,6 @@ Where to look for files. Should be a [glob](https://en.wikipedia.org/wiki/Glob_(
 
 The GraphQL type and template name. A `.vue` file in `src/templates` must match the `typeName` to have a template for it.
 
-#### route
-
-- Type: `string`
-
-Define a dynamic route if your source is able to have a certain pathname structure. This will generate a single route for all nodes from this source. Any custom field can be used as path params. If a `date` field exists, `year`, `month` and `day` will also be available as params. If the `route` option is omitted, a route for each file will be generated based on the path and filename. Read more about [route params](https://gridsome.org/docs/routing#route-params).
-
 #### baseDir
 
 - Type: `string`
@@ -62,6 +56,33 @@ module.exports = {
       use: '@gridsome/source-filesystem',
       options: {
         baseDir: './content/blog',
+        path: '*.md'
+      }
+    }
+  ]
+}
+```
+
+#### route
+
+- Type: `string`
+
+Define a dynamic route if your source is able to have a certain pathname structure. This will generate a single route for all nodes from this source. Any custom field can be used as path params. If a `date` field exists, `year`, `month` and `day` will also be available as params. If the `route` option is omitted, a route for each file will be generated based on the path and filename. Read more about [route params](https://gridsome.org/docs/routing#route-params).
+
+#### pathPrefix
+
+- Type: `string`
+
+Prefix paths generated from the file location. The example below looks for markdown files inside `/content/blog/*.md`. And a file named `blog-post.md` in that folder will get a path like `/blog/my-post`. This option is excluded if a `route` is defined.
+
+```js
+module.exports = {
+  plugins: [
+    {
+      use: '@gridsome/source-filesystem',
+      options: {
+        baseDir: './content/blog',
+        pathPrefix: '/blog',
         path: '*.md'
       }
     }
