@@ -3,6 +3,39 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.6.8](https://github.com/gridsome/gridsome/compare/gridsome@0.6.7...gridsome@0.6.8) (2019-08-19)
+
+
+### Bug Fixes
+
+* **develop:** always use port from cli args ([d94c76c](https://github.com/gridsome/gridsome/commit/d94c76c)), closes [http-party/node-portfinder#84](https://github.com/http-party/node-portfinder/issues/84)
+* **g-image:** fix size for fit inside and fit outside ([#608](https://github.com/gridsome/gridsome/issues/608)) ([ff88566](https://github.com/gridsome/gridsome/commit/ff88566))
+* **graphql:** image background argument ([#596](https://github.com/gridsome/gridsome/issues/596)) ([1f7702c](https://github.com/gridsome/gridsome/commit/1f7702c))
+* **graphql:** process images in list ([#609](https://github.com/gridsome/gridsome/issues/609)) ([97590d0](https://github.com/gridsome/gridsome/commit/97590d0))
+* **store:** resolve absolute url paths ([990b673](https://github.com/gridsome/gridsome/commit/990b673))
+
+
+
+
+
+## [0.6.7](https://github.com/gridsome/gridsome/compare/gridsome@0.6.6...gridsome@0.6.7) (2019-07-25)
+
+
+### Bug Fixes
+
+* **build:** don’t inline large data sets ([#462](https://github.com/gridsome/gridsome/issues/462)) ([88f28a7](https://github.com/gridsome/gridsome/commit/88f28a7))
+* **config:** load custom favicon config ([#526](https://github.com/gridsome/gridsome/issues/526)) ([73a4c38](https://github.com/gridsome/gridsome/commit/73a4c38))
+* **graphql:** return null if date value is null or falsy ([#527](https://github.com/gridsome/gridsome/issues/527)) ([3b4de3a](https://github.com/gridsome/gridsome/commit/3b4de3a))
+
+
+### Performance Improvements
+
+* **pages:** improve pages api performance ([#548](https://github.com/gridsome/gridsome/issues/548)) ([9bc4ddb](https://github.com/gridsome/gridsome/commit/9bc4ddb))
+
+
+
+
+
 ## [0.6.6](https://github.com/gridsome/gridsome/compare/gridsome@0.6.5...gridsome@0.6.6) (2019-07-05)
 
 
