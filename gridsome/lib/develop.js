@@ -1,6 +1,5 @@
 const fs = require('fs-extra')
 const chalk = require('chalk')
-const { debounce } = require('lodash')
 
 module.exports = async (context, args) => {
   process.env.NODE_ENV = 'development'
@@ -54,33 +53,6 @@ module.exports = async (context, args) => {
     if (err) throw err
   })
 
-  const createPages = debounce(() => app.createPages(), 16)
-  const fetchQueries = debounce(() => app.broadcast({ type: 'fetch' }), 16)
-  const generateRoutes = debounce(() => app.codegen.generate('routes.js'), 16)
-
-  app.store.on('change', createPages)
-  app.pages.on('create', generateRoutes)
-  app.pages.on('remove', generateRoutes)
-
-  app.pages.on('update', (page, oldPage) => {
-    const { path: oldPath, query: oldQuery } = oldPage
-    const { path, query } = page
-
-    if (
-      (path !== oldPath && !page.internal.isDynamic) ||
-      // pagination was added or removed in page-query
-      (query.paginate && !oldQuery.paginate) ||
-      (!query.paginate && oldQuery.paginate) ||
-      // page-query was created or removed
-      (query.document && !oldQuery.document) ||
-      (!query.document && oldQuery.document)
-    ) {
-      return generateRoutes()
-    }
-
-    fetchQueries()
-  })
-
   //
   // helpers
   //
@@ -88,7 +60,7 @@ module.exports = async (context, args) => {
   async function createWebpackConfig (app) {
     const { SOCKJS_ENDPOINT, GRAPHQL_ENDPOINT, GRAPHQL_WS_ENDPOINT } = process.env
 
-    const config = await app.resolveChainableWebpackConfig()
+    const config = await app.compiler.resolveChainableWebpackConfig()
 
     config
       .plugin('friendly-errors')
@@ -113,6 +85,6 @@ module.exports = async (context, args) => {
         .prepend('webpack/hot/dev-server')
     })
 
-    return app.resolveWebpackConfig(false, config)
+    return app.compiler.resolveWebpackConfig(false, config)
   }
 }

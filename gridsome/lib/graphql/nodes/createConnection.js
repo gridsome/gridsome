@@ -31,11 +31,11 @@ module.exports = ({ contentType, nodeType, fields }) => {
     })
   })
 
-  const { defaultSortBy, defaultSortOrder } = contentType.options
+  const { _defaultSortBy, _defaultSortOrder } = contentType
 
   const connectionArgs = {
-    sortBy: { type: GraphQLString, defaultValue: defaultSortBy },
-    order: { type: sortOrderType, defaultValue: defaultSortOrder },
+    sortBy: { type: GraphQLString, defaultValue: _defaultSortBy },
+    order: { type: sortOrderType, defaultValue: _defaultSortOrder },
     perPage: { type: GraphQLInt, description: `Defaults to ${PER_PAGE} when page is provided.` },
     skip: { type: GraphQLInt, defaultValue: 0 },
     limit: { type: GraphQLInt },

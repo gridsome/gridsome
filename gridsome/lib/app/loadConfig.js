@@ -1,3 +1,4 @@
+const Joi = require('joi')
 const path = require('path')
 const fs = require('fs-extra')
 const crypto = require('crypto')
@@ -9,7 +10,9 @@ const { internalRE, transformerRE, SUPPORTED_IMAGE_TYPES } = require('../utils/c
 const builtInPlugins = [
   path.resolve(__dirname, '../plugins/vue-components'),
   path.resolve(__dirname, '../plugins/vue-pages'),
-  path.resolve(__dirname, '../plugins/vue-templates')
+  path.resolve(__dirname, '../plugins/vue-templates'),
+  path.resolve(__dirname, '../plugins/NodePathPlugin.js'),
+  path.resolve(__dirname, '../plugins/RedirectsPlugin.js')
 ]
 
 // TODO: use joi to define and validate config schema
@@ -73,6 +76,7 @@ module.exports = (context, options = {}) => {
   config.host = args.host || localConfig.host || 'localhost'
   config.port = parseInt(args.port || localConfig.port, 10) || null
   config.plugins = normalizePlugins(context, plugins)
+  config.redirects = normalizeRedirects(localConfig)
   config.transformers = resolveTransformers(config.pkg, localConfig)
   config.pathPrefix = normalizePathPrefix(isProd ? localConfig.pathPrefix : '')
   config.publicPath = config.pathPrefix ? `${config.pathPrefix}/` : '/'
@@ -188,6 +192,7 @@ function normalizePlugins (context, plugins) {
     return defaultsDeep(plugin, {
       server: true,
       clientOptions: undefined,
+      name: undefined,
       options: {},
       entries,
       index,
@@ -196,20 +201,56 @@ function normalizePlugins (context, plugins) {
   })
 }
 
+const redirect = Joi.object()
+  .label('Redirect')
+  .keys({
+    from: Joi.string().required(),
+    to: Joi.string().required(),
+    status: Joi.number().integer().default(301)
+  })
+
+function normalizeRedirects (config) {
+  const redirects = []
+
+  if (Array.isArray(config.redirects)) {
+    return config.redirects.map(rule => {
+      const { error, value } = Joi.validate(rule, redirect)
+
+      if (error) {
+        throw new Error(error.message)
+      }
+
+      return value
+    })
+  }
+
+  return redirects
+}
+
 function resolvePluginEntries (id, context) {
   let dirName = ''
 
   if (typeof id === 'function') {
-    return {
+    return Object.freeze({
       clientEntry: null,
       serverEntry: id
-    }
+    })
   } else if (path.isAbsolute(id)) {
     dirName = id
   } else if (id.startsWith('~/')) {
     dirName = path.join(context, id.replace(/^~\//, ''))
   } else {
     dirName = path.dirname(require.resolve(id))
+  }
+
+  if (
+    fs.existsSync(dirName) &&
+    fs.lstatSync(dirName).isFile()
+  ) {
+    return Object.freeze({
+      clientEntry: null,
+      serverEntry: dirName
+    })
   }
 
   const entryPath = entry => {

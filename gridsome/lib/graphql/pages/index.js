@@ -56,7 +56,11 @@ module.exports = () => {
           Object.assign(query, createFilterQuery(filter, fields))
         }
 
-        return pages.findPages(query)
+        // TODO: return page entries
+        return pages.findPages(query).map(page => ({
+          path: page.path,
+          context: page.options.context
+        }))
       }
     }
   }

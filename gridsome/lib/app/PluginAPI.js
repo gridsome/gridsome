@@ -5,21 +5,30 @@ class PluginAPI {
   constructor (app, { entry, transformers }) {
     this._entry = entry
     this._app = app
-
-    this.config = app.config
-    this.context = app.context
-
-    this.store = new PluginStore(app, entry.options, { transformers })
+    this._store = new PluginStore(app, entry.options, { transformers })
 
     autoBind(this)
+  }
+
+  get context () {
+    return this._app.context
+  }
+
+  get config () {
+    return this._app.config
+  }
+
+  get store () {
+    // TODO: do not use store directly
+    return this._store
   }
 
   _on (eventName, handler, options = {}) {
     this._app.events.on(eventName, { api: this, handler, options })
   }
 
-  resolve (value) {
-    return this._app.resolve(value)
+  resolve (...args) {
+    return this._app.resolve(...args)
   }
 
   setClientOptions (options) {
@@ -51,7 +60,10 @@ class PluginAPI {
   }
 
   chainWebpack (fn) {
-    this._on('chainWebpack', fn)
+    this._app.compiler.hooks.chainWebpack.tapPromise(
+      this._entry.name || 'ChainWebpack',
+      (chain, context) => Promise.resolve(fn(chain, context))
+    )
   }
 
   configureWebpack (fn) {
@@ -63,6 +75,28 @@ class PluginAPI {
   }
 
   //
+  // hooks
+  //
+
+  onInit (fn) {
+    this._app.hooks.beforeBootstrap.tapAsync(this._entry.name || 'OnInit', fn)
+  }
+
+  onBootstrap (fn) {
+    this._app.hooks.bootstrap.tapAsync(this._entry.name || 'OnBootstrap', fn)
+  }
+
+  onCreateContentType (fn) {
+    const { name = 'OnCreateContentType' } = this._entry
+    this._app.store.hooks.addContentType.tap(name, fn)
+  }
+
+  onCreateNode (fn) {
+    const { name = 'OnCreateNode' } = this._entry
+    this._app.store.hooks.addNode.tap(name, fn)
+  }
+
+  //
   // build hooks
   //
 
@@ -70,48 +104,8 @@ class PluginAPI {
     this._on('beforeBuild', fn)
   }
 
-  beforeRenderQueries (fn) {
-    this._on('beforeRenderQueries', fn)
-  }
-
-  beforeRenderHTML (fn) {
-    this._on('beforeRenderHTML', fn)
-  }
-
-  beforeProcessAssets (fn) {
-    this._on('beforeProcessAssets', fn)
-  }
-
   afterBuild (fn) {
     this._on('afterBuild', fn)
-  }
-
-  //
-  // experimental
-  //
-
-  ___onCreateContentType (fn) {
-    const id = this._entry.use || 'onCreateContentType'
-
-    this._app._hooks.contentType.tap(id, (options, app) => {
-      return fn(options, app) || options
-    })
-  }
-
-  ___onCreateNode (fn) {
-    const id = this._entry.use || 'onCreateNode'
-
-    this._app._hooks.node.tap(id, (options, contentType, app) => {
-      return fn(options, contentType, app) || options
-    })
-  }
-
-  ___onCreatePage (fn) {
-    const id = this._entry.use || 'onCreatePage'
-
-    this._app._hooks.page.tap(id, (options, pages, app) => {
-      return fn(options, pages, app) || options
-    })
   }
 }
 

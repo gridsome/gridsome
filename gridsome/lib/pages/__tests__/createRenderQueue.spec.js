@@ -1,5 +1,4 @@
 const path = require('path')
-const { Kind } = require('graphql')
 const App = require('../../app/App')
 const createApp = require('../../app/index')
 const createRenderQueue = require('../createRenderQueue')
@@ -9,27 +8,27 @@ test('create render queue for basic project', async () => {
   const context = path.resolve(__dirname, '../../__tests__/__fixtures__/project-basic')
   const app = await createApp(context, undefined, BOOTSTRAP_PAGES)
 
-  const renderQueue = createRenderQueue([], app)
-  const renderPaths = renderQueue.map(entry => entry.path)
+  const renderQueue = createRenderQueue(app)
+  const renderPaths = renderQueue.map(entry => entry.path).sort()
 
   expect(renderPaths).toEqual(expect.arrayContaining([
+    '/',
+    '/404',
     '/about',
     '/about-us',
-    '/pages/2',
-    '/docs/4/extra',
-    '/docs/2/extra',
+    '/docs/1',
     '/docs/1/extra',
-    '/404',
-    '/',
-    '/docs/3/extra',
-    '/pages/1',
-    '/docs/3',
-    '/docs/4',
-    '/docs/5',
     '/docs/2',
     '/docs/2/2',
     '/docs/2/3',
-    '/docs/1'
+    '/docs/2/extra',
+    '/docs/3',
+    '/docs/3/extra',
+    '/docs/4',
+    '/docs/4/extra',
+    '/docs/5',
+    '/pages/1',
+    '/pages/2'
   ]))
 
   expect(renderPaths).toHaveLength(18)
@@ -38,44 +37,44 @@ test('create render queue for basic project', async () => {
 test('create render queue for blog project', async () => {
   const context = path.resolve(__dirname, '../../__tests__/__fixtures__/project-blog')
   const app = await createApp(context, undefined, BOOTSTRAP_PAGES)
-  const queue = createRenderQueue([], app)
+  const queue = createRenderQueue(app)
 
-  const renderPaths = queue.map(entry => entry.path)
+  const renderPaths = queue.map(entry => entry.path).sort()
 
   expect(renderPaths).toEqual(expect.arrayContaining([
-    '/404',
-    '/about',
     '/',
     '/2',
+    '/404',
+    '/about',
     '/category/first',
     '/category/first/2',
     '/category/second',
-    '/skip-me',
+    '/exclude-me',
     '/first-post',
-    '/second-post',
-    '/third-post',
     '/fourth-post',
+    '/post-10',
+    '/post-11',
+    '/post-12',
+    '/post-13',
     '/post-4',
     '/post-5',
     '/post-6',
     '/post-7',
     '/post-8',
     '/post-9',
-    '/post-10',
-    '/post-11',
-    '/post-12',
-    '/post-13',
-    '/exclude-me',
-    '/tag/first-tag',
-    '/tag/second-tag',
-    '/tag/third-tag',
-    '/tag/fourth-tag',
-    '/tag/fourth-tag/2',
+    '/second-post',
+    '/skip-me',
     '/tag/1/extra',
     '/tag/2/extra',
     '/tag/3/extra',
     '/tag/4/extra',
-    '/tag/4/extra/2'
+    '/tag/4/extra/2',
+    '/tag/first-tag',
+    '/tag/fourth-tag',
+    '/tag/fourth-tag/2',
+    '/tag/second-tag',
+    '/tag/third-tag',
+    '/third-post'
   ]))
 
   expect(renderPaths).not.toContain('/3')
@@ -172,7 +171,7 @@ test('create render queue for createPages hook', async () => {
     })
   })
 
-  const renderQueue = createRenderQueue([], app)
+  const renderQueue = createRenderQueue(app)
   const paths = renderQueue.map(entry => entry.path)
 
   expect(paths).toEqual(expect.arrayContaining([
@@ -191,20 +190,87 @@ test('create render queue for createPages hook', async () => {
   expect(paths).toHaveLength(11)
 
   renderQueue.forEach(entry => {
-    expect(entry.route).toBeDefined()
+    expect(entry.type).toBeDefined()
     expect(entry.path).toBeDefined()
-    expect(entry.component).toBeDefined()
+    expect(entry.htmlOutput).toBeDefined()
+    expect(entry.queryVariables).toBeDefined()
+    expect(entry.pageId).toBeDefined()
+    expect(entry.routeId).toBeDefined()
+  })
+})
 
-    if (entry.context) expect(typeof entry.context).toEqual('object')
-    else expect(entry.context).toBeNull()
+describe('dynamic pages', () => {
+  const _createRenderQueue = async () => {
+    const app = await _createApp()
+    const component = './__fixtures__/DefaultPage.vue'
 
-    if (entry.query) {
-      expect(entry.query.document.kind).toEqual(Kind.DOCUMENT)
-    } else {
-      expect(entry.query).toBeNull()
+    app.pages.createPage({ path: '/', component })
+    app.pages.createPage({ path: '/a', component })
+    app.pages.createPage({ path: '/a/b', component })
+    app.pages.createPage({ path: '/a/:b', component })
+    app.pages.createPage({ path: '/a/:b(\\d+)', component })
+    app.pages.createPage({ path: '/a/:b*', component })
+    app.pages.createPage({ path: '/a/:b+', component })
+
+    const renderQueue = createRenderQueue(app)
+
+    return { app, renderQueue }
+  }
+
+  test('render queue for dynamic pages', async () => {
+    const { renderQueue } = await _createRenderQueue()
+    const paths = renderQueue.map(entry => entry.path)
+
+    expect(paths).toEqual([
+      '/a/b',
+      '/a/:b(\\d+)',
+      '/a/:b',
+      '/a/:b*',
+      '/a/:b+',
+      '/a',
+      '/404',
+      '/'
+    ])
+  })
+
+  test('html output paths for dynamic pages', async () => {
+    const { app, renderQueue } = await _createRenderQueue()
+
+    const outputs = renderQueue.map(entry =>
+      path.relative(app.config.outDir, entry.htmlOutput)
+    )
+
+    expect(outputs).toEqual([
+      'a/b/index.html',
+      'a/_b_d_plus.html',
+      'a/_b.html',
+      'a/_b_star.html',
+      'a/_b_plus.html',
+      'a/index.html',
+      '404/index.html',
+      'index.html'
+    ])
+  })
+
+  test('redirects for dynamic pages', async () => {
+    const { app, renderQueue } = await _createRenderQueue()
+    const redirects = app.hooks.redirects.call([], renderQueue)
+
+    const expected = [
+      ['/a/:b(\\d+)', '/a/_b_d_plus.html', 200],
+      ['/a/:b', '/a/_b.html', 200],
+      ['/a/:b*', '/a/_b_star.html', 200],
+      ['/a/:b+', '/a/_b_plus.html', 200]
+    ]
+
+    expect(redirects).toHaveLength(4)
+
+    for (const [index, [from, to, status]] of expected.entries()) {
+      expect(redirects[index]).toMatchObject({ from, to, status })
     }
   })
 })
+
 
 async function _createApp (plugin) {
   const app = await new App(__dirname, {

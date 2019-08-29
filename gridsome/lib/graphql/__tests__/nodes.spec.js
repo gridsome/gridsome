@@ -12,8 +12,8 @@ const pathPrefix = '/'
 
 let app, api
 
-beforeEach(() => {
-  app = new App(context, {
+beforeEach(async () => {
+  app = await new App(context, {
     config: {
       plugins: [],
       pathPrefix,

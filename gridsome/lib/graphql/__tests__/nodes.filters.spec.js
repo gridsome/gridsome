@@ -5,8 +5,8 @@ const createSchema = require('../createSchema')
 
 let app, api
 
-beforeEach(() => {
-  app = new App(__dirname, {
+beforeEach(async () => {
+  app = await new App(__dirname, {
     config: {
       plugins: []
     }

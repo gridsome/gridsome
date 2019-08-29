@@ -42,7 +42,7 @@ module.exports = async (app, options = {}) => {
       }),
       extensions ({ variables }) {
         if (variables && variables.__path) {
-          const page = app.pages.findPage({
+          const page = app.pages._pages.findOne({
             path: variables.__path
           })
 

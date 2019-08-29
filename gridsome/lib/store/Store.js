@@ -1,32 +1,57 @@
-const Loki = require('lokijs')
+const { Collection } = require('lokijs')
 const autoBind = require('auto-bind')
+const NodeIndex = require('./NodeIndex')
 const EventEmitter = require('eventemitter3')
-const { omit, isArray, isPlainObject } = require('lodash')
+const { isArray, isPlainObject } = require('lodash')
+const { BOOTSTRAP_SOURCES } = require('../utils/constants')
 const ContentType = require('./ContentType')
+
+const { SyncWaterfallHook } = require('tapable')
+const SyncBailWaterfallHook = require('../app/SyncBailWaterfallHook')
 
 class Store {
   constructor (app) {
     this.app = app
-    this.store = new Loki()
     this.collections = {}
-    this.taxonomies = {}
-    this.lastUpdate = null
+    this.nodeIndex = new NodeIndex(app)
     this._events = new EventEmitter()
 
+    this.lastUpdate = null
     this.setUpdateTime()
 
     autoBind(this)
 
-    this.index = this.store.addCollection('core/nodeIndex', {
-      indices: ['typeName', 'id'],
-      unique: ['uid'],
-      disableMeta: true
-    })
-
-    this.metaData = this.store.addCollection('core/metaData', {
+    this.metaData = new Collection('MetaData', {
       unique: ['key'],
       autoupdate: true
     })
+
+    this.hooks = {
+      addContentType: new SyncWaterfallHook(['options']),
+      addNode: new SyncBailWaterfallHook(['options', 'collection'])
+    }
+
+    this.hooks.addNode.tap('TransformNodeContent', require('./transformNodeContent'))
+    this.hooks.addNode.tap('ProcessNodeFields', require('./processNodeFields'))
+
+    app.hooks.bootstrap.tapPromise(
+      {
+        name: 'GridsomeStore',
+        label: 'Load sources',
+        phase: BOOTSTRAP_SOURCES
+      },
+      () => this.loadSources()
+    )
+  }
+
+  getHooksContext () {
+    return {
+      hooks: this.hooks
+    }
+  }
+
+  async loadSources () {
+    await this.app.events.dispatch('loadSource', api => api.store)
   }
 
   on (eventName, fn, ctx) {
@@ -57,14 +82,33 @@ class Store {
 
   // nodes
 
-  addContentType (pluginStore, options) {
-    const collection = this.store.addCollection(options.typeName, {
-      indices: ['id', 'path', 'internal.typeName'],
-      unique: ['id', 'path'],
-      disableMeta: true
+  addContentType (options, store) {
+    options = this.hooks.addContentType.call(options)
+
+    if (this.collections.hasOwnProperty(options.typeName)) {
+      return this.getContentType(options.typeName)
+    }
+
+    const contentType = new ContentType(
+      options.typeName,
+      options,
+      store
+    )
+
+    contentType.on('add', node => {
+      this.nodeIndex.addEntry(node, contentType)
+      this.setUpdateTime()
     })
 
-    const contentType = new ContentType(pluginStore, collection, options)
+    contentType.on('update', node => {
+      this.nodeIndex.updateEntry(node, contentType)
+      this.setUpdateTime()
+    })
+
+    contentType.on('remove', node => {
+      this.nodeIndex.removeEntry(node)
+      this.setUpdateTime()
+    })
 
     this.collections[options.typeName] = contentType
 
@@ -76,10 +120,11 @@ class Store {
   }
 
   chainIndex (query = {}) {
-    return this.index.chain().find(query).map(entry => {
+    return this.nodeIndex.getChain().find(query).map(entry => {
       const contentType = this.collections[entry.typeName]
       const node = contentType.collection.by('id', entry.id)
-      return omit(node, '$loki')
+
+      return { ...node, $loki: undefined }
     })
   }
 
