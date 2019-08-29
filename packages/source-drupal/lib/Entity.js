@@ -138,19 +138,27 @@ class Entity {
   }
 
   processRelationships (relationships) {
-    const { createReference } = this.source.store
-
     return reduce(relationships, (result, relationship, key) => {
       const { data } = relationship
 
       if (data !== null) {
         result[key] = Array.isArray(data)
-          ? data.map(relation => createReference(this.createTypeName(relation.type), relation.id))
-          : createReference(this.createTypeName(data.type), data.id)
+          ? data.map(relation => this.createReference(relation))
+          : this.createReference(data)
       }
 
       return result
     }, {})
+  }
+
+  createReference (data) {
+    const { createReference } = this.source.store
+    const typeName = this.createTypeName(data.type)
+
+    return {
+      node: createReference(typeName, data.id),
+      meta: data.meta
+    }
   }
 }
 

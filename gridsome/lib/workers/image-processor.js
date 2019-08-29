@@ -37,11 +37,11 @@ exports.processImage = async function ({
     const plugins = []
     let pipeline = sharp(buffer)
 
-    if (config.width && config.width <= size.width) {
-      const ratio = size.height / size.width
-      const height = Math.round(config.width * ratio)
+    if (config.width && config.width <= size.width || config.height && config.height <= size.height) {
       const resizeOptions = {}
 
+      if (config.height) resizeOptions.height = config.height
+      if (config.width) resizeOptions.width = config.width
       if (options.fit) resizeOptions.fit = sharp.fit[options.fit]
       if (options.position) resizeOptions.position = sharp.position[options.position]
       if (options.background && colorString.get(options.background)) {
@@ -50,7 +50,7 @@ exports.processImage = async function ({
         resizeOptions.background = backgroundColor
       }
 
-      pipeline = pipeline.resize(config.width, height, resizeOptions)
+      pipeline = pipeline.resize(resizeOptions)
     }
 
     if (/\.png$/.test(ext)) {

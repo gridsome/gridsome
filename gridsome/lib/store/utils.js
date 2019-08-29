@@ -21,7 +21,7 @@ exports.parseUrl = function (input) {
   const { protocol, host, path: pathName } = url.parse(input)
   const basePath = pathName.endsWith('/') ? pathName : path.dirname(pathName)
   const baseUrl = `${protocol}//${host}`
-  const fullUrl = `${baseUrl}${path.join(basePath, '/')}`
+  const fullUrl = `${baseUrl}${path.posix.join(basePath, '/')}`
 
   return {
     baseUrl,
@@ -46,6 +46,7 @@ exports.resolvePath = function (origin, toPath, options = {}) {
   const url = isUrl(origin) ? exports.parseUrl(origin) : null
   const contextPath = url && resolveAbsolute === true ? url.baseUrl : context
   const fromPath = url ? url.fullUrl : origin
+  const resolver = url ? path.posix : path
 
   if (path.isAbsolute(toPath) && !resolveAbsolute) {
     return toPath
@@ -54,12 +55,12 @@ exports.resolvePath = function (origin, toPath, options = {}) {
   if (isRelative(toPath)) {
     if (!fromPath) return toPath
     const { rootPath, basePath } = parsePath(fromPath)
-    return rootPath + path.resolve(basePath, toPath)
+    return rootPath + resolver.resolve(basePath, toPath)
   }
 
   if (typeof contextPath === 'string') {
     const { rootPath, basePath } = parsePath(contextPath)
-    return rootPath + path.join(basePath, toPath)
+    return rootPath + resolver.join(basePath, toPath)
   }
 
   return toPath
