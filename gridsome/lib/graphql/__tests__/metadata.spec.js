@@ -1,7 +1,5 @@
 const path = require('path')
 const App = require('../../app/App')
-const { graphql } = require('graphql')
-const createSchema = require('../createSchema')
 const PluginAPI = require('../../app/PluginAPI')
 
 const context = path.resolve(__dirname, '../../__tests__')
@@ -35,20 +33,20 @@ afterAll(() => {
 })
 
 test('add meta data', async () => {
-  api.store.addMetaData('myValue', {
+  api.store.addMetadata('myValue', {
     test: 'Test Value',
     image: path.join(context, 'assets', '350x250.png'),
     file: path.join(context, 'assets', 'dummy.pdf')
   })
 
-  api.store.addMetaData('myValue', {
+  api.store.addMetadata('myValue', {
     object: {
       list: ['one', 'two', 'three'],
       value: 1000
     }
   })
 
-  api.store.addMetaData('myList', [
+  api.store.addMetadata('myList', [
     {
       name: 'Etiam Nibh',
       description: 'Sociis natoque penatibus.'
@@ -59,20 +57,20 @@ test('add meta data', async () => {
     }
   ])
 
-  api.store.addMetaData('myList', [
+  api.store.addMetadata('myList', [
     {
       name: 'Vulputate Magna',
       description: 'Cras justo odio.'
     }
   ])
 
-  api.store.addMetaData('myOtherValue', 'Value')
+  api.store.addMetadata('myOtherValue', 'Value')
 
-  api.store.addMetaData('overrideValue', 'Value 1')
-  api.store.addMetaData('overrideValue', 'Value 2')
+  api.store.addMetadata('overrideValue', 'Value 1')
+  api.store.addMetadata('overrideValue', 'Value 2')
 
   const query = `{
-    metaData {
+    metadata {
       myValue {
         test
         image
@@ -94,30 +92,28 @@ test('add meta data', async () => {
   const { errors, data } = await createSchemaAndExecute(query)
 
   expect(errors).toBeUndefined()
-  expect(data.metaData.myValue.test).toEqual('Test Value')
-  expect(data.metaData.myValue.image.src).toEqual('/assets/static/350x250.5c1e01e.test.png')
-  expect(data.metaData.myValue.file.src).toEqual('/assets/files/dummy.test.pdf')
-  expect(data.metaData.myValue.object.list).toHaveLength(3)
-  expect(data.metaData.myValue.object.value).toEqual(1000)
-  expect(data.metaData.myOtherValue).toEqual('Value')
-  expect(data.metaData.overrideValue).toEqual('Value 2')
-  expect(data.metaData.myList).toHaveLength(3)
-  expect(data.metaData.myList[0]).toMatchObject({
+  expect(data.metadata.myValue.test).toEqual('Test Value')
+  expect(data.metadata.myValue.image.src).toEqual('/assets/static/350x250.5c1e01e.test.png')
+  expect(data.metadata.myValue.file.src).toEqual('/assets/files/dummy.test.pdf')
+  expect(data.metadata.myValue.object.list).toHaveLength(3)
+  expect(data.metadata.myValue.object.value).toEqual(1000)
+  expect(data.metadata.myOtherValue).toEqual('Value')
+  expect(data.metadata.overrideValue).toEqual('Value 2')
+  expect(data.metadata.myList).toHaveLength(3)
+  expect(data.metadata.myList[0]).toMatchObject({
     name: 'Etiam Nibh',
     description: 'Sociis natoque penatibus.'
   })
-  expect(data.metaData.myList[1]).toMatchObject({
+  expect(data.metadata.myList[1]).toMatchObject({
     name: 'Tellus Ultricies Cursus',
     description: 'Nascetur ridiculus mus.'
   })
-  expect(data.metaData.myList[2]).toMatchObject({
+  expect(data.metadata.myList[2]).toMatchObject({
     name: 'Vulputate Magna',
     description: 'Cras justo odio.'
   })
 })
 
-async function createSchemaAndExecute (query) {
-  const schema = createSchema(app.store)
-  const context = app.createSchemaContext()
-  return graphql(schema, query, undefined, context)
+function createSchemaAndExecute (query) {
+  return app.schema.buildSchema().runQuery(query)
 }

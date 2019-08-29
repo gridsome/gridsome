@@ -1,7 +1,5 @@
 const App = require('../../app/App')
-const { graphql } = require('graphql')
 const PluginAPI = require('../../app/PluginAPI')
-const createSchema = require('../createSchema')
 
 let app, api
 
@@ -220,8 +218,8 @@ test('handle pagination for filtered nodes', async () => {
   expect(data.allProduct.pageInfo.totalPages).toEqual(1)
 })
 
-async function createSchemaAndExecute (query) {
-  const posts = api.store.addContentType({ typeName: 'Product' })
+function createSchemaAndExecute (query) {
+  const posts = api.store.addContentType('Product')
 
   posts.addNode({
     id: '1',
@@ -280,8 +278,5 @@ async function createSchemaAndExecute (query) {
     ]
   })
 
-  const schema = createSchema(app.store)
-  const context = app.createSchemaContext()
-
-  return graphql(schema, query, undefined, context)
+  return app.schema.buildSchema().runQuery(query)
 }

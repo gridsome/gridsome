@@ -2,7 +2,7 @@ const autoBind = require('auto-bind')
 const PluginStore = require('../store/PluginStore')
 
 class PluginAPI {
-  constructor (app, { entry, transformers }) {
+  constructor (app, { entry = {}, transformers } = {}) {
     this._entry = entry
     this._app = app
     this._store = new PluginStore(app, entry.options, { transformers })
@@ -40,7 +40,7 @@ class PluginAPI {
   }
 
   registerComponentParser (options) {
-    this._app.parser.add(options)
+    this._app.pages._parser.add(options)
   }
 
   loadSource (handler) {

@@ -120,7 +120,12 @@ module.exports = (context, options = {}) => {
   config.siteName = localConfig.siteName || path.parse(context).name
   config.titleTemplate = localConfig.titleTemplate || `%s - ${config.siteName}`
   config.siteDescription = localConfig.siteDescription || ''
-  config.metaData = localConfig.metaData || {}
+  config.metadata = localConfig.metadata || {}
+
+  // TODO: remove before 1.0
+  if (localConfig.metaData) {
+    config.metadata = localConfig.metaData
+  }
 
   config.manifestsDir = path.join(config.assetsDir, 'manifest')
   config.clientManifestPath = path.join(config.manifestsDir, 'client.json')

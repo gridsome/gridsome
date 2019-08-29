@@ -81,7 +81,6 @@ test('render g-link components', () => {
 
   expect($home('a.g-link-1.is-active.active--exact').attr('href')).toEqual('/')
   expect($home('a.g-link-2.test-active.active--exact').attr('href')).toEqual('/')
-  expect($home('a.router-link.is-active.router-link-exact-active').attr('href')).toEqual('/')
 
   expect($home('a[href="http://outsidelink1.com"]').attr('target')).toEqual('_blank')
   expect($home('a[href="http://outsidelink1.com"]').attr('rel')).toEqual('noopener')
