@@ -111,7 +111,7 @@ test('setup templates config from string', () => {
     typeName: 'Post',
     path: '/:year/:month/:day/:slug',
     component: path.join(context, 'src/templates/Post.vue'),
-    fieldName: 'path'
+    name: 'default'
   })
 })
 
@@ -123,15 +123,17 @@ test('setup templates config from array', () => {
         Post: [
           '/:year/:month/:day/:slug',
           {
+            name: 'info',
             path: '/:year/:month/:day/:slug/info',
             component: './src/templates/PostInfo.vue'
           },
           {
+            name: 'author',
             path: '/:year/:month/:day/:slug/author',
-            component: './src/templates/PostAuthor.vue',
-            fieldName: 'author'
+            component: './src/templates/PostAuthor.vue'
           },
           {
+            name: 'author2',
             path: genPath,
             component: './src/templates/PostAuthor.vue'
           }
@@ -145,24 +147,59 @@ test('setup templates config from array', () => {
     typeName: 'Post',
     path: '/:year/:month/:day/:slug',
     component: path.join(context, 'src/templates/Post.vue'),
-    fieldName: 'path'
+    name: 'default'
   })
   expect(config.templates.Post[1]).toMatchObject({
     typeName: 'Post',
     path: '/:year/:month/:day/:slug/info',
     component: path.join(context, 'src/templates/PostInfo.vue'),
-    fieldName: 'path2'
+    name: 'info'
   })
   expect(config.templates.Post[2]).toMatchObject({
     typeName: 'Post',
     path: '/:year/:month/:day/:slug/author',
     component: path.join(context, 'src/templates/PostAuthor.vue'),
-    fieldName: 'author'
+    name: 'author'
   })
   expect(config.templates.Post[3]).toMatchObject({
     path: genPath,
-    component: path.join(context, 'src/templates/PostAuthor.vue')
+    component: path.join(context, 'src/templates/PostAuthor.vue'),
+    name: 'author2'
   })
+})
+
+test('fail if a template has no name', () => {
+  expect(() => loadConfig(context, {
+    localConfig: {
+      templates: {
+        Post: [
+          '/:year/:month/:day/:slug',
+          {
+            path: '/:year/:month/:day/:slug/info'
+          }
+        ]
+      }
+    }
+  })).toThrow('missing the "name" option')
+})
+
+test('fail if two templates have the same name', () => {
+  expect(() => loadConfig(context, {
+    localConfig: {
+      templates: {
+        Post: [
+          {
+            name: 'info',
+            path: '/:year/:month/:day/:slug/info'
+          },
+          {
+            name: 'info',
+            path: '/:year/:month/:day/:slug/author'
+          }
+        ]
+      }
+    }
+  })).toThrow('already exist')
 })
 
 test('setup webpack client config', async () => {

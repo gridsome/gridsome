@@ -196,20 +196,34 @@ function normalizeTemplates (context, config, localConfig) {
         typeName,
         path: template,
         component: path.join(templatesDir, `${typeName}.vue`),
-        fieldName: 'path',
+        name: 'default',
         dateField: 'date'
       }
     }
 
+    if (index > 0 && typeof template.name === 'undefined') {
+      throw new Error(
+        `A template for "${typeName}" is missing the "name" option. ` +
+        `All templates except the default template must have a name.`
+      )
+    } else if (
+      Array.isArray(res[typeName]) &&
+      res[typeName].find(tpl => tpl.name === template.name)
+    ) {
+      throw new Error(
+        `A template for "${typeName}" with the name "${template.name}" already exist.`
+      )
+    }
+
     return {
       typeName,
+      name: template.name,
       path: template.path,
       component: template.component
         ? isRelative(template.component)
           ? path.join(context, template.component)
           : template.component
         : path.join(templatesDir, `${typeName}.vue`),
-      fieldName: template.fieldName || ('path' + (index > 0 ? index + 1 : '')),
       dateField: template.dateField || 'date'
     }
   }
@@ -217,9 +231,15 @@ function normalizeTemplates (context, config, localConfig) {
   for (const typeName in templates) {
     const options = templates[typeName]
 
-    res[typeName] = Array.isArray(options)
-      ? options.map((template, i) => normalize(typeName, template, i))
-      : [normalize(typeName, options, 0)]
+    res[typeName] = res[typeName] || []
+
+    if (Array.isArray(options)) {
+      options.forEach((template, i) => {
+        res[typeName].push(normalize(typeName, template, i))
+      })
+    } else {
+      res[typeName].push(normalize(typeName, options, 0))
+    }
   }
 
   return res
