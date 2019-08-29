@@ -34,9 +34,9 @@ module.exports = async (app, options = {}) => {
     express.json(),
     graphqlMiddleware(app),
     graphqlHTTP({
-      schema,
-      context: app.createSchemaContext(),
-      formatError: err => ({
+      schema: schema.getSchema(),
+      context: schema.createContext(),
+      customFormatErrorFn: err => ({
         message: err.message,
         stringified: err.toString()
       }),

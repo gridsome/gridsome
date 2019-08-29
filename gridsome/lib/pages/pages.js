@@ -5,6 +5,7 @@ const invariant = require('invariant')
 const initWatcher = require('./watch')
 const { Collection } = require('lokijs')
 const { FSWatcher } = require('chokidar')
+const { parseQuery } = require('../graphql')
 const pathToRegexp = require('path-to-regexp')
 const createPageQuery = require('./createPageQuery')
 const { HookMap, SyncWaterfallHook, SyncBailHook } = require('tapable')
@@ -309,7 +310,8 @@ class Pages {
   _createRouteOptions (options, meta = {}) {
     const component = this.app.resolve(options.component)
     const { pageQuery } = this._parseComponent(component)
-    const { source, document, paginate } = createPageQuery(pageQuery)
+    const parsedQuery = this._parseQuery(pageQuery)
+    const { source, document, paginate } = this._createPageQuery(parsedQuery)
 
     const type = options.type
     const normalPath = normalizePath(options.path)
@@ -352,6 +354,14 @@ class Pages {
         }
       })
     })
+  }
+
+  _parseQuery (query) {
+    return parseQuery(this.app.schema.getSchema(), query)
+  }
+
+  _createPageQuery (parsedQuery, vars = {}) {
+    return createPageQuery(parsedQuery, vars)
   }
 
   _resolvePriority (path) {
@@ -421,6 +431,7 @@ class Route {
     this.internal = options.internal
     this.options = options
 
+    Object.defineProperty(this, '_factory', { value: factory })
     Object.defineProperty(this, '_pages', { value: factory._pages })
     Object.defineProperty(this, '_createPage', { value: factory.hooks.createPage })
   }
@@ -485,10 +496,9 @@ class Route {
       )
     }
 
-    const { paginate, variables, filters } = createPageQuery(
-      query.source,
-      queryVariables || context
-    )
+    const vars = queryVariables || context || {}
+    const parsedQuery = this._factory._parseQuery(query.source)
+    const { paginate, variables, filters } = this._factory._createPageQuery(parsedQuery, vars)
 
     return this._createPage.call({
       id,

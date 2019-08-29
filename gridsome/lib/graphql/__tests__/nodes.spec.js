@@ -1,8 +1,6 @@
 const path = require('path')
 const App = require('../../app/App')
-const { graphql } = require('../graphql')
 const PluginAPI = require('../../app/PluginAPI')
-const createSchema = require('../createSchema')
 const JSONTransformer = require('./__fixtures__/JSONTransformer')
 
 const context = path.resolve(__dirname, '../../__tests__')
@@ -225,8 +223,17 @@ test('get nodes by path regex', async () => {
   posts.addNode({ path: '/node-2' })
   posts.addNode({ path: '/some-3' })
 
-  const query = '{ allTestPost (regex: "/node") { edges { node { _id }}}}'
-  const { errors, data } = await createSchemaAndExecute(query)
+  const { errors, data } = await createSchemaAndExecute(`
+    query {
+      allTestPost (filter: { path: { regex: "/node" }}) {
+        edges {
+          node {
+            id
+          }
+        }
+      }
+    }
+  `)
 
   expect(errors).toBeUndefined()
   expect(data.allTestPost.edges.length).toEqual(2)
@@ -324,14 +331,17 @@ test('create references with collection.addReference()', async () => {
 
   posts.addReference('author1', 'Author')
   posts.addReference('author2', { typeName: 'Author' })
+  posts.addReference('authors', { typeName: 'Author' })
 
   authors.addNode({ id: '1', title: 'An Author' })
-  posts.addNode({ id: '1', author1: '1', author2: '1' })
+  authors.addNode({ id: '2', title: 'Another Author' })
+  posts.addNode({ id: '1', author1: '1', author2: '1', authors: ['1'] })
 
   const query = `{
     post (id: "1") {
       author1 { id }
       author2 { id }
+      authors { id }
     }
   }`
 
@@ -340,30 +350,7 @@ test('create references with collection.addReference()', async () => {
   expect(errors).toBeUndefined()
   expect(data.post.author1.id).toEqual('1')
   expect(data.post.author2.id).toEqual('1')
-})
-
-test('create references with collection.addReference() and camelCased fields', async () => {
-  const authors = api.store.addContentType({ typeName: 'Author', camelCasedFieldNames: true })
-  const posts = api.store.addContentType({ typeName: 'Post', camelCasedFieldNames: true })
-
-  posts.addReference('author_one', 'Author')
-  posts.addReference('author_two', { typeName: 'Author' })
-
-  authors.addNode({ id: '1', title: 'An Author' })
-  posts.addNode({ id: '1', author_one: '1', author_two: '1' })
-
-  const query = `{
-    post (id: "1") {
-      authorOne { id }
-      authorTwo { id }
-    }
-  }`
-
-  const { errors, data } = await createSchemaAndExecute(query)
-
-  expect(errors).toBeUndefined()
-  expect(data.post.authorOne.id).toEqual('1')
-  expect(data.post.authorTwo.id).toEqual('1')
+  expect(data.post.authors).toHaveLength(1)
 })
 
 test('create node list reference', async () => {
@@ -419,42 +406,6 @@ test('create node list reference', async () => {
   expect(data.testPost.customRefs.authors).toHaveLength(2)
   expect(data.testPost.customRefs.authors[0].title).toEqual('C')
   expect(data.testPost.customRefs.authors[1].title).toEqual('B')
-})
-
-test('create node list reference with missing types', async () => {
-  const authors = api.store.addContentType('TestAuthor')
-  const posts = api.store.addContentType('TestPost')
-
-  authors.addNode({ id: '1', title: 'First Author' })
-  authors.addNode({ id: '2', title: 'Second Author' })
-  authors.addNode({ id: '3', title: 'Third Author' })
-
-  posts.addNode({
-    id: '1',
-    customRefs: {
-      authors: [
-        api.store.createReference('TestUser', '1'),
-        api.store.createReference('TestAuthor', '2'),
-        api.store.createReference('TestUser', '3')
-      ]
-    }
-  })
-
-  const query = `{
-    testPost (id: "1") {
-      customRefs {
-        authors {
-          title
-        }
-      }
-    }
-  }`
-
-  const { errors, data } = await createSchemaAndExecute(query)
-
-  expect(errors).toBeUndefined()
-  expect(data.testPost.customRefs.authors).toHaveLength(1)
-  expect(data.testPost.customRefs.authors[0].title).toEqual('Second Author')
 })
 
 test('create node list reference with id as array', async () => {
@@ -589,7 +540,7 @@ test('should get values from object fields', async () => {
 test('should convert keys to valid field names', async () => {
   const contentType = api.store.addContentType('TestPost')
 
-  const node = contentType.addNode({
+  const nodeOptions = {
     id: '1',
     'my-object': {
       _valid_name: '_valid_name',
@@ -601,7 +552,9 @@ test('should convert keys to valid field names', async () => {
         value: 'test'
       }
     }
-  })
+  }
+
+  const node = contentType.addNode(nodeOptions)
 
   const { errors, data } = await createSchemaAndExecute(`{
     testPost (id: "1") {
@@ -618,7 +571,7 @@ test('should convert keys to valid field names', async () => {
     }
   }`)
 
-  const obj = {
+  const expected = {
     my_object: {
       _valid_name: '_valid_name',
       _validName: '_validName',
@@ -632,41 +585,8 @@ test('should convert keys to valid field names', async () => {
   }
 
   expect(errors).toBeUndefined()
-  expect(data.testPost).toMatchObject(obj)
-  expect(node).toMatchObject(obj)
-})
-
-test('should camelCase field names', async () => {
-  const contentType = api.store.addContentType({
-    typeName: 'TestPost',
-    camelCasedFieldNames: true
-  })
-
-  const node = contentType.addNode({
-    id: '1',
-    __hidden: true,
-    nested: {
-      value: 'test',
-      '__nested-hidden': true
-    }
-  })
-
-  const { errors, data } = await createSchemaAndExecute(`{
-    testPost (id: "1") {
-      __hidden
-      nested {
-        value
-        __nested_hidden
-      }
-    }
-  }`)
-
-  expect(data).toBeUndefined()
-  expect(errors).toHaveLength(2)
-  expect(errors[0].message).toEqual('Cannot query field "__hidden" on type "TestPost".')
-  expect(errors[1].message).toEqual('Cannot query field "__nested_hidden" on type "TestPostNested".')
-  expect(node.__hidden).toBeTruthy()
-  expect(node.nested['__nested-hidden']).toBeTruthy()
+  expect(data.testPost).toMatchObject(expected)
+  expect(node).toMatchObject(nodeOptions)
 })
 
 test('should format dates from schema', async () => {
@@ -727,11 +647,9 @@ test('collection.addSchemaField', async () => {
   })
 
   contentType.addSchemaField('myField', payload => {
-    const { nodeTypes, nodeType, graphql } = payload
+    const { graphql } = payload
 
     expect(payload.contentType).toEqual(contentType)
-    expect(nodeTypes).toHaveProperty('TestPost')
-    expect(nodeTypes['TestPost']).toEqual(nodeType)
     expect(graphql).toHaveProperty('graphql')
     expect(graphql).toHaveProperty('GraphQLID')
     expect(graphql).toHaveProperty('GraphQLInt')
@@ -950,8 +868,6 @@ test('process file types in schema', async () => {
   expect(data.testPost.text).toEqual('pdf')
 })
 
-async function createSchemaAndExecute (query) {
-  const schema = createSchema(app.store)
-  const context = app.createSchemaContext()
-  return graphql(schema, query, undefined, context)
+function createSchemaAndExecute (query) {
+  return app.schema.buildSchema().runQuery(query)
 }

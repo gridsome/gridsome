@@ -17,6 +17,15 @@ exports.createFieldName = function (key, camelCased = false) {
   return key
 }
 
+exports.isRefField = function (field) {
+  return (
+    typeof field === 'object' &&
+    Object.keys(field).length === 2 &&
+    field.hasOwnProperty('typeName') &&
+    field.hasOwnProperty('id')
+  )
+}
+
 exports.parseUrl = function (input) {
   const { protocol, host, path: pathName } = url.parse(input)
   const basePath = pathName.endsWith('/') ? pathName : path.dirname(pathName)

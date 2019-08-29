@@ -185,6 +185,15 @@ test('get node by id', async () => {
   expect(contentType.getNode('test').id).toEqual('test')
 })
 
+test('get node by uid', async () => {
+  const api = await createPlugin()
+  const contentType = api.store.addContentType('TestPost')
+
+  contentType.addNode({ $uid: 'foo', id: '1' })
+
+  expect(api.store.getNodeByUid('foo').id).toEqual('1')
+})
+
 test('find node', async () => {
   const api = await createPlugin()
   const contentType = api.store.addContentType('TestPost')
@@ -411,10 +420,8 @@ test('deeply nested field starting with `raw`', async () => {
   })
 
   const node = contentType.addNode({
-    fields: {
-      foo: {
-        rawValue: 'BAR'
-      }
+    foo: {
+      rawValue: 'BAR'
     }
   })
 
@@ -483,14 +490,14 @@ test.each([
     { segments: ['a', 'b', 'c'] },
     '/path/a%2Cb%2Cc'
   ]
-])('dynamic route with repeated segments', async (route, fields, path) => {
+])('dynamic route with repeated segments', async (route, options, path) => {
   const api = await createPlugin()
   const contentType = api.store.addContentType({
     typeName: 'TestPost',
     route
   })
 
-  const node = contentType.addNode({ fields })
+  const node = contentType.addNode(options)
 
   expect(node.path).toEqual(path)
 })
@@ -503,9 +510,7 @@ test('dynamic route with non-optional repeated segments', async () => {
   })
 
   expect(() => contentType.addNode({
-    fields: {
-      segments: []
-    }
+    segments: []
   })).toThrow(TypeError, 'Expected "segments" to not be empty')
 })
 
