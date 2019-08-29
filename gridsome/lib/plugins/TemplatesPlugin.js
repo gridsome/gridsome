@@ -71,7 +71,6 @@ const makePath = (object, { dateField, routeKeys, createPath }) => {
   return '/' + trim(createPath(params), '/')
 }
 
-
 const createTemplateOptions = options => {
   let createPath = () => null
   const routeKeys = []
@@ -130,51 +129,6 @@ const setupTemplates = config => {
   }
 
   return templates
-}
-
-const createTemplates = async (actions, { byComponent }) => {
-  const allTemplates = new Map()
-
-  const createTemplate = component => {
-    if (byComponent.has(component)) {
-      for (const template of byComponent.get(component)) {
-        const contentType = actions.getContentType(template.typeName)
-        const value = allTemplates.get(component) || []
-        const instance = new Template(template, contentType, actions)
-
-        allTemplates.set(component, value.concat(instance))
-      }
-    }
-  }
-
-  const removeTemplate = component => {
-    if (allTemplates.has(component)) {
-      allTemplates.get(component).forEach(instance => instance.remove())
-      allTemplates.delete(component)
-    }
-  }
-
-  /**
-   * Find component files and create pages for components
-   * that matches any of the template paths. Watch the paths
-   * in development to act on new or deleted files.
-   */
-  const paths = Array.from(byComponent.keys())
-  const files = await glob(paths, { globstar: false, extglob: false })
-
-  for (const filePath of files) {
-    createTemplate(filePath)
-  }
-
-  if (isDev) {
-    const watcher = chokidar.watch(paths, {
-      disableGlobbing: true,
-      ignoreInitial: true
-    })
-
-    watcher.on('add', file => createTemplate(slash(file)))
-    watcher.on('unlink', file => removeTemplate(slash(file)))
-  }
 }
 
 class TemplatesPlugin {
@@ -285,51 +239,96 @@ class TemplatesPlugin {
       }
     })
 
-    api.createManagedPages(actions => {
-      return createTemplates(actions, templates)
+    api.createManagedPages(async actions => {
+      const { byComponent } = templates
+      const allTemplates = new Map()
+
+      const createTemplate = component => {
+        if (byComponent.has(component)) {
+          for (const template of byComponent.get(component)) {
+            const { typeName, name, path, component } = template
+            const contentType = actions.getContentType(typeName)
+            const instance = new Template(typeName, name, path, component, actions)
+            const value = allTemplates.get(component) || []
+
+            const nodes = contentType.data()
+            const length = nodes.length
+
+            for (let i = 0; i < length; i++) {
+              instance.createPage(nodes[i])
+            }
+
+            contentType.on('add', instance.createPage, instance)
+            contentType.on('update', instance.updatePage, instance)
+            contentType.on('remove', instance.removePage, instance)
+
+            allTemplates.set(component, value.concat(instance))
+          }
+        }
+      }
+
+      const removeTemplate = component => {
+        if (allTemplates.has(component)) {
+          allTemplates.get(component).forEach(instance => {
+            const contentType = actions.getContentType(instance.typeName)
+
+            contentType.off('add', instance.createPage, instance)
+            contentType.off('update', instance.updatePage, instance)
+            contentType.off('remove', instance.removePage, instance)
+
+            instance.remove()
+          })
+
+          allTemplates.delete(component)
+        }
+      }
+
+      /**
+       * Find component files and create pages for components
+       * that matches any of the template paths. Watch the paths
+       * in development to act on new or deleted files.
+       */
+      const paths = Array.from(byComponent.keys())
+      const files = await glob(paths, { globstar: false, extglob: false })
+
+      for (const filePath of files) {
+        createTemplate(filePath)
+      }
+
+      if (isDev) {
+        const watcher = chokidar.watch(paths, {
+          disableGlobbing: true,
+          ignoreInitial: true
+        })
+
+        watcher.on('add', file => createTemplate(slash(file)))
+        watcher.on('unlink', file => removeTemplate(slash(file)))
+      }
     })
   }
 }
 
 class Template {
-  constructor (template, contentType, actions) {
-    this.template = template
-    this.contentType = contentType
+  constructor(typeName, name, path, component, actions) {
+    this.typeName = typeName
+    this.name = name
+    this.path = path
+    this.component = component
     this.actions = actions
 
-    if (typeof template.path === 'string') {
-      this.route = actions.createRoute({
-        path: template.path,
-        component: template.component
-      })
+    if (typeof path === 'string') {
+      this.route = actions.createRoute({ path, component })
     }
-
-    const nodes = contentType.data()
-    const length = nodes.length
-
-    for (let i = 0; i < length; i++) {
-      this.createPage(nodes[i])
-    }
-
-    this.contentType.on('add', this.createPage, this)
-    this.contentType.on('update', this.updatePage, this)
-    this.contentType.on('remove', this.removePage, this)
   }
 
   remove () {
-    const { component } = this.template
-
-    this.contentType.off('add', this.createPage, this)
-    this.contentType.off('update', this.updatePage, this)
-    this.contentType.off('remove', this.removePage, this)
-
     if (this.route) this.actions.removeRoute(this.route.id)
-    else this.actions.removePagesByComponent(component)
+    else this.actions.removePagesByComponent(this.component)
   }
 
   createPage (node) {
-    const { name, component } = this.template
-    const id = makeId(node.$uid, this.template.name)
+    const { name, component } = this
+    const id = makeId(node.$uid, name)
     const path = node.internal.path[name]
     const queryVariables = node
 
@@ -338,14 +337,14 @@ class Template {
   }
 
   updatePage (node, oldNode) {
-    const { path, name } = this.template
+    const { path, name } = this
 
     if (
       node.internal.path[name] !== oldNode.internal.path[name] &&
       typeof path !== 'string'
     ) {
       this.actions.removePage(
-        makeId(node.$uid, this.template.name)
+        makeId(node.$uid, this.name)
       )
     }
 
@@ -354,7 +353,7 @@ class Template {
 
   removePage (node) {
     this.actions.removePage(
-      makeId(node.$uid, this.template.name)
+      makeId(node.$uid, this.name)
     )
   }
 }

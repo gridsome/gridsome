@@ -185,47 +185,67 @@ function normalizePathPrefix (pathPrefix = '') {
   return segments.length ? `/${segments.join('/')}` : ''
 }
 
+const template = Joi.object()
+  .label('Template')
+  .keys({
+    typeName: Joi.string().required(),
+    name: Joi.string().required(),
+    path: Joi.alternatives([
+      Joi.string().regex(/^\//, 'Template string paths must begin with a slash'),
+      Joi.func()
+    ]).required(),
+    component: Joi.string().required(),
+    dateField: Joi.string().required()
+  })
+
 function normalizeTemplates (context, config, localConfig) {
   const { templates = {}} = localConfig
   const { templatesDir } = config
   const res = {}
 
-  const normalize = (typeName, template, index) => {
-    if (typeof template === 'string') {
-      return {
+  const normalize = (typeName, options) => {
+    if (typeof options === 'string') {
+      const { error, value } = Joi.validate({
         typeName,
-        path: template,
+        path: options,
         component: path.join(templatesDir, `${typeName}.vue`),
         name: 'default',
         dateField: 'date'
+      }, template)
+
+      if (error) {
+        throw new Error(error.message)
       }
+
+      return value
     }
 
-    if (index > 0 && typeof template.name === 'undefined') {
-      throw new Error(
-        `A template for "${typeName}" is missing the "name" option. ` +
-        `All templates except the default template must have a name.`
-      )
-    } else if (
+    if (
       Array.isArray(res[typeName]) &&
-      res[typeName].find(tpl => tpl.name === template.name)
+      res[typeName].find(tpl => tpl.name === options.name)
     ) {
       throw new Error(
-        `A template for "${typeName}" with the name "${template.name}" already exist.`
+        `A template for "${typeName}" with the name "${options.name}" already exist.`
       )
     }
 
-    return {
+    const { error, value } = Joi.validate({
       typeName,
-      name: template.name,
-      path: template.path,
-      component: template.component
-        ? isRelative(template.component)
-          ? path.join(context, template.component)
-          : template.component
+      name: options.name,
+      path: options.path,
+      component: options.component
+        ? isRelative(options.component)
+          ? path.join(context, options.component)
+          : options.component
         : path.join(templatesDir, `${typeName}.vue`),
-      dateField: template.dateField || 'date'
+      dateField: options.dateField || 'date'
+    }, template)
+
+    if (error) {
+      throw new Error(error.message)
     }
+
+    return value
   }
 
   for (const typeName in templates) {
@@ -234,11 +254,11 @@ function normalizeTemplates (context, config, localConfig) {
     res[typeName] = res[typeName] || []
 
     if (Array.isArray(options)) {
-      options.forEach((template, i) => {
-        res[typeName].push(normalize(typeName, template, i))
+      options.forEach(options => {
+        res[typeName].push(normalize(typeName, options))
       })
     } else {
-      res[typeName].push(normalize(typeName, options, 0))
+      res[typeName].push(normalize(typeName, options))
     }
   }
 

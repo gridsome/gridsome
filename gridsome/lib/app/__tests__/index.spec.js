@@ -180,7 +180,7 @@ test('fail if a template has no name', () => {
         ]
       }
     }
-  })).toThrow('missing the "name" option')
+  })).toThrow('"name" is required')
 })
 
 test('fail if two templates have the same name', () => {
