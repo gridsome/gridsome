@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.6.9](https://github.com/gridsome/gridsome/compare/gridsome@0.6.8...gridsome@0.6.9) (2019-08-29)
+
+
+### Bug Fixes
+
+* **graphql:** ensure field value is array for lists ([8e02ccd](https://github.com/gridsome/gridsome/commit/8e02ccd))
+
+
+
+
+
 ## [0.6.8](https://github.com/gridsome/gridsome/compare/gridsome@0.6.7...gridsome@0.6.8) (2019-08-19)
 
 
