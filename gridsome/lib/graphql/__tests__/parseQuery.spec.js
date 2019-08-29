@@ -12,7 +12,7 @@ beforeEach(async () => {
   const contentType = api.store.addContentType('CustomContentType')
   contentType.addNode({ id: '1', path: '/test' })
 
-  await app.createSchema()
+  await app.schema.createSchema()
 })
 
 test('get variable definitions', async () => {

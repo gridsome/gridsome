@@ -1,4 +1,6 @@
-const { createQueryVariables } = require('../../pages/utils')
+const path = require('path')
+const { pathToFilePath } = require('../../pages/utils')
+const { createQueryVariables } = require('../../graphql/utils')
 
 const {
   toFilterArgs,
@@ -6,22 +8,27 @@ const {
   createPagedNodeEdges
 } = require('../../graphql')
 
-function createRenderQueue (renderQueue, { pages, store, schema }) {
-  const queue = renderQueue.slice()
+function createRenderQueue ({ hooks, pages, store, schema, config }) {
+  const { outDir } = config
+  const queue = []
 
-  for (const page of pages.data()) {
-    if (page.query.paginate) {
-      const totalPages = calcTotalPages(page.query.paginate, store, schema)
+  for (const route of pages.routes()) {
+    for (const page of route.pages()) {
+      const { query } = page.internal
 
-      for (let i = 1; i <= totalPages; i++) {
-        queue.push(createRenderEntry(page, i))
+      if (route.type === 'static' && query.paginate) {
+        const totalPages = calcTotalPages(page.internal.query.paginate, store, schema)
+
+        for (let i = 1; i <= totalPages; i++) {
+          queue.push(createRenderEntry(page, i, route, outDir))
+        }
+      } else {
+        queue.push(createRenderEntry(page, 0, route, outDir))
       }
-    } else {
-      queue.push(createRenderEntry(page))
     }
   }
 
-  return queue
+  return hooks.renderQueue.call(queue)
 }
 
 function calcTotalPages (paginate, store, schema) {
@@ -53,28 +60,36 @@ function calcTotalPages (paginate, store, schema) {
   return res.pageInfo.totalPages
 }
 
-function createRenderEntry (page, currentPage = undefined) {
-  const segments = page.internal.path.segments.slice()
+function createRenderEntry (page, currentPage, route, outDir) {
+  const segments = page.path.split('/').filter(Boolean)
 
   if (currentPage > 1) {
     segments.push(currentPage)
   }
 
-  const originalPath = `/${segments.join('/')}`
+  const normalizedPath = `/${segments.join('/')}`
+  const htmlOutput = path.join(outDir, pathToFilePath(normalizedPath))
+
+  const location = route.type === 'dynamic'
+    ? { name: route.name }
+    : { path: normalizedPath }
+
+  const queryVariables = route.internal.query.document
+    ? createQueryVariables(
+      normalizedPath,
+      page.internal.query.variables,
+      currentPage
+    )
+    : {}
 
   return {
-    route: page.route,
-    path: `/${segments.join('/')}`,
-    component: page.component,
-    context: page.context,
-    query: page.query.document ? {
-      document: page.query.document,
-      variables: createQueryVariables(page, currentPage)
-    } : null,
-    internal: {
-      originalPath,
-      pathSegments: segments
-    }
+    location,
+    htmlOutput,
+    queryVariables,
+    type: route.type,
+    path: normalizedPath,
+    routeId: page.internal.route,
+    pageId: page.id
   }
 }
 

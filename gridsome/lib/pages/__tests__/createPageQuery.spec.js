@@ -8,12 +8,12 @@ const parseQuery = require('../../graphql/parseQuery')
 let app
 
 beforeEach(async () => {
-  app = new App(__dirname).init()
+  app = await new App(__dirname).init()
   const api = new PluginAPI(app)
 
   api.store.addContentType('TestPost')
 
-  await app.createSchema()
+  await app.schema.createSchema()
 })
 
 test('parsed page-query', async () => {

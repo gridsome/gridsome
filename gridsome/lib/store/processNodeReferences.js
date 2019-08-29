@@ -1,6 +1,6 @@
 const { safeKey } = require('../utils')
 const { omit, isPlainObject } = require('lodash')
-const { isRefField } = require('../graphql/utils')
+const { isRefField } = require('./utils')
 const { NODE_FIELDS } = require('../utils/constants')
 
 module.exports = function processNodeReferences (entry, node, contentType) {

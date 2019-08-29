@@ -5,7 +5,6 @@ const { PER_PAGE } = require('../../utils/constants')
 const { createFilterInput } = require('../filters/input')
 const createFieldDefinitions = require('../createFieldDefinitions')
 const { createFieldTypes } = require('../createFieldTypes')
-const { SORT_ORDER } = require('../../utils/constants')
 const { isRefFieldDefinition } = require('../utils')
 
 const { mapValues, isEmpty, isPlainObject } = require('lodash')
@@ -146,16 +145,16 @@ function createThirdPartyFields (typeComposer, contentType) {
   const context = { contentType, graphql }
   const fields = {}
 
-  for (const mimeType in contentType.options.mimeTypes) {
-    const transformer = contentType.options.mimeTypes[mimeType]
+  for (const mimeType in contentType._mimeTypes) {
+    const transformer = contentType._mimeTypes[mimeType]
 
     if (typeof transformer.extendNodeType === 'function') {
       Object.assign(fields, transformer.extendNodeType(context))
     }
   }
 
-  for (const fieldName in contentType.options.fields) {
-    const field = contentType.options.fields[fieldName]
+  for (const fieldName in contentType._fields) {
+    const field = contentType._fields[fieldName]
 
     if (typeof field === 'function') {
       fields[fieldName] = field(context)
@@ -185,7 +184,7 @@ function createResolvers (schemaComposer, store) {
 function createTypeResolvers (typeComposer, contentType) {
   const typeName = typeComposer.getTypeName()
 
-  const { defaultSortBy, defaultSortOrder } = contentType.options
+  const { _defaultSortBy, _defaultSortOrder } = contentType
 
   typeComposer.addResolver({
     name: 'findOne',
@@ -207,8 +206,8 @@ function createTypeResolvers (typeComposer, contentType) {
     name: 'findManyPaginated',
     type: `${typeName}Connection`,
     args: {
-      sortBy: { type: 'String', defaultValue: defaultSortBy },
-      order: { type: 'SortOrder', defaultValue: defaultSortOrder },
+      sortBy: { type: 'String', defaultValue: _defaultSortBy },
+      order: { type: 'SortOrder', defaultValue: _defaultSortOrder },
       perPage: { type: 'Int', description: `Defaults to ${PER_PAGE} when page is provided.` },
       skip: { type: 'Int', defaultValue: 0 },
       limit: { type: 'Int' },
@@ -239,7 +238,7 @@ function createTypeResolvers (typeComposer, contentType) {
     type: [typeName],
     args: {
       sortBy: { type: 'String' },
-      order: { type: 'SortOrder', defaultValue: SORT_ORDER },
+      order: { type: 'SortOrder', defaultValue: _defaultSortOrder },
       skip: { type: 'Int', defaultValue: 0 },
       sort: { type: '[SortArgument]' },
       limit: { type: 'Int' }
@@ -249,9 +248,9 @@ function createTypeResolvers (typeComposer, contentType) {
 }
 
 function createReferenceFields (schemaComposer, typeComposer, contentType) {
-  if (isEmpty(contentType.options.refs)) return
+  if (isEmpty(contentType._refs)) return
 
-  const refs = mapValues(contentType.options.refs, ({ typeName }, fieldName) => {
+  const refs = mapValues(contentType._refs, ({ typeName }, fieldName) => {
     const refTypeComposer = schemaComposer.get(typeName)
 
     return typeComposer.isFieldPlural(fieldName)

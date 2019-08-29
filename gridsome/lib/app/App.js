@@ -12,10 +12,7 @@ const {
   SyncWaterfallHook
 } = require('tapable')
 
-const {
-  BOOTSTRAP_GRAPHQL,
-  BOOTSTRAP_FULL
-} = require('../utils/constants')
+const { BOOTSTRAP_FULL } = require('../utils/constants')
 
 class App {
   constructor (context, options) {
@@ -35,10 +32,6 @@ class App {
       redirects: new SyncWaterfallHook(['redirects', 'renderQueue']),
       plugin: new HookMap(() => new SyncHook(['plugin']))
     }
-
-    this._hooks.createRenderQueue.tap('Gridsome', require('./build/createRenderQueue'))
-    this._hooks.createRenderQueue.tap('Gridsome', require('./build/createHTMLPaths'))
-    this._hooks.createRenderQueue.tapPromise('Gridsome', require('./build/executeQueries'))
 
     autoBind(this)
   }
@@ -109,23 +102,11 @@ class App {
     // important for the bootstrap process
     this.events = new Events()
     this.store = new Store(this)
-
-    // TODO: move to schema class in #509
-    this.hooks.bootstrap.tapPromise(
-      {
-        name: 'GridsomeSchema',
-        label: 'Create GraphQL schema',
-        phase: BOOTSTRAP_GRAPHQL
-      },
-      this.createSchema
-    )
-
+    this.schema = new Schema(this)
     this.assets = new AssetsQueue(this)
     this.pages = new Pages(this)
     this.codegen = new Codegen(this)
     this.compiler = new Compiler(this)
-
-    // TODO: move to internal plugins
 
     // TODO: remove before 1.0
     this.queue = this.assets
@@ -188,21 +169,6 @@ class App {
     this.isInitialized = true
 
     return this
-  }
-
-  async createSchema () {
-    const { createSchemaActions } = require('./actions')
-
-    const results = await this.events.dispatch('createSchema', api => {
-      return createSchemaActions(api, this)
-    })
-
-    // add custom schemas returned from the hook handlers
-    results.forEach(schema =>
-      schema && this.schema._schemas.push(schema)
-    )
-
-    this.schema.buildSchema()
   }
 
   //

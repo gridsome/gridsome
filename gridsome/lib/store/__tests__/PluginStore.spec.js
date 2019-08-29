@@ -185,8 +185,8 @@ test('get node by id', async () => {
   expect(contentType.getNode('test').id).toEqual('test')
 })
 
-test('get node by uid', () => {
-  const api = createPlugin()
+test('get node by uid', async () => {
+  const api = await createPlugin()
   const contentType = api.store.addContentType('TestPost')
 
   contentType.addNode({ $uid: 'foo', id: '1' })

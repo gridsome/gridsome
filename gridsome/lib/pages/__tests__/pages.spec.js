@@ -113,7 +113,11 @@ test('create managed pages with plugin api', async () => {
 })
 
 test('create page with pagination', async () => {
-  const { pages } = await createApp()
+  const { pages } = await createApp(function (api) {
+    api.loadSource(store => {
+      store.addContentType('Post')
+    })
+  })
 
   const page = pages.createPage({
     path: '/page',
@@ -145,7 +149,11 @@ test('create page with custom context', async () => {
 })
 
 test('create page with query context', async () => {
-  const { pages } = await createApp()
+  const { pages } = await createApp(function (api) {
+    api.loadSource(store => {
+      store.addContentType('Movie')
+    })
+  })
 
   const page = pages.createPage({
     path: '/page',
@@ -166,7 +174,12 @@ test('always include a /404 page', async () => {
 })
 
 test('cache parsed components', async () => {
-  const { pages } = await createApp()
+  const { pages } = await createApp(function (api) {
+    api.loadSource(store => {
+      store.addContentType('Post')
+    })
+  })
+
   const parseComponent = jest.spyOn(pages.hooks.parseComponent.for('vue'), 'call')
 
   pages.createPage({ path: '/page/1', component: './__fixtures__/PagedPage.vue' })
@@ -177,7 +190,11 @@ test('cache parsed components', async () => {
 })
 
 test('update page', async () => {
-  const { pages } = await createApp()
+  const { pages } = await createApp(function (api) {
+    api.loadSource(store => {
+      store.addContentType('Post')
+    })
+  })
 
   const page1 = pages.createPage({
     path: '/page',
@@ -321,7 +338,11 @@ test('garbage collect unmanaged pages', async () => {
 })
 
 test('override page with similar path', async () => {
-  const { pages } = await createApp()
+  const { pages } = await createApp(function (api) {
+    api.loadSource(store => {
+      store.addContentType('Post')
+    })
+  })
 
   pages.createPage({
     path: '/page',
@@ -429,7 +450,11 @@ describe('dynamic pages', () => {
 
 describe('create routes', () => {
   test('create route', async () => {
-    const { pages } = await createApp()
+    const { pages } = await createApp(function (api) {
+      api.loadSource(store => {
+        store.addContentType('Post')
+      })
+    })
 
     const component = './__fixtures__/PagedTemplate.vue'
     const route = pages.createRoute({ component, path: '/page/:id' })
@@ -443,7 +468,11 @@ describe('create routes', () => {
   })
 
   test('add pages to route', async () => {
-    const { pages } = await createApp()
+    const { pages } = await createApp(function (api) {
+      api.loadSource(store => {
+        store.addContentType('Movie')
+      })
+    })
 
     const component = './__fixtures__/MovieTemplate.vue'
     const meta = { digest: 'foo', isManaged: true }
@@ -472,7 +501,11 @@ describe('create routes', () => {
   })
 
   test('remove route and its pages', async () => {
-    const { pages } = await createApp()
+    const { pages } = await createApp(function (api) {
+      api.loadSource(store => {
+        store.addContentType('Post')
+      })
+    })
 
     const route = pages.createRoute({
       path: '/user/:id',

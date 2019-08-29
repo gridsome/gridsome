@@ -40,7 +40,7 @@ module.exports = schemaComposer => {
         // TODO: return page entries
         return pages.findPages(query).map(page => ({
           path: page.path,
-          context: page.options.context
+          context: page.context
         }))
       }
     }

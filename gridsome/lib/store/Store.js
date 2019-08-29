@@ -22,13 +22,7 @@ class Store {
 
     autoBind(this)
 
-    this.index = this.store.addCollection('core/nodeIndex', {
-      indices: ['typeName', 'id'],
-      unique: ['uid'],
-      disableMeta: true
-    })
-
-    this.metadata = this.store.addCollection('core/metadata', {
+    this.metadata = new Collection('core/metadata', {
       unique: ['key'],
       autoupdate: true
     })
@@ -58,7 +52,11 @@ class Store {
   }
 
   async loadSources () {
-    await this.app.events.dispatch('loadSource', api => api.store)
+    const { createSchemaActions } = require('../app/actions')
+
+    await this.app.events.dispatch('loadSource', api => {
+      return createSchemaActions(api, this.app)
+    })
   }
 
   on (eventName, fn, ctx) {
@@ -127,7 +125,7 @@ class Store {
   }
 
   getNodeByUid (uid) {
-    const entry = this.index.by('uid', uid)
+    const entry = this.nodeIndex.getEntry(uid)
 
     return entry
       ? this.collections[entry.typeName].getNodeById(entry.id)
@@ -140,14 +138,14 @@ class Store {
 
   // TODO: move this to internal plugin
   setBelongsTo (node, typeName, id) {
-    const entry = this.index.by('uid', node.$uid)
+    const entry = this.nodeIndex.getEntry(node.$uid)
     const belongsTo = entry.belongsTo
     const key = safeKey(id)
 
     belongsTo[typeName] = belongsTo[typeName] || {}
     belongsTo[typeName][key] = true
 
-    this.index.update({ ...entry, belongsTo })
+    this.nodeIndex.index.update({ ...entry, belongsTo })
   }
 
   chainIndex (query = {}) {

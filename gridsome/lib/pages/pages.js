@@ -311,8 +311,7 @@ class Pages {
     const component = this.app.resolve(options.component)
     const { pageQuery } = this._parseComponent(component)
     const parsedQuery = this._parseQuery(pageQuery)
-    const queryVariables = options.queryVariables || options.context || {}
-    const { source, document, paginate } = this._createPageQuery(parsedQuery, queryVariables)
+    const { source, document, paginate } = this._createPageQuery(parsedQuery)
 
     const type = options.type
     const normalPath = normalizePath(options.path)
@@ -358,7 +357,7 @@ class Pages {
   }
 
   _parseQuery (query) {
-    return parseQuery(this._app.schema.getSchema(), query)
+    return parseQuery(this.app.schema.getSchema(), query)
   }
 
   _createPageQuery (parsedQuery, vars = {}) {
@@ -432,6 +431,7 @@ class Route {
     this.internal = options.internal
     this.options = options
 
+    Object.defineProperty(this, '_factory', { value: factory })
     Object.defineProperty(this, '_pages', { value: factory._pages })
     Object.defineProperty(this, '_createPage', { value: factory.hooks.createPage })
   }
@@ -496,10 +496,9 @@ class Route {
       )
     }
 
-    const { paginate, variables, filters } = createPageQuery(
-      query.source,
-      queryVariables || context
-    )
+    const vars = queryVariables || context || {}
+    const parsedQuery = this._factory._parseQuery(query.source)
+    const { paginate, variables, filters } = this._factory._createPageQuery(parsedQuery, vars)
 
     return this._createPage.call({
       id,
