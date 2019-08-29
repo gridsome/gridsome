@@ -45,7 +45,9 @@ function createFieldType (value, key, typeName, nodeTypes) {
       args: type.args,
       resolve: (obj, args, context, info) => {
         const arr = fieldResolver(obj, args, context, info)
-        return arr.map((_, i) => type.resolve(arr, args, context, {...info, fieldName: i}))
+        return Array.isArray(arr)
+          ? arr.map((_, i) => type.resolve(arr, args, context, { ...info, fieldName: i }))
+          : []
       }
     } : null
   }
