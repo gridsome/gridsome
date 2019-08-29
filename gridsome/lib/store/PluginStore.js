@@ -3,12 +3,10 @@ const crypto = require('crypto')
 const mime = require('mime-types')
 const autoBind = require('auto-bind')
 const camelCase = require('camelcase')
-const pathToRegexp = require('path-to-regexp')
 const slugify = require('@sindresorhus/slugify')
 const { mapValues, isPlainObject } = require('lodash')
 const { cache, nodeCache } = require('../utils/cache')
 const { resolvePath } = require('./utils')
-const { log } = require('../utils/log')
 
 class PluginStore {
   constructor (app, pluginOptions = {}, { transformers }) {
@@ -46,104 +44,16 @@ class PluginStore {
 
   // nodes
 
-  addType (...args) {
-    log('!! store.addType is deprectaded, use store.addContentType instead.')
-    return this.addContentType(...args)
-  }
-
   addContentType (options) {
     if (typeof options === 'string') {
       options = { typeName: options }
     }
 
-    if (typeof options.typeName !== 'string') {
-      throw new Error(`«typeName» option is required.`)
-    }
-
-    if (['page'].includes(options.typeName.toLowerCase())) {
-      throw new Error(`${options.typeName} is a reserved typeName`)
-    }
-
-    if (this.store.collections.hasOwnProperty(options.typeName)) {
-      return this.store.getContentType(options.typeName)
-    }
-
-    options = this._app._hooks.contentType.call(options, this._app)
-
-    let createPath = () => null
-    const routeKeys = []
-
-    if (typeof options.route === 'string') {
-      options.route = '/' + options.route.replace(/^\/+/g, '')
-      createPath = pathToRegexp.compile(options.route)
-      pathToRegexp(options.route, routeKeys)
-    }
-
-    // normalize references
-    const refs = mapValues(options.refs, (ref, key) => {
-      return {
-        typeName: ref.typeName || options.typeName,
-        fieldName: key
-      }
-    })
-
     if (typeof options.resolveAbsolutePaths === 'undefined') {
       options.resolveAbsolutePaths = this._resolveAbsolutePaths
     }
 
-    const dateField = options.dateField || 'date'
-    const defaultSortBy = dateField
-    const defaultSortOrder = 'DESC'
-
-    let component
-
-    if (typeof options.component !== 'undefined') {
-      component = typeof options.component === 'string'
-        ? path.isAbsolute(options.component)
-          ? options.component
-          : path.join(this.context, options.component)
-        : null
-    } else {
-      const { templatesDir } = this._app.config
-      component = templatesDir
-        ? path.join(templatesDir, `${options.typeName}.vue`)
-        : null
-    }
-
-    return this.store.addContentType(this, {
-      route: options.route,
-      fields: options.fields || {},
-      typeName: options.typeName,
-      dateField,
-      defaultSortBy,
-      defaultSortOrder,
-      camelCasedFieldNames: options.camelCasedFieldNames,
-      resolveAbsolutePaths: options.resolveAbsolutePaths,
-      routeKeys: routeKeys
-        .filter(key => typeof key.name === 'string')
-        .map(key => {
-          // separate field name from suffix
-          const [, fieldName, suffix] = (
-            key.name.match(/^(.*[^_])_([a-z]+)$/) ||
-            [null, key.name, null]
-          )
-
-          const path = fieldName.split('__')
-
-          return {
-            name: key.name,
-            path,
-            fieldName,
-            repeat: key.repeat,
-            suffix
-          }
-        }),
-      mimeTypes: [],
-      belongsTo: {},
-      createPath,
-      component,
-      refs
-    })
+    return this.store.addContentType(options, this)
   }
 
   getContentType (type) {

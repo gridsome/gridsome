@@ -10,8 +10,8 @@ const pathPrefix = '/'
 
 let app, api
 
-beforeEach(() => {
-  app = new App(context, {
+beforeEach(async () => {
+  app = await new App(context, {
     config: {
       plugins: [],
       pathPrefix,
@@ -52,7 +52,8 @@ test('create node type with custom fields', async () => {
     price: '',
     list: ['item'],
     obj: {
-      foo: 'foo'
+      foo: 'foo',
+      list: ['item']
     }
   })
 
@@ -62,7 +63,8 @@ test('create node type with custom fields', async () => {
     list: ['item'],
     price: '198.00',
     obj: {
-      foo: 'bar'
+      foo: 'bar',
+      list: null
     }
   })
 
@@ -72,7 +74,10 @@ test('create node type with custom fields', async () => {
       list
       price
       emptyString
-      obj { foo }
+      obj {
+        foo
+        list
+      }
     }
   }`
 
@@ -85,6 +90,7 @@ test('create node type with custom fields', async () => {
   expect(data.testPost.list).toHaveLength(1)
   expect(data.testPost.list[0]).toEqual('item')
   expect(data.testPost.obj.foo).toEqual('bar')
+  expect(data.testPost.obj.list).toHaveLength(0)
 })
 
 test('get node by path', async () => {

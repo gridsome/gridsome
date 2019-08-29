@@ -28,7 +28,7 @@ exports.render = async function ({
       state = JSON.parse(content)
     }
 
-    html = await render(page.path, state, stateSize)
+    html = await render(page, state, stateSize)
 
     await fs.outputFile(page.htmlOutput, html)
   }

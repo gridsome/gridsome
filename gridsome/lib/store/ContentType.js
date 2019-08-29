@@ -1,26 +1,40 @@
 const path = require('path')
 const isUrl = require('is-url')
 const crypto = require('crypto')
-const moment = require('moment')
 const autoBind = require('auto-bind')
 const isRelative = require('is-relative')
 const EventEmitter = require('eventemitter3')
-const { ISO_8601_FORMAT, NODE_FIELDS } = require('../utils/constants')
-const { cloneDeep, isString, isPlainObject, trim, omit, get } = require('lodash')
-const createNodeOptions = require('./createNodeOptions')
-const { warn } = require('../utils/log')
+const normalizeNodeOptions = require('./normalizeNodeOptions')
 const { parseUrl, createFieldName } = require('./utils')
+const { warn } = require('../utils/log')
+const { mapValues } = require('lodash')
+const { Collection } = require('lokijs')
 
 class ContentType {
-  constructor (store, collection, options = {}) {
-    this._collection = collection
-    this._events = new EventEmitter()
-
-    this.options = { refs: {}, fields: {}, ...options }
-    this.typeName = options.typeName
+  constructor (typeName, options, store) {
+    this.typeName = typeName
+    this.options = options || {}
 
     this._store = store
     this._transformers = store._transformers
+    this._events = new EventEmitter()
+    this._collection = new Collection(typeName, {
+      indices: ['id', 'path', 'internal.typeName'],
+      unique: ['id', 'path'],
+      disableMeta: true
+    })
+
+    this._refs = mapValues(options.refs, (ref, key) => ({
+      typeName: ref.typeName || options.typeName,
+      fieldName: key
+    }))
+
+    this._mimeTypes = {}
+    this._fields = options.fields || {}
+    this._dateField = options.dateField || 'date'
+    this._defaultSortBy = this._dateField
+    this._defaultSortOrder = 'DESC'
+
     this._camelCasedFieldNames = options.camelCasedFieldNames || false
     this._resolveAbsolutePaths = options.resolveAbsolutePaths || false
     this._assetsContext = typeof options.resolveAbsolutePaths === 'string'
@@ -53,45 +67,28 @@ class ContentType {
       options = { typeName: options }
     }
 
-    this.options.refs[this.createFieldName(fieldName)] = options
+    this._refs[this.createFieldName(fieldName)] = options
   }
 
   // TODO: warn when used, use addSchemaResolvers instead
   addSchemaField (fieldName, options) {
-    this.options.fields[fieldName] = options
+    this._fields[fieldName] = options
   }
 
   addNode (options) {
-    options = this._store._app._hooks.node.call(options, this, this._store._app)
+    options = normalizeNodeOptions(options, this, true)
 
-    const { nodeOptions, fields, belongsTo } = createNodeOptions(options, this)
+    const node = this._store.store.hooks.addNode.call(options, this)
 
-    const { $uid, id } = nodeOptions
-    const entry = { typeName: this.typeName, uid: $uid, id, belongsTo }
-    const node = { ...fields, ...nodeOptions }
-
-    // TODO: move this to a separate/internal plugin?
-    if (typeof fields.path === 'string' || this.options.route) {
-      node.path = this._createPath(node)
-    }
-
-    // add transformer to content type to let it
-    // extend the node type when creating schema
-    const { mimeTypes } = this.options
-    const { mimeType } = node.internal
-    if (mimeType && !mimeTypes.hasOwnProperty(mimeType)) {
-      mimeTypes[mimeType] = this._transformers[mimeType]
-    }
+    if (!node) return null
 
     try {
       this._collection.insert(node)
-      this._store.store.index.insert(entry)
     } catch (err) {
       warn(`Failed to add node: ${err.message}`, this.typeName)
       return null
     }
 
-    this._store.store.setUpdateTime()
     this._events.emit('add', node)
 
     return node
@@ -102,8 +99,9 @@ class ContentType {
   }
 
   getNode (id) {
-    const query = typeof id === 'string' ? { id } : id
-    return this._collection.findOne(query)
+    return this._collection.findOne(
+      typeof id === 'string' ? { id } : id
+    )
   }
 
   getNodeById (id) {
@@ -119,119 +117,47 @@ class ContentType {
   }
 
   removeNode (id) {
-    const query = typeof id === 'string' ? { id } : id
-    const node = this._collection.findOne(query)
+    const node = this._collection.findOne(
+      typeof id === 'string' ? { id } : id
+    )
 
-    this._store.store.index.findAndRemove({ uid: node.$uid })
     this._collection.findAndRemove({ $uid: node.$uid })
-    this._store.store.setUpdateTime()
-
     this._events.emit('remove', node)
+
+    return null
   }
 
-  updateNode (options = {}, _options = {}) {
-    // TODO: remove before 1.0
-    if (typeof options === 'string') {
-      _options.id = options
-      options = _options
-    }
+  updateNode (options = {}) {
+    options = normalizeNodeOptions(options, this, true)
 
-    const { nodeOptions, fields, belongsTo } = createNodeOptions(options, this)
-
-    const { $uid, id } = nodeOptions
-    const oldNode = this.getNode($uid ? { $uid } : { id })
+    const oldNode = this.getNode(options.$uid
+      ? { $uid: options.$uid }
+      : { id: options.id }
+    )
 
     if (!oldNode) {
-      throw new Error(`Could not find node to update with id: ${id}`)
+      throw new Error(`Could not find node to update with id: ${options.id}`)
     }
 
-    const oldOptions = cloneDeep(oldNode)
-    const oldFields = omit(oldOptions, NODE_FIELDS)
+    const node = this._store.store.hooks.addNode.call(options, this)
 
-    const node = { ...oldFields, ...fields, ...nodeOptions }
+    if (!node) {
+      return this.removeNode(oldNode.id)
+    }
 
+    node.id = options.id || oldNode.id
     node.$loki = oldNode.$loki
-    node.id = nodeOptions.id || node.id
-
-    // TODO: move this to a separate/internal plugin?
-    if (typeof fields.path === 'string' || this.options.route) {
-      node.path = this._createPath(node)
-    }
-
-    const entry = this._store.store.index.findOne({ uid: node.$uid })
-
-    entry.belongsTo = belongsTo
 
     try {
       this._collection.update(node)
-      this._store.store.index.update(entry)
     } catch (err) {
       warn(`Failed to update node: ${err.message}`, this.typeName)
       return null
     }
 
-    this._store.store.setUpdateTime()
-    this._events.emit('update', node, oldOptions)
+    this._events.emit('update', node, oldNode)
 
     return node
-  }
-
-  _createPath (node) {
-    if (!isString(this.options.route)) {
-      return isString(node.path)
-        ? '/' + trim(node.path, '/')
-        : null
-    }
-
-    const { routeKeys, dateField } = this.options
-    const date = moment.utc(node[dateField], ISO_8601_FORMAT, true)
-    const length = routeKeys.length
-    const params = {}
-
-    // Param values are slugified but the original
-    // value will be available with '_raw' suffix.
-    for (let i = 0; i < length; i++) {
-      const { name, fieldName, repeat, suffix } = routeKeys[i]
-      let { path } = routeKeys[i]
-
-      // TODO: remove before 1.0
-      // let slug fallback to title
-      if (name === 'slug' && !node.slug) {
-        path = ['title']
-      }
-
-      const field = get(node, path, fieldName)
-
-      if (fieldName === 'id') params.id = node.id
-      else if (fieldName === 'year' && !node.year) params.year = date.format('YYYY')
-      else if (fieldName === 'month' && !node.month) params.month = date.format('MM')
-      else if (fieldName === 'day' && !node.day) params.day = date.format('DD')
-      else {
-        const repeated = repeat && Array.isArray(field)
-        const values = repeated ? field : [field]
-
-        const segments = values.map(value => {
-          if (
-            isPlainObject(value) &&
-            value.hasOwnProperty('typeName') &&
-            value.hasOwnProperty('id') &&
-            !Array.isArray(value.id)
-          ) {
-            return String(value.id)
-          } else if (!isPlainObject(value)) {
-            return suffix === 'raw'
-              ? String(value)
-              : this.slugify(String(value))
-          } else {
-            return ''
-          }
-        }).filter(Boolean)
-
-        params[name] = repeated ? segments : segments[0]
-      }
-    }
-
-    return '/' + trim(this.options.createPath(params), '/')
   }
 
   //

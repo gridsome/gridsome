@@ -44,6 +44,12 @@ module.exports = function (api) {
       component: './src/pages/About.vue',
       context: {
         title: 'About us'
+      },
+      route: {
+        meta: {
+          aboutUsMeta1: true,
+          $aboutUsMeta2: '[1,2,3]'
+        }
       }
     })
   })

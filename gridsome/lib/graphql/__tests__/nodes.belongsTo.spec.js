@@ -3,8 +3,8 @@ const PluginAPI = require('../../app/PluginAPI')
 
 let app, api
 
-beforeEach(() => {
-  app = new App(__dirname, {
+beforeEach(async () => {
+  app = await new App(__dirname, {
     config: {
       plugins: []
     }
@@ -40,11 +40,18 @@ test('create node reference', async () => {
     id: '1',
     title: 'Post A',
     author: { typeName: 'Author', id: '2' },
-    user: { typeName: 'Author', id: '2' }
+    user: { typeName: 'Author', id: '2' },
+    users: [{ typeName: 'Author', id: '2' }]
   })
 
   books.addNode({
     id: '2',
+    title: 'Post B',
+    users: [{ typeName: 'Author', id: '2' }]
+  })
+
+  books.addNode({
+    id: '3',
     title: 'Post B',
     authorRef: '2'
   })
@@ -71,14 +78,16 @@ test('create node reference', async () => {
   const { errors, data } = await createSchemaAndExecute(query)
 
   expect(errors).toBeUndefined()
-  expect(data.author.belongsTo.edges).toHaveLength(3)
-  expect(data.author.belongsTo.totalCount).toEqual(3)
+  expect(data.author.belongsTo.edges).toHaveLength(4)
+  expect(data.author.belongsTo.totalCount).toEqual(4)
   expect(data.author.belongsTo.pageInfo.totalPages).toEqual(1)
   expect(data.author.belongsTo.edges[0].node.__typename).toEqual('Author')
   expect(data.author.belongsTo.edges[1].node.id).toEqual('1')
   expect(data.author.belongsTo.edges[1].node.__typename).toEqual('Book')
   expect(data.author.belongsTo.edges[2].node.id).toEqual('2')
   expect(data.author.belongsTo.edges[2].node.__typename).toEqual('Book')
+  expect(data.author.belongsTo.edges[3].node.id).toEqual('3')
+  expect(data.author.belongsTo.edges[3].node.__typename).toEqual('Book')
 })
 
 test('get references from custom schema', async () => {

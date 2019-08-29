@@ -99,7 +99,7 @@ test('set custom favicon sizes', () => {
 
 test('setup webpack client config', async () => {
   const app = await createApp(context, undefined, BOOTSTRAP_CONFIG)
-  const config = await app.resolveWebpackConfig()
+  const config = await app.compiler.resolveWebpackConfig()
 
   expect(config.output.publicPath).toEqual('/')
   expect(config.entry.app).toHaveLength(1)
@@ -109,7 +109,7 @@ test('setup webpack client config', async () => {
   expect(config.resolve.alias['@']).toEqual(path.join(context, 'src'))
   expect(config.resolve.alias['gridsome$']).toEqual(path.resolve(__dirname, '../../../app/index.js'))
 
-  const chain = await app.resolveChainableWebpackConfig()
+  const chain = await app.compiler.resolveChainableWebpackConfig()
   const postcss = chain.module.rule('postcss').oneOf('normal').use('postcss-loader').toConfig()
 
   expect(postcss.options.plugins).toHaveLength(1)
@@ -118,7 +118,7 @@ test('setup webpack client config', async () => {
 
 test('setup webpack server config', async () => {
   const app = await createApp(context, undefined, BOOTSTRAP_CONFIG)
-  const config = await app.resolveWebpackConfig(true)
+  const config = await app.compiler.resolveWebpackConfig(true)
 
   expect(config.target).toEqual('node')
   expect(config.output.publicPath).toEqual('/')
@@ -150,7 +150,7 @@ test('setup style loader options', async () => {
     }
   }, BOOTSTRAP_CONFIG)
 
-  const chain = await app.resolveChainableWebpackConfig()
+  const chain = await app.compiler.resolveChainableWebpackConfig()
   const oneOf = ['normal', 'modules']
 
   expect(app.config.css.split).toEqual(true)
@@ -175,6 +175,21 @@ test('setup style loader options', async () => {
   })
 })
 
+test('config.chainWenbpack', async () => {
+  const app = await createApp(context, {
+    localConfig: {
+      chainWebpack (config) {
+        config.mode('test')
+      }
+    }
+  }, BOOTSTRAP_CONFIG)
+
+  const config = await app.compiler.resolveWebpackConfig()
+
+  expect(config.entry.app).toBeDefined()
+  expect(config.mode).toEqual('test')
+})
+
 test('config.configureWebpack as object', async () => {
   const app = await createApp(context, {
     localConfig: {
@@ -184,7 +199,7 @@ test('config.configureWebpack as object', async () => {
     }
   }, BOOTSTRAP_CONFIG)
 
-  const config = await app.resolveWebpackConfig()
+  const config = await app.compiler.resolveWebpackConfig()
 
   expect(config.entry.app).toBeDefined()
   expect(config.mode).toEqual('test')
@@ -202,7 +217,7 @@ test('create new config in config.configureWebpack', async () => {
     }
   }, BOOTSTRAP_CONFIG)
 
-  const config = await app.resolveWebpackConfig()
+  const config = await app.compiler.resolveWebpackConfig()
 
   expect(config).toMatchObject({
     mode: 'test',
@@ -221,25 +236,25 @@ test('modify config in config.configureWebpack', async () => {
     }
   }, BOOTSTRAP_CONFIG)
 
-  const config = await app.resolveWebpackConfig()
+  const config = await app.compiler.resolveWebpackConfig()
 
   expect(config.entry.app).toBeDefined()
   expect(config.mode).toEqual('test')
 })
 
 test('api.configureWebpack as object', async () => {
-  const { app, api } = createPlugin()
+  const { app, api } = await createPlugin()
 
   api.configureWebpack({ mode: 'test' })
 
-  const config = await app.resolveWebpackConfig()
+  const config = await app.compiler.resolveWebpackConfig()
 
   expect(config.entry.app).toBeDefined()
   expect(config.mode).toEqual('test')
 })
 
 test('create new config in api.configureWebpack', async () => {
-  const { app, api } = createPlugin()
+  const { app, api } = await createPlugin()
 
   api.configureWebpack(() => ({
     mode: 'test',
@@ -248,7 +263,7 @@ test('create new config in api.configureWebpack', async () => {
     }
   }))
 
-  const config = await app.resolveWebpackConfig()
+  const config = await app.compiler.resolveWebpackConfig()
 
   expect(config).toMatchObject({
     mode: 'test',
@@ -259,13 +274,13 @@ test('create new config in api.configureWebpack', async () => {
 })
 
 test('modify config in api.configureWebpack', async () => {
-  const { app, api } = createPlugin()
+  const { app, api } = await createPlugin()
 
   api.configureWebpack(config => {
     config.mode = 'test'
   })
 
-  const config = await app.resolveWebpackConfig()
+  const config = await app.compiler.resolveWebpackConfig()
 
   expect(config.entry.app).toBeDefined()
   expect(config.mode).toEqual('test')
@@ -283,11 +298,41 @@ test('do not allow a custom publicPath', async () => {
     }
   }, BOOTSTRAP_CONFIG)
 
-  await expect(app.resolveWebpackConfig()).rejects.toThrow('pathPrefix')
+  await expect(app.compiler.resolveWebpackConfig()).rejects.toThrow('pathPrefix')
 })
 
-function createPlugin (context = '/') {
-  const app = new App(context).init()
+test('tap into plugin instance', async () => {
+  const fn = jest.fn(name => name)
+
+  function TestOne (api) {
+    this.test = fn
+
+    api._app.hooks.plugin.for('TestTwo').tap('TestOne', plugin => {
+      plugin.test('TestOne')
+    })
+  }
+
+  function TestTwo (api) {
+    this.test = fn
+
+    api._app.hooks.plugin.for('TestOne').tap('TestTwo', plugin => {
+      plugin.test('TestTwo')
+    })
+  }
+
+  await createApp(context, {
+    localConfig: {
+      plugins: [TestOne, TestTwo]
+    }
+  }, BOOTSTRAP_CONFIG)
+
+  expect(fn.mock.calls).toHaveLength(2)
+  expect(fn.mock.calls[0][0]).toEqual('TestTwo')
+  expect(fn.mock.calls[1][0]).toEqual('TestOne')
+})
+
+async function createPlugin (context = '/') {
+  const app = await new App(context).init()
   const api = new PluginAPI(app, { entry: { options: {}, clientOptions: undefined }})
 
   return { app, api }

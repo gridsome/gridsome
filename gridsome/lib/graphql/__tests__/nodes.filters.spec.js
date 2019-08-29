@@ -3,8 +3,8 @@ const PluginAPI = require('../../app/PluginAPI')
 
 let app, api
 
-beforeEach(() => {
-  app = new App(__dirname, {
+beforeEach(async () => {
+  app = await new App(__dirname, {
     config: {
       plugins: []
     }
