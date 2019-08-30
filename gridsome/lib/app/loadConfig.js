@@ -203,7 +203,7 @@ function normalizeTemplates (context, config, localConfig) {
   const { templatesDir } = config
   const res = {}
 
-  const normalize = (typeName, options) => {
+  const normalize = (typeName, options, i = 0) => {
     if (typeof options === 'string') {
       const { error, value } = Joi.validate({
         typeName,
@@ -218,6 +218,10 @@ function normalizeTemplates (context, config, localConfig) {
       }
 
       return value
+    }
+
+    if (i === 0 && typeof options.name === 'undefined') {
+      options.name = 'default'
     }
 
     if (
@@ -254,8 +258,8 @@ function normalizeTemplates (context, config, localConfig) {
     res[typeName] = res[typeName] || []
 
     if (Array.isArray(options)) {
-      options.forEach(options => {
-        res[typeName].push(normalize(typeName, options))
+      options.forEach((options, i) => {
+        res[typeName].push(normalize(typeName, options, i))
       })
     } else {
       res[typeName].push(normalize(typeName, options))

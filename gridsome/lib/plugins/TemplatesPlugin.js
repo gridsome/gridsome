@@ -168,7 +168,6 @@ class TemplatesPlugin {
           typeName: options.typeName,
           dateField: options.dateField,
           path: options.route,
-          fieldName: 'path',
           from: FROM_CONTENT_TYPE
         })
 
@@ -191,7 +190,7 @@ class TemplatesPlugin {
           switch (typeof template.path) {
             case 'string': path[template.name] = makePath(options, template); break
             case 'function ': path[template.name] = template.path(options); break
-            default: path.default = options.path
+            default: path[template.name] = options.path
           }
 
           // - set default path as root field for plugins that depends on it
