@@ -513,6 +513,40 @@ test.each([
   expect(node.path).toEqual(path)
 })
 
+test('custom slugify function', async () => {
+  const api = await createPlugin(undefined, {
+    permalinks: {
+      slugify: () => 'foo_bar'
+    }
+  })
+
+  const contentType = api.store.addContentType({
+    typeName: 'Post',
+    route: '/path/:title'
+  })
+
+  const node = contentType.addNode({ title: 'FooBar' })
+
+  expect(node.path).toEqual('/path/foo_bar')
+})
+
+test('disable slugify', async () => {
+  const api = await createPlugin(undefined, {
+    permalinks: {
+      slugify: false
+    }
+  })
+
+  const contentType = api.store.addContentType({
+    typeName: 'Post',
+    route: '/path/:title'
+  })
+
+  const node = contentType.addNode({ title: 'FooBar' })
+
+  expect(node.path).toEqual('/path/FooBar')
+})
+
 test('dynamic route with non-optional repeated segments', async () => {
   const api = await createPlugin()
   const contentType = api.store.addContentType({

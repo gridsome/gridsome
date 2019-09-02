@@ -9,7 +9,6 @@ module.exports = function processNodeFields (node, contentType) {
   const results = processFields(fields, {
     origin: node.internal.origin,
     context: contentType._assetsContext,
-    camelCased: contentType._camelCasedFieldNames,
     resolveAbsolute: contentType._resolveAbsolutePaths
   })
 

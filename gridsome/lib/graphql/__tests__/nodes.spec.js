@@ -1,6 +1,7 @@
 const path = require('path')
 const App = require('../../app/App')
 const PluginAPI = require('../../app/PluginAPI')
+const { BOOTSTRAP_PAGES } = require('../../utils/constants')
 const JSONTransformer = require('./__fixtures__/JSONTransformer')
 
 const context = path.resolve(__dirname, '../../__tests__')
@@ -868,6 +869,55 @@ test('process file types in schema', async () => {
   expect(data.testPost.text).toEqual('pdf')
 })
 
-function createSchemaAndExecute (query) {
-  return app.schema.buildSchema().runQuery(query)
+describe('permalinks config', () => {
+  const _createApp = async permalinks => createApp({
+    templates: {
+      Post: '/post/:id'
+    },
+    permalinks,
+    plugins: [
+      function (api) {
+        api.loadSource(({ addContentType }) => {
+          addContentType('Post').addNode({
+            id: '1',
+            title: 'Something'
+          })
+        })
+      }
+    ]
+  })
+
+  test('generate paths with trailing slash by default', async () => {
+    const app = await _createApp()
+    const { errors, data } = await app.schema.runQuery(`query {
+      post(id: "1") {
+        path
+      }
+    }`, app)
+
+    expect(errors).toBeUndefined()
+    expect(data.post.path).toEqual('/post/1/')
+  })
+
+  test('disable trailing slash in generated path', async () => {
+    const app = await _createApp({ trailingSlash: false })
+    const { errors, data } = await app.schema.runQuery(`query {
+      post(id: "1") {
+        path
+      }
+    }`, app)
+
+    expect(errors).toBeUndefined()
+    expect(data.post.path).toEqual('/post/1')
+  })
+})
+
+async function createApp (config) {
+  const app = new App(__dirname, { config })
+
+  return app.bootstrap(BOOTSTRAP_PAGES)
+}
+
+async function createSchemaAndExecute (query, _app = app) {
+  return _app.schema.buildSchema().runQuery(query)
 }

@@ -33,6 +33,12 @@ class App {
       plugin: new HookMap(() => new SyncHook(['plugin']))
     }
 
+    if (this.config.permalinks.slugify) {
+      this._slugify = this.config.permalinks.slugify.use
+    } else {
+      this._slugify = v => v
+    }
+
     autoBind(this)
   }
 
@@ -181,6 +187,10 @@ class App {
     return isRelative(value)
       ? path.join(this.context, value)
       : value
+  }
+
+  slugify (value = '') {
+    return this._slugify(value, this.config.permalinks.slugify.options)
   }
 
   graphql (docOrQuery, variables = {}) {

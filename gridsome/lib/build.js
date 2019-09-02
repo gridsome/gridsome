@@ -65,8 +65,8 @@ async function writePageData (renderQueue, app) {
   for (const id in routeIds) {
     const entries = routeIds[id]
     const route = app.pages._routes.by('id', id)
-    const content = entries.reduce((acc, { path, dataInfo }) => {
-      acc[path] = [dataInfo.group, dataInfo.hash]
+    const content = entries.reduce((acc, { prettyPath, dataInfo }) => {
+      acc[prettyPath] = [dataInfo.group, dataInfo.hash]
       return acc
     }, {})
 
@@ -75,7 +75,7 @@ async function writePageData (renderQueue, app) {
       await fs.outputFile(output, JSON.stringify(content))
       meta.set(route.id, output)
     } else {
-      meta.set(route.id, content[entries[0].path])
+      meta.set(route.id, content[entries[0].prettyPath])
     }
   }
 

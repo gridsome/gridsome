@@ -13,22 +13,22 @@ test('create render queue for basic project', async () => {
 
   expect(renderPaths).toEqual(expect.arrayContaining([
     '/',
-    '/404',
-    '/about',
-    '/about-us',
-    '/docs/1',
-    '/docs/1/extra',
-    '/docs/2',
-    '/docs/2/2',
-    '/docs/2/3',
-    '/docs/2/extra',
-    '/docs/3',
-    '/docs/3/extra',
-    '/docs/4',
-    '/docs/4/extra',
-    '/docs/5',
-    '/pages/1',
-    '/pages/2'
+    '/404/',
+    '/about/',
+    '/about-us/',
+    '/docs/1/',
+    '/docs/1/extra/',
+    '/docs/2/',
+    '/docs/2/2/',
+    '/docs/2/3/',
+    '/docs/2/extra/',
+    '/docs/3/',
+    '/docs/3/extra/',
+    '/docs/4/',
+    '/docs/4/extra/',
+    '/docs/5/',
+    '/pages/1/',
+    '/pages/2/'
   ]))
 
   expect(renderPaths).toHaveLength(18)
@@ -43,38 +43,38 @@ test('create render queue for blog project', async () => {
 
   expect(renderPaths).toEqual(expect.arrayContaining([
     '/',
-    '/2',
-    '/404',
-    '/about',
-    '/category/first',
-    '/category/first/2',
-    '/category/second',
-    '/exclude-me',
-    '/first-post',
-    '/fourth-post',
-    '/post-10',
-    '/post-11',
-    '/post-12',
-    '/post-13',
-    '/post-4',
-    '/post-5',
-    '/post-6',
-    '/post-7',
-    '/post-8',
-    '/post-9',
-    '/second-post',
-    '/skip-me',
-    '/tag/1/extra',
-    '/tag/2/extra',
-    '/tag/3/extra',
-    '/tag/4/extra',
-    '/tag/4/extra/2',
-    '/tag/first-tag',
-    '/tag/fourth-tag',
-    '/tag/fourth-tag/2',
-    '/tag/second-tag',
-    '/tag/third-tag',
-    '/third-post'
+    '/2/',
+    '/404/',
+    '/about/',
+    '/category/first/',
+    '/category/first/2/',
+    '/category/second/',
+    '/exclude-me/',
+    '/first-post/',
+    '/fourth-post/',
+    '/post-10/',
+    '/post-11/',
+    '/post-12/',
+    '/post-13/',
+    '/post-4/',
+    '/post-5/',
+    '/post-6/',
+    '/post-7/',
+    '/post-8/',
+    '/post-9/',
+    '/second-post/',
+    '/skip-me/',
+    '/tag/1/extra/',
+    '/tag/2/extra/',
+    '/tag/3/extra/',
+    '/tag/4/extra/',
+    '/tag/4/extra/2/',
+    '/tag/first-tag/',
+    '/tag/fourth-tag/',
+    '/tag/fourth-tag/2/',
+    '/tag/second-tag/',
+    '/tag/third-tag/',
+    '/third-post/'
   ]))
 
   expect(renderPaths).not.toContain('/3')
@@ -175,17 +175,17 @@ test('create render queue for createPages hook', async () => {
   const paths = renderQueue.map(entry => entry.path)
 
   expect(paths).toEqual(expect.arrayContaining([
-    '/about',
-    '/movie/three',
-    '/movie/two',
-    '/movie/one',
-    '/404',
-    '/blog',
-    '/blog/2',
-    '/article/1',
-    '/article/1/2',
-    '/article/2',
-    '/article/3'
+    '/about/',
+    '/movie/three/',
+    '/movie/two/',
+    '/movie/one/',
+    '/404/',
+    '/blog/',
+    '/blog/2/',
+    '/article/1/',
+    '/article/1/2/',
+    '/article/2/',
+    '/article/3/'
   ]))
   expect(paths).toHaveLength(11)
 
@@ -222,13 +222,13 @@ describe('dynamic pages', () => {
     const paths = renderQueue.map(entry => entry.path)
 
     expect(paths).toEqual([
-      '/a/b',
+      '/a/b/',
       '/a/:b(\\d+)',
       '/a/:b',
       '/a/:b*',
       '/a/:b+',
-      '/a',
-      '/404',
+      '/a/',
+      '/404/',
       '/'
     ])
   })

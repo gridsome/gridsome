@@ -3,14 +3,18 @@ const { slugify } = require('../../utils')
 const { NOT_FOUND_NAME } = require('../../utils/constants')
 
 function genRoutes (app, routeMeta = new Map()) {
+  const { trailingSlash } = app.config.permalinks || {}
+
   const createRouteItem = (route, name = route.options.name, path = route.path) => ({
     name,
-    path,
     component: route.component,
     chunkName: genChunkName(app.context, route),
     routeMeta: routeMeta.get(route.id),
     meta: route.internal.meta,
-    type: route.type
+    type: route.type,
+    path: trailingSlash && route.type === 'static' && path !== '*' && path !== '/'
+      ? path + '/'
+      : path
   })
 
   const redirects = app.config.redirects.filter(rule => rule.status === 301)

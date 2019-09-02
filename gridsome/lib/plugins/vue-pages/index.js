@@ -11,6 +11,7 @@ class VuePages {
   }
 
   constructor (api) {
+    this.api = api
     this.store = api.store
     this.pagesDir = api.config.pagesDir
 
@@ -36,11 +37,11 @@ class VuePages {
       .loader(require.resolve(loader))
   }
 
-  async createPages ({ createPage, removePagesByComponent }) {
+  async createPages ({ slugify, createPage, removePagesByComponent }) {
     const files = await glob('**/*.vue', { cwd: this.pagesDir })
 
     for (const file of files) {
-      createPage(this.createPageOptions(file))
+      createPage(this.createPageOptions(file, slugify))
     }
 
     if (process.env.NODE_ENV === 'development') {
@@ -50,7 +51,7 @@ class VuePages {
       })
 
       watcher.on('add', file => {
-        createPage(this.createPageOptions(slash(file)))
+        createPage(this.createPageOptions(slash(file), slugify))
       })
 
       watcher.on('unlink', file => {
@@ -59,9 +60,9 @@ class VuePages {
     }
   }
 
-  createPageOptions (file) {
+  createPageOptions (file, slugify) {
     return {
-      path: createPagePath(file),
+      path: createPagePath(file, slugify),
       name: /^[iI]ndex\.vue$/.test(file) ? 'home' : undefined,
       component: path.join(this.pagesDir, file)
     }
