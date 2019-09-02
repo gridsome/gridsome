@@ -31,7 +31,8 @@ module.exports = function createRenderFn ({
     try {
       app = await renderer.renderToString(context)
     } catch (err) {
-      error(chalk.red(`Failed to render ${page.path}`))
+      const location = page.location.name || page.location.path
+      error(chalk.red(`Could not generate HTML for "${location}":`))
       throw err
     }
 

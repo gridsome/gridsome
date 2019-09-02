@@ -24,7 +24,11 @@ module.exports = async (app, defines = {}) => {
       if (err) return reject(err)
 
       if (stats.hasErrors()) {
-        const { errors } = stats.toJson()
+        const errors = stats.stats
+          .map(stats => stats.compilation.errors)
+          .reduce((acc, errors) => acc.concat(errors), [])
+          .map(err => err.error)
+
         return reject(errors[0])
       }
 

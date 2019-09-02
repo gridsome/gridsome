@@ -20,6 +20,7 @@
     "blog"
   ],
   "dependencies": {
+    "@babel/code-frame": "^7.5.5",
     "@babel/core": "^7.0.0",
     "@gridsome/cli": "^0.2.2",
     "@sindresorhus/slugify": "^0.8.0",
@@ -83,6 +84,7 @@
     "sockjs": "^0.3.19",
     "sockjs-client": "^1.3.0",
     "tapable": "2.0.0-beta.5",
+    "stack-trace": "^0.0.10",
     "url-loader": "^1.1.2",
     "vue": "^2.6.10",
     "vue-loader": "^15.7.0",
