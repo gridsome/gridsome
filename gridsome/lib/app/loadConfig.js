@@ -5,7 +5,7 @@ const crypto = require('crypto')
 const dotenv = require('dotenv')
 const isRelative = require('is-relative')
 const colorString = require('color-string')
-const { defaultsDeep, camelCase } = require('lodash')
+const { defaultsDeep, camelCase, isString, isFunction } = require('lodash')
 const { internalRE, transformerRE, SUPPORTED_IMAGE_TYPES } = require('../utils/constants')
 
 const builtInPlugins = [
@@ -258,8 +258,10 @@ function normalizeTemplates (context, config, localConfig) {
       options.forEach((options, i) => {
         res[typeName].push(normalize(typeName, options, i))
       })
-    } else {
+    } else if (isString(options) || isFunction(options)) {
       res[typeName].push(normalize(typeName, options))
+    } else {
+      throw Error(`Template options for "${typeName}" cannot be an object.`)
     }
   }
 

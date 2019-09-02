@@ -168,6 +168,18 @@ test('setup templates config from array', () => {
   })
 })
 
+test('fail if a template is an object', () => {
+  expect(() => loadConfig(context, {
+    localConfig: {
+      templates: {
+        Post: {
+          path: '/:year/:month/:day/:slug'
+        }
+      }
+    }
+  })).toThrow('cannot be an object')
+})
+
 test('fail if a template has no name', () => {
   expect(() => loadConfig(context, {
     localConfig: {
