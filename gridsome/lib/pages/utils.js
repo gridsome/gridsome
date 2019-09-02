@@ -5,61 +5,6 @@ exports.normalizePath = value => {
   return '/' + value.split('/').filter(Boolean).join('/')
 }
 
-exports.createPagesAPI = function (api, { digest }) {
-  const { graphql, store, pages } = api._app
-  const internals = { digest, isManaged: false }
-
-  return {
-    graphql,
-    getContentTypes () {
-      return store.collections
-    },
-    getContentType (typeName) {
-      return store.getContentType(typeName)
-    },
-    createPage (options) {
-      pages.createPage(options, internals)
-    },
-    createRoute (options) {
-      return pages.createRoute(options, internals)
-    }
-  }
-}
-
-exports.createManagedPagesAPI = function (api, { digest }) {
-  const basePagesAPI = exports.createPagesAPI(api, { digest })
-  const internals = { digest, isManaged: true }
-  const { pages } = api._app
-
-  return {
-    ...basePagesAPI,
-    createPage (options) {
-      pages.createPage(options, internals)
-    },
-    updatePage (options) {
-      pages.updatePage(options, internals)
-    },
-    removePage (page) {
-      pages.removePage(page)
-    },
-    removePageByPath (path) {
-      pages.removePageByPath(path)
-    },
-    removePagesByComponent (component) {
-      pages.removePagesByComponent(component)
-    },
-    findAndRemovePages (query) {
-      pages.findAndRemovePages(query)
-    },
-    createRoute (options) {
-      return pages.createRoute(options, internals)
-    },
-    removeRoute (id) {
-      pages.removeRoute(id)
-    }
-  }
-}
-
 const hasDynamicParam = value => /:|\(/.test(value)
 
 const processRexExp = value => {

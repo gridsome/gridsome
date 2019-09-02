@@ -104,7 +104,7 @@ class Pages {
   async createPages () {
     const now = Date.now() + process.hrtime()[1]
     const digest = hashString(now.toString())
-    const { createPagesAPI, createManagedPagesAPI } = require('./utils')
+    const { createPagesActions, createManagedPagesActions } = require('../app/actions')
 
     this.clearCache()
 
@@ -113,13 +113,13 @@ class Pages {
     }
 
     await this.app.events.dispatch('createPages', api => {
-      return createPagesAPI(api, { digest })
+      return createPagesActions(api, this.app, { digest })
     })
 
     this.enableIndices()
 
     await this.app.events.dispatch('createManagedPages', api => {
-      return createManagedPagesAPI(api, { digest })
+      return createManagedPagesActions(api, this.app, { digest })
     })
 
     // remove unmanaged pages created in earlier digest cycles
@@ -177,39 +177,19 @@ class Pages {
   }
 
   createPage (input, meta = {}) {
-    if (typeof input.route === 'string') {
-      // TODO: remove this route workaround
-      const options = this._routes.by('path', input.route)
-      let route = options ? new Route(options, this) : null
-
-      if (!route) {
-        route = this.createRoute({
-          path: input.route,
-          component: input.component
-        }, meta)
-      }
-
-      route.addPage({
-        path: input.path,
-        context: input.context,
-        queryVariables: input.queryVariables
-      })
-
-      return
-    }
-
     const options = validateInput('page', input)
     const type = getRouteType(options.path)
 
     const route = this.createRoute({
       type,
-      name: options.name,
       path: options.path,
       component: options.component,
+      name: options.route.name,
       meta: options.route.meta
     }, meta)
 
     return route.addPage({
+      id: options.id,
       path: options.path,
       context: options.context,
       queryVariables: options.queryVariables
@@ -229,6 +209,7 @@ class Pages {
     }, meta)
 
     return route.updatePage({
+      id: options.id,
       path: options.path,
       context: options.context,
       queryVariables: options.queryVariables
@@ -321,7 +302,7 @@ class Pages {
 
     const keys = []
     const regexp = pathToRegexp(path, keys)
-    const id = createHash(`route-${path}`)
+    const id = options.id || createHash(`route-${path}`)
 
     if (paginate) {
       const segments = path.split('/').filter(Boolean)
@@ -459,8 +440,16 @@ class Route {
   }
 
   updatePage (input) {
-    const options = input.id ? input : this._createPageOptions(input)
+    const options = this._createPageOptions(input)
     const oldOptions = this._pages.by('id', options.id)
+
+    if (!oldOptions) {
+      throw new Error(
+        `Cannot update page "${options.path}". ` +
+        `Existing page with id "${options.id}" could not be found.`
+      )
+    }
+
     const newOptions = Object.assign({}, options, {
       $loki: oldOptions.$loki,
       meta: oldOptions.meta
@@ -477,10 +466,10 @@ class Route {
 
   _createPageOptions (input) {
     const { regexp, digest, isManaged, query } = this.internal
-    const { path: _path, context, queryVariables } = validateInput('routePage', input)
+    const { id: _id, path: _path, context, queryVariables } = validateInput('routePage', input)
     const normalPath = normalizePath(_path)
     const isDynamic = /:/.test(normalPath)
-    const id = createHash(`page-${normalPath}`)
+    const id = _id || createHash(`page-${normalPath}`)
 
     if (this.type === TYPE_STATIC) {
       invariant(

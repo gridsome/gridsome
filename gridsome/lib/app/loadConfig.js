@@ -3,16 +3,16 @@ const path = require('path')
 const fs = require('fs-extra')
 const crypto = require('crypto')
 const dotenv = require('dotenv')
+const isRelative = require('is-relative')
 const colorString = require('color-string')
-const { defaultsDeep, camelCase } = require('lodash')
+const { defaultsDeep, camelCase, isString, isFunction } = require('lodash')
 const { internalRE, transformerRE, SUPPORTED_IMAGE_TYPES } = require('../utils/constants')
 
 const builtInPlugins = [
   path.resolve(__dirname, '../plugins/vue-components'),
   path.resolve(__dirname, '../plugins/vue-pages'),
-  path.resolve(__dirname, '../plugins/vue-templates'),
-  path.resolve(__dirname, '../plugins/NodePathPlugin.js'),
-  path.resolve(__dirname, '../plugins/RedirectsPlugin.js')
+  path.resolve(__dirname, '../plugins/RedirectsPlugin.js'),
+  path.resolve(__dirname, '../plugins/TemplatesPlugin.js')
 ]
 
 // TODO: use joi to define and validate config schema
@@ -25,7 +25,7 @@ module.exports = (context, options = {}) => {
     return options.config
   }
 
-  const resolve = (...p) => path.resolve(context, ...p)
+  const resolve = (...p) => path.join(context, ...p)
   const isProd = process.env.NODE_ENV === 'production'
   const configPath = resolve('gridsome.config.js')
   const localIndex = resolve('src/index.html')
@@ -92,8 +92,9 @@ module.exports = (context, options = {}) => {
   config.imageCacheDir = resolve('.cache', assetsDir, 'static')
   config.maxImageWidth = localConfig.maxImageWidth || 2560
   config.imageExtensions = SUPPORTED_IMAGE_TYPES
-  config.pagesDir = resolve('src/pages')
-  config.templatesDir = resolve('src/templates')
+  config.pagesDir = resolve(localConfig._pagesDir || './src/pages')
+  config.templatesDir = resolve(localConfig._templatesDir || './src/templates')
+  config.templates = normalizeTemplates(context, config, localConfig)
   config.componentParsers = []
 
   config.chainWebpack = localConfig.chainWebpack
@@ -182,6 +183,89 @@ function resolvePkg (context) {
 function normalizePathPrefix (pathPrefix = '') {
   const segments = pathPrefix.split('/').filter(s => !!s)
   return segments.length ? `/${segments.join('/')}` : ''
+}
+
+const template = Joi.object()
+  .label('Template')
+  .keys({
+    typeName: Joi.string().required(),
+    name: Joi.string().required(),
+    path: Joi.alternatives([
+      Joi.string().regex(/^\//, 'Template string paths must begin with a slash'),
+      Joi.func()
+    ]).required(),
+    component: Joi.string().required()
+  })
+
+function normalizeTemplates (context, config, localConfig) {
+  const { templates = {}} = localConfig
+  const { templatesDir } = config
+  const res = {}
+
+  const normalize = (typeName, options, i = 0) => {
+    if (typeof options === 'string') {
+      const { error, value } = Joi.validate({
+        typeName,
+        path: options,
+        component: path.join(templatesDir, `${typeName}.vue`),
+        name: 'default'
+      }, template)
+
+      if (error) {
+        throw new Error(error.message)
+      }
+
+      return value
+    }
+
+    if (i === 0 && typeof options.name === 'undefined') {
+      options.name = 'default'
+    }
+
+    if (
+      Array.isArray(res[typeName]) &&
+      res[typeName].find(tpl => tpl.name === options.name)
+    ) {
+      throw new Error(
+        `A template for "${typeName}" with the name "${options.name}" already exist.`
+      )
+    }
+
+    const { error, value } = Joi.validate({
+      typeName,
+      name: options.name,
+      path: options.path,
+      component: options.component
+        ? isRelative(options.component)
+          ? path.join(context, options.component)
+          : options.component
+        : path.join(templatesDir, `${typeName}.vue`)
+    }, template)
+
+    if (error) {
+      throw new Error(error.message)
+    }
+
+    return value
+  }
+
+  for (const typeName in templates) {
+    const options = templates[typeName]
+
+    res[typeName] = res[typeName] || []
+
+    if (Array.isArray(options)) {
+      options.forEach((options, i) => {
+        res[typeName].push(normalize(typeName, options, i))
+      })
+    } else if (isString(options) || isFunction(options)) {
+      res[typeName].push(normalize(typeName, options))
+    } else {
+      throw Error(`Template options for "${typeName}" cannot be an object.`)
+    }
+  }
+
+  return res
 }
 
 function normalizePlugins (context, plugins) {

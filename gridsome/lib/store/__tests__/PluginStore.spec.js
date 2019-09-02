@@ -3,8 +3,8 @@ const PluginAPI = require('../../app/PluginAPI')
 const JSONTransformer = require('./__fixtures__/JSONTransformer')
 const { BOOTSTRAP_PAGES } = require('../../utils/constants')
 
-async function createPlugin (context = '/') {
-  const app = await new App(context).init()
+async function createPlugin (context = '/', localConfig) {
+  const app = await new App(context, { localConfig }).init()
   const api = new PluginAPI(app, {
     entry: {
       use: 'test-plugin',
@@ -45,9 +45,6 @@ test('add content type', async () => {
   expect(contentType._refs).toMatchObject({})
   expect(contentType._fields).toMatchObject({})
   expect(contentType._resolveAbsolutePaths).toEqual(false)
-  expect(contentType.options.routeKeys[0]).toMatchObject({ name: 'id', path: ['id'], fieldName: 'id', repeat: false })
-  expect(contentType.options.routeKeys[1]).toMatchObject({ name: 'bar', path: ['bar'], fieldName: 'bar', repeat: false })
-  expect(contentType.options.routeKeys[2]).toMatchObject({ name: 'foo_raw', path: ['foo'], fieldName: 'foo', repeat: false })
 
   expect(contentType.addNode).toBeInstanceOf(Function)
   expect(contentType.updateNode).toBeInstanceOf(Function)
@@ -373,6 +370,20 @@ test('add type with custom fields in route', async () => {
   })
 
   expect(node.path).toEqual('/my-value/My%20value/abcDef/10/2/thriller/1/missing/lorem-ipsum')
+})
+
+// TODO: the path field should be a schema field instead
+test('set content type template with config', async () => {
+  const api = await createPlugin('/', {
+    templates: {
+      Post: '/blog/:id'
+    }
+  })
+
+  const contentType = api.store.addContentType('Post')
+  const node = contentType.addNode({ id: '1' })
+
+  expect(node.path).toEqual('/blog/1')
 })
 
 // TODO: move dateField and route options to global permalinks config
