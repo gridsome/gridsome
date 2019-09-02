@@ -18,7 +18,7 @@ const makeId = (uid, name) => {
   return crypto.createHash('md5').update(uid + name).digest('hex')
 }
 
-const makePath = (object, { dateField, routeKeys, createPath }) => {
+const makePath = (object, { routeKeys, createPath }, dateField) => {
   const date = moment.utc(object[dateField], ISO_8601_FORMAT, true)
   const length = routeKeys.length
   const params = {}
@@ -86,7 +86,6 @@ const createTemplateOptions = options => {
     name: options.name || 'default',
     path: options.path,
     typeName: options.typeName,
-    dateField: options.dateField || 'date',
     component: options.component,
     from: options.from || FROM_CONFIG,
     routeKeys: routeKeys
@@ -178,6 +177,7 @@ class TemplatesPlugin {
 
     api.onCreateNode((options, contentType) => {
       const typeTemplates = templates.byTypeName.get(contentType.typeName)
+      const { _dateField = 'date' } = contentType
 
       if (typeof options.path === 'string') {
         options.path = '/' + trim(options.path, '/')
@@ -188,7 +188,7 @@ class TemplatesPlugin {
           const path = options.internal.path = options.internal.path || {}
 
           switch (typeof template.path) {
-            case 'string': path[template.name] = makePath(options, template); break
+            case 'string': path[template.name] = makePath(options, template, _dateField); break
             case 'function ': path[template.name] = template.path(options); break
             default: path[template.name] = options.path
           }

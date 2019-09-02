@@ -194,8 +194,7 @@ const template = Joi.object()
       Joi.string().regex(/^\//, 'Template string paths must begin with a slash'),
       Joi.func()
     ]).required(),
-    component: Joi.string().required(),
-    dateField: Joi.string().required()
+    component: Joi.string().required()
   })
 
 function normalizeTemplates (context, config, localConfig) {
@@ -209,8 +208,7 @@ function normalizeTemplates (context, config, localConfig) {
         typeName,
         path: options,
         component: path.join(templatesDir, `${typeName}.vue`),
-        name: 'default',
-        dateField: 'date'
+        name: 'default'
       }, template)
 
       if (error) {
@@ -241,8 +239,7 @@ function normalizeTemplates (context, config, localConfig) {
         ? isRelative(options.component)
           ? path.join(context, options.component)
           : options.component
-        : path.join(templatesDir, `${typeName}.vue`),
-      dateField: options.dateField || 'date'
+        : path.join(templatesDir, `${typeName}.vue`)
     }, template)
 
     if (error) {
