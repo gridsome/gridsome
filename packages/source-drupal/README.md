@@ -15,7 +15,10 @@
 
 ### Quick Overview
 
-This is the source plugin for pulling in data from the Drupal content management system for Gridsome. The Drupal module [JSON:API](https://www.drupal.org/project/jsonapi) is required for this plugin to work correctly. 
+**BREAKING CHANGE FROM 0.2.1 to 0.3.0**
+The shape for accessing relationships on a node via GraphQL has changed. See [Example Page Queries](#example-page-queries).
+
+This is the source plugin for pulling in data from the Drupal content management system for Gridsome. The Drupal module [JSON:API](https://www.drupal.org/project/jsonapi) is required for this plugin to work correctly.
 
 ### Install
 * `yarn add @gridsome/source-drupal`
@@ -120,7 +123,7 @@ Path parameters can be any GraphQL field on that node:
 `node--article: 'aritlces/:langcode/:title' -> /aritcles/en/lorem-ipsum`
 
 ### Contenta CMS
-[Contenta CMS](https://github.com/contentacms/contenta_jsonapi#--contenta-cms--) should work out-of-the-box with @gridsome/source-drupal. The main difference being, Contenta CMS is by default already using [JSON:API Extras](https://www.drupal.org/project/jsonapi_extras). This gives the user more flexibility and control over resources returned by the api. 
+[Contenta CMS](https://github.com/contentacms/contenta_jsonapi#--contenta-cms--) should work out-of-the-box with @gridsome/source-drupal. The main difference being, Contenta CMS is by default already using [JSON:API Extras](https://www.drupal.org/project/jsonapi_extras). This gives the user more flexibility and control over resources returned by the api.
 
 JSON:API has a clear finite list of features which are listed on its [Drupal project page](https://www.drupal.org/project/jsonapi_extras).
 
@@ -196,11 +199,11 @@ List all `DrupalNodeArticle` using `<page-query>` in a Gridsome page:
 ```
 <page-query>
   query Articles {
-    allDrupalNodeArticle (perPage:100) {
+    allDrupalNodeArticle(perPage:100) {
       edges {
         node {
-          id,
-          title,
+          id
+          title
           path
         }
       }
@@ -213,24 +216,34 @@ Get the details of an individual `DrupalNodeArticle` using `<page-query>` in a G
 
 ```
 <page-query>
-  query Article ($path: String!) {
-    drupalNodeArticles (path: $path) {
-      title,
-      date,
+  query Article($id: String!) {
+    drupalNodeArticle(id: $id) {
+      title
+      date
       body {
         processed
-      },
+      }
       field_image {
-        filename,
-        uri {
-          url
+        node {
+          filename
+          uri {
+            url
+          }
         }
-      },
+        meta {
+          alt
+          title
+        }
+      }
       field_tags {
-        name,
-        path
+        node {
+          name
+          path
+        }
       }
     }
   }
 </page-query>
 ```
+
+Any `relationships` containing a `meta` object in the JSON:API response will be merged as a sibling object alongside `node`. See `field_image` above as an example.

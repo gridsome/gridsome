@@ -5,6 +5,7 @@ const invariant = require('invariant')
 const initWatcher = require('./watch')
 const { Collection } = require('lokijs')
 const { FSWatcher } = require('chokidar')
+const { parseQuery } = require('../graphql')
 const pathToRegexp = require('path-to-regexp')
 const createPageQuery = require('./createPageQuery')
 const { HookMap, SyncWaterfallHook, SyncBailHook } = require('tapable')
@@ -101,8 +102,9 @@ class Pages {
   }
 
   async createPages () {
-    const digest = hashString(Date.now().toString())
-    const { createPagesAPI, createManagedPagesAPI } = require('./utils')
+    const now = Date.now() + process.hrtime()[1]
+    const digest = hashString(now.toString())
+    const { createPagesActions, createManagedPagesActions } = require('../app/actions')
 
     this.clearCache()
 
@@ -111,13 +113,13 @@ class Pages {
     }
 
     await this.app.events.dispatch('createPages', api => {
-      return createPagesAPI(api, { digest })
+      return createPagesActions(api, this.app, { digest })
     })
 
     this.enableIndices()
 
     await this.app.events.dispatch('createManagedPages', api => {
-      return createManagedPagesAPI(api, { digest })
+      return createManagedPagesActions(api, this.app, { digest })
     })
 
     // remove unmanaged pages created in earlier digest cycles
@@ -175,38 +177,15 @@ class Pages {
   }
 
   createPage (input, meta = {}) {
-    if (input.route) {
-      // TODO: remove this route workaround
-      const options = this._routes.by('path', input.route)
-      let route = options ? new Route(options, this) : null
-
-      if (!route) {
-        route = this.createRoute({
-          path: input.route,
-          component: input.component
-        }, meta)
-      }
-
-      route.addPage({
-        id: input.id,
-        path: input.path,
-        context: input.context,
-        queryVariables: input.queryVariables
-      })
-
-      return
-    }
-
-    delete input.route
-
     const options = validateInput('page', input)
     const type = getRouteType(options.path)
 
     const route = this.createRoute({
       type,
-      name: options.name,
       path: options.path,
-      component: options.component
+      component: options.component,
+      name: options.route.name,
+      meta: options.route.meta
     }, meta)
 
     return route.addPage({
@@ -225,7 +204,8 @@ class Pages {
       type,
       name: options.name,
       path: options.path,
-      component: options.component
+      component: options.component,
+      meta: options.route.meta
     }, meta)
 
     return route.updatePage({
@@ -270,6 +250,40 @@ class Pages {
     return options ? new Route(options, this) : null
   }
 
+  getMatch (path) {
+    let route = this._routes.by('path', path)
+
+    if (!route) {
+      const chain = this._routes.chain().simplesort('internal.priority', true)
+      route = chain.data().find(route => route.internal.regexp.test(path))
+    }
+
+    if (route) {
+      const { internal } = route
+      const length = internal.keys.length
+      const m = internal.regexp.exec(path)
+      const params = {}
+
+      for (var i = 0; i < length; i++) {
+        const key = internal.keys[i]
+        const param = m[i + 1]
+
+        if (!param) continue
+
+        params[key.name] = decodeURIComponent(param)
+
+        if (key.repeat) {
+          params[key.name] = params[key.name].split(key.delimiter)
+        }
+      }
+
+      return {
+        route: new Route(route, this),
+        params
+      }
+    }
+  }
+
   getPage (id) {
     return this._pages.by('id', id)
   }
@@ -277,7 +291,8 @@ class Pages {
   _createRouteOptions (options, meta = {}) {
     const component = this.app.resolve(options.component)
     const { pageQuery } = this._parseComponent(component)
-    const { source, document, paginate } = createPageQuery(pageQuery)
+    const parsedQuery = this._parseQuery(pageQuery)
+    const { source, document, paginate } = this._createPageQuery(parsedQuery)
 
     const type = options.type
     const normalPath = normalizePath(options.path)
@@ -285,7 +300,8 @@ class Pages {
     let name = options.name
     let path = normalPath
 
-    const regexp = pathToRegexp(path)
+    const keys = []
+    const regexp = pathToRegexp(path, keys)
     const id = options.id || createHash(`route-${path}`)
 
     if (paginate) {
@@ -306,10 +322,12 @@ class Pages {
       path,
       component,
       internal: Object.assign({}, meta, {
+        meta: options.meta || {},
         path: normalPath,
         isDynamic,
         priority,
         regexp,
+        keys,
         query: {
           source,
           document,
@@ -317,6 +335,14 @@ class Pages {
         }
       })
     })
+  }
+
+  _parseQuery (query) {
+    return parseQuery(this.app.schema.getSchema(), query)
+  }
+
+  _createPageQuery (parsedQuery, vars = {}) {
+    return createPageQuery(parsedQuery, vars)
   }
 
   _resolvePriority (path) {
@@ -386,6 +412,7 @@ class Route {
     this.internal = options.internal
     this.options = options
 
+    Object.defineProperty(this, '_factory', { value: factory })
     Object.defineProperty(this, '_pages', { value: factory._pages })
     Object.defineProperty(this, '_createPage', { value: factory.hooks.createPage })
   }
@@ -458,10 +485,9 @@ class Route {
       )
     }
 
-    const { paginate, variables, filters } = createPageQuery(
-      query.source,
-      queryVariables || context
-    )
+    const vars = queryVariables || context || {}
+    const parsedQuery = this._factory._parseQuery(query.source)
+    const { paginate, variables, filters } = this._factory._createPageQuery(parsedQuery, vars)
 
     return this._createPage.call({
       id,

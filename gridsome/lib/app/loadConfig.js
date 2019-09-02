@@ -5,7 +5,7 @@ const crypto = require('crypto')
 const dotenv = require('dotenv')
 const isRelative = require('is-relative')
 const colorString = require('color-string')
-const { defaultsDeep, camelCase } = require('lodash')
+const { defaultsDeep, camelCase, isString, isFunction } = require('lodash')
 const { internalRE, transformerRE, SUPPORTED_IMAGE_TYPES } = require('../utils/constants')
 
 const builtInPlugins = [
@@ -71,7 +71,7 @@ module.exports = (context, options = {}) => {
 
   config.pkg = options.pkg || resolvePkg(context)
   config.host = args.host || localConfig.host || 'localhost'
-  config.port = parseInt(args.port || localConfig.port, 10) || 8080
+  config.port = parseInt(args.port || localConfig.port, 10) || null
   config.plugins = normalizePlugins(context, plugins)
   config.redirects = normalizeRedirects(localConfig)
   config.transformers = resolveTransformers(config.pkg, localConfig)
@@ -119,7 +119,12 @@ module.exports = (context, options = {}) => {
   config.siteName = localConfig.siteName || path.parse(context).name
   config.titleTemplate = localConfig.titleTemplate || `%s - ${config.siteName}`
   config.siteDescription = localConfig.siteDescription || ''
-  config.metaData = localConfig.metaData || {}
+  config.metadata = localConfig.metadata || {}
+
+  // TODO: remove before 1.0
+  if (localConfig.metaData) {
+    config.metadata = localConfig.metaData
+  }
 
   config.manifestsDir = path.join(config.assetsDir, 'manifest')
   config.clientManifestPath = path.join(config.manifestsDir, 'client.json')
@@ -179,41 +184,84 @@ function normalizePathPrefix (pathPrefix = '') {
   return segments.length ? `/${segments.join('/')}` : ''
 }
 
+const template = Joi.object()
+  .label('Template')
+  .keys({
+    typeName: Joi.string().required(),
+    name: Joi.string().required(),
+    path: Joi.alternatives([
+      Joi.string().regex(/^\//, 'Template string paths must begin with a slash'),
+      Joi.func()
+    ]).required(),
+    component: Joi.string().required()
+  })
+
 function normalizeTemplates (context, config, localConfig) {
   const { templates = {}} = localConfig
   const { templatesDir } = config
   const res = {}
 
-  const normalize = (typeName, template, index) => {
-    if (typeof template === 'string') {
-      return {
+  const normalize = (typeName, options, i = 0) => {
+    if (typeof options === 'string') {
+      const { error, value } = Joi.validate({
         typeName,
-        path: template,
+        path: options,
         component: path.join(templatesDir, `${typeName}.vue`),
-        fieldName: 'path',
-        dateField: 'date'
+        name: 'default'
+      }, template)
+
+      if (error) {
+        throw new Error(error.message)
       }
+
+      return value
     }
 
-    return {
-      typeName,
-      path: template.path,
-      component: template.component
-        ? isRelative(template.component)
-          ? path.join(context, template.component)
-          : template.component
-        : path.join(templatesDir, `${typeName}.vue`),
-      fieldName: template.fieldName || ('path' + (index > 0 ? index + 1 : '')),
-      dateField: template.dateField || 'date'
+    if (i === 0 && typeof options.name === 'undefined') {
+      options.name = 'default'
     }
+
+    if (
+      Array.isArray(res[typeName]) &&
+      res[typeName].find(tpl => tpl.name === options.name)
+    ) {
+      throw new Error(
+        `A template for "${typeName}" with the name "${options.name}" already exist.`
+      )
+    }
+
+    const { error, value } = Joi.validate({
+      typeName,
+      name: options.name,
+      path: options.path,
+      component: options.component
+        ? isRelative(options.component)
+          ? path.join(context, options.component)
+          : options.component
+        : path.join(templatesDir, `${typeName}.vue`)
+    }, template)
+
+    if (error) {
+      throw new Error(error.message)
+    }
+
+    return value
   }
 
   for (const typeName in templates) {
     const options = templates[typeName]
 
-    res[typeName] = Array.isArray(options)
-      ? options.map((template, i) => normalize(typeName, template, i))
-      : [normalize(typeName, options, 0)]
+    res[typeName] = res[typeName] || []
+
+    if (Array.isArray(options)) {
+      options.forEach((options, i) => {
+        res[typeName].push(normalize(typeName, options, i))
+      })
+    } else if (isString(options) || isFunction(options)) {
+      res[typeName].push(normalize(typeName, options))
+    } else {
+      throw Error(`Template options for "${typeName}" cannot be an object.`)
+    }
   }
 
   return res
@@ -241,8 +289,8 @@ function normalizePlugins (context, plugins) {
   })
 }
 
-const redirectsSchema = Joi.object()
-  .label('Redirect options')
+const redirect = Joi.object()
+  .label('Redirect')
   .keys({
     from: Joi.string().required(),
     to: Joi.string().required(),
@@ -254,7 +302,7 @@ function normalizeRedirects (config) {
 
   if (Array.isArray(config.redirects)) {
     return config.redirects.map(rule => {
-      const { error, value } = Joi.validate(rule, redirectsSchema)
+      const { error, value } = Joi.validate(rule, redirect)
 
       if (error) {
         throw new Error(error.message)
@@ -391,18 +439,11 @@ function normalizeIconsConfig (config = {}) {
 
   res.favicon = typeof icon.favicon === 'string'
     ? { src: icon.favicon, sizes: faviconSizes }
-    : Object.assign({}, icon.favicon, {
-      sizes: faviconSizes,
-      src: defaultIcon
-    })
+    : Object.assign({}, { src: defaultIcon, sizes: faviconSizes }, icon.favicon)
 
   res.touchicon = typeof icon.touchicon === 'string'
     ? { src: icon.touchicon, sizes: touchiconSizes, precomposed: false }
-    : Object.assign({}, icon.touchicon, {
-      sizes: touchiconSizes,
-      src: res.favicon.src,
-      precomposed: false
-    })
+    : Object.assign({}, { src: res.favicon.src, sizes: touchiconSizes, precomposed: false }, icon.touchicon)
 
   return res
 }

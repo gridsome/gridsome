@@ -11,7 +11,7 @@
 </template>
 
 <page-query>
-query Category ($id: String!, $page: Int, $showType: String) {
+query Category ($id: ID!, $page: Int, $showType: TypeName) {
   category (id: $id) {
     id
     title
@@ -19,7 +19,7 @@ query Category ($id: String!, $page: Int, $showType: String) {
       perPage: 2,
       page: $page,
       filter: {
-        typeName: { regex: $showType }
+        typeName: { eq: $showType }
       }
     ) @paginate {
       pageInfo {

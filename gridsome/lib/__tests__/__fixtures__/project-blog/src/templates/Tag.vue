@@ -14,13 +14,13 @@
 
 <page-query>
 query Tag (
-  $path: String!
+  $id: ID!
   $page: Int
   $perPage: Int = 5
   $skip: Int = 0
   $limit: Int = 10
 ) {
-  tag (path: $path) {
+  tag (id: $id) {
     id
     title
     path

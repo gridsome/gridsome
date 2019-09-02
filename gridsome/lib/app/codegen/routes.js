@@ -1,6 +1,5 @@
 const path = require('path')
 const { slugify } = require('../../utils')
-const { isPlainObject } = require('lodash')
 const { NOT_FOUND_NAME } = require('../../utils/constants')
 
 function genRoutes (app, routeMeta = new Map()) {
@@ -80,23 +79,8 @@ function genRoute (item) {
     for (const key in item.meta) {
       const value = item.meta[key]
 
-      if (isPlainObject(value)) {
-        switch (value.type) {
-          case 'import': {
-            const path = JSON.stringify(value.path)
-            const chunkName = JSON.stringify(value.chunkName || item.chunkName)
-            const importCode = `import(/* webpackChunkName: ${chunkName} */ ${path})`
-
-            metas.push(`${key}: () => ${importCode}`)
-
-            break
-          }
-          case 'code': {
-            metas.push(`${key}: ${value.code}`)
-
-            break
-          }
-        }
+      if (key[0] === '$') {
+        metas.push(`${key}: ${value}`)
       } else {
         metas.push(`${key}: ${JSON.stringify(value)}`)
       }

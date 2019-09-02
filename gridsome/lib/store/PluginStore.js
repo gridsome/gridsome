@@ -32,8 +32,13 @@ class PluginStore {
 
   // metadata
 
+  addMetadata (key, data) {
+    return this.store.addMetadata(key, data)
+  }
+
+  // TODO: remove before 1.0
   addMetaData (key, data) {
-    return this.store.addMetaData(key, data)
+    return this.addMetadata(key, data)
   }
 
   // nodes
@@ -52,6 +57,10 @@ class PluginStore {
 
   getContentType (type) {
     return this.store.getContentType(type)
+  }
+
+  getNodeByUid (uid) {
+    return this.store.getNodeByUid(uid)
   }
 
   //

@@ -12,7 +12,7 @@ const endpoint = {
 }
 
 module.exports = async (app, options = {}) => {
-  const port = await resolvePort(app.config.port)
+  const port = app.config.port || await resolvePort()
   const { config, schema } = app
   const server = express()
 
@@ -34,9 +34,9 @@ module.exports = async (app, options = {}) => {
     express.json(),
     graphqlMiddleware(app),
     graphqlHTTP({
-      schema,
-      context: app.createSchemaContext(),
-      formatError: err => ({
+      schema: schema.getSchema(),
+      context: schema.createContext(),
+      customFormatErrorFn: err => ({
         message: err.message,
         stringified: err.toString()
       }),

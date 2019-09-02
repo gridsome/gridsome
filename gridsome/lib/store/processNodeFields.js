@@ -1,7 +1,7 @@
 const { omit, isDate } = require('lodash')
 const { isResolvablePath } = require('../utils')
 const { NODE_FIELDS } = require('../utils/constants')
-const { resolvePath, createFieldName } = require('./utils')
+const { resolvePath } = require('./utils')
 
 module.exports = function processNodeFields (node, contentType) {
   const fields = omit(node, NODE_FIELDS)
@@ -9,7 +9,6 @@ module.exports = function processNodeFields (node, contentType) {
   const results = processFields(fields, {
     origin: node.internal.origin,
     context: contentType._assetsContext,
-    camelCased: contentType._camelCasedFieldNames,
     resolveAbsolute: contentType._resolveAbsolutePaths
   })
 
@@ -22,7 +21,7 @@ module.exports = function processNodeFields (node, contentType) {
 }
 
 function processFields (fields = {}, options = {}) {
-  const { origin = '', context, resolveAbsolute, camelCased } = options
+  const { origin = '', context, resolveAbsolute } = options
 
   const processField = field => {
     if (field === undefined) return field
@@ -54,7 +53,7 @@ function processFields (fields = {}, options = {}) {
         continue
       }
 
-      res[createFieldName(key, camelCased)] = Array.isArray(fields[key])
+      res[key] = Array.isArray(fields[key])
         ? fields[key].map(value => processField(value))
         : processField(fields[key])
     }

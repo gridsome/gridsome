@@ -1,4 +1,3 @@
-const { safeKey } = require('../../utils')
 const { PER_PAGE } = require('../../utils/constants')
 
 exports.applyChainArgs = function (chain, args = {}, sort = []) {
@@ -7,10 +6,6 @@ exports.applyChainArgs = function (chain, args = {}, sort = []) {
   if (args.limit) chain = chain.limit(args.limit)
 
   return chain
-}
-
-exports.createBelongsToKey = function (node) {
-  return `belongsTo.${node.internal.typeName}.${safeKey(node.id)}`
 }
 
 exports.createPagedNodeEdges = function (chain, args = {}, sort = []) {

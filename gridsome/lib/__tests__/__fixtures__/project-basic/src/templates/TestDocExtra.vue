@@ -6,7 +6,7 @@
 </template>
 
 <page-query>
-query TestDoc($id: String!) {
+query TestDoc($id: ID!) {
   testDoc(id: $id) {
     id
     title

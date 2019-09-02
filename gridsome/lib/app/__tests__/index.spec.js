@@ -62,15 +62,156 @@ test('load env variables by NODE_ENV', () => {
 test('setup custom favicon and touchicon config', () => {
   const config = loadConfig(context, {
     localConfig: {
-      icon: 'src/new-favicon.png'
+      icon: './src/new-favicon.png'
     }
   })
 
   expect(config.icon.favicon).toHaveProperty('sizes')
-  expect(config.icon.favicon).toHaveProperty('src', 'src/new-favicon.png')
+  expect(config.icon.favicon).toHaveProperty('src', './src/new-favicon.png')
   expect(config.icon.touchicon).toHaveProperty('sizes')
   expect(config.icon.touchicon).toHaveProperty('precomposed')
-  expect(config.icon.touchicon).toHaveProperty('src', 'src/new-favicon.png')
+  expect(config.icon.touchicon).toHaveProperty('src', './src/new-favicon.png')
+})
+
+test('set custom favicon sizes', () => {
+  const config = loadConfig(context, {
+    localConfig: {
+      icon: {
+        favicon: {
+          src: './src/new-favicon.png',
+          sizes: [16, 32]
+        }
+      }
+    }
+  })
+
+  expect(config.icon.favicon).toMatchObject({
+    src: './src/new-favicon.png',
+    sizes: [16, 32]
+  })
+
+  expect(config.icon.touchicon).toMatchObject({
+    src: './src/new-favicon.png',
+    sizes: [76, 152, 120, 167, 180],
+    precomposed: false
+  })
+})
+
+test('setup templates config from string', () => {
+  const config = loadConfig(context, {
+    localConfig: {
+      templates: {
+        Post: '/:year/:month/:day/:slug'
+      }
+    }
+  })
+
+  expect(config.templates.Post).toHaveLength(1)
+  expect(config.templates.Post[0]).toMatchObject({
+    typeName: 'Post',
+    path: '/:year/:month/:day/:slug',
+    component: path.join(context, 'src/templates/Post.vue'),
+    name: 'default'
+  })
+})
+
+test('setup templates config from array', () => {
+  const genPath = node => `/test/${node.id}`
+  const config = loadConfig(context, {
+    localConfig: {
+      templates: {
+        Post: [
+          '/:year/:month/:day/:slug',
+          {
+            name: 'info',
+            path: '/:year/:month/:day/:slug/info',
+            component: './src/templates/PostInfo.vue'
+          },
+          {
+            name: 'author',
+            path: '/:year/:month/:day/:slug/author',
+            component: './src/templates/PostAuthor.vue'
+          },
+          {
+            name: 'author2',
+            path: genPath,
+            component: './src/templates/PostAuthor.vue'
+          }
+        ]
+      }
+    }
+  })
+
+  expect(config.templates.Post).toHaveLength(4)
+  expect(config.templates.Post[0]).toMatchObject({
+    typeName: 'Post',
+    path: '/:year/:month/:day/:slug',
+    component: path.join(context, 'src/templates/Post.vue'),
+    name: 'default'
+  })
+  expect(config.templates.Post[1]).toMatchObject({
+    typeName: 'Post',
+    path: '/:year/:month/:day/:slug/info',
+    component: path.join(context, 'src/templates/PostInfo.vue'),
+    name: 'info'
+  })
+  expect(config.templates.Post[2]).toMatchObject({
+    typeName: 'Post',
+    path: '/:year/:month/:day/:slug/author',
+    component: path.join(context, 'src/templates/PostAuthor.vue'),
+    name: 'author'
+  })
+  expect(config.templates.Post[3]).toMatchObject({
+    path: genPath,
+    component: path.join(context, 'src/templates/PostAuthor.vue'),
+    name: 'author2'
+  })
+})
+
+test('fail if a template is an object', () => {
+  expect(() => loadConfig(context, {
+    localConfig: {
+      templates: {
+        Post: {
+          path: '/:year/:month/:day/:slug'
+        }
+      }
+    }
+  })).toThrow('cannot be an object')
+})
+
+test('fail if a template has no name', () => {
+  expect(() => loadConfig(context, {
+    localConfig: {
+      templates: {
+        Post: [
+          '/:year/:month/:day/:slug',
+          {
+            path: '/:year/:month/:day/:slug/info'
+          }
+        ]
+      }
+    }
+  })).toThrow('"name" is required')
+})
+
+test('fail if two templates have the same name', () => {
+  expect(() => loadConfig(context, {
+    localConfig: {
+      templates: {
+        Post: [
+          {
+            name: 'info',
+            path: '/:year/:month/:day/:slug/info'
+          },
+          {
+            name: 'info',
+            path: '/:year/:month/:day/:slug/author'
+          }
+        ]
+      }
+    }
+  })).toThrow('already exist')
 })
 
 test('setup templates config from string', () => {
@@ -343,6 +484,36 @@ test('do not allow a custom publicPath', async () => {
   }, BOOTSTRAP_CONFIG)
 
   await expect(app.compiler.resolveWebpackConfig()).rejects.toThrow('pathPrefix')
+})
+
+test('tap into plugin instance', async () => {
+  const fn = jest.fn(name => name)
+
+  function TestOne (api) {
+    this.test = fn
+
+    api._app.hooks.plugin.for('TestTwo').tap('TestOne', plugin => {
+      plugin.test('TestOne')
+    })
+  }
+
+  function TestTwo (api) {
+    this.test = fn
+
+    api._app.hooks.plugin.for('TestOne').tap('TestTwo', plugin => {
+      plugin.test('TestTwo')
+    })
+  }
+
+  await createApp(context, {
+    localConfig: {
+      plugins: [TestOne, TestTwo]
+    }
+  }, BOOTSTRAP_CONFIG)
+
+  expect(fn.mock.calls).toHaveLength(2)
+  expect(fn.mock.calls[0][0]).toEqual('TestTwo')
+  expect(fn.mock.calls[1][0]).toEqual('TestOne')
 })
 
 async function createPlugin (context = '/') {

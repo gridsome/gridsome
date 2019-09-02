@@ -4,8 +4,8 @@ const pMap = require('p-map')
 const hirestime = require('hirestime')
 const { chunk, groupBy } = require('lodash')
 const sysinfo = require('./utils/sysinfo')
-const executeQueries = require('./graphql/executeQueries')
-const createRenderQueue = require('./pages/createRenderQueue')
+const executeQueries = require('./app/build/executeQueries')
+const createRenderQueue = require('./app/build/createRenderQueue')
 const { log, info, writeLine } = require('./utils/log')
 
 module.exports = async (context, args) => {

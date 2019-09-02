@@ -6,14 +6,13 @@ const isRelative = require('is-relative')
 const { version } = require('../../package.json')
 
 const {
+  HookMap,
+  SyncHook,
   AsyncSeriesHook,
   SyncWaterfallHook
 } = require('tapable')
 
-const {
-  BOOTSTRAP_GRAPHQL,
-  BOOTSTRAP_FULL
-} = require('../utils/constants')
+const { BOOTSTRAP_FULL } = require('../utils/constants')
 
 class App {
   constructor (context, options) {
@@ -30,7 +29,8 @@ class App {
       beforeBootstrap: new AsyncSeriesHook([]),
       bootstrap: new AsyncSeriesHook(['app']),
       renderQueue: new SyncWaterfallHook(['renderQueue']),
-      redirects: new SyncWaterfallHook(['redirects', 'renderQueue'])
+      redirects: new SyncWaterfallHook(['redirects', 'renderQueue']),
+      plugin: new HookMap(() => new SyncHook(['plugin']))
     }
 
     if (this.config.permalinks.slugify) {
@@ -98,6 +98,7 @@ class App {
   async init () {
     const Events = require('./Events')
     const Store = require('../store/Store')
+    const Schema = require('./Schema')
     const AssetsQueue = require('./queue/AssetsQueue')
     const Codegen = require('./codegen')
     const Pages = require('../pages/pages')
@@ -107,23 +108,11 @@ class App {
     // important for the bootstrap process
     this.events = new Events()
     this.store = new Store(this)
-
-    // TODO: move to schema class in #509
-    this.hooks.bootstrap.tapPromise(
-      {
-        name: 'GridsomeSchema',
-        label: 'Create GraphQL schema',
-        phase: BOOTSTRAP_GRAPHQL
-      },
-      this.createSchema
-    )
-
+    this.schema = new Schema(this)
     this.assets = new AssetsQueue(this)
     this.pages = new Pages(this)
     this.codegen = new Codegen(this)
     this.compiler = new Compiler(this)
-
-    // TODO: move to internal plugins
 
     // TODO: remove before 1.0
     this.queue = this.assets
@@ -158,6 +147,14 @@ class App {
       this.plugins.push({ api, entry, instance })
     })
 
+    this.plugins.forEach(({ entry, instance }) => {
+      const hookByName = this.hooks.plugin.get(entry.name)
+      const hookByUse = this.hooks.plugin.get(entry.use)
+
+      if (hookByName) hookByName.call(instance)
+      if (hookByUse) hookByUse.call(instance)
+    })
+
     // run config.chainWebpack after all plugins
     if (typeof this.config.chainWebpack === 'function') {
       this.compiler.hooks.chainWebpack.tapPromise('ChainWebpack', (chain, env) => {
@@ -180,30 +177,6 @@ class App {
     return this
   }
 
-  async createSchema (app) {
-    const graphql = require('../graphql/graphql')
-    const { mergeSchemas } = require('graphql-tools')
-    const createSchema = require('../graphql/createSchema')
-    const { createSchemaAPI } = require('../graphql/utils')
-
-    const schemas = []
-
-    const results = await app.events.dispatch('createSchema', () => {
-      return createSchemaAPI({
-        addSchema: schema => schemas.push(schema)
-      })
-    })
-
-    // add custom schemas returned from the hook handlers
-    results.forEach(schema => schema && schemas.push(schema))
-
-    const schema = createSchema(app.store)
-
-    app._execute = graphql.execute
-    app._graphql = graphql.graphql
-    app.schema = mergeSchemas({ schemas: [schema, ...schemas] })
-  }
-
   //
   // helpers
   //
@@ -221,17 +194,7 @@ class App {
   }
 
   graphql (docOrQuery, variables = {}) {
-    const context = this.createSchemaContext()
-
-    const method = typeof docOrQuery === 'object' ? '_execute' : '_graphql'
-
-    if (typeof docOrQuery === 'string') {
-      // workaround until query directives
-      // works in mergeSchema from graphql-tools
-      docOrQuery = docOrQuery.replace(/@paginate/g, '')
-    }
-
-    return this[method](this.schema, docOrQuery, undefined, context, variables)
+    return this.schema.runQuery(docOrQuery, variables)
   }
 
   broadcast (message, hotReload = true) {
@@ -242,17 +205,6 @@ class App {
     return hotReload
       ? this.codegen.generate('now.js')
       : undefined
-  }
-
-  createSchemaContext () {
-    return {
-      store: this.store,
-      pages: this.pages,
-      config: this.config,
-      assets: this.assets,
-      // TODO: remove before 1.0
-      queue: this.assets
-    }
   }
 }
 

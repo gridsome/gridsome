@@ -5,6 +5,7 @@ const EventEmitter = require('eventemitter3')
 const { isArray, isPlainObject } = require('lodash')
 const { BOOTSTRAP_SOURCES } = require('../utils/constants')
 const ContentType = require('./ContentType')
+const { safeKey } = require('../utils')
 
 const { SyncWaterfallHook } = require('tapable')
 const SyncBailWaterfallHook = require('../app/SyncBailWaterfallHook')
@@ -21,7 +22,7 @@ class Store {
 
     autoBind(this)
 
-    this.metaData = new Collection('MetaData', {
+    this.metadata = new Collection('core/metadata', {
       unique: ['key'],
       autoupdate: true
     })
@@ -51,7 +52,11 @@ class Store {
   }
 
   async loadSources () {
-    await this.app.events.dispatch('loadSource', api => api.store)
+    const { createSchemaActions } = require('../app/actions')
+
+    await this.app.events.dispatch('loadSource', api => {
+      return createSchemaActions(api, this.app)
+    })
   }
 
   on (eventName, fn, ctx) {
@@ -64,8 +69,8 @@ class Store {
 
   // site
 
-  addMetaData (key, data) {
-    let node = this.metaData.findOne({ key })
+  addMetadata (key, data) {
+    let node = this.metadata.findOne({ key })
 
     if (node && isArray(node.data) && isArray(data)) {
       node.data = node.data.concat(data)
@@ -74,7 +79,7 @@ class Store {
     } else if (node) {
       node.data = data
     } else {
-      node = this.metaData.insert({ key, data })
+      node = this.metadata.insert({ key, data })
     }
 
     return node
@@ -117,6 +122,30 @@ class Store {
 
   getContentType (typeName) {
     return this.collections[typeName]
+  }
+
+  getNodeByUid (uid) {
+    const entry = this.nodeIndex.getEntry(uid)
+
+    return entry
+      ? this.collections[entry.typeName].getNodeById(entry.id)
+      : null
+  }
+
+  getNode (typeName, id) {
+    return this.getContentType(typeName).getNodeById(id)
+  }
+
+  // TODO: move this to internal plugin
+  setBelongsTo (node, typeName, id) {
+    const entry = this.nodeIndex.getEntry(node.$uid)
+    const belongsTo = entry.belongsTo
+    const key = safeKey(id)
+
+    belongsTo[typeName] = belongsTo[typeName] || {}
+    belongsTo[typeName][key] = true
+
+    this.nodeIndex.index.update({ ...entry, belongsTo })
   }
 
   chainIndex (query = {}) {
