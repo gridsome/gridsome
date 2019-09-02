@@ -14,6 +14,12 @@ export default (route, options = {}) => {
   }
 
   if (!process.isStatic) {
+    const path = route.meta.dynamic
+      ? route.matched[0].path
+      : route.name === '*'
+        ? NOT_FOUND_PATH
+        : stripPageParam(route)
+
     const getJSON = function (route) {
       return new Promise((resolve, reject) => {
         fetch(process.env.GRAPHQL_ENDPOINT, {
@@ -21,7 +27,7 @@ export default (route, options = {}) => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             page: route.params.page ? Number(route.params.page) : null,
-            path: route.name === '*' ? NOT_FOUND_PATH : stripPageParam(route)
+            path
           })
         })
           .then(res => res.json())
@@ -99,15 +105,19 @@ function fetchJSON (jsonPath) {
     req.withCredentials = true
 
     req.onload = () => {
-      const contentType = req.getResponseHeader('Content-Type')
-
       switch (req.status) {
         case 200: {
-          if (contentType && /application\/json/.test(contentType)) {
-            return resolve(JSON.parse(req.responseText))
-          } else {
-            return reject(new Error(`Resource at ${jsonPath} is not JSON.`))
+          let results
+
+          try {
+            results = JSON.parse(req.responseText)
+          } catch (err) {
+            return reject(
+              new Error(`Failed to parse JSON from ${jsonPath}. ${err.message}.`)
+            )
           }
+
+          return resolve(results)
         }
         case 404: {
           const error = new Error(req.statusText)

@@ -19,8 +19,8 @@
 </template>
 
 <page-query>
-query Post ($path: String!, $dateFormat: String) {
-  post (path: $path) {
+query Post ($id: ID!, $dateFormat: String) {
+  post (id: $id) {
     id
     title
     date (format: $dateFormat)

@@ -4,6 +4,8 @@ const pMap = require('p-map')
 const hirestime = require('hirestime')
 const { chunk, groupBy } = require('lodash')
 const sysinfo = require('./utils/sysinfo')
+const executeQueries = require('./app/build/executeQueries')
+const createRenderQueue = require('./app/build/createRenderQueue')
 const { log, info, writeLine } = require('./utils/log')
 
 module.exports = async (context, args) => {
@@ -20,12 +22,14 @@ module.exports = async (context, args) => {
   await fs.emptyDir(config.outDir)
   await fs.emptyDir(config.dataDir)
 
-  const queue = await createRenderQueue(app)
+  const renderQueue = createRenderQueue(app)
+  const redirects = app.hooks.redirects.call([], renderQueue)
+  const queue = await executeQueries(renderQueue, app)
 
   await writePageData(queue, app)
   await runWebpack(app)
   await renderHTML(queue, app)
-  await processFiles(app.assets.files, app.config)
+  await processFiles(app.assets.files)
   await processImages(app.assets.images, app.config)
 
   // copy static files
@@ -33,7 +37,7 @@ module.exports = async (context, args) => {
     await fs.copy(config.staticDir, config.outDir)
   }
 
-  await app.events.dispatch('afterBuild', () => ({ context, config, queue }))
+  await app.events.dispatch('afterBuild', () => ({ context, config, queue, redirects }))
 
   // clean up
   await fs.remove(config.manifestsDir)
@@ -46,41 +50,32 @@ module.exports = async (context, args) => {
   return app
 }
 
-function createRenderQueue (app) {
-  return new Promise((resolve, reject) => {
-    app._hooks.createRenderQueue.callAsync([], app, (err, res) => {
-      if (err) reject(err)
-      else resolve(res)
-    })
-  })
-}
-
 async function writePageData (renderQueue, app) {
   const timer = hirestime()
   const queryQueue = renderQueue.filter(entry => entry.dataOutput)
-  const routes = groupBy(queryQueue, entry => entry.route)
-  const meta = {}
+  const routeIds = groupBy(queryQueue, entry => entry.routeId)
+  const meta = new Map()
 
   let count = 0
 
   for (const entry of queryQueue) {
-    if (!entry.dataOutput) continue
     await fs.outputFile(entry.dataOutput, JSON.stringify(entry.data))
   }
 
-  for (const route in routes) {
-    const entries = routes[route]
-    const content = entries.reduce((acc, { path, dataInfo }) => {
-      acc[path] = [dataInfo.group, dataInfo.hash]
+  for (const id in routeIds) {
+    const entries = routeIds[id]
+    const route = app.pages._routes.by('id', id)
+    const content = entries.reduce((acc, { prettyPath, dataInfo }) => {
+      acc[prettyPath] = [dataInfo.group, dataInfo.hash]
       return acc
     }, {})
 
     if (entries.length > 1) {
       const output = path.join(app.config.dataDir, 'route-meta', `${count++}.json`)
       await fs.outputFile(output, JSON.stringify(content))
-      meta[route] = output
+      meta.set(route.id, output)
     } else {
-      meta[route] = content[entries[0].path]
+      meta.set(route.id, content[entries[0].prettyPath])
     }
   }
 

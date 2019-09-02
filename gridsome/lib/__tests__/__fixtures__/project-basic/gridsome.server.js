@@ -1,6 +1,6 @@
 module.exports = function (api) {
   api.loadSource(store => {
-    store.addMetaData('myTest', {
+    store.addMetadata('myTest', {
       value: 'Test Value'
     })
 
@@ -44,6 +44,12 @@ module.exports = function (api) {
       component: './src/pages/About.vue',
       context: {
         title: 'About us'
+      },
+      route: {
+        meta: {
+          aboutUsMeta1: true,
+          $aboutUsMeta2: '[1,2,3]'
+        }
       }
     })
   })

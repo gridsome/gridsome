@@ -62,20 +62,161 @@ test('load env variables by NODE_ENV', () => {
 test('setup custom favicon and touchicon config', () => {
   const config = loadConfig(context, {
     localConfig: {
-      icon: 'src/new-favicon.png'
+      icon: './src/new-favicon.png'
     }
   })
 
   expect(config.icon.favicon).toHaveProperty('sizes')
-  expect(config.icon.favicon).toHaveProperty('src', 'src/new-favicon.png')
+  expect(config.icon.favicon).toHaveProperty('src', './src/new-favicon.png')
   expect(config.icon.touchicon).toHaveProperty('sizes')
   expect(config.icon.touchicon).toHaveProperty('precomposed')
-  expect(config.icon.touchicon).toHaveProperty('src', 'src/new-favicon.png')
+  expect(config.icon.touchicon).toHaveProperty('src', './src/new-favicon.png')
+})
+
+test('set custom favicon sizes', () => {
+  const config = loadConfig(context, {
+    localConfig: {
+      icon: {
+        favicon: {
+          src: './src/new-favicon.png',
+          sizes: [16, 32]
+        }
+      }
+    }
+  })
+
+  expect(config.icon.favicon).toMatchObject({
+    src: './src/new-favicon.png',
+    sizes: [16, 32]
+  })
+
+  expect(config.icon.touchicon).toMatchObject({
+    src: './src/new-favicon.png',
+    sizes: [76, 152, 120, 167, 180],
+    precomposed: false
+  })
+})
+
+test('setup templates config from string', () => {
+  const config = loadConfig(context, {
+    localConfig: {
+      templates: {
+        Post: '/:year/:month/:day/:slug'
+      }
+    }
+  })
+
+  expect(config.templates.Post).toHaveLength(1)
+  expect(config.templates.Post[0]).toMatchObject({
+    typeName: 'Post',
+    path: '/:year/:month/:day/:slug',
+    component: path.join(context, 'src/templates/Post.vue'),
+    name: 'default'
+  })
+})
+
+test('setup templates config from array', () => {
+  const genPath = node => `/test/${node.id}`
+  const config = loadConfig(context, {
+    localConfig: {
+      templates: {
+        Post: [
+          '/:year/:month/:day/:slug',
+          {
+            name: 'info',
+            path: '/:year/:month/:day/:slug/info',
+            component: './src/templates/PostInfo.vue'
+          },
+          {
+            name: 'author',
+            path: '/:year/:month/:day/:slug/author',
+            component: './src/templates/PostAuthor.vue'
+          },
+          {
+            name: 'author2',
+            path: genPath,
+            component: './src/templates/PostAuthor.vue'
+          }
+        ]
+      }
+    }
+  })
+
+  expect(config.templates.Post).toHaveLength(4)
+  expect(config.templates.Post[0]).toMatchObject({
+    typeName: 'Post',
+    path: '/:year/:month/:day/:slug',
+    component: path.join(context, 'src/templates/Post.vue'),
+    name: 'default'
+  })
+  expect(config.templates.Post[1]).toMatchObject({
+    typeName: 'Post',
+    path: '/:year/:month/:day/:slug/info',
+    component: path.join(context, 'src/templates/PostInfo.vue'),
+    name: 'info'
+  })
+  expect(config.templates.Post[2]).toMatchObject({
+    typeName: 'Post',
+    path: '/:year/:month/:day/:slug/author',
+    component: path.join(context, 'src/templates/PostAuthor.vue'),
+    name: 'author'
+  })
+  expect(config.templates.Post[3]).toMatchObject({
+    path: genPath,
+    component: path.join(context, 'src/templates/PostAuthor.vue'),
+    name: 'author2'
+  })
+})
+
+test('fail if a template is an object', () => {
+  expect(() => loadConfig(context, {
+    localConfig: {
+      templates: {
+        Post: {
+          path: '/:year/:month/:day/:slug'
+        }
+      }
+    }
+  })).toThrow('cannot be an object')
+})
+
+test('fail if a template has no name', () => {
+  expect(() => loadConfig(context, {
+    localConfig: {
+      templates: {
+        Post: [
+          '/:year/:month/:day/:slug',
+          {
+            path: '/:year/:month/:day/:slug/info'
+          }
+        ]
+      }
+    }
+  })).toThrow('"name" is required')
+})
+
+test('fail if two templates have the same name', () => {
+  expect(() => loadConfig(context, {
+    localConfig: {
+      templates: {
+        Post: [
+          {
+            name: 'info',
+            path: '/:year/:month/:day/:slug/info'
+          },
+          {
+            name: 'info',
+            path: '/:year/:month/:day/:slug/author'
+          }
+        ]
+      }
+    }
+  })).toThrow('already exist')
 })
 
 test('setup webpack client config', async () => {
   const app = await createApp(context, undefined, BOOTSTRAP_CONFIG)
-  const config = await app.resolveWebpackConfig()
+  const config = await app.compiler.resolveWebpackConfig()
 
   expect(config.output.publicPath).toEqual('/')
   expect(config.entry.app).toHaveLength(1)
@@ -85,7 +226,7 @@ test('setup webpack client config', async () => {
   expect(config.resolve.alias['@']).toEqual(path.join(context, 'src'))
   expect(config.resolve.alias['gridsome$']).toEqual(path.resolve(__dirname, '../../../app/index.js'))
 
-  const chain = await app.resolveChainableWebpackConfig()
+  const chain = await app.compiler.resolveChainableWebpackConfig()
   const postcss = chain.module.rule('postcss').oneOf('normal').use('postcss-loader').toConfig()
 
   expect(postcss.options.plugins).toHaveLength(1)
@@ -94,7 +235,7 @@ test('setup webpack client config', async () => {
 
 test('setup webpack server config', async () => {
   const app = await createApp(context, undefined, BOOTSTRAP_CONFIG)
-  const config = await app.resolveWebpackConfig(true)
+  const config = await app.compiler.resolveWebpackConfig(true)
 
   expect(config.target).toEqual('node')
   expect(config.output.publicPath).toEqual('/')
@@ -126,7 +267,7 @@ test('setup style loader options', async () => {
     }
   }, BOOTSTRAP_CONFIG)
 
-  const chain = await app.resolveChainableWebpackConfig()
+  const chain = await app.compiler.resolveChainableWebpackConfig()
   const oneOf = ['normal', 'modules']
 
   expect(app.config.css.split).toEqual(true)
@@ -151,6 +292,21 @@ test('setup style loader options', async () => {
   })
 })
 
+test('config.chainWenbpack', async () => {
+  const app = await createApp(context, {
+    localConfig: {
+      chainWebpack (config) {
+        config.mode('test')
+      }
+    }
+  }, BOOTSTRAP_CONFIG)
+
+  const config = await app.compiler.resolveWebpackConfig()
+
+  expect(config.entry.app).toBeDefined()
+  expect(config.mode).toEqual('test')
+})
+
 test('config.configureWebpack as object', async () => {
   const app = await createApp(context, {
     localConfig: {
@@ -160,7 +316,7 @@ test('config.configureWebpack as object', async () => {
     }
   }, BOOTSTRAP_CONFIG)
 
-  const config = await app.resolveWebpackConfig()
+  const config = await app.compiler.resolveWebpackConfig()
 
   expect(config.entry.app).toBeDefined()
   expect(config.mode).toEqual('test')
@@ -178,7 +334,7 @@ test('create new config in config.configureWebpack', async () => {
     }
   }, BOOTSTRAP_CONFIG)
 
-  const config = await app.resolveWebpackConfig()
+  const config = await app.compiler.resolveWebpackConfig()
 
   expect(config).toMatchObject({
     mode: 'test',
@@ -197,25 +353,25 @@ test('modify config in config.configureWebpack', async () => {
     }
   }, BOOTSTRAP_CONFIG)
 
-  const config = await app.resolveWebpackConfig()
+  const config = await app.compiler.resolveWebpackConfig()
 
   expect(config.entry.app).toBeDefined()
   expect(config.mode).toEqual('test')
 })
 
 test('api.configureWebpack as object', async () => {
-  const { app, api } = createPlugin()
+  const { app, api } = await createPlugin()
 
   api.configureWebpack({ mode: 'test' })
 
-  const config = await app.resolveWebpackConfig()
+  const config = await app.compiler.resolveWebpackConfig()
 
   expect(config.entry.app).toBeDefined()
   expect(config.mode).toEqual('test')
 })
 
 test('create new config in api.configureWebpack', async () => {
-  const { app, api } = createPlugin()
+  const { app, api } = await createPlugin()
 
   api.configureWebpack(() => ({
     mode: 'test',
@@ -224,7 +380,7 @@ test('create new config in api.configureWebpack', async () => {
     }
   }))
 
-  const config = await app.resolveWebpackConfig()
+  const config = await app.compiler.resolveWebpackConfig()
 
   expect(config).toMatchObject({
     mode: 'test',
@@ -235,13 +391,13 @@ test('create new config in api.configureWebpack', async () => {
 })
 
 test('modify config in api.configureWebpack', async () => {
-  const { app, api } = createPlugin()
+  const { app, api } = await createPlugin()
 
   api.configureWebpack(config => {
     config.mode = 'test'
   })
 
-  const config = await app.resolveWebpackConfig()
+  const config = await app.compiler.resolveWebpackConfig()
 
   expect(config.entry.app).toBeDefined()
   expect(config.mode).toEqual('test')
@@ -259,11 +415,41 @@ test('do not allow a custom publicPath', async () => {
     }
   }, BOOTSTRAP_CONFIG)
 
-  await expect(app.resolveWebpackConfig()).rejects.toThrow('pathPrefix')
+  await expect(app.compiler.resolveWebpackConfig()).rejects.toThrow('pathPrefix')
 })
 
-function createPlugin (context = '/') {
-  const app = new App(context).init()
+test('tap into plugin instance', async () => {
+  const fn = jest.fn(name => name)
+
+  function TestOne (api) {
+    this.test = fn
+
+    api._app.hooks.plugin.for('TestTwo').tap('TestOne', plugin => {
+      plugin.test('TestOne')
+    })
+  }
+
+  function TestTwo (api) {
+    this.test = fn
+
+    api._app.hooks.plugin.for('TestOne').tap('TestTwo', plugin => {
+      plugin.test('TestTwo')
+    })
+  }
+
+  await createApp(context, {
+    localConfig: {
+      plugins: [TestOne, TestTwo]
+    }
+  }, BOOTSTRAP_CONFIG)
+
+  expect(fn.mock.calls).toHaveLength(2)
+  expect(fn.mock.calls[0][0]).toEqual('TestTwo')
+  expect(fn.mock.calls[1][0]).toEqual('TestOne')
+})
+
+async function createPlugin (context = '/') {
+  const app = await new App(context).init()
   const api = new PluginAPI(app, { entry: { options: {}, clientOptions: undefined }})
 
   return { app, api }

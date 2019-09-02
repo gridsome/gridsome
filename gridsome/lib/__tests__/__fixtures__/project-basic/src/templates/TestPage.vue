@@ -7,7 +7,7 @@
 </template>
 
 <page-query>
-query TestPage($id: String!, $doc: String) {
+query TestPage($id: ID!, $doc: ID) {
   testPage(id: $id) {
     title
   }
