@@ -6,9 +6,8 @@ const moment = require('moment')
 const chokidar = require('chokidar')
 const didYouMean = require('didyoumean')
 const pathToRegexp = require('path-to-regexp')
-const slugify = require('@sindresorhus/slugify')
 const { ISO_8601_FORMAT } = require('../utils/constants')
-const { isPlainObject, trim, get } = require('lodash')
+const { isPlainObject, trim, trimEnd, get } = require('lodash')
 
 const isDev = process.env.NODE_ENV === 'development'
 const FROM_CONTENT_TYPE = 'content-type'
@@ -18,7 +17,7 @@ const makeId = (uid, name) => {
   return crypto.createHash('md5').update(uid + name).digest('hex')
 }
 
-const makePath = (object, { routeKeys, createPath }, dateField) => {
+const makePath = (object, { routeKeys, createPath }, dateField, slugify) => {
   const date = moment.utc(object[dateField], ISO_8601_FORMAT, true)
   const length = routeKeys.length
   const params = {}
@@ -58,7 +57,7 @@ const makePath = (object, { routeKeys, createPath }, dateField) => {
         } else if (!isPlainObject(value)) {
           return suffix === 'raw'
             ? String(value)
-            : slugify(String(value), { separator: '-' })
+            : slugify(String(value))
         } else {
           return ''
         }
@@ -137,6 +136,7 @@ class TemplatesPlugin {
 
   constructor (api) {
     const templates = setupTemplates(api.config.templates)
+    const permalinks = api.config.permalinks || {}
 
     // TODO: deprecate route and component option on collections
     api.onCreateContentType(options => {
@@ -188,7 +188,7 @@ class TemplatesPlugin {
           const path = options.internal.path = options.internal.path || {}
 
           switch (typeof template.path) {
-            case 'string': path[template.name] = makePath(options, template, _dateField); break
+            case 'string': path[template.name] = makePath(options, template, _dateField, api._app.slugify); break
             case 'function ': path[template.name] = template.path(options); break
             default: path[template.name] = options.path
           }
@@ -205,6 +205,7 @@ class TemplatesPlugin {
     api.createSchema(({ addSchemaResolvers }) => {
       const contentTypes = api._app.store.collections
       const typeNames = Object.keys(contentTypes)
+      const { trailingSlash } = permalinks
 
       for (const typeName of templates.byTypeName.keys()) {
         if (!typeNames.includes(typeName)) {
@@ -225,11 +226,16 @@ class TemplatesPlugin {
                   to: { type: 'String', defaultValue: 'default' }
                 },
                 resolve: (node, args) => {
+                  const trailingValue = trailingSlash ? '/' : ''
+                  let fieldValue = node.internal.path[args.to]
+
                   if (args.to === 'default' && typeof node.path === 'string') {
-                    return node.path
+                    fieldValue = node.path
                   }
 
-                  return node.internal.path[args.to]
+                  return fieldValue && trailingValue
+                    ? trimEnd(fieldValue, '/') + trailingValue
+                    : fieldValue
                 }
               }
             }

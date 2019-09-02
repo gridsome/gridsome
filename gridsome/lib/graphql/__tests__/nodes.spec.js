@@ -889,8 +889,8 @@ describe('permalinks config', () => {
 
   test('generate paths with trailing slash by default', async () => {
     const app = await _createApp()
-    const { errors, data } = await createSchemaAndExecute(`{
-      post (id: "1") {
+    const { errors, data } = await app.schema.runQuery(`query {
+      post(id: "1") {
         path
       }
     }`, app)
@@ -901,8 +901,8 @@ describe('permalinks config', () => {
 
   test('disable trailing slash in generated path', async () => {
     const app = await _createApp({ trailingSlash: false })
-    const { errors, data } = await createSchemaAndExecute(`{
-      post (id: "1") {
+    const { errors, data } = await app.schema.runQuery(`query {
+      post(id: "1") {
         path
       }
     }`, app)
@@ -912,8 +912,8 @@ describe('permalinks config', () => {
   })
 })
 
-async function createApp (localConfig) {
-  const app = new App(__dirname, { localConfig })
+async function createApp (config) {
+  const app = new App(__dirname, { config })
 
   return app.bootstrap(BOOTSTRAP_PAGES)
 }

@@ -8,6 +8,9 @@ function createBaseActions (api, app) {
     },
     resolve (...args) {
       return app.resolve(...args)
+    },
+    slugify (...args) {
+      return app.slugify(...args)
     }
   }
 }
