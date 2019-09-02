@@ -144,7 +144,21 @@ function createPagesActions (api, app, { digest }) {
     },
 
     createPage (options) {
+      if (typeof options.route === 'string') {
+        return createDeprecatedRoute(app.pages, options, internals)
+      }
+
+      if (options.name) {
+        options.route = options.route || {}
+        options.route.name = options.name
+        delete options.name
+      }
+
       return app.pages.createPage(options, internals)
+    },
+
+    createRoute(options) {
+      return app.pages.createRoute(options, internals)
     }
   }
 }
@@ -157,9 +171,29 @@ function createManagedPagesActions (api, app, { digest }) {
     ...baseActions,
 
     createPage (options) {
+      if (typeof options.route === 'string') {
+        return createDeprecatedRoute(app.pages, options, internals)
+      }
+
+      if (options.name) {
+        options.route = options.route || {}
+        options.route.name = options.name
+        delete options.name
+      }
+
       return app.pages.createPage(options, internals)
     },
     updatePage (options) {
+      if (typeof options.route === 'string') {
+        return createDeprecatedRoute(app.pages, options, internals)
+      }
+
+      if (options.name) {
+        options.route = options.route || {}
+        options.route.name = options.name
+        delete options.name
+      }
+
       return app.pages.updatePage(options, internals)
     },
     removePage (page) {
@@ -179,8 +213,34 @@ function createManagedPagesActions (api, app, { digest }) {
     },
     findPages (query) {
       return app.pages.findPages(query)
+    },
+    createRoute (options) {
+      return app.pages.createRoute(options, internals)
+    },
+    removeRoute (id) {
+      app.pages.removeRoute(id)
     }
   }
+}
+
+// TODO: remove this route workaround
+function createDeprecatedRoute (pages, input, internals) {
+  const options = pages._routes.by('path', input.route)
+  let route = options ? pages.getRoute(options.id) : null
+
+  if (!route) {
+    route = pages.createRoute({
+      path: input.route,
+      component: input.component
+    }, internals)
+  }
+
+  route.addPage({
+    id: input.id,
+    path: input.path,
+    context: input.context,
+    queryVariables: input.queryVariables
+  })
 }
 
 module.exports = {

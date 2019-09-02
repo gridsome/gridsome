@@ -18,14 +18,17 @@ const schemas = {
     .label('Page options')
     .keys({
       id: Joi.string(),
-      name: Joi.string(),
       path: Joi.string().regex(/^\//, 'leading slash').required(),
       component: Joi.string().required(),
       context: Joi.object().default({}),
       queryVariables: Joi.object().default(null).allow(null),
       route: Joi.object().default({}).keys({
+        name: Joi.string().allow(null),
         meta: Joi.object().default({}).allow(null)
-      })
+      }),
+
+      name: Joi.string().allow(null),
+      chunkName: Joi.string().allow(null)
     }),
 
   routePage: Joi.object()

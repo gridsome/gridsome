@@ -177,36 +177,14 @@ class Pages {
   }
 
   createPage (input, meta = {}) {
-    if (typeof input.route === 'string') {
-      // TODO: remove this route workaround
-      const options = this._routes.by('path', input.route)
-      let route = options ? new Route(options, this) : null
-
-      if (!route) {
-        route = this.createRoute({
-          path: input.route,
-          component: input.component
-        }, meta)
-      }
-
-      route.addPage({
-        id: input.id,
-        path: input.path,
-        context: input.context,
-        queryVariables: input.queryVariables
-      })
-
-      return
-    }
-
     const options = validateInput('page', input)
     const type = getRouteType(options.path)
 
     const route = this.createRoute({
       type,
-      name: options.name,
       path: options.path,
       component: options.component,
+      name: options.route.name,
       meta: options.route.meta
     }, meta)
 
