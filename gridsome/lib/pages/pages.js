@@ -104,7 +104,7 @@ class Pages {
   async createPages () {
     const now = Date.now() + process.hrtime()[1]
     const digest = hashString(now.toString())
-    const { createPagesAPI, createManagedPagesAPI } = require('./utils')
+    const { createPagesActions, createManagedPagesActions } = require('../app/actions')
 
     this.clearCache()
 
@@ -113,13 +113,13 @@ class Pages {
     }
 
     await this.app.events.dispatch('createPages', api => {
-      return createPagesAPI(api, { digest })
+      return createPagesActions(api, this.app, { digest })
     })
 
     this.enableIndices()
 
     await this.app.events.dispatch('createManagedPages', api => {
-      return createManagedPagesAPI(api, { digest })
+      return createManagedPagesActions(api, this.app, { digest })
     })
 
     // remove unmanaged pages created in earlier digest cycles
