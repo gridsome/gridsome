@@ -5,7 +5,7 @@ const Config = require('webpack-chain')
 const { forwardSlash } = require('../utils')
 const { VueLoaderPlugin } = require('vue-loader')
 const createHTMLRenderer = require('../server/createHTMLRenderer')
-const GridsomeFallbackResolverPlugin = require('./plugins/GridsomeFallbackResolverPlugin')
+const GridsomeResolverPlugin = require('./plugins/GridsomeResolverPlugin')
 const CSSExtractPlugin = require('mini-css-extract-plugin')
 
 const resolve = (p, c) => path.resolve(c || __dirname, p)
@@ -47,7 +47,7 @@ module.exports = (app, { isProd, isServer }) => {
 
   config.resolve
     .plugin('gridsome-fallback-resolver-plugin')
-      .use(GridsomeFallbackResolverPlugin, [{
+      .use(GridsomeResolverPlugin, [{
         fallbackDir: path.join(projectConfig.appPath, 'fallbacks'),
         optionalDir: path.join(app.context, 'src'),
         resolve: ['main', 'App.vue']
