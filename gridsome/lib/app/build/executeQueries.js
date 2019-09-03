@@ -1,57 +1,49 @@
 const path = require('path')
 const pMap = require('p-map')
-const hashSum = require('hash-sum')
+const fs = require('fs-extra')
 const invariant = require('invariant')
 const hirestime = require('hirestime')
 const sysinfo = require('../../utils/sysinfo')
 const { error, info } = require('../../utils/log')
 
-async function executeQueries (renderQueue, { context, config, pages, graphql }) {
-  const assetsDir = config.assetsDir
+async function executeQueries (renderQueue, { context, pages, graphql }, hash) {
   const timer = hirestime()
-  const groupSize = 500
 
-  let count = 0
-  let group = 0
-
-  const res = await pMap(renderQueue, async entry => {
+  const results = await pMap(renderQueue, async entry => {
     const route = pages.getRoute(entry.routeId)
     const page =  pages.getPage(entry.pageId)
 
     invariant(route, `Could not find a route for: ${entry.path}`)
     invariant(page, `Could not find a page for: ${entry.path}`)
 
-    const pageContext = page.context || {}
+    const results = { data: null, context: page.context }
     const document = route.internal.query.document
 
-    if (document === null && Object.keys(pageContext).length < 1) {
-      return entry
+    if (document) {
+      const { errors, data } = await graphql(document, entry.queryVariables)
+
+      if (errors) {
+        const relPath = path.relative(context, route.component)
+        error(`An error occurred while executing page-query for ${relPath}\n`)
+        throw new Error(errors[0])
+      }
+
+      results.data = data
     }
 
-    if (count % (groupSize - 1) === 0) group++
-    count++
-
-    const results = document
-      ? await graphql(document, entry.queryVariables)
-      : {}
-
-    if (results.errors) {
-      const relPath = path.relative(context, route.component)
-      error(`An error occurred while executing page-query for ${relPath}\n`)
-      throw new Error(results.errors[0])
-    }
-
-    const data = { data: results.data || null, context: pageContext }
-    const hash = hashSum(data)
-    const dataInfo = { group, hash }
-    const dataOutput = path.join(assetsDir, 'data', `${group}/${hash}.json`)
-
-    return Object.assign({}, entry, { dataOutput, data, dataInfo })
+    return { dataOutput: entry.dataOutput, data: results }
   }, { concurrency: sysinfo.cpus.physical })
 
-  info(`Execute GraphQL (${count} queries) - ${timer(hirestime.S)}s`)
+  info(`Execute GraphQL (${renderQueue.length} queries) - ${timer(hirestime.S)}s`)
 
-  return res
+  const timer2 = hirestime()
+
+  await Promise.all(results.map(result => {
+    const content = JSON.stringify({ hash, ...result.data })
+    return fs.outputFile(result.dataOutput, content)
+  }))
+
+  info(`Write out page data (${results.length} files) - ${timer2(hirestime.S)}s`)
 }
 
 module.exports = executeQueries

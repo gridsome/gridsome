@@ -9,10 +9,7 @@ const { parseQuery } = require('../graphql')
 const pathToRegexp = require('path-to-regexp')
 const createPageQuery = require('./createPageQuery')
 const { HookMap, SyncWaterfallHook, SyncBailHook } = require('tapable')
-const { BOOTSTRAP_PAGES } = require('../utils/constants')
 const validateInput = require('./schemas')
-const { normalizePath } = require('./utils')
-const { hashString } = require('../utils')
 const { snakeCase } = require('lodash')
 
 const TYPE_STATIC = 'static'
@@ -25,15 +22,6 @@ const getRouteType = value => /:/.test(value) ? TYPE_DYNAMIC : TYPE_STATIC
 class Pages {
   constructor (app) {
     this.app = app
-
-    app.hooks.bootstrap.tapPromise(
-      {
-        name: 'GridsomePages',
-        label: 'Create pages and templates',
-        phase: BOOTSTRAP_PAGES
-      },
-      () => this.createPages()
-    )
 
     this.hooks = {
       parseComponent: new HookMap(() => new SyncBailHook(['source', 'resource'])),
@@ -99,37 +87,6 @@ class Pages {
         adaptiveBinaryIndices: true
       })
     })
-  }
-
-  async createPages () {
-    const now = Date.now() + process.hrtime()[1]
-    const digest = hashString(now.toString())
-    const { createPagesActions, createManagedPagesActions } = require('../app/actions')
-
-    this.clearCache()
-
-    if (this.app.isBootstrapped) {
-      this.disableIndices()
-    }
-
-    await this.app.events.dispatch('createPages', api => {
-      return createPagesActions(api, this.app, { digest })
-    })
-
-    this.enableIndices()
-
-    await this.app.events.dispatch('createManagedPages', api => {
-      return createManagedPagesActions(api, this.app, { digest })
-    })
-
-    // remove unmanaged pages created in earlier digest cycles
-    const query = {
-      'internal.digest': { $ne: digest },
-      'internal.isManaged': { $eq: false }
-    }
-
-    this._routes.findAndRemove(query)
-    this._pages.findAndRemove(query)
   }
 
   createRoute (input, meta = {}) {
@@ -255,7 +212,10 @@ class Pages {
 
     if (!route) {
       const chain = this._routes.chain().simplesort('internal.priority', true)
-      route = chain.data().find(route => route.internal.regexp.test(path))
+
+      route = chain.data().find(route =>
+        route.internal.regexp.test(path)
+      )
     }
 
     if (route) {
@@ -295,22 +255,24 @@ class Pages {
     const { source, document, paginate } = this._createPageQuery(parsedQuery)
 
     const type = options.type
-    const normalPath = normalizePath(options.path)
-    const isDynamic = /:/.test(normalPath)
+    const originalPath = options.path.replace(/\/+/g, '/')
+    const hasTrailingSlash = /\/$/.test(options.path)
+    const isDynamic = /:/.test(options.path)
+    let path = originalPath
     let name = options.name
-    let path = normalPath
 
     const keys = []
     const regexp = pathToRegexp(path, keys)
-    const id = options.id || createHash(`route-${path}`)
-
-    if (paginate) {
-      const segments = path.split('/').filter(Boolean)
-      path = `/${segments.concat(':page(\\d+)?').join('/')}`
-    }
+    const id = options.id || createHash(`route-${originalPath}`)
 
     if (type === TYPE_DYNAMIC) {
-      name = name || `__${snakeCase(normalPath)}`
+      name = name || `__${snakeCase(path)}`
+    }
+
+    if (paginate) {
+      const prefix = hasTrailingSlash ? '' : '/'
+      const suffix = hasTrailingSlash ? '/' : ''
+      path += `${prefix}:page(\\d+)?${suffix}`
     }
 
     const priority = this._resolvePriority(path)
@@ -323,7 +285,7 @@ class Pages {
       component,
       internal: Object.assign({}, meta, {
         meta: options.meta || {},
-        path: normalPath,
+        path: originalPath,
         isDynamic,
         priority,
         regexp,
@@ -346,7 +308,7 @@ class Pages {
   }
 
   _resolvePriority (path) {
-    const segments = path.substring(1).split('/')
+    const segments = path.split('/').filter(Boolean)
     const scores = segments.map(segment => {
       let score = Math.max(segment.charCodeAt(0) || 0, 90)
       const parts = (segment.match(/-/g) || []).length
@@ -436,6 +398,8 @@ class Route {
       this._pages.insert(options)
     }
 
+    // TODO: warn if a page exists whith and without trailing slash
+
     return options
   }
 
@@ -467,20 +431,20 @@ class Route {
   _createPageOptions (input) {
     const { regexp, digest, isManaged, query } = this.internal
     const { id: _id, path: _path, context, queryVariables } = validateInput('routePage', input)
-    const normalPath = normalizePath(_path)
-    const isDynamic = /:/.test(normalPath)
-    const id = _id || createHash(`page-${normalPath}`)
+    const originalPath = _path.replace(/\/+/g, '/')
+    const isDynamic = /:/.test(originalPath)
+    const id = _id || createHash(`page-${originalPath}`)
 
     if (this.type === TYPE_STATIC) {
       invariant(
-        regexp.test(normalPath),
-        `Page path does not match route path: ${normalPath}`
+        regexp.test(originalPath),
+        `Page path does not match route path: ${originalPath}`
       )
     }
 
     if (this.type === TYPE_DYNAMIC) {
       invariant(
-        this.internal.path === normalPath,
+        this.internal.path === originalPath,
         `Dynamic page must equal the route path: ${this.internal.path}`
       )
     }
@@ -491,7 +455,7 @@ class Route {
 
     return this._createPage.call({
       id,
-      path: normalPath,
+      path: originalPath,
       context,
       internal: {
         route: this.id,

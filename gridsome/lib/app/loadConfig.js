@@ -81,10 +81,10 @@ module.exports = (context, options = {}) => {
   config.assetsDir = path.join(config.outDir, assetsDir)
   config.imagesDir = path.join(config.assetsDir, 'static')
   config.filesDir = path.join(config.assetsDir, 'files')
+  config.dataDir = path.join(config.assetsDir, 'data')
   config.appPath = path.resolve(__dirname, '../../app')
   config.tmpDir = resolve('src/.temp')
   config.cacheDir = resolve('.cache')
-  config.dataDir = path.join(config.cacheDir, 'data')
   config.imageCacheDir = resolve('.cache', assetsDir, 'static')
   config.maxImageWidth = localConfig.maxImageWidth || 2560
   config.imageExtensions = SUPPORTED_IMAGE_TYPES

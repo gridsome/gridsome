@@ -7,7 +7,7 @@ const chokidar = require('chokidar')
 const didYouMean = require('didyoumean')
 const pathToRegexp = require('path-to-regexp')
 const { ISO_8601_FORMAT } = require('../utils/constants')
-const { isPlainObject, trim, trimEnd, get } = require('lodash')
+const { isPlainObject, trimStart, trimEnd, get } = require('lodash')
 
 const isDev = process.env.NODE_ENV === 'development'
 const FROM_CONTENT_TYPE = 'content-type'
@@ -17,7 +17,7 @@ const makeId = (uid, name) => {
   return crypto.createHash('md5').update(uid + name).digest('hex')
 }
 
-const makePath = (object, { routeKeys, createPath }, dateField, slugify) => {
+const makePath = (object, { routeKeys, createPath }, dateField = 'date', slugify) => {
   const date = moment.utc(object[dateField], ISO_8601_FORMAT, true)
   const length = routeKeys.length
   const params = {}
@@ -67,23 +67,30 @@ const makePath = (object, { routeKeys, createPath }, dateField, slugify) => {
     }
   }
 
-  return '/' + trim(createPath(params), '/')
+  return createPath(params)
 }
 
-const createTemplateOptions = options => {
+const createTemplateOptions = (options, trailingSlash) => {
+  let templatePath = options.path
   let createPath = () => null
+
   const routeKeys = []
 
-  if (typeof options.path === 'string') {
-    options.path = '/' + options.path.replace(/^\/+/g, '')
-    createPath = pathToRegexp.compile(options.path)
-    pathToRegexp(options.path, routeKeys)
+  if (typeof templatePath === 'string') {
+    templatePath = templatePath.replace(/\/+/g, '/')
+
+    if (trailingSlash === 'always') {
+      templatePath = trimEnd(templatePath, '/') + '/'
+    }
+
+    createPath = pathToRegexp.compile(templatePath)
+    pathToRegexp(templatePath, routeKeys)
   }
 
   return {
     createPath,
     name: options.name || 'default',
-    path: options.path,
+    path: templatePath,
     typeName: options.typeName,
     component: options.component,
     from: options.from || FROM_CONFIG,
@@ -109,24 +116,24 @@ const createTemplateOptions = options => {
   }
 }
 
-const setupTemplates = config => {
-  const templates = {
+const setupTemplates = ({ templates, permalinks }) => {
+  const res = {
     byComponent: new Map(),
     byTypeName: new Map()
   }
 
-  for (const typeName in config) {
-    config[typeName].forEach(options => {
-      const template = createTemplateOptions(options)
-      const byTypeName = templates.byTypeName.get(typeName) || []
-      const byComponent = templates.byComponent.get(options.component) || []
+  for (const typeName in templates) {
+    templates[typeName].forEach(options => {
+      const byTypeName = res.byTypeName.get(typeName) || []
+      const byComponent = res.byComponent.get(options.component) || []
+      const template = createTemplateOptions(options, permalinks.trailingSlash)
 
-      templates.byTypeName.set(typeName, byTypeName.concat(template))
-      templates.byComponent.set(options.component, byComponent.concat(template))
+      res.byTypeName.set(typeName, byTypeName.concat(template))
+      res.byComponent.set(options.component, byComponent.concat(template))
     })
   }
 
-  return templates
+  return res
 }
 
 class TemplatesPlugin {
@@ -135,13 +142,12 @@ class TemplatesPlugin {
   }
 
   constructor (api) {
-    const templates = setupTemplates(api.config.templates)
-    const permalinks = api.config.permalinks || {}
+    const templates = setupTemplates(api.config)
 
     // TODO: deprecate route and component option on collections
-    api.onCreateContentType(options => {
-      options.route = typeof options.route === 'string'
-        ? '/' + trim(options.route, '/')
+    api._app.store.hooks.addContentType.tap('TemplatesPlugin', options => {
+      const templatePath = typeof options.route === 'string'
+        ? '/' + trimStart(options.route, '/')
         : undefined
 
       /**
@@ -150,7 +156,7 @@ class TemplatesPlugin {
        * is used as default value if no component path is defined.
        * Setting `component: null` will didsable the template.
        */
-      options.component = typeof options.component !== 'undefined'
+      const templateComponent = typeof options.component !== 'undefined'
         ? typeof options.component === 'string'
           ? path.isAbsolute(options.component)
             ? options.component
@@ -158,54 +164,54 @@ class TemplatesPlugin {
           : null
         : path.join(api.config.templatesDir, `${options.typeName}.vue`)
 
-      if (!templates.byComponent.has(options.component)) {
+      if (!templates.byComponent.has(templateComponent)) {
         const byTypeName = templates.byTypeName.get(options.typeName) || []
-        const byComponent = templates.byComponent.get(options.component) || []
+        const byComponent = templates.byComponent.get(templateComponent) || []
 
         const template = createTemplateOptions({
-          component: options.component,
+          component: templateComponent,
           typeName: options.typeName,
           dateField: options.dateField,
-          path: options.route,
+          path: templatePath,
           from: FROM_CONTENT_TYPE
-        })
+        }, api.config.permalinks.trailingSlash)
 
-        templates.byComponent.set(options.component, byComponent.concat(template))
+        templates.byComponent.set(templateComponent, byComponent.concat(template))
         templates.byTypeName.set(options.typeName, byTypeName.concat(template))
       }
     })
 
     api.onCreateNode((options, contentType) => {
       const typeTemplates = templates.byTypeName.get(contentType.typeName)
-      const { _dateField = 'date' } = contentType
 
       if (typeof options.path === 'string') {
-        options.path = '/' + trim(options.path, '/')
-      }
-
-      if (typeTemplates) {
+        options.path = '/' + trimStart(options.path, '/')
+      } else if (typeTemplates) {
         for (const template of typeTemplates) {
-          const path = options.internal.path = options.internal.path || {}
+          const paths = options.internal.path = options.internal.path || {}
 
-          switch (typeof template.path) {
-            case 'string': path[template.name] = makePath(options, template, _dateField, api._app.slugify); break
-            case 'function ': path[template.name] = template.path(options); break
-            default: path[template.name] = options.path
+          let nodePath
+
+          if (typeof template.path === 'string') {
+            nodePath = makePath(options, template, contentType._dateField, api._app.slugify)
+          } else if (typeof template.path === 'function') {
+            nodePath = template.path(options)
+          } else {
+            continue
           }
 
-          // - set default path as root field for plugins that depends on it
-          // - it is also used as the $path variable in queries
-          if (template.name === 'default' && !options.path) {
-            options.path = path[template.name]
-          }
+          paths[template.name] = nodePath
         }
+
+        // - set default path as root field for plugins that depends on it
+        // - many are also using it as the $path variable in queries
+        options.path = options.internal.path.default
       }
     })
 
     api.createSchema(({ addSchemaResolvers }) => {
       const contentTypes = api._app.store.collections
       const typeNames = Object.keys(contentTypes)
-      const { trailingSlash } = permalinks
 
       for (const typeName of templates.byTypeName.keys()) {
         if (!typeNames.includes(typeName)) {
@@ -226,16 +232,9 @@ class TemplatesPlugin {
                   to: { type: 'String', defaultValue: 'default' }
                 },
                 resolve: (node, args) => {
-                  const trailingValue = trailingSlash ? '/' : ''
-                  let fieldValue = node.internal.path[args.to]
-
-                  if (args.to === 'default' && typeof node.path === 'string') {
-                    fieldValue = node.path
-                  }
-
-                  return fieldValue && trailingValue
-                    ? trimEnd(fieldValue, '/') + trailingValue
-                    : fieldValue
+                  return node.internal.path
+                    ? node.internal.path[args.to]
+                    : node.path
                 }
               }
             }
@@ -334,8 +333,10 @@ class Template {
   createPage (node) {
     const { name, component } = this
     const id = makeId(node.$uid, name)
-    const path = node.internal.path[name]
     const queryVariables = node
+    const path = node.internal.path
+      ? node.internal.path[name]
+      : node.path
 
     if (this.route) this.route.addPage({ id, path, queryVariables })
     else this.actions.createPage({ id, path, component, queryVariables })

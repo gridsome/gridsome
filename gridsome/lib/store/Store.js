@@ -3,7 +3,6 @@ const autoBind = require('auto-bind')
 const NodeIndex = require('./NodeIndex')
 const EventEmitter = require('eventemitter3')
 const { isArray, isPlainObject } = require('lodash')
-const { BOOTSTRAP_SOURCES } = require('../utils/constants')
 const ContentType = require('./ContentType')
 const { safeKey } = require('../utils')
 
@@ -34,29 +33,12 @@ class Store {
 
     this.hooks.addNode.tap('TransformNodeContent', require('./transformNodeContent'))
     this.hooks.addNode.tap('ProcessNodeFields', require('./processNodeFields'))
-
-    app.hooks.bootstrap.tapPromise(
-      {
-        name: 'GridsomeStore',
-        label: 'Load sources',
-        phase: BOOTSTRAP_SOURCES
-      },
-      () => this.loadSources()
-    )
   }
 
   getHooksContext () {
     return {
       hooks: this.hooks
     }
-  }
-
-  async loadSources () {
-    const { createSchemaActions } = require('../app/actions')
-
-    await this.app.events.dispatch('loadSource', api => {
-      return createSchemaActions(api, this.app)
-    })
   }
 
   on (eventName, fn, ctx) {

@@ -2,8 +2,6 @@ const autoBind = require('auto-bind')
 const { createSchema } = require('../graphql')
 const { graphql, execute } = require('graphql')
 
-const { BOOTSTRAP_GRAPHQL } = require('../utils/constants')
-
 class Schema {
   constructor (app) {
     this._app = app
@@ -14,31 +12,7 @@ class Schema {
     this._schemas = []
     this._types = []
 
-    app.hooks.bootstrap.tapPromise(
-      {
-        name: 'GridsomeSchema',
-        label: 'Create GraphQL schema',
-        phase: BOOTSTRAP_GRAPHQL
-      },
-      () => this.createSchema()
-    )
-
     autoBind(this)
-  }
-
-  async createSchema () {
-    const { createSchemaActions } = require('./actions')
-
-    const results = await this._app.events.dispatch('createSchema', api => {
-      return createSchemaActions(api, this._app)
-    })
-
-    // add custom schemas returned from the hook handlers
-    results.forEach(schema =>
-      schema && this._schemas.push(schema)
-    )
-
-    this.buildSchema()
   }
 
   getSchema () {

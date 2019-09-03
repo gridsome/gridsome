@@ -34,27 +34,27 @@ const processPathSegment = segment => {
   return `_${snakeCase(segment)}`
 }
 
-function generateDynamicPath (segments) {
+function generateDynamicPath(segments, ext) {
   const processedSegments = segments
     .map(segment => processPathSegment(segment))
     .map(segment => decodeURIComponent(segment))
 
-  const filename = processedSegments.pop() + '.html'
+  const filename = processedSegments.pop() + `.${ext}`
 
   return `/${processedSegments.concat(filename).join('/')}`
 }
 
-function generateStaticPath (segments) {
+function generateStaticPath (segments, ext) {
   const processedSegments = segments
     .map(segment => decodeURIComponent(segment))
 
-  return `/${processedSegments.concat('index.html').join('/')}`
+  return `/${processedSegments.concat(`index.${ext}`).join('/')}`
 }
 
-exports.pathToFilePath = value => {
+exports.pathToFilePath = (value, ext = 'html') => {
   const segments = value.split('/').filter(Boolean)
 
   return hasDynamicParam(value)
-    ? generateDynamicPath(segments)
-    : generateStaticPath(segments)
+    ? generateDynamicPath(segments, ext)
+    : generateStaticPath(segments, ext)
 }

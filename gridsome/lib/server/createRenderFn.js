@@ -19,7 +19,7 @@ module.exports = function createRenderFn ({
     runInNewContext: false
   })
 
-  return async function render (page, state, stateSize) {
+  return async function render(page, state, stateSize, hash) {
     const context = {
       path: page.path,
       location: page.location,
@@ -43,6 +43,7 @@ module.exports = function createRenderFn ({
     const head = '' +
       inject.title.text() +
       inject.base.text() +
+      `<meta name="gridsome:hash" content="${hash}">` +
       inject.meta.text() +
       inject.link.text() +
       inject.style.text() +

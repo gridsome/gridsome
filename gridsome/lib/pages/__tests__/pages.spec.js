@@ -170,9 +170,9 @@ test('create page with query context', async () => {
 
 test('always include a /404 page', async () => {
   const app = await createApp()
-  const page = app.pages._pages.findOne({ path: '/404' })
+  const page = app.pages._pages.findOne({ path: '/404/' })
 
-  expect(page.path).toEqual('/404')
+  expect(page.path).toEqual('/404/')
 })
 
 test('cache parsed components', async () => {
@@ -283,9 +283,9 @@ test('api.createManagedPages() should only be called once', async () => {
     api.createManagedPages(createManagedPages)
   })
 
-  await app.pages.createPages()
-  await app.pages.createPages()
-  await app.pages.createPages()
+  await app.plugins.createPages()
+  await app.plugins.createPages()
+  await app.plugins.createPages()
 
   expect(createPages.mock.calls).toHaveLength(4)
   expect(createManagedPages.mock.calls).toHaveLength(1)
@@ -321,21 +321,21 @@ test('garbage collect unmanaged pages', async () => {
   expect(app.pages._watched.size).toEqual(3)
 
   maxPages = 5
-  await app.pages.createPages()
+  await app.plugins.createPages()
 
   expect(app.pages.routes()).toHaveLength(9)
   expect(app.pages.pages()).toHaveLength(10)
   expect(app.pages._watched.size).toEqual(3)
 
   maxPages = 1
-  await app.pages.createPages()
+  await app.plugins.createPages()
 
   expect(app.pages.routes()).toHaveLength(5)
   expect(app.pages.pages()).toHaveLength(6)
   expect(app.pages._watched.size).toEqual(3)
 
   maxPages = 2
-  await app.pages.createPages()
+  await app.plugins.createPages()
 
   expect(app.pages.routes()).toHaveLength(6)
   expect(app.pages.pages()).toHaveLength(7)
@@ -349,7 +349,7 @@ test('override page with similar path', async () => {
   })
 
   pages.createPage({
-    path: '/page',
+    path: '/page/',
     component: './__fixtures__/DefaultPage.vue'
   })
 
@@ -394,14 +394,14 @@ test('sort routes by priority', async () => {
     '/a/:b(.*)',
     '/a-b-c',
     '/a',
-    '/404',
-    '/',
+    '/404/',
     '/a-:b-c',
     '/a-:b',
     '/:rest(\\d+)',
     '/:rest(\\d+)?',
     '/:a-:b',
-    '/:rest'
+    '/:rest',
+    '/'
   ])
 })
 
