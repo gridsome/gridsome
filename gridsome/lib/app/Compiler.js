@@ -28,7 +28,7 @@ class Compiler {
   async resolveWebpackConfig (isServer = false, chain = null) {
     const context = this.createContext(isServer)
     const resolvedChain = chain || await this.resolveChainableWebpackConfig(isServer)
-    const configureWebpack = (this._app.events._events.configureWebpack || []).slice()
+    const configureWebpack = (this._app.plugins._listeners.configureWebpack || []).slice()
     const configFilePath = this._app.resolve('webpack.config.js')
     const merge = require('webpack-merge')
 

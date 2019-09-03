@@ -2,6 +2,7 @@ const fs = require('fs-extra')
 const createRenderFn = require('../server/createRenderFn')
 
 exports.render = async function ({
+  hash,
   pages,
   htmlTemplate,
   clientManifestPath,
@@ -28,7 +29,7 @@ exports.render = async function ({
       state = JSON.parse(content)
     }
 
-    html = await render(page, state, stateSize)
+    html = await render(page, state, stateSize, hash)
 
     await fs.outputFile(page.htmlOutput, html)
   }

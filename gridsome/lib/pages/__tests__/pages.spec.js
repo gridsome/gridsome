@@ -283,9 +283,9 @@ test('api.createManagedPages() should only be called once', async () => {
     api.createManagedPages(createManagedPages)
   })
 
-  await app.pages.createPages()
-  await app.pages.createPages()
-  await app.pages.createPages()
+  await app.plugins.createPages()
+  await app.plugins.createPages()
+  await app.plugins.createPages()
 
   expect(createPages.mock.calls).toHaveLength(4)
   expect(createManagedPages.mock.calls).toHaveLength(1)
@@ -321,21 +321,21 @@ test('garbage collect unmanaged pages', async () => {
   expect(app.pages._watched.size).toEqual(3)
 
   maxPages = 5
-  await app.pages.createPages()
+  await app.plugins.createPages()
 
   expect(app.pages.routes()).toHaveLength(9)
   expect(app.pages.pages()).toHaveLength(10)
   expect(app.pages._watched.size).toEqual(3)
 
   maxPages = 1
-  await app.pages.createPages()
+  await app.plugins.createPages()
 
   expect(app.pages.routes()).toHaveLength(5)
   expect(app.pages.pages()).toHaveLength(6)
   expect(app.pages._watched.size).toEqual(3)
 
   maxPages = 2
-  await app.pages.createPages()
+  await app.plugins.createPages()
 
   expect(app.pages.routes()).toHaveLength(6)
   expect(app.pages.pages()).toHaveLength(7)

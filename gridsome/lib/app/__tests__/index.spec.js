@@ -418,36 +418,6 @@ test('do not allow a custom publicPath', async () => {
   await expect(app.compiler.resolveWebpackConfig()).rejects.toThrow('pathPrefix')
 })
 
-test('tap into plugin instance', async () => {
-  const fn = jest.fn(name => name)
-
-  function TestOne (api) {
-    this.test = fn
-
-    api._app.hooks.plugin.for('TestTwo').tap('TestOne', plugin => {
-      plugin.test('TestOne')
-    })
-  }
-
-  function TestTwo (api) {
-    this.test = fn
-
-    api._app.hooks.plugin.for('TestOne').tap('TestTwo', plugin => {
-      plugin.test('TestTwo')
-    })
-  }
-
-  await createApp(context, {
-    localConfig: {
-      plugins: [TestOne, TestTwo]
-    }
-  }, BOOTSTRAP_CONFIG)
-
-  expect(fn.mock.calls).toHaveLength(2)
-  expect(fn.mock.calls[0][0]).toEqual('TestTwo')
-  expect(fn.mock.calls[1][0]).toEqual('TestOne')
-})
-
 async function createPlugin (context = '/') {
   const app = await new App(context).init()
   const api = new PluginAPI(app, { entry: { options: {}, clientOptions: undefined }})

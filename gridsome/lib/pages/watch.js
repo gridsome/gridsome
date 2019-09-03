@@ -1,7 +1,7 @@
 const { debounce } = require('lodash')
 
 module.exports = (app, pages) => {
-  const createPages = debounce(() => pages.createPages(), 16)
+  const createPages = debounce(() => app.plugins.createPages(), 16)
   const fetchQueries = debounce(() => app.broadcast({ type: 'fetch' }), 16)
   const generateRoutes = debounce(() => app.codegen.generate('routes.js'), 16)
 

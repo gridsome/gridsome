@@ -24,7 +24,7 @@ class PluginAPI {
   }
 
   _on (eventName, handler, options = {}) {
-    this._app.events.on(eventName, { api: this, handler, options })
+    this._app.plugins.on(eventName, { api: this, handler, options })
   }
 
   resolve (...args) {
@@ -84,11 +84,6 @@ class PluginAPI {
 
   onBootstrap (fn) {
     this._app.hooks.bootstrap.tapAsync(this._entry.name || 'OnBootstrap', fn)
-  }
-
-  onCreateContentType (fn) {
-    const { name = 'OnCreateContentType' } = this._entry
-    this._app.store.hooks.addContentType.tap(name, fn)
   }
 
   onCreateNode (fn) {

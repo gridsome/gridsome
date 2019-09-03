@@ -6,8 +6,6 @@ const isRelative = require('is-relative')
 const { version } = require('../../package.json')
 
 const {
-  HookMap,
-  SyncHook,
   AsyncSeriesHook,
   SyncWaterfallHook
 } = require('tapable')
@@ -19,7 +17,6 @@ class App {
     process.GRIDSOME = this
 
     this.clients = {}
-    this.plugins = []
     this.context = context
     this.config = require('./loadConfig')(context, options)
     this.isInitialized = false
@@ -29,8 +26,7 @@ class App {
       beforeBootstrap: new AsyncSeriesHook([]),
       bootstrap: new AsyncSeriesHook(['app']),
       renderQueue: new SyncWaterfallHook(['renderQueue']),
-      redirects: new SyncWaterfallHook(['redirects', 'renderQueue']),
-      plugin: new HookMap(() => new SyncHook(['plugin']))
+      redirects: new SyncWaterfallHook(['redirects', 'renderQueue'])
     }
 
     if (this.config.permalinks.slugify) {
@@ -82,7 +78,7 @@ class App {
       })
     })
 
-    await this.hooks.bootstrap.promise(this)
+    await this.hooks.bootstrap.promise()
 
     info(`Bootstrap finish - ${timer(hirestime.S)}s`)
 
@@ -96,7 +92,7 @@ class App {
   //
 
   async init () {
-    const Events = require('./Events')
+    const Plugins = require('./Plugins')
     const Store = require('../store/Store')
     const Schema = require('./Schema')
     const AssetsQueue = require('./queue/AssetsQueue')
@@ -104,9 +100,7 @@ class App {
     const Pages = require('../pages/pages')
     const Compiler = require('./Compiler')
 
-    // the order of these classes are
-    // important for the bootstrap process
-    this.events = new Events()
+    this.plugins = new Plugins(this)
     this.store = new Store(this)
     this.schema = new Schema(this)
     this.assets = new AssetsQueue(this)
@@ -117,43 +111,9 @@ class App {
     // TODO: remove before 1.0
     this.queue = this.assets
 
-    const { defaultsDeep } = require('lodash')
-    const PluginAPI = require('./PluginAPI')
-
     info(`Initializing plugins...`)
 
-    this.config.plugins.forEach(entry => {
-      const { serverEntry } = entry.entries
-      const Plugin = typeof serverEntry === 'string'
-        ? require(entry.entries.serverEntry)
-        : typeof serverEntry === 'function'
-          ? serverEntry
-          : null
-
-      if (typeof Plugin !== 'function') return
-      if (!Plugin.prototype) return
-
-      const defaults = typeof Plugin.defaultOptions === 'function'
-        ? Plugin.defaultOptions()
-        : {}
-
-      entry.name = Plugin.name || 'AnonymousPlugin'
-      entry.options = defaultsDeep(entry.options, defaults)
-
-      const { context } = this
-      const api = new PluginAPI(this, { entry })
-      const instance = new Plugin(api, entry.options, { context })
-
-      this.plugins.push({ api, entry, instance })
-    })
-
-    this.plugins.forEach(({ entry, instance }) => {
-      const hookByName = this.hooks.plugin.get(entry.name)
-      const hookByUse = this.hooks.plugin.get(entry.use)
-
-      if (hookByName) hookByName.call(instance)
-      if (hookByUse) hookByUse.call(instance)
-    })
+    this.plugins.initialize()
 
     // run config.chainWebpack after all plugins
     if (typeof this.config.chainWebpack === 'function') {
@@ -164,12 +124,12 @@ class App {
 
     // run config.configureWebpack after all plugins
     if (this.config.configureWebpack) {
-      this.events.on('configureWebpack', { handler: this.config.configureWebpack })
+      this.plugins.on('configureWebpack', { handler: this.config.configureWebpack })
     }
 
     // run config.configureServer after all plugins
     if (typeof this.config.configureServer === 'function') {
-      this.events.on('configureServer', { handler: this.config.configureServer })
+      this.plugins.on('configureServer', { handler: this.config.configureServer })
     }
 
     this.isInitialized = true

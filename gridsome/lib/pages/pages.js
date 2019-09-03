@@ -9,10 +9,8 @@ const { parseQuery } = require('../graphql')
 const pathToRegexp = require('path-to-regexp')
 const createPageQuery = require('./createPageQuery')
 const { HookMap, SyncWaterfallHook, SyncBailHook } = require('tapable')
-const { BOOTSTRAP_PAGES } = require('../utils/constants')
 const validateInput = require('./schemas')
 const { normalizePath } = require('./utils')
-const { hashString } = require('../utils')
 const { snakeCase } = require('lodash')
 
 const TYPE_STATIC = 'static'
@@ -25,15 +23,6 @@ const getRouteType = value => /:/.test(value) ? TYPE_DYNAMIC : TYPE_STATIC
 class Pages {
   constructor (app) {
     this.app = app
-
-    app.hooks.bootstrap.tapPromise(
-      {
-        name: 'GridsomePages',
-        label: 'Create pages and templates',
-        phase: BOOTSTRAP_PAGES
-      },
-      () => this.createPages()
-    )
 
     this.hooks = {
       parseComponent: new HookMap(() => new SyncBailHook(['source', 'resource'])),
@@ -99,37 +88,6 @@ class Pages {
         adaptiveBinaryIndices: true
       })
     })
-  }
-
-  async createPages () {
-    const now = Date.now() + process.hrtime()[1]
-    const digest = hashString(now.toString())
-    const { createPagesActions, createManagedPagesActions } = require('../app/actions')
-
-    this.clearCache()
-
-    if (this.app.isBootstrapped) {
-      this.disableIndices()
-    }
-
-    await this.app.events.dispatch('createPages', api => {
-      return createPagesActions(api, this.app, { digest })
-    })
-
-    this.enableIndices()
-
-    await this.app.events.dispatch('createManagedPages', api => {
-      return createManagedPagesActions(api, this.app, { digest })
-    })
-
-    // remove unmanaged pages created in earlier digest cycles
-    const query = {
-      'internal.digest': { $ne: digest },
-      'internal.isManaged': { $eq: false }
-    }
-
-    this._routes.findAndRemove(query)
-    this._pages.findAndRemove(query)
   }
 
   createRoute (input, meta = {}) {

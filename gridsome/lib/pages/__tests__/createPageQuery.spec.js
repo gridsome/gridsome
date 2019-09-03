@@ -13,7 +13,7 @@ beforeEach(async () => {
 
   api.store.addContentType('TestPost')
 
-  await app.schema.createSchema()
+  await app.plugins.createSchema()
 })
 
 test('parsed page-query', async () => {

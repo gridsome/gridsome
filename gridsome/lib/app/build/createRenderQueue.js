@@ -60,7 +60,7 @@ function calcTotalPages (paginate, store, schema) {
 }
 
 function createRenderEntry (page, route, config, currentPage = 1) {
-  const { outDir, publicPath, permalinks: { trailingSlash } } = config
+  const { outDir, dataDir, publicPath, permalinks: { trailingSlash } } = config
   const segments = page.path.split('/').filter(Boolean)
 
   if (currentPage > 1) {
@@ -68,7 +68,8 @@ function createRenderEntry (page, route, config, currentPage = 1) {
   }
 
   let currentPath = `/${segments.join('/')}`
-  const htmlOutput = path.join(outDir, pathToFilePath(currentPath))
+  const htmlOutput = pathToFilePath(currentPath)
+  const dataOutput = pathToFilePath(currentPath, 'json')
   const prettyPath = currentPath
 
   const location = route.type === 'dynamic'
@@ -89,7 +90,8 @@ function createRenderEntry (page, route, config, currentPage = 1) {
 
   return {
     location,
-    htmlOutput,
+    htmlOutput: path.join(outDir, htmlOutput),
+    dataOutput: path.join(dataDir, dataOutput),
     prettyPath,
     queryVariables,
     type: route.type,

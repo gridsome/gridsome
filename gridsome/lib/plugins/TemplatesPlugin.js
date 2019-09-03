@@ -139,7 +139,7 @@ class TemplatesPlugin {
     const permalinks = api.config.permalinks || {}
 
     // TODO: deprecate route and component option on collections
-    api.onCreateContentType(options => {
+    api._app.store.hooks.addContentType.tap('TemplatesPlugin', options => {
       options.route = typeof options.route === 'string'
         ? '/' + trim(options.route, '/')
         : undefined
