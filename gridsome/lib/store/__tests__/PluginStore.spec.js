@@ -55,27 +55,6 @@ test('add content type', async () => {
   expect(contentType.slugify).toBeInstanceOf(Function)
 })
 
-test('add content type without template', async () => {
-  const api = await createPlugin()
-  const contentType = api.store.addContentType({
-    typeName: 'TestPost',
-    component: false
-  })
-
-  expect(contentType.options.component).toEqual(null)
-})
-
-test('add content type with custom template component', async () => {
-  const api = await createPlugin()
-  const contentType = api.store.addContentType({
-    typeName: 'TestPost',
-    route: '/path/:id/:bar/:foo_raw/(.*)?',
-    component: './src/templates/Custom.vue'
-  })
-
-  expect(contentType.options.component).toEqual('/src/templates/Custom.vue')
-})
-
 test('add node', async () => {
   const api = await createPlugin()
   const contentType = api.store.addContentType('TestPost')
@@ -330,22 +309,6 @@ test.each([
   expect(node.path).toEqual(expteced)
 })
 
-test('prefix dynamic route with leading slash', async () => {
-  const api = await createPlugin()
-  const contentType = api.store.addContentType({
-    typeName: 'TestPost2',
-    route: 'blog/:slug'
-  })
-
-  const node = contentType.addNode({
-    title: 'Lorem ipsum dolor sit amet',
-    date: '2018-09-04T23:20:33.918Z'
-  })
-
-  expect(contentType.options.route).toEqual('/blog/:slug')
-  expect(node.path).toEqual('/blog/lorem-ipsum-dolor-sit-amet')
-})
-
 test('add type with custom fields in route', async () => {
   const api = await createPlugin()
   const contentType = api.store.addContentType({
@@ -384,6 +347,35 @@ test('set content type template with config', async () => {
   const node = contentType.addNode({ id: '1' })
 
   expect(node.path).toEqual('/blog/1')
+})
+
+test('preserve trailing slash in routes', async () => {
+  const api = await createPlugin(undefined, {
+    templates: {
+      Post: '/path/:id/'
+    }
+  })
+
+  const contentType = api.store.addContentType('Post')
+  const node = contentType.addNode({ id: '1' })
+
+  expect(node.path).toEqual('/path/1/')
+})
+
+test('always add trailing slash for tempalte paths', async () => {
+  const api = await createPlugin(undefined, {
+    permalinks: {
+      trailingSlash: 'always'
+    },
+    templates: {
+      Post: '/path/:id'
+    }
+  })
+
+  const contentType = api.store.addContentType('Post')
+  const node = contentType.addNode({ id: '1' })
+
+  expect(node.path).toEqual('/path/1/')
 })
 
 // TODO: move dateField and route options to global permalinks config
@@ -534,14 +526,13 @@ test('disable slugify', async () => {
   const api = await createPlugin(undefined, {
     permalinks: {
       slugify: false
+    },
+    templates: {
+      Post: '/path/:title'
     }
   })
 
-  const contentType = api.store.addContentType({
-    typeName: 'Post',
-    route: '/path/:title'
-  })
-
+  const contentType = api.store.addContentType('Post')
   const node = contentType.addNode({ title: 'FooBar' })
 
   expect(node.path).toEqual('/path/FooBar')

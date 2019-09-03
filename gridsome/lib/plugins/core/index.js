@@ -1,10 +1,7 @@
 const path = require('path')
 const fs = require('fs-extra')
 
-const {
-  NOT_FOUND_PATH,
-  NOT_FOUND_NAME
-} = require('../../utils/constants')
+const { NOT_FOUND_NAME } = require('../../utils/constants')
 
 function corePlugin (api, config) {
   api.loadSource(store => {
@@ -20,9 +17,11 @@ function corePlugin (api, config) {
 
   api.createPages(({ createPage }) => {
     createPage({
-      name: NOT_FOUND_NAME,
-      path: NOT_FOUND_PATH,
-      component: path.join(config.appPath, 'pages', '404.vue')
+      path: '/404' + (config.permalinks.trailingSlash ? '/' : ''),
+      component: path.join(config.appPath, 'pages', '404.vue'),
+      route: {
+        name: NOT_FOUND_NAME
+      }
     })
   })
 
@@ -36,7 +35,7 @@ function corePlugin (api, config) {
   })
 
   api._app.pages.hooks.createRoute.tap('Gridsome', options => {
-    if (options.path === NOT_FOUND_PATH) {
+    if (/\/404\/?/.test(options.path)) {
       options.name = NOT_FOUND_NAME
     }
 

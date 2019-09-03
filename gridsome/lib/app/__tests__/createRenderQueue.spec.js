@@ -15,7 +15,7 @@ test('create render queue for basic project', async () => {
     '/',
     '/404/',
     '/about/',
-    '/about-us/',
+    '/about-us', // manually created without trailing slash
     '/docs/1/',
     '/docs/1/extra/',
     '/docs/2/',
@@ -86,7 +86,7 @@ test('create render queue for blog project', async () => {
 test('create render queue for createPages hook', async () => {
   const app = await _createApp(function plugin (api) {
     api.loadSource(async store => {
-      const posts = api.store.addContentType({ typeName: 'Post', route: '/post/:id' })
+      const posts = api.store.addContentType({ typeName: 'Post', route: '/post/:id/' })
       const movies = api.store.addContentType({ typeName: 'Movie' })
 
       for (let i = 1; i <= 3; i++) {
@@ -95,7 +95,7 @@ test('create render queue for createPages hook', async () => {
 
       movies.addNode({
         id: '1',
-        path: '/movie/one',
+        path: '/movie/one/',
         fields: {
           posts: [
             store.createReference('Post', '1')
@@ -105,7 +105,7 @@ test('create render queue for createPages hook', async () => {
 
       movies.addNode({
         id: '2',
-        path: '/movie/two',
+        path: '/movie/two/',
         fields: {
           posts: [
             store.createReference('Post', '1'),
@@ -116,7 +116,7 @@ test('create render queue for createPages hook', async () => {
 
       movies.addNode({
         id: '3',
-        path: '/movie/three',
+        path: '/movie/three/',
         fields: {
           posts: [
             store.createReference('Post', '1')
@@ -134,7 +134,7 @@ test('create render queue for createPages hook', async () => {
       })
 
       createPage({
-        path: '/blog',
+        path: '/blog/',
         component: './__fixtures__/PagedPage.vue',
         context: { perPage: 2 }
       })
@@ -175,17 +175,17 @@ test('create render queue for createPages hook', async () => {
   const paths = renderQueue.map(entry => entry.path)
 
   expect(paths).toEqual(expect.arrayContaining([
-    '/about/',
+    '/about',
     '/movie/three/',
     '/movie/two/',
     '/movie/one/',
     '/404/',
     '/blog/',
     '/blog/2/',
-    '/article/1/',
-    '/article/1/2/',
-    '/article/2/',
-    '/article/3/'
+    '/article/1',
+    '/article/1/2',
+    '/article/2',
+    '/article/3'
   ]))
   expect(paths).toHaveLength(11)
 
@@ -222,12 +222,12 @@ describe('dynamic pages', () => {
     const paths = renderQueue.map(entry => entry.path)
 
     expect(paths).toEqual([
-      '/a/b/',
+      '/a/b',
       '/a/:b(\\d+)',
       '/a/:b',
       '/a/:b*',
       '/a/:b+',
-      '/a/',
+      '/a',
       '/404/',
       '/'
     ])
@@ -270,7 +270,6 @@ describe('dynamic pages', () => {
     }
   })
 })
-
 
 async function _createApp (plugin) {
   const app = await new App(__dirname, {

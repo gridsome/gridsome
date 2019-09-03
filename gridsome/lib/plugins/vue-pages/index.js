@@ -3,6 +3,7 @@ const fs = require('fs-extra')
 const glob = require('globby')
 const slash = require('slash')
 const chokidar = require('chokidar')
+const { trimEnd } = require('lodash')
 const { createPagePath } = require('./lib/utils')
 
 class VuePages {
@@ -61,8 +62,11 @@ class VuePages {
   }
 
   createPageOptions (file, slugify) {
+    const { trailingSlash } = this.api.config.permalinks
+    const pagePath = createPagePath(file, slugify)
+
     return {
-      path: createPagePath(file, slugify),
+      path: trailingSlash ? trimEnd(pagePath, '/') + '/' : pagePath,
       name: /^[iI]ndex\.vue$/.test(file) ? 'home' : undefined,
       component: path.join(this.pagesDir, file)
     }

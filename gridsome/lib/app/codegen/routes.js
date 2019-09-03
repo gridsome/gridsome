@@ -5,17 +5,13 @@ const { pathToFilePath } = require('../../pages/utils')
 const { NOT_FOUND_NAME } = require('../../utils/constants')
 
 function genRoutes(app) {
-  const { trailingSlash } = app.config.permalinks || {}
-
-  const createRouteItem = (route, name = route.options.name, path = route.path) => ({
+  const createRouteItem = (route, name = route.name, path = route.path) => ({
     name,
     component: route.component,
     chunkName: genChunkName(app.context, route),
     meta: route.internal.meta,
     type: route.type,
-    path: trailingSlash && route.type === 'static' && path !== '*' && path !== '/'
-      ? path + '/'
-      : path
+    path
   })
 
   const redirects = app.config.redirects.filter(rule => rule.status === 301)

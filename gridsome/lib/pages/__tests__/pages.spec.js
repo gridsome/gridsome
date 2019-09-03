@@ -170,9 +170,9 @@ test('create page with query context', async () => {
 
 test('always include a /404 page', async () => {
   const app = await createApp()
-  const page = app.pages._pages.findOne({ path: '/404' })
+  const page = app.pages._pages.findOne({ path: '/404/' })
 
-  expect(page.path).toEqual('/404')
+  expect(page.path).toEqual('/404/')
 })
 
 test('cache parsed components', async () => {
@@ -349,7 +349,7 @@ test('override page with similar path', async () => {
   })
 
   pages.createPage({
-    path: '/page',
+    path: '/page/',
     component: './__fixtures__/DefaultPage.vue'
   })
 
@@ -394,14 +394,14 @@ test('sort routes by priority', async () => {
     '/a/:b(.*)',
     '/a-b-c',
     '/a',
-    '/404',
-    '/',
+    '/404/',
     '/a-:b-c',
     '/a-:b',
     '/:rest(\\d+)',
     '/:rest(\\d+)?',
     '/:a-:b',
-    '/:rest'
+    '/:rest',
+    '/'
   ])
 })
 

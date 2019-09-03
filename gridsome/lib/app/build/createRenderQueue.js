@@ -1,6 +1,7 @@
 const path = require('path')
 const { pathToFilePath } = require('../../pages/utils')
 const { createQueryVariables } = require('../../graphql/utils')
+const { trimEnd } = require('lodash')
 
 const {
   toFilterArgs,
@@ -60,42 +61,42 @@ function calcTotalPages (paginate, store, schema) {
 }
 
 function createRenderEntry (page, route, config, currentPage = 1) {
-  const { outDir, dataDir, publicPath, permalinks: { trailingSlash } } = config
-  const segments = page.path.split('/').filter(Boolean)
+  const { outDir, dataDir, publicPath } = config
+  const hasTrailingSlash = /\/$/.test(page.path)
+
+  let currentPath = page.path
+  let queryVariables = {}
 
   if (currentPage > 1) {
-    segments.push(currentPage)
+    const prefix = hasTrailingSlash ? '' : '/'
+    const suffix = hasTrailingSlash ? '/' : ''
+    currentPath += `${prefix}${currentPage}${suffix}`
   }
 
-  let currentPath = `/${segments.join('/')}`
   const htmlOutput = pathToFilePath(currentPath)
   const dataOutput = pathToFilePath(currentPath, 'json')
-  const prettyPath = currentPath
+  const prettyPath = trimEnd(currentPath, '/') || '/'
 
   const location = route.type === 'dynamic'
     ? { name: route.name }
     : { path: currentPath }
 
-  const queryVariables = route.internal.query.document
-    ? createQueryVariables(
+  if (route.internal.query.document) {
+    queryVariables = createQueryVariables(
       currentPath,
       page.internal.query.variables,
       currentPage
     )
-    : {}
-
-  if (route.type === 'static' && currentPath !== '/' && trailingSlash) {
-    currentPath += '/'
   }
 
   return {
     location,
     htmlOutput: path.join(outDir, htmlOutput),
     dataOutput: path.join(dataDir, dataOutput),
+    path: currentPath,
     prettyPath,
     queryVariables,
     type: route.type,
-    path: currentPath,
     publicPath: publicPath + currentPath,
     routeId: page.internal.route,
     pageId: page.id

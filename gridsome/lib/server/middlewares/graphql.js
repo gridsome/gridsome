@@ -14,7 +14,12 @@ module.exports = ({ pages }) => {
       return next()
     }
 
-    const page = pages._pages.findOne({ path: body.path })
+    let page = pages._pages.findOne({ path: body.path })
+
+    if (!page && !/\/$/.test(body.path)) {
+      // TODO: inform user about missing trailing slash in the path
+      page = pages._pages.findOne({ path: `${body.path}/` })
+    }
 
     // page/1/index.html is not statically generated
     // in production and should return 404 in develop
