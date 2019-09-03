@@ -40,7 +40,6 @@ test('build basic project', () => {
   // no objects should be rendered
   expect(indexHTML).not.toMatch('[object Object]')
 
-  expect($home('head > title').text()).toEqual('Gridsome | Test')
   expect($home('#app').data('server-rendered')).toEqual(true)
   expect($home('meta[name="keywords"]').attr('content')).toEqual('test')
   expect($home('meta[name="og:title"]').attr('content')).toEqual('bar')
@@ -56,6 +55,11 @@ test('build basic project', () => {
   expect($home('span.from-metadata').text()).toEqual('test')
   expect($home('.footer span.meta-data-1').text()).toEqual('Test Value')
   expect($home('.footer span.meta-data-2').text()).toEqual('bar')
+})
+
+test('set title in custom App.vue', () => {
+  const $home = load('dist/index.html')
+  expect($home('head > title').text()).toEqual('Gridsome [basic] | Test')
 })
 
 test('render custom html template', () => {

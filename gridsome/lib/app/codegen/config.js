@@ -1,13 +1,11 @@
 function genConfig ({ config }) {
   const { version } = require('../../../package.json')
-  const { siteUrl, siteName, titleTemplate, siteDescription, permalinks } = config
+  const { permalinks, titleTemplate, siteUrl } = config
 
   return `export default ${JSON.stringify({
-    siteUrl,
-    siteName,
-    titleTemplate,
-    siteDescription,
     trailingSlash: permalinks.trailingSlash,
+    titleTemplate,
+    siteUrl,
     version
   }, null, 2)}`
 }
