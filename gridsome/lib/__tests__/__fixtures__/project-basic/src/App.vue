@@ -4,7 +4,7 @@
 
 <static-query>
 query {
-  metaData {
+  metadata {
     siteName
     siteDescription
   }
@@ -15,7 +15,7 @@ query {
 export default {
   metaInfo () {
     const metaInfo = { meta: [] }
-    const { siteName, siteDescription } = this.$static.metaData
+    const { siteName, siteDescription } = this.$static.metadata
 
     metaInfo.title = siteName + ' [basic]'
 
