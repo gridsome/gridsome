@@ -21,7 +21,7 @@ module.exports = function createPageQuery (parsed, context = {}) {
       typeName: paginate.typeName,
       fieldName: paginate.fieldName,
       fieldTypeName: paginate.fieldTypeName,
-      belongsToArgs: paginate.belongsToArgs,
+      belongsToArgs: null,
       args: {}
     }
 
@@ -29,8 +29,11 @@ module.exports = function createPageQuery (parsed, context = {}) {
       res.paginate.args[key] = valueFromASTUntyped(paginate.args[key], res.variables)
     }
 
-    for (const key in paginate.belongsToArgs) {
-      res.paginate.belongsToArgs[key] = valueFromASTUntyped(paginate.belongsToArgs[key], res.variables)
+    if (paginate.belongsToArgs) {
+      res.paginate.belongsToArgs = {}
+      for (const key in paginate.belongsToArgs) {
+        res.paginate.belongsToArgs[key] = valueFromASTUntyped(paginate.belongsToArgs[key], res.variables)
+      }
     }
 
     if (!res.paginate.args.perPage) {

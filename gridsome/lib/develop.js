@@ -1,7 +1,13 @@
 const fs = require('fs-extra')
 const chalk = require('chalk')
+const columnify = require('columnify')
 const resolvePort = require('./server/resolvePort')
 const { prepareUrls } = require('./server/utils')
+
+const {
+  hasWarnings,
+  logAllWarnings
+} = require('./utils/deprecate')
 
 module.exports = async (context, args) => {
   process.env.NODE_ENV = 'development'
@@ -44,16 +50,31 @@ module.exports = async (context, args) => {
       return
     }
 
-    console.log()
+    const columns = []
+
     if (urls.lan.pretty) {
-      console.log(`  Site running at:`)
-      console.log(`  - Local:                  ${chalk.cyan(urls.local.pretty)}`)
-      console.log(`  - Network:                ${chalk.cyan(urls.lan.pretty)}\n`)
+      columns.push({ label: 'Site running at:' })
+      columns.push({ label: '- Local:', url: chalk.cyan(urls.local.pretty) })
+      columns.push({ label: '- Network:', url: chalk.cyan(urls.lan.pretty) })
+      columns.push({ label: '' })
     } else {
-      console.log(`  Site running at:          ${chalk.cyan(urls.local.pretty)}`)
+      columns.push({ label: 'Site running at:', url: chalk.cyan(urls.local.pretty) })
     }
-    console.log(`  Explore GraphQL data at:  ${chalk.cyan(urls.explore.pretty)}`)
+
+    columns.push({ label: 'Explore GraphQL data at:', url: chalk.cyan(urls.explore.pretty) })
+
+    const renderedColumns = columnify(columns, { showHeaders: false })
+
     console.log()
+    console.log(`  ${renderedColumns.split('\n').join('\n  ')}`)
+    console.log()
+
+    if (hasWarnings()) {
+      console.log()
+      console.log(`${chalk.bgYellow.black(' WARNING ')} ${chalk.yellow('Deprecation notices')}`)
+      console.log()
+      logAllWarnings(app.context)
+    }
   })
 
   server.listen(port, hostname, err => {

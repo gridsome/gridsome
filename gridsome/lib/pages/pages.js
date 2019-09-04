@@ -1,5 +1,6 @@
 const path = require('path')
 const fs = require('fs-extra')
+const LRU = require('lru-cache')
 const crypto = require('crypto')
 const invariant = require('invariant')
 const initWatcher = require('./watch')
@@ -29,8 +30,9 @@ class Pages {
       createPage: new SyncWaterfallHook(['options'])
     }
 
+    this._componentCache = new LRU({ max: 100 })
+    this._queryCache = new LRU({ max: 100 })
     this._watched = new Map()
-    this._cache = new Map()
     this._watcher = null
 
     ;['routes', 'pages'].forEach(name => {
@@ -65,11 +67,13 @@ class Pages {
   }
 
   clearCache () {
-    this._cache.clear()
+    this._componentCache.reset()
+    this._queryCache.reset()
   }
 
   clearComponentCache (component) {
-    this._cache.delete(component)
+    this._componentCache.del(component)
+    this._queryCache.del(component)
   }
 
   disableIndices () {
@@ -113,6 +117,11 @@ class Pages {
 
   updateRoute (input, meta = {}) {
     const validated = validateInput('route', input)
+
+    this.clearComponentCache(
+      this.app.resolve(validated.component)
+    )
+
     const options = this._createRouteOptions(validated, meta)
     const route = this._routes.by('id', options.id)
     const newOptions = Object.assign({}, options, {
@@ -251,7 +260,7 @@ class Pages {
   _createRouteOptions (options, meta = {}) {
     const component = this.app.resolve(options.component)
     const { pageQuery } = this._parseComponent(component)
-    const parsedQuery = this._parseQuery(pageQuery)
+    const parsedQuery = this._parseQuery(pageQuery, component)
     const { source, document, paginate } = this._createPageQuery(parsedQuery)
 
     const type = options.type
@@ -299,8 +308,17 @@ class Pages {
     })
   }
 
-  _parseQuery (query) {
-    return parseQuery(this.app.schema.getSchema(), query)
+  _parseQuery (query, component) {
+    if (this._queryCache.has(component)) {
+      return this._queryCache.get(component)
+    }
+
+    const schema = this.app.schema.getSchema()
+    const res = parseQuery(schema, query, component)
+
+    this._queryCache.set(component, res)
+
+    return res
   }
 
   _createPageQuery (parsedQuery, vars = {}) {
@@ -331,8 +349,8 @@ class Pages {
   }
 
   _parseComponent (component) {
-    if (this._cache.has(component)) {
-      return this._cache.get(component)
+    if (this._componentCache.has(component)) {
+      return this._componentCache.get(component)
     }
 
     const ext = path.extname(component).substring(1)
@@ -344,7 +362,7 @@ class Pages {
       results = hook.call(source, { resourcePath: component })
     }
 
-    this._cache.set(component, validateInput('component', results || {}))
+    this._componentCache.set(component, validateInput('component', results || {}))
 
     return results
   }
@@ -450,7 +468,7 @@ class Route {
     }
 
     const vars = queryVariables || context || {}
-    const parsedQuery = this._factory._parseQuery(query.source)
+    const parsedQuery = this._factory._parseQuery(query.source, this.component)
     const { paginate, variables, filters } = this._factory._createPageQuery(parsedQuery, vars)
 
     return this._createPage.call({

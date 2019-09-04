@@ -4,6 +4,7 @@ const hirestime = require('hirestime')
 const { info } = require('../utils/log')
 const isRelative = require('is-relative')
 const { version } = require('../../package.json')
+const { deprecate } = require('../utils/deprecate')
 
 const {
   AsyncSeriesHook,
@@ -110,6 +111,7 @@ class App {
 
     // TODO: remove before 1.0
     this.queue = this.assets
+    deprecate.property(this, 'queue', 'The property app.queue is deprecated. Use app.assets instead.')
 
     info(`Initializing plugins...`)
 

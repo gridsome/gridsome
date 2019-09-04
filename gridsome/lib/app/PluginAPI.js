@@ -1,9 +1,11 @@
 const autoBind = require('auto-bind')
 const PluginStore = require('../store/PluginStore')
+const { deprecate } = require('../utils/deprecate')
 
 class PluginAPI {
   constructor (app, { entry = {}, transformers } = {}) {
     this._entry = entry
+    this._transformers = transformers
     this._app = app
     this._store = new PluginStore(app, entry.options, { transformers })
 
@@ -19,7 +21,7 @@ class PluginAPI {
   }
 
   get store () {
-    // TODO: do not use store directly
+    deprecate('Avoid using api.store directly. Use the actions in api.loadSource() instead.')
     return this._store
   }
 

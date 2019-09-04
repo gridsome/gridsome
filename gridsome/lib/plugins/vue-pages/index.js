@@ -13,7 +13,6 @@ class VuePages {
 
   constructor (api) {
     this.api = api
-    this.store = api.store
     this.pagesDir = api.config.pagesDir
 
     if (fs.existsSync(this.pagesDir)) {

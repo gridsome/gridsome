@@ -5,6 +5,7 @@ const { chunk } = require('lodash')
 const sysinfo = require('./utils/sysinfo')
 const executeQueries = require('./app/build/executeQueries')
 const createRenderQueue = require('./app/build/createRenderQueue')
+const { logAllWarnings } = require('./utils/deprecate')
 const { log, info, writeLine } = require('./utils/log')
 
 module.exports = async (context, args) => {
@@ -40,6 +41,7 @@ module.exports = async (context, args) => {
   await fs.remove(config.manifestsDir)
 
   log()
+  logAllWarnings(app.context)
   log(`  Done in ${buildTime(hirestime.S)}s`)
   log()
 

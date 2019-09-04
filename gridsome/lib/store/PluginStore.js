@@ -3,6 +3,7 @@ const crypto = require('crypto')
 const mime = require('mime-types')
 const autoBind = require('auto-bind')
 const camelCase = require('camelcase')
+const { deprecate } = require('../utils/deprecate')
 const { mapValues, isPlainObject } = require('lodash')
 const { cache, nodeCache } = require('../utils/cache')
 const { resolvePath } = require('./utils')
@@ -36,11 +37,6 @@ class PluginStore {
     return this.store.addMetadata(key, data)
   }
 
-  // TODO: remove before 1.0
-  addMetaData (key, data) {
-    return this.addMetadata(key, data)
-  }
-
   // nodes
 
   addContentType (options) {
@@ -50,6 +46,16 @@ class PluginStore {
 
     if (typeof options.resolveAbsolutePaths === 'undefined') {
       options.resolveAbsolutePaths = this._resolveAbsolutePaths
+    }
+
+    if (options.route && !this._app.config.templates[options.typeName]) {
+      deprecate(
+        `The route option in addContentType() ` +
+        `is deprecated. Use templates instead.`,
+        {
+          url: 'https://gridsome.org/docs/templates/'
+        }
+      )
     }
 
     return this.store.addContentType(options, this)
@@ -87,7 +93,7 @@ class PluginStore {
   }
 
   _createTransformer (TransformerClass, options, localOptions = {}) {
-    return new TransformerClass(options, {
+    const args = {
       resolveNodeFilePath: this._resolveNodeFilePath,
       context: this._app.context,
       assets: this._app.assets,
@@ -96,7 +102,13 @@ class PluginStore {
       queue: this._app.assets,
       nodeCache,
       cache
-    })
+    }
+
+    deprecate.property(args, 'queue', 'The queue property is renamed to assets.')
+    deprecate.property(args, 'nodeCache', 'Do not use the nodeCache property. It will be removed.')
+    deprecate.property(args, 'cache', 'Do not use the cache property. It will be removed.')
+
+    return new TransformerClass(options, args)
   }
 
   _addTransformer (TransformerClass, options = {}) {
@@ -132,13 +144,13 @@ class PluginStore {
     return { typeName, id }
   }
 
-  slugify (value) {
-    return this._app.slugify(value)
-  }
-
   //
   // deprecated
   //
+
+  addMetaData (key, data) {
+    return this.addMetadata(key, data)
+  }
 
   makeUid (orgId) {
     return crypto.createHash('md5').update(orgId).digest('hex')
@@ -150,6 +162,10 @@ class PluginStore {
 
   resolve (p) {
     return path.resolve(this.context, p)
+  }
+
+  slugify (value) {
+    return this._app.slugify(value)
   }
 }
 
