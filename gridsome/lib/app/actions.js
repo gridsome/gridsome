@@ -53,9 +53,6 @@ function createStoreActions (api, app) {
     getContentType (typeName) {
       return store.getContentType(typeName)
     },
-    slugify (string) {
-      return app.slugify(string)
-    },
 
     store: {
       createReference (typeName, id) {
@@ -70,6 +67,7 @@ function createStoreActions (api, app) {
       return store.addMetadata(key, data)
     },
     createTypeName (typeName) {
+      deprecate(`The createTypeName() action is deprecated. Type names should be generated manually instead.`)
       return store.createTypeName(typeName)
     },
     createReference (typeName, id) {
@@ -79,6 +77,7 @@ function createStoreActions (api, app) {
       return crypto.createHash('md5').update(orgId).digest('hex')
     },
     makeTypeName (string = '') {
+      deprecate(`The makeTypeName() action is deprecated. Type names should be generated manually instead.`)
       return store.createTypeName(string)
     }
   }

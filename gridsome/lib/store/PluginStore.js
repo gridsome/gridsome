@@ -37,11 +37,6 @@ class PluginStore {
     return this.store.addMetadata(key, data)
   }
 
-  // TODO: remove before 1.0
-  addMetaData (key, data) {
-    return this.addMetadata(key, data)
-  }
-
   // nodes
 
   addContentType (options) {
@@ -149,13 +144,13 @@ class PluginStore {
     return { typeName, id }
   }
 
-  slugify (value) {
-    return this._app.slugify(value)
-  }
-
   //
   // deprecated
   //
+
+  addMetaData (key, data) {
+    return this.addMetadata(key, data)
+  }
 
   makeUid (orgId) {
     return crypto.createHash('md5').update(orgId).digest('hex')
@@ -167,6 +162,10 @@ class PluginStore {
 
   resolve (p) {
     return path.resolve(this.context, p)
+  }
+
+  slugify (value) {
+    return this._app.slugify(value)
   }
 }
 

@@ -62,29 +62,9 @@ class ContentType {
     return this._events.removeListener(eventName, fn, ctx)
   }
 
-  addReference (fieldName, options) {
-    if (typeof options === 'string') {
-      options = { typeName: options }
-    }
-
-    deprecate('The addReference() method is deprecated. Use addSchemaTypes() instead.', {
-      url: 'https://gridsome.org/docs/schema-api/'
-    })
-
-    this._refs[this.createFieldName(fieldName)] = options
-  }
-
-  addSchemaField (fieldName, options) {
-    deprecate('The addSchemaField() method is deprecated. Use addSchemaResolvers() instead.', {
-      url: 'https://gridsome.org/docs/schema-api/'
-    })
-
-    this._fields[fieldName] = options
-  }
-
   addNode (options) {
     if (isPlainObject(options.fields)) {
-      deprecate('The fields property is deprecated. Set custom fields as root properties instead.')
+      deprecate('The fields property in addNode() is deprecated. Set custom fields as root properties instead.')
     }
 
     options = normalizeNodeOptions(options, this, true)
@@ -107,12 +87,6 @@ class ContentType {
 
   data () {
     return this._collection.find()
-  }
-
-  getNode (id) {
-    return this._collection.findOne(
-      typeof id === 'string' ? { id } : id
-    )
   }
 
   getNodeById (id) {
@@ -187,8 +161,36 @@ class ContentType {
   // deprecated
   //
 
+  addReference (fieldName, options) {
+    if (typeof options === 'string') {
+      options = { typeName: options }
+    }
+
+    deprecate('The addReference() method is deprecated. Use addSchemaTypes() instead.', {
+      url: 'https://gridsome.org/docs/schema-api/'
+    })
+
+    this._refs[this.createFieldName(fieldName)] = options
+  }
+
+  addSchemaField (fieldName, options) {
+    deprecate('The addSchemaField() method is deprecated. Use addSchemaResolvers() instead.', {
+      url: 'https://gridsome.org/docs/schema-api/'
+    })
+
+    this._fields[fieldName] = options
+  }
+
   slugify (string = '') {
+    deprecate(`${this.typeName}.slugify() is deprecated. Use the slugify() action instead.`)
     return this._store.slugify(string)
+  }
+
+  getNode (id) {
+    deprecate(`${this.typeName}.getNode() is deprecated. Use ${this.typeName}.getNodeById() instead.`)
+    return this._collection.findOne(
+      typeof id === 'string' ? { id } : id
+    )
   }
 }
 
