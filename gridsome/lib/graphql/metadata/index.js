@@ -47,7 +47,7 @@ function addQueryField (schemaComposer, typeCompoer, metadata) {
   // TODO: remove before 1.0
   schemaComposer.Query.setField('metaData', {
     type: 'Metadata',
-    deprecationReason: 'Use metadata instead.',
+    deprecationReason: 'Use Query.metadata instead.',
     resolve: () => metadata
   })
 }

@@ -102,7 +102,7 @@ class Plugins {
     const now = Date.now() + process.hrtime()[1]
     const digest = hashString(now.toString())
 
-    pages.clearCache()
+    // pages.clearCache()
 
     if (isBootstrapped) {
       pages.disableIndices()

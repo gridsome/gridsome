@@ -1,6 +1,7 @@
 const autoBind = require('auto-bind')
 const { createSchema } = require('../graphql')
 const { graphql, execute } = require('graphql')
+const { deprecate } = require('../utils/deprecate')
 
 class Schema {
   constructor (app) {
@@ -42,7 +43,7 @@ class Schema {
   }
 
   createContext () {
-    return {
+    const context = {
       store: createStoreActions(this._app.store),
       pages: createPagesAction(this._app.pages),
       config: this._app.config,
@@ -50,6 +51,10 @@ class Schema {
       // TODO: remove before 1.0
       queue: this._app.assets
     }
+
+    deprecate.property(context, 'queue', 'The property context.queue is deprecated. Use context.assets instead.')
+
+    return context
   }
 
   runQuery (docOrQuery, variables = {}) {

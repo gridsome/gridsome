@@ -47,7 +47,7 @@ module.exports = function createNodesSchema (schemaComposer, store) {
     ) {
       schemaComposer.Query.setField(oldAllFieldName, {
         ...typeComposer.getResolver('findManyPaginated'),
-        deprecationReason: `Use '${allFieldName}' instead.`
+        deprecationReason: `Use Query.${allFieldName} instead.`
       })
     }
   }

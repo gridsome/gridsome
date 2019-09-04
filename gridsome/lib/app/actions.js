@@ -1,5 +1,7 @@
 const crypto = require('crypto')
 const { pick } = require('lodash')
+const PluginStore = require('../store/PluginStore')
+const { deprecate } = require('../utils/deprecate')
 
 function createBaseActions (api, app) {
   return {
@@ -17,46 +19,67 @@ function createBaseActions (api, app) {
 
 function createStoreActions (api, app) {
   const baseActions = createBaseActions(api, app)
+  const store = new PluginStore(app, api._entry.options, {
+    transformers: api._transformers
+  })
 
   return {
     ...baseActions,
 
     addMetadata (key, data) {
-      return api.store.addMetadata(key, data)
+      return store.addMetadata(key, data)
     },
     addContentType (options) {
-      return api.store.addContentType(options)
+      if (typeof options === 'string') {
+        options = { typeName: options }
+      }
+
+      if (typeof options.resolveAbsolutePaths === 'undefined') {
+        options.resolveAbsolutePaths = store._resolveAbsolutePaths
+      }
+
+      if (options.route && !app.config.templates[options.typeName]) {
+        deprecate(
+          `The route option in addContentType() ` +
+          `is deprecated. Use templates instead.`,
+          {
+            url: 'https://gridsome.org/docs/templates/'
+          }
+        )
+      }
+
+      return app.store.addContentType(options, store)
     },
     getContentType (typeName) {
-      return api.store.getContentType(typeName)
+      return store.getContentType(typeName)
     },
     slugify (string) {
-      return api.store.slugify(string)
+      return store.slugify(string)
     },
 
     store: {
       createReference (typeName, id) {
-        return api.store.createReference(typeName, id)
+        return store.createReference(typeName, id)
       }
     },
 
     // deprecated actions
-    // TODO: warn when used
 
     addMetaData (key, data) {
-      return api.store.addMetadata(key, data)
+      deprecate(`The addMetaData() action is deprecated. Use addMetadata() instead.`)
+      return store.addMetadata(key, data)
     },
     createTypeName (typeName) {
-      return api.store.createTypeName(typeName)
+      return store.createTypeName(typeName)
     },
     createReference (typeName, id) {
-      return api.store.createReference(typeName, id)
+      return store.createReference(typeName, id)
     },
     makeUid (orgId) {
       return crypto.createHash('md5').update(orgId).digest('hex')
     },
     makeTypeName (string = '') {
-      return api.store.createTypeName(string)
+      return store.createTypeName(string)
     }
   }
 }
@@ -143,15 +166,19 @@ function createPagesActions (api, app, { digest }) {
     ...baseActions,
 
     getContentType (typeName) {
-      return api.store.getContentType(typeName)
+      return app.store.getContentType(typeName)
     },
 
     createPage (options) {
       if (typeof options.route === 'string') {
+        deprecate(`The route option for createPage() is deprecated. Use the createRoute() method instead.`, {
+          url: 'https://gridsome.org/docs/pages-api/'
+        })
         return createDeprecatedRoute(app.pages, options, internals)
       }
 
       if (options.name) {
+        deprecate(`The name option for createPage() is moved to route.name.`)
         options.route = options.route || {}
         options.route.name = options.name
         delete options.name
@@ -175,6 +202,9 @@ function createManagedPagesActions (api, app, { digest }) {
 
     createPage (options) {
       if (typeof options.route === 'string') {
+        deprecate(`The route option in createPage() is deprecated. Use the createRoute() action instead.`, {
+          url: 'https://gridsome.org/docs/pages-api/'
+        })
         return createDeprecatedRoute(app.pages, options, internals)
       }
 
@@ -188,10 +218,14 @@ function createManagedPagesActions (api, app, { digest }) {
     },
     updatePage (options) {
       if (typeof options.route === 'string') {
+        deprecate(`The route option in createPage() is deprecated. Use the createRoute() action instead.`, {
+          url: 'https://gridsome.org/docs/pages-api/'
+        })
         return createDeprecatedRoute(app.pages, options, internals)
       }
 
       if (options.name) {
+        deprecate(`The name option in createPage() has moved to route.name.`)
         options.route = options.route || {}
         options.route.name = options.name
         delete options.name

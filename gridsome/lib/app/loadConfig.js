@@ -5,6 +5,7 @@ const crypto = require('crypto')
 const dotenv = require('dotenv')
 const isRelative = require('is-relative')
 const colorString = require('color-string')
+const { deprecate } = require('../utils/deprecate')
 const { defaultsDeep, camelCase, isString, isFunction } = require('lodash')
 const { internalRE, transformerRE, SUPPORTED_IMAGE_TYPES } = require('../utils/constants')
 
@@ -121,6 +122,9 @@ module.exports = (context, options = {}) => {
 
   // TODO: remove before 1.0
   if (localConfig.metaData) {
+    deprecate(`The metaData config is renamed to metadata.`, {
+      customCaller: ['gridsome.config.js']
+    })
     config.metadata = localConfig.metaData
   }
 

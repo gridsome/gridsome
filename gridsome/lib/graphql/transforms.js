@@ -12,13 +12,20 @@ function fixIncorrectVariableUsage (schema, ast, variableDef) {
   const { value: name } = variableDef.variable.name
   const typeInfo = new TypeInfo(schema)
 
+  const incorrectNodes = []
+
   visit(ast, visitWithTypeInfo(typeInfo, {
     Argument (node) {
       if (node.value.kind === Kind.VARIABLE && node.name.value === name) {
         const inputTypeName = typeInfo.getInputType().toString()
 
         if (typeNode.name.value !== inputTypeName) {
-          // TODO: warn about incorrect usage
+          incorrectNodes.push({
+            name: node.name.value,
+            oldType: typeNode.name.value,
+            newType: inputTypeName
+          })
+
           typeNode.name.value = inputTypeName
 
           return BREAK
@@ -26,6 +33,8 @@ function fixIncorrectVariableUsage (schema, ast, variableDef) {
       }
     }
   }))
+
+  return incorrectNodes
 }
 
 module.exports = {

@@ -6,6 +6,7 @@ const moment = require('moment')
 const chokidar = require('chokidar')
 const didYouMean = require('didyoumean')
 const pathToRegexp = require('path-to-regexp')
+const { deprecate } = require('../utils/deprecate')
 const { ISO_8601_FORMAT } = require('../utils/constants')
 const { isPlainObject, trimStart, trimEnd, get } = require('lodash')
 
@@ -17,7 +18,7 @@ const makeId = (uid, name) => {
   return crypto.createHash('md5').update(uid + name).digest('hex')
 }
 
-const makePath = (object, { routeKeys, createPath }, dateField = 'date', slugify) => {
+const makePath = (object, { path, routeKeys, createPath }, dateField = 'date', slugify) => {
   const date = moment.utc(object[dateField], ISO_8601_FORMAT, true)
   const length = routeKeys.length
   const params = {}
@@ -33,6 +34,13 @@ const makePath = (object, { routeKeys, createPath }, dateField = 'date', slugify
     // TODO: remove before 1.0
     // let slug fallback to title
     if (name === 'slug' && !object.slug) {
+      deprecate(
+        `You have a :slug parameter in your route (${path}) but no slug ` +
+        `field exist on the node. The title field will be used instead ` +
+        `but you should change to :title in the route or use another field. ` +
+        `This fallback will be removed in v0.8.`,
+        { stackIndex: 5 }
+      )
       fieldPath = ['title']
     }
 
@@ -144,7 +152,6 @@ class TemplatesPlugin {
   constructor (api) {
     const templates = setupTemplates(api.config)
 
-    // TODO: deprecate route and component option on collections
     api._app.store.hooks.addContentType.tap('TemplatesPlugin', options => {
       const templatePath = typeof options.route === 'string'
         ? '/' + trimStart(options.route, '/')
