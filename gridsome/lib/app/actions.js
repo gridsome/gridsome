@@ -54,7 +54,7 @@ function createStoreActions (api, app) {
       return store.getContentType(typeName)
     },
     slugify (string) {
-      return store.slugify(string)
+      return app.slugify(string)
     },
 
     store: {

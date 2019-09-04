@@ -39,7 +39,7 @@ module.exports = async function (source, map) {
     return
   }
 
-  const { errors, data } = await schema.runQuery(source)
+  const { errors, data } = await schema.runQuery(ast)
 
   if (errors && errors.length) {
     callback(new Error(errors[0]), source, map)
