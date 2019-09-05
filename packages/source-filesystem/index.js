@@ -122,7 +122,7 @@ class FilesystemSource {
   async createNodeOptions (file) {
     const origin = path.join(this.context, file)
     const relPath = path.relative(this.context, file)
-    const mimeType = this.store.mime.lookup(file)
+    const mimeType = this.store.mime.lookup(file) || `application/x-${path.extname(file)}`
     const content = await fs.readFile(origin, 'utf8')
     const id = this.store.makeUid(relPath)
     const { dir, name, ext = '' } = path.parse(file)
