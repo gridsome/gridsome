@@ -1,7 +1,7 @@
 {
-  "version": "0.3.0",
-  "name": "@gridsome/source-wordpress",
-  "description": "WordPress source for Gridsome",
+  "version": "0.4.5",
+  "name": "gridsome-source-wordpress",
+  "description": "WordPress source for Gridsome with image processing support",
   "homepage": "https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress#readme",
   "repository": "https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress",
   "main": "index.js",

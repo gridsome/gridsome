@@ -112,7 +112,8 @@ class WordPressSource {
 
       authors.addNode({
         ...fields,
-        id: author.id,
+        id: store.makeUid(`author:${author.id}`),
+        wpId: author.id,
         title: author.name,
         avatars
       })
@@ -135,7 +136,8 @@ class WordPressSource {
 
       for (const term of terms) {
         taxonomy.addNode({
-          id: term.id,
+          id: store.makeUid(`term:${term.id}`),
+          wpId: term.id,
           title: term.name,
           slug: term.slug,
           content: term.description,
@@ -290,7 +292,11 @@ class WordPressSource {
           }
         }
 
-        posts.addNode({ ...fields, id: post.id })
+        posts.addNode({
+          ...fields,
+          id: store.makeUid(`post:${post.id}`),
+          wpId: post.id
+        })
       }
     }
   }
