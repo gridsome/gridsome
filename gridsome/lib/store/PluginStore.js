@@ -37,9 +37,9 @@ class PluginStore {
     return this.store.addMetadata(key, data)
   }
 
-  // nodes
+  // collections
 
-  addContentType (options) {
+  addCollection (options) {
     if (typeof options === 'string') {
       options = { typeName: options }
     }
@@ -50,7 +50,7 @@ class PluginStore {
 
     if (options.route && !this._app.config.templates[options.typeName]) {
       deprecate(
-        `The route option in addContentType() ` +
+        `The route option in addCollection() ` +
         `is deprecated. Use templates instead.`,
         {
           url: 'https://gridsome.org/docs/templates/'
@@ -58,11 +58,11 @@ class PluginStore {
       )
     }
 
-    return this.store.addContentType(options, this)
+    return this.store.addCollection(options, this)
   }
 
-  getContentType (type) {
-    return this.store.getContentType(type)
+  getCollection (type) {
+    return this.store.getCollection(type)
   }
 
   getNodeByUid (uid) {
@@ -83,12 +83,12 @@ class PluginStore {
   }
 
   _resolveNodeFilePath (node, toPath) {
-    const contentType = this.getContentType(node.internal.typeName)
+    const collection = this.getCollection(node.internal.typeName)
     const { origin = '' } = node.internal
 
     return resolvePath(origin, toPath, {
-      context: contentType._assetsContext,
-      resolveAbsolute: contentType._resolveAbsolutePaths
+      context: collection._assetsContext,
+      resolveAbsolute: collection._resolveAbsolutePaths
     })
   }
 
@@ -148,7 +148,18 @@ class PluginStore {
   // deprecated
   //
 
+  addContentType(options) {
+    deprecate('The store.addContentType() method has been renamed to store.addCollection().')
+    return this.addCollection(options)
+  }
+
+  getContentType(type) {
+    deprecate('The store.getContentType() method has been renamed to store.getCollection().')
+    return this.store.getCollection(type)
+  }
+
   addMetaData (key, data) {
+    deprecate('The store.addMetaData() method has been renamed to store.addMetadata().')
     return this.addMetadata(key, data)
   }
 

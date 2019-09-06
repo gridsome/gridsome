@@ -3,7 +3,7 @@ const crypto = require('crypto')
 const { pick, omit } = require('lodash')
 const { NODE_FIELDS } = require('../utils/constants')
 
-module.exports = function normalizeNodeOptions (options, contentType, useFallbacks) {
+module.exports = function normalizeNodeOptions (options, collection, useFallbacks) {
   if (typeof options === 'string') {
     options = { id: options }
   }
@@ -17,14 +17,14 @@ module.exports = function normalizeNodeOptions (options, contentType, useFallbac
     delete customFields.fields
   }
 
-  nodeOptions.internal = createInternal(contentType, nodeOptions.internal)
+  nodeOptions.internal = createInternal(collection, nodeOptions.internal)
 
   if (useFallbacks) {
     if (!nodeOptions.id) {
       nodeOptions.id = hash(options)
     }
     if (!nodeOptions.$uid) {
-      nodeOptions.$uid = genUid(contentType.typeName + nodeOptions.id)
+      nodeOptions.$uid = genUid(collection.typeName + nodeOptions.id)
     }
   }
 
@@ -38,9 +38,9 @@ function genUid (value) {
   return crypto.createHash('md5').update(value).digest('hex')
 }
 
-function createInternal (contentType, internal = {}) {
+function createInternal (collection, internal = {}) {
   return {
-    typeName: contentType.typeName,
+    typeName: collection.typeName,
     origin: internal.origin,
     mimeType: internal.mimeType,
     content: internal.content,

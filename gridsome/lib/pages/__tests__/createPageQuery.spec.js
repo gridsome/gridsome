@@ -11,7 +11,7 @@ beforeEach(async () => {
   app = await new App(__dirname).init()
   const api = new PluginAPI(app)
 
-  api.store.addContentType('TestPost')
+  api.store.addCollection('TestPost')
 
   await app.plugins.createSchema()
 })

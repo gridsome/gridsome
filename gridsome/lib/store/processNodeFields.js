@@ -3,13 +3,13 @@ const { isResolvablePath } = require('../utils')
 const { NODE_FIELDS } = require('../utils/constants')
 const { resolvePath } = require('./utils')
 
-module.exports = function processNodeFields (node, contentType) {
+module.exports = function processNodeFields (node, collection) {
   const fields = omit(node, NODE_FIELDS)
 
   const results = processFields(fields, {
     origin: node.internal.origin,
-    context: contentType._assetsContext,
-    resolveAbsolute: contentType._resolveAbsolutePaths
+    context: collection._assetsContext,
+    resolveAbsolute: collection._resolveAbsolutePaths
   })
 
   return {

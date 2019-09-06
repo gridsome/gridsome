@@ -110,8 +110,8 @@ const log = (namespace, message, options = {}) => {
     }
   }
 
-  const key = caller
-    ? (customCaller || depSite).join(':') + '__' + caller.join(':')
+  const key = customCaller || caller
+    ? (customCaller || caller).join(':') + '__' + caller.join(':')
     : undefined
 
   if (key && warned.has(key)) {

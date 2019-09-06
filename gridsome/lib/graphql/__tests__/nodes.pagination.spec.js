@@ -204,7 +204,7 @@ async function graphql (count, ...args) {
       plugins: [
         function plugin (api) {
           api.loadSource(store => {
-            const posts = store.addContentType('Post')
+            const posts = store.addCollection('Post')
 
             for (let i = 1; i <= count; i++) {
               posts.addNode({ id: String(i), order: i })

@@ -63,7 +63,7 @@ test('create page with plugin api', async () => {
   await createApp(function (api) {
     api.createPages(pages => {
       expect(pages.graphql).toBeInstanceOf(Function)
-      expect(pages.getContentType).toBeInstanceOf(Function)
+      expect(pages.getCollection).toBeInstanceOf(Function)
       expect(pages.createPage).toBeInstanceOf(Function)
       expect(pages.updatePage).toBeUndefined()
 
@@ -103,7 +103,7 @@ test('create managed pages with plugin api', async () => {
       expect(route.internal.isManaged).toEqual(true)
 
       expect(pages.graphql).toBeInstanceOf(Function)
-      expect(pages.getContentType).toBeInstanceOf(Function)
+      expect(pages.getCollection).toBeInstanceOf(Function)
       expect(pages.createPage).toBeInstanceOf(Function)
       expect(pages.updatePage).toBeInstanceOf(Function)
       expect(pages.removePage).toBeInstanceOf(Function)
@@ -117,7 +117,7 @@ test('create managed pages with plugin api', async () => {
 test('create page with pagination', async () => {
   const { pages } = await createApp(function (api) {
     api.loadSource(store => {
-      store.addContentType('Post')
+      store.addCollection('Post')
     })
   })
 
@@ -153,7 +153,7 @@ test('create page with custom context', async () => {
 test('create page with query context', async () => {
   const { pages } = await createApp(function (api) {
     api.loadSource(store => {
-      store.addContentType('Movie')
+      store.addCollection('Movie')
     })
   })
 
@@ -178,7 +178,7 @@ test('always include a /404 page', async () => {
 test('cache parsed components', async () => {
   const { pages } = await createApp(function (api) {
     api.loadSource(store => {
-      store.addContentType('Post')
+      store.addCollection('Post')
     })
   })
 
@@ -194,7 +194,7 @@ test('cache parsed components', async () => {
 test('update page', async () => {
   const { pages } = await createApp(function (api) {
     api.loadSource(store => {
-      store.addContentType('Post')
+      store.addCollection('Post')
     })
   })
 
@@ -296,7 +296,7 @@ test('garbage collect unmanaged pages', async () => {
 
   const app = await createApp(function (api) {
     api.loadSource(store => {
-      store.addContentType('Post')
+      store.addCollection('Post')
     })
 
     api.createPages(({ createPage }) => {
@@ -344,7 +344,7 @@ test('garbage collect unmanaged pages', async () => {
 test('override page with similar path', async () => {
   const { pages } = await createApp(function (api) {
     api.loadSource(store => {
-      store.addContentType('Post')
+      store.addCollection('Post')
     })
   })
 
@@ -456,7 +456,7 @@ describe('create routes', () => {
   test('create route', async () => {
     const { pages } = await createApp(function (api) {
       api.loadSource(store => {
-        store.addContentType('Post')
+        store.addCollection('Post')
       })
     })
 
@@ -474,7 +474,7 @@ describe('create routes', () => {
   test('add pages to route', async () => {
     const { pages } = await createApp(function (api) {
       api.loadSource(store => {
-        store.addContentType('Movie')
+        store.addCollection('Movie')
       })
     })
 
@@ -508,7 +508,7 @@ describe('create routes', () => {
   test('remove route and its pages', async () => {
     const { pages } = await createApp(function (api) {
       api.loadSource(store => {
-        store.addContentType('Post')
+        store.addCollection('Post')
       })
     })
 

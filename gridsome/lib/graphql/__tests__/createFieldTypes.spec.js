@@ -98,7 +98,7 @@ test('merge node fields', () => {
 test('create graphql types from node fields', async () => {
   const app = await createApp(function (api) {
     api.loadSource(actions => {
-      actions.addContentType('Post')
+      actions.addCollection('Post')
     })
   })
 

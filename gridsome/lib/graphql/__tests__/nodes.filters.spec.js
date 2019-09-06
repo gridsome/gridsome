@@ -219,7 +219,7 @@ test('handle pagination for filtered nodes', async () => {
 })
 
 function createSchemaAndExecute (query) {
-  const posts = api.store.addContentType('Product')
+  const posts = api.store.addCollection('Product')
 
   posts.addNode({
     id: '1',

@@ -151,8 +151,9 @@ class TemplatesPlugin {
 
   constructor (api) {
     const templates = setupTemplates(api.config)
+    const { permalinks: { trailingSlash }} = api.config
 
-    api._app.store.hooks.addContentType.tap('TemplatesPlugin', options => {
+    api._app.store.hooks.addCollection.tap('TemplatesPlugin', options => {
       const templatePath = typeof options.route === 'string'
         ? '/' + trimStart(options.route, '/')
         : undefined
@@ -188,37 +189,44 @@ class TemplatesPlugin {
       }
     })
 
-    api.onCreateNode((options, contentType) => {
-      const typeTemplates = templates.byTypeName.get(contentType.typeName)
+    api.onCreateNode((options, collection) => {
+      const typeTemplates = templates.byTypeName.get(collection.typeName)
 
       if (typeof options.path === 'string') {
         options.path = '/' + trimStart(options.path, '/')
-      } else if (typeTemplates) {
-        for (const template of typeTemplates) {
-          const paths = options.internal.path = options.internal.path || {}
+      }
 
+      if (typeTemplates) {
+        for (const template of typeTemplates) {
           let nodePath
 
           if (typeof template.path === 'string') {
-            nodePath = makePath(options, template, contentType._dateField, api._app.slugify)
+            nodePath = makePath(options, template, collection._dateField, api._app.slugify)
           } else if (typeof template.path === 'function') {
             nodePath = template.path(options)
+
+            if (trailingSlash === 'always') {
+              nodePath = trimEnd(nodePath) + '/'
+            }
           } else {
             continue
           }
 
-          paths[template.name] = nodePath
+          options.internal.path = options.internal.path || {}
+          options.internal.path[template.name] = nodePath
         }
 
         // - set default path as root field for plugins that depends on it
         // - many are also using it as the $path variable in queries
-        options.path = options.internal.path.default
+        if (options.internal.path) {
+          options.path = options.internal.path.default
+        }
       }
     })
 
     api.createSchema(({ addSchemaResolvers }) => {
-      const contentTypes = api._app.store.collections
-      const typeNames = Object.keys(contentTypes)
+      const collections = api._app.store.collections
+      const typeNames = Object.keys(collections)
 
       for (const typeName of templates.byTypeName.keys()) {
         if (!typeNames.includes(typeName)) {
@@ -258,20 +266,20 @@ class TemplatesPlugin {
         if (byComponent.has(component)) {
           for (const template of byComponent.get(component)) {
             const { typeName, name, path, component } = template
-            const contentType = actions.getContentType(typeName)
+            const collection = actions.getCollection(typeName)
             const instance = new Template(typeName, name, path, component, actions)
             const value = allTemplates.get(component) || []
 
-            const nodes = contentType.data()
+            const nodes = collection.data()
             const length = nodes.length
 
             for (let i = 0; i < length; i++) {
               instance.createPage(nodes[i])
             }
 
-            contentType.on('add', instance.createPage, instance)
-            contentType.on('update', instance.updatePage, instance)
-            contentType.on('remove', instance.removePage, instance)
+            collection.on('add', instance.createPage, instance)
+            collection.on('update', instance.updatePage, instance)
+            collection.on('remove', instance.removePage, instance)
 
             allTemplates.set(component, value.concat(instance))
           }
@@ -281,11 +289,11 @@ class TemplatesPlugin {
       const removeTemplate = component => {
         if (allTemplates.has(component)) {
           allTemplates.get(component).forEach(instance => {
-            const contentType = actions.getContentType(instance.typeName)
+            const collection = actions.getCollection(instance.typeName)
 
-            contentType.off('add', instance.createPage, instance)
-            contentType.off('update', instance.updatePage, instance)
-            contentType.off('remove', instance.removePage, instance)
+            collection.off('add', instance.createPage, instance)
+            collection.off('update', instance.updatePage, instance)
+            collection.off('remove', instance.removePage, instance)
 
             instance.remove()
           })

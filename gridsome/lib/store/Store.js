@@ -1,9 +1,10 @@
-const { Collection } = require('lokijs')
+const Loki = require('lokijs')
 const autoBind = require('auto-bind')
 const NodeIndex = require('./NodeIndex')
 const EventEmitter = require('eventemitter3')
+const { deprecate } = require('../utils/deprecate')
 const { isArray, isPlainObject } = require('lodash')
-const ContentType = require('./ContentType')
+const Collection = require('./Collection')
 const { safeKey } = require('../utils')
 
 const { SyncWaterfallHook } = require('tapable')
@@ -21,13 +22,13 @@ class Store {
 
     autoBind(this)
 
-    this.metadata = new Collection('core/metadata', {
+    this.metadata = new Loki.Collection('core/metadata', {
       unique: ['key'],
       autoupdate: true
     })
 
     this.hooks = {
-      addContentType: new SyncWaterfallHook(['options']),
+      addCollection: new SyncWaterfallHook(['options']),
       addNode: new SyncBailWaterfallHook(['options', 'collection'])
     }
 
@@ -69,40 +70,40 @@ class Store {
 
   // nodes
 
-  addContentType (options, store) {
-    options = this.hooks.addContentType.call(options)
+  addCollection (options, store) {
+    options = this.hooks.addCollection.call(options)
 
     if (this.collections.hasOwnProperty(options.typeName)) {
-      return this.getContentType(options.typeName)
+      return this.getCollection(options.typeName)
     }
 
-    const contentType = new ContentType(
+    const collection = new Collection(
       options.typeName,
       options,
       store
     )
 
-    contentType.on('add', node => {
-      this.nodeIndex.addEntry(node, contentType)
+    collection.on('add', node => {
+      this.nodeIndex.addEntry(node, collection)
       this.setUpdateTime()
     })
 
-    contentType.on('update', node => {
-      this.nodeIndex.updateEntry(node, contentType)
+    collection.on('update', node => {
+      this.nodeIndex.updateEntry(node, collection)
       this.setUpdateTime()
     })
 
-    contentType.on('remove', node => {
+    collection.on('remove', node => {
       this.nodeIndex.removeEntry(node)
       this.setUpdateTime()
     })
 
-    this.collections[options.typeName] = contentType
+    this.collections[options.typeName] = collection
 
-    return contentType
+    return collection
   }
 
-  getContentType (typeName) {
+  getCollection (typeName) {
     return this.collections[typeName]
   }
 
@@ -115,7 +116,7 @@ class Store {
   }
 
   getNode (typeName, id) {
-    return this.getContentType(typeName).getNodeById(id)
+    return this.getCollection(typeName).getNodeById(id)
   }
 
   // TODO: move this to internal plugin
@@ -132,8 +133,8 @@ class Store {
 
   chainIndex (query = {}) {
     return this.nodeIndex.getChain().find(query).map(entry => {
-      const contentType = this.collections[entry.typeName]
-      const node = contentType.collection.by('id', entry.id)
+      const collection = this.collections[entry.typeName]
+      const node = collection.collection.by('id', entry.id)
 
       return { ...node, $loki: undefined }
     })
@@ -147,6 +148,18 @@ class Store {
     if (this.app.isBootstrapped) {
       this._events.emit('change')
     }
+  }
+
+  // deprecated
+
+  addContentType (options, store) {
+    deprecate('The store.addContentType() method has been renamed to store.addCollection().')
+    return this.addCollection(options, store)
+  }
+
+  getContentType (typeName) {
+    deprecate('The store.getContentType() method has been renamed to store.getCollection().')
+    return this.getCollection(typeName)
   }
 }
 

@@ -35,7 +35,7 @@ function calcTotalPages (paginate, store, schema) {
   const { belongsToArgs, fieldName, typeName, args } = paginate
   const gqlField = schema.getComposer().Query.getField(fieldName)
   const typeComposer = schema.getComposer().get(typeName)
-  const { collection } = store.getContentType(typeName)
+  const { collection } = store.getCollection(typeName)
 
   const filterQuery = toFilterArgs(args.filter, belongsToArgs
     ? gqlField.type.getFields().belongsTo.args.filter.type
