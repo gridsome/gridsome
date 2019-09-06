@@ -269,18 +269,6 @@ test('add type with ref', async () => {
   })
 })
 
-test('add nodes with custom paths', async () => {
-  const api = await createPlugin()
-  const collection = api.store.addCollection('TestPost')
-
-  const node1 = collection.addNode({ path: '/lorem-ipsum-dolor-sit-amet' })
-  const node2 = collection.addNode({ path: 'nibh-fermentum-fringilla' })
-
-  expect(collection.options.route).toBeUndefined()
-  expect(node1.path).toEqual('/lorem-ipsum-dolor-sit-amet')
-  expect(node2.path).toEqual('/nibh-fermentum-fringilla')
-})
-
 test('add type with dynamic route', async () => {
   const api = await createPlugin()
   const collection = api.store.addCollection({
@@ -295,18 +283,6 @@ test('add type with dynamic route', async () => {
 
   expect(collection.options.route).toEqual('/:year/:month/:day/:title')
   expect(node.path).toEqual('/2018/09/04/lorem-ipsum-dolor-sit-amet')
-})
-
-test.each([
-  ['foo/bar', '/foo/bar'],
-  ['//foo/bar', '/foo/bar']
-])('ensure leading slash for node paths', async (path, expteced) => {
-  const api = await createPlugin()
-  const collection = api.store.addCollection('TestPost')
-
-  const node = collection.addNode({ path })
-
-  expect(node.path).toEqual(expteced)
 })
 
 test('add type with custom fields in route', async () => {

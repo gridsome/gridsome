@@ -192,10 +192,6 @@ class TemplatesPlugin {
     api.onCreateNode((options, collection) => {
       const typeTemplates = templates.byTypeName.get(collection.typeName)
 
-      if (typeof options.path === 'string') {
-        options.path = '/' + trimStart(options.path, '/')
-      }
-
       if (typeTemplates) {
         for (const template of typeTemplates) {
           let nodePath

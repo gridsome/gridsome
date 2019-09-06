@@ -125,7 +125,9 @@ function inferFields (typeComposer, collection) {
     return {}
   }
 
-  return createFieldDefinitions(collection.data())
+  return createFieldDefinitions(collection.data(), {
+    camelCase: collection._camelCasedFieldNames
+  })
 }
 
 function processInferredFields (typeComposer, fieldDefs, fieldTypes) {
@@ -142,7 +144,7 @@ function processInferredFields (typeComposer, fieldDefs, fieldTypes) {
 }
 
 function createThirdPartyFields (typeComposer, collection) {
-  const context = { collection, graphql }
+  const context = { collection, graphql, contentType: collection }
   const fields = {}
 
   for (const mimeType in collection._mimeTypes) {

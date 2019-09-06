@@ -95,6 +95,21 @@ test('merge node fields', () => {
   expect(fields.invalidRef.value).toBeUndefined()
 })
 
+test('camelcase fieldNames', () => {
+  const fields = createFieldDefinitions([{
+    field_name: true,
+    an_object: {
+      sub_field: true
+    }
+  }], { camelCase: true })
+
+  expect(fields.field_name.key).toEqual('field_name')
+  expect(fields.field_name.fieldName).toEqual('fieldName')
+  expect(fields.field_name.extensions.proxy).toBeDefined()
+  expect(fields.an_object.fieldName).toEqual('anObject')
+  expect(fields.an_object.value.sub_field.fieldName).toEqual('subField')
+})
+
 test('create graphql types from node fields', async () => {
   const app = await createApp(function (api) {
     api.loadSource(actions => {
