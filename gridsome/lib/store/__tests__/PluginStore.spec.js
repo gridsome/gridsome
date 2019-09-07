@@ -300,13 +300,13 @@ test('add type with dynamic route', async () => {
 test.each([
   ['foo/bar', '/foo/bar'],
   ['//foo/bar', '/foo/bar']
-])('ensure leading slash for node paths', async (path, expteced) => {
+])('ensure leading slash for node paths', async (path, expected) => {
   const api = await createPlugin()
   const contentType = api.store.addContentType('TestPost')
 
   const node = contentType.addNode({ path })
 
-  expect(node.path).toEqual(expteced)
+  expect(node.path).toEqual(expected)
 })
 
 test('add type with custom fields in route', async () => {
@@ -362,7 +362,7 @@ test('preserve trailing slash in routes', async () => {
   expect(node.path).toEqual('/path/1/')
 })
 
-test('always add trailing slash for tempalte paths', async () => {
+test('always add trailing slash for template paths', async () => {
   const api = await createPlugin(undefined, {
     permalinks: {
       trailingSlash: 'always'
@@ -667,7 +667,7 @@ test('don\'t touch absolute paths when resolveAbsolutePaths is not set', async (
   expect(node.file3).toEqual('/absolute/dir/to/image.png')
 })
 
-test('always resolve relative paths from filesytem sources', async () => {
+test('always resolve relative paths from filesystem sources', async () => {
   const api = await createPlugin()
 
   const contentType = api.store.addContentType({ typeName: 'A' })

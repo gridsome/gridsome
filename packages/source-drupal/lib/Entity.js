@@ -7,7 +7,7 @@ class Entity {
     this.source = source // instance of DrupalSource.js
 
     this.entityType = entityType
-    this.graphQlContentType // gridsome store api addConentType
+    this.graphQlContentType // gridsome store api addContentType
     this.url = url // url to fetch, pulled from apiSchema
     this.response = [] // response from this.fetchData
   }

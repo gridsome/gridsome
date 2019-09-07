@@ -189,7 +189,7 @@ test('sort nodes collection by custom field', async () => {
   expect(data.allTestPost.edges[2].node.value).toEqual('c')
 })
 
-test('sort nodes collection by mutliple fields', async () => {
+test('sort nodes collection by multiple fields', async () => {
   const posts = api.store.addContentType('Post')
   posts.addNode({ id: '1', date: '2019-02-01', featured: true })
   posts.addNode({ id: '2', date: '2019-02-02', featured: true })
