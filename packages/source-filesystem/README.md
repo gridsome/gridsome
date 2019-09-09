@@ -15,12 +15,14 @@ module.exports = {
     {
       use: '@gridsome/source-filesystem',
       options: {
-        path: 'blog/**/*.md',
         typeName: 'BlogPost',
-        route: '/blog/:year/:month/:day/:slug'
+        path: './content/blog/**/*.md',
       }
     }
-  ]
+  ],
+  templates: {
+    BlogPost: '/blog/:year/:month/:day/:slug'
+  }
 }
 ```
 
@@ -63,12 +65,6 @@ module.exports = {
 }
 ```
 
-#### route
-
-- Type: `string`
-
-Define a dynamic route if your source is able to have a certain pathname structure. This will generate a single route for all nodes from this source. Any custom field can be used as path params. If a `date` field exists, `year`, `month` and `day` will also be available as params. If the `route` option is omitted, a route for each file will be generated based on the path and filename. Read more about [route params](https://gridsome.org/docs/routing#route-params).
-
 #### pathPrefix
 
 - Type: `string`
@@ -108,7 +104,6 @@ module.exports = {
           // Create a Tag content type and its nodes automatically.
           tags: {
             typeName: 'Tag',
-            route: '/tag/:id',
             create: true
           }
         }
