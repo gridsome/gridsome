@@ -35,6 +35,7 @@ test('create page', async () => {
 
   expect(page.id).toEqual('76a99cb48c7cfa8dbb91bba1ced599cd')
   expect(page.path).toEqual('/page')
+  expect(page.publicPath).toEqual('/page/')
   expect(page.context).toMatchObject({})
   expect(page.internal.isDynamic).toEqual(false)
   expect(page.internal.route).toEqual('6823d06059b8ddddbf443e850beecbe9')
@@ -47,7 +48,7 @@ test('create page', async () => {
   const route = pages.getRoute(page.internal.route)
 
   expect(route.type).toEqual('static')
-  expect(route.path).toEqual('/page')
+  expect(route.path).toEqual('/page/')
   expect(route.id).toEqual('6823d06059b8ddddbf443e850beecbe9')
   expect(route.component).toEqual(path.join(__dirname, '__fixtures__', 'DefaultPage.vue'))
   expect(route.internal.regexp).toEqual(/^\/page(?:\/)?$/i)
@@ -63,21 +64,22 @@ test('create page with plugin api', async () => {
   await createApp(function (api) {
     api.createPages(pages => {
       expect(pages.graphql).toBeInstanceOf(Function)
-      expect(pages.getContentType).toBeInstanceOf(Function)
+      expect(pages.getCollection).toBeInstanceOf(Function)
       expect(pages.createPage).toBeInstanceOf(Function)
       expect(pages.updatePage).toBeUndefined()
 
       pages.createPage({
         id: '1',
-        path: '/page',
+        path: '/',
         component: './__fixtures__/DefaultPage.vue'
       })
 
-      const page = api._app.pages._pages.by('path', '/page')
+      const page = api._app.pages._pages.by('path', '/')
       const route = api._app.pages.getRoute(page.internal.route)
 
       expect(page.id).toEqual('1')
-      expect(page.path).toEqual('/page')
+      expect(page.path).toEqual('/')
+      expect(page.publicPath).toEqual('/')
       expect(page.context).toMatchObject({})
       expect(page.internal.isManaged).toEqual(false)
 
@@ -103,7 +105,7 @@ test('create managed pages with plugin api', async () => {
       expect(route.internal.isManaged).toEqual(true)
 
       expect(pages.graphql).toBeInstanceOf(Function)
-      expect(pages.getContentType).toBeInstanceOf(Function)
+      expect(pages.getCollection).toBeInstanceOf(Function)
       expect(pages.createPage).toBeInstanceOf(Function)
       expect(pages.updatePage).toBeInstanceOf(Function)
       expect(pages.removePage).toBeInstanceOf(Function)
@@ -117,7 +119,7 @@ test('create managed pages with plugin api', async () => {
 test('create page with pagination', async () => {
   const { pages } = await createApp(function (api) {
     api.loadSource(store => {
-      store.addContentType('Post')
+      store.addCollection('Post')
     })
   })
 
@@ -128,13 +130,14 @@ test('create page with pagination', async () => {
 
   expect(page.id).toEqual('76a99cb48c7cfa8dbb91bba1ced599cd')
   expect(page.path).toEqual('/page')
+  expect(page.publicPath).toEqual('/page/')
   expect(page.internal.query.paginate.typeName).toEqual('Post')
 
   const route = pages.getRoute(page.internal.route)
 
-  expect(route.path).toEqual('/page/:page(\\d+)?')
+  expect(route.path).toEqual('/page/:page(\\d+)?/')
   expect(route.internal.path).toEqual('/page')
-  expect(route.internal.regexp).toEqual(/^\/page(?:\/)?$/i)
+  expect(route.internal.regexp).toEqual(/^\/page(?:\/(\d+))?(?:\/)?$/i)
   expect(route.internal.query.paginate).toEqual(true)
 })
 
@@ -153,7 +156,7 @@ test('create page with custom context', async () => {
 test('create page with query context', async () => {
   const { pages } = await createApp(function (api) {
     api.loadSource(store => {
-      store.addContentType('Movie')
+      store.addCollection('Movie')
     })
   })
 
@@ -163,22 +166,22 @@ test('create page with query context', async () => {
     queryVariables: { id: '1' }
   })
 
-
   expect(page.context).toMatchObject({})
   expect(page.internal.query.variables).toMatchObject({ id: '1' })
 })
 
 test('always include a /404 page', async () => {
   const app = await createApp()
-  const page = app.pages._pages.findOne({ path: '/404/' })
+  const page = app.pages._pages.by('path', '/404')
 
-  expect(page.path).toEqual('/404/')
+  expect(page.path).toEqual('/404')
+  expect(page.publicPath).toEqual('/404/')
 })
 
 test('cache parsed components', async () => {
   const { pages } = await createApp(function (api) {
     api.loadSource(store => {
-      store.addContentType('Post')
+      store.addCollection('Post')
     })
   })
 
@@ -194,7 +197,7 @@ test('cache parsed components', async () => {
 test('update page', async () => {
   const { pages } = await createApp(function (api) {
     api.loadSource(store => {
-      store.addContentType('Post')
+      store.addCollection('Post')
     })
   })
 
@@ -207,6 +210,7 @@ test('update page', async () => {
   const route1 = pages.getRoute(page1.internal.route)
 
   expect(page1.path).toEqual('/page')
+  expect(page1.publicPath).toEqual('/page/')
   expect(route1.component).toEqual(path.join(__dirname, '__fixtures__', 'DefaultPage.vue'))
   expect(pages._watched.size).toEqual(2)
 
@@ -220,8 +224,9 @@ test('update page', async () => {
 
   expect(page2.id).toEqual(page1.id)
   expect(page2.path).toEqual('/page')
+  expect(page2.publicPath).toEqual('/page/')
   expect(route2.component).toEqual(path.join(__dirname, '__fixtures__', 'PagedPage.vue'))
-  expect(route2.path).toEqual('/page/:page(\\d+)?')
+  expect(route2.path).toEqual('/page/:page(\\d+)?/')
   expect(pages.pages()).toHaveLength(2) // includes /404
   expect(pages._watched.size).toEqual(2)
 })
@@ -296,7 +301,7 @@ test('garbage collect unmanaged pages', async () => {
 
   const app = await createApp(function (api) {
     api.loadSource(store => {
-      store.addContentType('Post')
+      store.addCollection('Post')
     })
 
     api.createPages(({ createPage }) => {
@@ -344,12 +349,12 @@ test('garbage collect unmanaged pages', async () => {
 test('override page with similar path', async () => {
   const { pages } = await createApp(function (api) {
     api.loadSource(store => {
-      store.addContentType('Post')
+      store.addCollection('Post')
     })
   })
 
   pages.createPage({
-    path: '/page/',
+    path: '/page',
     component: './__fixtures__/DefaultPage.vue'
   })
 
@@ -385,22 +390,22 @@ test('sort routes by priority', async () => {
   const paths = pages.routes().map(route => route.path)
 
   expect(paths).toEqual([
-    '/a/b/c',
-    '/a/:b/c',
-    '/a/:b/:c(\\d+)?',
-    '/a/:b/:c+',
-    '/a/b',
-    '/a/:b',
-    '/a/:b(.*)',
-    '/a-b-c',
-    '/a',
+    '/a/b/c/',
+    '/a/:b/c/',
+    '/a/:b/:c(\\d+)?/',
+    '/a/:b/:c+/',
+    '/a/b/',
+    '/a/:b/',
+    '/a/:b(.*)/',
+    '/a-b-c/',
+    '/a/',
     '/404/',
-    '/a-:b-c',
-    '/a-:b',
-    '/:rest(\\d+)',
-    '/:rest(\\d+)?',
-    '/:a-:b',
-    '/:rest',
+    '/a-:b-c/',
+    '/a-:b/',
+    '/:rest(\\d+)/',
+    '/:rest(\\d+)?/',
+    '/:a-:b/',
+    '/:rest/',
     '/'
   ])
 })
@@ -421,7 +426,7 @@ test('get matched route by path', async () => {
 
   const match1 = pages.getMatch('/2')
   const match2 = pages.getMatch('/bar')
-  const match3 = pages.getMatch('/about')
+  const match3 = pages.getMatch('/about/')
 
   expect(match1.params.page).toEqual('2')
   expect(match2.params.foo).toEqual('bar')
@@ -456,7 +461,7 @@ describe('create routes', () => {
   test('create route', async () => {
     const { pages } = await createApp(function (api) {
       api.loadSource(store => {
-        store.addContentType('Post')
+        store.addCollection('Post')
       })
     })
 
@@ -465,16 +470,16 @@ describe('create routes', () => {
 
     expect(route.type).toEqual('static')
     expect(route.id).toEqual('97634d90358baad1bc2499987699ca68')
-    expect(route.path).toEqual('/page/:id/:page(\\d+)?')
+    expect(route.path).toEqual('/page/:id/:page(\\d+)?/')
     expect(route.internal.path).toEqual('/page/:id')
     expect(route.internal.isDynamic).toEqual(true)
-    expect(route.internal.regexp).toEqual(/^\/page\/([^/]+?)(?:\/)?$/i)
+    expect(route.internal.regexp).toEqual(/^\/page\/([^/]+?)(?:\/(\d+))?(?:\/)?$/i)
   })
 
   test('add pages to route', async () => {
     const { pages } = await createApp(function (api) {
       api.loadSource(store => {
-        store.addContentType('Movie')
+        store.addCollection('Movie')
       })
     })
 
@@ -487,6 +492,7 @@ describe('create routes', () => {
     expect(route.id).toEqual('1')
     expect(page1.id).toEqual('1')
     expect(page1.path).toEqual('/page/1')
+    expect(page1.publicPath).toEqual('/page/1/')
     expect(page1.context).toEqual({})
     expect(page1.internal.digest).toEqual(route.internal.digest)
     expect(page1.internal.isManaged).toEqual(route.internal.isManaged)
@@ -508,7 +514,7 @@ describe('create routes', () => {
   test('remove route and its pages', async () => {
     const { pages } = await createApp(function (api) {
       api.loadSource(store => {
-        store.addContentType('Post')
+        store.addCollection('Post')
       })
     })
 

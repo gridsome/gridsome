@@ -15,7 +15,7 @@ test('create render queue for basic project', async () => {
     '/',
     '/404/',
     '/about/',
-    '/about-us', // manually created without trailing slash
+    '/about-us/',
     '/docs/1/',
     '/docs/1/extra/',
     '/docs/2/',
@@ -86,8 +86,8 @@ test('create render queue for blog project', async () => {
 test('create render queue for createPages hook', async () => {
   const app = await _createApp(function plugin (api) {
     api.loadSource(async store => {
-      const posts = api.store.addContentType({ typeName: 'Post', route: '/post/:id/' })
-      const movies = api.store.addContentType({ typeName: 'Movie' })
+      const posts = api.store.addCollection({ typeName: 'Post', route: '/post/:id/' })
+      const movies = api.store.addCollection({ typeName: 'Movie' })
 
       for (let i = 1; i <= 3; i++) {
         posts.addNode({ id: String(i), fields: { author: '2' }})
@@ -125,8 +125,8 @@ test('create render queue for createPages hook', async () => {
       })
     })
 
-    api.createPages(async ({ getContentType, createPage, graphql }) => {
-      const posts = getContentType('Post')
+    api.createPages(async ({ getCollection, createPage, graphql }) => {
+      const posts = getCollection('Post')
 
       createPage({
         path: '/about',
@@ -175,17 +175,17 @@ test('create render queue for createPages hook', async () => {
   const paths = renderQueue.map(entry => entry.path)
 
   expect(paths).toEqual(expect.arrayContaining([
-    '/about',
+    '/about/',
     '/movie/three/',
     '/movie/two/',
     '/movie/one/',
     '/404/',
     '/blog/',
     '/blog/2/',
-    '/article/1',
-    '/article/1/2',
-    '/article/2',
-    '/article/3'
+    '/article/1/',
+    '/article/1/2/',
+    '/article/2/',
+    '/article/3/'
   ]))
   expect(paths).toHaveLength(11)
 
@@ -222,12 +222,12 @@ describe('dynamic pages', () => {
     const paths = renderQueue.map(entry => entry.path)
 
     expect(paths).toEqual([
-      '/a/b',
+      '/a/b/',
       '/a/:b(\\d+)',
       '/a/:b',
       '/a/:b*',
       '/a/:b+',
-      '/a',
+      '/a/',
       '/404/',
       '/'
     ])

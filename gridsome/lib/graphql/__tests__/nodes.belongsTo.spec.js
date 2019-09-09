@@ -16,9 +16,9 @@ beforeEach(async () => {
 })
 
 test('create node reference', async () => {
-  const authors = api.store.addContentType('Author')
+  const authors = api.store.addCollection('Author')
 
-  const books = api.store.addContentType({
+  const books = api.store.addCollection({
     typeName: 'Book',
     refs: {
       authorRef: {
@@ -91,8 +91,8 @@ test('create node reference', async () => {
 })
 
 test('get references from custom schema', async () => {
-  const authors = api.store.addContentType('Author')
-  const books = api.store.addContentType('Book')
+  const authors = api.store.addCollection('Author')
+  const books = api.store.addCollection('Book')
 
   authors.addNode({ id: '1', title: 'Author 1', slug: 'author-1' })
   books.addNode({ id: '1', title: 'Book 1', author: '1' })
@@ -130,8 +130,8 @@ test('get references from custom schema', async () => {
 })
 
 test('sort belongsTo by multiple fields', async () => {
-  const authors = api.store.addContentType('Author')
-  const books = api.store.addContentType('Book')
+  const authors = api.store.addCollection('Author')
+  const books = api.store.addCollection('Book')
   books.addReference('author', 'Author')
 
   authors.addNode({ id: '1', title: 'Author 1' })
@@ -162,9 +162,9 @@ test('sort belongsTo by multiple fields', async () => {
 })
 
 test('handle pagination for filtered belongsTo', async () => {
-  const authors = api.store.addContentType('Author')
-  const stores = api.store.addContentType('Store')
-  const books = api.store.addContentType('Book')
+  const authors = api.store.addCollection('Author')
+  const stores = api.store.addCollection('Store')
+  const books = api.store.addCollection('Book')
 
   authors.addNode({ id: '1', title: 'Author 1' })
 

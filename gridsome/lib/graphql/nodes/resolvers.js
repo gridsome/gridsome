@@ -11,7 +11,7 @@ exports.createFindOneResolver = function (typeComposer) {
   const typeName = typeComposer.getTypeName()
 
   return function findOneResolver ({ args, context }) {
-    const { collection } = context.store.getContentType(typeName)
+    const { collection } = context.store.getCollection(typeName)
     let node = null
 
     if (args.id) {
@@ -30,7 +30,7 @@ exports.createFindManyPaginatedResolver = function (typeComposer) {
   const typeName = typeComposer.getTypeName()
 
   return function findManyPaginatedResolver ({ args, context }) {
-    const { collection } = context.store.getContentType(typeName)
+    const { collection } = context.store.getCollection(typeName)
     const sort = createSortOptions(args)
     const query = {}
 
@@ -53,7 +53,7 @@ exports.createReferenceOneResolver = function (typeComposer) {
   const typeName = typeComposer.getTypeName()
 
   return function referenceOneResolver ({ source, args, context, info }) {
-    const contentType = context.store.getContentType(typeName)
+    const collection = context.store.getCollection(typeName)
     const fieldValue = source[info.fieldName]
     const referenceValue = isRefField(fieldValue)
       ? fieldValue.id
@@ -64,9 +64,9 @@ exports.createReferenceOneResolver = function (typeComposer) {
     const { by = 'id' } = args
 
     if (by === 'id') {
-      return contentType.getNode(referenceValue)
+      return collection.getNodeById(referenceValue)
     } else {
-      return contentType.findNode({ [by]: referenceValue })
+      return collection.findNode({ [by]: referenceValue })
     }
   }
 }
@@ -75,7 +75,7 @@ exports.createReferenceManyResolver = function (typeComposer) {
   const typeName = typeComposer.getTypeName()
 
   return function referenceManyResolver ({ source, args, context, info }) {
-    const contentType = context.store.getContentType(typeName)
+    const collection = context.store.getCollection(typeName)
     const fieldValue = source[info.fieldName]
     let referenceValues = Array.isArray(fieldValue)
       ? fieldValue.map(value => isRefField(value) ? value.id : value)
@@ -90,7 +90,7 @@ exports.createReferenceManyResolver = function (typeComposer) {
 
     const { by = 'id' } = args
 
-    return contentType.findNodes({
+    return collection.findNodes({
       [by]: { $in: referenceValues }
     })
   }
@@ -100,7 +100,7 @@ exports.createReferenceManyAdvancedResolver = function (typeComposer) {
   const typeName = typeComposer.getTypeName()
 
   return function referenceManyAdvancedResolver ({ source, args, context, info }) {
-    const { collection } = context.store.getContentType(typeName)
+    const { collection } = context.store.getCollection(typeName)
     const fieldValue = source[info.fieldName]
     let referenceValues = Array.isArray(fieldValue)
       ? fieldValue.map(value => isRefField(value) ? value.id : value)

@@ -1,12 +1,12 @@
 const { omit } = require('lodash')
 const normalizeNodeOptions = require('./normalizeNodeOptions')
 
-module.exports = function transformNodeContent (node, contentType) {
+module.exports = function transformNodeContent (node, collection) {
   const { mimeType, content } = node.internal
-  const { _mimeTypes } = contentType
+  const { _mimeTypes } = collection
 
   if (mimeType) {
-    const transformer = contentType._transformers[mimeType]
+    const transformer = collection._transformers[mimeType]
 
     if (!transformer) {
       throw new Error(`No transformer for '${mimeType}' is installed.`)
@@ -19,7 +19,7 @@ module.exports = function transformNodeContent (node, contentType) {
     }
 
     const results = content ? transformer.parse(content) : {}
-    const options = normalizeNodeOptions(results, contentType, false)
+    const options = normalizeNodeOptions(results, collection, false)
     const customFields = omit(options, ['$uid', 'internal'])
 
     for (const key in customFields) {

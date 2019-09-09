@@ -32,35 +32,35 @@ async function createApp (plugin) {
   return app.bootstrap(BOOTSTRAP_PAGES)
 }
 
-test('add content type', async () => {
+test('add collection', async () => {
   const api = await createPlugin()
 
-  const contentType = api.store.addContentType({
+  const collection = api.store.addCollection({
     typeName: 'TestPost',
     route: '/path/:id/:bar/:foo_raw/(.*)?'
   })
 
-  expect(contentType.typeName).toEqual('TestPost')
-  expect(contentType.route).toBeUndefined()
-  expect(contentType._refs).toMatchObject({})
-  expect(contentType._fields).toMatchObject({})
-  expect(contentType._resolveAbsolutePaths).toEqual(false)
+  expect(collection.typeName).toEqual('TestPost')
+  expect(collection.route).toBeUndefined()
+  expect(collection._refs).toMatchObject({})
+  expect(collection._fields).toMatchObject({})
+  expect(collection._resolveAbsolutePaths).toEqual(false)
 
-  expect(contentType.addNode).toBeInstanceOf(Function)
-  expect(contentType.updateNode).toBeInstanceOf(Function)
-  expect(contentType.removeNode).toBeInstanceOf(Function)
-  expect(contentType.addReference).toBeInstanceOf(Function)
-  expect(contentType.addSchemaField).toBeInstanceOf(Function)
-  expect(contentType.makeUid).toBeInstanceOf(Function)
-  expect(contentType.slugify).toBeInstanceOf(Function)
+  expect(collection.addNode).toBeInstanceOf(Function)
+  expect(collection.updateNode).toBeInstanceOf(Function)
+  expect(collection.removeNode).toBeInstanceOf(Function)
+  expect(collection.addReference).toBeInstanceOf(Function)
+  expect(collection.addSchemaField).toBeInstanceOf(Function)
+  expect(collection.makeUid).toBeInstanceOf(Function)
+  expect(collection.slugify).toBeInstanceOf(Function)
 })
 
 test('add node', async () => {
   const api = await createPlugin()
-  const contentType = api.store.addContentType('TestPost')
+  const collection = api.store.addCollection('TestPost')
 
-  const emit = jest.spyOn(contentType._events, 'emit')
-  const node = contentType.addNode({
+  const emit = jest.spyOn(collection._events, 'emit')
+  const node = collection.addNode({
     id: 'test',
     title: 'Lorem ipsum dolor sit amet',
     date: '2018-09-04T23:20:33.918Z',
@@ -87,14 +87,14 @@ test('add node', async () => {
 test('update node', async () => {
   const api = await createPlugin()
 
-  const contentType = api.store.addContentType({
+  const collection = api.store.addCollection({
     typeName: 'TestPost',
     route: '/test/:foo/:slug'
   })
 
-  const emit = jest.spyOn(contentType._events, 'emit')
+  const emit = jest.spyOn(collection._events, 'emit')
 
-  const oldNode = contentType.addNode({
+  const oldNode = collection.addNode({
     id: 'test',
     slug: 'test',
     date: '2018-09-04T23:20:33.918Z',
@@ -106,7 +106,7 @@ test('update node', async () => {
   const oldTimestamp = oldNode.internal.timestamp
   const uid = oldNode.$uid
 
-  const node = contentType.updateNode({
+  const node = collection.updateNode({
     id: 'test',
     title: 'New title',
     slug: 'new-title',
@@ -120,7 +120,7 @@ test('update node', async () => {
   expect(node.id).toEqual('test')
   expect(node.title).toEqual('New title')
   expect(node.slug).toEqual('new-title')
-  expect(node.path).toEqual('/test/foo/new-title')
+  expect(node.path).toEqual('/test/foo/new-title/')
   expect(node.content).toEqual('Praesent commodo cursus magna')
   expect(node.excerpt).toEqual('Praesent commodo...')
   expect(node.foo).toEqual('foo')
@@ -138,13 +138,13 @@ test('change node id', async () => {
   const { store } = await createPlugin()
 
   const uid = 'test'
-  const contentType = store.addContentType({ typeName: 'TestPost' })
+  const collection = store.addCollection({ typeName: 'TestPost' })
 
-  const node1 = contentType.addNode({ $uid: uid, id: 'test' })
+  const node1 = collection.addNode({ $uid: uid, id: 'test' })
 
   expect(node1.id).toEqual('test')
 
-  const node2 = contentType.updateNode({ $uid: uid, id: 'test-2' })
+  const node2 = collection.updateNode({ $uid: uid, id: 'test-2' })
   const entry = store.store.nodeIndex.getEntry(uid)
 
   expect(node2.id).toEqual('test-2')
@@ -154,65 +154,65 @@ test('change node id', async () => {
 
 test('get node by id', async () => {
   const api = await createPlugin()
-  const contentType = api.store.addContentType('TestPost')
+  const collection = api.store.addCollection('TestPost')
 
-  contentType.addNode({ id: 'test' })
+  collection.addNode({ id: 'test' })
 
-  expect(contentType.getNode('test').id).toEqual('test')
+  expect(collection.getNode('test').id).toEqual('test')
 })
 
 test('get node by uid', async () => {
   const api = await createPlugin()
-  const contentType = api.store.addContentType('TestPost')
+  const collection = api.store.addCollection('TestPost')
 
-  contentType.addNode({ $uid: 'foo', id: '1' })
+  collection.addNode({ $uid: 'foo', id: '1' })
 
   expect(api.store.getNodeByUid('foo').id).toEqual('1')
 })
 
 test('find node', async () => {
   const api = await createPlugin()
-  const contentType = api.store.addContentType('TestPost')
+  const collection = api.store.addCollection('TestPost')
 
-  contentType.addNode({ id: 'test' })
+  collection.addNode({ id: 'test' })
 
-  expect(contentType.findNode({ id: 'test' }).id).toEqual('test')
+  expect(collection.findNode({ id: 'test' }).id).toEqual('test')
 })
 
 test('find many nodes', async () => {
   const api = await createPlugin()
-  const contentType = api.store.addContentType('TestPost')
+  const collection = api.store.addCollection('TestPost')
 
-  contentType.addNode({ id: '1', value: 1 })
-  contentType.addNode({ id: '2', value: 2 })
-  contentType.addNode({ id: '3', value: 3 })
+  collection.addNode({ id: '1', value: 1 })
+  collection.addNode({ id: '2', value: 2 })
+  collection.addNode({ id: '3', value: 3 })
 
-  expect(contentType.findNodes({ value: { $gt: 1 }})).toHaveLength(2)
+  expect(collection.findNodes({ value: { $gt: 1 }})).toHaveLength(2)
 })
 
 test('get all nodes', async () => {
   const api = await createPlugin()
-  const contentType = api.store.addContentType('TestPost')
+  const collection = api.store.addCollection('TestPost')
 
-  contentType.addNode({ id: '1' })
-  contentType.addNode({ id: '2' })
-  contentType.addNode({ id: '3' })
+  collection.addNode({ id: '1' })
+  collection.addNode({ id: '2' })
+  collection.addNode({ id: '3' })
 
-  expect(contentType.data()).toHaveLength(3)
+  expect(collection.data()).toHaveLength(3)
 })
 
 test('remove node', async () => {
   const api = await createPlugin()
-  const contentType = api.store.addContentType('TestPost')
+  const collection = api.store.addCollection('TestPost')
 
-  const emit = jest.spyOn(contentType._events, 'emit')
-  const node = contentType.addNode({ id: 'test' })
+  const emit = jest.spyOn(collection._events, 'emit')
+  const node = collection.addNode({ id: 'test' })
 
-  contentType.removeNode('test')
+  collection.removeNode('test')
 
   const entry = api.store.store.nodeIndex.getEntry(node.$uid)
 
-  expect(contentType.getNode('test')).toBeNull()
+  expect(collection.getNode('test')).toBeNull()
   expect(emit).toHaveBeenCalledTimes(2)
   expect(entry).toBeNull()
 
@@ -222,9 +222,9 @@ test('remove node', async () => {
 test('add nodes with custom fields', async () => {
   const api = await createPlugin()
 
-  const contentType = api.store.addContentType('TestPost')
+  const collection = api.store.addCollection('TestPost')
 
-  const node = contentType.addNode({
+  const node = collection.addNode({
     title: 'Lorem ipsum',
     nullValue: null,
     undefinedValue: undefined,
@@ -253,7 +253,7 @@ test('add nodes with custom fields', async () => {
 test('add type with ref', async () => {
   const api = await createPlugin()
 
-  const contentType = api.store.addContentType({
+  const collection = api.store.addCollection({
     typeName: 'TestPost',
     refs: {
       author: {
@@ -263,60 +263,36 @@ test('add type with ref', async () => {
     }
   })
 
-  expect(contentType._refs.author).toMatchObject({
+  expect(collection._refs.author).toMatchObject({
     typeName: 'TestAuthor',
     fieldName: 'author'
   })
 })
 
-test('add nodes with custom paths', async () => {
-  const api = await createPlugin()
-  const contentType = api.store.addContentType('TestPost')
-
-  const node1 = contentType.addNode({ path: '/lorem-ipsum-dolor-sit-amet' })
-  const node2 = contentType.addNode({ path: 'nibh-fermentum-fringilla' })
-
-  expect(contentType.options.route).toBeUndefined()
-  expect(node1.path).toEqual('/lorem-ipsum-dolor-sit-amet')
-  expect(node2.path).toEqual('/nibh-fermentum-fringilla')
-})
-
 test('add type with dynamic route', async () => {
   const api = await createPlugin()
-  const contentType = api.store.addContentType({
+  const collection = api.store.addCollection({
     typeName: 'TestPost',
     route: '/:year/:month/:day/:title'
   })
 
-  const node = contentType.addNode({
+  const node = collection.addNode({
     title: 'Lorem ipsum dolor sit amet',
     date: '2018-09-04T23:20:33.918Z'
   })
 
-  expect(contentType.options.route).toEqual('/:year/:month/:day/:title')
-  expect(node.path).toEqual('/2018/09/04/lorem-ipsum-dolor-sit-amet')
-})
-
-test.each([
-  ['foo/bar', '/foo/bar'],
-  ['//foo/bar', '/foo/bar']
-])('ensure leading slash for node paths', async (path, expected) => {
-  const api = await createPlugin()
-  const contentType = api.store.addContentType('TestPost')
-
-  const node = contentType.addNode({ path })
-
-  expect(node.path).toEqual(expected)
+  expect(collection.options.route).toEqual('/:year/:month/:day/:title')
+  expect(node.path).toEqual('/2018/09/04/lorem-ipsum-dolor-sit-amet/')
 })
 
 test('add type with custom fields in route', async () => {
   const api = await createPlugin()
-  const contentType = api.store.addContentType({
+  const collection = api.store.addCollection({
     typeName: 'TestPost',
     route: '/:test/:test_raw/:id/:numeric/:author/:genre__name/:arr__1/:missing/:slug'
   })
 
-  const node = contentType.addNode({
+  const node = collection.addNode({
     id: 'abcDef',
     title: 'Lorem ipsum',
     test: 'My value',
@@ -332,78 +308,112 @@ test('add type with custom fields in route', async () => {
     }
   })
 
-  expect(node.path).toEqual('/my-value/My%20value/abcDef/10/2/thriller/1/missing/lorem-ipsum')
+  expect(node.path).toEqual('/my-value/My%20value/abcDef/10/2/thriller/1/missing/lorem-ipsum/')
 })
 
 // TODO: the path field should be a schema field instead
-test('set content type template with config', async () => {
+test('set collection template with config', async () => {
   const api = await createPlugin('/', {
     templates: {
       Post: '/blog/:id'
     }
   })
 
-  const contentType = api.store.addContentType('Post')
-  const node = contentType.addNode({ id: '1' })
+  const collection = api.store.addCollection('Post')
+  const node = collection.addNode({ id: '1' })
 
-  expect(node.path).toEqual('/blog/1')
+  expect(node.path).toEqual('/blog/1/')
+})
+
+test('generate path with function', async () => {
+  const api = await createPlugin(undefined, {
+    templates: {
+      Post: node => `${node.path}/`
+    }
+  })
+
+  const collection = api.store.addCollection('Post')
+  const node = collection.addNode({ path: '/some/path' })
+
+  expect(node.path).toEqual('/some/path/')
+})
+
+test('preserve trailing slash in paths from function', async () => {
+  const api = await createPlugin(undefined, {
+    permalinks: {
+      trailingSlash: false
+    },
+    templates: {
+      Post: node => `${node.path}/`
+    }
+  })
+
+  const collection = api.store.addCollection('Post')
+  const node = collection.addNode({ path: '/some/path' })
+
+  expect(node.path).toEqual('/some/path/')
 })
 
 test('preserve trailing slash in routes', async () => {
   const api = await createPlugin(undefined, {
+    permalinks: {
+      trailingSlash: false
+    },
     templates: {
       Post: '/path/:id/'
     }
   })
 
-  const contentType = api.store.addContentType('Post')
-  const node = contentType.addNode({ id: '1' })
+  const collection = api.store.addCollection('Post')
+  const node = collection.addNode({ id: '1' })
 
   expect(node.path).toEqual('/path/1/')
 })
 
-test('always add trailing slash for template paths', async () => {
+test('don\'t add trailing slash for template paths', async () => {
   const api = await createPlugin(undefined, {
     permalinks: {
-      trailingSlash: 'always'
+      trailingSlash: false
     },
     templates: {
-      Post: '/path/:id'
+      Post: '/path/:id',
+      Author: node => node.path
     }
   })
 
-  const contentType = api.store.addContentType('Post')
-  const node = contentType.addNode({ id: '1' })
+  const post = api.store.addCollection('Post').addNode({ id: '1' })
+  const author = api.store.addCollection('Author').addNode({ path: '/test' })
 
-  expect(node.path).toEqual('/path/1/')
+  expect(post.path).toEqual('/path/1')
+  expect(author.path).toEqual('/test')
 })
 
 // TODO: move dateField and route options to global permalinks config
-test('set custom date field name for content type', async () => {
+test('set custom date field name for collection', async () => {
   const api = await createPlugin()
-  const contentType = api.store.addContentType({
+  const collection = api.store.addCollection({
     typeName: 'TestPost',
     dateField: 'published_at',
     route: '/:year/:month/:day/:slug'
   })
 
-  const node = contentType.addNode({
+  const node = collection.addNode({
     id: '1',
     slug: 'my-post',
     published_at: '2019-05-19'
   })
 
-  expect(node.path).toEqual('/2019/05/19/my-post')
+  expect(node.path).toEqual('/2019/05/19/my-post/')
 })
 
 test('set custom year, month and day fields', async () => {
   const api = await createPlugin()
-  const contentType = api.store.addContentType({
+  const collection = api.store.addCollection({
     typeName: 'TestPost',
     route: '/:year/:month/:day/:slug'
   })
 
-  const node = contentType.addNode({
+  const node = collection.addNode({
     id: '1',
     slug: 'my-post',
     date: '2019-05-19',
@@ -412,95 +422,95 @@ test('set custom year, month and day fields', async () => {
     day: 'Nighteen'
   })
 
-  expect(node.path).toEqual('/twenty-nighteen/may/nighteen/my-post')
+  expect(node.path).toEqual('/twenty-nighteen/may/nighteen/my-post/')
 })
 
 test('deeply nested field starting with `raw`', async () => {
   const api = await createPlugin()
-  const contentType = api.store.addContentType({
+  const collection = api.store.addCollection({
     typeName: 'TestPost',
     route: '/:foo__rawValue'
   })
 
-  const node = contentType.addNode({
+  const node = collection.addNode({
     foo: {
       rawValue: 'BAR'
     }
   })
 
-  expect(node.path).toEqual('/bar')
+  expect(node.path).toEqual('/bar/')
 })
 
 test('raw version of deeply nested field starting with `raw`', async () => {
   const api = await createPlugin()
-  const contentType = api.store.addContentType({
+  const collection = api.store.addCollection({
     typeName: 'TestPost',
     route: '/:foo__rawValue_raw'
   })
 
-  const node = contentType.addNode({
+  const node = collection.addNode({
     foo: {
       rawValue: 'BAR'
     }
   })
 
-  expect(node.path).toEqual('/BAR')
+  expect(node.path).toEqual('/BAR/')
 })
 
 test.each([
   [
     '/:segments+',
     { segments: ['this', 'should be', 'SLUGIFIED'] },
-    '/this/should-be/slugified'
+    '/this/should-be/slugified/'
   ],
   [
     '/:segments_raw+',
     { segments: ['this', 'should not be', 'SLUGIFIED'] },
-    '/this/should%20not%20be/SLUGIFIED'
+    '/this/should%20not%20be/SLUGIFIED/'
   ],
   [
     '/path/:optionalSegments*',
     { optionalSegments: [] },
-    '/path'
+    '/path/'
   ],
   [
     '/:segments+',
     { segments: 'this works too' },
-    '/this-works-too'
+    '/this-works-too/'
   ],
   [
     '/:before*/c/:after*',
     { before: ['a', 'b'], after: ['d'] },
-    '/a/b/c/d'
+    '/a/b/c/d/'
   ],
   [
     '/blog/:tags*',
     { tags: [{ typeName: 'Tag', id: 1 }, { typeName: 'Tag', id: 2 }] },
-    '/blog/1/2'
+    '/blog/1/2/'
   ],
   [
     '/:mixed_raw+/:mixed+',
     { mixed: [{ typeName: 'Thing', id: 42 }, '&&&', { thisIs: 'ignored' }] },
-    '/42/%26%26%26/42/and-and-and'
+    '/42/%26%26%26/42/and-and-and/'
   ],
   [
     '/this-is/:notRepeated',
     { notRepeated: ['a', 'b', 'c'] },
-    '/this-is/a-b-c'
+    '/this-is/a-b-c/'
   ],
   [
     '/path/:segments_raw',
     { segments: ['a', 'b', 'c'] },
-    '/path/a%2Cb%2Cc'
+    '/path/a%2Cb%2Cc/'
   ]
 ])('dynamic route with repeated segments', async (route, options, path) => {
   const api = await createPlugin()
-  const contentType = api.store.addContentType({
+  const collection = api.store.addCollection({
     typeName: 'TestPost',
     route
   })
 
-  const node = contentType.addNode(options)
+  const node = collection.addNode(options)
 
   expect(node.path).toEqual(path)
 })
@@ -512,14 +522,14 @@ test('custom slugify function', async () => {
     }
   })
 
-  const contentType = api.store.addContentType({
+  const collection = api.store.addCollection({
     typeName: 'Post',
     route: '/path/:title'
   })
 
-  const node = contentType.addNode({ title: 'FooBar' })
+  const node = collection.addNode({ title: 'FooBar' })
 
-  expect(node.path).toEqual('/path/foo_bar')
+  expect(node.path).toEqual('/path/foo_bar/')
 })
 
 test('disable slugify', async () => {
@@ -532,20 +542,20 @@ test('disable slugify', async () => {
     }
   })
 
-  const contentType = api.store.addContentType('Post')
-  const node = contentType.addNode({ title: 'FooBar' })
+  const collection = api.store.addCollection('Post')
+  const node = collection.addNode({ title: 'FooBar' })
 
-  expect(node.path).toEqual('/path/FooBar')
+  expect(node.path).toEqual('/path/FooBar/')
 })
 
 test('dynamic route with non-optional repeated segments', async () => {
   const api = await createPlugin()
-  const contentType = api.store.addContentType({
+  const collection = api.store.addCollection({
     typeName: 'TestPost',
     route: '/path/:segments+'
   })
 
-  expect(() => contentType.addNode({
+  expect(() => collection.addNode({
     segments: []
   })).toThrow(TypeError, 'Expected "segments" to not be empty')
 })
@@ -553,9 +563,9 @@ test('dynamic route with non-optional repeated segments', async () => {
 test('transform node', async () => {
   const api = await createPlugin()
 
-  const contentType = api.store.addContentType('TestPost')
+  const collection = api.store.addCollection('TestPost')
 
-  const node = contentType.addNode({
+  const node = collection.addNode({
     id: '1',
     internal: {
       mimeType: 'application/json',
@@ -569,12 +579,12 @@ test('transform node', async () => {
 test('resolve file paths', async () => {
   const api = await createPlugin('/absolute/dir/to/project')
 
-  const contentType = api.store.addContentType({
+  const collection = api.store.addCollection({
     typeName: 'Test',
     resolveAbsolutePaths: true
   })
 
-  const node = contentType.addNode({
+  const node = collection.addNode({
     file: 'image.png',
     file2: '/image.png',
     file3: '../image.png',
@@ -611,12 +621,12 @@ test('resolve file paths', async () => {
 test('resolve absolute file paths with no origin', async () => {
   const api = await createPlugin('/absolute/dir/to/project')
 
-  const contentType = api.store.addContentType({
+  const collection = api.store.addCollection({
     typeName: 'Test',
     resolveAbsolutePaths: true
   })
 
-  const node = contentType.addNode({
+  const node = collection.addNode({
     file: 'image.png',
     file2: '/image.png'
   })
@@ -628,19 +638,19 @@ test('resolve absolute file paths with no origin', async () => {
 test('resolve absolute file paths with a custom path', async () => {
   const api = await createPlugin('/absolute/dir/to/project')
 
-  const contentType = api.store.addContentType({
+  const collection = api.store.addCollection({
     typeName: 'C',
     resolveAbsolutePaths: '/path/to/dir'
   })
 
-  const node1 = contentType.addNode({
+  const node1 = collection.addNode({
     file: '/image.png',
     internal: {
       origin: '/absolute/dir/to/a/file.md'
     }
   })
 
-  const node2 = contentType.addNode({
+  const node2 = collection.addNode({
     file: '/image.png'
   })
 
@@ -651,9 +661,9 @@ test('resolve absolute file paths with a custom path', async () => {
 test('don\'t touch absolute paths when resolveAbsolutePaths is not set', async () => {
   const api = await createPlugin('/absolute/dir/to/project')
 
-  const contentType = api.store.addContentType({ typeName: 'A' })
+  const collection = api.store.addCollection({ typeName: 'A' })
 
-  const node = contentType.addNode({
+  const node = collection.addNode({
     file: 'image.png',
     file2: '/image.png',
     file3: '../image.png',
@@ -670,9 +680,9 @@ test('don\'t touch absolute paths when resolveAbsolutePaths is not set', async (
 test('always resolve relative paths from filesystem sources', async () => {
   const api = await createPlugin()
 
-  const contentType = api.store.addContentType({ typeName: 'A' })
+  const collection = api.store.addCollection({ typeName: 'A' })
 
-  const node = contentType.addNode({
+  const node = collection.addNode({
     file: '../image.png',
     internal: {
       origin: '/absolute/dir/to/a/file.md'
@@ -685,9 +695,9 @@ test('always resolve relative paths from filesystem sources', async () => {
 test('dont resolve relative paths when no origin', async () => {
   const api = await createPlugin()
 
-  const contentType = api.store.addContentType({ typeName: 'A' })
+  const collection = api.store.addCollection({ typeName: 'A' })
 
-  const node = contentType.addNode({
+  const node = collection.addNode({
     file: '../image.png'
   })
 
@@ -697,9 +707,9 @@ test('dont resolve relative paths when no origin', async () => {
 test('resolve relative paths from external sources', async () => {
   const api = await createPlugin()
 
-  const contentType1 = api.store.addContentType({ typeName: 'A' })
+  const collection1 = api.store.addCollection({ typeName: 'A' })
 
-  const node = contentType1.addNode({
+  const node = collection1.addNode({
     filename: 'image.png',
     file2: '/image.png',
     file3: '../../image.png',
@@ -716,12 +726,12 @@ test('resolve relative paths from external sources', async () => {
 test('resolve absolute paths from external sources', async () => {
   const api = await createPlugin('/absolute/dir/to/project')
 
-  const contentType2 = api.store.addContentType({
+  const collection2 = api.store.addCollection({
     typeName: 'B',
     resolveAbsolutePaths: true
   })
 
-  const node3 = contentType2.addNode({
+  const node3 = collection2.addNode({
     imagepath: 'images/image.png',
     file2: '/images/image.png',
     file3: './images/image.png',
@@ -738,12 +748,12 @@ test('resolve absolute paths from external sources', async () => {
 test('resolve paths from external sources with a custom url', async () => {
   const api = await createPlugin()
 
-  const contentType = api.store.addContentType({
+  const collection = api.store.addCollection({
     typeName: 'A',
     resolveAbsolutePaths: 'https://cdn.example.com/assets/images'
   })
 
-  const node = contentType.addNode({
+  const node = collection.addNode({
     file: 'image.png',
     file2: '/image.png',
     file3: '../image.png',
@@ -758,12 +768,12 @@ test('resolve paths from external sources with a custom url', async () => {
   expect(node.file3).toEqual('https://www.example.com/2018/11/image.png')
   expect(node.file4).toEqual('https://subdomain.example.com/images/image.png')
 
-  const contentType2 = api.store.addContentType({
+  const collection2 = api.store.addCollection({
     typeName: 'B',
     resolveAbsolutePaths: 'https://cdn.example.com/assets/images/'
   })
 
-  const node2 = contentType2.addNode({
+  const node2 = collection2.addNode({
     file: 'image.png',
     file2: '/image.png',
     file3: '../image.png',
@@ -781,10 +791,10 @@ test('resolve paths from external sources with a custom url', async () => {
 
 test('fail if transformer is not installed', async () => {
   const api = await createPlugin()
-  const contentType = api.store.addContentType('TestPost')
+  const collection = api.store.addCollection('TestPost')
 
   expect(() => {
-    contentType.addNode({
+    collection.addNode({
       internal: {
         mimeType: 'text/markdown',
         content: '# Test'
@@ -810,7 +820,7 @@ test('generate slug from any string', async () => {
 test('modify node with api.onCreateNode()', async () => {
   const app = await createApp(function (api) {
     api.loadSource(store => {
-      store.addContentType('Test').addNode({ id: '1' })
+      store.addCollection('Test').addNode({ id: '1' })
     })
     api.onCreateNode(node => {
       return {
@@ -820,8 +830,8 @@ test('modify node with api.onCreateNode()', async () => {
     })
   })
 
-  const contentType = app.store.getContentType('Test')
-  const node = contentType.getNode('1')
+  const collection = app.store.getCollection('Test')
+  const node = collection.getNode('1')
 
   expect(node.title).toEqual('Some title')
 })
@@ -829,7 +839,7 @@ test('modify node with api.onCreateNode()', async () => {
 test('exclude node with api.onCreateNode()', async () => {
   const app = await createApp(function (api) {
     api.loadSource(store => {
-      store.addContentType('Test').addNode({ id: '1' })
+      store.addCollection('Test').addNode({ id: '1' })
     })
     api.onCreateNode(node => {
       if (
@@ -841,15 +851,15 @@ test('exclude node with api.onCreateNode()', async () => {
     })
   })
 
-  const contentType = app.store.getContentType('Test')
-  const node = contentType.getNode('1')
+  const collection = app.store.getCollection('Test')
+  const node = collection.getNode('1')
 
   expect(node).toBeNull()
 })
 
 test('experimental: add transformer', async () => {
   const api = await createPlugin()
-  const posts = api.store.addContentType('TestPost')
+  const posts = api.store.addCollection('TestPost')
 
   api.store._addTransformer(class {
     static mimeTypes () {

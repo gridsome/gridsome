@@ -41,18 +41,18 @@ class GhostSource {
       ...this.options.routes
     }
 
-    api.loadSource(async store => {
+    api.loadSource(async actions => {
       console.log(`Loading data from ${options.url}`)
-      await this.loadAuthors(store)
-      await this.loadPosts(store)
-      await this.loadTags(store)
-      await this.loadPages(store)
-      await this.loadSettings(store)
+      await this.loadAuthors(actions)
+      await this.loadPosts(actions)
+      await this.loadTags(actions)
+      await this.loadPages(actions)
+      await this.loadSettings(actions)
     })
   }
 
-  async loadTags (store) {
-    const tags = store.addContentType({
+  async loadTags ({ addContentType, addCollection = addContentType }) {
+    const tags = addCollection({
       typeName: this.createTypeName(TYPE_TAG),
       route: this.routes[TYPE_TAG]
     })
@@ -60,8 +60,8 @@ class GhostSource {
     await this.loadBasicEntity(tags, this.contentAPI.tags)
   }
 
-  async loadPages (store) {
-    const pages = store.addContentType({
+  async loadPages ({ addContentType, addCollection = addContentType }) {
+    const pages = addCollection({
       typeName: this.createTypeName(TYPE_PAGE),
       route: this.routes[TYPE_PAGE],
       dateField: 'published_at'
@@ -70,8 +70,8 @@ class GhostSource {
     await this.loadBasicEntity(pages, this.contentAPI.pages)
   }
 
-  async loadAuthors (store) {
-    const authors = store.addContentType({
+  async loadAuthors ({ addContentType, addCollection = addContentType }) {
+    const authors = addCollection({
       typeName: this.createTypeName(TYPE_AUTHOR),
       route: this.routes[TYPE_AUTHOR]
     })
@@ -79,8 +79,8 @@ class GhostSource {
     await this.loadBasicEntity(authors, this.contentAPI.authors)
   }
 
-  async loadPosts (store) {
-    const posts = store.addContentType({
+  async loadPosts ({ addContentType, createReference, addCollection = addContentType }) {
+    const posts = addCollection({
       typeName: this.createTypeName(TYPE_POST),
       route: this.routes[TYPE_POST],
       dateField: 'published_at'
@@ -104,11 +104,11 @@ class GhostSource {
         const { primary_tag, primary_author } = options // eslint-disable-line
 
         options.primary_tag = primary_tag // eslint-disable-line
-          ? store.createReference(tagTypeName, primary_tag.id)
+          ? createReference(tagTypeName, primary_tag.id)
           : null
-        options.primary_author = store.createReference(authorTypeName, primary_author.id)
-        options.tags = tags.map(tag => store.createReference(tagTypeName, tag.id))
-        options.authors = authors.map(author => store.createReference(authorTypeName, author.id))
+        options.primary_author = createReference(authorTypeName, primary_author.id)
+        options.tags = tags.map(tag => createReference(tagTypeName, tag.id))
+        options.authors = authors.map(author => createReference(authorTypeName, author.id))
 
         posts.addNode(options)
       })

@@ -1,34 +1,34 @@
 module.exports = function (api) {
   api.loadSource(store => {
-    const posts = store.addContentType({
+    const posts = store.addCollection({
       typeName: 'Post',
-      route: '/:slug/'
+      route: '/:slug'
     })
 
-    const tags = store.addContentType({
+    const tags = store.addCollection({
       typeName: 'Tag',
-      route: '/tag/:slug/'
+      route: '/tag/:slug'
     })
 
-    const categories = store.addContentType({
+    const categories = store.addCollection({
       typeName: 'Category'
     })
 
-    const other = store.addContentType({
+    const other = store.addCollection({
       typeName: 'Other'
     })
 
     categories.addNode({
       id: '1',
       title: 'First category',
-      path: '/category/first/',
+      path: '/category/first',
       showType: 'Post'
     })
 
     categories.addNode({
       id: '2',
       title: 'Second category',
-      path: '/category/second/'
+      path: '/category/second'
     })
 
     tags.addNode({ id: '1', title: 'First tag', perPage: 2, skip: 0, limit: 10 })
@@ -111,12 +111,12 @@ module.exports = function (api) {
     }
   })
 
-  api.createPages(({ getContentType, createPage }) => {
-    const tags = getContentType('Tag')
+  api.createPages(({ getCollection, createPage }) => {
+    const tags = getCollection('Tag')
 
     tags.collection.find().forEach(node => {
       createPage({
-        path: `/tag/${node.id}/extra/`,
+        path: `/tag/${node.id}/extra`,
         component: './src/templates/Tag.vue',
         queryVariables: node
       })

@@ -10,8 +10,8 @@ const { parseQuery } = require('../graphql')
 const pathToRegexp = require('path-to-regexp')
 const createPageQuery = require('./createPageQuery')
 const { HookMap, SyncWaterfallHook, SyncBailHook } = require('tapable')
+const { snakeCase, trimEnd } = require('lodash')
 const validateInput = require('./schemas')
-const { snakeCase } = require('lodash')
 
 const TYPE_STATIC = 'static'
 const TYPE_DYNAMIC = 'dynamic'
@@ -35,12 +35,16 @@ class Pages {
     this._watched = new Map()
     this._watcher = null
 
-    ;['routes', 'pages'].forEach(name => {
-      this[`_${name}`] = new Collection(name, {
-        indices: ['id'],
-        unique: ['id', 'path'],
-        disableMeta: true
-      })
+    this._routes = new Collection('routes', {
+      indices: ['id'],
+      unique: ['id', 'path', 'internal.priority'],
+      disableMeta: true
+    })
+
+    this._pages = new Collection('pages', {
+      indices: ['id'],
+      unique: ['id', 'path'],
+      disableMeta: true
     })
 
     if (isDev) {
@@ -194,11 +198,13 @@ class Pages {
   }
 
   removePageByPath (path) {
-    const page = this._pages.by('path', path)
-
-    if (page) {
-      this.removePage(page.id)
+    const query = {
+      path: trimEnd(path, '/') || '/'
     }
+
+    this._pages
+      .find(query)
+      .forEach(page => this.removePage(page.id))
   }
 
   removePagesByComponent (path) {
@@ -219,7 +225,7 @@ class Pages {
   getMatch (path) {
     let route = this._routes.by('path', path)
 
-    if (!route) {
+    if (typeof route !== 'object') {
       const chain = this._routes.chain().simplesort('internal.priority', true)
 
       route = chain.data().find(route =>
@@ -227,29 +233,31 @@ class Pages {
       )
     }
 
-    if (route) {
-      const { internal } = route
-      const length = internal.keys.length
-      const m = internal.regexp.exec(path)
-      const params = {}
+    if (typeof route !== 'object') {
+      return { route: null, params: {} }
+    }
 
-      for (var i = 0; i < length; i++) {
-        const key = internal.keys[i]
-        const param = m[i + 1]
+    const { internal } = route
+    const length = internal.keys.length
+    const m = internal.regexp.exec(path)
+    const params = {}
 
-        if (!param) continue
+    for (let i = 0; i < length; i++) {
+      const key = internal.keys[i]
+      const param = m[i + 1]
 
-        params[key.name] = decodeURIComponent(param)
+      if (!param) continue
 
-        if (key.repeat) {
-          params[key.name] = params[key.name].split(key.delimiter)
-        }
+      params[key.name] = decodeURIComponent(param)
+
+      if (key.repeat) {
+        params[key.name] = params[key.name].split(key.delimiter)
       }
+    }
 
-      return {
-        route: new Route(route, this),
-        params
-      }
+    return {
+      route: new Route(route, this),
+      params
     }
   }
 
@@ -262,28 +270,31 @@ class Pages {
     const { pageQuery } = this._parseComponent(component)
     const parsedQuery = this._parseQuery(pageQuery, component)
     const { source, document, paginate } = this._createPageQuery(parsedQuery)
+    const { permalinks: { trailingSlash }} = this.app.config
 
-    const type = options.type
-    const originalPath = options.path.replace(/\/+/g, '/')
-    const hasTrailingSlash = /\/$/.test(options.path)
-    const isDynamic = /:/.test(options.path)
-    let path = originalPath
+    let path = options.path.replace(/\/+/g, '/')
     let name = options.name
 
-    const keys = []
-    const regexp = pathToRegexp(path, keys)
-    const id = options.id || createHash(`route-${originalPath}`)
+    const type = options.type
+    const prettyPath = trimEnd(path, '/')
+    const hasTrailingSlash = /\/$/.test(options.path)
+    const isDynamic = /:/.test(options.path)
 
     if (type === TYPE_DYNAMIC) {
       name = name || `__${snakeCase(path)}`
     }
 
     if (paginate) {
-      const prefix = hasTrailingSlash ? '' : '/'
-      const suffix = hasTrailingSlash ? '/' : ''
-      path += `${prefix}:page(\\d+)?${suffix}`
+      path = trimEnd(path, '/') + '/:page(\\d+)?' + (hasTrailingSlash ? '/' : '')
     }
 
+    if (type === TYPE_STATIC && trailingSlash) {
+      path = trimEnd(path, '/') + '/'
+    }
+
+    const keys = []
+    const regexp = pathToRegexp(trimEnd(path, '/') || '/', keys)
+    const id = options.id || createHash(`route-${prettyPath}`)
     const priority = this._resolvePriority(path)
 
     return this.hooks.createRoute.call({
@@ -294,7 +305,7 @@ class Pages {
       component,
       internal: Object.assign({}, meta, {
         meta: options.meta || {},
-        path: originalPath,
+        path: prettyPath,
         isDynamic,
         priority,
         regexp,
@@ -392,6 +403,8 @@ class Route {
     this.internal = options.internal
     this.options = options
 
+    this.createPath = pathToRegexp.compile(options.path)
+
     Object.defineProperty(this, '_factory', { value: factory })
     Object.defineProperty(this, '_pages', { value: factory._pages })
     Object.defineProperty(this, '_createPage', { value: factory.hooks.createPage })
@@ -415,8 +428,6 @@ class Route {
     } else {
       this._pages.insert(options)
     }
-
-    // TODO: warn if a page exists whith and without trailing slash
 
     return options
   }
@@ -447,22 +458,33 @@ class Route {
   }
 
   _createPageOptions (input) {
+    const { permalinks: { trailingSlash }} = this._factory.app.config
     const { regexp, digest, isManaged, query } = this.internal
     const { id: _id, path: _path, context, queryVariables } = validateInput('routePage', input)
-    const originalPath = _path.replace(/\/+/g, '/')
-    const isDynamic = /:/.test(originalPath)
-    const id = _id || createHash(`page-${originalPath}`)
+
+    let path = trimEnd(_path.replace(/\/+/g, '/'), '/') || '/'
+
+    if (path[0] !== '/') path = '/' + path
+
+    let publicPath = path
+
+    const isDynamic = /:/.test(path)
+    const id = _id || createHash(`page-${path}`)
 
     if (this.type === TYPE_STATIC) {
+      if (trailingSlash) {
+        publicPath = trimEnd(path, '/') + '/'
+      }
+
       invariant(
-        regexp.test(originalPath),
-        `Page path does not match route path: ${originalPath}`
+        regexp.test(path),
+        `The path ${path} does not match ${regexp}`
       )
     }
 
     if (this.type === TYPE_DYNAMIC) {
       invariant(
-        this.internal.path === originalPath,
+        this.internal.path === path,
         `Dynamic page must equal the route path: ${this.internal.path}`
       )
     }
@@ -473,7 +495,8 @@ class Route {
 
     return this._createPage.call({
       id,
-      path: originalPath,
+      path,
+      publicPath,
       context,
       internal: {
         route: this.id,

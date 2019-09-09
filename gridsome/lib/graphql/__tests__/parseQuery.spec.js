@@ -9,8 +9,8 @@ beforeEach(async () => {
   app = await new App(__dirname).init()
   const api = new PluginAPI(app)
 
-  const contentType = api.store.addContentType('CustomContentType')
-  contentType.addNode({ id: '1', path: '/test' })
+  const collection = api.store.addCollection('CustomContentType')
+  collection.addNode({ id: '1', path: '/test' })
 
   await app.plugins.createSchema()
 })

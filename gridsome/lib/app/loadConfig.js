@@ -206,7 +206,7 @@ function normalizeTemplates (context, config, localConfig) {
   const res = {}
 
   const normalize = (typeName, options, i = 0) => {
-    if (typeof options === 'string') {
+    if (typeof options === 'string' || typeof options === 'function') {
       const { error, value } = Joi.validate({
         typeName,
         path: options,

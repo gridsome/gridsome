@@ -22,13 +22,13 @@ module.exports = function createNodesSchema (schemaComposer, store) {
   createResolvers(schemaComposer, store)
 
   for (const typeName of typeNames) {
-    const contentType = store.getContentType(typeName)
+    const collection = store.getCollection(typeName)
     const typeComposer = schemaComposer.get(typeName)
 
-    createFields(schemaComposer, typeComposer, contentType)
+    createFields(schemaComposer, typeComposer, collection)
     createFilterInput(schemaComposer, typeComposer)
-    createReferenceFields(schemaComposer, typeComposer, contentType)
-    createThirdPartyFields(typeComposer, contentType)
+    createReferenceFields(schemaComposer, typeComposer, collection)
+    createThirdPartyFields(typeComposer, collection)
 
     const fieldName = camelCase(typeName)
     const allFieldName = camelCase(`all ${typeName}`)
@@ -101,9 +101,9 @@ function createTypeComposers (schemaComposer, store) {
   }
 }
 
-function createFields (schemaComposer, typeComposer, contentType) {
+function createFields (schemaComposer, typeComposer, collection) {
   const typeName = typeComposer.getTypeName()
-  const fieldDefs = inferFields(typeComposer, contentType)
+  const fieldDefs = inferFields(typeComposer, collection)
   const fieldTypes = createFieldTypes(schemaComposer, fieldDefs, typeName)
 
   processInferredFields(typeComposer, fieldDefs, fieldTypes)
@@ -117,7 +117,7 @@ function createFields (schemaComposer, typeComposer, contentType) {
   typeComposer.setField('id', 'ID!')
 }
 
-function inferFields (typeComposer, contentType) {
+function inferFields (typeComposer, collection) {
   const extensions = typeComposer.getExtensions()
 
   // user defined schemas must enable inference
@@ -125,7 +125,9 @@ function inferFields (typeComposer, contentType) {
     return {}
   }
 
-  return createFieldDefinitions(contentType.data())
+  return createFieldDefinitions(collection.data(), {
+    camelCase: collection._camelCasedFieldNames
+  })
 }
 
 function processInferredFields (typeComposer, fieldDefs, fieldTypes) {
@@ -141,20 +143,20 @@ function processInferredFields (typeComposer, fieldDefs, fieldTypes) {
   }
 }
 
-function createThirdPartyFields (typeComposer, contentType) {
-  const context = { contentType, graphql }
+function createThirdPartyFields (typeComposer, collection) {
+  const context = { collection, graphql, contentType: collection }
   const fields = {}
 
-  for (const mimeType in contentType._mimeTypes) {
-    const transformer = contentType._mimeTypes[mimeType]
+  for (const mimeType in collection._mimeTypes) {
+    const transformer = collection._mimeTypes[mimeType]
 
     if (typeof transformer.extendNodeType === 'function') {
       Object.assign(fields, transformer.extendNodeType(context))
     }
   }
 
-  for (const fieldName in contentType._fields) {
-    const field = contentType._fields[fieldName]
+  for (const fieldName in collection._fields) {
+    const field = collection._fields[fieldName]
 
     if (typeof field === 'function') {
       fields[fieldName] = field(context)
@@ -175,16 +177,16 @@ const {
 function createResolvers (schemaComposer, store) {
   for (const typeName in store.collections) {
     const typeComposer = schemaComposer.get(typeName)
-    const contentType = store.getContentType(typeName)
+    const collection = store.getCollection(typeName)
 
-    createTypeResolvers(typeComposer, contentType)
+    createTypeResolvers(typeComposer, collection)
   }
 }
 
-function createTypeResolvers (typeComposer, contentType) {
+function createTypeResolvers (typeComposer, collection) {
   const typeName = typeComposer.getTypeName()
 
-  const { _defaultSortBy, _defaultSortOrder } = contentType
+  const { _defaultSortBy, _defaultSortOrder } = collection
 
   typeComposer.addResolver({
     name: 'findOne',
@@ -247,10 +249,10 @@ function createTypeResolvers (typeComposer, contentType) {
   })
 }
 
-function createReferenceFields (schemaComposer, typeComposer, contentType) {
-  if (isEmpty(contentType._refs)) return
+function createReferenceFields (schemaComposer, typeComposer, collection) {
+  if (isEmpty(collection._refs)) return
 
-  const refs = mapValues(contentType._refs, ({ typeName }, fieldName) => {
+  const refs = mapValues(collection._refs, ({ typeName }, fieldName) => {
     const refTypeComposer = schemaComposer.get(typeName)
 
     return typeComposer.isFieldPlural(fieldName)

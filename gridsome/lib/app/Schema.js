@@ -71,8 +71,12 @@ class Schema {
 
 function createStoreActions (store) {
   return {
+    getCollection (typeName) {
+      return store.getCollection(typeName)
+    },
     getContentType (typeName) {
-      return store.getContentType(typeName)
+      deprecate('The context.store.getContentType() method has been renamed to context.store.getCollection()')
+      return store.getCollection(typeName)
     },
     getNodeByUid (uid) {
       return store.getNodeByUid(uid)

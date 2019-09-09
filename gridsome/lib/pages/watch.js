@@ -28,8 +28,8 @@ module.exports = (app, pages) => {
     pages.disableIndices()
 
     for (let i = 0; i < length; i++) {
-      const { type, name, path, internal } = routes[i]
-      const options = { type, name, path, component }
+      const { type, name, internal } = routes[i]
+      const options = { type, name, path: internal.path, component }
 
       pages.updateRoute(options, {
         digest: internal.digest,

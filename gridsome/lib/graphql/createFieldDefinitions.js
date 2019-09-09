@@ -2,19 +2,20 @@ const { omit, isPlainObject, isNumber, isInteger } = require('lodash')
 const { isRefFieldDefinition } = require('./utils')
 const { isRefField } = require('../store/utils')
 const { warn } = require('../utils/log')
+const camelCase = require('camelcase')
 
-module.exports = function createFieldDefinitions (nodes) {
+module.exports = function createFieldDefinitions (nodes, options = {}) {
   let res = {}
 
   for (let i = 0, l = nodes.length; i < l; i++) {
     const fields = omit(nodes[i], ['internal'])
-    res = resolveValues(fields, res)
+    res = resolveValues(fields, res, options)
   }
 
   return res
 }
 
-function resolveValues (obj, currentObj = {}, path = []) {
+function resolveValues (obj, currentObj = {}, options = {}, path = []) {
   const res = { ...currentObj }
 
   for (const key in obj) {
@@ -25,9 +26,9 @@ function resolveValues (obj, currentObj = {}, path = []) {
     if (value === undefined) continue
     if (value === null) continue
 
-    const fieldName = createFieldName(key)
+    const fieldName = createFieldName(key, options.camelCase)
     const currentValue = currentObj[key] ? currentObj[key].value : undefined
-    const resolvedValue = resolveValue(value, currentValue, path.concat(key))
+    const resolvedValue = resolveValue(value, currentValue, options, path.concat(key))
     const extensions = { isInferred: true }
 
     if (fieldName !== key) {
@@ -47,7 +48,7 @@ function resolveValues (obj, currentObj = {}, path = []) {
   return res
 }
 
-function resolveValue (value, currentValue, path = []) {
+function resolveValue (value, currentValue, options, path = []) {
   if (Array.isArray(value)) {
     const arr = Array.isArray(currentValue) ? currentValue : []
     const length = value.length
@@ -73,7 +74,7 @@ function resolveValue (value, currentValue, path = []) {
     }
 
     for (let i = 0; i < length; i++) {
-      arr[0] = resolveValue(value[i], arr[0], path.concat(i))
+      arr[0] = resolveValue(value[i], arr[0], options, path.concat(i))
     }
 
     return arr
@@ -90,7 +91,7 @@ function resolveValue (value, currentValue, path = []) {
       return ref
     }
 
-    return resolveValues(value, currentValue, path)
+    return resolveValues(value, currentValue, options, path)
   } else if (isNumber(value)) {
     return isNumber(currentValue) && isInteger(value)
       ? currentValue
@@ -103,8 +104,10 @@ function resolveValue (value, currentValue, path = []) {
 const nonValidCharsRE = new RegExp('[^a-zA-Z0-9_]', 'g')
 const leadingNumberRE = new RegExp('^([0-9])')
 
-function createFieldName (key) {
+function createFieldName (key, camelCased = false) {
+  key = key.replace(nonValidCharsRE, '_')
+  if (camelCased) key = camelCase(key)
+  key = key.replace(leadingNumberRE, '_$1')
+
   return key
-    .replace(nonValidCharsRE, '_')
-    .replace(leadingNumberRE, '_$1')
 }

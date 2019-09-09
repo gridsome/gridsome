@@ -1,5 +1,5 @@
 import prefetch from './utils/prefetch'
-import { unslashEnd, stripPageParam } from './utils/helpers'
+import { unslashEnd } from './utils/helpers'
 import { NOT_FOUND_PATH } from '~/.temp/constants'
 
 const dataUrl = process.env.DATA_URL
@@ -10,21 +10,12 @@ export default (route, options = {}) => {
   const { shouldPrefetch = false, force = false } = options
 
   if (!process.isStatic) {
-    const path = route.meta.dynamic
-      ? route.matched[0].path
-      : route.name === '*'
-        ? NOT_FOUND_PATH
-        : stripPageParam(route)
-
     const getJSON = function (route) {
       return new Promise((resolve, reject) => {
         fetch(process.env.GRAPHQL_ENDPOINT, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            page: route.params.page ? Number(route.params.page) : null,
-            path
-          })
+          body: JSON.stringify({ path: route.path })
         })
           .then(res => res.json())
           .then(resolve)

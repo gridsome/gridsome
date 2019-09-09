@@ -10,13 +10,13 @@ test('get page by path', async () => {
   `)
 
   expect(errors).toBeUndefined()
-  expect(data.page.path).toEqual('/page-one')
+  expect(data.page.path).toEqual('/page-one/')
 })
 
 test('filter pages by path', async () => {
   const { errors, data } = await runQuery(`
     query {
-      allPage(filter: { path: { regex: "two$" }}) {
+      allPage(filter: { path: { regex: "two" }}) {
         path
       }
     }
@@ -24,7 +24,7 @@ test('filter pages by path', async () => {
 
   expect(errors).toBeUndefined()
   expect(data.allPage).toHaveLength(1)
-  expect(data.allPage[0].path).toEqual('/page-two')
+  expect(data.allPage[0].path).toEqual('/page-two/')
 })
 
 async function runQuery (query) {

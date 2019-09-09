@@ -6,7 +6,7 @@ class NodeIndex {
     this.app = app
 
     this.hooks = {
-      addEntry: new SyncWaterfallHook(['entry', 'node', 'contentType'])
+      addEntry: new SyncWaterfallHook(['entry', 'node', 'collection'])
     }
 
     this.hooks.addEntry.tap('BelongsToProcessor', require('./processNodeReferences'))
@@ -18,7 +18,7 @@ class NodeIndex {
     })
   }
 
-  addEntry (node, contentType) {
+  addEntry (node, collection) {
     const options = {
       typeName: node.internal.typeName,
       uid: node.$uid,
@@ -28,13 +28,13 @@ class NodeIndex {
     const entry = this.hooks.addEntry.call(
       options,
       node,
-      contentType
+      collection
     )
 
     this.index.insert(entry)
   }
 
-  updateEntry (node, contentType) {
+  updateEntry (node, collection) {
     const oldEntry = this.index.by('uid', node.$uid)
 
     const options = {
@@ -47,7 +47,7 @@ class NodeIndex {
     const entry = this.hooks.addEntry.call(
       options,
       node,
-      contentType
+      collection
     )
 
     this.index.update(entry)

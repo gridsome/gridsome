@@ -166,9 +166,10 @@ class ContentType {
       options = { typeName: options }
     }
 
-    deprecate('The addReference() method is deprecated. Use addSchemaTypes() instead.', {
-      url: 'https://gridsome.org/docs/schema-api/'
-    })
+    // TODO: find an easier way to define references before deprecating this
+    // deprecate('The addReference() method is deprecated. Use addSchemaTypes() instead.', {
+    //   url: 'https://gridsome.org/docs/schema-api/'
+    // })
 
     this._refs[this.createFieldName(fieldName)] = options
   }

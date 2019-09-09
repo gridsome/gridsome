@@ -23,7 +23,12 @@ export default {
       return h('a', data, children)
     }
 
-    if (isExternalLink(attrs.href)){
+    if (isExternalLink(props.to)) {
+      // TODO: warn if props.to is an external url
+      attrs.href = props.to
+    }
+
+    if (isExternalLink(attrs.href)) {
       attrs.target = attrs.target || '_blank'
       attrs.rel = attrs.rel || 'noopener'
 
@@ -69,6 +74,12 @@ export default {
 const externalRE = new RegExp('^(https?:|//)')
 
 function isExternalLink (string) {
-  if (String(string).startsWith(config.siteUrl)) return false
+  if (
+    config.siteUrl &&
+    String(string).startsWith(config.siteUrl)
+  ) {
+    return false
+  }
+
   return externalRE.test(string)
 }

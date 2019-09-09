@@ -1,5 +1,3 @@
-import config from '~/.temp/config.js'
-
 const publicPath = process.env.PUBLIC_PATH
 
 export function unslash (string) {
@@ -48,19 +46,7 @@ export function parsePath (path) {
   }
 }
 
-export function normalizePath (path) {
-  const { pathname, query, hash } = parsePath(path)
-  const trailingSlash = config.trailingSlash === 'always'
-  const unslashed = unslashStart(pathname).replace(/\/+/g, '/')
-
-  if (/\.\w+$/.test(pathname)) {
-    return path
-  } else if (/\/$/.test(unslashed)) {
-    return `/${unslashed + query + hash}`
-  }
-
-  const normalized = unslashed ? `/${unslashed}` : '/'
-  const trailingValue = unslashed && trailingSlash ? '/' : ''
-
-  return normalized + trailingValue + query + hash
+export function normalizePath (path = '/') {
+  // TODO: warn if path misses a leading slash
+  return `/${unslashStart(path)}`.replace(/\/+/g, '/')
 }

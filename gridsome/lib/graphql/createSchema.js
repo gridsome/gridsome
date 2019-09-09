@@ -71,9 +71,9 @@ function setupBelongsTo (schemaComposer, store) {
   const typeNames = Object.keys(store.collections)
 
   for (const typeName of typeNames) {
-    const contentType = store.getContentType(typeName)
+    const collection = store.getCollection(typeName)
     const typeComposer = schemaComposer.get(typeName)
-    const nodes = contentType.data()
+    const nodes = collection.data()
     const length = nodes.length
 
     const references = getNodeReferenceFields(typeComposer)

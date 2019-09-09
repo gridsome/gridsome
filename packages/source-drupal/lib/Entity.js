@@ -3,11 +3,12 @@ const { reduce } = require('lodash')
 const camelCase = require('camelcase')
 
 class Entity {
-  constructor (source, { entityType, url }) {
+  constructor (source, actions, { entityType, url }) {
     this.source = source // instance of DrupalSource.js
+    this.actions = actions
 
     this.entityType = entityType
-    this.graphQlContentType // gridsome store api addContentType
+    this.collection // gridsome store api addCollection
     this.url = url // url to fetch, pulled from apiSchema
     this.response = [] // response from this.fetchData
   }
@@ -84,7 +85,9 @@ class Entity {
 
   async buildGraphQl () {
     const options = this.createContentTypeOptions()
-    this.graphQlContentType = this.source.store.addContentType(options)
+    const { addContentType, addCollection = addContentType } = this.actions
+
+    this.collection = addCollection(options)
 
     for (const item of this.response) {
       const fields = this.processFields(item.attributes)
@@ -93,7 +96,7 @@ class Entity {
         ? item.links.self.href
         : item.links.self
 
-      this.graphQlContentType.addNode({
+      this.collection.addNode({
         title: fields.title || fields.name,
         date: fields.created || fields.changed,
         ...fields,
@@ -116,24 +119,14 @@ class Entity {
 
   createContentTypeOptions (override = {}) {
     const {
-      store,
       options: {
-        typeName: prefix,
         routes = {}
       } = {}
     } = this.source
 
-    const typeNamePrefix = store.slugify(prefix)
-
-    // turn DrupalTaxonomyTermTag into 'taxonomy-term-tag'
-    const slug = store.slugify(this.typeName)
-    const fallbackSlug = (slug.split(`${typeNamePrefix}-`)[1])
-      ? slug.split(`${typeNamePrefix}-`)[1]
-      : slug
-
     return Object.assign({
       typeName: this.typeName,
-      route: routes[this.entityType] || `/${fallbackSlug}/:id`
+      route: routes[this.entityType]
     }, override)
   }
 
@@ -152,7 +145,7 @@ class Entity {
   }
 
   createReference (data) {
-    const { createReference } = this.source.store
+    const { createReference } = this.actions
     const typeName = this.createTypeName(data.type)
 
     return {

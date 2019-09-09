@@ -23,35 +23,39 @@ function createStoreActions (api, app) {
     transformers: api._transformers
   })
 
+  const addCollection = options => {
+    if (typeof options === 'string') {
+      options = { typeName: options }
+    }
+
+    if (typeof options.resolveAbsolutePaths === 'undefined') {
+      options.resolveAbsolutePaths = store._resolveAbsolutePaths
+    }
+
+    if (options.route && !app.config.templates[options.typeName]) {
+      deprecate(
+        `The route option in addCollection() ` +
+        `is deprecated. Use templates instead.`,
+        {
+          url: 'https://gridsome.org/docs/templates/'
+        }
+      )
+    }
+
+    return app.store.addCollection(options, store)
+  }
+
+  const getCollection = typeName => {
+    store.getCollection(typeName)
+  }
+
   return {
     ...baseActions,
+    addCollection,
+    getCollection,
 
     addMetadata (key, data) {
-      return store.addMetadata(key, data)
-    },
-    addContentType (options) {
-      if (typeof options === 'string') {
-        options = { typeName: options }
-      }
-
-      if (typeof options.resolveAbsolutePaths === 'undefined') {
-        options.resolveAbsolutePaths = store._resolveAbsolutePaths
-      }
-
-      if (options.route && !app.config.templates[options.typeName]) {
-        deprecate(
-          `The route option in addContentType() ` +
-          `is deprecated. Use templates instead.`,
-          {
-            url: 'https://gridsome.org/docs/templates/'
-          }
-        )
-      }
-
-      return app.store.addContentType(options, store)
-    },
-    getContentType (typeName) {
-      return store.getContentType(typeName)
+      return app.store.addMetadata(key, data)
     },
 
     store: {
@@ -61,6 +65,16 @@ function createStoreActions (api, app) {
     },
 
     // deprecated actions
+
+    addContentType (options) {
+      deprecate('The addContentType() action has been renamed to addCollection().')
+      return addCollection(options)
+    },
+
+    getContentType (typeName) {
+      deprecate('The getContentType() action has been renamed to getCollection().')
+      return getCollection(typeName)
+    },
 
     addMetaData (key, data) {
       deprecate(`The addMetaData() action is deprecated. Use addMetadata() instead.`)
@@ -164,8 +178,13 @@ function createPagesActions (api, app, { digest }) {
   return {
     ...baseActions,
 
+    getCollection (typeName) {
+      return app.store.getCollection(typeName)
+    },
+
     getContentType (typeName) {
-      return app.store.getContentType(typeName)
+      deprecate('The getContentType() action has been renamed to getCollection().')
+      return app.store.getCollection(typeName)
     },
 
     createPage (options) {
@@ -186,7 +205,7 @@ function createPagesActions (api, app, { digest }) {
       return app.pages.createPage(options, internals)
     },
 
-    createRoute(options) {
+    createRoute (options) {
       return app.pages.createRoute(options, internals)
     }
   }

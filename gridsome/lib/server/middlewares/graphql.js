@@ -1,4 +1,5 @@
 const { print } = require('graphql')
+const { trimEnd } = require('lodash')
 const { createQueryVariables } = require('../../graphql/utils')
 
 module.exports = ({ pages }) => {
@@ -10,26 +11,35 @@ module.exports = ({ pages }) => {
       return res.sendStatus(200)
     }
 
-    if (body.query || !body.path) {
+    if (body.query) {
       return next()
     }
 
-    let page = pages._pages.findOne({ path: body.path })
+    const { route, params } = pages.getMatch(body.path)
+    let currentPage = undefined
 
-    if (!page && !/\/$/.test(body.path)) {
-      // TODO: inform user about missing trailing slash in the path
-      page = pages._pages.findOne({ path: `${body.path}/` })
-    }
-
-    // page/1/index.html is not statically generated
-    // in production and should return 404 in develop
-    if (!page || body.page === 1) {
+    if (!route) {
       return res
         .status(404)
         .send({ code: 404, message: `Could not find ${body.path}` })
     }
 
-    const route = pages.getRoute(page.internal.route)
+    // page/1/index.html is not statically generated
+    // in production and should return 404 in develop
+    if (route.internal.query.paginate) {
+      currentPage = parseInt(params.page, 10) || 0
+
+      if (params.page && currentPage <= 1) {
+        return res
+          .status(404)
+          .send({ code: 404, message: `Could not find ${body.path}` })
+      }
+
+      delete params.page
+    }
+
+    const path = route.createPath(params)
+    const page = pages._pages.by('path', trimEnd(path, '/') || '/')
 
     if (!route.internal.query.document) {
       return res.json({
@@ -45,7 +55,7 @@ module.exports = ({ pages }) => {
       variables: createQueryVariables(
         page.path,
         page.internal.query.variables,
-        body.page
+        currentPage || undefined
       )
     }
 

@@ -3,11 +3,11 @@ const { omit, isPlainObject } = require('lodash')
 const { isRefField } = require('./utils')
 const { NODE_FIELDS } = require('../utils/constants')
 
-module.exports = function processNodeReferences (entry, node, contentType) {
+module.exports = function processNodeReferences (entry, node, collection) {
   const obj = omit(node, NODE_FIELDS)
 
-  for (const fieldName in contentType._refs) {
-    const ref = contentType._refs[fieldName]
+  for (const fieldName in collection._refs) {
+    const ref = collection._refs[fieldName]
 
     obj[fieldName] = {
       typeName: ref.typeName,
