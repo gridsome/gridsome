@@ -61,10 +61,10 @@ function calcTotalPages (paginate, store, schema) {
 }
 
 function createRenderEntry (page, route, config, currentPage = 1) {
-  const { outDir, dataDir, publicPath } = config
-  const hasTrailingSlash = /\/$/.test(page.path)
+  const { outDir, dataDir, pathPrefix } = config
+  const hasTrailingSlash = /\/$/.test(page.publicPath)
 
-  let currentPath = page.path
+  let currentPath = page.publicPath
   let queryVariables = {}
 
   if (currentPage > 1) {
@@ -97,7 +97,7 @@ function createRenderEntry (page, route, config, currentPage = 1) {
     prettyPath,
     queryVariables,
     type: route.type,
-    publicPath: publicPath + currentPath,
+    publicPath: pathPrefix + currentPath,
     routeId: page.internal.route,
     pageId: page.id
   }

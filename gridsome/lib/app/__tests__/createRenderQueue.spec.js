@@ -15,7 +15,7 @@ test('create render queue for basic project', async () => {
     '/',
     '/404/',
     '/about/',
-    '/about-us', // manually created without trailing slash
+    '/about-us/',
     '/docs/1/',
     '/docs/1/extra/',
     '/docs/2/',
@@ -175,17 +175,17 @@ test('create render queue for createPages hook', async () => {
   const paths = renderQueue.map(entry => entry.path)
 
   expect(paths).toEqual(expect.arrayContaining([
-    '/about',
+    '/about/',
     '/movie/three/',
     '/movie/two/',
     '/movie/one/',
     '/404/',
     '/blog/',
     '/blog/2/',
-    '/article/1',
-    '/article/1/2',
-    '/article/2',
-    '/article/3'
+    '/article/1/',
+    '/article/1/2/',
+    '/article/2/',
+    '/article/3/'
   ]))
   expect(paths).toHaveLength(11)
 
@@ -222,12 +222,12 @@ describe('dynamic pages', () => {
     const paths = renderQueue.map(entry => entry.path)
 
     expect(paths).toEqual([
-      '/a/b',
+      '/a/b/',
       '/a/:b(\\d+)',
       '/a/:b',
       '/a/:b*',
       '/a/:b+',
-      '/a',
+      '/a/',
       '/404/',
       '/'
     ])

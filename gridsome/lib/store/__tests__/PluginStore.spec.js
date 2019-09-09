@@ -32,7 +32,7 @@ async function createApp (plugin) {
   return app.bootstrap(BOOTSTRAP_PAGES)
 }
 
-test('add content type', async () => {
+test('add collection', async () => {
   const api = await createPlugin()
 
   const collection = api.store.addCollection({
@@ -120,7 +120,7 @@ test('update node', async () => {
   expect(node.id).toEqual('test')
   expect(node.title).toEqual('New title')
   expect(node.slug).toEqual('new-title')
-  expect(node.path).toEqual('/test/foo/new-title')
+  expect(node.path).toEqual('/test/foo/new-title/')
   expect(node.content).toEqual('Praesent commodo cursus magna')
   expect(node.excerpt).toEqual('Praesent commodo...')
   expect(node.foo).toEqual('foo')
@@ -282,7 +282,7 @@ test('add type with dynamic route', async () => {
   })
 
   expect(collection.options.route).toEqual('/:year/:month/:day/:title')
-  expect(node.path).toEqual('/2018/09/04/lorem-ipsum-dolor-sit-amet')
+  expect(node.path).toEqual('/2018/09/04/lorem-ipsum-dolor-sit-amet/')
 })
 
 test('add type with custom fields in route', async () => {
@@ -308,11 +308,11 @@ test('add type with custom fields in route', async () => {
     }
   })
 
-  expect(node.path).toEqual('/my-value/My%20value/abcDef/10/2/thriller/1/missing/lorem-ipsum')
+  expect(node.path).toEqual('/my-value/My%20value/abcDef/10/2/thriller/1/missing/lorem-ipsum/')
 })
 
 // TODO: the path field should be a schema field instead
-test('set content type template with config', async () => {
+test('set collection template with config', async () => {
   const api = await createPlugin('/', {
     templates: {
       Post: '/blog/:id'
@@ -322,7 +322,7 @@ test('set content type template with config', async () => {
   const collection = api.store.addCollection('Post')
   const node = collection.addNode({ id: '1' })
 
-  expect(node.path).toEqual('/blog/1')
+  expect(node.path).toEqual('/blog/1/')
 })
 
 test('generate path with function', async () => {
@@ -338,8 +338,27 @@ test('generate path with function', async () => {
   expect(node.path).toEqual('/some/path/')
 })
 
+test('preserve trailing slash in paths from function', async () => {
+  const api = await createPlugin(undefined, {
+    permalinks: {
+      trailingSlash: false
+    },
+    templates: {
+      Post: node => `${node.path}/`
+    }
+  })
+
+  const collection = api.store.addCollection('Post')
+  const node = collection.addNode({ path: '/some/path' })
+
+  expect(node.path).toEqual('/some/path/')
+})
+
 test('preserve trailing slash in routes', async () => {
   const api = await createPlugin(undefined, {
+    permalinks: {
+      trailingSlash: false
+    },
     templates: {
       Post: '/path/:id/'
     }
@@ -351,10 +370,10 @@ test('preserve trailing slash in routes', async () => {
   expect(node.path).toEqual('/path/1/')
 })
 
-test('always add trailing slash for tempalte paths', async () => {
+test('don\'t add trailing slash for tempalte paths', async () => {
   const api = await createPlugin(undefined, {
     permalinks: {
-      trailingSlash: 'always'
+      trailingSlash: false
     },
     templates: {
       Post: '/path/:id',
@@ -365,12 +384,12 @@ test('always add trailing slash for tempalte paths', async () => {
   const post = api.store.addCollection('Post').addNode({ id: '1' })
   const author = api.store.addCollection('Author').addNode({ path: '/test' })
 
-  expect(post.path).toEqual('/path/1/')
-  expect(author.path).toEqual('/test/')
+  expect(post.path).toEqual('/path/1')
+  expect(author.path).toEqual('/test')
 })
 
 // TODO: move dateField and route options to global permalinks config
-test('set custom date field name for content type', async () => {
+test('set custom date field name for collection', async () => {
   const api = await createPlugin()
   const collection = api.store.addCollection({
     typeName: 'TestPost',
@@ -384,7 +403,7 @@ test('set custom date field name for content type', async () => {
     published_at: '2019-05-19'
   })
 
-  expect(node.path).toEqual('/2019/05/19/my-post')
+  expect(node.path).toEqual('/2019/05/19/my-post/')
 })
 
 test('set custom year, month and day fields', async () => {
@@ -403,7 +422,7 @@ test('set custom year, month and day fields', async () => {
     day: 'Nighteen'
   })
 
-  expect(node.path).toEqual('/twenty-nighteen/may/nighteen/my-post')
+  expect(node.path).toEqual('/twenty-nighteen/may/nighteen/my-post/')
 })
 
 test('deeply nested field starting with `raw`', async () => {
@@ -419,7 +438,7 @@ test('deeply nested field starting with `raw`', async () => {
     }
   })
 
-  expect(node.path).toEqual('/bar')
+  expect(node.path).toEqual('/bar/')
 })
 
 test('raw version of deeply nested field starting with `raw`', async () => {
@@ -435,54 +454,54 @@ test('raw version of deeply nested field starting with `raw`', async () => {
     }
   })
 
-  expect(node.path).toEqual('/BAR')
+  expect(node.path).toEqual('/BAR/')
 })
 
 test.each([
   [
     '/:segments+',
     { segments: ['this', 'should be', 'SLUGIFIED'] },
-    '/this/should-be/slugified'
+    '/this/should-be/slugified/'
   ],
   [
     '/:segments_raw+',
     { segments: ['this', 'should not be', 'SLUGIFIED'] },
-    '/this/should%20not%20be/SLUGIFIED'
+    '/this/should%20not%20be/SLUGIFIED/'
   ],
   [
     '/path/:optionalSegments*',
     { optionalSegments: [] },
-    '/path'
+    '/path/'
   ],
   [
     '/:segments+',
     { segments: 'this works too' },
-    '/this-works-too'
+    '/this-works-too/'
   ],
   [
     '/:before*/c/:after*',
     { before: ['a', 'b'], after: ['d'] },
-    '/a/b/c/d'
+    '/a/b/c/d/'
   ],
   [
     '/blog/:tags*',
     { tags: [{ typeName: 'Tag', id: 1 }, { typeName: 'Tag', id: 2 }] },
-    '/blog/1/2'
+    '/blog/1/2/'
   ],
   [
     '/:mixed_raw+/:mixed+',
     { mixed: [{ typeName: 'Thing', id: 42 }, '&&&', { thisIs: 'ignored' }] },
-    '/42/%26%26%26/42/and-and-and'
+    '/42/%26%26%26/42/and-and-and/'
   ],
   [
     '/this-is/:notRepeated',
     { notRepeated: ['a', 'b', 'c'] },
-    '/this-is/a-b-c'
+    '/this-is/a-b-c/'
   ],
   [
     '/path/:segments_raw',
     { segments: ['a', 'b', 'c'] },
-    '/path/a%2Cb%2Cc'
+    '/path/a%2Cb%2Cc/'
   ]
 ])('dynamic route with repeated segments', async (route, options, path) => {
   const api = await createPlugin()
@@ -510,7 +529,7 @@ test('custom slugify function', async () => {
 
   const node = collection.addNode({ title: 'FooBar' })
 
-  expect(node.path).toEqual('/path/foo_bar')
+  expect(node.path).toEqual('/path/foo_bar/')
 })
 
 test('disable slugify', async () => {
@@ -526,7 +545,7 @@ test('disable slugify', async () => {
   const collection = api.store.addCollection('Post')
   const node = collection.addNode({ title: 'FooBar' })
 
-  expect(node.path).toEqual('/path/FooBar')
+  expect(node.path).toEqual('/path/FooBar/')
 })
 
 test('dynamic route with non-optional repeated segments', async () => {

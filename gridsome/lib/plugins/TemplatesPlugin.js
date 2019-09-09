@@ -87,7 +87,7 @@ const createTemplateOptions = (options, trailingSlash) => {
   if (typeof templatePath === 'string') {
     templatePath = templatePath.replace(/\/+/g, '/')
 
-    if (trailingSlash === 'always') {
+    if (trailingSlash) {
       templatePath = trimEnd(templatePath, '/') + '/'
     }
 
@@ -191,6 +191,7 @@ class TemplatesPlugin {
 
     api.onCreateNode((options, collection) => {
       const typeTemplates = templates.byTypeName.get(collection.typeName)
+      const { internal } = options
 
       if (typeTemplates) {
         for (const template of typeTemplates) {
@@ -201,21 +202,21 @@ class TemplatesPlugin {
           } else if (typeof template.path === 'function') {
             nodePath = template.path(options)
 
-            if (trailingSlash === 'always') {
-              nodePath = trimEnd(nodePath) + '/'
+            if (trailingSlash) {
+              nodePath = trimEnd(nodePath, '/') + '/'
             }
           } else {
             continue
           }
 
-          options.internal.path = options.internal.path || {}
-          options.internal.path[template.name] = nodePath
+          internal.publicPath = internal.publicPath || {}
+          internal.publicPath[template.name] = nodePath
         }
 
         // - set default path as root field for plugins that depends on it
         // - many are also using it as the $path variable in queries
-        if (options.internal.path) {
-          options.path = options.internal.path.default
+        if (internal.publicPath) {
+          options.path = internal.publicPath.default
         }
       }
     })
@@ -243,8 +244,8 @@ class TemplatesPlugin {
                   to: { type: 'String', defaultValue: 'default' }
                 },
                 resolve: (node, args) => {
-                  return node.internal.path
-                    ? node.internal.path[args.to]
+                  return node.internal.publicPath
+                    ? node.internal.publicPath[args.to]
                     : node.path
                 }
               }
@@ -345,8 +346,8 @@ class Template {
     const { name, component } = this
     const id = makeId(node.$uid, name)
     const queryVariables = node
-    const path = node.internal.path
-      ? node.internal.path[name]
+    const path = node.internal.publicPath
+      ? node.internal.publicPath[name]
       : node.path
 
     if (this.route) this.route.addPage({ id, path, queryVariables })
@@ -357,7 +358,7 @@ class Template {
     const { path, name } = this
 
     if (
-      node.internal.path[name] !== oldNode.internal.path[name] &&
+      node.internal.publicPath[name] !== oldNode.internal.publicPath[name] &&
       typeof path !== 'string'
     ) {
       this.actions.removePage(
