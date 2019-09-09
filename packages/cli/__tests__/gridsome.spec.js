@@ -23,7 +23,7 @@ test('warn about unknown command', async () => {
 })
 
 test('warn about missing dependencies', async () => {
-  const { stdout } = await execa(cli, ['asdf'], {
+  const { stdout } = await execa(cli, ['noop'], {
     cwd: path.join(__dirname, '__fixtures__', 'project')
   })
 
