@@ -74,7 +74,7 @@ class DrupalSource {
 
   /**
    * This method loops over the apiShema created in fetchJsonApiSchema
-   * if property key (in the apiScheme object) is not in the exlucdes list, it creates a new instance
+   * if property key (in the apiScheme object) is not in the excludes list, it creates a new instance
    */
   async processEntities (actions) {
     const { exclude: userExclude = [] } = this.options

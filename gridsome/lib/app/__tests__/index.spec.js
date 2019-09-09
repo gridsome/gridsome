@@ -292,7 +292,7 @@ test('setup style loader options', async () => {
   })
 })
 
-test('config.chainWenbpack', async () => {
+test('config.chainWebpack', async () => {
   const app = await createApp(context, {
     localConfig: {
       chainWebpack (config) {

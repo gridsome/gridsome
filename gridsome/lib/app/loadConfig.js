@@ -48,7 +48,7 @@ module.exports = (context, options = {}) => {
       ? require(configPath)
       : {}
 
-  // use provided plugins instaed of local plugins
+  // use provided plugins instead of local plugins
   if (Array.isArray(options.plugins)) {
     plugins.push(...options.plugins)
   } else if (Array.isArray(localConfig.plugins)) {

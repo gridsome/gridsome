@@ -370,7 +370,7 @@ test('preserve trailing slash in routes', async () => {
   expect(node.path).toEqual('/path/1/')
 })
 
-test('don\'t add trailing slash for tempalte paths', async () => {
+test('don\'t add trailing slash for template paths', async () => {
   const api = await createPlugin(undefined, {
     permalinks: {
       trailingSlash: false
@@ -677,7 +677,7 @@ test('don\'t touch absolute paths when resolveAbsolutePaths is not set', async (
   expect(node.file3).toEqual('/absolute/dir/to/image.png')
 })
 
-test('always resolve relative paths from filesytem sources', async () => {
+test('always resolve relative paths from filesystem sources', async () => {
   const api = await createPlugin()
 
   const collection = api.store.addCollection({ typeName: 'A' })
