@@ -55,11 +55,26 @@ The type name to give the pages in the GraphQL schema.
 
 The path to the directory which contains all the `.md` files. A relative path will be resolved from the project root directory.
 
-#### component
+#### template.component
 
 - Type: `string`
 
-Use a custom component as template for every page created by this plugin. This option is useful if you for example need to have a shared `page-query` or want to wrap every page in the same layout component. Insert the `VueRemarkContent` component where you want to show the Markdown content.
+Use a template for every page created by this plugin. This option is useful if you for example need to have a shared `page-query` or want to wrap every page in the same layout component. Insert the `<VueRemarkContent>` component where you want to show the Markdown content.
+
+```js
+module.exports = {
+  plugins: [
+    {
+      use: '@gridsome/vue-remark',
+      options: {
+        typeName: 'MarkdownPage',
+        baseDir: './content',
+        template: './src/templates/MarkdownPage.vue'
+      }
+    }
+  ]
+}
+```
 
 ```html
 <template>
@@ -70,7 +85,7 @@ Use a custom component as template for every page created by this plugin. This o
 </template>
 
 <page-query>
-query VueRemarkPage($id: String!) {
+query VueRemarkPage ($id: String!) {
   vueRemarkPage(id: $id) {
     title
   }
@@ -78,7 +93,7 @@ query VueRemarkPage($id: String!) {
 </page-query>
 ```
 
-It is also possible to use slots inside `VueRemarkContent`.
+It is also possible to use slots inside `<VueRemarkContent>`.
 
 ```html
 <VueRemarkContent>
@@ -98,6 +113,30 @@ It is also possible to use slots inside `VueRemarkContent`.
 <slot name="tags">
 ```
 
+#### template.path
+
+- Type: `string`
+
+By default, each markdown file will get a path based on the file location. Use this option to generate paths based on a pattern instead. Any front matter field is available to use in the path.
+
+```js
+module.exports = {
+  plugins: [
+    {
+      use: '@gridsome/vue-remark',
+      options: {
+        typeName: 'MarkdownPage',
+        baseDir: './content',
+        template: {
+          path: '/pages/:slug',
+          component: './src/templates/MarkdownPage.vue'
+        }
+      }
+    }
+  ]
+}
+```
+
 #### includePaths
 
 - Type: `Array`
@@ -111,12 +150,6 @@ Paths or regex that should be parsed by this plugin. Use this option if you want
 - Default: `'/'`
 
 The path for the first level index file in the directory specified by the `baseDir` option will become `/`. Use this option to prefix all paths.
-
-#### route
-
-- Type: `string`
-
-Generate paths from a route. The `pathPrefix` option is ignored when using a `route`.
 
 #### index
 
