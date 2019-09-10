@@ -24,7 +24,13 @@ module.exports = function toSfc () {
     const hast = toHAST(ast, {
       allowDangerousHTML: true,
       handlers: {
-        text (h, node) {
+        'g-link' (h, node) {
+          return h(node, 'g-link', { to: node.url }, node.children)
+        },
+        'g-image' (h, node) {
+          return h(node, 'g-image', { src: node.url })
+        },
+        'text' (h, node) {
           return h.augment(node, u('raw', he.encode(node.value)))
         }
       }

@@ -1,13 +1,21 @@
 const path = require('path')
-const fs = require('fs-extra')
+const pathToRegexp = require('path-to-regexp')
 const Filesystem = require('@gridsome/source-filesystem')
 const RemarkTransformer = require('@gridsome/transformer-remark')
+const { trimEnd, isPlainObject, omit } = require('lodash')
 
 const toSFC = require('./lib/toSfc')
 const sfcSyntax = require('./lib/sfcSyntax')
 const toVueRemarkAst = require('./lib/toVueRemarkAst')
+const remarkFilePlugin = require('./lib/plugins/file')
+const remarkImagePlugin = require('./lib/plugins/image')
 const { genFrontMatterBlock } = require('./lib/codegen')
-const { normalizeLayout, createFile } = require('./lib/utils')
+
+const {
+  createFile,
+  makePathParams,
+  normalizeLayout
+} = require('./lib/utils')
 
 class VueRemark {
   static defaultOptions () {
@@ -15,10 +23,10 @@ class VueRemark {
       typeName: undefined,
       baseDir: undefined,
       pathPrefix: undefined,
-      component: undefined,
-      route: undefined,
+      template: undefined,
       index: ['index'],
       includePaths: [],
+      plugins: [],
       refs: {}
     }
   }
@@ -33,57 +41,136 @@ class VueRemark {
     }
 
     this.api = api
-    this.store = api.store
     this.options = options
     this.context = options.baseDir ? api.resolve(options.baseDir) : api.context
-    this.component = options.component ? api.resolve(options.component) : null
+
+    if (typeof options.template === 'string') {
+      this.template = {
+        path: null,
+        component: api.resolve(options.template)
+      }
+    } else if (isPlainObject(options.template)) {
+      this.template = {
+        path: options.template.path || null,
+        component: api.resolve(options.template.component)
+      }
+    } else {
+      this.template = {
+        path: null,
+        component: null
+      }
+    }
+
+    if (typeof this.template.path === 'string') {
+      let route = trimEnd(this.template.path, '/') || '/'
+      const routeKeys = []
+
+      if (api.config.permalinks.trailingSlash) {
+        route = trimEnd(route, '/') + '/'
+      }
+
+      pathToRegexp(route, routeKeys)
+
+      this.template.createPath = pathToRegexp.compile(route)
+      this.template.routeKeys = routeKeys
+        .filter(key => typeof key.name === 'string')
+        .map(key => {
+          // separate field name from suffix
+          const [, fieldName, suffix] = (
+            key.name.match(/^(.*[^_])_([a-z]+)$/) ||
+            [null, key.name, null]
+          )
+
+          const path = fieldName.split('__')
+
+          return {
+            name: key.name,
+            path,
+            fieldName,
+            repeat: key.repeat,
+            suffix
+          }
+        })
+    }
 
     this.filesystem = new Filesystem(api, {
       path: '**/*.md',
       typeName: options.typeName,
       baseDir: options.baseDir,
       pathPrefix: options.pathPrefix,
-      route: options.route,
+      route: this.template.path,
       index: options.index,
       refs: options.refs
     })
 
-    api.store._addTransformer(RemarkTransformer, options.remark)
-
-    this.remark = api.store._transformers['text/markdown']
-
-    this.processor = this.remark.createProcessor({
-      plugins: [sfcSyntax, toVueRemarkAst],
-      stringifier: toSFC
+    this.remark = new RemarkTransformer({}, {
+      assets: api._app.assets,
+      localOptions: {
+        processFiles: false,
+        processImages: false,
+        stringifier: toSFC,
+        plugins: [
+          sfcSyntax,
+          toVueRemarkAst,
+          remarkFilePlugin,
+          remarkImagePlugin,
+          ...this.options.plugins
+        ]
+      }
     })
 
     api.transpileDependencies([path.resolve(__dirname, 'src')])
     api.chainWebpack(config => this.chainWebpack(config))
-    api.createPages(args => this.createPages(args))
+    api.createPages(actions => this.createPages(actions))
 
-    api.registerComponentParser({
-      test: /\.md/,
-      parse: this.parseComponent.bind(this)
+    api._app.pages.hooks.parseComponent.for('md').tap('VueRemark', source => {
+      const pageQueryRE = /<page-query>([^</]+)<\/page-query>/
+      const ast = this.remark.processor.parse(source)
+
+      return {
+        pageQuery: ast.children
+          .filter(node => node.type === 'html' && /^<page-query/.test(node.value))
+          .map(node => pageQueryRE.exec(node.value)[1])
+          .pop()
+      }
     })
 
-    api.___onCreateContentType(options => {
+    api._app.store.hooks.addCollection.tap({
+      name: 'VueRemark',
+      before: 'TemplatesPlugin'
+    }, options => {
       if (options.typeName === this.options.typeName) {
         options.component = false
       }
     })
-  }
 
-  parseComponent (resourcePath) {
-    const pageQueryRE = /<page-query>([^</]+)<\/page-query>/
-    const source = fs.readFileSync(resourcePath, 'utf-8')
-    const ast = this.processor.parse(source)
+    api._app.store.hooks.addNode.tap({
+      name: 'VueRemark',
+      before: 'TransformNodeContent'
+    }, options => {
+      if (options.internal.typeName === this.options.typeName) {
+        const parsed = this.remark.parse(options.internal.content)
 
-    return {
-      pageQuery: ast.children
-        .filter(node => node.type === 'html' && /^<page-query/.test(node.value))
-        .map(node => pageQueryRE.exec(node.value)[1])
-        .pop()
-    }
+        Object.assign(options, omit(parsed, ['excerpt']))
+
+        options.internal.mimeType = null
+        options.internal.content = null
+
+        if (this.template.createPath) {
+          const slugify = api._app.slugify
+          const params = makePathParams(options, this.template, slugify)
+          options.path = this.template.createPath(params)
+        }
+      }
+    })
+
+    api.createSchema(({ addSchemaResolvers }) => {
+      const { headings } = this.remark.extendNodeType()
+
+      addSchemaResolvers({
+        [this.options.typeName]: { headings }
+      })
+    })
   }
 
   chainWebpack (config) {
@@ -110,19 +197,22 @@ class VueRemark {
       .options(this)
   }
 
-  async createPages ({ getContentType, createPage }) {
-    const contentType = getContentType(this.options.typeName)
+  async createPages ({ getCollection, createPage }) {
+    const collection = getCollection(this.options.typeName)
+    const nodes = collection.data()
+    const length = nodes.length
 
-    contentType.collection.find().forEach(node => {
-      if (this.component) {
+    for (let i = 0; i < length; i++) {
+      const node = nodes[i]
+
+      if (this.template.component) {
         createPage({
           path: node.path,
-          component: this.component,
+          component: this.template.component,
           queryVariables: node,
-          _meta: {
-            vueRemark: {
-              type: 'import',
-              path: node.internal.origin
+          route: {
+            meta: {
+              $vueRemark: `() => import(${JSON.stringify(node.internal.origin)})`
             }
           }
         })
@@ -133,7 +223,7 @@ class VueRemark {
           queryVariables: node
         })
       }
-    })
+    }
   }
 
   async parse (source, resourcePath = null) {
@@ -149,14 +239,16 @@ class VueRemark {
     const file = createFile({
       contents: content,
       path: resourcePath,
-      data: { layout }
+      data: {
+        layout
+      }
     })
 
     if (resourcePath) {
       file.path = resourcePath
     }
 
-    const sfc = await this.processor.process(file)
+    const sfc = await this.remark.processor.process(file)
 
     return `${sfc}\n\n${frontMatterBlock}`
   }
