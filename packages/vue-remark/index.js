@@ -2,7 +2,7 @@ const path = require('path')
 const pathToRegexp = require('path-to-regexp')
 const Filesystem = require('@gridsome/source-filesystem')
 const RemarkTransformer = require('@gridsome/transformer-remark')
-const { trimEnd, isPlainObject, omit } = require('lodash')
+const { trimEnd, omit } = require('lodash')
 
 const toSFC = require('./lib/toSfc')
 const sfcSyntax = require('./lib/sfcSyntax')
@@ -16,6 +16,26 @@ const {
   makePathParams,
   normalizeLayout
 } = require('./lib/utils')
+
+const normalizeRouteKeys = keys => keys
+  .filter(key => typeof key.name === 'string')
+  .map(key => {
+    // separate field name from suffix
+    const [, fieldName, suffix] = (
+      key.name.match(/^(.*[^_])_([a-z]+)$/) ||
+      [null, key.name, null]
+    )
+
+    const path = fieldName.split('__')
+
+    return {
+      name: key.name,
+      path,
+      fieldName,
+      repeat: key.repeat,
+      suffix
+    }
+  })
 
 // TODO: refactor and clean up
 
@@ -47,54 +67,23 @@ class VueRemark {
     this.context = options.baseDir ? api.resolve(options.baseDir) : api.context
 
     if (typeof options.template === 'string') {
-      this.template = {
-        path: null,
-        component: api.resolve(options.template)
-      }
-    } else if (isPlainObject(options.template)) {
-      this.template = {
-        path: options.template.path || null,
-        component: typeof options.template.component === 'string'
-          ? api.resolve(options.template.component)
-          : null
-      }
-    } else {
-      this.template = {
-        path: null,
-        component: null
-      }
+      this.template = api.resolve(options.template)
     }
 
-    if (typeof this.template.path === 'string') {
-      let route = trimEnd(this.template.path, '/') || '/'
-      const routeKeys = []
-
-      if (api.config.permalinks.trailingSlash) {
-        route = trimEnd(route, '/') + '/'
+    if (typeof options.route === 'string') {
+      this.route = {
+        path: trimEnd(options.route, '/') || '/'
       }
 
-      pathToRegexp(route, routeKeys)
+      if (api.config.permalinks.trailingSlash) {
+        this.route.path = trimEnd(this.route.path, '/') + '/'
+      }
 
-      this.template.createPath = pathToRegexp.compile(route)
-      this.template.routeKeys = routeKeys
-        .filter(key => typeof key.name === 'string')
-        .map(key => {
-          // separate field name from suffix
-          const [, fieldName, suffix] = (
-            key.name.match(/^(.*[^_])_([a-z]+)$/) ||
-            [null, key.name, null]
-          )
+      const routeKeys = []
+      pathToRegexp(this.route.path, routeKeys)
 
-          const path = fieldName.split('__')
-
-          return {
-            name: key.name,
-            path,
-            fieldName,
-            repeat: key.repeat,
-            suffix
-          }
-        })
+      this.route.createPath = pathToRegexp.compile(this.route.path)
+      this.route.routeKeys = normalizeRouteKeys(routeKeys)
     }
 
     this.filesystem = new Filesystem(api, {
@@ -102,7 +91,6 @@ class VueRemark {
       typeName: options.typeName,
       baseDir: options.baseDir,
       pathPrefix: options.pathPrefix,
-      route: this.template.path,
       index: options.index,
       refs: options.refs
     })
@@ -160,10 +148,10 @@ class VueRemark {
         options.internal.mimeType = null
         options.internal.content = null
 
-        if (this.template.createPath) {
+        if (this.route) {
           const slugify = api._app.slugify
-          const params = makePathParams(options, this.template, slugify)
-          options.path = this.template.createPath(params)
+          const params = makePathParams(options, this.route, slugify)
+          options.path = this.route.createPath(params)
         }
       }
     })
@@ -209,10 +197,10 @@ class VueRemark {
     for (let i = 0; i < length; i++) {
       const node = nodes[i]
 
-      if (this.template.component) {
+      if (this.template) {
         createPage({
           path: node.path,
-          component: this.template.component,
+          component: this.template,
           queryVariables: node,
           route: {
             meta: {

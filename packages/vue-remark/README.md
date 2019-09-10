@@ -55,7 +55,7 @@ The type name to give the pages in the GraphQL schema.
 
 The path to the directory which contains all the `.md` files. A relative path will be resolved from the project root directory.
 
-#### template.component
+#### template
 
 - Type: `string`
 
@@ -85,7 +85,7 @@ module.exports = {
 </template>
 
 <page-query>
-query VueRemarkPage ($id: String!) {
+query VueRemarkPage ($id: ID!) {
   vueRemarkPage(id: $id) {
     title
   }
@@ -113,11 +113,11 @@ It is also possible to use slots inside `<VueRemarkContent>`.
 <slot name="tags">
 ```
 
-#### template.path
+#### route
 
 - Type: `string`
 
-By default, each markdown file will get a path based on the file location. Use this option to generate paths based on a pattern instead. Any front matter field is available to use in the path.
+By default, each markdown file will get a path based on the file location. Use this option to generate paths based on a route pattern instead. Any front matter field is available to use in the path.
 
 ```js
 module.exports = {
@@ -127,10 +127,7 @@ module.exports = {
       options: {
         typeName: 'MarkdownPage',
         baseDir: './content',
-        template: {
-          path: '/pages/:slug',
-          component: './src/templates/MarkdownPage.vue'
-        }
+        route: '/pages/:slug'
       }
     }
   ]
