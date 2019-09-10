@@ -30,3 +30,23 @@ const replacement = publicPath !== '/' ? '' : '/'
 export function stripPathPrefix (string) {
   return string.replace(re, replacement)
 }
+
+export function parsePath (path) {
+  let pathname = path || '/'
+  let query = ''
+  let hash = ''
+
+  ;[pathname, hash = ''] = path.split('#')
+  ;[pathname, query = ''] = pathname.split('?')
+
+  return {
+    pathname,
+    query: query ? `?${query}` : '',
+    hash: hash ? `#${hash}` : ''
+  }
+}
+
+export function normalizePath (path = '/') {
+  // TODO: warn if path misses a leading slash
+  return `/${unslashStart(path)}`.replace(/\/+/g, '/')
+}

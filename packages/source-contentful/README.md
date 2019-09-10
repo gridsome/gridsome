@@ -27,6 +27,21 @@ module.exports = {
 }
 ```
 
+### Custom Routes
+
+To add custom routes use the [`templates`](https://gridsome.org/docs/templates/) config with the collection type name as the key and the custom route as the value.
+
+If you have Contentful ContentTypes named BlogPost and Article you can add new routes like this:
+
+```js
+module.exports = {
+  templates: {
+    ContentfulBlogPost: '/blog/:slug',
+    ContentfulArticle: '/articles/:slug'
+  }
+}
+```
+
 ## Contentful Content Types
 
 `@gridsome/souce-contentful` currently works with all Contentful Content Types.
@@ -157,27 +172,5 @@ query Json {
       }
     }
   }
-}
-```
-
-### Custom Routes
-
-To add custom routes use the `routes` option with the ContentType name as the key and the custom route as the value.
-
-If you have Contentful ContentTypes named BlogPost and Article you can add new routes like this.
-
-```js
-module.exports = {
-  plugins: [
-    {
-      use: '@gridsome/source-contentful',
-      options: {
-        routes: {
-          'BlogPost': '/blog/:slug',
-          'Article': '/articles/:slug'
-        }
-      }
-    }
-  ]
 }
 ```

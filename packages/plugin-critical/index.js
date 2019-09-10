@@ -1,11 +1,5 @@
-const fs = require('fs-extra')
-const critical = require('critical')
 const micromatch = require('micromatch')
-
-const {
-  createPolyfillScript,
-  inlineCriticalCSS
-} = require('./lib/inline')
+const Worker = require('jest-worker').default
 
 module.exports = function (api, options) {
   api.afterBuild(async ({ queue, config }) => {
@@ -15,43 +9,28 @@ module.exports = function (api, options) {
       return micromatch(page.path, options.paths).length
     })
 
+    const worker = new Worker(require.resolve('./lib/worker'))
+
     console.log(`Extract critical CSS (${pages.length} pages)`)
 
     await Promise.all(pages.map(async ({ htmlOutput }) => {
-      const sourceHTML = await fs.readFile(htmlOutput, 'utf-8')
-      let polyfill = ''
-      let css = ''
-
       try {
-        css = await critical.generate({
+        await worker.generate(htmlOutput, {
           ignore: options.ignore,
           width: options.width,
           height: options.height,
           // TODO: remove pathPrefix fallback
           pathPrefix: publicPath || pathPrefix || '/',
-          html: sourceHTML,
-          inline: false,
-          minify: true,
+          polyfill: options.polyfill,
           base
         })
       } catch (err) {
-        console.log(err.message)
-        return
+        worker.end()
+        throw err
       }
-
-      // remove path prefix from hashed urls
-      css = css.replace(/="url\([/\w]+%23(\w+)\)"/g, '="url(%23$1)"')
-
-      if (options.polyfill) {
-        polyfill = createPolyfillScript()
-      }
-
-      // we manually inline critical css because cheerio is messing
-      // up the markup from Vue server renderer
-      const resultHTML = await inlineCriticalCSS(htmlOutput, { css, polyfill })
-
-      return fs.outputFile(htmlOutput, resultHTML)
     }))
+
+    worker.end()
   })
 }
 

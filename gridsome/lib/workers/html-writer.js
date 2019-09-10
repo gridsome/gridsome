@@ -2,6 +2,7 @@ const fs = require('fs-extra')
 const createRenderFn = require('../server/createRenderFn')
 
 exports.render = async function ({
+  hash,
   pages,
   htmlTemplate,
   clientManifestPath,
@@ -13,16 +14,22 @@ exports.render = async function ({
     serverBundlePath
   })
 
-  let page, html, state
+  let page, html, state, stateSize
   const length = pages.length
 
   for (let i = 0; i < length; i++) {
     page = pages[i]
-    state = page.dataOutput
-      ? await fs.readJson(page.dataOutput)
-      : undefined
+    state = undefined
+    stateSize = undefined
 
-    html = await render(page.path, state)
+    if (page.dataOutput) {
+      const content = await fs.readFile(page.dataOutput, 'utf8')
+
+      stateSize = content.length
+      state = JSON.parse(content)
+    }
+
+    html = await render(page, state, stateSize, hash)
 
     await fs.outputFile(page.htmlOutput, html)
   }

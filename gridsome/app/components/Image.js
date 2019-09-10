@@ -28,13 +28,13 @@ export default {
     switch (typeof props.src) {
       case 'string':
         attrs.src = props.src
-        
+
         break
 
       case 'object': {
         const { src, srcset, sizes, size, dataUri } = props.src
         const isLazy = !isImmediate && dataUri
-        
+
         attrs.src = isLazy ? dataUri : src
         attrs.width = size.width
 
@@ -79,7 +79,7 @@ export default {
 
       res.push(h('noscript', {
         domProps: {
-          innerHTML: `` + 
+          innerHTML: `` +
             `<img src="${props.src.src}" class="${stringifyClass(noscriptClassNames)}"` +
             (attrs.width ? ` width="${attrs.width}"`: '') +
             (attrs.alt ? ` alt="${attrs.alt}"` : '') +

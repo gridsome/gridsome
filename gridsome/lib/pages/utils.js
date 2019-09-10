@@ -1,57 +1,60 @@
-exports.createQueryVariables = function (page, currentPage = undefined) {
-  return {
-    ...page.query.variables,
-    page: currentPage,
-    __path: page.path
-  }
+const { snakeCase } = require('lodash')
+const slugify = require('@sindresorhus/slugify')
+
+exports.normalizePath = value => {
+  return '/' + value.split('/').filter(Boolean).join('/')
 }
 
-exports.createPagesAPI = function (api, { digest }) {
-  const { graphql, store, pages } = api._app
+const hasDynamicParam = value => /:|\(/.test(value)
 
-  return {
-    graphql,
-    getContentType (typeName) {
-      return store.getContentType(typeName)
-    },
-    createPage (options) {
-      return pages.createPage(options, { digest, isManaged: false })
-    }
-  }
+const processRexExp = value => {
+  const re = new RegExp(value)
+  const str = re.toString()
+  return '_' + slugify(str.substr(2, str.length - 4))
 }
 
-exports.createManagedPagesAPI = function (api, { digest }) {
-  const internals = { digest, isManaged: true }
-  const { graphql, store, pages } = api._app
+const replacements = [
+  [':', '_'],
+  ['.', '_dot_'],
+  ['*', '_star_'],
+  ['?', '_qn_'],
+  ['+', '_plus_'],
+  ['^', '_caret_'],
+  ['|', '_pipe_'],
+  [/\([^)]+\)/, processRexExp]
+]
 
-  return {
-    graphql,
-    getContentType (typeName) {
-      return store.getContentType(typeName)
-    },
-    createPage (options) {
-      return pages.createPage(options, internals)
-    },
-    updatePage (options) {
-      return pages.updatePage(options, internals)
-    },
-    removePage (page) {
-      return pages.removePage(page)
-    },
-    removePageByPath (path) {
-      return pages.removePageByPath(path)
-    },
-    removePagesByComponent (component) {
-      return pages.removePagesByComponent(component)
-    },
-    findAndRemovePages (query) {
-      return pages.findAndRemovePages(query)
-    },
-    findPage (query) {
-      return pages.findPage(query)
-    },
-    findPages (query) {
-      return pages.findPages(query)
-    }
+const processPathSegment = segment => {
+  if (!hasDynamicParam(segment)) return segment
+
+  for (const [regexp, handler] of replacements) {
+    segment = segment.replace(regexp, handler)
   }
+
+  return `_${snakeCase(segment)}`
+}
+
+function generateDynamicPath(segments, ext) {
+  const processedSegments = segments
+    .map(segment => processPathSegment(segment))
+    .map(segment => decodeURIComponent(segment))
+
+  const filename = processedSegments.pop() + `.${ext}`
+
+  return `/${processedSegments.concat(filename).join('/')}`
+}
+
+function generateStaticPath (segments, ext) {
+  const processedSegments = segments
+    .map(segment => decodeURIComponent(segment))
+
+  return `/${processedSegments.concat(`index.${ext}`).join('/')}`
+}
+
+exports.pathToFilePath = (value, ext = 'html') => {
+  const segments = value.split('/').filter(Boolean)
+
+  return hasDynamicParam(value)
+    ? generateDynamicPath(segments, ext)
+    : generateStaticPath(segments, ext)
 }

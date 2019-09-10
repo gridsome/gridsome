@@ -1,228 +1,515 @@
 const path = require('path')
-const autoBind = require('auto-bind')
+const fs = require('fs-extra')
+const LRU = require('lru-cache')
+const crypto = require('crypto')
+const invariant = require('invariant')
+const initWatcher = require('./watch')
 const { Collection } = require('lokijs')
 const { FSWatcher } = require('chokidar')
-const EventEmitter = require('eventemitter3')
-const validateOptions = require('./validateOptions')
+const { parseQuery } = require('../graphql')
+const pathToRegexp = require('path-to-regexp')
 const createPageQuery = require('./createPageQuery')
-const { NOT_FOUND_NAME, NOT_FOUND_PATH } = require('../utils/constants')
-const { cloneDeep } = require('lodash')
-const { slugify } = require('../utils')
+const { HookMap, SyncWaterfallHook, SyncBailHook } = require('tapable')
+const { snakeCase, trimEnd } = require('lodash')
+const validateInput = require('./schemas')
+
+const TYPE_STATIC = 'static'
+const TYPE_DYNAMIC = 'dynamic'
+const isDev = process.env.NODE_ENV === 'development'
+
+const createHash = value => crypto.createHash('md5').update(value).digest('hex')
+const getRouteType = value => /:/.test(value) ? TYPE_DYNAMIC : TYPE_STATIC
 
 class Pages {
   constructor (app) {
-    this._app = app
-    this._context = app.context
-    this._parser = app.parser
-    this._events = new EventEmitter()
-    this._watcher = new FSWatcher({ disableGlobbing: true })
-    this._watched = {}
-    this._created = []
+    this.app = app
 
-    this._collection = new Collection({
-      indices: ['path'],
-      unique: ['path'],
-      autoupdate: true
+    this.hooks = {
+      parseComponent: new HookMap(() => new SyncBailHook(['source', 'resource'])),
+      createRoute: new SyncWaterfallHook(['options']),
+      createPage: new SyncWaterfallHook(['options'])
+    }
+
+    this._componentCache = new LRU({ max: 100 })
+    this._queryCache = new LRU({ max: 100 })
+    this._watched = new Map()
+    this._watcher = null
+
+    this._routes = new Collection('routes', {
+      indices: ['id'],
+      unique: ['id', 'path', 'internal.priority'],
+      disableMeta: true
     })
 
-    autoBind(this)
+    this._pages = new Collection('pages', {
+      indices: ['id'],
+      unique: ['id', 'path'],
+      disableMeta: true
+    })
 
-    if (process.env.NODE_ENV === 'development') {
-      this._watcher.on('change', component => {
-        const { pageQuery } = this._parse(component, false)
-
-        this.findPages({ component }).forEach(page => {
-          const oldPage = cloneDeep(page)
-          const query = createPageQuery(pageQuery, page.queryVariables || page.context)
-
-          Object.assign(page, { query })
-          Object.assign(page, createRoute({ page, query }))
-
-          this._events.emit('update', page, oldPage)
-        })
+    if (isDev) {
+      this._watcher = new FSWatcher({
+        disableGlobbing: true
       })
+
+      initWatcher(app, this)
     }
   }
 
-  on (eventName, fn, ctx) {
-    return this._events.on(eventName, fn, ctx)
+  routes () {
+    return this._routes
+      .chain()
+      .simplesort('internal.priority', true)
+      .data()
+      .map(route => {
+        return new Route(route, this)
+      })
   }
 
-  off (eventName, fn, ctx) {
-    return this._events.removeListener(eventName, fn, ctx)
+  pages () {
+    return this._pages.data.slice()
   }
 
-  data () {
-    return this._collection.chain().simplesort('order').data()
+  clearCache () {
+    this._componentCache.reset()
+    this._queryCache.reset()
   }
 
-  findPages (query) {
-    return this._collection.find(query)
+  clearComponentCache (component) {
+    this._componentCache.del(component)
+    this._queryCache.del(component)
   }
 
-  findPage (query) {
-    return this._collection.findOne(query)
+  disableIndices () {
+    ['_routes', '_pages'].forEach(prop => {
+      this[prop].configureOptions({
+        adaptiveBinaryIndices: false
+      })
+    })
   }
 
-  createPage (input, internals = {}) {
-    const options = this._normalizeOptions(input)
-    const oldPage = this.findPage({ path: options.path })
+  enableIndices () {
+    ['_routes', '_pages'].forEach(prop => {
+      this[prop].ensureAllIndexes()
+      this[prop].configureOptions({
+        adaptiveBinaryIndices: true
+      })
+    })
+  }
 
-    if (oldPage) return this.updatePage(options, internals)
+  createRoute (input, meta = {}) {
+    const validated = validateInput('route', input)
+    const options = this._createRouteOptions(validated, meta)
+    const oldRoute = this._routes.by('id', options.id)
 
-    const { pageQuery } = this._parse(options.component)
-    const page = createPage({ options, context: this._context })
-    const query = createPageQuery(pageQuery, page.queryVariables || page.context)
+    if (oldRoute) {
+      const newOptions = Object.assign({}, options, {
+        $loki: oldRoute.$loki,
+        meta: oldRoute.meta
+      })
 
-    Object.assign(page, { query })
-    Object.assign(page, createRoute({ page, query }))
-    Object.assign(page.internal, internals)
+      this._routes.update(newOptions)
 
-    this._created.push(page)
-    this._collection.insert(page)
-    this._events.emit('create', page)
-
-    if (process.env.NODE_ENV === 'development') {
-      this._watch(options.component)
+      return new Route(newOptions, this)
     }
 
-    return page
+    this._routes.insert(options)
+    this._watchComponent(options.component)
+
+    return new Route(options, this)
   }
 
-  updatePage (input, internals = {}) {
-    const options = this._normalizeOptions(input)
-    const page = this.findPage({ path: options.path })
+  updateRoute (input, meta = {}) {
+    const validated = validateInput('route', input)
 
-    const { pageQuery } = this._parse(options.component, false)
-    const newPage = createPage({ options, context: this._context })
-    const query = createPageQuery(pageQuery, newPage.queryVariables)
+    this.clearComponentCache(
+      this.app.resolve(validated.component)
+    )
 
-    const oldPage = cloneDeep(page)
+    const options = this._createRouteOptions(validated, meta)
+    const route = this._routes.by('id', options.id)
+    const newOptions = Object.assign({}, options, {
+      $loki: route.$loki,
+      meta: route.meta
+    })
 
-    Object.assign(page, { query })
-    Object.assign(page, newPage)
-    Object.assign(page, createRoute({ page, query }))
-    Object.assign(page.internal, internals)
+    this._routes.update(newOptions)
 
-    this._events.emit('update', page, oldPage)
-
-    return page
+    return new Route(newOptions, this)
   }
 
-  removePage (page) {
-    const query = { path: page.path }
+  removeRoute (id) {
+    const options = this._routes.by('id', id)
 
-    this._collection.findAndRemove(query)
-    this._events.emit('remove', page)
-    this._unwatch(page.component)
+    this._pages.findAndRemove({ 'internal.route': id })
+    this._routes.findAndRemove({ id })
+    this._unwatchComponent(options.component)
+  }
+
+  createPage (input, meta = {}) {
+    const options = validateInput('page', input)
+    const type = getRouteType(options.path)
+
+    const route = this.createRoute({
+      type,
+      path: options.path,
+      component: options.component,
+      name: options.route.name,
+      meta: options.route.meta
+    }, meta)
+
+    return route.addPage({
+      id: options.id,
+      path: options.path,
+      context: options.context,
+      queryVariables: options.queryVariables
+    })
+  }
+
+  updatePage (input, meta = {}) {
+    const options = validateInput('page', input)
+    const type = getRouteType(options.path)
+
+    const route = this.updateRoute({
+      type,
+      name: options.name,
+      path: options.path,
+      component: options.component,
+      meta: options.route.meta
+    }, meta)
+
+    return route.updatePage({
+      id: options.id,
+      path: options.path,
+      context: options.context,
+      queryVariables: options.queryVariables
+    })
+  }
+
+  removePage (id) {
+    const page = this.getPage(id)
+    const route = this.getRoute(page.internal.route)
+
+    if (route.internal.isDynamic) {
+      route.removePage(id)
+    } else {
+      this.removeRoute(route.id)
+    }
   }
 
   removePageByPath (path) {
-    const query = { path }
-    const page = this._collection.findOne(query)
-
-    if (page) {
-      this._collection.findAndRemove(query)
-      this._events.emit('remove', page)
-      this._unwatch(page.component)
+    const query = {
+      path: trimEnd(path, '/') || '/'
     }
+
+    this._pages
+      .find(query)
+      .forEach(page => this.removePage(page.id))
   }
 
   removePagesByComponent (path) {
-    const component = this._app.resolve(path)
+    const component = this.app.resolve(path)
 
-    this._collection.find({ component }).forEach(page => {
-      this._events.emit('remove', page)
+    this._routes
+      .find({ component })
+      .forEach(options => {
+        this.removeRoute(options.id)
+      })
+  }
+
+  getRoute (id) {
+    const options = this._routes.by('id', id)
+    return options ? new Route(options, this) : null
+  }
+
+  getMatch (path) {
+    let route = this._routes.by('path', path)
+
+    if (typeof route !== 'object') {
+      const chain = this._routes.chain().simplesort('internal.priority', true)
+
+      route = chain.data().find(route =>
+        route.internal.regexp.test(path)
+      )
+    }
+
+    if (typeof route !== 'object') {
+      return { route: null, params: {} }
+    }
+
+    const { internal } = route
+    const length = internal.keys.length
+    const m = internal.regexp.exec(path)
+    const params = {}
+
+    for (let i = 0; i < length; i++) {
+      const key = internal.keys[i]
+      const param = m[i + 1]
+
+      if (!param) continue
+
+      params[key.name] = decodeURIComponent(param)
+
+      if (key.repeat) {
+        params[key.name] = params[key.name].split(key.delimiter)
+      }
+    }
+
+    return {
+      route: new Route(route, this),
+      params
+    }
+  }
+
+  getPage (id) {
+    return this._pages.by('id', id)
+  }
+
+  _createRouteOptions (options, meta = {}) {
+    const component = this.app.resolve(options.component)
+    const { pageQuery } = this._parseComponent(component)
+    const parsedQuery = this._parseQuery(pageQuery, component)
+    const { source, document, paginate } = this._createPageQuery(parsedQuery)
+    const { permalinks: { trailingSlash }} = this.app.config
+
+    let path = options.path.replace(/\/+/g, '/')
+    let name = options.name
+
+    const type = options.type
+    const prettyPath = trimEnd(path, '/') || '/'
+    const hasTrailingSlash = /\/$/.test(options.path)
+    const isDynamic = /:/.test(options.path)
+
+    if (type === TYPE_DYNAMIC) {
+      name = name || `__${snakeCase(path)}`
+    }
+
+    if (paginate) {
+      path = trimEnd(path, '/') + '/:page(\\d+)?' + (hasTrailingSlash ? '/' : '')
+    }
+
+    if (type === TYPE_STATIC && trailingSlash) {
+      path = trimEnd(path, '/') + '/'
+    }
+
+    const keys = []
+    const regexp = pathToRegexp(trimEnd(path, '/') || '/', keys)
+    const id = options.id || createHash(`route-${prettyPath}`)
+    const priority = this._resolvePriority(path)
+
+    return this.hooks.createRoute.call({
+      id,
+      type,
+      name,
+      path,
+      component,
+      internal: Object.assign({}, meta, {
+        meta: options.meta || {},
+        path: prettyPath,
+        isDynamic,
+        priority,
+        regexp,
+        keys,
+        query: {
+          source,
+          document,
+          paginate: !!paginate
+        }
+      })
+    })
+  }
+
+  _parseQuery (query, component) {
+    if (this._queryCache.has(component)) {
+      return this._queryCache.get(component)
+    }
+
+    const schema = this.app.schema.getSchema()
+    const res = parseQuery(schema, query, component)
+
+    this._queryCache.set(component, res)
+
+    return res
+  }
+
+  _createPageQuery (parsedQuery, vars = {}) {
+    return createPageQuery(parsedQuery, vars)
+  }
+
+  _resolvePriority (path) {
+    const segments = path.split('/').filter(Boolean)
+    const scores = segments.map(segment => {
+      let score = Math.max(segment.charCodeAt(0) || 0, 90)
+      const parts = (segment.match(/-/g) || []).length
+
+      if (/^:/.test(segment)) score -= 10
+      if (/:/.test(segment)) score -= 10
+      if (/\(.*\)/.test(segment)) score += 5
+      if (/\/[^:]$/.test(segment)) score += 3
+      if (/(\?|\+|\*)$/.test(segment)) score -= 3
+      if (/\(\.\*\)/.test(segment)) score -= 10
+      if (parts) score += parts
+
+      return score
     })
 
-    this._collection.findAndRemove({ component })
-    this._unwatch(component)
+    return scores.reduce(
+      (sum, score) => sum + score,
+      segments.length * 100
+    )
   }
 
-  findAndRemovePages (query) {
-    this._collection.find(query).forEach(page => {
-      this.removePage(page)
+  _parseComponent (component) {
+    if (this._componentCache.has(component)) {
+      return this._componentCache.get(component)
+    }
+
+    const ext = path.extname(component).substring(1)
+    const hook = this.hooks.parseComponent.get(ext)
+    let results
+
+    if (hook) {
+      const source = fs.readFileSync(component, 'utf8')
+      results = hook.call(source, { resourcePath: component })
+    }
+
+    this._componentCache.set(component, validateInput('component', results || {}))
+
+    return results
+  }
+
+  _watchComponent (component) {
+    if (!this._watched.has(component)) {
+      this._watched.set(component, true)
+      if (this._watcher) this._watcher.add(component)
+    }
+  }
+
+  _unwatchComponent (component) {
+    if (this._routes.find({ component }).length <= 0) {
+      this._watched.delete(component)
+      if (this._watcher) this._watcher.unwatch(component)
+    }
+  }
+}
+
+class Route {
+  constructor (options, factory) {
+    this.type = options.type
+    this.id = options.id
+    this.name = options.name
+    this.path = options.path
+    this.component = options.component
+    this.internal = options.internal
+    this.options = options
+
+    this.createPath = pathToRegexp.compile(options.path)
+
+    Object.defineProperty(this, '_factory', { value: factory })
+    Object.defineProperty(this, '_pages', { value: factory._pages })
+    Object.defineProperty(this, '_createPage', { value: factory.hooks.createPage })
+  }
+
+  pages () {
+    return this._pages.find({
+      'internal.route': this.id
     })
   }
 
-  _normalizeOptions (input = {}) {
-    const options = validateOptions(input)
+  addPage (input) {
+    const options = this._createPageOptions(input)
+    const oldPage = this._pages.by('id', options.id)
 
-    options.component = this._app.resolve(input.component)
+    if (oldPage) {
+      options.$loki = oldPage.$loki
+      options.meta = oldPage.meta
 
-    return this._app._hooks.page.call(options, this, this._app)
-  }
-
-  _parse (component, useCache = true) {
-    return this._parser.parse(component, useCache)
-  }
-
-  _watch (component) {
-    if (!this._watched[component]) {
-      this._watched[component] = true
-      this._watcher.add(component)
+      this._pages.update(options)
+    } else {
+      this._pages.insert(options)
     }
+
+    return options
   }
 
-  _unwatch (component) {
-    if (this._collection.find({ component }).length <= 0) {
-      delete this._watched[component]
-      this._watcher.unwatch(component)
+  updatePage (input) {
+    const options = this._createPageOptions(input)
+    const oldOptions = this._pages.by('id', options.id)
+
+    if (!oldOptions) {
+      throw new Error(
+        `Cannot update page "${options.path}". ` +
+        `Existing page with id "${options.id}" could not be found.`
+      )
     }
+
+    const newOptions = Object.assign({}, options, {
+      $loki: oldOptions.$loki,
+      meta: oldOptions.meta
+    })
+
+    this._pages.update(newOptions)
+
+    return newOptions
   }
-}
 
-function createPage ({ options, context }) {
-  const segments = options.path.split('/').filter(segment => !!segment)
-  const path = `/${segments.join('/')}`
+  removePage (id) {
+    this._pages.findAndRemove({ id, 'internal.route': this.id })
+  }
 
-  // the /404 page must be named 404
-  const name = path === NOT_FOUND_PATH ? NOT_FOUND_NAME : options.name
+  _createPageOptions (input) {
+    const { permalinks: { trailingSlash }} = this._factory.app.config
+    const { regexp, digest, isManaged, query } = this.internal
+    const { id: _id, path: _path, context, queryVariables } = validateInput('routePage', input)
 
-  return {
-    name,
-    path,
-    component: options.component,
-    context: options.context || {},
-    queryVariables: options.queryVariables || null,
-    chunkName: options.chunkName || genChunkName(options.component, context),
-    internal: {
-      digest: null,
-      path: { segments },
-      route: options.route || null,
-      meta: options._meta || {},
-      isDynamic: typeof options.route === 'string',
-      isManaged: false
+    let path = trimEnd(_path.replace(/\/+/g, '/'), '/') || '/'
+
+    if (path[0] !== '/') path = '/' + path
+
+    let publicPath = path
+
+    const isDynamic = /:/.test(path)
+    const id = _id || createHash(`page-${path}`)
+
+    if (this.type === TYPE_STATIC) {
+      if (trailingSlash) {
+        publicPath = trimEnd(path, '/') + '/'
+      }
+
+      invariant(
+        regexp.test(path),
+        `The path ${path} does not match ${regexp}`
+      )
     }
-  }
-}
 
-function genChunkName (component, context) {
-  const chunkName = path.relative(context, component)
-    .split('/')
-    .filter(s => s !== '..')
-    .map(s => slugify(s))
-    .join('--')
+    if (this.type === TYPE_DYNAMIC) {
+      invariant(
+        this.internal.path === path,
+        `Dynamic page must equal the route path: ${this.internal.path}`
+      )
+    }
 
-  return `page--${chunkName}`
-}
+    const vars = queryVariables || context || {}
+    const parsedQuery = this._factory._parseQuery(query.source, this.component)
+    const { paginate, variables, filters } = this._factory._createPageQuery(parsedQuery, vars)
 
-function createRoute ({ page, query }) {
-  const { route, path: { segments: pathSegments }} = page.internal
-  const segments = route
-    ? route.split('/').filter(segment => !!segment)
-    : pathSegments.slice()
-
-  let order = route ? 3 : 1
-
-  if (query && query.paginate) {
-    segments.push(':page(\\d+)?')
-    order = route ? 3 : 2
-  }
-
-  return {
-    order,
-    route: `/${segments.join('/')}`
+    return this._createPage.call({
+      id,
+      path,
+      publicPath,
+      context,
+      internal: {
+        route: this.id,
+        digest,
+        isManaged,
+        isDynamic,
+        query: {
+          paginate,
+          variables,
+          filters
+        }
+      }
+    })
   }
 }
 

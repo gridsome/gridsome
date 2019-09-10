@@ -1,13 +1,13 @@
 <template>
   <div class="footer">
-    <span class="meta-data-1">{{ $static.metaData.myTest.value }}</span>
-    <span class="meta-data-2">{{ $static.metaData.pluginValue }}</span>
+    <span class="meta-data-1">{{ $static.metadata.myTest.value }}</span>
+    <span class="meta-data-2">{{ $static.metadata.pluginValue }}</span>
   </div>
 </template>
 
 <static-query>
 query Footer {
-  metaData {
+  metadata {
     myTest {
       value
     }

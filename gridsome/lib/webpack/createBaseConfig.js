@@ -5,6 +5,7 @@ const Config = require('webpack-chain')
 const { forwardSlash } = require('../utils')
 const { VueLoaderPlugin } = require('vue-loader')
 const createHTMLRenderer = require('../server/createHTMLRenderer')
+const GridsomeResolverPlugin = require('./plugins/GridsomeResolverPlugin')
 const CSSExtractPlugin = require('mini-css-extract-plugin')
 
 const resolve = (p, c) => path.resolve(c || __dirname, p)
@@ -43,6 +44,14 @@ module.exports = (app, { isProd, isServer }) => {
     .add(resolve('../../node_modules'))
     .add(resolve('../../../packages'))
     .add('node_modules')
+
+  config.resolve
+    .plugin('gridsome-fallback-resolver-plugin')
+      .use(GridsomeResolverPlugin, [{
+        fallbackDir: path.join(projectConfig.appPath, 'fallbacks'),
+        optionalDir: path.join(app.context, 'src'),
+        resolve: ['main', 'App.vue']
+      }])
 
   config.resolveLoader
     .set('symlinks', true)
@@ -218,7 +227,7 @@ module.exports = (app, { isProd, isServer }) => {
   }
 
   config.plugin('injections')
-    .use(require('webpack/lib/DefinePlugin'), [createEnv(projectConfig)])
+    .use(require('webpack/lib/DefinePlugin'), [createEnv()])
 
   if (isProd && !isServer) {
     config.plugin('extract-css')

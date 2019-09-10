@@ -1,11 +1,13 @@
 const path = require('path')
 const LRU = require('lru-cache')
 const hash = require('hash-sum')
+const { parse, findDeprecatedUsages } = require('graphql')
+const { deprecate } = require('../../../../utils/deprecate')
 
 const cache = new LRU({ max: 1000 })
 
 module.exports = async function (source, map) {
-  const { config, graphql, store } = process.GRIDSOME
+  const { config, store, schema } = process.GRIDSOME
   const resourcePath = this.resourcePath
 
   // add dependency to now.js to re-run
@@ -28,7 +30,16 @@ module.exports = async function (source, map) {
     return
   }
 
-  const { errors, data } = await graphql(source)
+  let ast = null
+
+  try {
+    ast = parse(source)
+  } catch (err) {
+    callback(err, source, map)
+    return
+  }
+
+  const { errors, data } = await schema.runQuery(ast)
 
   if (errors && errors.length) {
     callback(new Error(errors[0]), source, map)
@@ -56,6 +67,19 @@ module.exports = async function (source, map) {
   `
 
   cache.set(cacheKey, res)
+
+  findDeprecatedUsages(schema.getSchema(), ast).forEach(err => {
+    let line = 0
+    let column = 0
+
+    if (Array.isArray(err.locations) && err.locations.length) {
+      [{ line, column }] = err.locations
+    }
+
+    deprecate(err.message, {
+      customCaller: [resourcePath, line, column]
+    })
+  })
 
   callback(null, res, map)
 }

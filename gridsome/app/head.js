@@ -4,14 +4,12 @@ import icons from '~/.temp/icons.js'
 import config from '~/.temp/config.js'
 
 Vue.use(Meta, {
-  // keyName: 'head', TODO: change this to 'head'
   attribute: 'data-vue-tag',
   ssrAttribute: 'data-html-server-rendered',
   tagIDKeyName: 'key'
 })
 
 const head = {
-  title: config.siteName,
   titleTemplate: config.titleTemplate,
   __dangerouslyDisableSanitizers: ['style', 'script', 'noscript'],
   __dangerouslyDisableSanitizersByTagID: {},
@@ -22,8 +20,7 @@ const head = {
     { charset: 'utf-8' },
     { name: 'generator', content: `Gridsome v${config.version}` },
     { key: 'viewport', name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
-    { key: 'description', name: 'description', content: config.siteDescription },
-    
+
     // do not convert telephone numbers
     // into hypertext links because it
     // will cause hydration errors

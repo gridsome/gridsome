@@ -7,7 +7,7 @@ const sortPackageJson = require('sort-package-json')
 const { hasYarn } = require('../utils')
 
 module.exports = async (name, starter = 'default') => {
-  const dir = aboslutePath(name)
+  const dir = absolutePath(name)
   const projectName = path.basename(dir)
   const starters = ['default', 'wordpress']
   const useYarn = await hasYarn()
@@ -142,7 +142,7 @@ function exec (cmd, args = [], options = {}, context = process.cwd()) {
   })
 }
 
-function aboslutePath (string) {
+function absolutePath (string) {
   if (path.isAbsolute(string)) return string
   return path.join(process.cwd(), string)
 }

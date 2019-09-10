@@ -37,6 +37,11 @@ test('build simple project', () => {
   expect($home('h1').text()).toEqual('Index.vue')
 })
 
+test('don\'t render empty siteDescription ', () => {
+  const $home = load('dist/index.html')
+  expect($home('meta[data-key="description"]').length).toEqual(0)
+})
+
 test('data dir should be empty', () => {
   expect(exists('dist/assets/data/1')).toBeFalsy()
 })

@@ -73,18 +73,18 @@ Gridsome sites are usually not connected to any database and can be hosted entir
 
 ## How to Contribute
 
-Install [Node.js 8.3](https://nodejs.org/en/download/) or higher and [Yarn](https://yarnpkg.com/lang/en/docs/install/). It's also recommended to install [Lerna](https://www.npmjs.com/package/lerna) globally.
+Install [Node.js 8.3](https://nodejs.org/en/download/) or higher and [Yarn](https://yarnpkg.com/lang/en/docs/install/).
 
 1. Clone this repository.
 2. Create a new Gridsome project inside the `~/projects` folder.
-3. Enter the new project folder and run `yarn` (or `lerna bootstrap` if installed).
+3. Enter the new project folder and run `yarn install`.
 4. The project will now use the local packages when you run `gridsome develop`.
 
 Make sure your test project has a version number in its `package.json` if you use an existing project.
 
 To use the local version of `@gridsome/cli` as the global command, enter the `~/packages/cli` folder and run `npm link`.
 
-Yarn will add dependencies from your test projects to the root `yarn.lock` file. So you should not commit changes in that file unless you have added dependencies to any of the core packages. If you need to commit it, remove your projects from the `~/projects` folder temporary and run `yarn` or `lerna bootstrap` in the root folder. Yarn will then clean up the lock file with only core dependencies. Commit the file and move your projects back and run `yarn` or `lerna bootstrap` again to start developing.
+Yarn will add dependencies from your test projects to the root `yarn.lock` file. So you should not commit changes in that file unless you have added dependencies to any of the core packages. If you need to commit it, remove your projects from the `~/projects` folder temporary and run `yarn install` in the root folder. Yarn will then clean up the lock file with only necessary dependencies. Commit the file and move your projects back and run `yarn install` again to start developing.
 
 ### Code of Conduct
 
@@ -96,16 +96,4 @@ Licensed under the [MIT License](./LICENSE).
 
 ## Roadmap for v1.0
 
-- [x] `*.vue` pages and templates
-- [x] GraphQL data layer
-- [x] Multi-process image processing
-- [x] Multi-process HTML rendering
-- [x] Lazy-loading images and pages
-- [x] Pagination
-- [x] Plugin API
-- [x] Taxonomies
-- [ ] Download external assets
-- [ ] Service Worker
-- [ ] Documentation
-- [ ] Guides
-- [ ] Tests
+Visit the [Gridsome Roadmap](https://github.com/gridsome/gridsome/projects/2) to keep track of which features we are currently working on.

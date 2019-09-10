@@ -15,14 +15,15 @@ module.exports = {
     {
       use: '@gridsome/source-ghost',
       options: {
+        typeName: 'Ghost',
         baseUrl: 'http://localhost:2368',
-        contentKey: '0b7050113fba7147f358cc2f4d',
-        routes: {
-          post: '/:year/:month/:day/:slug',
-          tag: '/tag/:slug'
-        }
+        contentKey: '0b7050113fba7147f358cc2f4d'
       }
     }
-  ]
+  ],
+  templates: {
+    GhostPost: '/:year/:month/:day/:slug',
+    GhostTag: '/tag/:slug'
+  }
 }
 ```

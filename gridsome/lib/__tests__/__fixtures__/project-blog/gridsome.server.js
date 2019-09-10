@@ -1,20 +1,20 @@
 module.exports = function (api) {
   api.loadSource(store => {
-    const posts = store.addContentType({
+    const posts = store.addCollection({
       typeName: 'Post',
       route: '/:slug'
     })
 
-    const tags = store.addContentType({
+    const tags = store.addCollection({
       typeName: 'Tag',
       route: '/tag/:slug'
     })
 
-    const categories = store.addContentType({
+    const categories = store.addCollection({
       typeName: 'Category'
     })
 
-    const other = store.addContentType({
+    const other = store.addCollection({
       typeName: 'Other'
     })
 
@@ -111,8 +111,8 @@ module.exports = function (api) {
     }
   })
 
-  api.createPages(({ getContentType, createPage }) => {
-    const tags = getContentType('Tag')
+  api.createPages(({ getCollection, createPage }) => {
+    const tags = getCollection('Tag')
 
     tags.collection.find().forEach(node => {
       createPage({
