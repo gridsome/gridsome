@@ -3,7 +3,7 @@ const fs = require('fs-extra')
 const slash = require('slash')
 const crypto = require('crypto')
 const mime = require('mime-types')
-const { mapValues } = require('lodash')
+const { mapValues, trimStart } = require('lodash')
 
 const isDev = process.env.NODE_ENV === 'development'
 
@@ -172,7 +172,9 @@ class FilesystemSource {
       segments.push(actions.slugify(name))
     }
 
-    return `/${segments.join('/')}${suffix}`
+    const res = segments.join('/') + suffix
+
+    return '/' + trimStart(res, '/')
   }
 
   normalizeRefs (refs) {
