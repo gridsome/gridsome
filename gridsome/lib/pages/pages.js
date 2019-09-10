@@ -276,7 +276,7 @@ class Pages {
     let name = options.name
 
     const type = options.type
-    const prettyPath = trimEnd(path, '/')
+    const prettyPath = trimEnd(path, '/') || '/'
     const hasTrailingSlash = /\/$/.test(options.path)
     const isDynamic = /:/.test(options.path)
 

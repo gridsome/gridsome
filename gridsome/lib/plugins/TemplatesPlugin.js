@@ -172,7 +172,7 @@ class TemplatesPlugin {
           : null
         : path.join(api.config.templatesDir, `${options.typeName}.vue`)
 
-      if (!templates.byComponent.has(templateComponent)) {
+      if (templateComponent && !templates.byComponent.has(templateComponent)) {
         const byTypeName = templates.byTypeName.get(options.typeName) || []
         const byComponent = templates.byComponent.get(templateComponent) || []
 

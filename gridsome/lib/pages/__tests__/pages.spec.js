@@ -85,6 +85,7 @@ test('create page with plugin api', async () => {
 
       expect(route.component).toEqual(path.join(__dirname, '__fixtures__', 'DefaultPage.vue'))
       expect(route.internal.query.document).toBeNull()
+      expect(route.internal.path).toEqual('/')
       expect(route.pages()).toHaveLength(1)
     })
   })

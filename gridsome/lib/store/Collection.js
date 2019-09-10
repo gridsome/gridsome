@@ -115,7 +115,7 @@ class ContentType {
   updateNode (options = {}) {
     options = normalizeNodeOptions(options, this, true)
 
-    const oldNode = this.getNode(options.$uid
+    const oldNode = this.findNode(options.$uid
       ? { $uid: options.$uid }
       : { id: options.id }
     )
