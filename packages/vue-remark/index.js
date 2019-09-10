@@ -17,6 +17,8 @@ const {
   normalizeLayout
 } = require('./lib/utils')
 
+// TODO: refactor and clean up
+
 class VueRemark {
   static defaultOptions () {
     return {
@@ -52,7 +54,9 @@ class VueRemark {
     } else if (isPlainObject(options.template)) {
       this.template = {
         path: options.template.path || null,
-        component: api.resolve(options.template.component)
+        component: typeof options.template.component === 'string'
+          ? api.resolve(options.template.component)
+          : null
       }
     } else {
       this.template = {

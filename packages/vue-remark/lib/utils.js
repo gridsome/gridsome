@@ -1,29 +1,3 @@
-exports.createFile = function (options) {
-  const file = {
-    contents: options.contents
-  }
-
-  if (options.path) file.path = options.path
-  if (options.data) file.data = options.data
-
-  return file
-}
-
-exports.normalizeLayout = function (layout) {
-  const defaultLayout = require.resolve('../src/VueRemarkLayout.js')
-
-  if (typeof layout === 'string') {
-    return { component: layout, props: {}}
-  } else if (typeof layout === 'object') {
-    return {
-      component: layout.component || defaultLayout,
-      props: layout.props || {}
-    }
-  }
-
-  return { component: defaultLayout, props: {}}
-}
-
 const moment = require('moment')
 const { isPlainObject, get } = require('lodash')
 
@@ -58,6 +32,32 @@ const ISO_8601_FORMAT = [
   'YYYY-DDDD',
   'YYYYDDDD'
 ]
+
+exports.createFile = function (options) {
+  const file = {
+    contents: options.contents
+  }
+
+  if (options.path) file.path = options.path
+  if (options.data) file.data = options.data
+
+  return file
+}
+
+exports.normalizeLayout = function (layout) {
+  const defaultLayout = require.resolve('../src/VueRemarkLayout.js')
+
+  if (typeof layout === 'string') {
+    return { component: layout, props: {}}
+  } else if (typeof layout === 'object') {
+    return {
+      component: layout.component || defaultLayout,
+      props: layout.props || {}
+    }
+  }
+
+  return { component: defaultLayout, props: {}}
+}
 
 exports.makePathParams = (object, { routeKeys, dateField = 'date' }, slugify) => {
   const date = moment.utc(object[dateField], ISO_8601_FORMAT, true)
