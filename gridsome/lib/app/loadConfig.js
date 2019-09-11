@@ -1,6 +1,6 @@
-const Joi = require('joi')
 const path = require('path')
 const fs = require('fs-extra')
+const Joi = require('@hapi/joi')
 const crypto = require('crypto')
 const dotenv = require('dotenv')
 const isRelative = require('is-relative')
