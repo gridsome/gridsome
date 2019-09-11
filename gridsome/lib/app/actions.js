@@ -46,7 +46,7 @@ function createStoreActions (api, app) {
   }
 
   const getCollection = typeName => {
-    store.getCollection(typeName)
+    return store.getCollection(typeName)
   }
 
   return {

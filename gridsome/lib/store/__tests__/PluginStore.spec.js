@@ -836,6 +836,21 @@ test('modify node with api.onCreateNode()', async () => {
   expect(node.title).toEqual('Some title')
 })
 
+test('get collection through actions', async () => {
+  let collection = null
+
+  await createApp(function (api) {
+    api.loadSource(({ addCollection }) => {
+      addCollection('Test')
+    })
+    api.createSchema(({ getCollection }) => {
+      collection = getCollection('Test')
+    })
+  })
+
+  expect(collection).not.toBeFalsy()
+})
+
 test('exclude node with api.onCreateNode()', async () => {
   const app = await createApp(function (api) {
     api.loadSource(store => {
