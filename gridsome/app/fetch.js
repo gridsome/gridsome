@@ -10,22 +10,22 @@ export default (route, options = {}) => {
   const { shouldPrefetch = false, force = false } = options
 
   if (!process.isStatic) {
-    const getJSON = function (route) {
-      return new Promise((resolve, reject) => {
-        fetch(process.env.GRAPHQL_ENDPOINT, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ path: route.path })
-        })
-          .then(res => res.json())
-          .then(resolve)
-          .catch(reject)
-      })
+    const { dynamic = false } = route.meta
+    let path = dynamic ? route.matched[0].path : route.path
+
+    if (route.name === '*') {
+      path = NOT_FOUND_PATH
     }
 
     return new Promise((resolve, reject) => {
       if (force || !isLoaded[route.fullPath]) {
-        isLoaded[route.fullPath] = getJSON(route)
+        isLoaded[route.fullPath] = fetch(process.env.GRAPHQL_ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ path, dynamic })
+        })
+          .then(res => res.json())
+          .catch(reject)
       }
 
       isLoaded[route.fullPath]
@@ -39,7 +39,6 @@ export default (route, options = {}) => {
               : {}
           })
         })
-        .catch(reject)
     })
   }
 

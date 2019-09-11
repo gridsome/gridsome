@@ -222,6 +222,11 @@ class Pages {
     return options ? new Route(options, this) : null
   }
 
+  getRouteByPath (path) {
+    const options = this._routes.by('path', path)
+    return options ? new Route(options, this) : null
+  }
+
   getMatch (path) {
     let route = this._routes.by('path', path)
 

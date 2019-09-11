@@ -15,8 +15,18 @@ module.exports = ({ pages }) => {
       return next()
     }
 
-    const { route, params } = pages.getMatch(body.path)
-    let currentPage = undefined
+    let route = null
+    let currentPage = null
+    let params = {}
+
+    if (body.dynamic) {
+      route = pages.getRouteByPath(body.path)
+    } else {
+      const match = pages.getMatch(body.path)
+
+      route = match.route
+      params = match.params
+    }
 
     if (!route) {
       return res
@@ -38,8 +48,11 @@ module.exports = ({ pages }) => {
       delete params.page
     }
 
-    const path = route.createPath(params)
-    const page = pages._pages.by('path', trimEnd(path, '/') || '/')
+    const path = !body.dynamic
+      ? trimEnd(route.createPath(params), '/') || '/'
+      : body.path
+
+    const page = pages._pages.by('path', path)
 
     if (!route.internal.query.document) {
       return res.json({
