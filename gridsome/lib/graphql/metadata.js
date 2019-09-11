@@ -1,6 +1,6 @@
 const { isEmpty } = require('lodash')
-const { createFieldTypes } = require('../createFieldTypes')
-const createFieldDefinitions = require('../createFieldDefinitions')
+const { createFieldTypes } = require('./createFieldTypes')
+const createFieldDefinitions = require('./createFieldDefinitions')
 
 module.exports = (schemaComposer, store) => {
   const metadata = store.metadata.find().reduce((fields, obj) => {

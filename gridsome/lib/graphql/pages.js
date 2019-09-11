@@ -1,5 +1,5 @@
-const { createFilterInput } = require('../filters/input')
-const { toFilterArgs } = require('../filters/query')
+const { createFilterInput } = require('./filters/input')
+const { toFilterArgs } = require('./filters/query')
 const { trimEnd } = require('lodash')
 
 module.exports = schemaComposer => {
