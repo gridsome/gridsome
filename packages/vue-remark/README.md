@@ -1,6 +1,6 @@
 # @gridsome/vue-remark
 
-> Create pages with Vue components in markdown. Perfect for building Documentation, Design Systems, Portfolios, Blogs, etc.
+> Create pages with Vue components in Markdown. Perfect for building Documentation, Design Systems, Portfolios, Blogs, etc.
 
 ## Install
 
