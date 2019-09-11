@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0](https://github.com/gridsome/gridsome/tree/master/packages/source-drupal/compare/@gridsome/source-drupal@0.3.0...@gridsome/source-drupal@0.4.0) (2019-09-11)
+
+
+### Features
+
+* **drupal:** gridsome v0.7 support ([de9526b](https://github.com/gridsome/gridsome/tree/master/packages/source-drupal/commit/de9526b))
+
+
+
+
+
 # [0.3.0](https://github.com/gridsome/gridsome/tree/master/packages/source-drupal/compare/@gridsome/source-drupal@0.2.1...@gridsome/source-drupal@0.3.0) (2019-08-26)
 
 

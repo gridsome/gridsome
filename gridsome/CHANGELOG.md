@@ -3,6 +3,33 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.7.0](https://github.com/gridsome/gridsome/compare/gridsome@0.6.9...gridsome@0.7.0) (2019-09-11)
+
+
+### Bug Fixes
+
+* **app:** ensure siteUrl is set before checking url ([dfdfea9](https://github.com/gridsome/gridsome/commit/dfdfea9))
+* **build:** show better error messages ([b71bcc6](https://github.com/gridsome/gridsome/commit/b71bcc6))
+* **develop:** run sockjs on main port ([e78503b](https://github.com/gridsome/gridsome/commit/e78503b))
+* **develop:** show deprecation notices ([#639](https://github.com/gridsome/gridsome/issues/639)) ([9ed78c9](https://github.com/gridsome/gridsome/commit/9ed78c9))
+* **templates:** preserve trailing slash in routes ([f7b5397](https://github.com/gridsome/gridsome/commit/f7b5397))
+
+
+### Features
+
+* **app:** override App.vue component ([#635](https://github.com/gridsome/gridsome/issues/635)) ([fc9606d](https://github.com/gridsome/gridsome/commit/fc9606d))
+* **app:** permalinks config ([#574](https://github.com/gridsome/gridsome/issues/574)) ([e89d80a](https://github.com/gridsome/gridsome/commit/e89d80a)), closes [#121](https://github.com/gridsome/gridsome/issues/121)
+* **app:** upgrade to vue-meta v2.0 ([eac20ef](https://github.com/gridsome/gridsome/commit/eac20ef))
+* **develop:** run site on local network ([a1d91f4](https://github.com/gridsome/gridsome/commit/a1d91f4))
+* **graphql:** customize the schema ([#509](https://github.com/gridsome/gridsome/issues/509)) ([c4684b2](https://github.com/gridsome/gridsome/commit/c4684b2))
+* **pages:** dynamic routing ([#570](https://github.com/gridsome/gridsome/issues/570)) ([0061019](https://github.com/gridsome/gridsome/commit/0061019))
+* **pages:** trailing slash for page paths ([3116ed5](https://github.com/gridsome/gridsome/commit/3116ed5))
+* **templates:** centralized templates config ([#571](https://github.com/gridsome/gridsome/issues/571)) ([04fa6d1](https://github.com/gridsome/gridsome/commit/04fa6d1))
+
+
+
+
+
 ## [0.6.9](https://github.com/gridsome/gridsome/compare/gridsome@0.6.8...gridsome@0.6.9) (2019-08-29)
 
 

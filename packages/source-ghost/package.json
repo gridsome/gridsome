@@ -1,5 +1,5 @@
 {
-  "version": "0.1.0",
+  "version": "0.1.1",
   "name": "@gridsome/source-ghost",
   "description": "ghost source for Gridsome",
   "homepage": "https://github.com/gridsome/gridsome/tree/master/packages/source-ghost#readme",

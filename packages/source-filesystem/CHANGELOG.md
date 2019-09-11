@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.6.0](https://github.com/gridsome/gridsome/tree/master/packages/source-filesystem/compare/@gridsome/source-filesystem@0.5.0...@gridsome/source-filesystem@0.6.0) (2019-09-11)
+
+
+### Bug Fixes
+
+* **filesystem:** add fallback mime type ([#642](https://github.com/gridsome/gridsome/tree/master/packages/source-filesystem/issues/642)) ([9a5ca89](https://github.com/gridsome/gridsome/tree/master/packages/source-filesystem/commit/9a5ca89))
+
+
+### Features
+
+* **filesystem:** basic gridsome v0.7 support ([1d35fe7](https://github.com/gridsome/gridsome/tree/master/packages/source-filesystem/commit/1d35fe7))
+
+
+
+
+
 # [0.5.0](https://github.com/gridsome/gridsome/tree/master/packages/source-filesystem/compare/@gridsome/source-filesystem@0.4.1...@gridsome/source-filesystem@0.5.0) (2019-05-20)
 
 
