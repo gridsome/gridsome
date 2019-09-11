@@ -6,6 +6,10 @@ module.exports = ({ pages }) => {
   return async function graphqlMiddleware (req, res, next) {
     const { body = {}} = req
 
+    const notFound = () => res
+      .status(404)
+      .send({ code: 404, message: `Could not find ${body.path}` })
+
     // allow OPTIONS method for cors
     if (req.method === 'OPTIONS') {
       return res.sendStatus(200)
@@ -28,11 +32,7 @@ module.exports = ({ pages }) => {
       params = match.params
     }
 
-    if (!route) {
-      return res
-        .status(404)
-        .send({ code: 404, message: `Could not find ${body.path}` })
-    }
+    if (!route) return notFound()
 
     // page/1/index.html is not statically generated
     // in production and should return 404 in develop
@@ -40,9 +40,7 @@ module.exports = ({ pages }) => {
       currentPage = parseInt(params.page, 10) || 0
 
       if (params.page && currentPage <= 1) {
-        return res
-          .status(404)
-          .send({ code: 404, message: `Could not find ${body.path}` })
+        return notFound()
       }
 
       delete params.page
@@ -53,6 +51,8 @@ module.exports = ({ pages }) => {
       : body.path
 
     const page = pages._pages.by('path', path)
+
+    if (!page) return notFound()
 
     if (!route.internal.query.document) {
       return res.json({
