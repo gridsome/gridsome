@@ -49,6 +49,7 @@ class VueRemark {
       index: ['index'],
       includePaths: [],
       plugins: [],
+      remark: {},
       refs: {}
     }
   }
@@ -98,6 +99,7 @@ class VueRemark {
     this.remark = new RemarkTransformer({}, {
       assets: api._app.assets,
       localOptions: {
+        ...options.remark,
         processFiles: false,
         processImages: false,
         stringifier: toSFC,
@@ -106,7 +108,7 @@ class VueRemark {
           toVueRemarkAst,
           remarkFilePlugin,
           remarkImagePlugin,
-          ...this.options.plugins
+          ...options.plugins
         ]
       }
     })

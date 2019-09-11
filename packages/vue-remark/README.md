@@ -155,6 +155,10 @@ The path for the first level index file in the directory specified by the `baseD
 
 Define which files to consider as index files. These files will not have their filename appear in its path and will become the main `index.html` file of the directory. Make sure there is only one possible index file per directory if multiple index names are defined.
 
+#### plugins
+
+Add additional [Remark](https://remark.js.org/) plugins. [Read more](https://github.com/remarkjs/remark/blob/master/doc/plugins.md#list-of-plugins).
+
 #### remark
 
 Custom [Remark](https://remark.js.org/) options. [Read more](https://github.com/gridsome/gridsome/tree/master/packages/transformer-remark#options).
