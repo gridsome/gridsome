@@ -5,8 +5,13 @@ const chalk = require('chalk')
 const program = require('commander')
 const didYouMean = require('didyoumean')
 const resolveCwd = require('resolve-cwd')
+const updateNotifier = require('update-notifier')
 const resolveVersions = require('../lib/utils/version')
 const pkgPath = require('find-up').sync('package.json')
+const { hasYarn } = require('../lib/utils')
+
+const pkg = require('../package.json')
+const notifier = updateNotifier({ pkg })
 
 const context = pkgPath ? path.resolve(path.dirname(pkgPath)) : process.cwd()
 const version = resolveVersions(pkgPath)
@@ -67,6 +72,18 @@ program.parse(process.argv)
 
 if (!process.argv.slice(2).length) {
   program.outputHelp()
+}
+
+if (notifier.update) {
+  (async () => {
+    const withYarn = await hasYarn()
+    const margin = chalk.bgGreen(' ')
+    const command = withYarn ? `yarn add global ${pkg.name}` : `npm i -g ${pkg.name}`
+    console.log()
+    console.log(`${margin} Update available: ${chalk.bold(notifier.update.latest)}`)
+    console.log(`${margin} Run ${chalk.cyan(command)} to update`)
+    console.log()
+  })()
 }
 
 function wrapCommand (fn) {
