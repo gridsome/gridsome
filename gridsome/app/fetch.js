@@ -18,8 +18,8 @@ export default (route, options = {}) => {
     }
 
     return new Promise((resolve, reject) => {
-      if (force || !isLoaded[route.fullPath]) {
-        isLoaded[route.fullPath] = fetch(process.env.GRAPHQL_ENDPOINT, {
+      if (force || !isLoaded[route.path]) {
+        isLoaded[route.path] = fetch(process.env.GRAPHQL_ENDPOINT, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ path, dynamic })
@@ -28,7 +28,7 @@ export default (route, options = {}) => {
           .catch(reject)
       }
 
-      isLoaded[route.fullPath]
+      isLoaded[route.path]
         .then(res => {
           if (res.errors) reject(res.errors[0])
           else if (res.code) resolve({ code: res.code })
@@ -38,6 +38,8 @@ export default (route, options = {}) => {
               ? res.extensions.context
               : {}
           })
+
+          isLoaded[route.path] = null
         })
     })
   }
