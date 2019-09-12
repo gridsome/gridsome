@@ -54,6 +54,14 @@ function createStoreActions (api, app) {
     addCollection,
     getCollection,
 
+    getNodeByUid (uid) {
+      return app.store.getNodeByUid(uid)
+    },
+
+    getNode (typeName, id) {
+      return app.store.getNode(typeName, id)
+    },
+
     addMetadata (key, data) {
       return app.store.addMetadata(key, data)
     },

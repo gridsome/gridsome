@@ -838,17 +838,24 @@ test('modify node with api.onCreateNode()', async () => {
 
 test('get collection through actions', async () => {
   let collection = null
+  let node1
+  let node2
 
   await createApp(function (api) {
     api.loadSource(({ addCollection }) => {
-      addCollection('Test')
+      const test = addCollection('Test')
+      test.addNode({ id: '1', $uid: '123' })
     })
-    api.createSchema(({ getCollection }) => {
+    api.createSchema(({ getCollection, getNodeByUid, getNode }) => {
       collection = getCollection('Test')
+      node1 = getNodeByUid('123')
+      node2 = getNode('Test', '1')
     })
   })
 
   expect(collection).not.toBeFalsy()
+  expect(node1).not.toBeFalsy()
+  expect(node2).not.toBeFalsy()
 })
 
 test('exclude node with api.onCreateNode()', async () => {
