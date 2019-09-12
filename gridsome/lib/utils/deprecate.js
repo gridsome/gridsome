@@ -173,7 +173,7 @@ exports.logAllWarnings = context => {
   })
 
   const renderedColumns = columnify(columns, {
-    maxWidth: Math.min(80, process.stdout.columns),
+    maxWidth: Math.min(80, process.stdout.columns || Infinity),
     preserveNewLines: true,
     showHeaders: false
   })
