@@ -11,12 +11,6 @@ module.exports = function normalizeNodeOptions (options, collection, useFallback
   const nodeOptions = pick(options, NODE_FIELDS)
   const customFields = omit(options, NODE_FIELDS)
 
-  // TODO: remove before 1.0
-  if (customFields.fields) {
-    Object.assign(customFields, customFields.fields)
-    delete customFields.fields
-  }
-
   nodeOptions.internal = createInternal(collection, nodeOptions.internal)
 
   if (useFallbacks) {
@@ -27,9 +21,6 @@ module.exports = function normalizeNodeOptions (options, collection, useFallback
       nodeOptions.$uid = genUid(collection.typeName + nodeOptions.id)
     }
   }
-
-  // TODO: remove before 1.0
-  if (nodeOptions._id) nodeOptions.id = nodeOptions._id
 
   return { ...customFields, ...nodeOptions }
 }
