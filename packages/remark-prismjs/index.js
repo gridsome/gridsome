@@ -8,14 +8,6 @@ const toHTML = require('hast-util-to-html')
 // load all prismjs languages
 require('prismjs/components/index')()
 
-// highlight page-query and static-query in html
-Prism.languages.html.graphql = {
-  pattern: /(<(page|static)-query[\s\S]*?>)[\s\S]*?(?=<\/(page|static)-query>)/i,
-  inside: Prism.languages.graphql,
-  lookbehind: true,
-  greedy: true
-}
-
 module.exports = () => tree => {
   visit(tree, 'code', (node, index, parent) => {
     parent.children.splice(index, 1, createCode(node))
