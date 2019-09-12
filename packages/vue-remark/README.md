@@ -9,36 +9,74 @@
 
 ## Usage
 
+
+**1.** Add configs to `gridsome.config.js`.
+
 ```js
 module.exports = {
   plugins: [
     {
       use: '@gridsome/vue-remark',
       options: {
-        typeName: 'MarkdownPage', // required
-        baseDir: './src/pages', // required
+        typeName: 'Documentation', // required
+        baseDir: './docs', // where .md files are located.
+        template: './src/templates/Documentation.vue' // optional
       }
     }
   ]
 }
 ```
 
-## Example component
+By default it takes any **.md** files in `baseDir` folder and uses them for file-based routing like [Pages](/docs/pages) works. You can override this by using a `route` config.
+
+In this example `/docs/index.md` will be `website.com/docs/`,
+and `/docs/install-guide.md` will be `website.com/docs/install-guide/`.
+
+
+**2.** Setup a template and include the `<VueRemarkContent />` component:
+
+```html
+<template>
+  <Layout>
+    <h1>{{ $page.documentation.title }}</h1>
+    <p class="intro">{{ $page.documentation.excerpt }}</p>
+    <VueRemarkContent />
+  </Layout>
+</template>
+
+<!-- Front-matter fields can be queried from GraphQL layer -->
+<page-query>
+query Documentation ($id: ID!) {
+  documentation(id: $id) {
+    title
+    excerpt
+  }
+}
+</page-query>
+```
+
+
+## Example Markdown file.
 
 ```jsx
 ---
 title: A cool title
 excerpt: Lorem Ipsum is simply dummy text.
-layout: ~/layouts/Default.vue
 ---
+// Import any Vue Component. Even other .md files!
 import YouTube from '~/components/YouTube.vue'
+import AboutUs from '~/sections/AboutUs.md'
+
+// Import any JSON if you need data.
 import data from '~/data/youtube.json'
 
+// Use front-matter fields anywhere.
 # {{ $frontmatter.title }}
-
-<YouTube :id="data.id" />
-
 > {{ $frontmatter.excerpt }}
+
+// Use your imported Vue Components.
+<YouTube :id="data.id" />
+<AboutUs />
 ```
 
 ## Options
@@ -158,6 +196,36 @@ Define which files to consider as index files. These files will not have their f
 #### plugins
 
 Add additional [Remark](https://remark.js.org/) plugins. [Read more](https://github.com/remarkjs/remark/blob/master/doc/plugins.md#list-of-plugins).
+
+
+#### refs
+
+- Type: `object`
+
+Define fields that will have a reference to another node. The referenced `typeName` is expected to exist. But a content type can also be created automatically if you set `create: true`. Read more about [references](https://gridsome.org/docs/data-store-api#collectionaddreferencefieldname-typename).
+
+```js
+module.exports = {
+  plugins: [
+    {
+      use: '@gridsome/vue-remark',
+      options: {
+        typeName: 'Documentation', 
+        baseDir: './docs', 
+        refs: {
+          // Example 1: Create a Author collection by reference `author` field
+          author: 'Author',
+          // Example 2: Create a Tag collection by reference `tags` field.
+          tags: {
+            typeName: 'Tag',
+            create: true
+          }
+        }
+      }
+    }
+  ]
+}
+```
 
 #### remark
 
