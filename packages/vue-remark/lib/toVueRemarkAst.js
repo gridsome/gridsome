@@ -4,12 +4,12 @@ module.exports = () => tree => {
   visit(tree, 'code', node => {
     const data = node.data = (node.data || {})
     const props = data.hProperties = (data.hProperties || {})
-    const lang = getLanguage(node)
+    props['v-pre'] = true
+  })
 
-    // the language-* class name disappears
-    // somehow when adding the v-pre prop
-    if (lang) props.className = ['language-' + lang]
-
+  visit(tree, 'inlineCode', node => {
+    const data = node.data = (node.data || {})
+    const props = data.hProperties = (data.hProperties || {})
     props['v-pre'] = true
   })
 
