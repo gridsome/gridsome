@@ -235,6 +235,23 @@ class TemplatesPlugin {
           )
         }
 
+        const typeTemplates = templates.byTypeName.get(typeName)
+        const collection = collections[typeName]
+        const nodes = collection.data()
+
+        // remove automatic templates from collections
+        // without a route where no nodes has a path
+        for (const [index, tmpl] of typeTemplates.entries()) {
+          if (
+            tmpl.from === FROM_CONTENT_TYPE &&
+            typeof tmpl.path === 'undefined' &&
+            nodes.filter(node => node.path).length < 1
+          ) {
+            templates.byComponent.delete(tmpl.component)
+            typeTemplates.splice(index, 1)
+          }
+        }
+
         templates.byTypeName.get(typeName).forEach(() => {
           addSchemaResolvers({
             [typeName]: {
