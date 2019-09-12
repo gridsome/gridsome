@@ -3,6 +3,21 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.7.1](https://github.com/gridsome/gridsome/compare/gridsome@0.7.0...gridsome@0.7.1) (2019-09-12)
+
+
+### Bug Fixes
+
+* **graphql:** fix metadata module error ([598de72](https://github.com/gridsome/gridsome/commit/598de72))
+* **graphql:** return 404 for missing pages ([7e3fe84](https://github.com/gridsome/gridsome/commit/7e3fe84))
+* **store:** keep custom _id field on node ([bee711c](https://github.com/gridsome/gridsome/commit/bee711c))
+* **store:** return collection in getCollection action ([7f0a631](https://github.com/gridsome/gridsome/commit/7f0a631))
+* **templates:** skip auto template if no node paths ([2e72f5f](https://github.com/gridsome/gridsome/commit/2e72f5f))
+
+
+
+
+
 # [0.7.0](https://github.com/gridsome/gridsome/compare/gridsome@0.6.9...gridsome@0.7.0) (2019-09-11)
 
 
