@@ -135,6 +135,8 @@ function processInferredFields (typeComposer, fieldDefs, fieldTypes) {
     const options = fieldDefs[key]
     const fieldType = fieldTypes[options.fieldName]
 
+    if (!fieldType) continue
+
     fieldType.extensions = options.extensions
 
     if (isPlainObject(options.value) && !isRefFieldDefinition(options.value)) {

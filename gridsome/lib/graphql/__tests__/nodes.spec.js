@@ -50,6 +50,8 @@ test('create node type with custom fields', async () => {
     foo: 'bar',
     emptyString: '',
     price: '',
+    emptyObj: {},
+    emtpyList: [],
     list: ['item'],
     obj: {
       foo: 'foo',
