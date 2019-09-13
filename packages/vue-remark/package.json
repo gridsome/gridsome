@@ -1,5 +1,5 @@
 {
-  "version": "0.1.0",
+  "version": "0.1.1",
   "name": "@gridsome/vue-remark",
   "description": "Use Vue Components in Markdown",
   "homepage": "https://github.com/gridsome/gridsome/tree/master/packages/vue-remark#readme",

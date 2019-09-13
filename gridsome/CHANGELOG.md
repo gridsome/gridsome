@@ -3,6 +3,21 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.7.2](https://github.com/gridsome/gridsome/compare/gridsome@0.7.1...gridsome@0.7.2) (2019-09-13)
+
+
+### Bug Fixes
+
+* **build:** ensure column width for deprecation notices ([50a6ebb](https://github.com/gridsome/gridsome/commit/50a6ebb))
+* **develop:** refresh query results on navigation ([0ce8de3](https://github.com/gridsome/gridsome/commit/0ce8de3))
+* **graphql:** don’t process empty object fields ([#662](https://github.com/gridsome/gridsome/issues/662)) ([7852e9e](https://github.com/gridsome/gridsome/commit/7852e9e))
+* **graphql:** process object types only once ([11416ac](https://github.com/gridsome/gridsome/commit/11416ac))
+* **graphql:** require resolve for custom resolvers ([63da3dd](https://github.com/gridsome/gridsome/commit/63da3dd))
+
+
+
+
+
 ## [0.7.1](https://github.com/gridsome/gridsome/compare/gridsome@0.7.0...gridsome@0.7.1) (2019-09-12)
 
 
