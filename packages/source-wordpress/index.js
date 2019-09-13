@@ -124,6 +124,7 @@ class WordPressSource {
   async getPosts (actions) {
     const { createReference } = actions
     const getCollection = actions.getCollection || actions.getContentType
+    const customPostTypeReferences = this.options.customPostTypeReferences
 
     const AUTHOR_TYPE_NAME = this.createTypeName(TYPE_AUTHOR)
     const ATTACHEMENT_TYPE_NAME = this.createTypeName(TYPE_ATTACHEMENT)
@@ -142,6 +143,15 @@ class WordPressSource {
 
         if (post.type !== TYPE_ATTACHEMENT) {
           fields.featuredMedia = createReference(ATTACHEMENT_TYPE_NAME, post.featured_media)
+        }
+
+        // create custom post field node references
+        if (customPostTypeReferences) {
+          for (let customReference of customPostTypeReferences) {
+            if (post.type !== TYPE_ATTACHEMENT && post[customReference.sourceField]) {
+              fields[customReference.targetField] = createReference(this.createTypeName(customReference.type), parseInt(post[customReference.sourceField]))
+            }
+          }
         }
 
         // add references if post has any taxonomy rest bases as properties
