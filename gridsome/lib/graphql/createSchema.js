@@ -238,16 +238,16 @@ function mergeTypes (schemaComposer, typeA, typeB) {
 }
 
 function processTypes (schemaComposer, extensions) {
-  for (const [typeComposer] of schemaComposer.entries()) {
+  for (const typeComposer of schemaComposer.values()) {
     switch (typeComposer.constructor) {
       case ObjectTypeComposer:
-        processFields(schemaComposer, typeComposer, extensions)
+        processObjectTypeFields(schemaComposer, typeComposer, extensions)
         break
     }
   }
 }
 
-function processFields (schemaComposer, typeComposer, extensions) {
+function processObjectTypeFields (schemaComposer, typeComposer, extensions) {
   const fields = typeComposer.getFields()
 
   for (const fieldName in fields) {
@@ -255,14 +255,6 @@ function processFields (schemaComposer, typeComposer, extensions) {
     const fieldTypeComposer = typeComposer.getFieldTC(fieldName)
     const extensions = typeComposer.getFieldExtensions(fieldName)
     const typeName = fieldTypeComposer.getTypeName()
-
-    if (
-      !typeComposer.getExtension('isExternalType') &&
-      fieldTypeComposer instanceof ObjectTypeComposer &&
-      fieldTypeComposer !== typeComposer
-    ) {
-      processFields(schemaComposer, fieldTypeComposer)
-    }
 
     if (
       !typeComposer.getExtension('isCustomType') ||
