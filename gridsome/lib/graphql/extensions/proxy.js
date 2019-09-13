@@ -7,6 +7,8 @@ module.exports = {
     from: 'String'
   },
   apply (ext, config) {
+    if (typeof ext.from !== 'string') return
+
     const resolve = config.resolve || defaultFieldResolver
     const fromPath = ext.from.split('.') // only supporting dot notation for now
 

@@ -359,22 +359,25 @@ function addResolvers (schemaComposer, resolvers = {}) {
           ? { resolve: fields[fieldName] }
           : fields[fieldName]
 
+        if (typeof fieldOptions.resolve !== 'function') {
+          throw new Error(`Resolver for ${typeName}.${fieldName} must have a "resolve" function.`)
+        }
+
         if (typeComposer.hasField(fieldName)) {
-          const field = typeComposer.getFieldConfig(fieldName)
-          const originalResolver = field.resolve || defaultFieldResolver
-          const resolve = fieldOptions.resolve || originalResolver
+          const fieldConfig = typeComposer.getFieldConfig(fieldName)
+          const originalResolver = fieldConfig.resolve || defaultFieldResolver
 
           typeComposer.setField(fieldName, {
-            type: fieldOptions.type || field.type,
-            args: fieldOptions.args || field.args,
+            type: fieldOptions.type || fieldConfig.type,
+            args: fieldOptions.args || fieldConfig.args,
             extensions: fieldOptions.extensions || {},
             resolve: (obj, args, ctx, info) => {
-              return resolve(obj, args, ctx, { ...info, originalResolver })
+              return fieldOptions.resolve(obj, args, ctx, { ...info, originalResolver })
             }
           })
         } else {
           if (!fieldOptions.type) {
-            throw new Error(`${typeName}.${fieldName} must have a "type" property.`)
+            throw new Error(`Resolver for ${typeName}.${fieldName} must have a "type" property.`)
           }
 
           typeComposer.setField(fieldName, fieldOptions)

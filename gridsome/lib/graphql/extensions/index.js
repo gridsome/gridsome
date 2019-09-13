@@ -87,7 +87,9 @@ function applyFieldExtensions (typeComposer, customExtensions = {}) {
             fieldName
           })
 
-          typeComposer.extendField(fieldName, newFieldConfig)
+          if (newFieldConfig) {
+            typeComposer.extendField(fieldName, newFieldConfig)
+          }
         }
       })
   })
