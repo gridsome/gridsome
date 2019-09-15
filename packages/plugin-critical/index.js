@@ -1,12 +1,15 @@
 const micromatch = require('micromatch')
 const Worker = require('jest-worker').default
 
+const normalize = p => p.replace(/\/+$/, '') || '/'
+
 module.exports = function (api, options) {
   api.afterBuild(async ({ queue, config }) => {
     const { outDir: base, pathPrefix, publicPath } = config
+    const patterns = options.paths.map(p => normalize(p))
 
     const pages = queue.filter(page => {
-      return micromatch(page.path, options.paths).length
+      return micromatch(page.path, patterns).length
     })
 
     const worker = new Worker(require.resolve('./lib/worker'))
