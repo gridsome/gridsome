@@ -171,7 +171,17 @@ class ContentType {
     //   url: 'https://gridsome.org/docs/schema-api/'
     // })
 
-    this._refs[this.createFieldName(fieldName)] = options
+    const validName = this.createFieldName(fieldName)
+
+    if (validName !== fieldName) {
+      options.extensions = {
+        proxy: {
+          from: fieldName
+        }
+      }
+    }
+
+    this._refs[validName] = options
   }
 
   addSchemaField (fieldName, options) {

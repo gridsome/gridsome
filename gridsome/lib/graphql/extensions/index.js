@@ -80,7 +80,7 @@ function applyFieldExtensions (typeComposer, customExtensions = {}) {
       .forEach(key => {
         const { apply } = allFieldExtensions[key] || {}
 
-        if (apply) {
+        if (typeof apply === 'function') {
           const fieldConfig = typeComposer.getFieldConfig(fieldName)
           const newFieldConfig = apply(extensions[key], fieldConfig, {
             typeComposer,
