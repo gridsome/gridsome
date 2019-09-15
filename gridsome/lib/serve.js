@@ -22,7 +22,6 @@ module.exports = async (context, args) => {
   const { config } = app
 
   await app.plugins.run('beforeServe', { context, config })
-  await app.plugins.configureServer(server)
 
   await fs.ensureDir(config.cacheDir)
   await fs.emptyDir(config.outDir)

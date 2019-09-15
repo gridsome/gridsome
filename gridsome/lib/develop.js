@@ -22,8 +22,6 @@ module.exports = async (context, args) => {
   const urls = prepareUrls(hostname, port)
   const server = new Server(app, urls)
 
-  await app.plugins.configureServer(server)
-
   await fs.emptyDir(app.config.cacheDir)
 
   const webpackConfig = await createWebpackConfig(app)

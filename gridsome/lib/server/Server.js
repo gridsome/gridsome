@@ -19,7 +19,7 @@ class Server {
     }
   }
 
-  createExpressApp() {
+  async createExpressApp() {
     const isDev = process.env.NODE_ENV === 'development'
     const app = express()
 
@@ -79,7 +79,12 @@ class Server {
     const assetsPath = forwardSlash(path.join(this._app.config.pathPrefix, assetsDir))
     const assetsRE = new RegExp(`${assetsPath}/(files|static)/(.*)`)
 
-    app.get(assetsRE, assetsMiddleware(this._app))
+    if (!process.env.GRIDSOME_TEST) {
+      app.get(assetsRE, assetsMiddleware(this._app))
+    }
+
+    await this._app.plugins.configureServer(app)
+
     app.use(historyApiFallback())
 
     this.hooks.afterSetup.call(app)
@@ -88,7 +93,7 @@ class Server {
   }
 
   async listen(port, hostname, callback) {
-    const app = this.createExpressApp()
+    const app = await this.createExpressApp()
     const server = http.createServer(app)
 
     if (process.env.NODE_ENV === 'development') {

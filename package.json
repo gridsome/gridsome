@@ -27,7 +27,8 @@
     "lerna": "^3.4.0",
     "memfs": "^2.9.4",
     "minimist": "^1.2.0",
-    "puppeteer": "^1.12.2"
+    "puppeteer": "^1.12.2",
+    "supertest": "^4.0.2"
   },
   "engines": {
     "node": ">=8.3",
