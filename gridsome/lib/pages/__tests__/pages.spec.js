@@ -61,7 +61,7 @@ test('create page', async () => {
 })
 
 test('create page with plugin api', async () => {
-  await createApp(function (api) {
+  await createApp(api => {
     api.createPages(pages => {
       expect(pages.graphql).toBeInstanceOf(Function)
       expect(pages.getCollection).toBeInstanceOf(Function)
@@ -92,7 +92,7 @@ test('create page with plugin api', async () => {
 })
 
 test('create managed pages with plugin api', async () => {
-  await createApp(function (api) {
+  await createApp(api => {
     api.createManagedPages((pages) => {
       pages.createPage({
         path: '/page',
@@ -118,7 +118,7 @@ test('create managed pages with plugin api', async () => {
 })
 
 test('create page with pagination', async () => {
-  const { pages } = await createApp(function (api) {
+  const { pages } = await createApp(api => {
     api.loadSource(store => {
       store.addCollection('Post')
     })
@@ -155,7 +155,7 @@ test('create page with custom context', async () => {
 })
 
 test('create page with query context', async () => {
-  const { pages } = await createApp(function (api) {
+  const { pages } = await createApp(api => {
     api.loadSource(store => {
       store.addCollection('Movie')
     })
@@ -180,7 +180,7 @@ test('always include a /404 page', async () => {
 })
 
 test('cache parsed components', async () => {
-  const { pages } = await createApp(function (api) {
+  const { pages } = await createApp(api => {
     api.loadSource(store => {
       store.addCollection('Post')
     })
@@ -196,7 +196,7 @@ test('cache parsed components', async () => {
 })
 
 test('update page', async () => {
-  const { pages } = await createApp(function (api) {
+  const { pages } = await createApp(api => {
     api.loadSource(store => {
       store.addCollection('Post')
     })
@@ -284,7 +284,7 @@ test('api.createManagedPages() should only be called once', async () => {
   const createPages = jest.fn()
   const createManagedPages = jest.fn()
 
-  const app = await createApp(function (api) {
+  const app = await createApp(api => {
     api.createPages(createPages)
     api.createManagedPages(createManagedPages)
   })
@@ -300,7 +300,7 @@ test('api.createManagedPages() should only be called once', async () => {
 test('garbage collect unmanaged pages', async () => {
   let maxPages = 10
 
-  const app = await createApp(function (api) {
+  const app = await createApp(api => {
     api.loadSource(store => {
       store.addCollection('Post')
     })
@@ -348,7 +348,7 @@ test('garbage collect unmanaged pages', async () => {
 })
 
 test('override page with similar path', async () => {
-  const { pages } = await createApp(function (api) {
+  const { pages } = await createApp(api => {
     api.loadSource(store => {
       store.addCollection('Post')
     })
@@ -460,7 +460,7 @@ describe('dynamic pages', () => {
 
 describe('create routes', () => {
   test('create route', async () => {
-    const { pages } = await createApp(function (api) {
+    const { pages } = await createApp(api => {
       api.loadSource(store => {
         store.addCollection('Post')
       })
@@ -478,7 +478,7 @@ describe('create routes', () => {
   })
 
   test('add pages to route', async () => {
-    const { pages } = await createApp(function (api) {
+    const { pages } = await createApp(api => {
       api.loadSource(store => {
         store.addCollection('Movie')
       })
@@ -513,7 +513,7 @@ describe('create routes', () => {
   })
 
   test('remove route and its pages', async () => {
-    const { pages } = await createApp(function (api) {
+    const { pages } = await createApp(api => {
       api.loadSource(store => {
         store.addCollection('Post')
       })

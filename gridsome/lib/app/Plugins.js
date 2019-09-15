@@ -48,7 +48,6 @@ class Plugins {
           : null
 
       if (typeof Plugin !== 'function') continue
-      if (!Plugin.prototype) continue
 
       const defaults = typeof Plugin.defaultOptions === 'function'
         ? Plugin.defaultOptions()
@@ -58,7 +57,9 @@ class Plugins {
       entry.options = defaultsDeep(entry.options, defaults)
 
       const api = new PluginAPI(this._app, { entry })
-      const instance = new Plugin(api, entry.options, { context })
+      const instance = Plugin.prototype
+        ? new Plugin(api, entry.options, { context })
+        : Plugin(api, entry.options, { context })
 
       this._plugins.push({ api, entry, instance })
     }

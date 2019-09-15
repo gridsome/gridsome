@@ -2,7 +2,7 @@ const App = require('../../app/App')
 const { BOOTSTRAP_CONFIG, BOOTSTRAP_PAGES } = require('../../utils/constants')
 
 test('add custom GraphQL object types', async () => {
-  const app = await createApp(function (api) {
+  const app = await createApp(api => {
     api.loadSource(({ addCollection, addSchemaTypes, schema }) => {
       addCollection('Post').addNode({
         id: '1',
@@ -52,7 +52,7 @@ test('add custom GraphQL object types', async () => {
 })
 
 test('add custom GraphQL union type', async () => {
-  const app = await createApp(function (api) {
+  const app = await createApp(api => {
     api.loadSource(store => {
       store.addCollection('Track').addNode({ id: '1', name: 'A Track' })
       store.addCollection('Album').addNode({ id: '1', name: 'An Album' })
@@ -110,7 +110,7 @@ test('add custom GraphQL union type', async () => {
 })
 
 test('add custom GraphQL types from SDL', async () => {
-  const app = await createApp(function (api) {
+  const app = await createApp(api => {
     api.loadSource(({ addCollection }) => {
       addCollection('Tag').addNode({ id: '1', foo: { slug: 'tag-one' }})
       addCollection('Post').addNode({
@@ -352,7 +352,7 @@ describe('add reference resolvers', () => {
 })
 
 test('add custom resolver for invalid field names', async () => {
-  const app = await createApp(function (api) {
+  const app = await createApp(api => {
     api.loadSource(store => {
       store.addCollection('Post').addNode({
         id: '1',
@@ -415,7 +415,7 @@ test('add custom resolver for invalid field names', async () => {
 })
 
 test('add custom resolvers for content type', async () => {
-  const app = await createApp(function (api) {
+  const app = await createApp(api => {
     api.loadSource(store => {
       store.addCollection('Post').addNode({ id: '1', title: 'My Post' })
     })
@@ -446,7 +446,7 @@ test('add custom resolvers for content type', async () => {
 })
 
 test('disable field inference with SDL', async () => {
-  const app = await createApp(function (api) {
+  const app = await createApp(api => {
     api.loadSource(({ addCollection, addSchemaTypes }) => {
       addCollection('Post').addNode({
         id: '1',
@@ -474,7 +474,7 @@ test('disable field inference with SDL', async () => {
 })
 
 test('disable field inference with createObjectType', async () => {
-  const app = await createApp(function (api) {
+  const app = await createApp(api => {
     api.loadSource(({ addCollection, addSchemaTypes, schema }) => {
       addCollection('Post').addNode({
         id: '1',
@@ -506,7 +506,7 @@ test('disable field inference with createObjectType', async () => {
 })
 
 test('insert default resolvers for SDL', async () => {
-  const app = await createApp(function (api) {
+  const app = await createApp(api => {
     api.loadSource(({ addCollection, addSchemaTypes, store }) => {
       addCollection('Author').addNode({
         id: '1',
@@ -563,7 +563,7 @@ test('insert default resolvers for SDL', async () => {
 })
 
 test('insert default resolvers with createObjectType', async () => {
-  const app = await createApp(function (api) {
+  const app = await createApp(api => {
     api.loadSource(({ addCollection, addSchemaTypes, schema }) => {
       addCollection('Post').addNode({ id: '1', title: 'My Post', author: '1', authors: ['1'] })
       addCollection('Author').addNode({ id: '1', name: 'An Author' })
@@ -618,7 +618,7 @@ test('insert default resolvers with createObjectType', async () => {
 })
 
 test('add custom GraphQL schema', async () => {
-  const app = await createApp(function (api) {
+  const app = await createApp(api => {
     api.createSchema(({ addSchema, ...actions }) => {
       const queryType = new actions.GraphQLObjectType({
         name: 'CustomRootQuery',
@@ -673,7 +673,7 @@ test('add custom GraphQL schema', async () => {
 })
 
 test('add custom Metadata schema', async () => {
-  const app = await createApp(function (api) {
+  const app = await createApp(api => {
     api.createSchema(({ addMetadata, addSchemaTypes }) => {
       addMetadata('myCustomData', true)
       addMetadata('some_value', 10)
@@ -739,7 +739,7 @@ test('merge object types', async () => {
 
 describe('create input types', () => {
   test('create input types with SDL', async () => {
-    const app = await createApp(function (api) {
+    const app = await createApp(api => {
       api.loadSource(({ addSchemaTypes, addSchemaResolvers }) => {
         addSchemaTypes(`input SomeInput { value: String! }`)
         addSchemaResolvers({
@@ -765,7 +765,7 @@ describe('create input types', () => {
   })
 
   test('create input types with JS', async () => {
-    const app = await createApp(function (api) {
+    const app = await createApp(api => {
       api.loadSource(({ addSchemaTypes, addSchemaResolvers, schema }) => {
         addSchemaTypes([
           schema.createInputType({
@@ -797,7 +797,7 @@ describe('create input types', () => {
 })
 
 test('add a experimental field extension', async () => {
-  const app = await createApp(function (api) {
+  const app = await createApp(api => {
     api.loadSource(({ addCollection, addSchemaTypes, addSchemaFieldExtension }) => {
       addCollection('Post').addNode({ id: '1', title: 'test' })
       addSchemaTypes(`
@@ -854,7 +854,7 @@ test('output field value as JSON', async () => {
 
 // TODO: remove this before 1.0
 test('add deprecated collection field', async () => {
-  const app = await createApp(function (api) {
+  const app = await createApp(api => {
     api.loadSource(store => store.addCollection('test_post'))
   })
 
@@ -876,7 +876,7 @@ function createApp (plugin, phase = BOOTSTRAP_PAGES) {
 }
 
 function initApp (fn) {
-  return createApp(function (api) {
+  return createApp(api => {
     api.loadSource(actions => {
       const tracks = actions.addCollection('Track')
       const albums = actions.addCollection('Album')

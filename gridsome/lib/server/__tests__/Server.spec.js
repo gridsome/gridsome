@@ -7,7 +7,7 @@ const { BOOTSTRAP_CONFIG } = require('../../utils/constants')
 test('api.configureServer()', async () => {
   const urls = prepareUrls('localhost', 8080)
   const callback = jest.fn((req, res) => res.send('Hello, world!'))
-  const gridsome = await createApp(function (api) {
+  const gridsome = await createApp(api => {
     api.configureServer(app => {
       app.get('/my-endpoint', callback)
     })
