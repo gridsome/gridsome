@@ -9,7 +9,7 @@ test('create render queue for basic project', async () => {
   const app = await createApp(context, undefined, BOOTSTRAP_PAGES)
 
   const renderQueue = createRenderQueue(app)
-  const renderPaths = renderQueue.map(entry => entry.path).sort()
+  const renderPaths = renderQueue.map(entry => entry.publicPath).sort()
 
   expect(renderPaths).toEqual(expect.arrayContaining([
     '/',
@@ -39,7 +39,7 @@ test('create render queue for blog project', async () => {
   const app = await createApp(context, undefined, BOOTSTRAP_PAGES)
   const queue = createRenderQueue(app)
 
-  const renderPaths = queue.map(entry => entry.path).sort()
+  const renderPaths = queue.map(entry => entry.publicPath).sort()
 
   expect(renderPaths).toEqual(expect.arrayContaining([
     '/',
@@ -172,7 +172,7 @@ test('create render queue for createPages hook', async () => {
   })
 
   const renderQueue = createRenderQueue(app)
-  const paths = renderQueue.map(entry => entry.path)
+  const paths = renderQueue.map(entry => entry.publicPath)
 
   expect(paths).toEqual(expect.arrayContaining([
     '/about/',
@@ -219,7 +219,7 @@ describe('dynamic pages', () => {
 
   test('render queue for dynamic pages', async () => {
     const { renderQueue } = await _createRenderQueue()
-    const paths = renderQueue.map(entry => entry.path)
+    const paths = renderQueue.map(entry => entry.publicPath)
 
     expect(paths).toEqual([
       '/a/b/',

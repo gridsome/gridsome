@@ -64,26 +64,26 @@ function createRenderEntry (page, route, config, currentPage = 1) {
   const { outDir, dataDir, pathPrefix } = config
   const hasTrailingSlash = /\/$/.test(page.publicPath)
 
-  let currentPath = page.publicPath
+  let publicPath = page.publicPath
   let queryVariables = {}
 
   if (currentPage > 1) {
     const prefix = hasTrailingSlash ? '' : '/'
     const suffix = hasTrailingSlash ? '/' : ''
-    currentPath += `${prefix}${currentPage}${suffix}`
+    publicPath += `${prefix}${currentPage}${suffix}`
   }
 
-  const htmlOutput = pathToFilePath(currentPath)
-  const dataOutput = pathToFilePath(currentPath, 'json')
-  const prettyPath = trimEnd(currentPath, '/') || '/'
+  const htmlOutput = pathToFilePath(publicPath)
+  const dataOutput = pathToFilePath(publicPath, 'json')
+  const prettyPath = trimEnd(publicPath, '/') || '/'
 
   const location = route.type === 'dynamic'
     ? { name: route.name }
-    : { path: currentPath }
+    : { path: publicPath }
 
   if (route.internal.query.document) {
     queryVariables = createQueryVariables(
-      currentPath,
+      publicPath,
       page.internal.query.variables,
       currentPage
     )
@@ -91,13 +91,12 @@ function createRenderEntry (page, route, config, currentPage = 1) {
 
   return {
     location,
+    path: prettyPath,
     htmlOutput: path.join(outDir, htmlOutput),
     dataOutput: path.join(dataDir, dataOutput),
-    path: currentPath,
-    prettyPath,
+    publicPath: pathPrefix + publicPath,
     queryVariables,
     type: route.type,
-    publicPath: pathPrefix + currentPath,
     routeId: page.internal.route,
     pageId: page.id
   }
