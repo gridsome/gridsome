@@ -1,6 +1,5 @@
 const path = require('path')
 const glob = require('globby')
-const slash = require('slash')
 const crypto = require('crypto')
 const moment = require('moment')
 const chokidar = require('chokidar')
@@ -325,7 +324,7 @@ class TemplatesPlugin {
       const files = await glob(paths, { globstar: false, extglob: false })
 
       for (const filePath of files) {
-        createTemplate(filePath)
+        createTemplate(path.normalize(filePath))
       }
 
       if (isDev) {
@@ -334,8 +333,8 @@ class TemplatesPlugin {
           ignoreInitial: true
         })
 
-        watcher.on('add', file => createTemplate(slash(file)))
-        watcher.on('unlink', file => removeTemplate(slash(file)))
+        watcher.on('add', file => createTemplate(path.normalize(file)))
+        watcher.on('unlink', file => removeTemplate(path.normalize(file)))
       }
     })
   }
