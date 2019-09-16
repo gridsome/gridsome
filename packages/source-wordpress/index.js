@@ -115,6 +115,7 @@ class WordPressSource {
           title: term.name,
           slug: term.slug,
           content: term.description,
+          meta: term.meta,
           count: term.count
         })
       }
