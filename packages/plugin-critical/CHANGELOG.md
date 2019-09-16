@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.5](https://github.com/gridsome/gridsome/tree/master/packages/plugin-critical/compare/@gridsome/plugin-critical@0.1.4...@gridsome/plugin-critical@0.1.5) (2019-09-16)
+
+
+### Bug Fixes
+
+* **critical:** ignore trailing slash in patterns ([3af5443](https://github.com/gridsome/gridsome/tree/master/packages/plugin-critical/commit/3af5443))
+
+
+
+
+
 ## [0.1.4](https://github.com/gridsome/gridsome/tree/master/packages/plugin-critical/compare/@gridsome/plugin-critical@0.1.3...@gridsome/plugin-critical@0.1.4) (2019-09-11)
 
 

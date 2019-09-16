@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.7.3](https://github.com/gridsome/gridsome/compare/gridsome@0.7.2...gridsome@0.7.3) (2019-09-16)
+
+
+### Bug Fixes
+
+* **api:** allow arrow function as default export ([44d13bc](https://github.com/gridsome/gridsome/commit/44d13bc))
+* **api:** use express app in configureServer ([#668](https://github.com/gridsome/gridsome/issues/668)) ([fff7a8f](https://github.com/gridsome/gridsome/commit/fff7a8f))
+* **build:** support symlinks in static folder ([#671](https://github.com/gridsome/gridsome/issues/671)) ([d35ec39](https://github.com/gridsome/gridsome/commit/d35ec39))
+* **build:** use pretty path in render queue ([699b027](https://github.com/gridsome/gridsome/commit/699b027))
+* **graphql:** don’t fix unknown variable types ([8e45485](https://github.com/gridsome/gridsome/commit/8e45485))
+* **graphql:** proxy invalid reference field names ([b23df81](https://github.com/gridsome/gridsome/commit/b23df81))
+* **graphql:** update variables when query changes ([0fc0056](https://github.com/gridsome/gridsome/commit/0fc0056))
+* **templates:** fix templates on windows ([a80fb76](https://github.com/gridsome/gridsome/commit/a80fb76))
+
+
+
+
+
 ## [0.7.2](https://github.com/gridsome/gridsome/compare/gridsome@0.7.1...gridsome@0.7.2) (2019-09-13)
 
 
