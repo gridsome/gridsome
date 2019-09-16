@@ -49,14 +49,16 @@ module.exports = function parseQuery (schema, source, resourcePath) {
   res.document = visit(ast, visitWithTypeInfo(typeInfo, {
     VariableDefinition (variableDef) {
       if (variableDef.variable.name.value !== 'page') {
-        // TODO: remove this fix before 1.0
-        fixIncorrectVariableUsage(schema, ast, variableDef)
-          .forEach(({ name, oldType, newType }) => {
-            const { line, column } = getLocation(src, variableDef.loc.start)
-            deprecate(`The $${name} variable should be of type ${newType} instead of ${oldType}.`, {
-              customCaller: [resourcePath, line, column]
+        if (variableDef.variable.name.value === 'id') {
+          // TODO: remove this fix before 1.0
+          fixIncorrectVariableUsage(schema, ast, variableDef)
+            .forEach(({ name, oldType, newType }) => {
+              const { line, column } = getLocation(src, variableDef.loc.start)
+              deprecate(`The $${name} variable should be of type ${newType} instead of ${oldType}.`, {
+                customCaller: [resourcePath, line, column]
+              })
             })
-          })
+        }
 
         variableDefs.push(variableDef)
       }

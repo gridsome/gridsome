@@ -17,16 +17,18 @@ function fixIncorrectVariableUsage (schema, ast, variableDef) {
   visit(ast, visitWithTypeInfo(typeInfo, {
     Argument (node) {
       if (node.value.kind === Kind.VARIABLE && node.name.value === name) {
-        const inputTypeName = typeInfo.getInputType().toString()
+        const argumentType = schema.getType(typeNode.name.value)
+        const inputType = typeInfo.getInputType()
+        const typeName = inputType.toString()
 
-        if (typeNode.name.value !== inputTypeName) {
+        if (argumentType && argumentType !== inputType) {
           incorrectNodes.push({
             name: node.name.value,
             oldType: typeNode.name.value,
-            newType: inputTypeName
+            newType: typeName
           })
 
-          typeNode.name.value = inputTypeName
+          typeNode.name.value = typeName
 
           return BREAK
         }
