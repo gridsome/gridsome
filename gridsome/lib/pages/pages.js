@@ -127,15 +127,29 @@ class Pages {
     )
 
     const options = this._createRouteOptions(validated, meta)
-    const route = this._routes.by('id', options.id)
+    const oldOptions = this._routes.by('id', options.id)
     const newOptions = Object.assign({}, options, {
-      $loki: route.$loki,
-      meta: route.meta
+      $loki: oldOptions.$loki,
+      meta: oldOptions.meta
     })
 
     this._routes.update(newOptions)
 
-    return new Route(newOptions, this)
+    const route = new Route(newOptions, this)
+
+    if (options.internal.query.source !== oldOptions.internal.query.source) {
+      for (const page of route.pages()) {
+        const vars = page.internal.queryVariables || page.context || {}
+        const { paginate, variables, filters } = this._createPageQuery(route.internal.query, vars)
+
+        const newOptions = { ...page }
+        newOptions.internal.query = { paginate, variables, filters }
+
+        this._pages.update(newOptions)
+      }
+    }
+
+    return route
   }
 
   removeRoute (id) {
@@ -273,8 +287,7 @@ class Pages {
   _createRouteOptions (options, meta = {}) {
     const component = this.app.resolve(options.component)
     const { pageQuery } = this._parseComponent(component)
-    const parsedQuery = this._parseQuery(pageQuery, component)
-    const { source, document, paginate } = this._createPageQuery(parsedQuery)
+    const query = this._parseQuery(pageQuery, component)
     const { permalinks: { trailingSlash }} = this.app.config
 
     let path = options.path.replace(/\/+/g, '/')
@@ -289,7 +302,7 @@ class Pages {
       name = name || `__${snakeCase(path)}`
     }
 
-    if (paginate) {
+    if (query.directives.paginate) {
       path = trimEnd(path, '/') + '/:page(\\d+)?' + (hasTrailingSlash ? '/' : '')
     }
 
@@ -314,12 +327,8 @@ class Pages {
         isDynamic,
         priority,
         regexp,
-        keys,
-        query: {
-          source,
-          document,
-          paginate: !!paginate
-        }
+        query,
+        keys
       })
     })
   }
@@ -495,8 +504,7 @@ class Route {
     }
 
     const vars = queryVariables || context || {}
-    const parsedQuery = this._factory._parseQuery(query.source, this.component)
-    const { paginate, variables, filters } = this._factory._createPageQuery(parsedQuery, vars)
+    const { paginate, variables, filters } = this._factory._createPageQuery(query, vars)
 
     return this._createPage.call({
       id,
@@ -504,6 +512,7 @@ class Route {
       publicPath,
       context,
       internal: {
+        queryVariables,
         route: this.id,
         digest,
         isManaged,

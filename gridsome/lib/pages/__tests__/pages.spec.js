@@ -139,7 +139,7 @@ test('create page with pagination', async () => {
   expect(route.path).toEqual('/page/:page(\\d+)?/')
   expect(route.internal.path).toEqual('/page')
   expect(route.internal.regexp).toEqual(/^\/page(?:\/(\d+))?(?:\/)?$/i)
-  expect(route.internal.query.paginate).toEqual(true)
+  expect(route.internal.query.directives).toHaveProperty('paginate')
 })
 
 test('create page with custom context', async () => {
@@ -161,14 +161,17 @@ test('create page with query context', async () => {
     })
   })
 
+  const queryVariables = { id: '1' }
+
   const page = pages.createPage({
     path: '/page',
     component: './__fixtures__/MovieTemplate.vue',
-    queryVariables: { id: '1' }
+    queryVariables
   })
 
   expect(page.context).toMatchObject({})
   expect(page.internal.query.variables).toMatchObject({ id: '1' })
+  expect(page.internal.queryVariables).toEqual(queryVariables)
 })
 
 test('always include a /404 page', async () => {

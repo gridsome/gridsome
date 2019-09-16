@@ -36,7 +36,7 @@ module.exports = ({ pages }) => {
 
     // page/1/index.html is not statically generated
     // in production and should return 404 in develop
-    if (route.internal.query.paginate) {
+    if (route.internal.query.directives.paginate) {
       currentPage = parseInt(params.page, 10) || 0
 
       if (params.page && currentPage <= 1) {
