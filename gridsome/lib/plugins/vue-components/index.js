@@ -1,5 +1,4 @@
 const path = require('path')
-const fs = require('fs-extra')
 const compiler = require('vue-template-compiler')
 const { parse } = require('@vue/component-compiler-utils')
 
@@ -10,12 +9,22 @@ class VueComponents {
 
   constructor (api) {
     api.transpileDependencies([path.resolve(__dirname, 'lib', 'loaders')])
-    api.registerComponentParser({ test: /\.vue$/, parse: this.parseComponent })
 
     api.chainWebpack(config => {
       this.createGraphQLRule(config, 'page-query', './lib/loaders/page-query')
       this.createGraphQLRule(config, 'static-query', './lib/loaders/static-query')
     })
+
+    api._app.pages.hooks.parseComponent.for('vue')
+      .tap('VueComponentsPlugin', (source, { resourcePath }) => {
+        const filename = path.parse(resourcePath).name
+        const { customBlocks } = parse({ filename, source, compiler })
+        const pageQuery = customBlocks.find(block => block.type === 'page-query')
+
+        return {
+          pageQuery: pageQuery ? pageQuery.content : null
+        }
+      })
   }
 
   createGraphQLRule (config, type, loader) {
@@ -33,17 +42,6 @@ class VueComponents {
       .end()
       .use(`${type}-loader`)
       .loader(require.resolve(loader))
-  }
-
-  parseComponent (resource) {
-    const filename = path.parse(resource).name
-    const source = fs.readFileSync(resource, 'utf-8')
-    const { customBlocks } = parse({ filename, source, compiler })
-    const pageQuery = customBlocks.find(block => block.type === 'page-query')
-
-    return {
-      pageQuery: pageQuery ? pageQuery.content : null
-    }
   }
 }
 

@@ -1,8 +1,13 @@
 const fs = require('fs-extra')
 const chalk = require('chalk')
-const { debounce } = require('lodash')
+const columnify = require('columnify')
 const resolvePort = require('./server/resolvePort')
 const { prepareUrls } = require('./server/utils')
+
+const {
+  hasWarnings,
+  logAllWarnings
+} = require('./utils/deprecate')
 
 module.exports = async (context, args) => {
   process.env.NODE_ENV = 'development'
@@ -16,8 +21,6 @@ module.exports = async (context, args) => {
   const hostname = app.config.host
   const urls = prepareUrls(hostname, port)
   const server = new Server(app, urls)
-
-  await app.events.dispatch('configureServer', null, server)
 
   await fs.emptyDir(app.config.cacheDir)
 
@@ -45,41 +48,35 @@ module.exports = async (context, args) => {
       return
     }
 
+    const columns = []
+
+    if (urls.lan.pretty) {
+      columns.push({ label: 'Site running at:' })
+      columns.push({ label: '- Local:', url: chalk.cyan(urls.local.pretty) })
+      columns.push({ label: '- Network:', url: chalk.cyan(urls.lan.pretty) })
+      columns.push({ label: '' })
+    } else {
+      columns.push({ label: 'Site running at:', url: chalk.cyan(urls.local.pretty) })
+    }
+
+    columns.push({ label: 'Explore GraphQL data at:', url: chalk.cyan(urls.explore.pretty) })
+
+    const renderedColumns = columnify(columns, { showHeaders: false })
+
     console.log()
-    console.log(`  Site running at:          ${chalk.cyan(urls.local.pretty)}`)
-    console.log(`  Explore GraphQL data at:  ${chalk.cyan(urls.explore.pretty)}`)
+    console.log(`  ${renderedColumns.split('\n').join('\n  ')}`)
     console.log()
+
+    if (hasWarnings()) {
+      console.log()
+      console.log(`${chalk.bgYellow.black(' WARNING ')} ${chalk.yellow('Deprecation notices')}`)
+      console.log()
+      logAllWarnings(app.context)
+    }
   })
 
   server.listen(port, hostname, err => {
     if (err) throw err
-  })
-
-  const createPages = debounce(() => app.createPages(), 16)
-  const fetchQueries = debounce(() => app.broadcast({ type: 'fetch' }), 16)
-  const generateRoutes = debounce(() => app.codegen.generate('routes.js'), 16)
-
-  app.store.on('change', createPages)
-  app.pages.on('create', generateRoutes)
-  app.pages.on('remove', generateRoutes)
-
-  app.pages.on('update', (page, oldPage) => {
-    const { path: oldPath, query: oldQuery } = oldPage
-    const { path, query } = page
-
-    if (
-      (path !== oldPath && !page.internal.isDynamic) ||
-      // pagination was added or removed in page-query
-      (query.paginate && !oldQuery.paginate) ||
-      (!query.paginate && oldQuery.paginate) ||
-      // page-query was created or removed
-      (query.document && !oldQuery.document) ||
-      (!query.document && oldQuery.document)
-    ) {
-      return generateRoutes()
-    }
-
-    fetchQueries()
   })
 
   //
@@ -87,7 +84,7 @@ module.exports = async (context, args) => {
   //
 
   async function createWebpackConfig (app) {
-    const config = await app.resolveChainableWebpackConfig()
+    const config = await app.compiler.resolveChainableWebpackConfig()
 
     config
       .plugin('friendly-errors')
@@ -99,8 +96,8 @@ module.exports = async (context, args) => {
         const definitions = args[0]
         args[0] = {
           ...definitions,
-          'process.env.SOCKJS_ENDPOINT': JSON.stringify(urls.sockjs.url),
-          'process.env.GRAPHQL_ENDPOINT': JSON.stringify(urls.graphql.url)
+          'process.env.SOCKJS_ENDPOINT': JSON.stringify(urls.sockjs.endpoint),
+          'process.env.GRAPHQL_ENDPOINT': JSON.stringify(urls.graphql.endpoint)
         }
         return args
       })
@@ -111,6 +108,6 @@ module.exports = async (context, args) => {
         .prepend('webpack/hot/dev-server')
     })
 
-    return app.resolveWebpackConfig(false, config)
+    return app.compiler.resolveWebpackConfig(false, config)
   }
 }

@@ -40,7 +40,6 @@ test('build basic project', () => {
   // no objects should be rendered
   expect(indexHTML).not.toMatch('[object Object]')
 
-  expect($home('head > title').text()).toEqual('Gridsome | Test')
   expect($home('#app').data('server-rendered')).toEqual(true)
   expect($home('meta[name="keywords"]').attr('content')).toEqual('test')
   expect($home('meta[name="og:title"]').attr('content')).toEqual('bar')
@@ -56,6 +55,11 @@ test('build basic project', () => {
   expect($home('span.from-metadata').text()).toEqual('test')
   expect($home('.footer span.meta-data-1').text()).toEqual('Test Value')
   expect($home('.footer span.meta-data-2').text()).toEqual('bar')
+})
+
+test('set title in custom App.vue', () => {
+  const $home = load('dist/index.html')
+  expect($home('head > title').text()).toEqual('Gridsome [basic] | Test')
 })
 
 test('render custom html template', () => {
@@ -81,7 +85,6 @@ test('render g-link components', () => {
 
   expect($home('a.g-link-1.is-active.active--exact').attr('href')).toEqual('/')
   expect($home('a.g-link-2.test-active.active--exact').attr('href')).toEqual('/')
-  expect($home('a.router-link.is-active.router-link-exact-active').attr('href')).toEqual('/')
 
   expect($home('a[href="http://outsidelink1.com"]').attr('target')).toEqual('_blank')
   expect($home('a[href="http://outsidelink1.com"]').attr('rel')).toEqual('noopener')
@@ -123,6 +126,13 @@ test('render g-image components', () => {
   // no duplicate classes
   const classes = $home('img.g-image-1').attr('class').split(' ')
   expect(uniq(classes).length - classes.length).toEqual(0)
+})
+
+test('render custom route meta', () => {
+  const appJS = content('dist/assets/js/app.js')
+
+  expect(appJS).toMatch('aboutUsMeta1: true')
+  expect(appJS).toMatch('$aboutUsMeta2: [1, 2, 3]')
 })
 
 test('render template with static routes', () => {

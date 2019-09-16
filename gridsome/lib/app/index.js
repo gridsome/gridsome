@@ -1,7 +1,9 @@
+const { BOOTSTRAP_FULL } = require('../utils/constants')
+
 module.exports = async (
   context,
   options = {},
-  phase = null
+  phase = BOOTSTRAP_FULL
 ) => {
   const App = require('./App')
 

@@ -21,8 +21,7 @@ module.exports = async (context, args) => {
   const server = new Server(app, urls)
   const { config } = app
 
-  await app.events.dispatch('beforeServe', { context, config })
-  await app.events.dispatch('configureServer', null, server)
+  await app.plugins.run('beforeServe', { context, config })
 
   await fs.ensureDir(config.cacheDir)
   await fs.emptyDir(config.outDir)
@@ -43,7 +42,7 @@ module.exports = async (context, args) => {
     server.get('*', require('./server/middlewares/renderer')(app, routes))
   })
 
-  await app.events.dispatch('afterServe', { context, config, app })
+  await app.plugins.run('afterServe', { context, config, app })
 
   server.listen(port, hostname, err => {
     if (err) throw err

@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.2.0](https://github.com/gridsome/gridsome/tree/master/packages/remark-prismjs/compare/@gridsome/remark-prismjs@0.1.0...@gridsome/remark-prismjs@0.2.0) (2019-09-13)
+
+
+### Bug Fixes
+
+* **prismjs:** dont highlight page-query in html ([99ebec0](https://github.com/gridsome/gridsome/tree/master/packages/remark-prismjs/commit/99ebec0))
+
+
+### Features
+
+* **prismjs:** generate html with hastscript ([48f1509](https://github.com/gridsome/gridsome/tree/master/packages/remark-prismjs/commit/48f1509))
+
+
+
+
+
 # [0.1.0](https://github.com/gridsome/gridsome/tree/master/packages/remark-prismjs/compare/@gridsome/remark-prismjs@0.0.6...@gridsome/remark-prismjs@0.1.0) (2019-06-25)
 
 

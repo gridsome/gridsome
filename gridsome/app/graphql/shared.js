@@ -1,16 +1,20 @@
 import Vue from 'vue'
+import { unslash } from '../utils/helpers'
 
 const cache = Vue.observable({})
+const normalize = path => unslash(path) || '/'
 
 export function setResults (path, res) {
-  return Vue.set(cache, path, res)
+  return Vue.set(cache, normalize(path), res)
 }
 
 export function getResults (path) {
-  return cache[path]
+  return cache[normalize(path)]
 }
 
 export function clearAllResults (currentPath) {
+  currentPath = normalize(currentPath)
+
   for (const path in cache) {
     if (path !== currentPath) {
       Vue.delete(cache, path)

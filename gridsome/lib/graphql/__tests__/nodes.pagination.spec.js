@@ -4,6 +4,7 @@ const { BOOTSTRAP_PAGES } = require('../../utils/constants')
 test('should return all nodes', async () => {
   const results = await graphql(100)
 
+  expect(results.errors).toBeUndefined()
   expect(results.data.allPost.totalCount).toEqual(100)
   expect(results.data.allPost.edges).toHaveLength(100)
   expect(results.data.allPost.pageInfo).toMatchObject({
@@ -21,6 +22,7 @@ test('should return all nodes', async () => {
 test('should return empty results', async () => {
   const results = await graphql(0)
 
+  expect(results.errors).toBeUndefined()
   expect(results.data.allPost.totalCount).toEqual(0)
   expect(results.data.allPost.edges).toHaveLength(0)
   expect(results.data.allPost.pageInfo).toMatchObject({
@@ -38,6 +40,7 @@ test('should return empty results', async () => {
 test('return limited nodes', async () => {
   const results = await graphql(100, 'limit: 10')
 
+  expect(results.errors).toBeUndefined()
   expect(results.data.allPost.totalCount).toEqual(100)
   expect(results.data.allPost.edges).toHaveLength(10)
   expect(results.data.allPost.edges[0].node.id).toEqual('1')
@@ -57,6 +60,7 @@ test('return limited nodes', async () => {
 test('skip nodes', async () => {
   const results = await graphql(100, 'skip: 95')
 
+  expect(results.errors).toBeUndefined()
   expect(results.data.allPost.totalCount).toEqual(100)
   expect(results.data.allPost.edges).toHaveLength(5)
   expect(results.data.allPost.edges[0].node.id).toEqual('96')
@@ -76,6 +80,7 @@ test('skip nodes', async () => {
 test('limit and skip', async () => {
   const results = await graphql(100, 'limit: 10', 'skip: 10')
 
+  expect(results.errors).toBeUndefined()
   expect(results.data.allPost.totalCount).toEqual(100)
   expect(results.data.allPost.edges).toHaveLength(10)
   expect(results.data.allPost.edges[0].node.id).toEqual('11')
@@ -95,6 +100,7 @@ test('limit and skip', async () => {
 test('limit and skip is more than total nodes', async () => {
   const results = await graphql(100, 'limit: 10', 'skip: 95')
 
+  expect(results.errors).toBeUndefined()
   expect(results.data.allPost.totalCount).toEqual(100)
   expect(results.data.allPost.edges).toHaveLength(5)
   expect(results.data.allPost.edges[0].node.id).toEqual('96')
@@ -114,6 +120,7 @@ test('limit and skip is more than total nodes', async () => {
 test('limit results with perPage argument', async () => {
   const results = await graphql(100, 'perPage: 10')
 
+  expect(results.errors).toBeUndefined()
   expect(results.data.allPost.totalCount).toEqual(100)
   expect(results.data.allPost.edges).toHaveLength(10)
   expect(results.data.allPost.pageInfo).toMatchObject({
@@ -131,6 +138,7 @@ test('limit results with perPage argument', async () => {
 test('return specific page', async () => {
   const results = await graphql(100, 'page: 2')
 
+  expect(results.errors).toBeUndefined()
   expect(results.data.allPost.totalCount).toEqual(100)
   expect(results.data.allPost.edges).toHaveLength(25)
   expect(results.data.allPost.edges[0].node.id).toEqual('26')
@@ -150,6 +158,7 @@ test('return specific page', async () => {
 test('return specific page within limit', async () => {
   const results = await graphql(100, 'page: 1', 'limit: 50')
 
+  expect(results.errors).toBeUndefined()
   expect(results.data.allPost.totalCount).toEqual(100)
   expect(results.data.allPost.edges).toHaveLength(25)
   expect(results.data.allPost.edges[0].node.id).toEqual('1')
@@ -169,6 +178,7 @@ test('return specific page within limit', async () => {
 test('return specific page within limit with custom perPage', async () => {
   const results = await graphql(100, 'page: 5', 'perPage: 3', 'limit: 50')
 
+  expect(results.errors).toBeUndefined()
   expect(results.data.allPost.totalCount).toEqual(100)
   expect(results.data.allPost.edges).toHaveLength(3)
   expect(results.data.allPost.edges[0].node.id).toEqual('13')
@@ -194,7 +204,7 @@ async function graphql (count, ...args) {
       plugins: [
         function plugin (api) {
           api.loadSource(store => {
-            const posts = store.addContentType('Post')
+            const posts = store.addCollection('Post')
 
             for (let i = 1; i <= count; i++) {
               posts.addNode({ id: String(i), order: i })

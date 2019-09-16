@@ -3,12 +3,10 @@ const crypto = require('crypto')
 const mime = require('mime-types')
 const autoBind = require('auto-bind')
 const camelCase = require('camelcase')
-const pathToRegexp = require('path-to-regexp')
-const slugify = require('@sindresorhus/slugify')
+const { deprecate } = require('../utils/deprecate')
 const { mapValues, isPlainObject } = require('lodash')
 const { cache, nodeCache } = require('../utils/cache')
 const { resolvePath } = require('./utils')
-const { log } = require('../utils/log')
 
 class PluginStore {
   constructor (app, pluginOptions = {}, { transformers }) {
@@ -35,114 +33,40 @@ class PluginStore {
 
   // metadata
 
-  addMetaData (key, data) {
-    return this.store.addMetaData(key, data)
+  addMetadata (key, data) {
+    return this.store.addMetadata(key, data)
   }
 
-  // nodes
+  // collections
 
-  addType (...args) {
-    log('!! store.addType is deprectaded, use store.addContentType instead.')
-    return this.addContentType(...args)
-  }
-
-  addContentType (options) {
+  addCollection (options) {
     if (typeof options === 'string') {
       options = { typeName: options }
     }
-
-    if (typeof options.typeName !== 'string') {
-      throw new Error(`«typeName» option is required.`)
-    }
-
-    if (['page'].includes(options.typeName.toLowerCase())) {
-      throw new Error(`${options.typeName} is a reserved typeName`)
-    }
-
-    if (this.store.collections.hasOwnProperty(options.typeName)) {
-      return this.store.getContentType(options.typeName)
-    }
-
-    options = this._app._hooks.contentType.call(options, this._app)
-
-    let createPath = () => null
-    const routeKeys = []
-
-    if (typeof options.route === 'string') {
-      options.route = '/' + options.route.replace(/^\/+/g, '')
-      createPath = pathToRegexp.compile(options.route)
-      pathToRegexp(options.route, routeKeys)
-    }
-
-    // normalize references
-    const refs = mapValues(options.refs, (ref, key) => {
-      return {
-        typeName: ref.typeName || options.typeName,
-        fieldName: key
-      }
-    })
 
     if (typeof options.resolveAbsolutePaths === 'undefined') {
       options.resolveAbsolutePaths = this._resolveAbsolutePaths
     }
 
-    const dateField = options.dateField || 'date'
-    const defaultSortBy = dateField
-    const defaultSortOrder = 'DESC'
-
-    let component
-
-    if (typeof options.component !== 'undefined') {
-      component = typeof options.component === 'string'
-        ? path.isAbsolute(options.component)
-          ? options.component
-          : path.join(this.context, options.component)
-        : null
-    } else {
-      const { templatesDir } = this._app.config
-      component = templatesDir
-        ? path.join(templatesDir, `${options.typeName}.vue`)
-        : null
+    if (options.route && !this._app.config.templates[options.typeName]) {
+      deprecate(
+        `The route option in addCollection() ` +
+        `is deprecated. Use templates instead.`,
+        {
+          url: 'https://gridsome.org/docs/templates/'
+        }
+      )
     }
 
-    return this.store.addContentType(this, {
-      route: options.route,
-      fields: options.fields || {},
-      typeName: options.typeName,
-      dateField,
-      defaultSortBy,
-      defaultSortOrder,
-      camelCasedFieldNames: options.camelCasedFieldNames,
-      resolveAbsolutePaths: options.resolveAbsolutePaths,
-      routeKeys: routeKeys
-        .filter(key => typeof key.name === 'string')
-        .map(key => {
-          // separate field name from suffix
-          const [, fieldName, suffix] = (
-            key.name.match(/^(.*[^_])_([a-z]+)$/) ||
-            [null, key.name, null]
-          )
-
-          const path = fieldName.split('__')
-
-          return {
-            name: key.name,
-            path,
-            fieldName,
-            repeat: key.repeat,
-            suffix
-          }
-        }),
-      mimeTypes: [],
-      belongsTo: {},
-      createPath,
-      component,
-      refs
-    })
+    return this.store.addCollection(options, this)
   }
 
-  getContentType (type) {
-    return this.store.getContentType(type)
+  getCollection (type) {
+    return this.store.getCollection(type)
+  }
+
+  getNodeByUid (uid) {
+    return this.store.getNodeByUid(uid)
   }
 
   //
@@ -159,17 +83,17 @@ class PluginStore {
   }
 
   _resolveNodeFilePath (node, toPath) {
-    const contentType = this.getContentType(node.internal.typeName)
+    const collection = this.getCollection(node.internal.typeName)
     const { origin = '' } = node.internal
 
     return resolvePath(origin, toPath, {
-      context: contentType._assetsContext,
-      resolveAbsolute: contentType._resolveAbsolutePaths
+      context: collection._assetsContext,
+      resolveAbsolute: collection._resolveAbsolutePaths
     })
   }
 
   _createTransformer (TransformerClass, options, localOptions = {}) {
-    return new TransformerClass(options, {
+    const args = {
       resolveNodeFilePath: this._resolveNodeFilePath,
       context: this._app.context,
       assets: this._app.assets,
@@ -178,7 +102,13 @@ class PluginStore {
       queue: this._app.assets,
       nodeCache,
       cache
-    })
+    }
+
+    deprecate.property(args, 'queue', 'The queue property is renamed to assets.')
+    deprecate.property(args, 'nodeCache', 'Do not use the nodeCache property. It will be removed.')
+    deprecate.property(args, 'cache', 'Do not use the cache property. It will be removed.')
+
+    return new TransformerClass(options, args)
   }
 
   _addTransformer (TransformerClass, options = {}) {
@@ -214,13 +144,24 @@ class PluginStore {
     return { typeName, id }
   }
 
-  slugify (string = '') {
-    return slugify(string, { separator: '-' })
-  }
-
   //
   // deprecated
   //
+
+  addContentType(options) {
+    deprecate('The store.addContentType() method has been renamed to store.addCollection().')
+    return this.addCollection(options)
+  }
+
+  getContentType(type) {
+    deprecate('The store.getContentType() method has been renamed to store.getCollection().')
+    return this.store.getCollection(type)
+  }
+
+  addMetaData (key, data) {
+    deprecate('The store.addMetaData() method has been renamed to store.addMetadata().')
+    return this.addMetadata(key, data)
+  }
 
   makeUid (orgId) {
     return crypto.createHash('md5').update(orgId).digest('hex')
@@ -232,6 +173,10 @@ class PluginStore {
 
   resolve (p) {
     return path.resolve(this.context, p)
+  }
+
+  slugify (value) {
+    return this._app.slugify(value)
   }
 }
 

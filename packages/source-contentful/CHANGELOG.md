@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.5.0](https://github.com/gridsome/gridsome/tree/master/packages/source-contentful/compare/@gridsome/source-contentful@0.4.0...@gridsome/source-contentful@0.5.0) (2019-09-11)
+
+
+### Features
+
+* **contentful:** gridsome v0.7 support ([78ca5bf](https://github.com/gridsome/gridsome/tree/master/packages/source-contentful/commit/78ca5bf))
+
+
+
+
+
 # [0.4.0](https://github.com/gridsome/gridsome/tree/master/packages/source-contentful/compare/@gridsome/source-contentful@0.3.0...@gridsome/source-contentful@0.4.0) (2019-06-25)
 
 

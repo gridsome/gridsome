@@ -40,7 +40,7 @@ export default {
         to: createPagePath(currentPath, page),
         exact: true
       }
-      
+
       if (props.activeLinkClass) {
         linkProps.activeClass = props.activeLinkClass
       }
@@ -87,7 +87,8 @@ export default {
 }
 
 function createPagePath (path, page) {
-  return page > 1 ? unslashEnd(path) + `/${page}` : path
+  const suffix = /\/$/.test(path) ? '/' : ''
+  return page > 1 ? unslashEnd(path) + `/${page}${suffix}` : path
 }
 
 function resolveRange ({

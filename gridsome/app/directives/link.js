@@ -31,8 +31,6 @@ function intersectionHandler ({ intersectionRatio, target }) {
         const path = stripPathPrefix(target.pathname)
         const { route } = router.resolve({ path })
 
-        if (!route.meta.data) return
-
         setTimeout(() => fetch(route, { shouldPrefetch: true }), 250)
       }
     }

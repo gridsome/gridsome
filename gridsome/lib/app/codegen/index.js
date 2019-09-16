@@ -5,6 +5,7 @@ const genConfig = require('./config')
 const genRoutes = require('./routes')
 const genPlugins = require('./plugins')
 const genConstants = require('./constants')
+const { BOOTSTRAP_FULL } = require('../../utils/constants')
 
 // TODO: let plugins add generated files
 
@@ -21,6 +22,15 @@ class Codegen {
       'plugins-client.js': () => genPlugins(app, false),
       'now.js': () => `export default ${app.store.lastUpdate}`
     }
+
+    app.hooks.bootstrap.tapPromise(
+      {
+        name: 'GridsomeCodegen',
+        label: 'Generate temporary code',
+        phase: BOOTSTRAP_FULL
+      },
+      () => this.generate()
+    )
   }
 
   async generate (filename = null, ...args) {
