@@ -32,7 +32,9 @@ module.exports = async (context, args) => {
 
   // copy static files
   if (fs.existsSync(config.staticDir)) {
-    await fs.copy(config.staticDir, config.outDir)
+    await fs.copy(config.staticDir, config.outDir, {
+      dereference: true
+    })
   }
 
   await app.plugins.run('afterBuild', () => ({ context, config, queue, redirects }))
