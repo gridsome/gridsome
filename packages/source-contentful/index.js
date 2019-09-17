@@ -17,7 +17,6 @@ class ContentfulSource {
 
   constructor (api, options) {
     this.options = options
-    this.store = api.store
     this.typesIndex = {}
 
     this.client = contentful.createClient({
@@ -60,10 +59,8 @@ class ContentfulSource {
   async getAssets (actions) {
     const assets = await this.fetch('getAssets')
     const typeName = this.createTypeName('asset')
-    const route = this.options.routes.asset || '/asset/:id'
-
-    const addCollection = actions.addCollection || actions.addContentType
-    const collection = addCollection({ typeName, route })
+    const route = this.options.routes.asset
+    const collection = actions.addCollection({ typeName, route })
 
     for (const asset of assets) {
       collection.addNode({ ...asset.fields, id: asset.sys.id })
@@ -72,12 +69,11 @@ class ContentfulSource {
 
   async getEntries (actions) {
     const entries = await this.fetch('getEntries')
-    const getCollection = actions.getCollection || actions.getContentType
 
     for (const entry of entries) {
       const typeId = entry.sys.contentType.sys.id
       const { typeName, displayField } = this.typesIndex[typeId]
-      const collection = getCollection(typeName)
+      const collection = actions.getCollection(typeName)
       const node = {}
 
       node.title = entry.fields[displayField]
