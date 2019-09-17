@@ -3,7 +3,7 @@ const query = require('./helpers/query')
 const { trimEnd, upperFirst, camelCase } = require('lodash')
 
 module.exports = function (api, options) {
-  api.loadSource(async ({ addContentType }) => {
+  api.loadSource(async ({ addCollection }) => {
     const { queryLimit, contentTypes, loginData } = options
     const apiURL = trimEnd(options.apiURL, '/')
     let jwtToken = null
@@ -33,12 +33,12 @@ module.exports = function (api, options) {
     }
 
     return Promise.all(contentTypes.map(resourceName => {
-      const typeName = options.typeName + upperFirst(camelCase(resourceName))
-      const contentType = addContentType({ typeName })
+      const typeName = upperFirst(camelCase(`${options.typeName} ${resourceName}`))
+      const collection = addCollection({ typeName, dateField: 'created_at' })
 
       return query({ apiURL, resourceName, jwtToken, queryLimit })
-        .then(docs => docs.map(doc => {
-          contentType.addNode(doc)
+        .then(docs => docs.forEach(doc => {
+          collection.addNode(doc)
         }))
     }))
   })
