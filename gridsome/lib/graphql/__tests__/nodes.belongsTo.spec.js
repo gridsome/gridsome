@@ -1,12 +1,10 @@
 const App = require('../../app/App')
-const { graphql } = require('graphql')
 const PluginAPI = require('../../app/PluginAPI')
-const createSchema = require('../createSchema')
 
 let app, api
 
-beforeEach(() => {
-  app = new App(__dirname, {
+beforeEach(async () => {
+  app = await new App(__dirname, {
     config: {
       plugins: []
     }
@@ -18,9 +16,9 @@ beforeEach(() => {
 })
 
 test('create node reference', async () => {
-  const authors = api.store.addContentType('Author')
+  const authors = api.store.addCollection('Author')
 
-  const books = api.store.addContentType({
+  const books = api.store.addCollection({
     typeName: 'Book',
     refs: {
       authorRef: {
@@ -42,11 +40,18 @@ test('create node reference', async () => {
     id: '1',
     title: 'Post A',
     author: { typeName: 'Author', id: '2' },
-    user: { typeName: 'Author', id: '2' }
+    user: { typeName: 'Author', id: '2' },
+    users: [{ typeName: 'Author', id: '2' }]
   })
 
   books.addNode({
     id: '2',
+    title: 'Post B',
+    users: [{ typeName: 'Author', id: '2' }]
+  })
+
+  books.addNode({
+    id: '3',
     title: 'Post B',
     authorRef: '2'
   })
@@ -73,19 +78,60 @@ test('create node reference', async () => {
   const { errors, data } = await createSchemaAndExecute(query)
 
   expect(errors).toBeUndefined()
-  expect(data.author.belongsTo.edges).toHaveLength(3)
-  expect(data.author.belongsTo.totalCount).toEqual(3)
+  expect(data.author.belongsTo.edges).toHaveLength(4)
+  expect(data.author.belongsTo.totalCount).toEqual(4)
   expect(data.author.belongsTo.pageInfo.totalPages).toEqual(1)
   expect(data.author.belongsTo.edges[0].node.__typename).toEqual('Author')
   expect(data.author.belongsTo.edges[1].node.id).toEqual('1')
   expect(data.author.belongsTo.edges[1].node.__typename).toEqual('Book')
   expect(data.author.belongsTo.edges[2].node.id).toEqual('2')
   expect(data.author.belongsTo.edges[2].node.__typename).toEqual('Book')
+  expect(data.author.belongsTo.edges[3].node.id).toEqual('3')
+  expect(data.author.belongsTo.edges[3].node.__typename).toEqual('Book')
+})
+
+test('get references from custom schema', async () => {
+  const authors = api.store.addCollection('Author')
+  const books = api.store.addCollection('Book')
+
+  authors.addNode({ id: '1', title: 'Author 1', slug: 'author-1' })
+  books.addNode({ id: '1', title: 'Book 1', author: '1' })
+  books.addNode({ id: '2', title: 'Book 2', authors: ['1'] })
+  books.addNode({ id: '3', title: 'Book 3', authors: ['2'] })
+
+  const query = `query {
+    author (id: "1") {
+      belongsTo (sortBy: "title", order: ASC) {
+        totalCount
+        pageInfo {
+          totalPages
+        }
+        edges {
+          node {
+            __typename
+          }
+        }
+      }
+    }
+  }`
+
+  const types = `
+    type Book implements Node {
+      author: Author @reference
+      authors: [Author] @reference
+    }
+  `
+
+  const { errors, data } = await createSchemaAndExecute(query, { types })
+
+  expect(errors).toBeUndefined()
+  expect(data.author.belongsTo.edges).toHaveLength(2)
+  expect(data.author.belongsTo.totalCount).toEqual(2)
 })
 
 test('sort belongsTo by multiple fields', async () => {
-  const authors = api.store.addContentType('Author')
-  const books = api.store.addContentType('Book')
+  const authors = api.store.addCollection('Author')
+  const books = api.store.addCollection('Book')
   books.addReference('author', 'Author')
 
   authors.addNode({ id: '1', title: 'Author 1' })
@@ -116,9 +162,9 @@ test('sort belongsTo by multiple fields', async () => {
 })
 
 test('handle pagination for filtered belongsTo', async () => {
-  const authors = api.store.addContentType('Author')
-  const stores = api.store.addContentType('Store')
-  const books = api.store.addContentType('Book')
+  const authors = api.store.addCollection('Author')
+  const stores = api.store.addCollection('Store')
+  const books = api.store.addCollection('Book')
 
   authors.addNode({ id: '1', title: 'Author 1' })
 
@@ -155,8 +201,6 @@ test('handle pagination for filtered belongsTo', async () => {
   expect(data.author.belongsTo.edges[0].node.__typename).toEqual('Book')
 })
 
-async function createSchemaAndExecute (query) {
-  const schema = createSchema(app.store)
-  const context = app.createSchemaContext()
-  return graphql(schema, query, undefined, context)
+function createSchemaAndExecute (query, options) {
+  return app.schema.buildSchema(options).runQuery(query)
 }

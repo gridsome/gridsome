@@ -19,15 +19,20 @@ module.exports = function createRenderFn ({
     runInNewContext: false
   })
 
-  return async function render (url, state, stateSize) {
-    const context = { url, state: createState(state) }
+  return async function render(page, state, stateSize, hash) {
+    const context = {
+      path: page.path,
+      location: page.location,
+      state: createState(state)
+    }
 
     let app = ''
 
     try {
       app = await renderer.renderToString(context)
     } catch (err) {
-      error(chalk.red(`Failed to render ${url}`))
+      const location = page.location.name || page.location.path
+      error(chalk.red(`Could not generate HTML for "${location}":`))
       throw err
     }
 
@@ -38,6 +43,7 @@ module.exports = function createRenderFn ({
     const head = '' +
       inject.title.text() +
       inject.base.text() +
+      `<meta name="gridsome:hash" content="${hash}">` +
       inject.meta.text() +
       inject.link.text() +
       inject.style.text() +

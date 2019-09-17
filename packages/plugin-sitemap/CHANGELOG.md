@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.2](https://github.com/gridsome/gridsome/tree/master/packages/plugin-sitemap/compare/@gridsome/plugin-sitemap@0.2.1...@gridsome/plugin-sitemap@0.2.2) (2019-09-16)
+
+
+### Bug Fixes
+
+* **sitemap:** ignore trailing slash in patterns ([7b0abd5](https://github.com/gridsome/gridsome/tree/master/packages/plugin-sitemap/commit/7b0abd5))
+
+
+
+
+
 ## [0.2.1](https://github.com/gridsome/gridsome/tree/master/packages/plugin-sitemap/compare/@gridsome/plugin-sitemap@0.2.0...@gridsome/plugin-sitemap@0.2.1) (2019-05-27)
 
 

@@ -1,5 +1,5 @@
-const { PaginateDirective } = require('./paginate')
+const paginate = require('./paginate')
 
 module.exports = [
-  PaginateDirective
+  paginate
 ]

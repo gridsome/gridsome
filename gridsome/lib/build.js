@@ -1,9 +1,11 @@
-const path = require('path')
 const fs = require('fs-extra')
 const pMap = require('p-map')
 const hirestime = require('hirestime')
-const { chunk, groupBy } = require('lodash')
+const { chunk } = require('lodash')
 const sysinfo = require('./utils/sysinfo')
+const executeQueries = require('./app/build/executeQueries')
+const createRenderQueue = require('./app/build/createRenderQueue')
+const { logAllWarnings } = require('./utils/deprecate')
 const { log, info, writeLine } = require('./utils/log')
 
 module.exports = async (context, args) => {
@@ -15,78 +17,37 @@ module.exports = async (context, args) => {
   const app = await createApp(context, { args })
   const { config } = app
 
-  await app.events.dispatch('beforeBuild', { context, config })
+  await app.plugins.run('beforeBuild', { context, config })
 
   await fs.emptyDir(config.outDir)
-  await fs.emptyDir(config.dataDir)
 
-  const queue = await createRenderQueue(app)
+  const queue = createRenderQueue(app)
+  const redirects = app.hooks.redirects.call([], queue)
+  const stats = await runWebpack(app)
 
-  await writePageData(queue, app)
-  await runWebpack(app)
-  await renderHTML(queue, app)
+  await executeQueries(queue, app, stats.hash)
+  await renderHTML(queue, app, stats.hash)
   await processFiles(app.assets.files)
   await processImages(app.assets.images, app.config)
 
   // copy static files
   if (fs.existsSync(config.staticDir)) {
-    await fs.copy(config.staticDir, config.outDir)
+    await fs.copy(config.staticDir, config.outDir, {
+      dereference: true
+    })
   }
 
-  await app.events.dispatch('afterBuild', () => ({ context, config, queue }))
+  await app.plugins.run('afterBuild', () => ({ context, config, queue, redirects }))
 
   // clean up
   await fs.remove(config.manifestsDir)
-  await fs.remove(config.dataDir)
 
   log()
+  logAllWarnings(app.context)
   log(`  Done in ${buildTime(hirestime.S)}s`)
   log()
 
   return app
-}
-
-function createRenderQueue (app) {
-  return new Promise((resolve, reject) => {
-    app._hooks.createRenderQueue.callAsync([], app, (err, res) => {
-      if (err) reject(err)
-      else resolve(res)
-    })
-  })
-}
-
-async function writePageData (renderQueue, app) {
-  const timer = hirestime()
-  const queryQueue = renderQueue.filter(entry => entry.dataOutput)
-  const routes = groupBy(queryQueue, entry => entry.route)
-  const meta = {}
-
-  let count = 0
-
-  for (const entry of queryQueue) {
-    await fs.outputFile(entry.dataOutput, JSON.stringify(entry.data))
-  }
-
-  for (const route in routes) {
-    const entries = routes[route]
-    const content = entries.reduce((acc, { path, dataInfo }) => {
-      acc[path] = [dataInfo.group, dataInfo.hash]
-      return acc
-    }, {})
-
-    if (entries.length > 1) {
-      const output = path.join(app.config.dataDir, 'route-meta', `${count++}.json`)
-      await fs.outputFile(output, JSON.stringify(content))
-      meta[route] = output
-    } else {
-      meta[route] = content[entries[0].path]
-    }
-  }
-
-  // re-generate routes with query meta
-  await app.codegen.generate('routes.js', meta)
-
-  info(`Write page data (${queryQueue.length + count} files) - ${timer(hirestime.S)}s`)
 }
 
 async function runWebpack (app) {
@@ -105,9 +66,11 @@ async function runWebpack (app) {
   }
 
   info(`Compile assets - ${compileTime(hirestime.S)}s`)
+
+  return stats
 }
 
-async function renderHTML (renderQueue, app) {
+async function renderHTML (renderQueue, app, hash) {
   const { createWorker } = require('./workers')
   const timer = hirestime()
   const worker = createWorker('html-writer')
@@ -116,6 +79,7 @@ async function renderHTML (renderQueue, app) {
   await Promise.all(chunk(renderQueue, 350).map(async pages => {
     try {
       await worker.render({
+        hash,
         pages,
         htmlTemplate,
         clientManifestPath,

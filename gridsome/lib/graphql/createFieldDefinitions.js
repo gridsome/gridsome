@@ -1,18 +1,21 @@
 const { omit, isPlainObject, isNumber, isInteger } = require('lodash')
-const { isRefField, isRefFieldDefinition } = require('./utils')
+const { isRefFieldDefinition } = require('./utils')
+const { isRefField } = require('../store/utils')
 const { warn } = require('../utils/log')
+const camelCase = require('camelcase')
 
-module.exports = function createFieldDefinitions (nodes) {
-  let fields = {}
+module.exports = function createFieldDefinitions (nodes, options = {}) {
+  let res = {}
 
   for (let i = 0, l = nodes.length; i < l; i++) {
-    fields = fieldValues(omit(nodes[i], ['id', 'internal']), fields)
+    const fields = omit(nodes[i], ['internal'])
+    res = resolveValues(fields, res, options)
   }
 
-  return fields
+  return res
 }
 
-function fieldValues (obj, currentObj = {}, path = []) {
+function resolveValues (obj, currentObj = {}, options = {}, path = []) {
   const res = { ...currentObj }
 
   for (const key in obj) {
@@ -23,13 +26,29 @@ function fieldValues (obj, currentObj = {}, path = []) {
     if (value === undefined) continue
     if (value === null) continue
 
-    res[key] = fieldValue(value, currentObj[key], path.concat(key))
+    const fieldName = createFieldName(key, options.camelCase)
+    const currentValue = currentObj[key] ? currentObj[key].value : undefined
+    const resolvedValue = resolveValue(value, currentValue, options, path.concat(key))
+    const extensions = { isInferred: true }
+
+    if (fieldName !== key) {
+      extensions.proxy = {
+        from: key
+      }
+    }
+
+    res[key] = {
+      key,
+      fieldName,
+      extensions,
+      value: resolvedValue
+    }
   }
 
   return res
 }
 
-function fieldValue (value, currentValue, path = []) {
+function resolveValue (value, currentValue, options, path = []) {
   if (Array.isArray(value)) {
     const arr = Array.isArray(currentValue) ? currentValue : []
     const length = value.length
@@ -55,7 +74,7 @@ function fieldValue (value, currentValue, path = []) {
     }
 
     for (let i = 0; i < length; i++) {
-      arr[0] = fieldValue(value[i], arr[0], path.concat(i))
+      arr[0] = resolveValue(value[i], arr[0], options, path.concat(i))
     }
 
     return arr
@@ -72,7 +91,7 @@ function fieldValue (value, currentValue, path = []) {
       return ref
     }
 
-    return fieldValues(value, currentValue, path)
+    return resolveValues(value, currentValue, options, path)
   } else if (isNumber(value)) {
     return isNumber(currentValue) && isInteger(value)
       ? currentValue
@@ -80,4 +99,15 @@ function fieldValue (value, currentValue, path = []) {
   }
 
   return currentValue !== undefined ? currentValue : value
+}
+
+const nonValidCharsRE = new RegExp('[^a-zA-Z0-9_]', 'g')
+const leadingNumberRE = new RegExp('^([0-9])')
+
+function createFieldName (key, camelCased = false) {
+  key = key.replace(nonValidCharsRE, '_')
+  if (camelCased) key = camelCase(key)
+  key = key.replace(leadingNumberRE, '_$1')
+
+  return key
 }

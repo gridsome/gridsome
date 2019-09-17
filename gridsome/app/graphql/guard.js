@@ -23,11 +23,10 @@ export default (to, from, next) => {
       }
     })
     .catch(err => {
-      if (err.code === 'MODULE_NOT_FOUND') {
-        console.error(err) // eslint-disable-line
-        next({ name: '*', params: { 0: to.path }})
-      } else if (err.code === 404 && to.path !== window.location.pathname) {
-        // reload page if coming from another page and data doesn't exist
+      if (err.code === 'MODULE_NOT_FOUND' || err.code === 404) {
+        console.error(err)
+        next({ name: '*', params: { 0: to.path } })
+      } else if (err.code === 'INVALID_HASH' && to.path !== window.location.pathname) {
         window.location.assign(to.fullPath)
       } else {
         formatError(err, to)

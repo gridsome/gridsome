@@ -18,10 +18,12 @@ module.exports = {
         baseId: 'YOUR_BASE_ID', // required
         tableName: 'YOUR_TABLE_NAME', // required
         typeName: 'YOUR_TYPE_NAME', // required
-        route: 'YOUR_OPTIONAL_ROUTE' // optional
       }
     }
-  ]
+  ],
+  templates: {
+    YOUR_TYPE_NAME: 'YOUR_OPTIONAL_ROUTE' // optional
+  }
 }
 ```
 
@@ -31,4 +33,3 @@ module.exports = {
 1. `baseId`: This can be found by going to https://airtable.com/api, clicking on your workspace, and will be visible in the url: https://airtable.com/{YOUR_BASE_ID}/api/docs#curl/introduction
 1. `tableName`: This is the full name of your chosen workspace table, for example "Furniture" is the first and main table in the pre-defined workspace named "Product Catalog & Orders"
 1. `typeName`: Your chosen type name. The type name "Product" is an example of an fitting route for the pre-defined airtable workspace named "Product Catalog & Orders"
-1. `route`: Your chosen optional route name. The route "/products/:name" is an example of an fitting route for the pre-defined airtable workspace named "Product Catalog & Orders"

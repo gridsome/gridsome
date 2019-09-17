@@ -1,5 +1,5 @@
 import prefetch from './utils/prefetch'
-import { unslashEnd, stripPageParam } from './utils/helpers'
+import { unslashEnd } from './utils/helpers'
 import { NOT_FOUND_PATH } from '~/.temp/constants'
 
 const dataUrl = process.env.DATA_URL
@@ -9,33 +9,26 @@ const isLoaded = {}
 export default (route, options = {}) => {
   const { shouldPrefetch = false, force = false } = options
 
-  if (!route.meta.data) {
-    return Promise.resolve({ data: null, context: {}})
-  }
-
   if (!process.isStatic) {
-    const getJSON = function (route) {
-      return new Promise((resolve, reject) => {
-        fetch(process.env.GRAPHQL_ENDPOINT, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            page: route.params.page ? Number(route.params.page) : null,
-            path: route.name === '*' ? NOT_FOUND_PATH : stripPageParam(route)
-          })
-        })
-          .then(res => res.json())
-          .then(resolve)
-          .catch(reject)
-      })
+    const { dynamic = false } = route.meta
+    let path = dynamic ? route.matched[0].path : route.path
+
+    if (route.name === '*') {
+      path = NOT_FOUND_PATH
     }
 
     return new Promise((resolve, reject) => {
-      if (force || !isLoaded[route.fullPath]) {
-        isLoaded[route.fullPath] = getJSON(route)
+      if (force || !isLoaded[route.path]) {
+        isLoaded[route.path] = fetch(process.env.GRAPHQL_ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ path, dynamic })
+        })
+          .then(res => res.json())
+          .catch(reject)
       }
 
-      isLoaded[route.fullPath]
+      isLoaded[route.path]
         .then(res => {
           if (res.errors) reject(res.errors[0])
           else if (res.code) resolve({ code: res.code })
@@ -45,50 +38,48 @@ export default (route, options = {}) => {
               ? res.extensions.context
               : {}
           })
+
+          isLoaded[route.path] = null
         })
-        .catch(reject)
     })
   }
 
+  const hashMeta = document
+    .querySelector('meta[name="gridsome:hash"]')
+    .getAttribute('content')
+
   return new Promise((resolve, reject) => {
-    const loadJSON = ([ group, hash ]) => {
-      const jsonPath = dataUrl + `${group}/${hash}.json`
+    const usePath = route.name === '*' ? NOT_FOUND_PATH : route.path
+    const jsonPath = route.meta.dataPath || unslashEnd(usePath) + '/index.json'
+    const absPath = unslashEnd(dataUrl) + jsonPath
 
-      if (shouldPrefetch && !isLoaded[jsonPath]) {
-        if (!isPrefetched[jsonPath]) {
-          isPrefetched[jsonPath] = prefetch(jsonPath)
-        }
-
-        return isPrefetched[jsonPath]
-          .then(() => resolve())
-          .catch(() => resolve())
+    if (shouldPrefetch && !isLoaded[jsonPath]) {
+      if (!isPrefetched[jsonPath]) {
+        isPrefetched[jsonPath] = prefetch(absPath)
       }
 
-      if (!isLoaded[jsonPath]) {
-        isLoaded[jsonPath] = fetchJSON(jsonPath)
-      }
-
-      return isLoaded[jsonPath]
-        .then(res => {
-          if (res.errors) reject(res.errors[0])
-          else resolve(res)
-        })
-        .catch(reject)
+      return isPrefetched[jsonPath]
+        .then(() => resolve())
+        .catch(() => resolve())
     }
 
-    const { name, meta: { data }} = route
-    const usePath = name === '*' ? NOT_FOUND_PATH : route.path
-    const path = unslashEnd(usePath) || '/'
-
-    if (typeof data === 'function') {
-      data().then(data => {
-        if (data[path]) loadJSON(data[path])
-        else resolve({ code: 404 })
-      }).catch(reject)
-    } else {
-      loadJSON(data)
+    if (!isLoaded[jsonPath]) {
+      isLoaded[jsonPath] = fetchJSON(absPath)
     }
+
+    return isLoaded[jsonPath]
+      .then(res => {
+        if (res.hash !== hashMeta) reject(createError('Hash did not match.', 'INVALID_HASH'))
+        else resolve(res)
+      })
+      .catch(reject)
   })
+}
+
+function createError (message, code) {
+  const error = new Error(message)
+  error.code = code
+  return error
 }
 
 function fetchJSON (jsonPath) {
@@ -111,12 +102,16 @@ function fetchJSON (jsonPath) {
             )
           }
 
+          if (!results.hash) {
+            return reject(
+              new Error(`JSON data in ${jsonPath} is missing a hash.`)
+            )
+          }
+
           return resolve(results)
         }
         case 404: {
-          const error = new Error(req.statusText)
-          error.code = req.status
-          return reject(error)
+          return reject(createError(req.statusText, req.status))
         }
       }
 

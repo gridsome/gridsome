@@ -17,7 +17,6 @@ class ContentfulSource {
 
   constructor (api, options) {
     this.options = options
-    this.store = api.store
     this.typesIndex = {}
 
     this.client = contentful.createClient({
@@ -34,46 +33,49 @@ class ContentfulSource {
     })
   }
 
-  async getContentTypes (store) {
+  async getContentTypes (actions) {
     const contentTypes = await this.fetch('getContentTypes')
     const richTextType = createRichTextType(this.options)
 
     for (const contentType of contentTypes) {
       const { name, sys: { id }} = contentType
       const typeName = this.createTypeName(name)
-      const route = this.options.routes[name] || `/${store.slugify(name)}/:slug`
-
-      const collection = store.addContentType({ typeName, route })
+      const route = this.options.routes[name]
+      const resolvers = {}
 
       for (const field of contentType.fields) {
         if (field.type === 'RichText') {
-          collection.addSchemaField(field.id, () => richTextType)
+          resolvers[field.id] = richTextType
         }
       }
+
+      actions.addCollection({ typeName, route })
+      actions.addSchemaResolvers({
+        [typeName]: resolvers
+      })
 
       this.typesIndex[id] = { ...contentType, typeName }
     }
   }
 
-  async getAssets (store) {
+  async getAssets (actions) {
     const assets = await this.fetch('getAssets')
     const typeName = this.createTypeName('asset')
-    const route = this.options.routes.asset || '/asset/:id'
-
-    const contentType = store.addContentType({ typeName, route })
+    const route = this.options.routes.asset
+    const collection = actions.addCollection({ typeName, route })
 
     for (const asset of assets) {
-      contentType.addNode({ ...asset.fields, id: asset.sys.id })
+      collection.addNode({ ...asset.fields, id: asset.sys.id })
     }
   }
 
-  async getEntries (store) {
+  async getEntries (actions) {
     const entries = await this.fetch('getEntries')
 
     for (const entry of entries) {
       const typeId = entry.sys.contentType.sys.id
       const { typeName, displayField } = this.typesIndex[typeId]
-      const collection = store.getContentType(typeName)
+      const collection = actions.getCollection(typeName)
       const node = {}
 
       node.title = entry.fields[displayField]
@@ -87,11 +89,11 @@ class ContentfulSource {
 
         if (Array.isArray(value)) {
           node[key] = value.map(item => this.isReference(item)
-            ? this.createReference(item, store)
+            ? this.createReference(item, actions)
             : item
           )
         } else if (this.isReference(value)) {
-          node[key] = this.createReference(value, store)
+          node[key] = this.createReference(value, actions)
         } else if (this.isRichText(value)) {
           node[key] = JSON.stringify(value) // Rich Text
         } else {

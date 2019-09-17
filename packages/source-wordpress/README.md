@@ -19,14 +19,13 @@ module.exports = {
         apiBase: 'wp-json',
         typeName: 'WordPress',
         perPage: 100,
-        concurrent: 10,
-        routes: {
-          post: '/:year/:month/:day/:slug',
-          post_tag: '/tag/:slug'
-        }
+        concurrent: 10
       }
     }
-  ]
+  ],
+  templates: {
+    WordPressPost: '/:year/:month/:day/:slug'
+  }
 }
 ```
 

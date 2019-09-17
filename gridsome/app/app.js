@@ -1,6 +1,8 @@
 import Vue from 'vue'
 import plugins from '~/.temp/plugins-server'
-import main from './main'
+
+import main from '~/main'
+import App from '~/App.vue'
 
 import head from './head'
 import router from './router'
@@ -25,7 +27,7 @@ router.beforeEach(graphqlGuard)
 
 const context = {
   appOptions: {
-    render: h => h('router-view', { attrs: { id: 'app' } }),
+    render: h => h(App, { attrs: { id: 'app' }}),
     metaInfo: head,
     methods: {},
     data: {},

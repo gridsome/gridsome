@@ -1,6 +1,6 @@
 const LRU = require('lru-cache')
 const createRenderFn = require('../createRenderFn')
-const { createQueryVariables } = require('../../pages/utils')
+const { createQueryVariables } = require('../../graphql/utils')
 
 module.exports = (app, routes) => {
   const render = createRenderFn({

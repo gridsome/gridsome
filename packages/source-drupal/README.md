@@ -48,7 +48,6 @@ Property |Default Value | Notes
 `baseUrl` | *none*, **required** | This is the base url of your Drupal instance. (`https://somedrupalsite.pantheon.io`)
 | `exclude` | *see lib/constants.js* | An array of entity types you want excluded from the [GraphQL conversion](#api-schema-to-graphql-conversion). Any length array will fully override the defaults. [See Excludes](#exclude).
 `requestConfig` | `{}` | A config object that is passed directly to `axios` request. [See Auth](#auth).
-`routes` | `{}`| An object keyed by entity type that specifies a `path` value override used for dynamic routing. [See Routing](#routing).
 `typeName` | `Drupal` | A String value to name space your GraphQL Types during conversion - this prevents collisions with other plugins. [See GraphQL Conversion](#api-schema-to-graphql-conversion).
 
 ### API Schema to GraphQL Conversion
@@ -100,7 +99,7 @@ The url `values` of the `links` object get looped over and requested via `axios`
 Within your Gridsome project, run `gridsome develop` and access `http://localhost:8080/___explore` to see all the relationships.
 
 ### Routing
-Use the `routes` option in `gridsome.config.js` to specify the url schema for each entity type individually:
+Use the `templates` option in `gridsome.config.js` to specify the url schema for each entity type individually:
 
 ```js
 module.exports = {
@@ -108,19 +107,22 @@ module.exports = {
     {
       use: '@gridsome/source-drupal',
       options: {
-        baseUrl: 'https://somedrupalsite.pantheonsite.io',
-        routes: {
-          'node--article': '/articles/:title',
-          'taxonomy_term--tags': '/tags/:name'
-        }
+        typeName: 'Drupal',
+        baseUrl: 'https://somedrupalsite.pantheonsite.io'
       }
     }
-  ]
+  ],
+  templates: {
+    DrupalNodeArticle: '/articles/:title',
+    DrupalTaxonomyTermTags: '/tags/:name'
+  }
 }
 ```
 
+[Read more about templates in Gridsome](https://gridsome.org/docs/templates/)
+
 Path parameters can be any GraphQL field on that node:
-`node--article: 'aritlces/:langcode/:title' -> /aritcles/en/lorem-ipsum`
+`DrupalNodeArticle: 'aritlces/:langcode/:title/' -> /aritcles/en/lorem-ipsum/`
 
 ### Contenta CMS
 [Contenta CMS](https://github.com/contentacms/contenta_jsonapi#--contenta-cms--) should work out-of-the-box with @gridsome/source-drupal. The main difference being, Contenta CMS is by default already using [JSON:API Extras](https://www.drupal.org/project/jsonapi_extras). This gives the user more flexibility and control over resources returned by the api.
@@ -154,10 +156,6 @@ module.exports = {
       options: {
         baseUrl: 'https://somedrupalsite.pantheon.io',
         exclude: [ ...defaultExcludes, 'user--user' ], // include the defaults
-        routes: {
-          'node--article': '/articles/:title',
-          'taxonomy_term--tags': '/tags/:name'
-        }
       }
     }
   ]

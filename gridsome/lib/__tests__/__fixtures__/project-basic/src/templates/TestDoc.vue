@@ -16,7 +16,7 @@
 </template>
 
 <page-query>
-query TestDoc($id: String!, $page: Int, $perPage: Int) {
+query TestDoc($id: ID!, $page: Int, $perPage: Int) {
   testDoc(id: $id) {
     id
     path
