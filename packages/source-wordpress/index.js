@@ -13,7 +13,6 @@ class WordPressSource {
       apiBase: 'wp-json',
       perPage: 100,
       concurrent: 10,
-      routes: {},
       typeName: 'WordPress'
     }
   }
@@ -36,13 +35,7 @@ class WordPressSource {
       baseURL: `${baseUrl}/${options.apiBase}`
     })
 
-    this.routes = {
-      post: '/:year/:month/:day/:slug',
-      post_tag: '/tag/:slug',
-      category: '/category/:slug',
-      author: '/author/:slug',
-      ...this.options.routes
-    }
+    this.routes = this.options.routes || {}
 
     api.loadSource(async actions => {
       this.store = actions
@@ -67,7 +60,7 @@ class WordPressSource {
 
       addCollection({
         typeName: this.createTypeName(type),
-        route: this.routes[type] || `/${options.rest_base}/:slug`
+        route: this.routes[type]
       })
     }
   }
