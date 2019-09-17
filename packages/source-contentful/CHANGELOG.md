@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.5.1](https://github.com/gridsome/gridsome/tree/master/packages/source-contentful/compare/@gridsome/source-contentful@0.5.0...@gridsome/source-contentful@0.5.1) (2019-09-17)
+
+
+### Bug Fixes
+
+* **contentful:** add resolvers with schema api ([55695c2](https://github.com/gridsome/gridsome/tree/master/packages/source-contentful/commit/55695c2))
+* **contentful:** remove default routes ([ac17eda](https://github.com/gridsome/gridsome/tree/master/packages/source-contentful/commit/ac17eda))
+
+
+
+
+
 # [0.5.0](https://github.com/gridsome/gridsome/tree/master/packages/source-contentful/compare/@gridsome/source-contentful@0.4.0...@gridsome/source-contentful@0.5.0) (2019-09-11)
 
 
