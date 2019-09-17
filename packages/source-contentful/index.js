@@ -37,20 +37,22 @@ class ContentfulSource {
     const contentTypes = await this.fetch('getContentTypes')
     const richTextType = createRichTextType(this.options)
 
-    const addCollection = actions.addCollection || actions.addContentType
-
     for (const contentType of contentTypes) {
       const { name, sys: { id }} = contentType
       const typeName = this.createTypeName(name)
       const route = this.options.routes[name]
-
-      const collection = addCollection({ typeName, route })
+      const resolvers = {}
 
       for (const field of contentType.fields) {
         if (field.type === 'RichText') {
-          collection.addSchemaField(field.id, () => richTextType)
+          resolvers[field.id] = richTextType
         }
       }
+
+      actions.addCollection({ typeName, route })
+      actions.addSchemaResolvers({
+        [typeName]: resolvers
+      })
 
       this.typesIndex[id] = { ...contentType, typeName }
     }
