@@ -244,7 +244,7 @@ module.exports = (app, { isProd, isServer }) => {
   // helpes
 
   function createCacheOptions () {
-    const values = {
+    const values = app.compiler.hooks.cacheIdentifier.call({
       'gridsome': require('../../package.json').version,
       'cache-loader': require('cache-loader/package.json').version,
       'vue-loader': require('vue-loader/package.json').version,
@@ -254,7 +254,7 @@ module.exports = (app, { isProd, isServer }) => {
       config: (
         (projectConfig.chainWebpack || '').toString()
       )
-    }
+    })
 
     return {
       cacheDirectory: app.resolve('node_modules/.cache/gridsome'),
