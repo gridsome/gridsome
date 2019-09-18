@@ -1,5 +1,5 @@
 {
-  "version": "0.4.0",
+  "version": "0.4.1",
   "name": "dynamic-node-source-wordpress",
   "description": "Dynamic Node WordPress source for Gridsome",
   "homepage": "https://github.com/baffo/gridsome/tree/master/packages/source-wordpress#readme",
