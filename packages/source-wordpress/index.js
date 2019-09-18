@@ -124,7 +124,6 @@ class WordPressSource {
   async getPosts (actions) {
     const { createReference } = actions
     const getCollection = actions.getCollection || actions.getContentType
-    const customPostTypeReferences = this.options.customPostTypeReferences
 
     const AUTHOR_TYPE_NAME = this.createTypeName(TYPE_AUTHOR)
     const ATTACHEMENT_TYPE_NAME = this.createTypeName(TYPE_ATTACHEMENT)
