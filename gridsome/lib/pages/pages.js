@@ -380,7 +380,11 @@ class Pages {
 
     const ext = path.extname(component).substring(1)
     const hook = this.hooks.parseComponent.get(ext)
-    let results
+    let results = {}
+
+    if (!fs.existsSync(component)) {
+      throw new Error(`Could not find component ${component}.`)
+    }
 
     if (hook) {
       const source = fs.readFileSync(component, 'utf8')
