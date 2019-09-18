@@ -353,6 +353,18 @@ test('create references with collection.addReference()', async () => {
   expect(data.post.authors).toHaveLength(1)
 })
 
+test('don\'t process invalid refs from collection.addReference()', () => {
+  const authors = api.store.addCollection('Author')
+  const posts = api.store.addCollection('Post')
+
+  authors.addNode({ id: '1', title: 'An Author' })
+  posts.addNode({ id: '1', authors: [null] })
+
+  posts.addReference('authors', 'Author')
+
+  expect(() => app.schema.buildSchema()).not.toThrow('object')
+})
+
 test('proxy invalid field names in collection.addReference()', async () => {
   const authors = api.store.addCollection('Author')
   const posts = api.store.addCollection('Post')

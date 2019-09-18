@@ -1,5 +1,5 @@
 const camelCase = require('camelcase')
-const { isObject } = require('lodash')
+const { isObject, isPlainObject } = require('lodash')
 
 const {
   ThunkComposer,
@@ -28,13 +28,9 @@ exports.is32BitInt = function (x) {
 
 exports.CreatedGraphQLType = CreatedGraphQLType
 
-exports.is32BitInt = function (x) {
-  return (x | 0) === x
-}
-
 exports.isRefFieldDefinition = function (field) {
   return (
-    typeof field === 'object' &&
+    isPlainObject(field) &&
     Object.keys(field).length === 2 &&
     field.hasOwnProperty('typeName') &&
     field.hasOwnProperty('isList')
