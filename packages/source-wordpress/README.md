@@ -3,62 +3,9 @@
 > WordPress source for Gridsome. This package is under development and
 API might change before v1 is released.
 
-This is a customised version of the original source-wordpress package.
+This is a customised unmaintained version of the original source-wordpress package and it may be out of date! Use at own discretion.
 
 It adds additional settings and allows you to create references to Nodes of custom fields and custom post types.
-
-Adding the functionality to create node references for custom fields that contain a valid postID. It supports referencing either attachments or custom post types. References can be set on any post type, except on attachments (I didn't find a case where this would make sense, but this can be easily expanded).
-
-Requires the `customPostTypeReferences` array to be defined in `gridsome.config.js` under the plugin settings
-```
-plugins: [{
-    use: '@gridsome/source-wordpress',
-    options: {
-      baseUrl: 'https://example.com', // required
-      apiBase: '?rest_route=/',
-      typeName: 'WordPress',
-      perPage: 100,
-      concurrent: 10,
-      routes: {
-        post: '/:year/:month/:day/:slug',
-        post_tag: '/tag/:slug'
-      },
-      customPostTypeReferences: [
-        {
-           type: 'attachment',
-           sourceField: 'banner_image_id',
-           targetField: 'bannerImage'
-        },
-        {
-           type: 'car',
-           sourceField: 'car_brand_id',
-           targetField: 'carBrand'
-        },
-        ...
-      ]
-    }
-}]
-```
-
-Example of a Query making use of a custom node reference:
-```
-query {
-  allWordPressPost {
-    edges {
-      node {
-        title
-        bannerImage {
-          id
-    	  sourceUrl
-          mediaDetails {
-             width
-          }
-        }
-      }
-    }
-  }
-}
-```
 
 ## Install
 - `yarn add dynamic-node-source-wordpress`
