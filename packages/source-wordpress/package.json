@@ -1,12 +1,12 @@
 {
   "version": "0.4.0",
-  "name": "@baffo/source-wordpress",
-  "description": "Custom WordPress source for Gridsome",
+  "name": "dynamic-node-source-wordpress",
+  "description": "Dynamic Node WordPress source for Gridsome",
   "homepage": "https://github.com/baffo/gridsome/tree/master/packages/source-wordpress#readme",
   "repository": "https://github.com/baffo/gridsome/tree/master/packages/source-wordpress",
   "main": "index.js",
   "keywords": [
-    "gridsome-wordpress",
+    "gridsome-wordpress"
   ],
   "dependencies": {
     "axios": "^0.19.0",

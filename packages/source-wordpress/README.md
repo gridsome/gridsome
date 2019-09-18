@@ -8,8 +8,8 @@ This is a customised unmaintained version of the original source-wordpress packa
 It adds additional settings and allows you to create references to Nodes of custom fields and custom post types.
 
 ## Install
-- `yarn add @gridsome/source-wordpress`
-- `npm install @gridsome/source-wordpress`
+- `yarn add dynamic-node-source-wordpress`
+- `npm install dynamic-node-source-wordpress`
 
 ## Usage
 
@@ -17,7 +17,7 @@ It adds additional settings and allows you to create references to Nodes of cust
 module.exports = {
   plugins: [
     {
-      use: '@gridsome/source-wordpress',
+      use: 'dynamic-node-source-wordpress',
       options: {
         baseUrl: 'WEBSITE_URL', // required
         apiBase: 'wp-json',
