@@ -146,7 +146,7 @@ class WordPressSource {
 
         // create custom post field node references
         if (customPostTypeReferences) {
-          for (let customReference of customPostTypeReferences) {
+          for (const customReference of customPostTypeReferences) {
             if (post.type !== TYPE_ATTACHEMENT && post[customReference.sourceField]) {
               fields[customReference.targetField] = createReference(this.createTypeName(customReference.type), parseInt(post[customReference.sourceField]))
             }
