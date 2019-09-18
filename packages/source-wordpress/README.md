@@ -3,10 +3,6 @@
 > WordPress source for Gridsome. This package is under development and
 API might change before v1 is released.
 
-This is a customised unmaintained version of the original source-wordpress package and it may be out of date! Use at own discretion.
-
-It adds additional settings and allows you to create references to Nodes of custom fields and custom post types.
-
 ## Install
 - `yarn add @gridsome/source-wordpress`
 - `npm install @gridsome/source-wordpress`
