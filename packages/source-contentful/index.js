@@ -60,7 +60,7 @@ class ContentfulSource {
         const taxonomyField = this.options.taxonomy[name]
         const taxonomyTypeName = this.createTypeName(`${name} ${taxonomyField}`)
         taxonomy[taxonomyField] = actions.addCollection(taxonomyTypeName)
-        collection.addReference(taxonomyField, taxonomyTypeName);
+        collection.addReference(taxonomyField, taxonomyTypeName)
       }
 
       this.typesIndex[id] = { ...contentType, typeName, taxonomy }
@@ -102,14 +102,14 @@ class ContentfulSource {
             : item
           )
         } else if (taxonomy[key]) {
-          const taxonomyContentType = taxonomy[key];
-          let taxonomyNode = taxonomyContentType.findNode({ title: value });
+          const taxonomyContentType = taxonomy[key]
+          let taxonomyNode = taxonomyContentType.findNode({ title: value })
 
           if (taxonomyNode === null) {
-            taxonomyNode = taxonomyContentType.addNode({ title: value, id: value });
+            taxonomyNode = taxonomyContentType.addNode({ title: value, id: value })
           }
 
-          node[key] = taxonomyNode.id;
+          node[key] = taxonomyNode.id
         } else if (this.isReference(value)) {
           node[key] = this.createReference(value, actions)
         } else if (this.isRichText(value)) {
