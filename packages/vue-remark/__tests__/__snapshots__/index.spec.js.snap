@@ -1,0 +1,53 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`add v-pre to fenced code blocks 1`] = `
+"<template>
+<VueRemarkRoot>
+<pre><code class=\\"language-html\\" v-pre>&#x3C;div>
+# title
+&#x3C;/div>
+</code></pre>
+</VueRemarkRoot>
+</template>"
+`;
+
+exports[`parse markdown inside Vue component 1`] = `
+"<template>
+<VueRemarkRoot>
+<MyComponent :is=\\"test\\">
+<h2 id=\\"test-2\\"><a href=\\"#test-2\\" aria-hidden=\\"true\\"><span class=\\"icon icon-link\\"></span></a>Test 2</h2>
+<blockquote>
+<p>Quote</p>
+</blockquote>
+</MyComponent>
+</VueRemarkRoot>
+</template>"
+`;
+
+exports[`parse nested Vue components 1`] = `
+"<template>
+<VueRemarkRoot>
+<MyComponent v-on:click=\\"test\\" @event=\\"test\\">
+  <AnotherComponent>
+    Some text...
+  </AnotherComponent>
+</MyComponent>
+</VueRemarkRoot>
+</template>"
+`;
+
+exports[`parse simple Vue component 1`] = `
+"<template>
+<VueRemarkRoot>
+<MyComponent />
+</VueRemarkRoot>
+</template>"
+`;
+
+exports[`parse simple title 1`] = `
+"<template>
+<VueRemarkRoot>
+<h1 id=\\"test\\"><a href=\\"#test\\" aria-hidden=\\"true\\"><span class=\\"icon icon-link\\"></span></a>Test</h1>
+</VueRemarkRoot>
+</template>"
+`;

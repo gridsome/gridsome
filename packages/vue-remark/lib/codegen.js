@@ -9,15 +9,15 @@ exports.genTemplateBlock = function (html, file) {
 
   return '' +
     `<template>\n` +
-    `  <VueRemarkLayout${attrs}>\n${html}\n</VueRemarkLayout>\n` +
-    `</template>\n`
+    `<VueRemarkRoot${attrs}>\n${html}\n</VueRemarkRoot>\n` +
+    `</template>`
 }
 
 exports.genImportBlock = function (statements, file) {
   const layout = normalizeLayout(file.data.layout)
 
   let code = statements.concat(
-    `import VueRemarkLayout from ${JSON.stringify(layout.component)}`
+    `import VueRemarkRoot from ${JSON.stringify(layout.component)}`
   ).join('\n')
 
   const ast = parse(code, { sourceType: 'module' })
@@ -75,7 +75,7 @@ exports.genFrontMatterBlock = function (data) {
    `    }\n` +
    `  }, Component.options.computed)\n` +
    `}\n` +
-   `</vue-remark-frontmatter>\n`
+   `</vue-remark-frontmatter>`
 }
 
 function propsToAttrs (props = {}) {

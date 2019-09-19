@@ -2,7 +2,12 @@ const he = require('he')
 const u = require('unist-builder')
 const toHTML = require('hast-util-to-html')
 const toHAST = require('mdast-util-to-hast')
-const { genImportBlock, genTemplateBlock } = require('./codegen')
+
+const {
+  genImportBlock,
+  genTemplateBlock,
+  genFrontMatterBlock
+} = require('./codegen')
 
 module.exports = function toSfc () {
   this.Compiler = compiler
@@ -38,8 +43,21 @@ module.exports = function toSfc () {
 
     const html = toHTML(hast, { allowDangerousHTML: true })
 
-    blocks.push(genImportBlock(importStatements, file))
-    blocks.unshift(genTemplateBlock(html, file))
+    if (file.data.onlyTemplate) {
+      return genTemplateBlock(html, file)
+    }
+
+    if (file.data.withImport !== false) {
+      blocks.push(genImportBlock(importStatements, file))
+    }
+
+    if (file.data.withTemplate !== false) {
+      blocks.unshift(genTemplateBlock(html, file))
+    }
+
+    if (file.data.withFrontMatter !== false) {
+      blocks.push(genFrontMatterBlock(file.data.data))
+    }
 
     return blocks.join('\n\n')
   }

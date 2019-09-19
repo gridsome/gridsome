@@ -45,7 +45,7 @@ exports.createFile = function (options) {
 }
 
 exports.normalizeLayout = function (layout) {
-  const defaultLayout = require.resolve('../src/VueRemarkLayout.js')
+  const defaultLayout = require.resolve('../src/VueRemarkRoot.js')
 
   if (typeof layout === 'string') {
     return { component: layout, props: {}}

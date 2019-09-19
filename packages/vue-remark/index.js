@@ -9,7 +9,6 @@ const sfcSyntax = require('./lib/sfcSyntax')
 const toVueRemarkAst = require('./lib/toVueRemarkAst')
 const remarkFilePlugin = require('./lib/plugins/file')
 const remarkImagePlugin = require('./lib/plugins/image')
-const { genFrontMatterBlock } = require('./lib/codegen')
 
 const {
   createFile,
@@ -166,6 +165,10 @@ class VueRemark {
     })
 
     api.createSchema(({ addSchemaResolvers }) => {
+      if (options.remark.autolinkHeadings === false) {
+        return
+      }
+
       const { headings } = this.remark.extendNodeType()
 
       addSchemaResolvers({
@@ -227,31 +230,33 @@ class VueRemark {
     }
   }
 
-  async parse (source, resourcePath = null) {
+  async parse (source, options = {}) {
     const { content, ...data } = this.remark.parse(source.trim())
-    const defaultLayout = require.resolve('./src/VueRemarkLayout.js')
+    const defaultLayout = require.resolve('./src/VueRemarkRoot.js')
     const layout = normalizeLayout(data.layout || defaultLayout)
-    const frontMatterBlock = genFrontMatterBlock(data)
 
     if (!data.layout && !path.isAbsolute(layout.component)) {
       layout.component = path.resolve(this.api.context, layout.component)
     }
 
+    if (!data.excerpt) data.excerpt = null
+
     const file = createFile({
       contents: content,
-      path: resourcePath,
       data: {
-        layout
+        data,
+        layout,
+        ...options
       }
     })
 
-    if (resourcePath) {
-      file.path = resourcePath
+    if (options.resourcePath) {
+      file.path = options.resourcePath
     }
 
     const sfc = await this.remark.processor.process(file)
 
-    return `${sfc}\n\n${frontMatterBlock}`
+    return sfc.contents
   }
 }
 

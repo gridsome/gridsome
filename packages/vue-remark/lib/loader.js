@@ -18,7 +18,7 @@ module.exports = async function vueRemarkLoader (source, map) {
   }
 
   try {
-    res = await plugin.parse(source, this.resourcePath)
+    res = await plugin.parse(source, { resourcePath: this.resourcePath })
   } catch (err) {
     callback(err, source, map)
     return
