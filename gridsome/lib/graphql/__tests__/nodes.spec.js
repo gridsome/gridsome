@@ -101,12 +101,21 @@ test('get node by path', async () => {
   })
 
   posts.addNode({ id: '1', path: '/test' })
+  posts.addNode({ id: '2', path: '/test/2/' })
+  posts.addNode({ id: '3', path: '/' })
 
-  const query = '{ testPost (path: "/test") { id }}'
-  const { errors, data } = await createSchemaAndExecute(query)
+  const { errors, data } = await createSchemaAndExecute(`{
+    testPost (path: "/test") { id }
+    testPost2: testPost (path: "/test/2") { id }
+    testPost3: testPost (path: "/test/") { id }
+    testPost4: testPost (path: "/") { id }
+  }`)
 
   expect(errors).toBeUndefined()
   expect(data.testPost.id).toEqual('1')
+  expect(data.testPost2.id).toEqual('2')
+  expect(data.testPost3.id).toEqual('1')
+  expect(data.testPost4.id).toEqual('3')
 })
 
 test('get node by id', async () => {
@@ -115,13 +124,17 @@ test('get node by id', async () => {
   })
 
   collection.addNode({ id: '20', title: 'Test' })
+  collection.addNode({ id: 21, title: 'Test' })
 
-  const query = '{ testPost (id: "20") { id title }}'
-  const { errors, data } = await createSchemaAndExecute(query)
+  const { errors, data } = await createSchemaAndExecute(`{
+    testPost (id: "20") { id title }
+    testPost2: testPost (id: "21") { id title }
+  }`)
 
   expect(errors).toBeUndefined()
   expect(data.testPost.id).toEqual('20')
   expect(data.testPost.title).toEqual('Test')
+  expect(data.testPost2.id).toEqual('21')
 })
 
 test('create connection', async () => {
