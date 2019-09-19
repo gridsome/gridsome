@@ -95,18 +95,28 @@ class VueRemark {
       refs: options.refs
     })
 
+    const remarkOptions = options.remark || {}
+
     this.remark = new RemarkTransformer({}, {
       assets: api._app.assets,
       localOptions: {
-        ...options.remark,
+        ...remarkOptions,
         processFiles: false,
         processImages: false,
         stringifier: toSFC,
         plugins: [
           sfcSyntax,
           toVueRemarkAst,
-          remarkFilePlugin,
-          remarkImagePlugin,
+          [remarkFilePlugin, {
+            processFiles: remarkOptions.processFiles
+          }],
+          [remarkImagePlugin, {
+            processImages: remarkOptions.processImages,
+            blur: remarkOptions.imageBlurRatio,
+            quality: remarkOptions.imageQuality,
+            background: remarkOptions.imageBackground,
+            immediate: remarkOptions.lazyLoadImages === false ? true : undefined
+          }],
           ...options.plugins
         ]
       }

@@ -107,11 +107,59 @@ test('parse images as g-image', async () => {
   expect(res).toMatch('<p><g-image src="./image.png" alt="Test"></g-image></p>')
 })
 
+test('parse image options', async () => {
+  const plugin = await createPlugin({
+    remark: {
+      imageQuality: 10,
+      imageBlurRatio: 5,
+      imageBackground: 'red'
+    }
+  })
+  const res = await plugin.parse('![](./image.png)', { onlyTemplate: true })
+
+  expect(res).toMatch('blur="5"')
+  expect(res).toMatch('quality="10"')
+  expect(res).toMatch('background="red"')
+})
+
+test('disable image lazy loading', async () => {
+  const plugin = await createPlugin({
+    remark: {
+      lazyLoadImages: false
+    }
+  })
+  const res = await plugin.parse('![](./image.png)', { onlyTemplate: true })
+
+  expect(res).toMatch('immediate')
+})
+
+test('disable image processing', async () => {
+  const plugin = await createPlugin({
+    remark: {
+      processImages: false
+    }
+  })
+  const res = await plugin.parse('![](./image.png)', { onlyTemplate: true })
+
+  expect(res).toMatch('<p><img src="./image.png"></p>')
+})
+
 test('parse local files as g-link', async () => {
   const plugin = await createPlugin()
   const res = await plugin.parse('[Test](./document.pdf)', { onlyTemplate: true })
 
   expect(res).toMatch('<p><g-link to="./document.pdf">Test</g-link></p>')
+})
+
+test('disable g-link for files', async () => {
+  const plugin = await createPlugin({
+    remark: {
+      processFiles: false
+    }
+  })
+  const res = await plugin.parse('[Test](./document.pdf)', { onlyTemplate: true })
+
+  expect(res).toMatch('<p><a href="./document.pdf">Test</a></p>')
 })
 
 test('parse frontmatter', async () => {
