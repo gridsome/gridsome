@@ -24,12 +24,15 @@ exports.genImportBlock = function (statements, file) {
   const identifiers = {}
 
   traverse(ast, {
-    Identifier (path) {
-      identifiers[path.node.name] = true
+    ImportDefaultSpecifier (path) {
+      identifiers[path.node.local.name] = true
+    },
+    ImportSpecifier (path) {
+      identifiers[path.node.local.name] = true
     }
   })
 
-  code += '\n\n' +
+  code += '\n' +
     `import Vue from 'vue'\n\n` +
     `const strats = Vue.config.optionMergeStrategies\n` +
     `const imported = {${Object.keys(identifiers).join(', ')}}\n\n` +
@@ -58,7 +61,7 @@ exports.genFrontMatterBlock = function (data) {
       return acc
     }, {})
 
-  return '\n' +
+  return '' +
    `<vue-remark-frontmatter>\n` +
    `import Vue from 'vue'\n\n` +
    `const strats = Vue.config.optionMergeStrategies\n` +
