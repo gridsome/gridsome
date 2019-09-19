@@ -11,7 +11,8 @@ class ContentfulSource {
       host: 'cdn.contentful.com',
       typeName: 'Contentful',
       richText: {},
-      routes: {}
+      routes: {},
+      taxonomy: {}
     }
   }
 
@@ -26,10 +27,10 @@ class ContentfulSource {
       host: options.host
     })
 
-    api.loadSource(async store => {
-      await this.getContentTypes(store)
-      await this.getAssets(store)
-      await this.getEntries(store)
+    api.loadSource(async actions => {
+      await this.getContentTypes(actions)
+      await this.getAssets(actions)
+      await this.getEntries(actions)
     })
   }
 
@@ -42,6 +43,7 @@ class ContentfulSource {
       const typeName = this.createTypeName(name)
       const route = this.options.routes[name]
       const resolvers = {}
+      const taxonomy = {}
 
       for (const field of contentType.fields) {
         if (field.type === 'RichText') {
@@ -49,12 +51,19 @@ class ContentfulSource {
         }
       }
 
-      actions.addCollection({ typeName, route })
+      const collection = actions.addCollection({ typeName, route })
       actions.addSchemaResolvers({
         [typeName]: resolvers
       })
 
-      this.typesIndex[id] = { ...contentType, typeName }
+      if (this.options.taxonomy[name]) {
+        const taxonomyField = this.options.taxonomy[name]
+        const taxonomyTypeName = this.createTypeName(`${name} ${taxonomyField}`)
+        taxonomy[taxonomyField] = actions.addCollection(taxonomyTypeName)
+        collection.addReference(taxonomyField, taxonomyTypeName);
+      }
+
+      this.typesIndex[id] = { ...contentType, typeName, taxonomy }
     }
   }
 
@@ -74,7 +83,7 @@ class ContentfulSource {
 
     for (const entry of entries) {
       const typeId = entry.sys.contentType.sys.id
-      const { typeName, displayField } = this.typesIndex[typeId]
+      const { typeName, displayField, taxonomy } = this.typesIndex[typeId]
       const collection = actions.getCollection(typeName)
       const node = {}
 
@@ -92,6 +101,15 @@ class ContentfulSource {
             ? this.createReference(item, actions)
             : item
           )
+        } else if (taxonomy[key]) {
+          const taxonomyContentType = taxonomy[key];
+          let taxonomyNode = taxonomyContentType.findNode({ title: value });
+
+          if (taxonomyNode === null) {
+            taxonomyNode = taxonomyContentType.addNode({ title: value, id: value });
+          }
+
+          node[key] = taxonomyNode.id;
         } else if (this.isReference(value)) {
           node[key] = this.createReference(value, actions)
         } else if (this.isRichText(value)) {
