@@ -353,6 +353,25 @@ test('create references with collection.addReference()', async () => {
   expect(data.post.authors).toHaveLength(1)
 })
 
+test('create missing reference fields from collection.addReference()', async () => {
+  const posts = api.store.addCollection('Post')
+
+  api.store.addCollection('Author')
+  posts.addReference('author', 'Author')
+  posts.addNode({ id: '1' })
+
+  const query = `{
+    post (id: "1") {
+      author { id }
+    }
+  }`
+
+  const { errors, data } = await createSchemaAndExecute(query)
+
+  expect(errors).toBeUndefined()
+  expect(data.post.author).toBeNull()
+})
+
 test('don\'t process invalid refs from collection.addReference()', () => {
   const authors = api.store.addCollection('Author')
   const posts = api.store.addCollection('Post')

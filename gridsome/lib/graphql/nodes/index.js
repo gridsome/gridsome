@@ -254,22 +254,10 @@ function createTypeResolvers (typeComposer, collection) {
 function createReferenceFields (schemaComposer, typeComposer, collection) {
   if (isEmpty(collection._refs)) return
 
-  const refs = mapValues(collection._refs, ({ typeName, extensions }, fieldName) => {
+  const refs = mapValues(collection._refs, ({ typeName }, fieldName) => {
     const refTypeComposer = schemaComposer.get(typeName)
 
-    if (!typeComposer.hasField(fieldName)) {
-      const typeName = typeComposer.getTypeName()
-      const key = extensions && extensions.proxy
-        ? extensions.proxy.from
-        : fieldName
-
-      throw new Error(
-        `Could not setup reference for ${typeName}.${fieldName}. ` +
-        `The ${key} field does not exist.`
-      )
-    }
-
-    return typeComposer.isFieldPlural(fieldName)
+    return typeComposer.hasField(fieldName) && typeComposer.isFieldPlural(fieldName)
       ? refTypeComposer.getResolver('referenceManyAdvanced')
       : refTypeComposer.getResolver('referenceOne')
   })
@@ -277,6 +265,8 @@ function createReferenceFields (schemaComposer, typeComposer, collection) {
   typeComposer.addFields(refs)
 
   mapValues(collection._refs, ({ extensions = {}}, fieldName) => {
-    typeComposer.extendFieldExtensions(fieldName, extensions)
+    if (typeComposer.hasField(fieldName)) {
+      typeComposer.extendFieldExtensions(fieldName, extensions)
+    }
   })
 }
