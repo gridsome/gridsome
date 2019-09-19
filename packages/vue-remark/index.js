@@ -116,6 +116,12 @@ class VueRemark {
     api.chainWebpack(config => this.chainWebpack(config))
     api.createPages(actions => this.createPages(actions))
 
+    if (api._app.compiler.hooks.cacheIdentifier) {
+      api._app.compiler.hooks.cacheIdentifier.tap('VueRemark', id => {
+        id['vue-remark'] = require('./package.json').version
+      })
+    }
+
     api._app.pages.hooks.parseComponent.for('md').tap('VueRemark', source => {
       const pageQueryRE = /<page-query>([^</]+)<\/page-query>/
       const ast = this.remark.processor.parse(source)

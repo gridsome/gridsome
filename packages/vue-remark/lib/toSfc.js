@@ -33,7 +33,7 @@ module.exports = function toSfc () {
           return h(node, 'g-link', { to: node.url }, node.children)
         },
         'g-image' (h, node) {
-          return h(node, 'g-image', { src: node.url })
+          return h(node, 'g-image', { src: node.url, alt: node.alt, title: node.title })
         },
         'text' (h, node) {
           return h.augment(node, u('raw', he.encode(node.value)))
