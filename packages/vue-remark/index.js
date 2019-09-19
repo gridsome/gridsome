@@ -36,6 +36,20 @@ const normalizeRouteKeys = keys => keys
     }
   })
 
+const createCustomBlockRule = (config, type) => {
+  const re = new RegExp(`blockType=(${type})`)
+
+  config.module.rule(type)
+    .resourceQuery(re)
+    .use('babel-loader')
+    .loader('babel-loader')
+    .options({
+      presets: [
+        require.resolve('@vue/babel-preset-app')
+      ]
+    })
+}
+
 // TODO: refactor and clean up
 
 class VueRemark {
@@ -196,6 +210,9 @@ class VueRemark {
   chainWebpack (config) {
     const vueLoader = config.module.rule('vue').use('vue-loader')
     const includePaths = this.options.includePaths.map(p => this.api.resolve(p))
+
+    createCustomBlockRule(config, 'vue-remark-import')
+    createCustomBlockRule(config, 'vue-remark-frontmatter')
 
     config.module.rule('vue-remark')
       .test(/\.md$/)

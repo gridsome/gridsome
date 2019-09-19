@@ -16,6 +16,7 @@
     "@babel/traverse": "^7.0.0",
     "@gridsome/source-filesystem": "^0.6.0",
     "@gridsome/transformer-remark": "^0.3.3",
+    "@vue/babel-preset-app": "^3.11.0",
     "hash-sum": "^1.0.2",
     "hast-util-to-html": "^5.0.0",
     "he": "^1.2.0",
