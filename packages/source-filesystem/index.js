@@ -67,7 +67,17 @@ class FilesystemSource {
       const node = this.collection.addNode(options)
 
       this.createNodeRefs(node, actions)
-    }))
+    })).catch(err => {
+      if (err.message === "No transformer for 'text/markdown' is installed.") {
+        throw Error(`${err.message}
+
+  Please install @gridsome/transformer-remark
+
+  yarn add @gridsome/transformer-remark
+
+`)
+      }
+    })
   }
 
   createNodeRefs (node, actions) {
