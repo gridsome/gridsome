@@ -131,3 +131,22 @@ Automatically add links to headings. Disabled if `slug` is `false`.
 - Default: `true`
 
 Support ASCII guillements (`<<`, `>>`) and mapping them to HTML.
+
+#### imageQuality
+
+- Type: `number`
+- Default: `75`
+
+#### imageBlurRatio
+
+- Type: `number`
+- Default: `40`
+
+#### imageBackground
+
+- Type: `string`
+
+#### lazyLoadImages
+
+- Type: `boolean`
+- Default: `true`

@@ -32,7 +32,12 @@ exports.createPlugins = function (options, localOptions) {
   }
 
   if (options.processImages !== false) {
-    plugins.push(require('./plugins/image'))
+    plugins.push([require('./plugins/image'), {
+      blur: options.imageBlurRatio,
+      quality: options.imageQuality,
+      background: options.imageBackground,
+      immediate: options.lazyLoadImages === false ? true : undefined
+    }])
   }
 
   if (options.slug !== false) {
