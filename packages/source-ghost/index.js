@@ -33,14 +33,6 @@ class GhostSource {
       throw new Error(`${options.typeName}: perPage cannot be more than 100 or less than 1`)
     }
 
-    this.templates = {
-      post: '/:year/:month/:day/:slug',
-      tag: '/tag/:slug',
-      page: '/page/:slug',
-      author: '/author/:slug',
-      ...this.options.templates
-    }
-
     api.loadSource(async actions => {
       console.log(`Loading data from ${options.url}`)
       await this.loadAuthors(actions)
