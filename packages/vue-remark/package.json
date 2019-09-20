@@ -1,5 +1,5 @@
 {
-  "version": "0.1.1",
+  "version": "0.1.2",
   "name": "@gridsome/vue-remark",
   "description": "Use Vue Components in Markdown",
   "homepage": "https://github.com/gridsome/gridsome/tree/master/packages/vue-remark#readme",
@@ -15,7 +15,7 @@
     "@babel/parser": "^7.0.0",
     "@babel/traverse": "^7.0.0",
     "@gridsome/source-filesystem": "^0.6.0",
-    "@gridsome/transformer-remark": "^0.3.3",
+    "@gridsome/transformer-remark": "^0.3.4",
     "@vue/babel-preset-app": "^3.11.0",
     "hash-sum": "^1.0.2",
     "hast-util-to-html": "^5.0.0",

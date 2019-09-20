@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.7.4](https://github.com/gridsome/gridsome/compare/gridsome@0.7.3...gridsome@0.7.4) (2019-09-20)
+
+
+### Bug Fixes
+
+* **develop:** show original error when no filename ([eb702d8](https://github.com/gridsome/gridsome/commit/eb702d8))
+* **graphql:** auto create missing reference fields ([9a4d24c](https://github.com/gridsome/gridsome/commit/9a4d24c))
+* **graphql:** don’t process invalid references ([b88960e](https://github.com/gridsome/gridsome/commit/b88960e))
+* **graphql:** don’t transform missing input types ([6e2f28e](https://github.com/gridsome/gridsome/commit/6e2f28e))
+* **graphql:** fix union fields by addReference() ([99e2ce8](https://github.com/gridsome/gridsome/commit/99e2ce8))
+* **graphql:** ignore trailing slash for path argument ([2b5d17f](https://github.com/gridsome/gridsome/commit/2b5d17f))
+* **pages:** show an error if component is not found ([654d075](https://github.com/gridsome/gridsome/commit/654d075))
+
+
+
+
+
 ## [0.7.3](https://github.com/gridsome/gridsome/compare/gridsome@0.7.2...gridsome@0.7.3) (2019-09-16)
 
 
