@@ -126,7 +126,7 @@ class GhostSource {
     const settings = await this.contentAPI.settings.browse()
     const fieldName = settingsName || camelCase(typeName)
 
-    store.addMetaData(fieldName, settings)
+    store.addMetadata(fieldName, settings)
   }
 
   async loadBasicEntity (collection, contentEntity) {
