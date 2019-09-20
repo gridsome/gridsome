@@ -180,6 +180,68 @@ test('keep interpolation', async () => {
   expect(res).toMatch('<p>{{ $frontmatter.title }}</p>')
 })
 
+test('extract <script> tag', async () => {
+  const plugin = await createPlugin()
+  const res = await plugin.parse(`
+# Test
+<script>
+export default {
+  mounted() {}
+}
+</script>`, {
+    onlyBlocks: true
+  })
+
+  expect(res).toMatchSnapshot()
+})
+
+test('extract <style> tag', async () => {
+  const plugin = await createPlugin()
+  const res = await plugin.parse(`
+# Test
+<style lang="scss">
+body {}
+</style>`, {
+    onlyBlocks: true
+  })
+
+  expect(res).toMatchSnapshot()
+})
+
+test('extract <page-query> tag', async () => {
+  const plugin = await createPlugin()
+  const res = await plugin.parse(`
+# Test
+<page-query>
+query {
+  metadata {
+    siteName
+  }
+}
+</page-query>`, {
+    onlyBlocks: true
+  })
+
+  expect(res).toMatchSnapshot()
+})
+
+test('extract <static-query> tag', async () => {
+  const plugin = await createPlugin()
+  const res = await plugin.parse(`
+# Test
+<static-query>
+query {
+  metadata {
+    siteName
+  }
+}
+</static-query>`, {
+    onlyBlocks: true
+  })
+
+  expect(res).toMatchSnapshot()
+})
+
 async function createPlugin (options = {}) {
   const app = new App('/', {
     plugins: [{

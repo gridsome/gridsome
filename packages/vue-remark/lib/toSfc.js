@@ -44,6 +44,10 @@ module.exports = function toSfc () {
 
     const html = toHTML(hast, { allowDangerousHTML: true })
 
+    if (file.data.onlyBlocks) {
+      return blocks.join('\n\n')
+    }
+
     if (file.data.onlyTemplate) {
       return genTemplateBlock(html, file)
     }

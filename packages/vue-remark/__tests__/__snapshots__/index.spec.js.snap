@@ -11,6 +11,40 @@ exports[`add v-pre to fenced code blocks 1`] = `
 </template>"
 `;
 
+exports[`extract <page-query> tag 1`] = `
+"<page-query>
+query {
+  metadata {
+    siteName
+  }
+}
+</page-query>"
+`;
+
+exports[`extract <script> tag 1`] = `
+"<script>
+export default {
+  mounted() {}
+}
+</script>"
+`;
+
+exports[`extract <static-query> tag 1`] = `
+"<static-query>
+query {
+  metadata {
+    siteName
+  }
+}
+</static-query>"
+`;
+
+exports[`extract <style> tag 1`] = `
+"<style lang=\\"scss\\">
+body {}
+</style>"
+`;
+
 exports[`parse markdown inside Vue component 1`] = `
 "<template>
 <VueRemarkRoot>

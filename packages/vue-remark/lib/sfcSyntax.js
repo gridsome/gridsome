@@ -26,7 +26,11 @@ function tokenizeImportSyntax (eat, value) {
 
 function tokenizeSFCBlocks (eat, value) {
   if (isQuery(value) || isScript(value) || isStyle(value)) {
-    const portion = getTag(value)
+    const [, name] = value.match(/^<([a-zA-Z0-9_-]+)[^>]*>/)
+    const re = new RegExp(`^<${name}[^>]*>(.|\\n|\\t)*?<\\/${name}>`)
+    const matches = value.match(re)
+    const portion = matches ? matches[0] : ''
+
     return eat(portion)({ type: 'vue-remark:block', value: portion })
   }
 }
