@@ -45,7 +45,7 @@ const createCustomBlockRule = (config, type) => {
     .loader('babel-loader')
     .options({
       presets: [
-        require.resolve('@vue/babel-preset-app')
+        require.resolve('@babel/preset-env')
       ]
     })
 }
