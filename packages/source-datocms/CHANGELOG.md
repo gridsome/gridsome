@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.2.0](https://github.com/gridsome/gridsome/tree/master/packages/source-datocms/compare/@gridsome/source-datocms@0.1.0...@gridsome/source-datocms@0.2.0) (2019-09-20)
+
+
+### Features
+
+* **datocms:** changes for gridsome v0.7 support ([f2c6377](https://github.com/gridsome/gridsome/tree/master/packages/source-datocms/commit/f2c6377))
+
+
+
+
+
 # [0.1.0](https://github.com/gridsome/gridsome/tree/master/packages/source-datocms/compare/@gridsome/source-datocms@0.0.2...@gridsome/source-datocms@0.1.0) (2019-05-20)
 
 

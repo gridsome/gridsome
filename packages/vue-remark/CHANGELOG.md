@@ -3,6 +3,21 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.3](https://github.com/gridsome/gridsome/tree/master/packages/vue-remark/compare/@gridsome/vue-remark@0.1.2...@gridsome/vue-remark@0.1.3) (2019-09-20)
+
+
+### Bug Fixes
+
+* **vue-remark:** don’t touch built-in tags ([#677](https://github.com/gridsome/gridsome/tree/master/packages/vue-remark/issues/677)) ([cb69ea9](https://github.com/gridsome/gridsome/tree/master/packages/vue-remark/commit/cb69ea9))
+* **vue-remark:** extract sfc blocks from template ([dc33f4a](https://github.com/gridsome/gridsome/tree/master/packages/vue-remark/commit/dc33f4a))
+* **vue-remark:** generate route chunk names ([18615ad](https://github.com/gridsome/gridsome/tree/master/packages/vue-remark/commit/18615ad))
+* **vue-remark:** throw error if using global templates ([1c54c27](https://github.com/gridsome/gridsome/tree/master/packages/vue-remark/commit/1c54c27))
+* **vue-remark:** use babel env preset for custom blocks ([11e56eb](https://github.com/gridsome/gridsome/tree/master/packages/vue-remark/commit/11e56eb))
+
+
+
+
+
 ## [0.1.2](https://github.com/gridsome/gridsome/tree/master/packages/vue-remark/compare/@gridsome/vue-remark@0.1.1...@gridsome/vue-remark@0.1.2) (2019-09-20)
 
 
