@@ -67,6 +67,10 @@ function createStoreActions (api, app) {
     },
 
     store: {
+      createUniqueId (id) {
+        const { name, index } = api._entry
+        return crypto.createHash('md5').update(name + index + id).digest('hex')
+      },
       createReference (typeName, id) {
         return store.createReference(typeName, id)
       }

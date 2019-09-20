@@ -99,7 +99,9 @@ function createRefType (schemaComposer, ref, fieldName, fieldTypeName) {
   if (typeNames.length > 1) {
     const typeComposer = schemaComposer.createUnionTC({
       name: createTypeName(fieldTypeName, fieldName + 'Ref'),
-      types: typeNames
+      description: `Reference to ${typeNames.join(', ')} nodes`,
+      interfaces: ['Node'],
+      types: () => typeNames
     })
 
     return {

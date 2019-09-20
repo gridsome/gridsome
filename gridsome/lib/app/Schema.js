@@ -84,8 +84,8 @@ function createStoreActions (store) {
     getNode (typeName, id) {
       return store.getNode(typeName, id)
     },
-    chainIndex (query) {
-      return store.chainIndex(query)
+    chainIndex (query, resolveNodes) {
+      return store.chainIndex(query, resolveNodes)
     }
   }
 }

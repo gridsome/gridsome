@@ -5,9 +5,10 @@ const { PER_PAGE } = require('../../utils/constants')
 const { createFilterInput } = require('../filters/input')
 const createFieldDefinitions = require('../createFieldDefinitions')
 const { createFieldTypes } = require('../createFieldTypes')
-const { isRefFieldDefinition } = require('../utils')
+const { isRefFieldDefinition, createTypeName } = require('../utils')
+const { isRefField } = require('../../store/utils')
 
-const { mapValues, isEmpty, isPlainObject } = require('lodash')
+const { omit, mapValues, isEmpty, isPlainObject } = require('lodash')
 
 module.exports = function createNodesSchema (schemaComposer, store) {
   const typeNames = Object.keys(store.collections)
@@ -254,19 +255,79 @@ function createTypeResolvers (typeComposer, collection) {
 function createReferenceFields (schemaComposer, typeComposer, collection) {
   if (isEmpty(collection._refs)) return
 
-  const refs = mapValues(collection._refs, ({ typeName }, fieldName) => {
-    const refTypeComposer = schemaComposer.get(typeName)
+  const fields = mapValues(collection._refs, ({ typeName }, fieldName) => {
+    const isList = typeComposer.hasField(fieldName)
+      ? typeComposer.isFieldPlural(fieldName)
+      : false
 
-    return typeComposer.hasField(fieldName) && typeComposer.isFieldPlural(fieldName)
-      ? refTypeComposer.getResolver('referenceManyAdvanced')
-      : refTypeComposer.getResolver('referenceOne')
+    if (Array.isArray(typeName)) {
+      const unionTypeComposer = schemaComposer.createUnionTC({
+        name: createTypeName(typeComposer.getTypeName(), fieldName + 'InferRef'),
+        description: `Reference to ${typeName.join(', ')} nodes`,
+        interfaces: ['Node'],
+        types: () => typeName
+      })
+
+      return {
+        type: isList
+          ? [unionTypeComposer]
+          : unionTypeComposer,
+        resolve: isList
+          ? createReferenceManyUnionResolver(typeName)
+          : createReferenceOneUnionResolver(typeName)
+      }
+    } else {
+      const otherTypeComposer = schemaComposer.get(typeName)
+
+      return isList
+        ? otherTypeComposer.getResolver('referenceManyAdvanced')
+        : otherTypeComposer.getResolver('referenceOne')
+    }
   })
 
-  typeComposer.addFields(refs)
+  typeComposer.addFields(fields)
 
   mapValues(collection._refs, ({ extensions = {}}, fieldName) => {
     if (typeComposer.hasField(fieldName)) {
       typeComposer.extendFieldExtensions(fieldName, extensions)
     }
   })
+}
+
+function createReferenceManyUnionResolver (typeNames) {
+    return (src, args , ctx, info) => {
+      const fieldValue = src[info.fieldName] || []
+
+      if (fieldValue.length && isRefField(fieldValue[0])) {
+        return fieldValue.map(value => {
+          return ctx.store.getNode(value.typeName, value.id)
+        }).filter(Boolean)
+      }
+
+      const query = { typeName: { $in: typeNames } }
+      const chain = ctx.store.chainIndex(query, false)
+      const results = chain.find({ id: { $in: fieldValue }}).map(entry => {
+        return omit(ctx.store.getNodeByUid(entry.uid), ['$loki'])
+      })
+
+      return results.data().filter(Boolean)
+    }
+}
+
+function createReferenceOneUnionResolver (typeNames) {
+  return (src, args, ctx, info) => {
+    const fieldValue = src[info.fieldName] || null
+
+    if (isRefField(fieldValue)) {
+      return ctx.store.getNode(fieldValue.typeName, fieldValue.id)
+    }
+
+    const query = { typeName: { $in: typeNames } }
+    const chain = ctx.store.chainIndex(query, false)
+    const results = chain.find({ id: { $in: fieldValue } }).map(entry => {
+      return omit(ctx.store.getNodeByUid(entry.uid), ['$loki'])
+    })
+
+    return results.data().shift()
+  }
 }

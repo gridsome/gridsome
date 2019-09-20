@@ -131,8 +131,14 @@ class Store {
     this.nodeIndex.index.update({ ...entry, belongsTo })
   }
 
-  chainIndex (query = {}) {
-    return this.nodeIndex.getChain().find(query).map(entry => {
+  chainIndex (query = {}, resolveNodes = true) {
+    const chain = this.nodeIndex.getChain().find(query)
+
+    if (!resolveNodes) {
+      return chain
+    }
+
+    return chain.map(entry => {
       const collection = this.collections[entry.typeName]
       const node = collection.collection.by('id', entry.id)
 
