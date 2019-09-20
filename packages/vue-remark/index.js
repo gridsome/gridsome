@@ -76,6 +76,14 @@ class VueRemark {
       throw new Error(`@gridsome/vue-remark requires the 'typeName' option.`)
     }
 
+    if (api.config.templates[options.typeName]) {
+      throw new Error(
+        `@gridsome/vue-remark does not work with a template. ` +
+        `Remove "${options.typeName}" from the global templates config ` +
+        `and use the "template" option for the plugin instead.`
+      )
+    }
+
     this.api = api
     this.options = options
     this.context = options.baseDir ? api.resolve(options.baseDir) : api.context
