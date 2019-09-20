@@ -2,7 +2,7 @@ const path = require('path')
 const pathToRegexp = require('path-to-regexp')
 const Filesystem = require('@gridsome/source-filesystem')
 const RemarkTransformer = require('@gridsome/transformer-remark')
-const { trimEnd } = require('lodash')
+const { trimEnd, kebabCase } = require('lodash')
 
 const toSFC = require('./lib/toSfc')
 const sfcSyntax = require('./lib/sfcSyntax')
@@ -48,6 +48,16 @@ const createCustomBlockRule = (config, type) => {
         require.resolve('@babel/preset-env')
       ]
     })
+}
+
+const genChunkName = (context, component) => {
+  const chunkName = path.relative(context, component)
+    .split('/')
+    .filter(s => s !== '..')
+    .map(s => kebabCase(s))
+    .join('--')
+
+  return `vue-remark--${chunkName}`
 }
 
 // TODO: refactor and clean up
@@ -251,13 +261,18 @@ class VueRemark {
       const node = nodes[i]
 
       if (this.template) {
+        const chunkName = genChunkName(
+          this.api.context,
+          node.internal.origin
+        )
+
         createPage({
           path: node.path,
           component: this.template,
           queryVariables: node,
           route: {
             meta: {
-              $vueRemark: `() => import(${JSON.stringify(node.internal.origin)})`
+              $vueRemark: `() => import(/* webpackChunkName: "${chunkName}" */ ${JSON.stringify(node.internal.origin)})`
             }
           }
         })
