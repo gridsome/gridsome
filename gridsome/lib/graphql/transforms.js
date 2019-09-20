@@ -19,18 +19,21 @@ function fixIncorrectVariableUsage (schema, ast, variableDef) {
       if (node.value.kind === Kind.VARIABLE && node.name.value === name) {
         const argumentType = schema.getType(typeNode.name.value)
         const inputType = typeInfo.getInputType()
-        const typeName = inputType.toString()
 
-        if (argumentType && argumentType !== inputType) {
-          incorrectNodes.push({
-            name: node.name.value,
-            oldType: typeNode.name.value,
-            newType: typeName
-          })
+        if (inputType) {
+          const typeName = inputType.toString()
 
-          typeNode.name.value = typeName
+          if (argumentType && argumentType !== inputType) {
+            incorrectNodes.push({
+              name: node.name.value,
+              oldType: typeNode.name.value,
+              newType: typeName
+            })
 
-          return BREAK
+            typeNode.name.value = typeName
+
+            return BREAK
+          }
         }
       }
     }
