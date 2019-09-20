@@ -53,8 +53,7 @@ class GhostSource {
 
   async loadTags ({ addContentType, addCollection = addContentType }) {
     const tags = addCollection({
-      typeName: this.createTypeName(TYPE_TAG),
-      route: this.routes[TYPE_TAG]
+      typeName: this.createTypeName(TYPE_TAG)
     })
 
     await this.loadBasicEntity(tags, this.contentAPI.tags)
@@ -63,7 +62,6 @@ class GhostSource {
   async loadPages ({ addContentType, addCollection = addContentType }) {
     const pages = addCollection({
       typeName: this.createTypeName(TYPE_PAGE),
-      route: this.routes[TYPE_PAGE],
       dateField: 'published_at'
     })
 
@@ -72,8 +70,7 @@ class GhostSource {
 
   async loadAuthors ({ addContentType, addCollection = addContentType }) {
     const authors = addCollection({
-      typeName: this.createTypeName(TYPE_AUTHOR),
-      route: this.routes[TYPE_AUTHOR]
+      typeName: this.createTypeName(TYPE_AUTHOR)
     })
 
     await this.loadBasicEntity(authors, this.contentAPI.authors)
@@ -82,7 +79,6 @@ class GhostSource {
   async loadPosts ({ addContentType, createReference, addCollection = addContentType }) {
     const posts = addCollection({
       typeName: this.createTypeName(TYPE_POST),
-      route: this.routes[TYPE_POST],
       dateField: 'published_at'
     })
 
