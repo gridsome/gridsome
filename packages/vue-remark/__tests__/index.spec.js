@@ -15,6 +15,26 @@ test('parse simple Vue component', async () => {
   expect(res).toMatchSnapshot()
 })
 
+test('parse simple Vue component after heading', async () => {
+  const plugin = await createPlugin()
+  const res = await plugin.parse(`
+# Heading
+
+<MyComponent />
+`, { onlyTemplate: true })
+
+  expect(res).toMatchSnapshot()
+})
+
+test('parse Vue component in paragraph', async () => {
+  const plugin = await createPlugin()
+  const res = await plugin.parse(`
+Lorem <MyComponent /> impsum...
+`, { onlyTemplate: true })
+
+  expect(res).toMatch('<p>Lorem <MyComponent /> impsum...</p>')
+})
+
 test('parse nested Vue components', async () => {
   const plugin = await createPlugin()
   const res = await plugin.parse(`
@@ -75,29 +95,6 @@ test('parse Vue components in headings', async () => {
   const res = await plugin.parse('# Heading <Tag />', { onlyTemplate: true })
 
   expect(res).toMatch('Heading <Tag />')
-})
-
-test('parse import statements', async () => {
-  const plugin = await createPlugin()
-  const res = await plugin.parse(`import A from '~/components/A.vue'\n<A/>`)
-
-  expect(res).toMatch('import A from \'~/components/A.vue\'')
-  expect(res).toMatch('const imported = {A, VueRemarkRoot}')
-  expect(res).toMatch('<A/>')
-})
-
-test('parse import as statements', async () => {
-  const plugin = await createPlugin()
-  const res = await plugin.parse(`import A, { B, C as D } from '~/components'`)
-
-  expect(res).toMatch('const imported = {A, B, D, VueRemarkRoot}')
-})
-
-test('parse import default as statements', async () => {
-  const plugin = await createPlugin()
-  const res = await plugin.parse(`import { default as D } from '~/components/Button.vue'`)
-
-  expect(res).toMatch('const imported = {D, VueRemarkRoot}')
 })
 
 test('parse images as g-image', async () => {
@@ -180,37 +177,38 @@ test('keep interpolation', async () => {
   expect(res).toMatch('<p>{{ $frontmatter.title }}</p>')
 })
 
-test('extract <script> tag', async () => {
-  const plugin = await createPlugin()
-  const res = await plugin.parse(`
+describe('process SFC blocks', () => {
+  test('extract <script> tag', async () => {
+    const plugin = await createPlugin()
+    const res = await plugin.parse(`
 # Test
 <script>
 export default {
   mounted() {}
 }
 </script>`, {
-    onlyBlocks: true
+      onlyBlocks: true
+    })
+
+    expect(res).toMatchSnapshot()
   })
 
-  expect(res).toMatchSnapshot()
-})
-
-test('extract <style> tag', async () => {
-  const plugin = await createPlugin()
-  const res = await plugin.parse(`
+  test('extract <style> tag', async () => {
+    const plugin = await createPlugin()
+    const res = await plugin.parse(`
 # Test
 <style lang="scss">
 body {}
 </style>`, {
-    onlyBlocks: true
+      onlyBlocks: true
+    })
+
+    expect(res).toMatchSnapshot()
   })
 
-  expect(res).toMatchSnapshot()
-})
-
-test('extract <page-query> tag', async () => {
-  const plugin = await createPlugin()
-  const res = await plugin.parse(`
+  test('extract <page-query> tag', async () => {
+    const plugin = await createPlugin()
+    const res = await plugin.parse(`
 # Test
 <page-query>
 query {
@@ -219,15 +217,15 @@ query {
   }
 }
 </page-query>`, {
-    onlyBlocks: true
+      onlyBlocks: true
+    })
+
+    expect(res).toMatchSnapshot()
   })
 
-  expect(res).toMatchSnapshot()
-})
-
-test('extract <static-query> tag', async () => {
-  const plugin = await createPlugin()
-  const res = await plugin.parse(`
+  test('extract <static-query> tag', async () => {
+    const plugin = await createPlugin()
+    const res = await plugin.parse(`
 # Test
 <static-query>
 query {
@@ -236,10 +234,87 @@ query {
   }
 }
 </static-query>`, {
-    onlyBlocks: true
+      onlyBlocks: true
+    })
+
+    expect(res).toMatchSnapshot()
+  })
+})
+
+describe('don\'t touch normal HTML tags', () => {
+  test('<sup>1</sup> Lorem ipsum', async () => {
+    const plugin = await createPlugin()
+    const res = await plugin.parse('<sup>1</sup> Lorem ipsum', { onlyTemplate: true })
+
+    expect(res).toMatch('<p><sup>1</sup> Lorem ipsum</p>')
   })
 
-  expect(res).toMatchSnapshot()
+  test('Lorem <sup>1</sup> ipsum', async () => {
+    const plugin = await createPlugin()
+    const res = await plugin.parse('Lorem <sup>1</sup> ipsum', { onlyTemplate: true })
+
+    expect(res).toMatch('<p>Lorem <sup>1</sup> ipsum</p>')
+  })
+
+  test('<img src="..."/> Lorem ipsum', async () => {
+    const plugin = await createPlugin()
+    const res = await plugin.parse('<img src="..."/> Lorem ipsum', { onlyTemplate: true })
+
+    expect(res).toMatch('<p><img src="..."/> Lorem ipsum</p>')
+  })
+
+  test('multiple sections', async () => {
+    const plugin = await createPlugin()
+    const res = await plugin.parse(`
+# Heading
+
+<MyComponent>
+
+## Sub heading
+<sup>1</sup> Lorem ipsum
+
+</MyComponent>
+
+<img src="..."/> Lorem ipsum
+<sup>1</sup> Lorem ipsum
+
+Lorem <sup>1</sup> ipsum
+`, { onlyTemplate: true })
+
+    expect(res).toMatchSnapshot()
+  })
+})
+
+describe('process import statements', () => {
+  test('import default statement', async () => {
+    const plugin = await createPlugin()
+    const res = await plugin.parse(`import A from '~/components/A.vue'\n<A/>`)
+
+    expect(res).toMatch('import A from \'~/components/A.vue\'')
+    expect(res).toMatch('const imported = {A, VueRemarkRoot}')
+    expect(res).toMatch('<A/>')
+  })
+
+  test('import as statement', async () => {
+    const plugin = await createPlugin()
+    const res = await plugin.parse(`import A, { B, C as D } from '~/components'`)
+
+    expect(res).toMatch('const imported = {A, B, D, VueRemarkRoot}')
+  })
+
+  test('import default as statement', async () => {
+    const plugin = await createPlugin()
+    const res = await plugin.parse(`import { default as D } from '~/components/Button.vue'`)
+
+    expect(res).toMatch('const imported = {D, VueRemarkRoot}')
+  })
+
+  test('skip sentences starting with import*', async () => {
+    const plugin = await createPlugin()
+    const res = await plugin.parse(`important notice`)
+
+    expect(res).toMatch('<p>important notice</p>')
+  })
 })
 
 async function createPlugin (options = {}) {

@@ -1,4 +1,6 @@
-const isImport = value => /^import/.test(value)
+const htmlTags = require('html-tags')
+
+const isImport = value => /^import\s+/.test(value)
 const isStyle = value => /^<style/.test(value)
 const isScript = value => /^<script/.test(value)
 const isTag = value => /^<\/?[a-zA-Z0-9_-][^>]*>/.test(value)
@@ -7,11 +9,6 @@ const isQuery = value => /^<(page|static)-query/.test(value)
 const getValue = value => {
   const index = value.indexOf('\n\n')
   return index !== -1 ? value.slice(0, index) : value
-}
-
-const getTag = value => {
-  const matches = value.match(/^<\/?([a-zA-Z0-9_-]+)[^>]*>/)
-  return matches ? matches[0] : ''
 }
 
 function tokenizeImportSyntax (eat, value) {
@@ -37,8 +34,11 @@ function tokenizeSFCBlocks (eat, value) {
 
 function tokenizeVueComponents (eat, value) {
   if (isTag(value)) {
-    const portion = getTag(value)
-    return eat(portion)({ type: 'html', value: portion })
+    const [, name] = value.match(/^<\/?([a-zA-Z0-9_-]+)[^>]*>/) || []
+
+    if (!htmlTags.includes(name)) {
+      return eat(value)({ type: 'html', value })
+    }
   }
 }
 

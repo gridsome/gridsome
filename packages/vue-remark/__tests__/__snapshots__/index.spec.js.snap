@@ -11,38 +11,19 @@ exports[`add v-pre to fenced code blocks 1`] = `
 </template>"
 `;
 
-exports[`extract <page-query> tag 1`] = `
-"<page-query>
-query {
-  metadata {
-    siteName
-  }
-}
-</page-query>"
-`;
-
-exports[`extract <script> tag 1`] = `
-"<script>
-export default {
-  mounted() {}
-}
-</script>"
-`;
-
-exports[`extract <static-query> tag 1`] = `
-"<static-query>
-query {
-  metadata {
-    siteName
-  }
-}
-</static-query>"
-`;
-
-exports[`extract <style> tag 1`] = `
-"<style lang=\\"scss\\">
-body {}
-</style>"
+exports[`don't touch normal HTML tags multiple sections 1`] = `
+"<template>
+<VueRemarkRoot>
+<h1 id=\\"heading\\"><a href=\\"#heading\\" aria-hidden=\\"true\\"><span class=\\"icon icon-link\\"></span></a>Heading</h1>
+<MyComponent>
+<h2 id=\\"sub-heading\\"><a href=\\"#sub-heading\\" aria-hidden=\\"true\\"><span class=\\"icon icon-link\\"></span></a>Sub heading</h2>
+<p><sup>1</sup> Lorem ipsum</p>
+</MyComponent>
+<p><img src=\\"...\\"/> Lorem ipsum
+<sup>1</sup> Lorem ipsum</p>
+<p>Lorem <sup>1</sup> ipsum</p>
+</VueRemarkRoot>
+</template>"
 `;
 
 exports[`parse markdown inside Vue component 1`] = `
@@ -78,10 +59,53 @@ exports[`parse simple Vue component 1`] = `
 </template>"
 `;
 
+exports[`parse simple Vue component after heading 1`] = `
+"<template>
+<VueRemarkRoot>
+<h1 id=\\"heading\\"><a href=\\"#heading\\" aria-hidden=\\"true\\"><span class=\\"icon icon-link\\"></span></a>Heading</h1>
+<MyComponent />
+</VueRemarkRoot>
+</template>"
+`;
+
 exports[`parse simple title 1`] = `
 "<template>
 <VueRemarkRoot>
 <h1 id=\\"test\\"><a href=\\"#test\\" aria-hidden=\\"true\\"><span class=\\"icon icon-link\\"></span></a>Test</h1>
 </VueRemarkRoot>
 </template>"
+`;
+
+exports[`process SFC blocks extract <page-query> tag 1`] = `
+"<page-query>
+query {
+  metadata {
+    siteName
+  }
+}
+</page-query>"
+`;
+
+exports[`process SFC blocks extract <script> tag 1`] = `
+"<script>
+export default {
+  mounted() {}
+}
+</script>"
+`;
+
+exports[`process SFC blocks extract <static-query> tag 1`] = `
+"<static-query>
+query {
+  metadata {
+    siteName
+  }
+}
+</static-query>"
+`;
+
+exports[`process SFC blocks extract <style> tag 1`] = `
+"<style lang=\\"scss\\">
+body {}
+</style>"
 `;
