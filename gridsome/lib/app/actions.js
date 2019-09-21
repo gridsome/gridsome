@@ -112,6 +112,7 @@ function createStoreActions (api, app) {
 const {
   createObjectType,
   createUnionType,
+  createScalarType,
   createInterfaceType,
   createInputType
 } = require('../graphql/utils')
@@ -177,6 +178,7 @@ function createSchemaActions (api, app) {
     schema: {
       createObjectType,
       createUnionType,
+      createScalarType,
       createInterfaceType,
       createInputType
     }

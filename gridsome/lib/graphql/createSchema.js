@@ -22,6 +22,7 @@ const {
   EnumTypeComposer,
   InputTypeComposer,
   UnionTypeComposer,
+  ScalarTypeComposer,
   ObjectTypeComposer,
   InterfaceTypeComposer
 } = require('graphql-compose')
@@ -220,6 +221,9 @@ function createType (schemaComposer, type, options) {
 
     case CreatedGraphQLType.Input:
       return InputTypeComposer.createTemp(options, schemaComposer)
+
+    case CreatedGraphQLType.Scalar:
+      return ScalarTypeComposer.createTemp(options, schemaComposer)
 
     case CreatedGraphQLType.Interface:
       return InterfaceTypeComposer.createTemp(options, schemaComposer)

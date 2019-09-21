@@ -11,6 +11,7 @@ const CreatedGraphQLType = {
   Enum: 'Enum',
   Object: 'Object',
   Union: 'Union',
+  Scalar: 'Scalar',
   Interface: 'Interface',
   Input: 'Input'
 }
@@ -45,12 +46,14 @@ exports.createEnumType = options => ({ options, type: CreatedGraphQLType.Enum })
 exports.createObjectType = options => ({ options, type: CreatedGraphQLType.Object })
 exports.createUnionType = options => ({ options, type: CreatedGraphQLType.Union })
 exports.createInterfaceType = options => ({ options, type: CreatedGraphQLType.Interface })
+exports.createScalarType = options => ({ options, type: CreatedGraphQLType.Scalar })
 exports.createInputType = options => ({ options, type: CreatedGraphQLType.Input })
 
 exports.isEnumType = value => isObject(value) && value.type === CreatedGraphQLType.Enum
 exports.isObjectType = value => isObject(value) && value.type === CreatedGraphQLType.Object
 exports.isUnionType = value => isObject(value) && value.type === CreatedGraphQLType.Union
 exports.isInterfaceType = value => isObject(value) && value.type === CreatedGraphQLType.Interface
+exports.isScalarType = value => isObject(value) && value.type === CreatedGraphQLType.Scalar
 exports.isInputType = value => isObject(value) && value.type === CreatedGraphQLType.Input
 
 const typeNameCounter = {}

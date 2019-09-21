@@ -852,6 +852,34 @@ test('output field value as JSON', async () => {
   )
 })
 
+test('add custom scalar types with createScalarType()', async () => {
+  const app = await initApp(({ addSchemaTypes, addSchemaResolvers, schema }) => {
+    addSchemaTypes([
+      schema.createScalarType({
+        name: 'MyScalar',
+        serialize: value => ({ ...value, foo: 'bar' })
+      })
+    ])
+    addSchemaResolvers({
+      Album: {
+        myField: {
+          type: 'MyScalar',
+          resolve: () => ({ test: true })
+        }
+      }
+    })
+  })
+
+  const { errors, data } = await app.graphql(`{
+    album(id:"1") {
+      myField
+    }
+  }`)
+
+  expect(errors).toBeUndefined()
+  expect(data.album.myField).toMatchObject({ test: true, foo: 'bar' })
+})
+
 // TODO: remove this before 1.0
 test('add deprecated collection field', async () => {
   const app = await createApp(api => {
