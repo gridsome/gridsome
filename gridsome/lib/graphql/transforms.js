@@ -3,30 +3,55 @@ const {
   BREAK,
   visit,
   TypeInfo,
+  typeFromAST,
+  getNullableType,
   visitWithTypeInfo
 } = require('graphql')
 
+const getNamedAstType = node => {
+  if (node && node.kind !== Kind.NAMED_TYPE) {
+    return getNamedAstType(node.type)
+  }
+
+  return node
+}
+
 function fixIncorrectVariableUsage (schema, ast, variableDef) {
-  const { type: innerType } = variableDef.type
-  const typeNode = innerType || variableDef.type
+  const variableType = typeFromAST(schema, variableDef.type)
+  const nullableType = getNullableType(variableType)
   const { value: name } = variableDef.variable.name
+  const typeNode = getNamedAstType(variableDef)
+  const nodeInterfaceType = schema.getType('Node')
   const typeInfo = new TypeInfo(schema)
 
   const incorrectNodes = []
 
+  if (!typeNode) {
+    return incorrectNodes
+  }
+
+  // TODO: remove this in 0.8
   visit(ast, visitWithTypeInfo(typeInfo, {
     Argument (node) {
-      if (node.value.kind === Kind.VARIABLE && node.name.value === name) {
-        const argumentType = schema.getType(typeNode.name.value)
-        const inputType = typeInfo.getInputType()
+      if (
+        node.value.kind === Kind.VARIABLE &&
+        node.name.value === name
+      ) {
+        const input = typeInfo.getInputType()
+        const type = typeInfo.getType()
 
-        if (inputType) {
-          const typeName = inputType.toString()
+        if (input && type) {
+          if (!schema.isPossibleType(nodeInterfaceType, type)) {
+            return
+          }
 
-          if (argumentType && argumentType !== inputType) {
+          const typeName = input.toString()
+          const oldTypeName = nullableType.toString()
+
+          if (oldTypeName !== typeName) {
             incorrectNodes.push({
               name: node.name.value,
-              oldType: typeNode.name.value,
+              oldType: oldTypeName,
               newType: typeName
             })
 
