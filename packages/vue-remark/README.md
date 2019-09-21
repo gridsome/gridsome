@@ -20,6 +20,7 @@ module.exports = {
       options: {
         typeName: 'Documentation', // required
         baseDir: './docs', // where .md files are located.
+        pathPrefix: '/docs', // optional
         template: './src/templates/Documentation.vue' // optional
       }
     }
