@@ -76,7 +76,7 @@ module.exports = async (name, starter = 'default') => {
           child.stdout.on('data', buffer => {
             let str = buffer.toString().trim()
 
-            if (str && command === 'yarn' && str.indexOf('"type":') !== -1) {
+            if (str && command === 'yarn' && str.includes('"type":')) {
               const newLineIndex = str.lastIndexOf('\n')
 
               if (newLineIndex !== -1) {
