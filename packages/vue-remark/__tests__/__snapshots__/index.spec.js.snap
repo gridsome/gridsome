@@ -109,3 +109,15 @@ exports[`process SFC blocks extract <style> tag 1`] = `
 body {}
 </style>"
 `;
+
+exports[`process SFC blocks extract <style> tag after component 1`] = `
+"<template>
+<VueRemarkRoot>
+<MyComponent></MyComponent>
+</VueRemarkRoot>
+</template>
+
+<style scoped>
+body {}
+</style>"
+`;

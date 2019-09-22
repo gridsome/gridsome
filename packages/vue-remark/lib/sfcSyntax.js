@@ -12,6 +12,8 @@ const getValue = value => {
 }
 
 function tokenizeImportSyntax (eat, value) {
+  value = getValue(value)
+
   if (isImport(value)) {
     const lines = getValue(value).split('\n')
     const statements = lines.filter(line => line.startsWith('import'))
@@ -22,6 +24,8 @@ function tokenizeImportSyntax (eat, value) {
 }
 
 function tokenizeSFCBlocks (eat, value) {
+  value = getValue(value)
+
   if (isQuery(value) || isScript(value) || isStyle(value)) {
     const [, name] = value.match(/^<([a-zA-Z0-9_-]+)[^>]*>/)
     const re = new RegExp(`^<${name}[^>]*>(.|\\n|\\t)*?<\\/${name}>`)
@@ -33,6 +37,8 @@ function tokenizeSFCBlocks (eat, value) {
 }
 
 function tokenizeVueComponents (eat, value) {
+  value = getValue(value)
+
   if (isTag(value)) {
     const [, name] = value.match(/^<\/?([a-zA-Z0-9_-]+)[^>]*>/) || []
 

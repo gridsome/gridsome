@@ -206,6 +206,21 @@ body {}
     expect(res).toMatchSnapshot()
   })
 
+  test('extract <style> tag after component', async () => {
+    const plugin = await createPlugin()
+    const res = await plugin.parse(`
+<MyComponent></MyComponent>
+
+<style scoped>
+body {}
+</style>`, {
+      withImport: false,
+      withFrontMatter: false
+    })
+
+    expect(res).toMatchSnapshot()
+  })
+
   test('extract <page-query> tag', async () => {
     const plugin = await createPlugin()
     const res = await plugin.parse(`
