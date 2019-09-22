@@ -33,15 +33,15 @@ program
   .command('info')
   .description('Print debugging information about the local environment')
   .action(() => {
-  	console.log(chalk.bold('\nEnvironment Info:'));
+    console.log(chalk.bold('\nEnvironment Info:'))
     envinfo
       .run({
         System: ['OS', 'CPU'],
         Binaries: ['Node', 'Yarn', 'npm'],
         Browsers: ['Chrome', 'Edge', 'Firefox', 'Safari'],
-        npmGlobalPackages: ['gridsome'],
+        npmGlobalPackages: ['gridsome']
       })
-      .then(console.log);
+      .then(console.log)
   })
 
 try {
