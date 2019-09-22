@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.4](https://github.com/gridsome/gridsome/tree/master/packages/vue-remark/compare/@gridsome/vue-remark@0.1.3...@gridsome/vue-remark@0.1.4) (2019-09-22)
+
+
+### Bug Fixes
+
+* **vue-remark:** process style tags after components ([#693](https://github.com/gridsome/gridsome/tree/master/packages/vue-remark/issues/693)) ([47cc556](https://github.com/gridsome/gridsome/tree/master/packages/vue-remark/commit/47cc556))
+
+
+
+
+
 ## [0.1.3](https://github.com/gridsome/gridsome/tree/master/packages/vue-remark/compare/@gridsome/vue-remark@0.1.2...@gridsome/vue-remark@0.1.3) (2019-09-20)
 
 

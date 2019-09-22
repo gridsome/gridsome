@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.7.5](https://github.com/gridsome/gridsome/compare/gridsome@0.7.4...gridsome@0.7.5) (2019-09-22)
+
+
+### Bug Fixes
+
+* **graphql:** add schema.createScalarType() method ([5f59747](https://github.com/gridsome/gridsome/commit/5f59747))
+* **graphql:** don’t fix variables for other types ([#689](https://github.com/gridsome/gridsome/issues/689)) ([35cfd2b](https://github.com/gridsome/gridsome/commit/35cfd2b))
+
+
+
+
+
 ## [0.7.4](https://github.com/gridsome/gridsome/compare/gridsome@0.7.3...gridsome@0.7.4) (2019-09-20)
 
 
