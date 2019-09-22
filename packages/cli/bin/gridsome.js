@@ -9,6 +9,7 @@ const updateNotifier = require('update-notifier')
 const resolveVersions = require('../lib/utils/version')
 const pkgPath = require('find-up').sync('package.json')
 const { hasYarn } = require('../lib/utils')
+const envinfo = require('envinfo')
 
 const pkg = require('../package.json')
 const notifier = updateNotifier({ pkg })
@@ -26,6 +27,21 @@ program
   .action((...args) => {
     const create = require('../lib/commands/create')
     return wrapCommand(create)(...args)
+  })
+
+program
+  .command('info')
+  .description('Print debugging information about the local environment')
+  .action(() => {
+  	console.log(chalk.bold('\nEnvironment Info:'));
+    envinfo
+      .run({
+        System: ['OS', 'CPU'],
+        Binaries: ['Node', 'Yarn', 'npm'],
+        Browsers: ['Chrome', 'Edge', 'Firefox', 'Safari'],
+        npmGlobalPackages: ['gridsome'],
+      })
+      .then(console.log);
   })
 
 try {
