@@ -12,6 +12,7 @@ class FilesystemSource {
     return {
       baseDir: undefined,
       path: undefined,
+      route: undefined,
       pathPrefix: undefined,
       index: ['index'],
       typeName: 'FileNode',
@@ -40,7 +41,8 @@ class FilesystemSource {
     this.refs = this.normalizeRefs(this.options.refs)
 
     this.collection = addCollection({
-      typeName: this.options.typeName
+      typeName: this.options.typeName,
+      route: this.options.route
     })
 
     mapValues(this.refs, (ref, key) => {
@@ -48,7 +50,8 @@ class FilesystemSource {
 
       if (ref.create) {
         addCollection({
-          typeName: ref.typeName
+          typeName: ref.typeName,
+          route: ref.route
         })
       }
     })
