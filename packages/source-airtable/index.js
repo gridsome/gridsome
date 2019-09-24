@@ -8,7 +8,8 @@ module.exports = function (api, options) {
 
     const collection = addCollection({
       camelCasedFieldNames: true,
-      typeName: options.typeName
+      typeName: options.typeName,
+      route: options.route
     })
 
     await base(options.tableName).select().eachPage((records, fetchNextPage) => {
