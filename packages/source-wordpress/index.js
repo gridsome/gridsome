@@ -29,6 +29,8 @@ class WordPressSource {
       throw new Error(`${options.typeName}: perPage cannot be more than 100 or less than 1.`)
     }
 
+    this.customEndpoints = this.sanitizeCustomEndpoints()
+
     const baseUrl = trimEnd(options.baseUrl, '/')
 
     this.client = axios.create({
@@ -46,6 +48,7 @@ class WordPressSource {
       await this.getUsers(actions)
       await this.getTaxonomies(actions)
       await this.getPosts(actions)
+      await this.getCustomEndpoints(actions)
     })
   }
 
@@ -155,6 +158,22 @@ class WordPressSource {
     }
   }
 
+  async getCustomEndpoints (actions) {
+    for (const endpoint of this.customEndpoints) {
+      const makeCollection = actions.addCollection || actions.addContentType
+      const cepCollection = makeCollection({
+        typeName: this.createTypeName(camelCase(endpoint.name))
+      })
+      const { data } = await this.fetch(`${trimEnd(endpoint.apiRoot, '/')}/${trimEnd(endpoint.apiBase, '/')}`, {}, {})
+      for (const item of data) {
+        cepCollection.addNode({
+          ...item,
+          id: item.id || item.slug
+        })
+      }
+    }
+  }
+
   async fetch (url, params = {}, fallbackData = []) {
     let res
 
@@ -221,6 +240,23 @@ class WordPressSource {
 
       resolve(res.data)
     })
+  }
+
+  sanitizeCustomEndpoints () {
+    if (!this.options.customEndpoints) return []
+    if (!Array.isArray(this.options.customEndpoints)) throw Error('customEndpoints must be an array')
+    this.options.customEndpoints.forEach(endpoint => {
+      if (!endpoint.name) {
+        throw Error('Please provide name option for all customEndpoints\n')
+      }
+      if (!endpoint.apiRoot) {
+        throw Error(`No apiRoot option in endpoint: ${endpoint.name}\n Ex: 'apiName/versionNumber'`)
+      }
+      if (!endpoint.apiBase) {
+        throw Error(`No apiBase option in endpoint: ${endpoint.name}\n Ex: 'menu'`)
+      }
+    })
+    return this.options.customEndpoints ? this.options.customEndpoints : []
   }
 
   normalizeFields (fields) {
