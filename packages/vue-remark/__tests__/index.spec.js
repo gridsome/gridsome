@@ -159,6 +159,29 @@ test('disable g-link for files', async () => {
   expect(res).toMatch('<p><a href="./document.pdf">Test</a></p>')
 })
 
+test('disable g-link for urls', async () => {
+  const plugin = await createPlugin()
+  const res = await plugin.parse('[External](https://example.com)', { onlyTemplate: true })
+
+  expect(res).toMatch(
+    '<p><a href="https://example.com"'
+  )
+})
+
+test('keep italic text in links', async () => {
+  const plugin = await createPlugin()
+  const res = await plugin.parse('[*Italic link*](https://example.com)', { onlyTemplate: true })
+
+  expect(res).toMatch('<em>Italic link</em></a>')
+})
+
+test('image inside external link', async () => {
+  const plugin = await createPlugin()
+  const res = await plugin.parse('[![Image Alt](https://placehold.it/300x250)](http://imagelink.com)', { onlyTemplate: true })
+
+  expect(res).toMatchSnapshot()
+})
+
 test('parse frontmatter', async () => {
   const plugin = await createPlugin()
   const res = await plugin.parse(`

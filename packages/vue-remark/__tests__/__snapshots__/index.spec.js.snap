@@ -26,6 +26,14 @@ exports[`don't touch normal HTML tags multiple sections 1`] = `
 </template>"
 `;
 
+exports[`image inside external link 1`] = `
+"<template>
+<VueRemarkRoot>
+<p><a href=\\"http://imagelink.com\\" target=\\"_blank\\" rel=\\"nofollow noopener noreferrer\\"><img src=\\"https://placehold.it/300x250\\" alt=\\"Image Alt\\"></a></p>
+</VueRemarkRoot>
+</template>"
+`;
+
 exports[`parse markdown inside Vue component 1`] = `
 "<template>
 <VueRemarkRoot>
