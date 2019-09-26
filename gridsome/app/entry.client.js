@@ -63,7 +63,7 @@ document.addEventListener('click', event => {
     return
   }
 
-  router.push(location)
+  router.push(location, () => {})
   event.preventDefault()
 }, false)
 
