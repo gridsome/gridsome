@@ -7,6 +7,7 @@ const createFieldDefinitions = require('../createFieldDefinitions')
 const { createFieldTypes } = require('../createFieldTypes')
 const { isRefFieldDefinition, createTypeName } = require('../utils')
 const { isRefField } = require('../../store/utils')
+const { ObjectTypeComposer } = require('graphql-compose')
 
 const { omit, mapValues, isEmpty, isPlainObject } = require('lodash')
 
@@ -99,6 +100,8 @@ function createTypeComposers (schemaComposer, store) {
     typeComposer.setIsTypeOf(node =>
       node.internal && node.internal.typeName === typeName
     )
+
+    typeComposer.setField('id', 'ID!')
   }
 }
 
@@ -107,15 +110,7 @@ function createFields (schemaComposer, typeComposer, collection) {
   const fieldDefs = inferFields(typeComposer, collection)
   const fieldTypes = createFieldTypes(schemaComposer, fieldDefs, typeName)
 
-  processInferredFields(typeComposer, fieldDefs, fieldTypes)
-
-  for (const fieldName in fieldTypes) {
-    if (!typeComposer.hasField(fieldName)) {
-      typeComposer.setField(fieldName, fieldTypes[fieldName])
-    }
-  }
-
-  typeComposer.setField('id', 'ID!')
+  addInferredFields(typeComposer, fieldDefs, fieldTypes)
 }
 
 function inferFields (typeComposer, collection) {
@@ -131,17 +126,35 @@ function inferFields (typeComposer, collection) {
   })
 }
 
-function processInferredFields (typeComposer, fieldDefs, fieldTypes) {
+function addInferredFields (typeComposer, fieldDefs, fieldTypes) {
   for (const key in fieldDefs) {
     const options = fieldDefs[key]
     const fieldType = fieldTypes[options.fieldName]
 
     if (!fieldType) continue
 
-    fieldType.extensions = options.extensions
+    if (!typeComposer.hasField(options.fieldName)) {
+      typeComposer.setField(options.fieldName, fieldType)
+      typeComposer.setFieldExtensions(options.fieldName, options.extensions)
 
-    if (isPlainObject(options.value) && !isRefFieldDefinition(options.value)) {
-      processInferredFields(typeComposer, options.value, fieldType.type.getFields())
+      if (isPlainObject(options.value) && !isRefFieldDefinition(options.value)) {
+        addFieldExtensions(typeComposer, options.fieldName, options.value)
+      }
+    }
+  }
+}
+
+function addFieldExtensions (typeComposer, fieldName, fieldDefs) {
+  const fieldTypeComposer = typeComposer.getFieldTC(fieldName)
+
+  if (fieldTypeComposer instanceof ObjectTypeComposer) {
+    for (const key in fieldDefs) {
+      const { fieldName, extensions, value } = fieldDefs[key]
+      fieldTypeComposer.extendFieldExtensions(fieldName, extensions)
+
+      if (isPlainObject(value) && !isRefFieldDefinition(value)) {
+        addFieldExtensions(fieldTypeComposer, fieldName, value)
+      }
     }
   }
 }

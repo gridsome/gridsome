@@ -51,7 +51,7 @@ test('add custom GraphQL object types', async () => {
   expect(data.post.author).toMatchObject({ name: 'The Author' })
 })
 
-test('add custom GraphQL union type', async () => {
+test('add custom GraphQL union type with Node interface', async () => {
   const app = await createApp(api => {
     api.loadSource(store => {
       store.addCollection('Track').addNode({ id: '1', name: 'A Track' })
@@ -109,14 +109,110 @@ test('add custom GraphQL union type', async () => {
   expect(data.track.appearsOn).toHaveLength(2)
 })
 
+test('add custom GraphQL union type', async () => {
+  const app = await createApp(api => {
+    api.loadSource(actions => {
+      actions.addCollection('Post').addNode({
+        id: '1',
+        test: {
+          type: 'TestType2',
+          name: 'something'
+        }
+      })
+    })
+
+    api.createSchema(({ addSchemaTypes, schema }) => {
+      addSchemaTypes([
+        schema.createObjectType({
+          name: 'TestType1',
+          fields: {
+            name: 'String'
+          }
+        }),
+        schema.createObjectType({
+          name: 'TestType2',
+          fields: {
+            name: 'String'
+          }
+        }),
+        schema.createUnionType({
+          name: 'TestTypes',
+          types: ['TestType1', 'TestType2'],
+          resolveType: obj => obj.type
+        }),
+        schema.createObjectType({
+          name: 'Post',
+          interfaces: ['Node'],
+          fields: {
+            test: 'TestTypes'
+          }
+        })
+      ])
+    })
+  })
+
+  const { errors, data } = await app.graphql(`{
+    post(id:"1") {
+      test {
+        __typename
+      }
+    }
+  }`)
+
+  expect(errors).toBeUndefined()
+  expect(data.post.test.__typename).toEqual('TestType2')
+})
+
+// TODO: require unique id's for all nodes
+test('add custom GraphQL union type', async () => {
+  const app = await createApp(api => {
+    api.loadSource(actions => {
+      actions.addCollection('Post').addNode({
+        id: '1',
+        ref: '3'
+      })
+      actions.addCollection('Test1').addNode({ $uid: '2' })
+      actions.addCollection('Test2').addNode({ $uid: '3' })
+    })
+
+    api.createSchema(({ addSchemaTypes, schema }) => {
+      addSchemaTypes([
+        schema.createUnionType({
+          name: 'TestTypes',
+          types: ['Test1', 'Test2']
+        }),
+        schema.createObjectType({
+          name: 'Post',
+          interfaces: ['Node'],
+          fields: {
+            ref: 'TestTypes'
+          }
+        })
+      ])
+    })
+  })
+
+  const { errors, data } = await app.graphql(`{
+    post(id:"1") {
+      ref {
+        __typename
+      }
+    }
+  }`)
+
+  expect(errors).toBeUndefined()
+  expect(data.post.ref.__typename).toEqual('Test2')
+})
+
 test('add custom GraphQL types from SDL', async () => {
   const app = await createApp(api => {
-    api.loadSource(({ addCollection }) => {
+    api.loadSource(({ addCollection, store }) => {
       addCollection('Tag').addNode({ id: '1', foo: { slug: 'tag-one' }})
       addCollection('Post').addNode({
         id: '1',
         title: 'My Post',
         content: 'Value1',
+        tag: store.createReference('Tag', '1'),
         foo: {
           bar: 'Value2',
           tag: 'tag-one'
@@ -159,6 +255,9 @@ test('add custom GraphQL types from SDL', async () => {
       author {
         name
       }
+      tag {
+        id
+      }
     }
   }`)
 
@@ -168,10 +267,13 @@ test('add custom GraphQL types from SDL', async () => {
   expect(data.post.proxyContent).toEqual('Value1')
   expect(data.post.proxyDeep).toEqual('Value2')
   expect(data.post.proxyRef).toMatchObject({ id: '1' })
+  expect(data.post.tag).toMatchObject({ id: '1' })
   expect(data.post.author).toMatchObject({ name: 'The Author' })
 
   const composer = app.schema.getComposer()
+
   expect(composer.getAnyTC('Post').getTypeName()).toEqual('Post')
+  expect(composer.getAnyTC('Tag').getExtensions().isInferred).toBeUndefined()
   expect(composer.getAnyTC('Post').getField('foo').type.getTypeName()).toEqual('Post_Foo')
   expect(() => composer.getAnyTC('Author').getField('foo')).toThrow()
 })
@@ -358,7 +460,10 @@ test('add custom resolver for invalid field names', async () => {
         id: '1',
         '123': 4,
         '456-test': 4,
-        '789 test': 10
+        '789 test': 10,
+        'sub-fields': {
+          'sub-field': 10
+        }
       })
     })
 
@@ -404,6 +509,9 @@ test('add custom resolver for invalid field names', async () => {
       _456_test
       _789_test
       proxyField
+      sub_fields {
+        sub_field
+      }
     }
   }`)
 
@@ -412,6 +520,7 @@ test('add custom resolver for invalid field names', async () => {
   expect(data.post._456_test).toEqual(10)
   expect(data.post._789_test).toEqual(10)
   expect(data.post.proxyField).toEqual(10)
+  expect(data.post.sub_fields.sub_field).toEqual(10)
 })
 
 test('add custom resolvers for content type', async () => {

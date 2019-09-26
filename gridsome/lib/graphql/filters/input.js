@@ -2,7 +2,8 @@ const { hasNodeReference } = require('../utils')
 
 const {
   EnumTypeComposer,
-  ObjectTypeComposer
+  ObjectTypeComposer,
+  InputTypeComposer
 } = require('graphql-compose')
 
 const {
@@ -14,46 +15,84 @@ const {
 
 function createFilterInput (schemaComposer, typeComposer) {
   const inputTypeName = `${typeComposer.getTypeName()}FilterInput`
-  const inputTypeComposer = schemaComposer.getOrCreateITC(inputTypeName)
+  const inputTypeComposer = typeComposer.getInputTypeComposer()
+  const filterTypeComposer = schemaComposer.getOrCreateITC(inputTypeName)
 
-  typeComposer.getFieldNames().forEach(fieldName => {
+  typeComposer.setInputTypeComposer(filterTypeComposer)
+
+  inputTypeComposer.getFieldNames().forEach(fieldName => {
     const fieldTypeComposer = typeComposer.getFieldTC(fieldName)
+    const extensions = typeComposer.getFieldExtensions(fieldName)
+
+    let type
 
     if (fieldTypeComposer instanceof ObjectTypeComposer) {
-      inputTypeComposer.setField(fieldName, {
-        type: fieldTypeComposer.hasInterface('Node')
-          ? createInputTypeComposer(schemaComposer, typeComposer, fieldName)
-          : createFilterInput(schemaComposer, fieldTypeComposer)
-      })
-    } else {
-      inputTypeComposer.setField(fieldName, {
-        type: createInputTypeComposer(
+      type = fieldTypeComposer.hasInterface('Node')
+        ? createInputTypeComposer({
           schemaComposer,
           typeComposer,
+          inputTypeComposer,
           fieldName
-        )
+        })
+        : createFilterInput(schemaComposer, fieldTypeComposer)
+    } else {
+      type = createInputTypeComposer({
+        schemaComposer,
+        typeComposer,
+        inputTypeComposer,
+        fieldName
       })
     }
 
-    const extensions = typeComposer.getFieldExtensions(fieldName)
-    inputTypeComposer.setFieldExtensions(fieldName, extensions)
+
+    if (type) {
+      filterTypeComposer.setField(fieldName, { type })
+      filterTypeComposer.setFieldExtensions(fieldName, extensions)
+    }
   })
 
-  typeComposer.setInputTypeComposer(inputTypeComposer)
-
-  return inputTypeComposer
+  return removeEmptyTypes(filterTypeComposer)
 }
 
-function createInputTypeComposer (schemaComposer, typeComposer, fieldName) {
+function removeEmptyTypes (typeComposer) {
+  typeComposer.getFieldNames().forEach(fieldName => {
+    const fieldTypeComposer = typeComposer.getFieldTC(fieldName)
+
+    if (fieldTypeComposer instanceof InputTypeComposer) {
+      if (fieldTypeComposer.getFieldNames().length > 0) {
+        removeEmptyTypes(fieldTypeComposer)
+      } else {
+        typeComposer.removeField(fieldName)
+      }
+    }
+  })
+
+  return typeComposer
+}
+
+function createInputTypeComposer({
+  inputTypeComposer,
+  schemaComposer,
+  typeComposer,
+  fieldName
+}) {
   const inputTypeName = createInputTypeName(typeComposer, fieldName)
 
   if (schemaComposer.has(inputTypeName)) {
     return schemaComposer.get(inputTypeName)
   }
 
-  const operatorTypeComposer = schemaComposer.createInputTC(inputTypeName)
   const fieldTypeComposer = typeComposer.getFieldTC(fieldName)
-  const typeName = fieldTypeComposer.getTypeName()
+  const operatorTypeComposer = schemaComposer.createInputTC(inputTypeName)
+  const fieldInputTypeComposer = inputTypeComposer.getFieldTC(fieldName)
+  const fieldConfig = typeComposer.getFieldConfig(fieldName)
+  const extensions = typeComposer.getFieldExtensions(fieldName)
+  const typeName = fieldInputTypeComposer.getTypeName()
+
+  // TODO: create input types for fields with custom resolver
+  if (fieldConfig.resolve && !extensions.isInferred) {
+    return
+  }
 
   let fieldType = typeName
   let operators = defaultOperators
@@ -62,7 +101,7 @@ function createInputTypeComposer (schemaComposer, typeComposer, fieldName) {
     operators = scalarOperators[typeName]
   } else if (hasNodeReference(fieldTypeComposer)) {
     fieldType = 'ID'
-  } else if (fieldTypeComposer instanceof EnumTypeComposer) {
+  } else if (fieldInputTypeComposer instanceof EnumTypeComposer) {
     operators = scalarOperators.Enum
   }
 
