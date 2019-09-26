@@ -393,7 +393,7 @@ function createCollections (api) {
           typeName: 'Product',
           id: '2'
         },
-        unoin: [
+        union: [
           { typeName: 'Product', id: '1' },
           { typeName: 'Item', id: '5' }
         ]
