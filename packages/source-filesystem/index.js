@@ -36,7 +36,7 @@ class FilesystemSource {
   }
 
   createCollections (actions) {
-    const addCollection = actions.addCollection || actions.addContentType
+    const addCollection = actions.addCollection
 
     this.refs = this.normalizeRefs(this.options.refs)
 
@@ -147,7 +147,7 @@ class FilesystemSource {
   }
 
   addRefNode (typeName, fieldName, value, actions) {
-    const getCollection = actions.getCollection || actions.getContentType
+    const getCollection = actions.getCollection
     const cacheKey = `${typeName}-${fieldName}-${value}`
 
     if (!this.refsCache[cacheKey] && value) {
