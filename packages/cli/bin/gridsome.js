@@ -9,7 +9,6 @@ const updateNotifier = require('update-notifier')
 const resolveVersions = require('../lib/utils/version')
 const pkgPath = require('find-up').sync('package.json')
 const { hasYarn } = require('../lib/utils')
-const envinfo = require('envinfo')
 
 const pkg = require('../package.json')
 const notifier = updateNotifier({ pkg })
