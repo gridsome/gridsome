@@ -43,7 +43,7 @@ class GhostSource {
     })
   }
 
-  async loadTags ({ addContentType, addCollection = addContentType }) {
+  async loadTags ({ addCollection }) {
     const tags = addCollection({
       typeName: this.createTypeName(TYPE_TAG)
     })
@@ -51,7 +51,7 @@ class GhostSource {
     await this.loadBasicEntity(tags, this.contentAPI.tags)
   }
 
-  async loadPages ({ addContentType, addCollection = addContentType }) {
+  async loadPages ({ addCollection }) {
     const pages = addCollection({
       typeName: this.createTypeName(TYPE_PAGE),
       dateField: 'published_at'
@@ -60,7 +60,7 @@ class GhostSource {
     await this.loadBasicEntity(pages, this.contentAPI.pages)
   }
 
-  async loadAuthors ({ addContentType, addCollection = addContentType }) {
+  async loadAuthors ({ addCollection }) {
     const authors = addCollection({
       typeName: this.createTypeName(TYPE_AUTHOR)
     })
@@ -68,7 +68,7 @@ class GhostSource {
     await this.loadBasicEntity(authors, this.contentAPI.authors)
   }
 
-  async loadPosts ({ addContentType, createReference, addCollection = addContentType }) {
+  async loadPosts ({ createReference, addCollection }) {
     const posts = addCollection({
       typeName: this.createTypeName(TYPE_POST),
       dateField: 'published_at'
