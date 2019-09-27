@@ -76,6 +76,7 @@ module.exports = (context, options = {}) => {
   config.redirects = normalizeRedirects(localConfig)
   config.transformers = resolveTransformers(config.pkg, localConfig)
   config.pathPrefix = normalizePathPrefix(isProd ? localConfig.pathPrefix : '')
+  config._pathPrefix = normalizePathPrefix(localConfig.pathPrefix)
   config.publicPath = config.pathPrefix ? `${config.pathPrefix}/` : '/'
   config.staticDir = resolve('static')
   config.outDir = resolve(localConfig.outDir || 'dist')

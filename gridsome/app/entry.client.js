@@ -2,6 +2,7 @@ import './polyfills'
 
 import Vue from 'vue'
 import createApp, { runPlugins, runMain } from './app'
+import config from '~/.temp/config'
 import plugins from '~/.temp/plugins-client'
 import linkDirective from './directives/link'
 import imageDirective from './directives/image'
@@ -34,6 +35,7 @@ if (process.env.NODE_ENV === 'production') {
   })
 }
 
+// TODO: remove this behavior
 // let Vue router handle internal URLs for anchors in innerHTML
 document.addEventListener('click', event => {
   const $el = event.target.closest('a')
@@ -53,6 +55,13 @@ document.addEventListener('click', event => {
     /\.[^.]+$/.test($el.pathname) || // link to a file
     /\b_blank\b/i.test($el.target) // opens in new tab
   ) return
+
+  if (
+    config.pathPrefix &&
+    !$el.pathname.startsWith(config.pathPrefix)
+  ) {
+    return // must include pathPrefix in path
+  }
 
   const path = stripPathPrefix($el.pathname)
   const { route, location } = router.resolve({
