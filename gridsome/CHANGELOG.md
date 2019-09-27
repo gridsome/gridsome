@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.7.6](https://github.com/gridsome/gridsome/compare/gridsome@0.7.5...gridsome@0.7.6) (2019-09-27)
+
+
+### Bug Fixes
+
+* **app:** don’t resolve links without path prefix ([66eb650](https://github.com/gridsome/gridsome/commit/66eb650))
+* **app:** ignore NavigationDuplicated error ([#703](https://github.com/gridsome/gridsome/issues/703)) ([a000bfb](https://github.com/gridsome/gridsome/commit/a000bfb))
+* **app:** prevent request to favicon.ico ([#711](https://github.com/gridsome/gridsome/issues/711)) ([28278f7](https://github.com/gridsome/gridsome/commit/28278f7))
+* **graphql:** don’t create input types for unions ([c4ba3c5](https://github.com/gridsome/gridsome/commit/c4ba3c5))
+
+
+
+
+
 ## [0.7.5](https://github.com/gridsome/gridsome/compare/gridsome@0.7.4...gridsome@0.7.5) (2019-09-22)
 
 
