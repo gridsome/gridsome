@@ -31,17 +31,10 @@ program
 
 program
   .command('info')
-  .description('Print debugging information about the local environment')
+  .description('output information about the local environment')
   .action(() => {
-    console.log(chalk.bold('\nEnvironment Info:'))
-    envinfo
-      .run({
-        System: ['OS', 'CPU'],
-        Binaries: ['Node', 'Yarn', 'npm'],
-        Browsers: ['Chrome', 'Edge', 'Firefox', 'Safari'],
-        npmGlobalPackages: ['gridsome']
-      })
-      .then(console.log)
+    const info = require('../lib/commands/info')
+    return wrapCommand(info)()
   })
 
 try {
