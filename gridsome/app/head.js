@@ -37,6 +37,11 @@ const head = {
   link: []
 }
 
+if (icons.favicons.length) {
+  // prevent unnecessary request for /favicon.ico
+  head.link.push({ rel: 'icon', href: 'data:,' })
+}
+
 icons.favicons.forEach(({ width, height, src: href }) => {
   head.link.push({
     rel: 'icon',
