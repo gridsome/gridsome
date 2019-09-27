@@ -4,7 +4,7 @@ module.exports = function (api, options) {
   const base = new Airtable({ apiKey: options.apiKey }).base(options.baseId)
 
   api.loadSource(async actions => {
-    const addCollection = actions.addCollection
+    const addCollection = actions.addCollection || actions.addContentType
 
     const collection = addCollection({
       camelCasedFieldNames: true,
