@@ -7,7 +7,14 @@ const createFieldDefinitions = require('../createFieldDefinitions')
 const { createFieldTypes } = require('../createFieldTypes')
 const { isRefFieldDefinition, createTypeName } = require('../utils')
 const { isRefField } = require('../../store/utils')
-const { ObjectTypeComposer } = require('graphql-compose')
+
+const {
+  ObjectTypeComposer,
+  NonNullComposer,
+  ThunkComposer,
+  ListComposer,
+  unwrapTC
+} = require('graphql-compose')
 
 const { omit, mapValues, isEmpty, isPlainObject } = require('lodash')
 
@@ -288,11 +295,21 @@ function createReferenceFields (schemaComposer, typeComposer, collection) {
           : createReferenceOneUnionResolver(typeName)
       }
     } else {
-      const otherTypeComposer = schemaComposer.get(typeName)
-
-      return isList
+      const { typeMapper } = schemaComposer
+      const refTypeComposer = typeMapper.convertSDLWrappedTypeName(typeName)
+      const otherTypeComposer = unwrapTC(refTypeComposer)
+      const resolver = isList || isListTC(refTypeComposer)
         ? otherTypeComposer.getResolver('referenceManyAdvanced')
         : otherTypeComposer.getResolver('referenceOne')
+
+      const clonedResolver = resolver.clone()
+
+      // TODO: warn if inferred field type is a list but the typeName is not.
+      if (!isList && typeComposer.hasField(fieldName)) {
+        clonedResolver.setType(refTypeComposer)
+      }
+
+      return clonedResolver
     }
   })
 
@@ -303,6 +320,17 @@ function createReferenceFields (schemaComposer, typeComposer, collection) {
       typeComposer.extendFieldExtensions(fieldName, extensions)
     }
   })
+}
+
+function isListTC (anyTC) {
+  if (
+    anyTC instanceof NonNullComposer ||
+    anyTC instanceof ThunkComposer
+  ) {
+    return isListTC(anyTC.ofType)
+  }
+
+  return anyTC instanceof ListComposer
 }
 
 function createReferenceManyUnionResolver (typeNames) {
