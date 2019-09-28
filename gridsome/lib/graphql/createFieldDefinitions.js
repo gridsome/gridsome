@@ -5,6 +5,7 @@ const { isRefFieldDefinition } = require('./utils')
 
 const {
   omit,
+  isNil,
   isEmpty,
   isNumber,
   isInteger,
@@ -30,13 +31,13 @@ function resolveValues (obj, currentObj = {}, options = {}, path = []) {
 
     if (key.startsWith('$')) continue
     if (key.startsWith('__')) continue
-    if (value === undefined) continue
-    if (value === null) continue
+    if (isNil(value)) continue
 
     const currentValue = currentObj[key] ? currentObj[key].value : undefined
     const resolvedValue = resolveValue(value, currentValue, options, path.concat(key))
 
     if (
+      isNil(resolvedValue) ||
       (Array.isArray(resolvedValue) && !resolvedValue.length) ||
       (isPlainObject(resolvedValue) && isEmpty(resolvedValue))
     ) {
@@ -92,7 +93,7 @@ function resolveValue (value, currentValue, options, path = []) {
       arr[0] = resolveValue(value[i], arr[0], options, path.concat(i))
     }
 
-    return arr
+    return arr.filter(v => !isNil(v))
   } else if (isPlainObject(value)) {
     if (isRefField(value)) {
       if (!value.typeName) {
@@ -113,7 +114,7 @@ function resolveValue (value, currentValue, options, path = []) {
       : value
   }
 
-  return currentValue !== undefined ? currentValue : value
+  return isNil(currentValue) ? value : currentValue
 }
 
 const nonValidCharsRE = new RegExp('[^a-zA-Z0-9_]', 'g')

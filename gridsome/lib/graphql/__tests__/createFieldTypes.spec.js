@@ -71,6 +71,7 @@ const nodes = [
     ref: null,
     refs: [],
     objList: [],
+    invalidList: [null, undefined],
     numberList: [],
     deep: {
       object: {
@@ -110,7 +111,8 @@ test('merge node fields', () => {
   expect(fields.obj.value.test.value.emptyObj).toBeUndefined()
   expect(fields.obj.value.test.value.emptyList).toBeUndefined()
   expect(fields.obj.value.empty).toBeUndefined()
-  expect(fields.invalidRef.value).toBeUndefined()
+  expect(fields.invalidList).toBeUndefined()
+  expect(fields.invalidRef).toBeUndefined()
   expect(fields.emptyObj).toBeUndefined()
   expect(fields.emptyList).toBeUndefined()
   expect(fields.deep).toBeUndefined()
@@ -162,6 +164,8 @@ test('create graphql types from node fields', async () => {
   expect(types.obj.type.getFields().foo.type.getTypeName()).toEqual('String')
   expect(types.obj.type.getFields().bar.type.getTypeName()).toEqual('String')
   expect(types.obj.type.getFields().test.type).toBeInstanceOf(ObjectTypeComposer)
+  expect(types.invalidList).toBeUndefined()
+  expect(types.invalidRef).toBeUndefined()
   expect(types.nullValue).toBeUndefined()
   expect(types.emptyList).toBeUndefined()
   expect(types.emptyObj).toBeUndefined()
