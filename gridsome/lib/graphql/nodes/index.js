@@ -131,8 +131,6 @@ function addInferredFields (typeComposer, fieldDefs, fieldTypes) {
     const options = fieldDefs[key]
     const fieldType = fieldTypes[options.fieldName]
 
-    if (!fieldType) continue
-
     if (!typeComposer.hasField(options.fieldName)) {
       typeComposer.setField(options.fieldName, fieldType)
       typeComposer.setFieldExtensions(options.fieldName, options.extensions)

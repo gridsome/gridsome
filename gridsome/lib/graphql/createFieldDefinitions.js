@@ -1,8 +1,15 @@
-const { omit, isPlainObject, isNumber, isInteger } = require('lodash')
-const { isRefFieldDefinition } = require('./utils')
-const { isRefField } = require('../store/utils')
-const { warn } = require('../utils/log')
 const camelCase = require('camelcase')
+const { warn } = require('../utils/log')
+const { isRefField } = require('../store/utils')
+const { isRefFieldDefinition } = require('./utils')
+
+const {
+  omit,
+  isEmpty,
+  isNumber,
+  isInteger,
+  isPlainObject
+} = require('lodash')
 
 module.exports = function createFieldDefinitions (nodes, options = {}) {
   let res = {}
@@ -26,9 +33,17 @@ function resolveValues (obj, currentObj = {}, options = {}, path = []) {
     if (value === undefined) continue
     if (value === null) continue
 
-    const fieldName = createFieldName(key, options.camelCase)
     const currentValue = currentObj[key] ? currentObj[key].value : undefined
     const resolvedValue = resolveValue(value, currentValue, options, path.concat(key))
+
+    if (
+      (Array.isArray(resolvedValue) && !resolvedValue.length) ||
+      (isPlainObject(resolvedValue) && isEmpty(resolvedValue))
+    ) {
+      continue
+    }
+
+    const fieldName = createFieldName(key, options.camelCase)
     const extensions = { isInferred: true }
 
     if (fieldName !== key) {

@@ -21,9 +21,6 @@ function createFieldTypes (schemaComposer, fields, prefix = '') {
 }
 
 function createFieldType (schemaComposer, value, key, prefix) {
-  if (value === undefined) return null
-  if (value === null) return null
-
   if (Array.isArray(value)) {
     const type = createFieldType(schemaComposer, value[0], key, prefix)
 

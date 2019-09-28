@@ -8,6 +8,7 @@ const nodes = [
     '123': 1,
     string: 'bar',
     number: 10,
+    zero: 0,
     float: 1.2,
     nullValue: null,
     truthyBoolean: true,
@@ -31,7 +32,8 @@ const nodes = [
       foo: 'bar'
     },
     obj: {
-      foo: 'bar'
+      foo: 'bar',
+      empty: []
     }
   },
   {
@@ -55,15 +57,29 @@ const nodes = [
     obj: {
       bar: 'foo',
       test: {
-        foo: 'bar'
+        foo: 'bar',
+        emptyObj: {},
+        emptyList: []
       }
+    },
+    deep: {
+      list: [],
+      object: {}
     }
   },
   {
     ref: null,
     refs: [],
     objList: [],
-    numberList: []
+    numberList: [],
+    deep: {
+      object: {
+        empty: {
+          object: {},
+          list: []
+        }
+      }
+    }
   }
 ]
 
@@ -72,10 +88,10 @@ test('merge node fields', () => {
 
   expect(fields['123']).toMatchObject({ key: '123', fieldName: '_123', value: 1 })
   expect(fields.emptyString.value).toEqual('')
+  expect(fields.zero.value).toEqual(0)
   expect(fields.numberList.value).toHaveLength(1)
   expect(fields.floatList.value).toHaveLength(1)
   expect(fields.objList.value).toHaveLength(1)
-  expect(fields.emptyList.value).toHaveLength(0)
   expect(fields.objList.value[0].a.value).toEqual('a')
   expect(fields.objList.value[0].b.value).toEqual('b')
   expect(fields.objList.value[0].c.value).toEqual('c')
@@ -86,13 +102,18 @@ test('merge node fields', () => {
   expect(fields.refList.value.typeName).toEqual(expect.arrayContaining(['Post1', 'Post2', 'Post3']))
   expect(fields.refList.value.isList).toEqual(true)
   expect(fields.ref.value).toMatchObject({ typeName: 'Post', isList: false })
-  expect(fields.emptyObj.value).toMatchObject({})
   expect(fields.simpleObj.value.foo.value).toEqual('bar')
   expect(fields.extendObj.value.bar.value).toEqual('foo')
   expect(fields.obj.value.foo.value).toEqual('bar')
   expect(fields.obj.value.bar.value).toEqual('foo')
   expect(fields.obj.value.test.value.foo.value).toEqual('bar')
+  expect(fields.obj.value.test.value.emptyObj).toBeUndefined()
+  expect(fields.obj.value.test.value.emptyList).toBeUndefined()
+  expect(fields.obj.value.empty).toBeUndefined()
   expect(fields.invalidRef.value).toBeUndefined()
+  expect(fields.emptyObj).toBeUndefined()
+  expect(fields.emptyList).toBeUndefined()
+  expect(fields.deep).toBeUndefined()
 })
 
 test('camelcase fieldNames', () => {
@@ -124,6 +145,7 @@ test('create graphql types from node fields', async () => {
   expect(types._123.type).toEqual('Int')
   expect(types.string.type).toEqual('String')
   expect(types.number.type).toEqual('Int')
+  expect(types.zero.type).toEqual('Int')
   expect(types.float.type).toEqual('Float')
   expect(types.emptyString.type).toEqual('String')
   expect(types.falsyBoolean.type).toEqual('Boolean')
