@@ -63,8 +63,8 @@ Gridsome sites are usually not connected to any database and can be hosted entir
 
 ### 3. Next steps
 
-1. Create `.vue` components in the `~/src/pages` directory to create pages
-2. Use `gridsome build` to generate static files in a `~/dist` folder
+1. Create `.vue` components in the `./src/pages` directory to create pages
+2. Use `gridsome build` to generate static files in a `./dist` folder
 
 ### Learn more...
 
@@ -76,19 +76,19 @@ Gridsome sites are usually not connected to any database and can be hosted entir
 Install [Node.js 8.3](https://nodejs.org/en/download/) or higher and [Yarn](https://yarnpkg.com/lang/en/docs/install/).
 
 1. Clone this repository.
-2. Create a new Gridsome project inside the `~/projects` folder.
+2. Create a new Gridsome project inside the `./projects` folder.
 3. Enter the new project folder and run `yarn install`.
 4. The project will now use the local packages when you run `gridsome develop`.
 
 Make sure your test project has a version number in its `package.json` if you use an existing project.
 
-To use the local version of `@gridsome/cli` as the global command, enter the `~/packages/cli` folder and run `npm link`.
+To use the local version of `@gridsome/cli` as the global command, enter the `./packages/cli` folder and run `npm link`.
 
-Yarn will add dependencies from your test projects to the root `yarn.lock` file. So you should not commit changes in that file unless you have added dependencies to any of the core packages. If you need to commit it, remove your projects from the `~/projects` folder temporary and run `yarn install` in the root folder. Yarn will then clean up the lock file with only necessary dependencies. Commit the file and move your projects back and run `yarn install` again to start developing.
+Yarn will add dependencies from your test projects to the root `yarn.lock` file. So you should not commit changes in that file unless you have added dependencies to any of the core packages. If you need to commit it, remove your projects from the `./projects` folder temporary and run `yarn install` in the root folder. Yarn will then clean up the lock file with only necessary dependencies. Commit the file and move your projects back and run `yarn install` again to start developing.
 
 ### Code of Conduct
 
-In the interest of fostering an open and welcoming environment please read and follow our [Code of Conduct](./CODE_OF_CONDUCT.md).  
+In the interest of fostering an open and welcoming environment please read and follow our [Code of Conduct](./CODE_OF_CONDUCT.md).
 
 ## License
 
