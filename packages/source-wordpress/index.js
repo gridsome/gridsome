@@ -1,7 +1,7 @@
 const pMap = require('p-map')
 const axios = require('axios')
 const camelCase = require('camelcase')
-const { mapKeys, isPlainObject, trimEnd } = require('lodash')
+const { mapKeys, isPlainObject, trimEnd, trimStart } = require('lodash')
 
 const TYPE_AUTHOR = 'author'
 const TYPE_ATTACHEMENT = 'attachment'
@@ -56,7 +56,7 @@ class WordPressSource {
     for (const type in data) {
       const options = data[type]
 
-      this.restBases.posts[type] = options.rest_base
+      this.restBases.posts[type] = trimStart(options.rest_base, '/')
 
       addCollection({
         typeName: this.createTypeName(type),
@@ -98,7 +98,7 @@ class WordPressSource {
         route: this.routes[type]
       })
 
-      this.restBases.taxonomies[type] = options.rest_base
+      this.restBases.taxonomies[type] = trimStart(options.rest_base, '/')
 
       const terms = await this.fetchPaged(`wp/v2/${options.rest_base}`)
 
