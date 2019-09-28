@@ -98,7 +98,7 @@ class WordPressSource {
         route: this.routes[type]
       })
 
-      this.restBases.taxonomies[type] = options.rest_base
+      this.restBases.taxonomies[type] = trimStart(options.rest_base, '/')
 
       const terms = await this.fetchPaged(`wp/v2/${options.rest_base}`)
 
