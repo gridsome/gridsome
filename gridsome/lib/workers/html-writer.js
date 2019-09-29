@@ -6,12 +6,18 @@ exports.render = async function ({
   pages,
   htmlTemplate,
   clientManifestPath,
-  serverBundlePath
+  serverBundlePath,
+  prefetch,
+  preload
 }) {
+  const regexpPrefetch = (prefetch && (typeof(prefetch.mask) === 'string')) ? new RegExp(prefetch.mask) : null
+  const regexpPreload = (preload && (typeof(preload.mask) === 'string')) ? new RegExp(preload.mask) : null
   const render = createRenderFn({
     htmlTemplate,
     clientManifestPath,
-    serverBundlePath
+    serverBundlePath,
+    shouldPrefetch: regexpPrefetch ? (file, type) => regexpPrefetch.test(file) : null,
+    shouldPreload: regexpPreload ? (file, type) => regexpPreload.test(file) : null
   })
 
   let page, html, state, stateSize

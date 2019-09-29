@@ -8,7 +8,9 @@ const MAX_STATE_SIZE = 25000
 module.exports = function createRenderFn ({
   htmlTemplate,
   clientManifestPath,
-  serverBundlePath
+  serverBundlePath,
+  shouldPrefetch,
+  shouldPreload
 }) {
   const renderHTML = createHTMLRenderer(htmlTemplate)
   const clientManifest = require(clientManifestPath)
@@ -16,7 +18,9 @@ module.exports = function createRenderFn ({
 
   const renderer = createBundleRenderer(serverBundle, {
     clientManifest,
-    runInNewContext: false
+    runInNewContext: false,
+    shouldPrefetch,
+    shouldPreload
   })
 
   return async function render(page, state, stateSize, hash) {

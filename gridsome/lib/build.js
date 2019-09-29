@@ -74,7 +74,7 @@ async function renderHTML (renderQueue, app, hash) {
   const { createWorker } = require('./workers')
   const timer = hirestime()
   const worker = createWorker('html-writer')
-  const { htmlTemplate, clientManifestPath, serverBundlePath } = app.config
+  const { htmlTemplate, clientManifestPath, serverBundlePath, prefetch, preload } = app.config
 
   await Promise.all(chunk(renderQueue, 350).map(async pages => {
     try {
@@ -83,7 +83,8 @@ async function renderHTML (renderQueue, app, hash) {
         pages,
         htmlTemplate,
         clientManifestPath,
-        serverBundlePath
+        serverBundlePath,
+        prefetch, preload
       })
     } catch (err) {
       worker.end()
