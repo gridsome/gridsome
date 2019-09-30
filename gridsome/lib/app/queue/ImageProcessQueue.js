@@ -64,7 +64,7 @@ class ImageProcessQueue {
 
     const hash = await md5File(filePath)
     const buffer = await fs.readFile(filePath)
-    const originalSize = imageSize.sync(buffer)
+    const originalSize = imageSize.sync(buffer) || { width: 1, height: 1 }
 
     const { imageWidth, imageHeight } = computeScaledImageSize(originalSize, options, maxImageWidth)
 
@@ -130,7 +130,11 @@ class ImageProcessQueue {
     const isLazy = options.immediate === undefined
 
     if (isSrcset) {
-      results.dataUri = await createDataUri(buffer, mimeType, imageWidth, imageHeight, options)
+      try {
+        results.dataUri = await createDataUri(buffer, mimeType, imageWidth, imageHeight, options)
+      } catch (err) {
+        throw new Error(`Failed to process image ${relPath}. ${err.message}`)
+      }
       results.sizes = options.sizes || `(max-width: ${imageWidth}px) 100vw, ${imageWidth}px`
       results.srcset = results.sets.map(({ src, width }) => `${src} ${width}w`)
     }

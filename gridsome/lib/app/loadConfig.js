@@ -69,6 +69,7 @@ module.exports = (context, options = {}) => {
 
   const assetsDir = localConfig.assetsDir || 'assets'
 
+  config.context = context
   config.pkg = options.pkg || resolvePkg(context)
   config.host = args.host || localConfig.host || '0.0.0.0'
   config.port = parseInt(args.port || localConfig.port, 10) || undefined

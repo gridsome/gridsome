@@ -11,7 +11,7 @@ async function executeQueries (renderQueue, { context, pages, graphql }, hash) {
 
   const results = await pMap(renderQueue, async entry => {
     const route = pages.getRoute(entry.routeId)
-    const page =  pages.getPage(entry.pageId)
+    const page = pages.getPage(entry.pageId)
 
     invariant(route, `Could not find a route for: ${entry.path}`)
     invariant(page, `Could not find a page for: ${entry.path}`)

@@ -124,6 +124,7 @@ async function processImages (images, config) {
       await worker.process({
         queue,
         outDir: config.outDir,
+        context: config.context,
         cacheDir: config.imageCacheDir,
         backgroundColor: config.images.backgroundColor
       })

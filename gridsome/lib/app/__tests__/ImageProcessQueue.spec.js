@@ -359,5 +359,12 @@ test('fail if file is missing', async () => {
   const filePath = path.resolve(context, 'assets/1000x600-missing.png')
   const queue = new AssetsQueue({ context, config: baseconfig })
 
-  expect(queue.add(filePath, { srcset: false })).rejects.toThrow(/was not found/)
+  await expect(queue.add(filePath, { srcset: false })).rejects.toThrow(/was not found/)
+})
+
+test('give useful error for null byte images', async () => {
+  const filePath = path.resolve(context, 'assets/null-byte.jpg')
+  const queue = new AssetsQueue({ context, config: baseconfig })
+
+  await expect(queue.add(filePath)).rejects.toThrow('Failed to process image')
 })
