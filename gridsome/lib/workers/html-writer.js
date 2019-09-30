@@ -16,8 +16,8 @@ exports.render = async function ({
     htmlTemplate,
     clientManifestPath,
     serverBundlePath,
-    shouldPrefetch: regexpPrefetch ? (file, type) => regexpPrefetch.test(file) : null,
-    shouldPreload: regexpPreload ? (file, type) => regexpPreload.test(file) : null
+    shouldPrefetch: regexpPrefetch ? file => regexpPrefetch.test(file) : null,
+    shouldPreload: regexpPreload ? file => regexpPreload.test(file) : null
   })
 
   let page, html, state, stateSize
