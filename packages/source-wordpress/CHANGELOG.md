@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.4.2](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/compare/@gridsome/source-wordpress@0.4.1...@gridsome/source-wordpress@0.4.2) (2019-10-01)
+
+
+### Bug Fixes
+
+* **wordpress:** add meta to taxonomy terms ([#672](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/issues/672)) ([5b359ad](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/commit/5b359ad))
+* **wordpress:** remove starting slash from rest_base ([#712](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/issues/712)) ([bb0f6d5](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/commit/bb0f6d5))
+
+
+
+
+
 ## [0.4.1](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/compare/@gridsome/source-wordpress@0.4.0...@gridsome/source-wordpress@0.4.1) (2019-09-17)
 
 

@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.7.7](https://github.com/gridsome/gridsome/compare/gridsome@0.7.6...gridsome@0.7.7) (2019-10-01)
+
+
+### Bug Fixes
+
+* **assets:** better error message for broken images ([59919aa](https://github.com/gridsome/gridsome/commit/59919aa))
+* **build:** validate page-query during build ([5fff97a](https://github.com/gridsome/gridsome/commit/5fff97a))
+* **graphql:** don’t create empty fields in objects ([#713](https://github.com/gridsome/gridsome/issues/713)) ([b4776e2](https://github.com/gridsome/gridsome/commit/b4776e2))
+* **graphql:** don’t create fields for lists with invalid values ([f635e8b](https://github.com/gridsome/gridsome/commit/f635e8b))
+* **graphql:** set sdl type def with addReference ([619b510](https://github.com/gridsome/gridsome/commit/619b510))
+* **graphql:** validate static queries ([b9e79f2](https://github.com/gridsome/gridsome/commit/b9e79f2))
+
+
+
+
+
 ## [0.7.6](https://github.com/gridsome/gridsome/compare/gridsome@0.7.5...gridsome@0.7.6) (2019-09-27)
 
 
