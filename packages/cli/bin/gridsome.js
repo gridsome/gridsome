@@ -28,6 +28,14 @@ program
     return wrapCommand(create)(...args)
   })
 
+program
+  .command('info')
+  .description('output information about the local environment')
+  .action(() => {
+    const info = require('../lib/commands/info')
+    return wrapCommand(info)()
+  })
+
 try {
   const commandsPath = resolveCwd.silent('gridsome/commands')
   const gridsomePath = resolveCwd.silent('gridsome')
