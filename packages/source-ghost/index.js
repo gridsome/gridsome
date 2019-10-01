@@ -33,14 +33,6 @@ class GhostSource {
       throw new Error(`${options.typeName}: perPage cannot be more than 100 or less than 1`)
     }
 
-    this.routes = {
-      post: '/:year/:month/:day/:slug',
-      tag: '/tag/:slug',
-      page: '/page/:slug',
-      author: '/author/:slug',
-      ...this.options.routes
-    }
-
     api.loadSource(async actions => {
       console.log(`Loading data from ${options.url}`)
       await this.loadAuthors(actions)
@@ -51,38 +43,34 @@ class GhostSource {
     })
   }
 
-  async loadTags ({ addContentType, addCollection = addContentType }) {
+  async loadTags ({ addCollection }) {
     const tags = addCollection({
-      typeName: this.createTypeName(TYPE_TAG),
-      route: this.routes[TYPE_TAG]
+      typeName: this.createTypeName(TYPE_TAG)
     })
 
     await this.loadBasicEntity(tags, this.contentAPI.tags)
   }
 
-  async loadPages ({ addContentType, addCollection = addContentType }) {
+  async loadPages ({ addCollection }) {
     const pages = addCollection({
       typeName: this.createTypeName(TYPE_PAGE),
-      route: this.routes[TYPE_PAGE],
       dateField: 'published_at'
     })
 
     await this.loadBasicEntity(pages, this.contentAPI.pages)
   }
 
-  async loadAuthors ({ addContentType, addCollection = addContentType }) {
+  async loadAuthors ({ addCollection }) {
     const authors = addCollection({
-      typeName: this.createTypeName(TYPE_AUTHOR),
-      route: this.routes[TYPE_AUTHOR]
+      typeName: this.createTypeName(TYPE_AUTHOR)
     })
 
     await this.loadBasicEntity(authors, this.contentAPI.authors)
   }
 
-  async loadPosts ({ addContentType, createReference, addCollection = addContentType }) {
+  async loadPosts ({ createReference, addCollection }) {
     const posts = addCollection({
       typeName: this.createTypeName(TYPE_POST),
-      route: this.routes[TYPE_POST],
       dateField: 'published_at'
     })
 
@@ -126,7 +114,7 @@ class GhostSource {
     const settings = await this.contentAPI.settings.browse()
     const fieldName = settingsName || camelCase(typeName)
 
-    store.addMetaData(fieldName, settings)
+    store.addMetadata(fieldName, settings)
   }
 
   async loadBasicEntity (collection, contentEntity) {
