@@ -22,26 +22,4 @@ What happened.
 
 ### Environment
 
-<pre><code>
-Libs:
-- gridsome version: X.Y.Z
-- @gridsome/cli version: X.Y.Z
-<!-- Check whether this is still an issue in the most recent Gridsome version -->
-
-Browser:
-- [ ] Chrome (desktop) version XX
-- [ ] Chrome (Android) version XX
-- [ ] Chrome (iOS) version XX
-- [ ] Firefox version XX
-- [ ] Safari (desktop) version XX
-- [ ] Safari (iOS) version XX
-- [ ] IE version XX
-- [ ] Edge version XX
- 
-For Tooling issues:
-- Node version: XX  <!-- run `node --version` -->
-- Platform:  <!-- Mac, Linux, Windows -->
-
-Others:
-<!-- Anything else relevant?  Operating system version, IDE, package manager, HTTP server, ... -->
-</code></pre>
+Paste the information here as shown by `gridsome info`
