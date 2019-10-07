@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.6.1](https://github.com/gridsome/gridsome/tree/master/packages/source-filesystem/compare/@gridsome/source-filesystem@0.6.0...@gridsome/source-filesystem@0.6.1) (2019-10-07)
+
+
+### Bug Fixes
+
+* **filesystem:** don’t create refs for filtered nodes ([e458e0a](https://github.com/gridsome/gridsome/tree/master/packages/source-filesystem/commit/e458e0a))
+
+
+
+
+
 # [0.6.0](https://github.com/gridsome/gridsome/tree/master/packages/source-filesystem/compare/@gridsome/source-filesystem@0.5.0...@gridsome/source-filesystem@0.6.0) (2019-09-11)
 
 

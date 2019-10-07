@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.6](https://github.com/gridsome/gridsome/tree/master/packages/vue-remark/compare/@gridsome/vue-remark@0.1.5...@gridsome/vue-remark@0.1.6) (2019-10-07)
+
+**Note:** Version bump only for package @gridsome/vue-remark
+
+
+
+
+
 ## [0.1.5](https://github.com/gridsome/gridsome/tree/master/packages/vue-remark/compare/@gridsome/vue-remark@0.1.4...@gridsome/vue-remark@0.1.5) (2019-09-27)
 
 
