@@ -11,6 +11,7 @@ const pathToRegexp = require('path-to-regexp')
 const createPageQuery = require('./createPageQuery')
 const { HookMap, SyncWaterfallHook, SyncBailHook } = require('tapable')
 const { snakeCase, trimEnd } = require('lodash')
+const { genChunkName } = require('./utils')
 const validateInput = require('./schemas')
 
 const TYPE_STATIC = 'static'
@@ -286,7 +287,7 @@ class Pages {
 
   _createRouteOptions (options, meta = {}) {
     const component = this.app.resolve(options.component)
-    const { pageQuery } = this._parseComponent(component)
+    const { chunkName, pageQuery } = this._parseComponent(component)
     const query = this._parseQuery(pageQuery, component)
     const { permalinks: { trailingSlash }} = this.app.config
 
@@ -324,6 +325,7 @@ class Pages {
       internal: Object.assign({}, meta, {
         meta: options.meta || {},
         path: prettyPath,
+        chunkName,
         isDynamic,
         priority,
         regexp,
@@ -378,17 +380,18 @@ class Pages {
       return this._componentCache.get(component)
     }
 
-    const ext = path.extname(component).substring(1)
-    const hook = this.hooks.parseComponent.get(ext)
-    let results = {}
-
     if (!fs.existsSync(component)) {
       throw new Error(`Could not find component ${component}.`)
     }
 
+    const ext = path.extname(component).substring(1)
+    const hook = this.hooks.parseComponent.get(ext)
+    const chunkName = genChunkName(this.app.context, component)
+    const results = { chunkName }
+
     if (hook) {
       const source = fs.readFileSync(component, 'utf8')
-      results = hook.call(source, { resourcePath: component })
+      Object.assign(results, hook.call(source, { resourcePath: component }))
     }
 
     this._componentCache.set(component, validateInput('component', results || {}))
@@ -479,8 +482,10 @@ class Route {
     const { permalinks: { trailingSlash }} = this._factory.app.config
     const { regexp, digest, isManaged, query } = this.internal
     const { id: _id, path: _path, context, queryVariables } = validateInput('routePage', input)
+    const hasTrailingSlash = /\/$/.test(_path)
 
     let path = trimEnd(_path.replace(/\/+/g, '/'), '/') || '/'
+    let routePath = path
 
     if (path[0] !== '/') path = '/' + path
 
@@ -491,7 +496,7 @@ class Route {
 
     if (this.type === TYPE_STATIC) {
       if (trailingSlash) {
-        publicPath = trimEnd(path, '/') + '/'
+        publicPath = routePath = trimEnd(path, '/') + '/'
       }
 
       invariant(
@@ -510,9 +515,14 @@ class Route {
     const vars = queryVariables || context || {}
     const { paginate, variables, filters } = this._factory._createPageQuery(query, vars)
 
+    if (query.directives.paginate) {
+      routePath = trimEnd(path, '/') + '/:page(\\d+)?' + (hasTrailingSlash ? '/' : '')
+    }
+
     return this._createPage.call({
       id,
       path,
+      routePath,
       publicPath,
       context,
       internal: {

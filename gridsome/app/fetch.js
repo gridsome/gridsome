@@ -1,88 +1,18 @@
 import prefetch from './utils/prefetch'
 import { unslashEnd } from './utils/helpers'
-import { NOT_FOUND_PATH } from '~/.temp/constants'
 
+const isProd = process.env.NODE_ENV === 'production'
 const dataUrl = process.env.DATA_URL
 const isPrefetched = {}
 const isLoaded = {}
 
-export default (route, options = {}) => {
-  const { shouldPrefetch = false, force = false } = options
-
-  if (!process.isStatic) {
-    const { dynamic = false } = route.meta
-    let path = dynamic ? route.matched[0].path : route.path
-
-    if (route.name === '*') {
-      path = NOT_FOUND_PATH
-    }
-
-    return new Promise((resolve, reject) => {
-      if (force || !isLoaded[route.path]) {
-        isLoaded[route.path] = fetch(process.env.GRAPHQL_ENDPOINT, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ path, dynamic })
-        })
-          .then(res => res.json())
-          .catch(reject)
-      }
-
-      isLoaded[route.path]
-        .then(res => {
-          if (res.errors) reject(res.errors[0])
-          else if (res.code) resolve({ code: res.code })
-          else resolve({
-            data: res.data,
-            context: res.extensions
-              ? res.extensions.context
-              : {}
-          })
-
-          isLoaded[route.path] = null
-        })
-    })
-  }
-
-  const hashMeta = document
-    .querySelector('meta[name="gridsome:hash"]')
-    .getAttribute('content')
-
-  return new Promise((resolve, reject) => {
-    const usePath = route.name === '*' ? NOT_FOUND_PATH : route.path
-    const jsonPath = route.meta.dataPath || unslashEnd(usePath) + '/index.json'
-    const absPath = unslashEnd(dataUrl) + jsonPath
-
-    if (shouldPrefetch && !isLoaded[jsonPath]) {
-      if (!isPrefetched[jsonPath]) {
-        isPrefetched[jsonPath] = prefetch(absPath)
-      }
-
-      return isPrefetched[jsonPath]
-        .then(() => resolve())
-        .catch(() => resolve())
-    }
-
-    if (!isLoaded[jsonPath]) {
-      isLoaded[jsonPath] = fetchJSON(absPath)
-    }
-
-    return isLoaded[jsonPath]
-      .then(res => {
-        if (res.hash !== hashMeta) reject(createError('Hash did not match.', 'INVALID_HASH'))
-        else resolve(res)
-      })
-      .catch(reject)
-  })
-}
-
-function createError (message, code) {
+const createError = (message, code) => {
   const error = new Error(message)
   error.code = code
   return error
 }
 
-function fetchJSON (jsonPath) {
+const fetchJSON = jsonPath => {
   return new Promise((resolve, reject) => {
     const req = new XMLHttpRequest()
 
@@ -102,7 +32,7 @@ function fetchJSON (jsonPath) {
             )
           }
 
-          if (!results.hash) {
+          if (!results.hash && process.env.NODE_ENV === 'production') {
             return reject(
               new Error(`JSON data in ${jsonPath} is missing a hash.`)
             )
@@ -119,5 +49,54 @@ function fetchJSON (jsonPath) {
     }
 
     req.send(null)
+  })
+}
+
+export default (route, options = {}) => {
+  const { shouldPrefetch = false, force = false } = options
+
+  const hashMeta = isProd
+    ? document
+        .querySelector('meta[name="gridsome:hash"]')
+        .getAttribute('content')
+    : null
+
+  return new Promise((resolve, reject) => {
+    const usePath = route.path
+    const jsonPath = route.meta.dataPath || unslashEnd(usePath) + '/index.json'
+    let absPath = unslashEnd(dataUrl) + jsonPath
+
+    if (route.meta.routeId) {
+      absPath += `?routeId=${route.meta.routeId}`
+    }
+
+    if (force) {
+      delete isPrefetched[jsonPath]
+      delete isLoaded[jsonPath]
+    }
+
+    if (shouldPrefetch && !isLoaded[jsonPath]) {
+      if (!isPrefetched[jsonPath]) {
+        isPrefetched[jsonPath] = prefetch(absPath)
+      }
+
+      return isPrefetched[jsonPath]
+        .then(() => resolve())
+        .catch(() => resolve())
+    }
+
+    if (!isLoaded[jsonPath]) {
+      isLoaded[jsonPath] = fetchJSON(absPath)
+    }
+
+    return isLoaded[jsonPath]
+      .then(res => {
+        if (isProd && res.hash !== hashMeta) {
+          reject(createError('Hash did not match.', 'INVALID_HASH'))
+        } else {
+          resolve(res)
+        }
+      })
+      .catch(reject)
   })
 }

@@ -1,4 +1,5 @@
 import createApp, { runMain } from './app'
+import { components } from '~/.temp/routes'
 
 runMain()
 
@@ -10,6 +11,13 @@ export default context => new Promise((resolve, reject) => {
 
   if (!startRoute) startRoute = router.history.current
   else router.history.current = startRoute
+
+  if (location.path) {
+    router.addRoutes([{
+      path: context.state.path,
+      component: components[context.state.chunkName]
+    }])
+  }
 
   context.meta = app.$meta()
 

@@ -73,6 +73,7 @@ module.exports = function createRenderFn ({
 
 function createState (state = {}) {
   return {
+    ...state,
     data: state.data || null,
     context: state.context || {}
   }

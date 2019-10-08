@@ -68,7 +68,7 @@ document.addEventListener('click', event => {
     path: path + ($el.search || '') + ($el.hash || '')
   })
 
-  if (route.name === '*') {
+  if (!route.matched.length) {
     return
   }
 

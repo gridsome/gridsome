@@ -1,8 +1,19 @@
-const { snakeCase } = require('lodash')
+const path = require('path')
 const slugify = require('@sindresorhus/slugify')
+const { snakeCase, kebabCase } = require('lodash')
 
 exports.normalizePath = value => {
   return '/' + value.split('/').filter(Boolean).join('/')
+}
+
+exports.genChunkName = (context, component) => {
+  const chunkName = path.relative(context, component)
+    .split('/')
+    .filter(s => s !== '..')
+    .map(s => kebabCase(s))
+    .join('--')
+
+  return `page--${chunkName}`
 }
 
 const hasDynamicParam = value => /:|\(/.test(value)

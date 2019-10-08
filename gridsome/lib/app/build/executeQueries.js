@@ -52,16 +52,22 @@ async function executeQueries (renderQueue, { context, pages, schema, graphql },
       results.data = data
     }
 
-    return { dataOutput: entry.dataOutput, data: results }
+    return {
+      path: page.routePath,
+      meta: route.internal.meta,
+      chunkName: route.internal.chunkName,
+      dataOutput: entry.dataOutput,
+      ...results
+    }
   }, { concurrency: sysinfo.cpus.physical })
 
   info(`Execute GraphQL (${renderQueue.length} queries) - ${timer(hirestime.S)}s`)
 
   const timer2 = hirestime()
 
-  await Promise.all(results.map(result => {
-    const content = JSON.stringify({ hash, ...result.data })
-    return fs.outputFile(result.dataOutput, content)
+  await Promise.all(results.map(({ dataOutput, ...res }) => {
+    const content = JSON.stringify({ ...res, hash })
+    return fs.outputFile(dataOutput, content)
   }))
 
   info(`Write out page data (${results.length} files) - ${timer2(hirestime.S)}s`)

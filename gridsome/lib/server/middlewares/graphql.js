@@ -1,77 +1,71 @@
-const { print } = require('graphql')
-const { trimEnd } = require('lodash')
+const path = require('path')
+const { trim, trimEnd } = require('lodash')
 const { createQueryVariables } = require('../../graphql/utils')
 
-module.exports = ({ pages }) => {
-  return async function graphqlMiddleware (req, res, next) {
-    const { body = {}} = req
+module.exports = ({ pages, schema }) => {
+  return async function graphqlMiddleware (req, res) {
+    const { dir } = path.posix.parse(req.params[0])
+    const paramPath = '/' + trim(dir, '/')
+    const { routeId } = req.query
 
     const notFound = () => res
       .status(404)
-      .send({ code: 404, message: `Could not find ${body.path}` })
+      .send({ code: 404, message: `Could not find ${paramPath}` })
 
-    // allow OPTIONS method for cors
-    if (req.method === 'OPTIONS') {
-      return res.sendStatus(200)
-    }
-
-    if (body.query) {
-      return next()
-    }
-
-    let route = null
+    let page, route
     let currentPage = null
-    let params = {}
 
-    if (body.dynamic) {
-      route = pages.getRouteByPath(body.path)
+    if (routeId) {
+      route = pages.getRoute(routeId)
+
+      if (!route) return notFound()
+
+      page = route.pages().shift()
     } else {
-      const match = pages.getMatch(body.path)
+      const { route: matchedRoute, params } = pages.getMatch(paramPath)
 
-      route = match.route
-      params = match.params
-    }
+      if (!matchedRoute) return notFound()
 
-    if (!route) return notFound()
+      // page/1/index.html is not statically generated
+      // in production and should return 404 in develop
+      if (matchedRoute.internal.query.directives.paginate) {
+        currentPage = parseInt(params.page, 10) || 0
 
-    // page/1/index.html is not statically generated
-    // in production and should return 404 in develop
-    if (route.internal.query.directives.paginate) {
-      currentPage = parseInt(params.page, 10) || 0
+        if (params.page && currentPage <= 1) {
+          return notFound()
+        }
 
-      if (params.page && currentPage <= 1) {
-        return notFound()
+        delete params.page
       }
 
-      delete params.page
+      const pagePath = trimEnd(matchedRoute.createPath(params), '/') || '/'
+      page = pages._pages.by('path', pagePath)
+      route = matchedRoute
     }
-
-    const path = !body.dynamic
-      ? trimEnd(route.createPath(params), '/') || '/'
-      : body.path
-
-    const page = pages._pages.by('path', path)
 
     if (!page) return notFound()
 
-    if (!route.internal.query.document) {
-      return res.json({
-        extensions: {
-          context: page.context
-        },
-        data: null
-      })
+    const result = {
+      path: page.routePath,
+      meta: route.internal.meta,
+      chunkName: route.internal.chunkName,
+      context: page.context,
+      data: null
     }
 
-    req.body = {
-      query: print(route.internal.query.document),
-      variables: createQueryVariables(
-        page.path,
-        page.internal.query.variables,
-        currentPage || undefined
+    if (route.internal.query.document) {
+      const { data } = await schema.runQuery(
+        route.internal.query.document,
+        createQueryVariables(
+          page.path,
+          page.internal.query.variables,
+          currentPage || undefined
+        )
       )
+
+      result.data = data
     }
 
-    next()
+    res.json(result)
   }
 }

@@ -36,7 +36,6 @@ class Server {
     app.use(
       this._urls.graphql.endpoint,
       express.json(),
-      graphqlMiddleware(this._app),
       graphqlHTTP({
         schema: this._app.schema.getSchema(),
         context: this._app.schema.createContext(),
@@ -82,6 +81,11 @@ class Server {
     if (!process.env.GRIDSOME_TEST) {
       app.get(assetsRE, assetsMiddleware(this._app))
     }
+
+    app.get(
+      new RegExp(`${assetsPath}/data/(.*)`),
+      graphqlMiddleware(this._app)
+    )
 
     await this._app.plugins.configureServer(app)
 

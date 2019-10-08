@@ -23,7 +23,7 @@ Vue.component('ClientOnly', ClientOnly)
 Vue.prototype.$url = url
 Vue.prototype.$fetch = fetchPath
 
-router.beforeEach(graphqlGuard)
+router.beforeEach(graphqlGuard(router))
 
 const context = {
   appOptions: {
