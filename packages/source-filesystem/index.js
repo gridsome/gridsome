@@ -101,7 +101,7 @@ class FilesystemSource {
       const options = await this.createNodeOptions(slash(file), actions)
       const node = this.collection.addNode(options)
 
-      this.createNodeRefs(node)
+      this.createNodeRefs(node, actions)
     })
 
     watcher.on('unlink', file => {
@@ -116,7 +116,7 @@ class FilesystemSource {
       const options = await this.createNodeOptions(slash(file), actions)
       const node = this.collection.updateNode(options)
 
-      this.createNodeRefs(node)
+      this.createNodeRefs(node, actions)
     })
   }
 
