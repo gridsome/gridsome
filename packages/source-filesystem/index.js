@@ -3,7 +3,7 @@ const fs = require('fs-extra')
 const slash = require('slash')
 const crypto = require('crypto')
 const mime = require('mime-types')
-const { mapValues, trimStart } = require('lodash')
+const { mapValues, trim, trimEnd } = require('lodash')
 
 const isDev = process.env.NODE_ENV === 'development'
 
@@ -159,22 +159,24 @@ class FilesystemSource {
 
   createPath ({ dir, name }, actions) {
     const { permalinks = {}} = this.api.config
-    const { index, pathPrefix = '/' } = this.options
-    const suffix = permalinks.trailingSlash ? '/' : ''
-    const joinedPath = path.join(pathPrefix, dir)
+    const pathPrefix = trim(this.options.pathPrefix, '/')
+    const pathSuffix = permalinks.trailingSlash ? '/' : ''
 
-    const segments = slash(joinedPath)
-      .split('/')
-      .filter(Boolean)
-      .map(segment => actions.slugify(segment))
+    const segments = slash(dir).split('/').map(segment => {
+      return actions.slugify(segment)
+    })
 
-    if (!index.includes(name)) {
+    if (!this.options.index.includes(name)) {
       segments.push(actions.slugify(name))
     }
 
-    const res = segments.join('/') + suffix
+    if (pathPrefix) {
+      segments.unshift(pathPrefix)
+    }
 
-    return '/' + trimStart(res, '/')
+    const res = trimEnd('/' + segments.filter(Boolean).join('/'), '/')
+
+    return (res + pathSuffix) || '/'
   }
 
   normalizeRefs (refs) {
