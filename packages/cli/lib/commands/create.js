@@ -13,7 +13,7 @@ module.exports = async (name, starter = 'default') => {
   const useYarn = await hasYarn()
   const commandName = {
     develop: 'gridsome develop',
-    build: 'gridsome build',
+    build: 'gridsome build'
   }
 
   try {
