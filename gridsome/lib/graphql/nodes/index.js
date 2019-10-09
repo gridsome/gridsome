@@ -184,7 +184,14 @@ function createThirdPartyFields (typeComposer, collection) {
     }
   }
 
-  typeComposer.addFields(fields)
+  for (const fieldName in fields) {
+    const extensions = typeComposer.hasField(fieldName)
+      ? typeComposer.getFieldExtensions(fieldName)
+      : {}
+
+    typeComposer.setField(fieldName, fields[fieldName])
+    typeComposer.extendFieldExtensions(fieldName, extensions)
+  }
 }
 
 const {
