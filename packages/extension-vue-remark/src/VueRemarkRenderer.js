@@ -11,7 +11,7 @@ const VueRemarkRoot = {
 export default {
   functional: true,
   props: {
-    code: {
+    source: {
       type: String,
       required: true
     },
@@ -25,18 +25,18 @@ export default {
     }
   },
   render (h, { parent, props, data, children }) {
-    let fn = cache[props.code]
+    let fn = cache[props.source]
 
     if (typeof fn !== 'function') {
       fn = new Function('options',
-        `${props.code}\n` +
+        `${props.source}\n` +
         `return Object.assign({}, options, {` +
         `render: render, staticRenderFns: staticRenderFns, ` +
         `_compiled: _compiled`+
         `})`
       )
 
-      cache[props.code] = fn
+      cache[props.source] = fn
     }
 
     const components = props.components || parent.$options.components
