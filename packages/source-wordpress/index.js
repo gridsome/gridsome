@@ -144,10 +144,11 @@ class WordPressSource {
 
           if (post.hasOwnProperty(propName)) {
             const typeName = this.createTypeName(type)
-            const ref = createReference(typeName, post[propName])
             const key = camelCase(propName)
 
-            fields[key] = ref
+            fields[key] = Array.isArray(post[propName])
+              ? post[propName].map(id => createReference(typeName, id))
+              : createReference(typeName, post[propName])
           }
         }
 
