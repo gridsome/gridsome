@@ -1,15 +1,8 @@
 const cache = Object.create(null)
 
-const VueRemarkRoot = {
-  name: 'VueRemarkRoot',
-  render (h) {
-    return h('div', null, this.$slots.default)
-  }
-}
-
 // @vue/component
 export default {
-  name: 'VueRemarkRenderer',
+  name: 'VueRenderer',
   functional: true,
   props: {
     source: {
@@ -33,7 +26,7 @@ export default {
         `${props.source}\n` +
         `return Object.assign({}, options, {` +
         `render: render, staticRenderFns: staticRenderFns, ` +
-        `_compiled: _compiled`+
+        `_compiled: true`+
         `})`
       )
 
@@ -43,12 +36,9 @@ export default {
     const directives = [{ name: 'g-image' }].concat(data.directives || [])
 
     const component = fn({
-      name: 'VueRemarkRenderer',
+      name: 'VueRenderer',
       data: () => props.data,
-      components: {
-        VueRemarkRoot,
-        ...props.components
-      }
+      components: props.components
     })
 
     return h(component, { ...data, directives }, children)

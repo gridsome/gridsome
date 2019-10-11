@@ -1,0 +1,30 @@
+{
+  "version": "0.0.0",
+  "name": "@gridsome/extension-remark",
+  "description": "Converts Markdown to HTML",
+  "homepage": "https://github.com/gridsome/gridsome/tree/master/packages/extension-remark#readme",
+  "repository": "https://github.com/gridsome/gridsome/tree/master/packages/extension-remark",
+  "main": "index.js",
+  "keywords": [
+    "gridsome",
+    "gridsome-plugin",
+    "markdown",
+    "remark"
+  ],
+  "dependencies": {
+    "is-relative": "^1.0.0",
+    "is-url": "^1.2.4",
+    "lodash": "^4.17.11",
+    "lru-cache": "^5.1.1",
+    "remark-html": "^10.0.0",
+    "remark-parse": "^7.0.1",
+    "unified": "^8.4.1",
+    "unist-util-visit": "^2.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=8"
+  }
+}

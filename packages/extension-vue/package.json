@@ -1,0 +1,25 @@
+{
+  "version": "0.0.0",
+  "name": "@gridsome/extension-vue",
+  "description": "Use Vue Components in Markdown",
+  "homepage": "https://github.com/gridsome/gridsome/tree/master/packages/extension-vue#readme",
+  "repository": "https://github.com/gridsome/gridsome/tree/master/packages/extension-vue",
+  "main": "index.js",
+  "module": "runtime/index.js",
+  "keywords": [
+    "gridsome",
+    "gridsome-plugin",
+    "vue"
+  ],
+  "dependencies": {
+    "@vue/component-compiler-utils": "^3.0.0",
+    "lru-cache": "^5.1.1",
+    "vue-template-compiler": "^2.6.10"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=8"
+  }
+}
