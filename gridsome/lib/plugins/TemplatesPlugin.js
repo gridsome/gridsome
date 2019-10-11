@@ -186,6 +186,11 @@ class TemplatesPlugin {
         templates.byComponent.set(templateComponent, byComponent.concat(template))
         templates.byTypeName.set(options.typeName, byTypeName.concat(template))
       }
+
+      if (templates.byTypeName.has(options.typeName)) {
+        options._indices = ['path']
+        options._unique = ['path']
+      }
     })
 
     api.onCreateNode((options, collection) => {
