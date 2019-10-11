@@ -43,11 +43,19 @@ test.each(
 test('create filter operators for node references', () => {
   const schemaComposer = new SchemaComposer()
 
-  schemaComposer.createObjectTC({ name: 'Tag', interfaces: ['Node'] })
+  schemaComposer.createObjectTC({
+    name: 'Tag',
+    interfaces: ['Node'],
+    fields: {
+      id: 'ID!'
+    }
+  })
+
   const typeComposer = schemaComposer.createObjectTC({
     name: 'Post',
     interfaces: ['Node'],
     fields: {
+      id: 'ID!',
       tag: 'Tag',
       tags: ['Tag']
     }
@@ -59,8 +67,18 @@ test('create filter operators for node references', () => {
   forEach(inputFields.tag.type.getFields(), (field, fieldName) => {
     const extensions = inputFields.tag.type.getFieldExtensions(fieldName)
     const typeComposer = inputFields.tag.type.getFieldTC(fieldName)
-    expect(extensions.isNodeReference).toEqual(true)
-    expect(typeComposer.getTypeName()).toEqual('ID')
+
+    switch (fieldName) {
+      case 'id':
+        expect(extensions.isReference).toEqual(true)
+        expect(typeComposer.getTypeName()).toEqual('IDQueryOperatorInput')
+        break
+
+      default:
+        expect(extensions.isDeprecatedNodeReference).toEqual(true)
+        expect(typeComposer.getTypeName()).toEqual('ID')
+        break
+    }
   })
 })
 

@@ -152,7 +152,7 @@ test('filter dates by gt', async () => {
   expect(data.allProduct.edges[1].node.id).toEqual('3')
 })
 
-test('filter by reference id', async () => {
+test('deprecated: filter by reference id', async () => {
   const { errors, data } = await createSchemaAndExecute(`{
     allProduct (filter: { related: { eq: "2" } }) {
       edges {
@@ -168,7 +168,7 @@ test('filter by reference id', async () => {
 
 test('filter by multiple reference ids', async () => {
   const { errors, data } = await createSchemaAndExecute(`{
-    allProduct (filter: { alternatives: { containsAny: ["1", "4"] } }) {
+    allProduct (filter: { alternatives: { id: { in: ["1", "4"] } } }) {
       edges {
         node { id }
       }
@@ -179,6 +179,350 @@ test('filter by multiple reference ids', async () => {
   expect(data.allProduct.edges).toHaveLength(2)
   expect(data.allProduct.edges[0].node.id).toEqual('3')
   expect(data.allProduct.edges[1].node.id).toEqual('2')
+})
+
+test('deprecated: filter by multiple reference ids', async () => {
+  const { errors, data } = await createSchemaAndExecute(`{
+    allProduct (filter: { alternatives: { containsAny: ["1", "4"] } }) {
+      edges {
+        node { id }
+      }
+    }
+  }`)
+
+  expect(errors).toBeUndefined()
+  expect(data.allProduct.edges).toHaveLength(3)
+  expect(data.allProduct.edges[0].node.id).toEqual('3')
+  expect(data.allProduct.edges[1].node.id).toEqual('2')
+  expect(data.allProduct.edges[2].node.id).toEqual('1')
+})
+
+describe('filter by reference id', () => {
+  test('eq', async () => {
+    const { errors, data } = await createSchemaAndExecute(`{
+      allProduct (filter: { related: { id: { eq: "2" } } }) {
+        edges {
+          node { id }
+        }
+      }
+    }`)
+
+    expect(errors).toBeUndefined()
+    expect(data.allProduct.edges).toHaveLength(1)
+    expect(data.allProduct.edges[0].node.id).toEqual('3')
+  })
+
+  test('ne', async () => {
+    const { errors, data } = await createSchemaAndExecute(`{
+      allProduct (filter: { related: { id: { ne: "2" } } }) {
+        edges {
+          node { id }
+        }
+      }
+    }`)
+
+    expect(errors).toBeUndefined()
+    expect(data.allProduct.edges).toHaveLength(3)
+    expect(data.allProduct.edges[0].node.id).toEqual('4')
+    expect(data.allProduct.edges[1].node.id).toEqual('2')
+    expect(data.allProduct.edges[2].node.id).toEqual('1')
+  })
+
+  test('in', async () => {
+    const { errors, data } = await createSchemaAndExecute(`{
+      allProduct (filter: { related: { id: { in: ["2"] } } }) {
+        edges {
+          node { id }
+        }
+      }
+    }`)
+
+    expect(errors).toBeUndefined()
+    expect(data.allProduct.edges).toHaveLength(1)
+    expect(data.allProduct.edges[0].node.id).toEqual('3')
+  })
+
+  test('nin', async () => {
+    const { errors, data } = await createSchemaAndExecute(`{
+      allProduct (filter: { related: { id: { nin: ["2"] } } }) {
+        edges {
+          node { id }
+        }
+      }
+    }`)
+
+    expect(errors).toBeUndefined()
+    expect(data.allProduct.edges).toHaveLength(3)
+    expect(data.allProduct.edges[0].node.id).toEqual('4')
+    expect(data.allProduct.edges[1].node.id).toEqual('2')
+    expect(data.allProduct.edges[2].node.id).toEqual('1')
+  })
+})
+
+describe('filter by user defined reference fields (single)', () => {
+  const runQuery = query => buildSchema(api => {
+    api.loadSource(({ addSchemaTypes }) => {
+      addSchemaTypes(`
+      type Product implements Node {
+        related: Product
+        relatedId: Product
+      }
+    `)
+    })
+  }, query)
+
+  test('eq', async () => {
+    const { errors, data } = await runQuery(`{
+      allProduct (filter: { relatedId: { id: { eq: "2" } } }) {
+        edges {
+          node { id }
+        }
+      }
+    }`)
+
+    expect(errors).toBeUndefined()
+    expect(data.allProduct.edges).toHaveLength(1)
+    expect(data.allProduct.edges[0].node.id).toEqual('3')
+  })
+
+  test('eq (inferred)', async () => {
+    const { errors, data } = await runQuery(`{
+      allProduct (filter: { related: { id: { eq: "2" } } }) {
+        edges {
+          node { id }
+        }
+      }
+    }`)
+
+    expect(errors).toBeUndefined()
+    expect(data.allProduct.edges).toHaveLength(1)
+    expect(data.allProduct.edges[0].node.id).toEqual('3')
+  })
+
+  test('ne', async () => {
+    const { errors, data } = await runQuery(`{
+      allProduct (filter: { relatedId: { id: { ne: "2" } } }) {
+        edges {
+          node { id }
+        }
+      }
+    }`)
+
+    expect(errors).toBeUndefined()
+    expect(data.allProduct.edges).toHaveLength(3)
+    expect(data.allProduct.edges[0].node.id).toEqual('4')
+    expect(data.allProduct.edges[1].node.id).toEqual('2')
+    expect(data.allProduct.edges[2].node.id).toEqual('1')
+  })
+
+  test('ne (inferred)', async () => {
+    const { errors, data } = await runQuery(`{
+      allProduct (filter: { related: { id: { ne: "2" } } }) {
+        edges {
+          node { id }
+        }
+      }
+    }`)
+
+    expect(errors).toBeUndefined()
+    expect(data.allProduct.edges).toHaveLength(3)
+    expect(data.allProduct.edges[0].node.id).toEqual('4')
+    expect(data.allProduct.edges[1].node.id).toEqual('2')
+    expect(data.allProduct.edges[2].node.id).toEqual('1')
+  })
+
+  test('in', async () => {
+    const { errors, data } = await runQuery(`{
+      allProduct (filter: { relatedId: { id: { in: ["2", "4"] } } }) {
+        edges {
+          node { id }
+        }
+      }
+    }`)
+
+    expect(errors).toBeUndefined()
+    expect(data.allProduct.edges).toHaveLength(2)
+    expect(data.allProduct.edges[0].node.id).toEqual('4')
+    expect(data.allProduct.edges[1].node.id).toEqual('3')
+  })
+
+  test('in (inferred)', async () => {
+    const { errors, data } = await runQuery(`{
+      allProduct (filter: { related: { id: { in: ["2", "4"] } } }) {
+        edges {
+          node { id }
+        }
+      }
+    }`)
+
+    expect(errors).toBeUndefined()
+    expect(data.allProduct.edges).toHaveLength(2)
+    expect(data.allProduct.edges[0].node.id).toEqual('4')
+    expect(data.allProduct.edges[1].node.id).toEqual('3')
+  })
+
+  test('nin', async () => {
+    const { errors, data } = await runQuery(`{
+      allProduct (filter: { relatedId: { id: { nin: ["2", "4"] } } }) {
+        edges {
+          node { id }
+        }
+      }
+    }`)
+
+    expect(errors).toBeUndefined()
+    expect(data.allProduct.edges).toHaveLength(2)
+    expect(data.allProduct.edges[0].node.id).toEqual('2')
+    expect(data.allProduct.edges[1].node.id).toEqual('1')
+  })
+
+  test('nin (inferred)', async () => {
+    const { errors, data } = await runQuery(`{
+      allProduct (filter: { related: { id: { nin: ["2", "4"] } } }) {
+        edges {
+          node { id }
+        }
+      }
+    }`)
+
+    expect(errors).toBeUndefined()
+    expect(data.allProduct.edges).toHaveLength(2)
+    expect(data.allProduct.edges[0].node.id).toEqual('2')
+    expect(data.allProduct.edges[1].node.id).toEqual('1')
+  })
+})
+
+describe('filter by user defined reference fields (list)', () => {
+  const runQuery = query => buildSchema(api => {
+    api.loadSource(({ addSchemaTypes }) => {
+      addSchemaTypes(`
+      type Product implements Node {
+        alternatives: [Product]
+        alternativeIds: [Product]
+      }
+    `)
+    })
+  }, query)
+
+  test('in', async () => {
+    const { errors, data } = await runQuery(`{
+      allProduct (filter: { alternativeIds: { id: { in: ["1", "4"] } } }) {
+        edges {
+          node { id }
+        }
+      }
+    }`)
+
+    expect(errors).toBeUndefined()
+    expect(data.allProduct.edges).toHaveLength(2)
+    expect(data.allProduct.edges[0].node.id).toEqual('3')
+    expect(data.allProduct.edges[1].node.id).toEqual('2')
+  })
+
+  test('in (inferred)', async () => {
+    const { errors, data } = await runQuery(`{
+      allProduct (filter: { alternatives: { id: { in: ["1", "4"] } } }) {
+        edges {
+          node { id }
+        }
+      }
+    }`)
+
+    expect(errors).toBeUndefined()
+    expect(data.allProduct.edges).toHaveLength(2)
+    expect(data.allProduct.edges[0].node.id).toEqual('3')
+    expect(data.allProduct.edges[1].node.id).toEqual('2')
+  })
+
+  test('nin', async () => {
+    const { errors, data } = await runQuery(`{
+      allProduct (filter: { alternativeIds: { id: { nin: ["1", "4"] } } }) {
+        edges {
+          node { id }
+        }
+      }
+    }`)
+
+    expect(errors).toBeUndefined()
+    expect(data.allProduct.edges).toHaveLength(2)
+    expect(data.allProduct.edges[0].node.id).toEqual('4')
+    expect(data.allProduct.edges[1].node.id).toEqual('1')
+  })
+
+  test('nin (inferred)', async () => {
+    const { errors, data } = await runQuery(`{
+      allProduct (filter: { alternatives: { id: { nin: ["1", "4"] } } }) {
+        edges {
+          node { id }
+        }
+      }
+    }`)
+
+    expect(errors).toBeUndefined()
+    expect(data.allProduct.edges).toHaveLength(2)
+    expect(data.allProduct.edges[0].node.id).toEqual('4')
+    expect(data.allProduct.edges[1].node.id).toEqual('1')
+  })
+
+  test('eq', async () => {
+    const { errors, data } = await runQuery(`{
+      allProduct (filter: { alternativeIds: { id: { eq: "1" } } }) {
+        edges {
+          node { id }
+        }
+      }
+    }`)
+
+    expect(errors).toBeUndefined()
+    expect(data.allProduct.edges).toHaveLength(1)
+    expect(data.allProduct.edges[0].node.id).toEqual('2')
+  })
+
+  test('eq (inferred)', async () => {
+    const { errors, data } = await runQuery(`{
+      allProduct (filter: { alternatives: { id: { eq: "1" } } }) {
+        edges {
+          node { id }
+        }
+      }
+    }`)
+
+    expect(errors).toBeUndefined()
+    expect(data.allProduct.edges).toHaveLength(1)
+    expect(data.allProduct.edges[0].node.id).toEqual('2')
+  })
+
+  test('ne', async () => {
+    const { errors, data } = await runQuery(`{
+      allProduct (filter: { alternativeIds: { id: { ne: "1" } } }) {
+        edges {
+          node { id }
+        }
+      }
+    }`)
+
+    expect(errors).toBeUndefined()
+    expect(data.allProduct.edges).toHaveLength(3)
+    expect(data.allProduct.edges[0].node.id).toEqual('4')
+    expect(data.allProduct.edges[1].node.id).toEqual('3')
+    expect(data.allProduct.edges[2].node.id).toEqual('1')
+  })
+
+  test('ne (inferred)', async () => {
+    const { errors, data } = await runQuery(`{
+      allProduct (filter: { alternatives: { id: { ne: "1" } } }) {
+        edges {
+          node { id }
+        }
+      }
+    }`)
+
+    expect(errors).toBeUndefined()
+    expect(data.allProduct.edges).toHaveLength(3)
+    expect(data.allProduct.edges[0].node.id).toEqual('4')
+    expect(data.allProduct.edges[1].node.id).toEqual('3')
+    expect(data.allProduct.edges[2].node.id).toEqual('1')
+  })
 })
 
 test('handle pagination for filtered nodes', async () => {
@@ -203,8 +547,8 @@ test('setup inferred filter input types', async () => {
   const inputType = schema.getType('ProductFilterInput').toConfig()
 
   expect(Object.keys(inputType.fields).sort()).toEqual([
-    'alternatives', 'date', 'deep', 'discount',
-    'featured', 'id', 'price', 'related', 'tags', 'title'
+    'alternativeIds', 'alternatives', 'date', 'deep', 'discount',
+    'featured', 'id', 'price', 'related', 'relatedId', 'tags', 'title'
   ])
 
   expect(inputType.fields.id.type).toEqual(schema.getType('IDQueryOperatorInput'))
@@ -223,8 +567,12 @@ test('setup inferred filter input types', async () => {
   expect(inputType.fields.tags.extensions.isInferred).toBe(true)
   expect(inputType.fields.alternatives.type).toEqual(schema.getType('ProductInferredListQueryOperatorInput'))
   expect(inputType.fields.alternatives.extensions.isInferred).toBe(true)
+  expect(inputType.fields.alternativeIds.type).toEqual(schema.getType('StringListQueryOperatorInput'))
+  expect(inputType.fields.alternativeIds.extensions.isInferred).toBe(true)
   expect(inputType.fields.related.type).toEqual(schema.getType('ProductInferredQueryOperatorInput'))
   expect(inputType.fields.related.extensions.isInferred).toBe(true)
+  expect(inputType.fields.relatedId.type).toEqual(schema.getType('StringQueryOperatorInput'))
+  expect(inputType.fields.relatedId.extensions.isInferred).toBe(true)
   expect(inputType.fields.other).toBeUndefined()
 
   expect(inputType.fields.deep.extensions.isInferred).toBe(true)
@@ -375,8 +723,10 @@ function createCollections (api) {
       featured: false,
       tags: ['one', 'two', 'four'],
       alternatives: [
-        { typeName: 'Product', id: '2' }
-      ]
+        { typeName: 'Product', id: '2' },
+        { typeName: 'Product', id: '11' }
+      ],
+      alternativeIds: ['2', '11']
     })
 
     products.addNode({
@@ -402,6 +752,7 @@ function createCollections (api) {
         { typeName: 'Product', id: '1' },
         { typeName: 'Product', id: '3' }
       ],
+      alternativeIds: ['1', '3'],
       other: [
         { typeName: 'Product', id: '1' },
         { typeName: 'Item', id: '5' }
@@ -415,13 +766,12 @@ function createCollections (api) {
       price: 149,
       featured: true,
       tags: ['three', 'four'],
-      related: {
-        typeName: 'Product',
-        id: '2'
-      },
+      related: { typeName: 'Product', id: '2' },
+      relatedId: '2',
       alternatives: [
         { typeName: 'Product', id: '4' }
-      ]
+      ],
+      alternativeIds: ['4']
     })
 
     products.addNode({
@@ -431,10 +781,13 @@ function createCollections (api) {
       price: 119,
       featured: false,
       tags: ['one', 'two'],
+      related: { typeName: 'Product', id: '4' },
+      relatedId: '4',
       alternatives: [
         { typeName: 'Product', id: '2' },
         { typeName: 'Product', id: '3' }
-      ]
+      ],
+      alternativeIds: ['2', '3']
     })
 
     items.addNode({ id: '5', title: 'Item 1' })
