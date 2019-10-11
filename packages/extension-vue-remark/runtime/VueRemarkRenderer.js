@@ -9,6 +9,7 @@ const VueRemarkRoot = {
 
 // @vue/component
 export default {
+  name: 'VueRemarkRenderer',
   functional: true,
   props: {
     source: {
@@ -24,7 +25,7 @@ export default {
       default: () => ({})
     }
   },
-  render (h, { parent, props, data, children }) {
+  render (h, { props, data, children }) {
     let fn = cache[props.source]
 
     if (typeof fn !== 'function') {
@@ -39,14 +40,14 @@ export default {
       cache[props.source] = fn
     }
 
-    const components = props.components || parent.$options.components
     const directives = [{ name: 'g-image' }].concat(data.directives || [])
 
     const component = fn({
+      name: 'VueRemarkRenderer',
       data: () => props.data,
       components: {
         VueRemarkRoot,
-        ...components
+        ...props.components
       }
     })
 
