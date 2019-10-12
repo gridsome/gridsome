@@ -940,6 +940,39 @@ test('add a experimental field extension', async () => {
   expect(data.post.title).toEqual('test-test')
 })
 
+test('apply extensions once per field', async () => {
+  const resolve = jest.fn((src, args, ctx, info) => src[info.fieldName])
+  const apply = jest.fn(() => ({ resolve }))
+
+  const app = await createApp(api => {
+    api.loadSource(({ addCollection, addSchemaTypes, addSchemaFieldExtension }) => {
+      addCollection('Post').addNode({ id: '1', title: 'test' })
+      addSchemaTypes(`
+        type Post implements Node {
+          title: String @ext
+          title2: String @ext @proxy(from: "title")
+        }
+      `)
+      addSchemaFieldExtension({ name: 'ext', apply })
+    })
+  })
+
+  const { errors, data } = await app.graphql(`
+    query {
+      post(id:"1") {
+        title
+        title2
+      }
+    }
+  `)
+
+  expect(errors).toBeUndefined()
+  expect(data.post.title).toEqual('test')
+  expect(data.post.title2).toEqual('test')
+  expect(apply.mock.calls).toHaveLength(2)
+  expect(resolve.mock.calls).toHaveLength(2)
+})
+
 test('output field value as JSON', async () => {
   const app = await initApp(({ addSchemaTypes }) => {
     addSchemaTypes(`

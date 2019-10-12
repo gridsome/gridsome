@@ -242,13 +242,20 @@ function mergeTypes (schemaComposer, typeA, typeB) {
 }
 
 function processTypes (schemaComposer, extensions) {
+  const seen = new Set()
+
   for (const typeComposer of schemaComposer.values()) {
+    if (seen.has(typeComposer.getTypeName())) continue
+    else seen.add(typeComposer.getTypeName())
+
     switch (typeComposer.constructor) {
       case ObjectTypeComposer:
         processObjectTypeFields(schemaComposer, typeComposer, extensions)
         break
     }
   }
+
+  seen.clear()
 }
 
 function processObjectTypeFields (schemaComposer, typeComposer, extensions) {
