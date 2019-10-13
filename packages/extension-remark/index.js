@@ -48,7 +48,6 @@ const createResolver = (processor, ext) =>
       contents: value,
       path: resourcePath,
       data: {
-        onlyTemplate: true,
         context,
         node
       }

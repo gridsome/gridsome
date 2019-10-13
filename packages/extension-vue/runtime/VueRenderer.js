@@ -26,7 +26,7 @@ export default {
         `${props.source}\n` +
         `return Object.assign({}, options, {` +
         `render: render, staticRenderFns: staticRenderFns, ` +
-        `_compiled: true`+
+        `_compiled: true` +
         `})`
       )
 
