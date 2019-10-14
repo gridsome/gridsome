@@ -23,8 +23,8 @@ export default {
       return h('a', data, children)
     }
 
-    if (isExternalLink(props.to)) {
-      // TODO: warn if props.to is an external url
+    if (isExternalLink(props.to) || isMailToLink(props.to) || isTelLink(isMailToLink)) {
+      // TODO: warn if props.to is an external url, email or phone
       attrs.href = props.to
     }
 
@@ -83,3 +83,7 @@ function isExternalLink (string) {
 
   return externalRE.test(string)
 }
+
+function isMailToLink (string) { return string.startsWith('mailto:') }
+
+function isTelLink (string) { return string.startsWith('tel:') }
