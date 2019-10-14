@@ -80,14 +80,13 @@ module.exports = (context, options = {}) => {
   config._pathPrefix = normalizePathPrefix(localConfig.pathPrefix)
   config.publicPath = config.pathPrefix ? `${config.pathPrefix}/` : '/'
   config.staticDir = resolve('static')
-  config.outputDir = resolve(localConfig.outputDir || 'dist')
-
-  // TODO: remove before 1.0
+  
+   // TODO: remove outDir before 1.0
+  config.outputDir = resolve(localConfig.outputDir || localConfig.outDir || 'dist')
   if (localConfig.outDir) {
     deprecate(`The outDir config is renamed to outputDir.`, {
       customCaller: ['gridsome.config.js']
     })
-    config.outputDir = localConfig.outDir
   }
 
   config.assetsDir = path.join(config.outputDir, assetsDir)
