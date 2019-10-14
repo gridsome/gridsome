@@ -84,9 +84,8 @@ module.exports = (context, options = {}) => {
    // TODO: remove outDir before 1.0
   config.outputDir = resolve(localConfig.outputDir || localConfig.outDir || 'dist')
   if (localConfig.outDir) {
-    deprecate(`The outDir config is renamed to outputDir.`, {
-      customCaller: ['gridsome.config.js']
-    })
+    config.outDir = localConfig.outDir
+    deprecate.property(config, 'outDir', 'The outDir config is renamed to outputDir.' )
   }
 
   config.assetsDir = path.join(config.outputDir, assetsDir)
