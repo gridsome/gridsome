@@ -84,7 +84,7 @@ module.exports = (context, options = {}) => {
    // TODO: remove outDir before 1.0
   config.outputDir = resolve(localConfig.outputDir || localConfig.outDir || 'dist')
   if (localConfig.outDir) {
-    config.outDir = localConfig.outDir
+    config.outDir =  config.outputDir
     deprecate.property(config, 'outDir', 'The outDir config is renamed to outputDir.' )
   }
 
