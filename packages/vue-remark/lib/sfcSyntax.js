@@ -3,7 +3,7 @@ const htmlTags = require('html-tags')
 const isImport = value => /^import\s+/.test(value)
 const isStyle = value => /^<style/.test(value)
 const isScript = value => /^<script/.test(value)
-const isTag = value => /^<\/?[a-zA-Z0-9_-][^>]*>/.test(value)
+const isTag = value => /^<\/?[\w-]+/.test(value)
 const isQuery = value => /^<(page|static)-query/.test(value)
 
 const getValue = value => {
@@ -40,9 +40,9 @@ function tokenizeVueComponents (eat, value) {
   value = getValue(value)
 
   if (isTag(value)) {
-    const [, name] = value.match(/^<\/?([a-zA-Z0-9_-]+)[^>]*>/) || []
+    const [, name] = value.match(/^<\/?([\w-]+)[>\s]/) || []
 
-    if (!htmlTags.includes(name)) {
+    if (name && !htmlTags.includes(name)) {
       return eat(value)({ type: 'html', value })
     }
   }
