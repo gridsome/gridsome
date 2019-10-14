@@ -1062,6 +1062,33 @@ test('use extension multiple times on field', async () => {
   expect(apply.mock.calls).toHaveLength(3)
 })
 
+test('prevent overriding built-in GraphQL directives', done => {
+  createApp(api => {
+    api.loadSource(({ addSchemaFieldExtension }) => {
+      expect(() => addSchemaFieldExtension({ name: 'skip' })).toThrow('@skip')
+      done()
+    })
+  })
+})
+
+test('prevent overriding @paginate directives', done => {
+  createApp(api => {
+    api.loadSource(({ addSchemaFieldExtension }) => {
+      expect(() => addSchemaFieldExtension({ name: 'paginate' })).toThrow('@paginate')
+      done()
+    })
+  })
+})
+
+test('prevent overriding built-in extensions', done => {
+  createApp(api => {
+    api.loadSource(({ addSchemaFieldExtension }) => {
+      expect(() => addSchemaFieldExtension({ name: 'reference' })).toThrow('@reference')
+      done()
+    })
+  })
+})
+
 test('output field value as JSON', async () => {
   const app = await initApp(({ addSchemaTypes }) => {
     addSchemaTypes(`

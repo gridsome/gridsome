@@ -1,5 +1,6 @@
 const crypto = require('crypto')
 const { pick } = require('lodash')
+const { specifiedDirectives } = require('graphql')
 const PluginStore = require('../store/PluginStore')
 const { deprecate } = require('../utils/deprecate')
 
@@ -145,6 +146,8 @@ function createSchemaActions (api, app) {
     'GraphQLID'
   ])
 
+  const directiveNames = specifiedDirectives.map(directive => directive.name)
+
   return {
     ...baseActions,
     ...graphqlTypes,
@@ -168,8 +171,14 @@ function createSchemaActions (api, app) {
     },
 
     addSchemaFieldExtension (options) {
+      if (directiveNames.includes(options.name)) {
+        throw new Error(`Cannot override GraphQL directive: @${options.name}`)
+      }
+      if (['paginate', 'proxy', 'reference'].includes(options.name)) {
+        throw new Error(`Cannot override built-in directive: @${options.name}`)
+      }
       if (app.schema._extensions[options.name]) {
-        throw new Error(`Field extension already exist: ${options.name}`)
+        throw new Error(`Field extension already exist: @${options.name}`)
       }
 
       app.schema._extensions[options.name] = options
