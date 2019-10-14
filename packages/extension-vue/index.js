@@ -22,6 +22,20 @@ const parse = (value, info) => {
   return template
 }
 
+const isNoScriptImage = el => (
+  el.tag === 'noscript' &&
+  el.children.length === 1 &&
+  el.children[0].tag === 'img'
+)
+
+const renderNoScriptImage = el => {
+  const attrs = (el.attrs || []).reduce((acc, { name, value }) => {
+    return acc + ` ${name}=${value}`
+  }, '')
+
+  return `<${el.tag} class=${el.staticClass}${attrs}>`
+}
+
 const compileTemplate = template =>
   utils.compileTemplate({
     compiler,
@@ -29,22 +43,20 @@ const compileTemplate = template =>
     preprocessLang: template.lang,
     source: template.content,
     compilerOptions: {
-      outputSourceRange: true,
-      preserveWhitespace: false,
+      whitespace: 'condense',
       modules: [
         {
-          preTransformNode (node) {
-            if (node.tag === 'code') {
-              node.attrsList.push({ name: 'v-pre' })
-              node.attrsMap['v-pre'] = true
+          preTransformNode (el) {
+            if (el.tag === 'code') {
+              el.attrsList.push({ name: 'v-pre' })
+              el.attrsMap['v-pre'] = true
             }
           },
-          transformNode (node) {
-            if (node.tag === 'noscript') {
-              const outerHTML = template.content.substring(node.start, node.end)
-              const [, innerHTML] = outerHTML.match(/<noscript(?:[^>]+)?>(.*)<\/noscript>/)
-              node.attrsList.push({ name: 'v-html', value: JSON.stringify(innerHTML) })
-              node.children = []
+          transformNode (el) {
+            if (isNoScriptImage(el)) {
+              const html = renderNoScriptImage(el.children[0])
+              el.attrsList.push({ name: 'v-html', value: JSON.stringify(html) })
+              el.children = []
             }
           }
         }
