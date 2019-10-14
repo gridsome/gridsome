@@ -2,7 +2,6 @@ const { toFilterArgs } = require('../query')
 const initMustHaveTypes = require('../../types')
 const { createFilterInput } = require('../input')
 const { SchemaComposer } = require('graphql-compose')
-const { addObjectTypeExtensions } = require('../../utils')
 
 test('convert filters to Loki query', () => {
   const inputTypeComposer = createInputTypeComposer(`
@@ -118,7 +117,6 @@ function createInputTypeComposer (config) {
   const typeComposer = schemaComposer.createObjectTC(config)
 
   initMustHaveTypes(schemaComposer)
-  addObjectTypeExtensions(typeComposer)
   createFilterInput(schemaComposer, typeComposer)
 
   return typeComposer.getInputTypeComposer()
@@ -131,7 +129,6 @@ function createTypes (types) {
 
   return types.map(type => {
     const typeComposer = schemaComposer.createObjectTC(type)
-    addObjectTypeExtensions(typeComposer)
     createFilterInput(schemaComposer, typeComposer)
     return typeComposer
   })

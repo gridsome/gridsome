@@ -1,4 +1,4 @@
-const { reduce, mapKeys } = require('lodash')
+const { reduce, mapKeys, findLastIndex } = require('lodash')
 const { InputTypeComposer, ThunkComposer } = require('graphql-compose')
 
 const listRefOpsMap = {
@@ -36,8 +36,13 @@ function toFilterArgs (filter, typeComposer, currentKey = '') {
     }
 
     if (field instanceof InputTypeComposer) {
-      if (extensions.proxy) {
-        key = extensions.proxy.from || key
+      const { directives } = extensions
+
+      if (Array.isArray(directives)) {
+        const index = findLastIndex(directives, ['name', 'proxy'])
+        if (directives[index] && directives[index].args) {
+          key = directives[index].args.from || key
+        }
       }
 
       const suffix = extensions.isReference ? '' : `.${key}`

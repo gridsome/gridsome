@@ -175,9 +175,9 @@ class Collection {
 
     if (validName !== fieldName) {
       options.extensions = {
-        proxy: {
-          from: fieldName
-        }
+        directives: [
+          { name: 'proxy', args: { from: fieldName } }
+        ]
       }
     }
 

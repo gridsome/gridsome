@@ -523,6 +523,53 @@ test('add custom resolver for invalid field names', async () => {
   expect(data.post.sub_fields.sub_field).toEqual(10)
 })
 
+test('set field extensions with factory methods', async () => {
+  const app = await createApp(api => {
+    api.loadSource(store => {
+      store.addCollection('Post').addNode({
+        id: '1',
+        foo: 10
+      })
+    })
+
+    api.createSchema(({ addSchemaTypes, schema }) => {
+      addSchemaTypes([
+        schema.createObjectType({
+          name: 'Post',
+          interfaces: ['Node'],
+          fields: {
+            one: {
+              type: 'Int',
+              extensions: {
+                proxy: {
+                  from: 'foo'
+                }
+              }
+            },
+            two: {
+              type: 'Int',
+              extensions: [
+                { name: 'proxy', args: { from: 'foo' } }
+              ]
+            }
+          }
+        })
+      ])
+    })
+  })
+
+  const { errors, data } = await app.graphql(`{
+    post(id:"1") {
+      one
+      two
+    }
+  }`)
+
+  expect(errors).toBeUndefined()
+  expect(data.post.one).toEqual(10)
+  expect(data.post.two).toEqual(10)
+})
+
 test('add custom resolvers for content type', async () => {
   const app = await createApp(api => {
     api.loadSource(store => {
@@ -841,7 +888,8 @@ test('merge object types', async () => {
   expect(fields.authorId).toBeDefined()
   expect(metaFields.id).toBeDefined()
   expect(metaFields.status).toBeDefined()
-  expect(metaFields.status.extensions.proxy.from).toEqual('bar')
+  expect(metaFields.status.extensions.directives).toHaveLength(1)
+  expect(metaFields.status.extensions.directives[0]).toMatchObject({ name: 'proxy', args: { from: 'bar' } })
   expect(postMetaComposer.getExtensions().foo).toBeDefined()
   expect(postMetaComposer.getExtensions().bar).toBeDefined()
 })
@@ -971,6 +1019,47 @@ test('apply extensions once per field', async () => {
   expect(data.post.title2).toEqual('test')
   expect(apply.mock.calls).toHaveLength(2)
   expect(resolve.mock.calls).toHaveLength(2)
+})
+
+test('use extension multiple times on field', async () => {
+  const apply = jest.fn((ext, config) => ({
+    resolve(src, args, ctx, info) {
+      return config.resolve(src, args, ctx, info) + ext.value
+    }
+  }))
+
+  const app = await createApp(api => {
+    api.loadSource(({ addCollection, addSchemaTypes, addSchemaFieldExtension }) => {
+      addCollection('Post').addNode({ id: '1', title: 'test' })
+      addSchemaTypes(`
+        type Post implements Node @infer {
+          title: String @ext(value:"-one") @ext(value:"-two") @ext
+        }
+      `)
+      addSchemaFieldExtension({
+        name: 'ext',
+        args: {
+          value: {
+            type: 'String',
+            defaultValue: '-three'
+          }
+        },
+        apply
+      })
+    })
+  })
+
+  const { errors, data } = await app.graphql(`
+    query {
+      post(id:"1") {
+        title
+      }
+    }
+  `)
+
+  expect(errors).toBeUndefined()
+  expect(data.post.title).toEqual('test-one-two-three')
+  expect(apply.mock.calls).toHaveLength(3)
 })
 
 test('output field value as JSON', async () => {

@@ -45,12 +45,10 @@ function resolveValues (obj, currentObj = {}, options = {}, path = []) {
     }
 
     const fieldName = createFieldName(key, options.camelCase)
-    const extensions = { isInferred: true }
+    const extensions = { isInferred: true, directives: [] }
 
     if (fieldName !== key) {
-      extensions.proxy = {
-        from: key
-      }
+      extensions.directives.push({ name: 'proxy', args: { from: key } })
     }
 
     res[key] = {

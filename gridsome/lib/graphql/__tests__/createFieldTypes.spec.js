@@ -119,18 +119,18 @@ test('merge node fields', () => {
 })
 
 test('camelcase fieldNames', () => {
-  const fields = createFieldDefinitions([{
+  const { field_name, an_object } = createFieldDefinitions([{
     field_name: true,
     an_object: {
       sub_field: true
     }
   }], { camelCase: true })
 
-  expect(fields.field_name.key).toEqual('field_name')
-  expect(fields.field_name.fieldName).toEqual('fieldName')
-  expect(fields.field_name.extensions.proxy).toBeDefined()
-  expect(fields.an_object.fieldName).toEqual('anObject')
-  expect(fields.an_object.value.sub_field.fieldName).toEqual('subField')
+  expect(field_name.key).toEqual('field_name')
+  expect(field_name.fieldName).toEqual('fieldName')
+  expect(field_name.extensions.directives[0]).toMatchObject({ name: 'proxy', args: { from: 'field_name' } })
+  expect(an_object.fieldName).toEqual('anObject')
+  expect(an_object.value.sub_field.fieldName).toEqual('subField')
 })
 
 test('create graphql types from node fields', async () => {

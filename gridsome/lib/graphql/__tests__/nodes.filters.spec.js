@@ -639,11 +639,12 @@ test('setup custom filter input type @reference by', async () => {
   })
 
   const inputType = schema.getType('ProductFilterInput').toConfig()
+  const { related: { type, extensions } } = inputType.fields
 
   expect(Object.keys(inputType.fields).sort()).toEqual(['id', 'related'])
-  expect(inputType.fields.related.type).toEqual(schema.getType('ProductQueryOperatorInput'))
-  expect(inputType.fields.related.extensions.reference).toMatchObject({ by: 'test' })
-  expect(inputType.fields.related.extensions.isInferred).toBeUndefined()
+  expect(type).toEqual(schema.getType('ProductQueryOperatorInput'))
+  expect(extensions.directives[0]).toMatchObject({ name: 'reference', args: { by: 'test' } })
+  expect(extensions.isInferred).toBeUndefined()
 })
 
 test('setup custom filter input type with @proxy', async () => {
@@ -658,11 +659,12 @@ test('setup custom filter input type with @proxy', async () => {
   })
 
   const inputType = schema.getType('ProductFilterInput').toConfig()
+  const { testRelated: { type, extensions } } = inputType.fields
 
   expect(Object.keys(inputType.fields).sort()).toEqual(['id', 'testRelated'])
-  expect(inputType.fields.testRelated.type).toEqual(schema.getType('ProductQueryOperatorInput'))
-  expect(inputType.fields.testRelated.extensions.proxy).toMatchObject({ from: 'related' })
-  expect(inputType.fields.testRelated.extensions.isInferred).toBeUndefined()
+  expect(type).toEqual(schema.getType('ProductQueryOperatorInput'))
+  expect(extensions.directives[0]).toMatchObject({ name: 'proxy', args: { from: 'related' } })
+  expect(extensions.isInferred).toBeUndefined()
 })
 
 test('filter collection by proxied field', async () => {
@@ -671,6 +673,28 @@ test('filter collection by proxied field', async () => {
       addSchemaTypes(`
         type Product implements Node {
           testRelated: Product @proxy(from:"related")
+        }
+      `)
+    })
+  }, `{
+    allProduct (filter: { testRelated: { eq: "2" } }) {
+      edges {
+        node { id }
+      }
+    }
+  }`)
+
+  expect(errors).toBeUndefined()
+  expect(data.allProduct.edges).toHaveLength(1)
+  expect(data.allProduct.edges[0].node.id).toEqual('3')
+})
+
+test('proxied input types should use last instance', async () => {
+  const { errors, data } = await buildSchema(api => {
+    api.loadSource(({ addSchemaTypes }) => {
+      addSchemaTypes(`
+        type Product implements Node {
+          testRelated: Product @proxy(from:"fail") @proxy(from:"related")
         }
       `)
     })

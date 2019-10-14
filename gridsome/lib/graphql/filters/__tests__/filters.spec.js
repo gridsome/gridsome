@@ -3,7 +3,6 @@ const initMustHaveTypes = require('../../types')
 const { createFilterInput } = require('../input')
 const { SchemaComposer } = require('graphql-compose')
 const { scalarOperators, listOperators } = require('../operators')
-const { addObjectTypeExtensions } = require('../../utils')
 
 test.each(
   ['ID', 'Boolean', 'JSON', 'String', 'Int', 'Float', 'Date']
@@ -87,7 +86,6 @@ function createTypeComposer (config) {
   const typeComposer = schemaComposer.createObjectTC(config)
 
   initMustHaveTypes(schemaComposer)
-  addObjectTypeExtensions(typeComposer)
   createFilterInput(schemaComposer, typeComposer)
 
   return typeComposer
