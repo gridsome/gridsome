@@ -24,7 +24,7 @@ module.exports = async (context, args) => {
   await app.plugins.run('beforeServe', { context, config })
 
   await fs.ensureDir(config.cacheDir)
-  await fs.emptyDir(config.outDir)
+  await fs.emptyDir(config.outputDir)
 
   const routes = createRoutes(app)
 
@@ -34,11 +34,11 @@ module.exports = async (context, args) => {
   })
 
   if (config.css.split !== true) {
-    await removeStylesJsChunk(stats, config.outDir)
+    await removeStylesJsChunk(stats, config.outputDir)
   }
 
   server.hooks.setup.tap('serve', server => {
-    server.use(express.static(config.outDir))
+    server.use(express.static(config.outputDir))
     server.get('*', require('./server/middlewares/renderer')(app, routes))
   })
 

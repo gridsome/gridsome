@@ -18,7 +18,7 @@ module.exports = function (api, options) {
       key
     }))
 
-    const filename = path.join(config.outDir, options.output)
+    const filename = path.join(config.outputDir, options.output)
     const pathPrefix = config.pathPrefix !== '/' ? config.pathPrefix : ''
     const staticUrls = options.staticUrls || []
     const pages = queue

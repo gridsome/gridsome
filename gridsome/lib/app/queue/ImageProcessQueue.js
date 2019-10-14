@@ -45,8 +45,8 @@ class ImageProcessQueue {
   }
 
   async preProcess (filePath, options = {}) {
-    const { imageExtensions, outDir, pathPrefix, maxImageWidth } = this.config
-    const imagesDir = path.relative(outDir, this.config.imagesDir)
+    const { imageExtensions, outputDir, pathPrefix, maxImageWidth } = this.config
+    const imagesDir = path.relative(outputDir, this.config.imagesDir)
     const relPath = path.relative(this.context, filePath)
     const { name, ext } = path.parse(filePath)
     const mimeType = mime.lookup(filePath)
@@ -107,7 +107,7 @@ class ImageProcessQueue {
       const arr = this.createImageOptions(imageOptions)
       const filename = this.createFileName(filePath, arr, hash)
       const relPath = createDestPath(filename, arr)
-      const destPath = path.join(this.config.outDir, relPath)
+      const destPath = path.join(this.config.outputDir, relPath)
       const src = encodeURI(forwardSlash(path.join(pathPrefix || '/', relPath)))
 
       return { filename, destPath, src, width, height }

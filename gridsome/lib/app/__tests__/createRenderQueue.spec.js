@@ -237,7 +237,7 @@ describe('dynamic pages', () => {
     const { app, renderQueue } = await _createRenderQueue()
 
     const outputs = renderQueue.map(entry =>
-      path.relative(app.config.outDir, entry.htmlOutput)
+      path.relative(app.config.outputDir, entry.htmlOutput)
     )
 
     expect(outputs).toEqual([

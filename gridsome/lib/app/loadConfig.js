@@ -80,8 +80,8 @@ module.exports = (context, options = {}) => {
   config._pathPrefix = normalizePathPrefix(localConfig.pathPrefix)
   config.publicPath = config.pathPrefix ? `${config.pathPrefix}/` : '/'
   config.staticDir = resolve('static')
-  config.outDir = resolve(localConfig.outDir || 'dist')
-  config.assetsDir = path.join(config.outDir, assetsDir)
+  config.outputDir = resolve(localConfig.outputDir || 'dist')
+  config.assetsDir = path.join(config.outputDir, assetsDir)
   config.imagesDir = path.join(config.assetsDir, 'static')
   config.filesDir = path.join(config.assetsDir, 'files')
   config.dataDir = path.join(config.assetsDir, 'data')

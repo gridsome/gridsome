@@ -17,7 +17,7 @@ beforeEach(async () => {
       pathPrefix,
       imagesDir,
       filesDir,
-      outDir: context,
+      outputDir: context,
       imageExtensions: ['.png'],
       maxImageWidth: 1000
     }
