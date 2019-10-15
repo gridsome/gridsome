@@ -49,3 +49,7 @@ export function parsePath (path) {
 export function normalizePath (path = '/') {
   return `/${path}`.replace(/\/+/g, '/')
 }
+
+export const isMailtoLink = string => String(string).startsWith('mailto:')
+
+export const isTelLink = string => String(string).startsWith('tel:')
