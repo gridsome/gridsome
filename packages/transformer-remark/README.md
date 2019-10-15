@@ -13,7 +13,6 @@ The transformer is automatically used if installed in your project. Custom trans
 
 ```js
 //gridsome.config.js
-
 module.exports = {
   plugins: [
     {
@@ -81,6 +80,14 @@ Add additional [Remark plugins](https://github.com/remarkjs/remark/blob/master/d
 - Default: `true`
 
 Set this option to `false` to disable all built-in plugins.
+
+#### grayMatter
+
+- Type: `object` Default: `{}`
+
+Options to pass through to [gray-matter][] for parsing front matter.
+
+[gray-matter]: https://github.com/jonschlinkert/gray-matter#options
 
 #### squeezeParagraphs
 
