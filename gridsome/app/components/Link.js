@@ -1,5 +1,5 @@
 import config from '~/.temp/config.js'
-import { normalizePath } from '../utils/helpers'
+import { normalizePath, isMailtoLink, isTelLink } from '../utils/helpers'
 
 // @vue/component
 export default {
@@ -23,7 +23,7 @@ export default {
       return h('a', data, children)
     }
 
-    if (isExternalLink(props.to) || isMailToLink(props.to) || isTelLink(isMailToLink)) {
+    if (isExternalLink(props.to) || isMailtoLink(props.to) || isTelLink(props.to)) {
       // TODO: warn if props.to is an external url, email or phone
       attrs.href = props.to
     }
@@ -32,6 +32,10 @@ export default {
       attrs.target = attrs.target || '_blank'
       attrs.rel = attrs.rel || 'noopener'
 
+      return h('a', data, children)
+    }
+
+    if (isMailtoLink(attrs.href) || isTelLink(attrs.href)) {
       return h('a', data, children)
     }
 
@@ -83,7 +87,3 @@ function isExternalLink (string) {
 
   return externalRE.test(string)
 }
-
-const isMailToLink = string => string.startsWith('mailto:')
-
-function isTelLink (string) { return string.startsWith('tel:') }
