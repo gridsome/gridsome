@@ -1,7 +1,7 @@
 module.exports = async (app, defines = {}) => {
   const webpack = require('webpack')
 
-  const clientChain = await app.resolveChainableWebpackConfig()
+  const clientChain = await app.compiler.resolveChainableWebpackConfig()
 
   clientChain
     .plugin('injections')
@@ -14,15 +14,21 @@ module.exports = async (app, defines = {}) => {
       return args
     })
 
-  const serverConfig = await app.resolveWebpackConfig(true)
-  const clientConfig = await app.resolveWebpackConfig(false, clientChain)
+  const [serverConfig, clientConfig] = await Promise.all([
+    app.compiler.resolveWebpackConfig(true),
+    app.compiler.resolveWebpackConfig(false, clientChain)
+  ])
 
   return new Promise((resolve, reject) => {
     webpack([clientConfig, serverConfig]).run((err, stats) => {
       if (err) return reject(err)
 
       if (stats.hasErrors()) {
-        const { errors } = stats.toJson()
+        const errors = stats.stats
+          .map(stats => stats.compilation.errors)
+          .reduce((acc, errors) => acc.concat(errors), [])
+          .map(err => err.error)
+
         return reject(errors[0])
       }
 

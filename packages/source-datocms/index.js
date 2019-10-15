@@ -29,8 +29,7 @@ class DatoCmsSource {
       typeName: 'DatoCms',
       apiToken: undefined,
       previewMode: false,
-      apiUrl: undefined,
-      routes: {}
+      apiUrl: undefined
     }
   }
 
@@ -39,9 +38,16 @@ class DatoCmsSource {
     api.loadSource(args => this.fetchContent(args))
   }
 
+  createTypeName (name) {
+    return (
+      this.options.typeName.charAt(0).toUpperCase() +
+      camelize(`${this.options.typeName} ${name}`).slice(1)
+    )
+  }
+
   async fetchContent (store) {
-    const { addContentType, getContentType, makeTypeName, slugify } = store
-    const { apiToken, apiUrl, previewMode, routes } = this.options
+    const { addCollection, getCollection } = store
+    const { apiToken, apiUrl, previewMode } = this.options
 
     const clientHeaders = {
       'X-Reason': 'dump',
@@ -66,12 +72,9 @@ class DatoCmsSource {
 
       cache[itemType.id] = { titleField, slugField }
 
-      const contentType = {
-        typeName: makeTypeName(itemType.name),
-        route: routes[itemType.name] || `/${slugify(itemType.name)}/:slug`
-      }
-
-      const collection = addContentType(contentType)
+      const collection = addCollection(
+        this.createTypeName(itemType.name),
+      )
 
       fields
         .filter(({ fieldType }) => ['link', 'links', 'rich_text'].includes(fieldType))
@@ -81,13 +84,12 @@ class DatoCmsSource {
             field.validators.itemsItemType ||
             field.validators.richTextBlocks
           ).itemTypes.map((id) => (
-            makeTypeName(entitiesRepo.findEntity('item_type', id).name)
+            this.createTypeName(entitiesRepo.findEntity('item_type', id).name)
           ))
 
           collection.addReference(
             camelize(field.apiKey),
             {
-              key: '_id',
               typeName: typeNames.length > 1 ? typeNames : typeNames[0]
             }
           )
@@ -96,17 +98,22 @@ class DatoCmsSource {
 
     for (const item of Object.values(itemsRepo.itemsById)) {
       const { titleField, slugField } = cache[item.itemType.id]
-      const typeName = makeTypeName(item.itemType.name)
-      const collection = getContentType(typeName)
+      const typeName = this.createTypeName(item.itemType.name)
+      const collection = getCollection(typeName)
 
       const node = {
-        _id: item.id,
+        id: item.id,
         title: titleField && item[camelize(titleField.apiKey)],
         slug: slugField && item[camelize(slugField.apiKey)],
         created: new Date(item.createdAt),
         updated: new Date(item.updatedAt),
-        fields: item.itemType.fields.reduce((fields, field) => {
+        ...item.itemType.fields.reduce((fields, field) => {
           const val = item.readAttribute(field)
+
+          if (item.itemType.hasOwnProperty('apiKey')) {
+            fields.model = { apiKey: item.itemType.apiKey }
+          }
+
           if (!val) return fields
 
           if (['link', 'links', 'rich_text'].includes(field.fieldType)) {
@@ -119,7 +126,7 @@ class DatoCmsSource {
 
             return fields
           } else {
-            fields[camelize(field.apiKey)] = val && val.toMap
+            fields[camelize(field.apiKey)] = val.toMap
               ? withNoEmptyValues(val.toMap())
               : withNoEmptyValues(val)
 

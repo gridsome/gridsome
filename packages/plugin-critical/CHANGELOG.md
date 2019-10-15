@@ -3,6 +3,47 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.5](https://github.com/gridsome/gridsome/tree/master/packages/plugin-critical/compare/@gridsome/plugin-critical@0.1.4...@gridsome/plugin-critical@0.1.5) (2019-09-16)
+
+
+### Bug Fixes
+
+* **critical:** ignore trailing slash in patterns ([3af5443](https://github.com/gridsome/gridsome/tree/master/packages/plugin-critical/commit/3af5443))
+
+
+
+
+
+## [0.1.4](https://github.com/gridsome/gridsome/tree/master/packages/plugin-critical/compare/@gridsome/plugin-critical@0.1.3...@gridsome/plugin-critical@0.1.4) (2019-09-11)
+
+
+### Bug Fixes
+
+* **critical:** prevent possible memory leak ([#485](https://github.com/gridsome/gridsome/tree/master/packages/plugin-critical/issues/485)) ([0d70729](https://github.com/gridsome/gridsome/tree/master/packages/plugin-critical/commit/0d70729))
+
+
+
+
+
+## [0.1.3](https://github.com/gridsome/gridsome/tree/master/packages/plugin-critical/compare/@gridsome/plugin-critical@0.1.2...@gridsome/plugin-critical@0.1.3) (2019-06-07)
+
+**Note:** Version bump only for package @gridsome/plugin-critical
+
+
+
+
+
+## [0.1.2](https://github.com/gridsome/gridsome/tree/master/packages/plugin-critical/compare/@gridsome/plugin-critical@0.1.1...@gridsome/plugin-critical@0.1.2) (2019-05-10)
+
+
+### Bug Fixes
+
+* **critical:** use publicPath as path prefix ([e866517](https://github.com/gridsome/gridsome/tree/master/packages/plugin-critical/commit/e866517))
+
+
+
+
+
 <a name="0.1.1"></a>
 ## [0.1.1](https://github.com/gridsome/gridsome/tree/master/packages/plugin-critical/compare/@gridsome/plugin-critical@0.1.0...@gridsome/plugin-critical@0.1.1) (2019-02-26)
 

@@ -1,6 +1,6 @@
 const visit = require('unist-util-visit')
 
-module.exports = function attacher () {
+module.exports = function attacher (options = {}) {
   const transformer = this.data('transformer')
 
   return async function transform (tree, file, callback) {
@@ -28,7 +28,8 @@ module.exports = function attacher () {
           alt: props.alt || node.alt,
           width: props.width,
           height: props.height,
-          classNames
+          classNames,
+          ...options
         })
 
         imageHTML = asset.imageHTML

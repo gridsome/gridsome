@@ -15,6 +15,7 @@ export default (to, from, next) => {
   fetch(to)
     .then(res => {
       if (res.code === 404) {
+        setResults(to.path, { data: null, context: {} })
         next({ name: '*', params: { 0: to.path }})
       } else {
         setResults(to.path, res)
@@ -23,10 +24,13 @@ export default (to, from, next) => {
     })
     .catch(err => {
       if (err.code === 'MODULE_NOT_FOUND' || err.code === 404) {
-        console.error(err) // eslint-disable-line
-        next({ name: '*', params: { 0: to.path }})
+        console.error(err)
+        next({ name: '*', params: { 0: to.path } })
+      } else if (err.code === 'INVALID_HASH' && to.path !== window.location.pathname) {
+        window.location.assign(to.fullPath)
       } else {
         formatError(err, to)
+        next(err)
       }
     })
 }

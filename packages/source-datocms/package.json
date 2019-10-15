@@ -1,5 +1,5 @@
 {
-  "version": "0.0.2",
+  "version": "0.2.0",
   "name": "@gridsome/source-datocms",
   "description": "DatoCMS source for Gridsome",
   "homepage": "https://github.com/gridsome/gridsome/tree/master/packages/source-datocms#readme",

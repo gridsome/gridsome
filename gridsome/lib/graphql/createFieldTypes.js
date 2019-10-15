@@ -1,50 +1,42 @@
 const { isEmpty } = require('lodash')
-const { nodeInterface } = require('./interfaces')
 const { isFile, fileType } = require('./types/file')
-const { sortOrderType, sortType } = require('./types')
 const { isImage, imageType } = require('./types/image')
 const { isDate, dateType } = require('./types/date')
-const { fieldResolver, createRefResolver } = require('./resolvers')
+const { ObjectTypeComposer } = require('graphql-compose')
 const { is32BitInt, isRefFieldDefinition, createTypeName } = require('./utils')
-const { SORT_ORDER } = require('../utils/constants')
-const { warn } = require('../utils/log')
 
-const {
-  GraphQLInt,
-  GraphQLList,
-  GraphQLFloat,
-  GraphQLString,
-  GraphQLBoolean,
-  GraphQLUnionType,
-  GraphQLObjectType
-} = require('graphql')
-
-function createFieldTypes (fields, typeName, nodeTypes) {
-  const types = {}
+function createFieldTypes (schemaComposer, fields, prefix = '') {
+  const res = {}
 
   for (const key in fields) {
-    const result = createFieldType(fields[key], key, typeName, nodeTypes)
+    const options = fields[key]
+    const result = createFieldType(schemaComposer, options.value, key, prefix)
 
     if (result) {
-      types[key] = result
+      res[options.fieldName] = result
     }
   }
 
-  return types
+  return res
 }
 
-function createFieldType (value, key, typeName, nodeTypes) {
-  if (value === undefined) return null
-  if (value === null) return null
-
+function createFieldType (schemaComposer, value, key, prefix) {
   if (Array.isArray(value)) {
-    const type = createFieldType(value[0], key, typeName, nodeTypes)
+    const type = createFieldType(schemaComposer, value[0], key, prefix)
 
     return type !== null ? {
-      type: new GraphQLList(type.type),
+      type: [type.type],
+      args: type.args,
       resolve: (obj, args, context, info) => {
-        const value = fieldResolver(obj, args, context, info)
-        return Array.isArray(value) ? value : []
+        const arr = obj[key]
+
+        if (!Array.isArray(arr)) return []
+
+        return arr.map((_, i) => {
+          return typeof type.resolve === 'function'
+            ? type.resolve(arr, args, context, { ...info, fieldName: i })
+            : arr[i]
+        })
       }
     } : null
   }
@@ -59,87 +51,70 @@ function createFieldType (value, key, typeName, nodeTypes) {
       if (isFile(value)) return fileType
 
       return {
-        type: GraphQLString,
-        resolve: (...args) => fieldResolver(...args) || ''
+        type: 'String',
+        resolve (obj, args, ctx, info) {
+          return obj[info.fieldName] || ''
+        }
       }
     case 'boolean':
-      return {
-        type: GraphQLBoolean,
-        resolve: fieldResolver
-      }
+      return { type: 'Boolean' }
     case 'number':
-      return {
-        type: is32BitInt(value) ? GraphQLInt : GraphQLFloat,
-        resolve: fieldResolver
-      }
+      return { type: is32BitInt(value) ? 'Int' : 'Float' }
     case 'object':
       return isRefFieldDefinition(value)
-        ? createRefType(value, key, typeName, nodeTypes)
-        : createObjectType(value, key, typeName, nodeTypes)
+        ? createRefType(schemaComposer, value, key, prefix)
+        : createObjectType(schemaComposer, value, key, prefix)
   }
 }
 
-function createObjectType (obj, fieldName, typeName, nodeTypes) {
-  const name = createTypeName(typeName, fieldName)
+function createObjectType (schemaComposer, value, fieldName, prefix) {
+  const name = createTypeName(prefix, fieldName)
   const fields = {}
 
-  for (const key in obj) {
-    const type = createFieldType(obj[key], key, name, nodeTypes)
+  for (const key in value) {
+    const options = value[key]
+    const type = createFieldType(schemaComposer, options.value, key, name)
 
     if (type) {
-      fields[key] = type
+      fields[options.fieldName] = type
     }
   }
 
-  return !isEmpty(fields) ? {
-    type: new GraphQLObjectType({ name, fields }),
-    resolve: fieldResolver
-  } : null
+  return !isEmpty(fields)
+    ? { type: ObjectTypeComposer.createTemp({ name, fields }, schemaComposer) }
+    : null
 }
 
-function createRefType (ref, fieldName, fieldTypeName, nodeTypes) {
-  const typeName = Array.isArray(ref.typeName)
-    ? ref.typeName.filter(typeName => nodeTypes.hasOwnProperty(typeName))
-    : ref.typeName
+const {
+  createReferenceOneUnionResolver,
+  createReferenceManyUnionResolver
+} = require('./nodes/resolvers')
 
-  const res = {
-    resolve: createRefResolver({ ...ref, typeName })
-  }
+function createRefType (schemaComposer, ref, fieldName, fieldTypeName) {
+  const typeNames = Array.isArray(ref.typeName) ? ref.typeName : [ref.typeName]
 
-  if (Array.isArray(typeName)) {
-    if (typeName.length > 1) {
-      res.type = new GraphQLUnionType({
-        interfaces: [nodeInterface],
-        name: createTypeName(fieldTypeName, fieldName + 'Ref'),
-        description: `Reference to ${ref.typeName.join(', ')} nodes`,
-        types: () => typeName.map(typeName => nodeTypes[typeName])
-      })
-    } else if (typeName.length === 1) {
-      res.type = nodeTypes[typeName[0]]
-    } else {
-      warn(`No reference found for ${fieldName}.`)
-      return null
-    }
-  } else if (nodeTypes.hasOwnProperty(typeName)) {
-    res.type = nodeTypes[typeName]
-  } else {
-    warn(`No reference found for ${fieldName}.`)
-    return null
-  }
+  if (typeNames.length > 1) {
+    const typeComposer = schemaComposer.createUnionTC({
+      name: createTypeName(fieldTypeName, fieldName + 'Ref'),
+      description: `Reference to ${typeNames.join(', ')} nodes`,
+      interfaces: ['Node'],
+      types: () => typeNames
+    })
 
-  if (ref.isList) {
-    res.type = new GraphQLList(res.type)
-
-    res.args = {
-      sortBy: { type: GraphQLString },
-      order: { type: sortOrderType, defaultValue: SORT_ORDER },
-      skip: { type: GraphQLInt, defaultValue: 0 },
-      sort: { type: new GraphQLList(sortType) },
-      limit: { type: GraphQLInt }
+    return {
+      type: ref.isList
+        ? [typeComposer]
+        : typeComposer,
+      resolve: ref.isList
+        ? createReferenceManyUnionResolver(typeComposer)
+        : createReferenceOneUnionResolver(typeComposer)
     }
   }
 
-  return res
+  const typeComposer = schemaComposer.get(typeNames[0])
+  const resolverName = ref.isList ? 'referenceManyAdvanced' : 'referenceOne'
+
+  return typeComposer.getResolver(resolverName)
 }
 
 module.exports = {

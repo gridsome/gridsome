@@ -1,3 +1,8 @@
+const path = require('path')
+const fs = require('fs-extra')
+const stackTrace = require('stack-trace')
+const { codeFrameColumns } = require('@babel/code-frame')
+
 module.exports = ({ context, program }) => {
   program
     .command('develop')
@@ -35,12 +40,44 @@ module.exports = ({ context, program }) => {
 }
 
 function wrapCommand (fn) {
-  const chalk = require('chalk')
+  return (context, args) => {
+    return fn(context, args).catch(err => {
+      const callSite = getCallSite(context, err)
+      const fileName = callSite ? callSite.getFileName() : null
+      const filePath = typeof fileName === 'string'
+        ? path.resolve(context, fileName)
+        : null
 
-  return (...args) => {
-    return fn(...args).catch(err => {
-      console.error(chalk.red(err.stack || err))
+      if (filePath && fs.existsSync(filePath)) {
+        const line = callSite.getLineNumber()
+        const column = callSite.getColumnNumber() || 0
+        const fileContent = fs.readFileSync(filePath, 'utf8')
+        const location = { start: { line, column }}
+        const codeFrame = codeFrameColumns(fileContent, location, {
+          highlightCode: true
+        })
+
+        console.log(
+          `${err.name}: ${path.relative(context, filePath)}: ` +
+          `${err.message} (${line}:${column})` +
+          `\n\n${codeFrame}`
+        )
+      } else {
+        console.log(err.stack || err)
+      }
+
       process.exitCode = 1
     })
   }
+}
+
+function getCallSite (context, err) {
+  return stackTrace.parse(err).find(callSite => {
+    const fileName = callSite.getFileName() || ''
+
+    return (
+      fileName.startsWith(context) &&
+      !/node_modules/.test(fileName)
+    )
+  })
 }

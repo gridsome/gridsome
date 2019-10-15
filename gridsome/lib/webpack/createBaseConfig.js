@@ -5,6 +5,7 @@ const Config = require('webpack-chain')
 const { forwardSlash } = require('../utils')
 const { VueLoaderPlugin } = require('vue-loader')
 const createHTMLRenderer = require('../server/createHTMLRenderer')
+const GridsomeResolverPlugin = require('./plugins/GridsomeResolverPlugin')
 const CSSExtractPlugin = require('mini-css-extract-plugin')
 
 const resolve = (p, c) => path.resolve(c || __dirname, p)
@@ -29,10 +30,6 @@ module.exports = (app, { isProd, isServer }) => {
     .chunkFilename(`${assetsDir}/js/${filename}`)
     .filename(`${assetsDir}/js/${filename}`)
 
-  if (process.env.NODE_ENV === 'test') {
-    config.output.pathinfo(true)
-  }
-
   config.resolve
     .set('symlinks', true)
     .alias
@@ -48,6 +45,14 @@ module.exports = (app, { isProd, isServer }) => {
     .add(resolve('../../../packages'))
     .add('node_modules')
 
+  config.resolve
+    .plugin('gridsome-fallback-resolver-plugin')
+      .use(GridsomeResolverPlugin, [{
+        fallbackDir: path.join(projectConfig.appPath, 'fallbacks'),
+        optionalDir: path.join(app.context, 'src'),
+        resolve: ['main', 'App.vue']
+      }])
+
   config.resolveLoader
     .set('symlinks', true)
     .modules
@@ -56,7 +61,7 @@ module.exports = (app, { isProd, isServer }) => {
     .add(resolve('../../../packages'))
     .add('node_modules')
 
-  config.module.noParse(/^(vue|vue-router)$/)
+  config.module.noParse(/^(vue|vue-router|vue-meta)$/)
 
   if (app.config.runtimeCompiler) {
     config.resolve.alias.set('vue$', 'vue/dist/vue.esm.js')
@@ -94,14 +99,18 @@ module.exports = (app, { isProd, isServer }) => {
   // js
 
   config.module.rule('js')
-    .test(/\.jsx?$/)
+    .test(/\.js$/)
     .exclude
     .add(filepath => {
-      if (/\.vue\.jsx?$/.test(filepath)) {
+      if (/\.vue\.js$/.test(filepath)) {
         return false
       }
 
       if (/gridsome\.client\.js$/.test(filepath)) {
+        return false
+      }
+
+      if (filepath.startsWith(projectConfig.appPath)) {
         return false
       }
 
@@ -110,10 +119,6 @@ module.exports = (app, { isProd, isServer }) => {
           ? filepath.includes(path.normalize(dep))
           : filepath.match(dep)
       })) {
-        return false
-      }
-
-      if (filepath.startsWith(projectConfig.appPath)) {
         return false
       }
 
@@ -131,7 +136,12 @@ module.exports = (app, { isProd, isServer }) => {
     .loader('babel-loader')
     .options({
       presets: [
-        require.resolve('@vue/babel-preset-app')
+        [require.resolve('@vue/babel-preset-app'), {
+          entryFiles: [
+            resolve('../../app/entry.server.js'),
+            resolve('../../app/entry.client.js')
+          ]
+        }]
       ]
     })
 
@@ -204,9 +214,6 @@ module.exports = (app, { isProd, isServer }) => {
   config.plugin('case-sensitive-paths')
     .use(require('case-sensitive-paths-webpack-plugin'))
 
-  // config.plugin('friendly-errors')
-  //   .use(require('friendly-errors-webpack-plugin'))
-
   if (!isProd) {
     config.plugin('html')
       .use(require('html-webpack-plugin'), [{
@@ -220,36 +227,24 @@ module.exports = (app, { isProd, isServer }) => {
   }
 
   config.plugin('injections')
-    .use(require('webpack/lib/DefinePlugin'), [createEnv(projectConfig)])
+    .use(require('webpack/lib/DefinePlugin'), [createEnv()])
 
   if (isProd && !isServer) {
     config.plugin('extract-css')
       .use(CSSExtractPlugin, [{
         filename: `${assetsDir}/css/styles${useHash ? '.[contenthash:8]' : ''}.css`
       }])
-
-    const cacheGroups = {}
-
-    if (projectConfig.css.split !== true) {
-      cacheGroups.styles = {
-        name: 'styles',
-        test: m => /css\/mini-extract/.test(m.type),
-        chunks: 'all',
-        enforce: true
-      }
-    }
-
-    config.optimization.splitChunks({ cacheGroups })
   }
 
   if (process.env.GRIDSOME_TEST) {
+    config.output.pathinfo(true)
     config.optimization.minimize(false)
   }
 
   // helpes
 
   function createCacheOptions () {
-    const values = {
+    const values = app.compiler.hooks.cacheIdentifier.call({
       'gridsome': require('../../package.json').version,
       'cache-loader': require('cache-loader/package.json').version,
       'vue-loader': require('vue-loader/package.json').version,
@@ -259,7 +254,7 @@ module.exports = (app, { isProd, isServer }) => {
       config: (
         (projectConfig.chainWebpack || '').toString()
       )
-    }
+    })
 
     return {
       cacheDirectory: app.resolve('node_modules/.cache/gridsome'),
@@ -309,7 +304,7 @@ module.exports = (app, { isProd, isServer }) => {
     }
   }
 
-  function createEnv (projectConfig) {
+  function createEnv () {
     const assetsUrl = forwardSlash(path.join(publicPath, assetsDir, '/'))
     const dataUrl = forwardSlash(path.join(assetsUrl, 'data', '/'))
 

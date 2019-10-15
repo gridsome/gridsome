@@ -10,7 +10,7 @@
     "test:unit": "node scripts/test.js",
     "test:e2e": "node scripts/test.js --e2e",
     "changelog": "node scripts/changelog.js",
-    "lint": "eslint \"gridsome/**/*.js\" \"packages/**/*.js\""
+    "lint": "eslint \"@(gridsome|packages)/**/*.js\""
   },
   "devDependencies": {
     "@lerna/conventional-commits": "^3.4.1",
@@ -18,6 +18,7 @@
     "cheerio": "^1.0.0-rc.2",
     "conventional-changelog": "^2.0.3",
     "eslint": "^5.2.0",
+    "eslint-plugin-import": "^2.17.3",
     "eslint-plugin-node": "^7.0.1",
     "eslint-plugin-vue": "^4.7.1",
     "eslint-plugin-vue-libs": "^3.0.0",
@@ -26,7 +27,8 @@
     "lerna": "^3.4.0",
     "memfs": "^2.9.4",
     "minimist": "^1.2.0",
-    "puppeteer": "^1.12.2"
+    "puppeteer": "^1.12.2",
+    "supertest": "^4.0.2"
   },
   "engines": {
     "node": ">=8.3",

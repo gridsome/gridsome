@@ -3,6 +3,62 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.4.3](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/compare/@gridsome/source-wordpress@0.4.2...@gridsome/source-wordpress@0.4.3) (2019-10-15)
+
+
+### Bug Fixes
+
+* **wordpress:** add references as array fields ([#745](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/issues/745)) ([6058ff1](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/commit/6058ff1))
+
+
+
+
+
+## [0.4.2](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/compare/@gridsome/source-wordpress@0.4.1...@gridsome/source-wordpress@0.4.2) (2019-10-01)
+
+
+### Bug Fixes
+
+* **wordpress:** add meta to taxonomy terms ([#672](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/issues/672)) ([5b359ad](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/commit/5b359ad))
+* **wordpress:** remove starting slash from rest_base ([#712](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/issues/712)) ([bb0f6d5](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/commit/bb0f6d5))
+
+
+
+
+
+## [0.4.1](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/compare/@gridsome/source-wordpress@0.4.0...@gridsome/source-wordpress@0.4.1) (2019-09-17)
+
+
+### Bug Fixes
+
+* **wordpress:** don’t add default routes ([6e7134f](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/commit/6e7134f))
+
+
+
+
+
+# [0.4.0](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/compare/@gridsome/source-wordpress@0.3.0...@gridsome/source-wordpress@0.4.0) (2019-09-11)
+
+
+### Features
+
+* **wordpress:** basic gridsome v0.7 support ([8433c9a](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/commit/8433c9a))
+
+
+
+
+
+# [0.3.0](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/compare/@gridsome/source-wordpress@0.2.2...@gridsome/source-wordpress@0.3.0) (2019-05-10)
+
+
+### Features
+
+* **wordpress:** camelcase fields and use latest apis ([0c431cf](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/commit/0c431cf))
+
+
+
+
+
 ## [0.2.2](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/compare/@gridsome/source-wordpress@0.2.1...@gridsome/source-wordpress@0.2.2) (2019-04-18)
 
 

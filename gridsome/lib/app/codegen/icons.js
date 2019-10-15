@@ -2,7 +2,7 @@ const path = require('path')
 const fs = require('fs-extra')
 const isRelative = require('is-relative')
 
-async function genIcons ({ config, context, queue }) {
+async function genIcons ({ config, context, assets }) {
   const { touchicon, favicon } = config.icon
   const touchiconPath = iconPath(context, touchicon.src)
   const faviconPath = iconPath(context, favicon.src)
@@ -16,7 +16,7 @@ async function genIcons ({ config, context, queue }) {
   }
 
   if (await fs.exists(touchiconPath)) {
-    const touchicons = await queue.add(touchiconPath, {
+    const touchicons = await assets.add(touchiconPath, {
       sizes: touchicon.sizes,
       srcset: false
     })
@@ -27,7 +27,7 @@ async function genIcons ({ config, context, queue }) {
   }
 
   if (await fs.exists(faviconPath)) {
-    const favicons = await queue.add(faviconPath, {
+    const favicons = await assets.add(faviconPath, {
       sizes: favicon.sizes,
       srcset: false
     })

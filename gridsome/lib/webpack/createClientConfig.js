@@ -6,7 +6,7 @@ const resolve = p => path.resolve(__dirname, p)
 module.exports = async app => {
   const isProd = process.env.NODE_ENV === 'production'
   const config = createBaseConfig(app, { isProd, isServer: false })
-  const { outDir, clientManifestPath } = app.config
+  const { outDir, clientManifestPath, css } = app.config
 
   config.entry('app').add(resolve('../../app/entry.client.js'))
 
@@ -29,6 +29,18 @@ module.exports = async app => {
           mergeLonghand: false
         }
       }])
+
+    if (css.split !== true) {
+      const cacheGroups = {
+        styles: {
+          name: 'styles',
+          test: m => /css\/mini-extract/.test(m.type),
+          chunks: 'all',
+          enforce: true
+        }
+      }
+      config.optimization.splitChunks({ cacheGroups })
+    }
   } else {
     config.entry('app').add(resolve('../../app/entry.sockjs.js'))
 

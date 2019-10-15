@@ -15,13 +15,7 @@ class FileProcessQueue {
   }
 
   async add (filePath, options = {}) {
-    let asset
-
-    try {
-      asset = await this.preProcess(filePath, options)
-    } catch (err) {
-      throw err
-    }
+    const asset = await this.preProcess(filePath, options)
 
     if (process.env.GRIDSOME_MODE === 'serve') {
       return asset
@@ -37,7 +31,7 @@ class FileProcessQueue {
     return asset
   }
 
-  async preProcess (filePath, options) {
+  async preProcess (filePath) {
     if (!await fs.exists(filePath)) {
       throw new Error(`${filePath} was not found. `)
     }

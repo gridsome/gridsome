@@ -1,5 +1,5 @@
 {
-  "version": "0.1.1",
+  "version": "0.2.2",
   "name": "@gridsome/plugin-sitemap",
   "description": "Generate sitemap for Gridsome sites",
   "homepage": "https://github.com/gridsome/gridsome/tree/master/packages/plugin-sitemap#readme",

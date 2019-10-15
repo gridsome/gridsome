@@ -27,8 +27,18 @@ exports.createPlugins = function (options, localOptions) {
     return normalizePlugins(userPlugins || [])
   }
 
-  plugins.push(require('./plugins/file'))
-  plugins.push(require('./plugins/image'))
+  if (options.processFiles !== false) {
+    plugins.push(require('./plugins/file'))
+  }
+
+  if (options.processImages !== false) {
+    plugins.push([require('./plugins/image'), {
+      blur: options.imageBlurRatio,
+      quality: options.imageQuality,
+      background: options.imageBackground,
+      immediate: options.lazyLoadImages === false ? true : undefined
+    }])
+  }
 
   if (options.slug !== false) {
     plugins.push('remark-slug')

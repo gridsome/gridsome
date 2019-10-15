@@ -1,19 +1,22 @@
+const camelCase = require('camelcase')
 const contentful = require('contentful')
+const createRichTextType = require('./lib/types/rich-text')
 
 class ContentfulSource {
   static defaultOptions () {
     return {
       space: undefined,
+      accessToken: undefined,
       environment: 'master',
       host: 'cdn.contentful.com',
       typeName: 'Contentful',
+      richText: {},
       routes: {}
     }
   }
 
   constructor (api, options) {
     this.options = options
-    this.store = api.store
     this.typesIndex = {}
 
     this.client = contentful.createClient({
@@ -30,68 +33,77 @@ class ContentfulSource {
     })
   }
 
-  async getContentTypes (store) {
+  async getContentTypes (actions) {
     const contentTypes = await this.fetch('getContentTypes')
+    const richTextType = createRichTextType(this.options)
 
     for (const contentType of contentTypes) {
       const { name, sys: { id }} = contentType
-      const typeName = store.makeTypeName(name)
-      const route = this.options.routes[name] || `/${store.slugify(name)}/:slug`
+      const typeName = this.createTypeName(name)
+      const route = this.options.routes[name]
+      const resolvers = {}
 
-      store.addContentType({ typeName, route })
+      for (const field of contentType.fields) {
+        if (field.type === 'RichText') {
+          resolvers[field.id] = richTextType
+        }
+      }
+
+      actions.addCollection({ typeName, route })
+      actions.addSchemaResolvers({
+        [typeName]: resolvers
+      })
 
       this.typesIndex[id] = { ...contentType, typeName }
     }
   }
 
-  async getAssets (store) {
+  async getAssets (actions) {
     const assets = await this.fetch('getAssets')
-    const typeName = store.makeTypeName('asset')
-    const route = this.options.routes.asset || '/asset/:id'
-
-    const contentType = store.addContentType({ typeName, route })
+    const typeName = this.createTypeName('asset')
+    const route = this.options.routes.asset
+    const collection = actions.addCollection({ typeName, route })
 
     for (const asset of assets) {
-      contentType.addNode({ id: asset.sys.id, fields: asset.fields })
+      collection.addNode({ ...asset.fields, id: asset.sys.id })
     }
   }
 
-  async getEntries (store) {
+  async getEntries (actions) {
     const entries = await this.fetch('getEntries')
 
     for (const entry of entries) {
-      const id = entry.sys.contentType.sys.id
-      const { typeName, displayField } = this.typesIndex[id]
-      const collection = store.getContentType(typeName)
-      const fields = {}
+      const typeId = entry.sys.contentType.sys.id
+      const { typeName, displayField } = this.typesIndex[typeId]
+      const collection = actions.getCollection(typeName)
+      const node = {}
 
-      fields.createdAt = entry.sys.createdAt
-      fields.updatedAt = entry.sys.updatedAt
-      fields.locale = entry.sys.locale
+      node.title = entry.fields[displayField]
+      node.date = entry.sys.createdAt // TODO: deprecate this
+      node.createdAt = entry.sys.createdAt
+      node.updatedAt = entry.sys.updatedAt
+      node.locale = entry.sys.locale
 
       for (const key in entry.fields) {
         const value = entry.fields[key]
 
         if (Array.isArray(value)) {
-          fields[key] = value.map(item =>
-            typeof item === 'object' && typeof item.sys !== 'undefined'
-              ? this.createReferenceField(item)
-              : item
+          node[key] = value.map(item => this.isReference(item)
+            ? this.createReference(item, actions)
+            : item
           )
-        } else if (typeof value === 'object' && typeof value.sys !== 'undefined') {
-          fields[key] = this.createReferenceField(value)
+        } else if (this.isReference(value)) {
+          node[key] = this.createReference(value, actions)
+        } else if (this.isRichText(value)) {
+          node[key] = JSON.stringify(value) // Rich Text
         } else {
-          fields[key] = value
+          node[key] = value
         }
       }
 
-      collection.addNode({
-        id: entry.sys.id,
-        title: entry.fields[displayField],
-        slug: entry.fields.slug || '', // TODO: let user choose which field contains the slug
-        date: entry.sys.createdAt,
-        fields
-      })
+      node.id = entry.sys.id
+
+      collection.addNode(node)
     }
   }
 
@@ -108,22 +120,32 @@ class ContentfulSource {
     return items
   }
 
-  createReferenceField (item) {
+  createReference (item, store) {
     switch (item.sys.type) {
       case 'Asset' :
-        return {
-          typeName: this.store.makeTypeName('asset'),
-          id: item.sys.id
-        }
+        return store.createReference(
+          this.createTypeName('asset'),
+          item.sys.id
+        )
 
       case 'Entry' :
         const contentType = this.typesIndex[item.sys.contentType.sys.id]
+        const typeName = this.createTypeName(contentType.name)
 
-        return {
-          typeName: this.store.makeTypeName(contentType.name),
-          id: item.sys.id
-        }
+        return store.createReference(typeName, item.sys.id)
     }
+  }
+
+  createTypeName (name = '') {
+    return camelCase(`${this.options.typeName} ${name}`, { pascalCase: true })
+  }
+
+  isReference (value) {
+    return typeof value === 'object' && typeof value.sys !== 'undefined'
+  }
+
+  isRichText (value) {
+    return typeof value === 'object' && value.nodeType === 'document'
   }
 }
 

@@ -3,11 +3,17 @@
 const path = require('path')
 const chalk = require('chalk')
 const program = require('commander')
+const didYouMean = require('didyoumean')
 const resolveCwd = require('resolve-cwd')
+const updateNotifier = require('update-notifier')
 const resolveVersions = require('../lib/utils/version')
 const pkgPath = require('find-up').sync('package.json')
+const { hasYarn } = require('../lib/utils')
 
-const context = pkgPath ? path.dirname(pkgPath) : process.cwd()
+const pkg = require('../package.json')
+const notifier = updateNotifier({ pkg })
+
+const context = pkgPath ? path.resolve(path.dirname(pkgPath)) : process.cwd()
 const version = resolveVersions(pkgPath)
 
 program
@@ -22,10 +28,21 @@ program
     return wrapCommand(create)(...args)
   })
 
+program
+  .command('info')
+  .description('output information about the local environment')
+  .action(() => {
+    const info = require('../lib/commands/info')
+    return wrapCommand(info)()
+  })
+
 try {
+  const commandsPath = resolveCwd.silent('gridsome/commands')
   const gridsomePath = resolveCwd.silent('gridsome')
 
-  if (gridsomePath) {
+  if (commandsPath) {
+    require(commandsPath)({ context, program })
+  } else if (gridsomePath) {
     require(gridsomePath)({ context, program })
   }
 } catch (err) {
@@ -35,8 +52,10 @@ try {
 // show a warning if the command does not exist
 program.arguments('<command>').action(async command => {
   const { isGridsomeProject, hasYarn } = require('../lib/utils')
+  const availableCommands = program.commands.map(cmd => cmd._name)
+  const suggestion = didYouMean(command, availableCommands)
 
-  if (isGridsomeProject(pkgPath)) {
+  if (isGridsomeProject(pkgPath) && !suggestion) {
     const useYarn = await hasYarn()
 
     console.log()
@@ -44,6 +63,10 @@ program.arguments('<command>').action(async command => {
     console.log()
   } else {
     console.log(chalk.red(`Unknown command ${chalk.bold(command)}`))
+    if (suggestion) {
+      console.log()
+      console.log(`Did you mean ${suggestion}?`)
+    }
   }
 })
 
@@ -57,6 +80,18 @@ program.parse(process.argv)
 
 if (!process.argv.slice(2).length) {
   program.outputHelp()
+}
+
+if (notifier.update) {
+  (async () => {
+    const withYarn = await hasYarn()
+    const margin = chalk.bgGreen(' ')
+    const command = withYarn ? `yarn global add ${pkg.name}` : `npm i -g ${pkg.name}`
+    console.log()
+    console.log(`${margin} Update available: ${chalk.bold(notifier.update.latest)}`)
+    console.log(`${margin} Run ${chalk.cyan(command)} to update`)
+    console.log()
+  })()
 }
 
 function wrapCommand (fn) {

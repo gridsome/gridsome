@@ -40,7 +40,6 @@ test('build basic project', () => {
   // no objects should be rendered
   expect(indexHTML).not.toMatch('[object Object]')
 
-  expect($home('head > title').text()).toEqual('Gridsome | Test')
   expect($home('#app').data('server-rendered')).toEqual(true)
   expect($home('meta[name="keywords"]').attr('content')).toEqual('test')
   expect($home('meta[name="og:title"]').attr('content')).toEqual('bar')
@@ -56,6 +55,11 @@ test('build basic project', () => {
   expect($home('span.from-metadata').text()).toEqual('test')
   expect($home('.footer span.meta-data-1').text()).toEqual('Test Value')
   expect($home('.footer span.meta-data-2').text()).toEqual('bar')
+})
+
+test('set title in custom App.vue', () => {
+  const $home = load('dist/index.html')
+  expect($home('head > title').text()).toEqual('Gridsome [basic] | Test')
 })
 
 test('render custom html template', () => {
@@ -79,6 +83,7 @@ test('do not render duplicate style links', () => {
 test('render g-link components', () => {
   const $home = load('dist/index.html')
 
+  expect($home('a.g-link-1.is-active.active--exact').attr('href')).toEqual('/')
   expect($home('a.g-link-2.test-active.active--exact').attr('href')).toEqual('/')
 
   expect($home('a[href="http://outsidelink1.com"]').attr('target')).toEqual('_blank')
@@ -123,6 +128,13 @@ test('render g-image components', () => {
   expect(uniq(classes).length - classes.length).toEqual(0)
 })
 
+test('render custom route meta', () => {
+  const appJS = content('dist/assets/js/app.js')
+
+  expect(appJS).toMatch('aboutUsMeta1: true')
+  expect(appJS).toMatch('$aboutUsMeta2: [1, 2, 3]')
+})
+
 test('render template with static routes', () => {
   const $page1 = load('dist/pages/1/index.html')
   const $page2 = load('dist/pages/2/index.html')
@@ -141,6 +153,14 @@ test('render template with static routes and pagination', () => {
   expect(exists('dist/docs/1/2/index.html')).toBeFalsy()
   expect(exists('dist/docs/2/4/index.html')).toBeFalsy()
   expect(exists('dist/docs/3/2/index.html')).toBeFalsy()
+})
+
+test('render page $context', () => {
+  const $page1 = load('dist/about/index.html')
+  const $page2 = load('dist/about-us/index.html')
+
+  expect($page1('h1').text()).toEqual('')
+  expect($page2('h1').text()).toEqual('About us')
 })
 
 test('generate /404.html', () => {
@@ -170,10 +190,14 @@ test('compile scripts correctly', () => {
   // env variables
   expect(homeJS).toMatch('GRIDSOME_PROD_VARIABLE: "PROD_1"')
   expect(homeJS).toMatch('PROD_VARIABLE: process.env.PROD_VARIABLE')
+})
 
-  // polyfills
+test('compile scripts includes polyfills', () => {
+  const appJS = content('dist/assets/js/app.js')
 
-  expect(appJS).toMatch('// ECMAScript 6 symbols shim')
+  expect(appJS).toMatch('core-js/modules/es6.promise.js')
+  expect(appJS).toMatch('core-js/modules/es6.symbol.js')
+  expect(appJS).toMatch('core-js/modules/es6.string.ends-with.js')
 })
 
 test('compile a single css file', () => {
@@ -234,12 +258,12 @@ test('navigate to /docs/2', async () => {
 })
 
 test('navigate to /docs/2/2', async () => {
-  await page.click('nav[role="navigation"] a.active + a')
+  await page.click('nav[role="navigation"] a.is-active + a')
   await page.waitForSelector('#app.doc-template-2.page-2')
 })
 
 test('navigate to /docs/2/3', async () => {
-  await page.click('nav[role="navigation"] a.active + a')
+  await page.click('nav[role="navigation"] a.is-active + a')
   await page.waitForSelector('#app.doc-template-2.page-3')
 })
 

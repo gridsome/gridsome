@@ -1,5 +1,5 @@
 {
-  "version": "0.3.0",
+  "version": "0.6.2",
   "name": "@gridsome/source-filesystem",
   "description": "Filesystem source for Gridsome",
   "homepage": "https://github.com/gridsome/gridsome/tree/master/packages/source-filesystem#readme",
@@ -15,6 +15,7 @@
     "fs-extra": "^7.0.0",
     "globby": "^8.0.1",
     "lodash": "^4.17.10",
+    "mime-types": "^2.1.21",
     "slash": "^2.0.0"
   },
   "publishConfig": {

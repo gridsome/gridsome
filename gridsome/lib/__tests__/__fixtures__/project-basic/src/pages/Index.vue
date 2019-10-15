@@ -1,28 +1,29 @@
 <template>
   <Layout class="home">
     <h1>Gridsome</h1>
-    <h2 class="meta-data">{{ $page.metaData.myTest.value }}</h2>
-    
+    <h2 class="meta-data">{{ $page.metadata.myTest.value }}</h2>
+
     <g-link href="http://outsidelink1.com">External Links</g-link>
     <g-link href="https://outsidelink2.com">External Links</g-link>
     <g-link href="//outsidelink3.com">External Links</g-link>
     <g-link href="https://www.gridsome.org/docs">Internal Links</g-link>
-    <g-link :class="{ 'g-link-2': true }" :to="{ name: 'home' }" active-class="test-active">Home</g-link>
+    <g-link class="g-link-1" to="/">Home</g-link>
+    <g-link :class="{ 'g-link-2': true }" to="/" active-class="test-active">Home</g-link>
     <g-link class="not-found-link" to="/asdf">Show /404</g-link>
     <g-link class="g-link-file" to="~/assets/dummy.pdf">Download</g-link>
     <a class="external-link" href="/external/">External</a>
-    
+
     <g-image class="g-image-1" src="~/assets/logo.svg" alt="SVG logo" width="300" />
     <g-image :class="{ 'g-image-2': true, 'g-image-false': false }" src="~/assets/test.png" alt="Test image" width="1000" />
     <g-image :class="['g-image-external']" src="https://www.example.com/assets/image.png" alt="External image" immediate />
     <g-image class="g-image-immediate" src="~/assets/test.png" alt="Immediate image" immediate/>
     <g-image class="g-image-static" src="/uploads/test.png" alt="Static image" width="300" />
-    
+
     <span class="from-custom-root-field">{{ $page.customRootValue }}</span>
     <span class="from-env-production">{{ TEST_1 }}</span>
     <span class="from-plugin">{{ TEST_2 }}</span>
     <span class="from-chain-webpack">{{ TEST_3 }}</span>
-    <span class="from-metadata">{{ $page.metaData.someMeta }}</span>
+    <span class="from-metadata">{{ $page.metadata.someMeta }}</span>
 
     <button class="fetch-doc-page-3" @click="fetchPath1('/docs/3')">
       fetch /docs/3
@@ -48,7 +49,7 @@
 <page-query>
 query Home {
   customRootValue
-  metaData {
+  metadata {
     someMeta
     myTest {
       value
@@ -94,7 +95,7 @@ export default {
       meta: [
         {
           name: 'og:description',
-          content: this.$page.metaData.myTest.value
+          content: this.$page.metadata.myTest.value
         },
         {
           key: 'description',

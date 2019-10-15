@@ -3,6 +3,62 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.5.1](https://github.com/gridsome/gridsome/tree/master/packages/source-contentful/compare/@gridsome/source-contentful@0.5.0...@gridsome/source-contentful@0.5.1) (2019-09-17)
+
+
+### Bug Fixes
+
+* **contentful:** add resolvers with schema api ([55695c2](https://github.com/gridsome/gridsome/tree/master/packages/source-contentful/commit/55695c2))
+* **contentful:** remove default routes ([ac17eda](https://github.com/gridsome/gridsome/tree/master/packages/source-contentful/commit/ac17eda))
+
+
+
+
+
+# [0.5.0](https://github.com/gridsome/gridsome/tree/master/packages/source-contentful/compare/@gridsome/source-contentful@0.4.0...@gridsome/source-contentful@0.5.0) (2019-09-11)
+
+
+### Features
+
+* **contentful:** gridsome v0.7 support ([78ca5bf](https://github.com/gridsome/gridsome/tree/master/packages/source-contentful/commit/78ca5bf))
+
+
+
+
+
+# [0.4.0](https://github.com/gridsome/gridsome/tree/master/packages/source-contentful/compare/@gridsome/source-contentful@0.3.0...@gridsome/source-contentful@0.4.0) (2019-06-25)
+
+
+### Features
+
+* **contentful:** reflect changes in v0.6 ([e4962fe](https://github.com/gridsome/gridsome/tree/master/packages/source-contentful/commit/e4962fe))
+
+
+
+
+
+# [0.3.0](https://github.com/gridsome/gridsome/tree/master/packages/source-contentful/compare/@gridsome/source-contentful@0.2.3...@gridsome/source-contentful@0.3.0) (2019-05-20)
+
+
+### Features
+
+* **contentful:** rich text support ([#354](https://github.com/gridsome/gridsome/tree/master/packages/source-contentful/issues/354)) ([bd5905c](https://github.com/gridsome/gridsome/tree/master/packages/source-contentful/commit/bd5905c))
+
+
+
+
+
+## [0.2.3](https://github.com/gridsome/gridsome/tree/master/packages/source-contentful/compare/@gridsome/source-contentful@0.2.2...@gridsome/source-contentful@0.2.3) (2019-05-10)
+
+
+### Bug Fixes
+
+* **contentful:** prevent infinite loop for references ([#399](https://github.com/gridsome/gridsome/tree/master/packages/source-contentful/issues/399)) ([5b0054b](https://github.com/gridsome/gridsome/tree/master/packages/source-contentful/commit/5b0054b))
+
+
+
+
+
 ## [0.2.2](https://github.com/gridsome/gridsome/tree/master/packages/source-contentful/compare/@gridsome/source-contentful@0.2.1...@gridsome/source-contentful@0.2.2) (2019-04-09)
 
 **Note:** Version bump only for package @gridsome/source-contentful

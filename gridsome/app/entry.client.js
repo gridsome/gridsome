@@ -1,5 +1,8 @@
+import './polyfills'
+
 import Vue from 'vue'
 import createApp, { runPlugins, runMain } from './app'
+import config from '~/.temp/config'
 import plugins from '~/.temp/plugins-client'
 import linkDirective from './directives/link'
 import imageDirective from './directives/image'
@@ -13,6 +16,26 @@ runMain()
 
 const { app, router } = createApp()
 
+if (process.env.NODE_ENV === 'production') {
+  router.beforeEach((to, from, next) => {
+    const components = router.getMatchedComponents(to).map(
+      c => typeof c === 'function' ? c() : c
+    )
+
+    Promise.all(components)
+      .then(() => next())
+      .catch(err => {
+        // reload page if a component failed to load
+        if (err.request && to.path !== window.location.pathname) {
+          window.location.assign(to.fullPath)
+        } else {
+          next(err)
+        }
+      })
+  })
+}
+
+// TODO: remove this behavior
 // let Vue router handle internal URLs for anchors in innerHTML
 document.addEventListener('click', event => {
   const $el = event.target.closest('a')
@@ -33,14 +56,23 @@ document.addEventListener('click', event => {
     /\b_blank\b/i.test($el.target) // opens in new tab
   ) return
 
+  if (
+    config.pathPrefix &&
+    !$el.pathname.startsWith(config.pathPrefix)
+  ) {
+    return // must include pathPrefix in path
+  }
+
   const path = stripPathPrefix($el.pathname)
-  const { route, location } = router.resolve({ path, hash: $el.hash })
+  const { route, location } = router.resolve({
+    path: path + ($el.search || '') + ($el.hash || '')
+  })
 
   if (route.name === '*') {
     return
   }
 
-  router.push(location)
+  router.push(location, () => {})
   event.preventDefault()
 }, false)
 

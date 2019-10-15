@@ -1,17 +1,29 @@
-const { omit, isPlainObject, isNumber, isInteger } = require('lodash')
-const { isRefField, isRefFieldDefinition } = require('./utils')
+const camelCase = require('camelcase')
+const { warn } = require('../utils/log')
+const { isRefField } = require('../store/utils')
+const { isRefFieldDefinition } = require('./utils')
 
-module.exports = function createFieldDefinitions (nodes) {
-  let fields = {}
+const {
+  omit,
+  isNil,
+  isEmpty,
+  isNumber,
+  isInteger,
+  isPlainObject
+} = require('lodash')
+
+module.exports = function createFieldDefinitions (nodes, options = {}) {
+  let res = {}
 
   for (let i = 0, l = nodes.length; i < l; i++) {
-    fields = fieldValues(omit(nodes[i], ['id', 'internal']), fields)
+    const fields = omit(nodes[i], ['internal'])
+    res = resolveValues(fields, res, options)
   }
 
-  return fields
+  return res
 }
 
-function fieldValues (obj, currentObj = {}) {
+function resolveValues (obj, currentObj = {}, options = {}, path = []) {
   const res = { ...currentObj }
 
   for (const key in obj) {
@@ -19,16 +31,38 @@ function fieldValues (obj, currentObj = {}) {
 
     if (key.startsWith('$')) continue
     if (key.startsWith('__')) continue
-    if (value === undefined) continue
-    if (value === null) continue
+    if (isNil(value)) continue
 
-    res[key] = fieldValue(value, currentObj[key])
+    const currentValue = currentObj[key] ? currentObj[key].value : undefined
+    const resolvedValue = resolveValue(value, currentValue, options, path.concat(key))
+
+    if (
+      isNil(resolvedValue) ||
+      (Array.isArray(resolvedValue) && !resolvedValue.length) ||
+      (isPlainObject(resolvedValue) && isEmpty(resolvedValue))
+    ) {
+      continue
+    }
+
+    const fieldName = createFieldName(key, options.camelCase)
+    const extensions = { isInferred: true, directives: [] }
+
+    if (fieldName !== key) {
+      extensions.directives.push({ name: 'proxy', args: { from: key } })
+    }
+
+    res[key] = {
+      key,
+      fieldName,
+      extensions,
+      value: resolvedValue
+    }
   }
 
   return res
 }
 
-function fieldValue (value, currentValue) {
+function resolveValue (value, currentValue, options, path = []) {
   if (Array.isArray(value)) {
     const arr = Array.isArray(currentValue) ? currentValue : []
     const length = value.length
@@ -39,7 +73,9 @@ function fieldValue (value, currentValue) {
       }
 
       for (let i = 0; i < length; i++) {
-        if (!currentValue.typeName.includes(value[i].typeName)) {
+        if (!value[i].typeName) {
+          warn(`Missing typeName for reference at: ${path.join('.')}.${i}`)
+        } else if (!currentValue.typeName.includes(value[i].typeName)) {
           currentValue.typeName.push(value[i].typeName)
         }
       }
@@ -52,24 +88,40 @@ function fieldValue (value, currentValue) {
     }
 
     for (let i = 0; i < length; i++) {
-      arr[0] = fieldValue(value[i], arr[0])
+      arr[0] = resolveValue(value[i], arr[0], options, path.concat(i))
     }
 
-    return arr
+    return arr.filter(v => !isNil(v))
   } else if (isPlainObject(value)) {
     if (isRefField(value)) {
+      if (!value.typeName) {
+        warn(`Missing typeName for reference in field: ${path.join('.')}`)
+        return currentValue
+      }
+
       const ref = currentValue || { typeName: value.typeName }
       ref.isList = ref.isList || Array.isArray(value.id)
 
       return ref
     }
 
-    return fieldValues(value, currentValue)
+    return resolveValues(value, currentValue, options, path)
   } else if (isNumber(value)) {
     return isNumber(currentValue) && isInteger(value)
       ? currentValue
       : value
   }
 
-  return currentValue !== undefined ? currentValue : value
+  return isNil(currentValue) ? value : currentValue
+}
+
+const nonValidCharsRE = new RegExp('[^a-zA-Z0-9_]', 'g')
+const leadingNumberRE = new RegExp('^([0-9])')
+
+function createFieldName (key, camelCased = false) {
+  key = key.replace(nonValidCharsRE, '_')
+  if (camelCased) key = camelCase(key)
+  key = key.replace(leadingNumberRE, '_$1')
+
+  return key
 }

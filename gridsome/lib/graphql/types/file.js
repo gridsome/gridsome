@@ -1,7 +1,6 @@
 const url = require('url')
 const path = require('path')
 const mime = require('mime-types')
-const { GraphQLScalarType } = require('graphql')
 const { isResolvablePath } = require('../../utils')
 const { SUPPORTED_IMAGE_TYPES } = require('../../utils/constants')
 
@@ -27,20 +26,22 @@ exports.isFile = value => {
   return false
 }
 
-exports.GraphQLFile = new GraphQLScalarType({
-  name: 'File',
-  serialize: value => value
-})
+exports.createFileScalar = schemaComposer => {
+  return schemaComposer.createScalarTC({
+    name: 'File',
+    serialize: value => value
+  })
+}
 
 exports.fileType = {
-  type: exports.GraphQLFile,
+  type: 'File',
   args: {},
   async resolve (obj, args, context, { fieldName }) {
     const value = obj[fieldName]
 
     if (!value) return null
 
-    const result = await context.queue.add(value)
+    const result = await context.assets.add(value)
 
     if (result.isUrl) {
       return result.src

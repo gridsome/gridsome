@@ -1,25 +1,36 @@
 const autoBind = require('auto-bind')
 const PluginStore = require('../store/PluginStore')
+const { deprecate } = require('../utils/deprecate')
 
 class PluginAPI {
-  constructor (app, { entry, transformers }) {
+  constructor (app, { entry = {}, transformers } = {}) {
     this._entry = entry
+    this._transformers = transformers
     this._app = app
-
-    this.config = app.config
-    this.context = app.context
-
-    this.store = new PluginStore(app, entry.options, { transformers })
+    this._store = new PluginStore(app, entry.options, { transformers })
 
     autoBind(this)
   }
 
-  _on (eventName, handler, options = {}) {
-    this._app.events.on(eventName, { api: this, handler, options })
+  get context () {
+    return this._app.context
   }
 
-  resolve (value) {
-    return this._app.resolve(value)
+  get config () {
+    return this._app.config
+  }
+
+  get store () {
+    deprecate('Avoid using api.store directly. Use the actions in api.loadSource() instead.')
+    return this._store
+  }
+
+  _on (eventName, handler, options = {}) {
+    this._app.plugins.on(eventName, { api: this, handler, options })
+  }
+
+  resolve (...args) {
+    return this._app.resolve(...args)
   }
 
   setClientOptions (options) {
@@ -31,7 +42,7 @@ class PluginAPI {
   }
 
   registerComponentParser (options) {
-    this._app.parser.add(options)
+    this._app.pages._parser.add(options)
   }
 
   loadSource (handler) {
@@ -51,7 +62,10 @@ class PluginAPI {
   }
 
   chainWebpack (fn) {
-    this._on('chainWebpack', fn)
+    this._app.compiler.hooks.chainWebpack.tapPromise(
+      this._entry.name || 'ChainWebpack',
+      (chain, context) => Promise.resolve(fn(chain, context))
+    )
   }
 
   configureWebpack (fn) {
@@ -63,23 +77,28 @@ class PluginAPI {
   }
 
   //
+  // hooks
+  //
+
+  onInit (fn) {
+    this._app.hooks.beforeBootstrap.tapAsync(this._entry.name || 'OnInit', fn)
+  }
+
+  onBootstrap (fn) {
+    this._app.hooks.bootstrap.tapAsync(this._entry.name || 'OnBootstrap', fn)
+  }
+
+  onCreateNode (fn) {
+    const { name = 'OnCreateNode' } = this._entry
+    this._app.store.hooks.addNode.tap(name, fn)
+  }
+
+  //
   // build hooks
   //
 
   beforeBuild (fn) {
     this._on('beforeBuild', fn)
-  }
-
-  beforeRenderQueries (fn) {
-    this._on('beforeRenderQueries', fn)
-  }
-
-  beforeRenderHTML (fn) {
-    this._on('beforeRenderHTML', fn)
-  }
-
-  beforeProcessAssets (fn) {
-    this._on('beforeProcessAssets', fn)
   }
 
   afterBuild (fn) {

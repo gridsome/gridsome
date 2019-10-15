@@ -4,6 +4,8 @@ const isUrl = require('is-url')
 const mime = require('mime-types')
 const camelCase = require('camelcase')
 const isRelative = require('is-relative')
+const { isPlainObject } = require('lodash')
+const { isResolvablePath } = require('../utils')
 
 const nonValidCharsRE = new RegExp('[^a-zA-Z0-9_]', 'g')
 const leadingNumberRE = new RegExp('^([0-9])')
@@ -16,11 +18,20 @@ exports.createFieldName = function (key, camelCased = false) {
   return key
 }
 
+exports.isRefField = function (field) {
+  return (
+    isPlainObject(field) &&
+    Object.keys(field).length === 2 &&
+    field.hasOwnProperty('typeName') &&
+    field.hasOwnProperty('id')
+  )
+}
+
 exports.parseUrl = function (input) {
   const { protocol, host, path: pathName } = url.parse(input)
   const basePath = pathName.endsWith('/') ? pathName : path.dirname(pathName)
   const baseUrl = `${protocol}//${host}`
-  const fullUrl = `${baseUrl}${path.join(basePath, '/')}`
+  const fullUrl = `${baseUrl}${path.posix.join(basePath, '/')}`
 
   return {
     baseUrl,
@@ -34,14 +45,18 @@ exports.resolvePath = function (origin, toPath, options = {}) {
 
   if (typeof toPath !== 'string') return toPath
   if (typeof origin !== 'string') return toPath
-  if (path.extname(toPath).length <= 1) return toPath
   if (isUrl(toPath)) return toPath
-  if (mime.lookup(toPath) === 'application/x-msdownload') return toPath
-  if (!mime.lookup(toPath)) return toPath
+  if (!isResolvablePath(toPath)) return toPath
+
+  const mimeType = mime.lookup(toPath)
+
+  if (!mimeType) return toPath
+  if (mimeType === 'application/x-msdownload') return toPath
 
   const url = isUrl(origin) ? exports.parseUrl(origin) : null
   const contextPath = url && resolveAbsolute === true ? url.baseUrl : context
   const fromPath = url ? url.fullUrl : origin
+  const resolver = url ? path.posix : path
 
   if (path.isAbsolute(toPath) && !resolveAbsolute) {
     return toPath
@@ -50,12 +65,12 @@ exports.resolvePath = function (origin, toPath, options = {}) {
   if (isRelative(toPath)) {
     if (!fromPath) return toPath
     const { rootPath, basePath } = parsePath(fromPath)
-    return rootPath + path.resolve(basePath, toPath)
+    return rootPath + resolver.resolve(basePath, toPath)
   }
 
   if (typeof contextPath === 'string') {
     const { rootPath, basePath } = parsePath(contextPath)
-    return rootPath + path.join(basePath, toPath)
+    return rootPath + resolver.join(basePath, toPath)
   }
 
   return toPath

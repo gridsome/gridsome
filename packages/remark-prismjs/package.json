@@ -1,7 +1,7 @@
 {
-  "version": "0.0.5",
+  "version": "0.2.0",
   "name": "@gridsome/remark-prismjs",
-  "description": "Prism for Gridsome",
+  "description": "Syntax highlighter for markdown code blocks",
   "homepage": "https://github.com/gridsome/gridsome/tree/master/packages/remark-prismjs#readme",
   "repository": "https://github.com/gridsome/gridsome/tree/master/packages/remark-prismjs",
   "main": "index.js",
@@ -13,7 +13,10 @@
   ],
   "dependencies": {
     "escape-html": "^1.0.3",
+    "hast-util-to-html": "^6.0.2",
+    "hastscript": "^5.1.0",
     "prismjs": "^1.15.0",
+    "unist-builder": "^1.0.4",
     "unist-util-visit": "^1.4.0"
   },
   "publishConfig": {

@@ -32,11 +32,13 @@ class RemarkTransformer {
     return ['text/markdown', 'text/x-markdown']
   }
 
-  constructor (options, { localOptions, resolveNodeFilePath, assets, queue }) {
+  constructor (options, context) {
+    const { localOptions, resolveNodeFilePath } = context
+
     this.options = defaultsDeep(localOptions, options)
     this.processor = this.createProcessor(localOptions)
     this.resolveNodeFilePath = resolveNodeFilePath
-    this.assets = assets || queue
+    this.assets = context.assets || context.queue
   }
 
   parse (source) {
@@ -119,11 +121,13 @@ class RemarkTransformer {
   }
 
   createProcessor (options = {}) {
-    return unified()
-      .data('transformer', this)
+    const processor = unified().data('transformer', this)
+    const plugins = createPlugins(this.options, options)
+
+    return processor
       .use(remarkParse)
-      .use(createPlugins(this.options, options))
-      .use(remarkHtml)
+      .use(plugins)
+      .use(options.stringifier || remarkHtml)
   }
 
   _nodeToAST (node) {

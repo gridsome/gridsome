@@ -1,48 +1,101 @@
-const { uniqBy } = require('lodash')
+const path = require('path')
+const slash = require('slash')
+const { slugify } = require('../../utils')
+const { pathToFilePath } = require('../../pages/utils')
 const { NOT_FOUND_NAME } = require('../../utils/constants')
 
-function genRoutes (app, routeMeta = {}) {
-  let res = ''
-
-  const pages = uniqBy(app.pages.data(), page => page.route)
-  const notFound = app.pages.findPage({ name: NOT_FOUND_NAME })
-
-  // use the /404 page as fallback route
-  pages.push({
-    ...notFound,
-    dataInfo: routeMeta[notFound.route],
-    name: '*',
-    route: '*'
+function genRoutes(app) {
+  const createRouteItem = (route, name = route.name, path = route.path) => ({
+    name,
+    component: route.component,
+    chunkName: genChunkName(app.context, route),
+    meta: route.internal.meta,
+    type: route.type,
+    path
   })
 
-  res += `export default [${pages.map(page => {
-    const component = JSON.stringify(page.component)
-    const chunkName = JSON.stringify(page.chunkName)
-    const dataInfo = page.dataInfo || routeMeta[page.route]
-    const props = []
-    const metas = []
+  const redirects = app.config.redirects.filter(rule => rule.status === 301)
+  const fallback = app.pages._routes.findOne({ name: NOT_FOUND_NAME })
+  const items = []
 
-    props.push(`    path: ${JSON.stringify(page.route)}`)
-    props.push(`    component: () => import(/* webpackChunkName: ${chunkName} */ ${component})`)
+  for (const redirect of redirects) {
+    items.push(redirect)
+  }
 
-    if (typeof dataInfo === 'string') {
-      metas.push(`data: () => import(/* webpackChunkName: ${chunkName} */ ${JSON.stringify(dataInfo)})`)
-    } else if (Array.isArray(dataInfo)) {
-      metas.push(`data: ${JSON.stringify(dataInfo)}`)
-    } else if (process.env.GRIDSOME_MODE !== 'static' && (page.query.document || page.context)) {
-      metas.push(`data: true`)
+  for (const route of app.pages.routes()) {
+    items.push(createRouteItem(route))
+  }
+
+  // use the /404 page as fallback route
+  items.push(createRouteItem(fallback, '*', '*'))
+
+  const routes = items.map(item => {
+    if (item.from && item.to) {
+      return genRedirect(item)
     }
 
-    if (metas.length) props.push(`    meta: { ${metas.join(', ')} }`)
+    return genRoute(item)
+  })
 
-    if (page.name) {
-      props.unshift(`    name: ${JSON.stringify(page.name)}`)
+  return `export default [${routes.join(',')}\n]\n\n`
+}
+
+function genRedirect (rule) {
+  const props = []
+
+  props.push(`    path: ${JSON.stringify(rule.from)}`)
+  props.push(`    redirect: ${JSON.stringify(rule.to)}`)
+
+  return `\n  {\n${props.join(',\n')}\n  }`
+}
+
+function genRoute (item) {
+  const component = JSON.stringify(item.component)
+  const chunkName = JSON.stringify(item.chunkName)
+
+  const props = []
+  const metas = []
+
+  props.push(`    path: ${JSON.stringify(item.path)}`)
+  props.push(`    component: () => import(/* webpackChunkName: ${chunkName} */ ${component})`)
+
+  if (item.type === 'dynamic') {
+    const dataPath = pathToFilePath(item.path, 'json')
+    metas.push(`dataPath: ${JSON.stringify(slash(dataPath))}`)
+    metas.push(`dynamic: true`)
+  }
+
+  if (item.meta) {
+    for (const key in item.meta) {
+      const value = item.meta[key]
+
+      if (key[0] === '$') {
+        metas.push(`${key}: ${value}`)
+      } else {
+        metas.push(`${key}: ${JSON.stringify(value)}`)
+      }
     }
+  }
 
-    return `\n  {\n${props.join(',\n')}\n  }`
-  }).join(',')}\n]\n\n`
+  if (item.name) {
+    props.unshift(`    name: ${JSON.stringify(item.name)}`)
+  }
 
-  return res
+  if (metas.length) {
+    props.push(`    meta: {\n      ${metas.join(',\n      ')}\n    }`)
+  }
+
+  return `\n  {\n${props.join(',\n')}\n  }`
+}
+
+function genChunkName (context, route) {
+  const chunkName = path.relative(context, route.component)
+    .split('/')
+    .filter(s => s !== '..')
+    .map(s => slugify(s))
+    .join('--')
+
+  return `page--${chunkName}`
 }
 
 module.exports = genRoutes

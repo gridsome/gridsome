@@ -1,5 +1,5 @@
 {
-  "version": "0.2.2",
+  "version": "0.5.1",
   "name": "@gridsome/source-contentful",
   "description": "Contentful source for Gridsome",
   "homepage": "https://github.com/gridsome/gridsome/tree/master/packages/source-contentful#readme",
@@ -12,7 +12,12 @@
     "contentful"
   ],
   "dependencies": {
+    "@contentful/rich-text-html-renderer": "^13.1.0",
+    "camelcase": "^5.3.1",
     "contentful": "^6.1.1"
+  },
+  "peerDependencies": {
+    "gridsome": ">= 0.6.0"
   },
   "publishConfig": {
     "access": "public"
