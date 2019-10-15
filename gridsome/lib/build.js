@@ -19,7 +19,7 @@ module.exports = async (context, args) => {
 
   await app.plugins.run('beforeBuild', { context, config })
 
-  await fs.emptyDir(config.outDir)
+  await fs.emptyDir(config.outputDir)
 
   const queue = createRenderQueue(app)
   const redirects = app.hooks.redirects.call([], queue)
@@ -32,7 +32,7 @@ module.exports = async (context, args) => {
 
   // copy static files
   if (fs.existsSync(config.staticDir)) {
-    await fs.copy(config.staticDir, config.outDir, {
+    await fs.copy(config.staticDir, config.outputDir, {
       dereference: true
     })
   }
@@ -62,7 +62,7 @@ async function runWebpack (app) {
   const stats = await compileAssets(app)
 
   if (app.config.css.split !== true) {
-    await removeStylesJsChunk(stats, app.config.outDir)
+    await removeStylesJsChunk(stats, app.config.outputDir)
   }
 
   info(`Compile assets - ${compileTime(hirestime.S)}s`)
@@ -123,7 +123,7 @@ async function processImages (images, config) {
     await pMap(chunks, async queue => {
       await worker.process({
         queue,
-        outDir: config.outDir,
+        outputDir: config.outputDir,
         context: config.context,
         cacheDir: config.imageCacheDir,
         backgroundColor: config.images.backgroundColor

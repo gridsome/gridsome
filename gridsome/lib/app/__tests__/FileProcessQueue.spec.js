@@ -6,7 +6,7 @@ const pathPrefix = '/'
 
 const baseconfig = {
   imageExtensions: ['.png'],
-  outDir: context,
+  outputDir: context,
   pathPrefix,
   filesDir
 }

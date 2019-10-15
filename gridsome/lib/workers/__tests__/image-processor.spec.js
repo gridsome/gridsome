@@ -127,7 +127,7 @@ async function process (filenames, options = {}, withCache = false) {
   const config = {
     pathPrefix,
     imagesDir,
-    outDir: context,
+    outputDir: context,
     maxImageWidth: 1000,
     imageExtensions: ['.jpg', '.png', '.svg', '.gif', '.webp']
   }
@@ -142,7 +142,7 @@ async function process (filenames, options = {}, withCache = false) {
   await processImages({
     queue: processQueue.images.queue,
     cacheDir: withCache ? imageCacheDir : false,
-    outDir: context
+    outputDir: context
   })
 
   return Promise.all(assets.map(async ({ filePath, src, hash }) => {
