@@ -84,6 +84,6 @@ function isExternalLink (string) {
   return externalRE.test(string)
 }
 
-function isMailToLink (string) { return string.startsWith('mailto:') }
+const isMailToLink = string => string.startsWith('mailto:')
 
 function isTelLink (string) { return string.startsWith('tel:') }
