@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.7](https://github.com/gridsome/gridsome/tree/master/packages/vue-remark/compare/@gridsome/vue-remark@0.1.6...@gridsome/vue-remark@0.1.7) (2019-10-15)
+
+
+### Bug Fixes
+
+* **vue-remark:** don't use g-link for mailto links ([#740](https://github.com/gridsome/gridsome/tree/master/packages/vue-remark/issues/740)) ([99e577a](https://github.com/gridsome/gridsome/tree/master/packages/vue-remark/commit/99e577a))
+
+
+
+
+
 ## [0.1.6](https://github.com/gridsome/gridsome/tree/master/packages/vue-remark/compare/@gridsome/vue-remark@0.1.5...@gridsome/vue-remark@0.1.6) (2019-10-07)
 
 **Note:** Version bump only for package @gridsome/vue-remark
