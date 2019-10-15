@@ -81,13 +81,11 @@ module.exports = (context, options = {}) => {
   config.publicPath = config.pathPrefix ? `${config.pathPrefix}/` : '/'
   config.staticDir = resolve('static')
   
-   // TODO: remove outDir before 1.0
+  // TODO: remove outDir before 1.0
   config.outputDir = resolve(localConfig.outputDir || localConfig.outDir || 'dist')
-  if (localConfig.outDir) {
-    config.outDir = config.outputDir
-    deprecate.property(config, 'outDir', 'The outDir config is renamed to outputDir.')
-  }
-
+  config.outDir = config.outputDir
+  deprecate.property(config, 'outDir', 'The outDir config is renamed to outputDir.')
+  
   config.assetsDir = path.join(config.outputDir, assetsDir)
   config.imagesDir = path.join(config.assetsDir, 'static')
   config.filesDir = path.join(config.assetsDir, 'files')
