@@ -85,6 +85,7 @@ module.exports = (context, options = {}) => {
   config.outputDir = resolve(localConfig.outputDir || localConfig.outDir || 'dist')
   config.outDir = config.outputDir
   deprecate.property(config, 'outDir', 'The outDir config is renamed to outputDir.')
+  if (localConfig.outDir) deprecate(`The outDir config is renamed to outputDir.`, { customCaller: ['gridsome.config.js'] })
   
   config.assetsDir = path.join(config.outputDir, assetsDir)
   config.imagesDir = path.join(config.assetsDir, 'static')
