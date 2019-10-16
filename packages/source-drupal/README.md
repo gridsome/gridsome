@@ -245,3 +245,29 @@ Get the details of an individual `DrupalNodeArticle` using `<page-query>` in a G
 ```
 
 Any `relationships` containing a `meta` object in the JSON:API response will be merged as a sibling object alongside `node`. See `field_image` above as an example.
+
+Taxonomy terms get a little trickier but you can use `Fragments` (and `Inline Fragments`) to generate a query that 'joins' between your node resource and your tag resource:
+
+```
+  query Tag($path: String!) {
+    tag: drupalTaxonomyTermTags(path: $path) {
+      title
+      belongsTo {
+        edges {
+          node {
+            id
+            ... on DrupalNodeArticle {
+              title
+              path
+              date_path
+              body {
+                processed
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+```
+And everything within the `DrupalNodeArticle` can be treated the same as for a regular node query.
