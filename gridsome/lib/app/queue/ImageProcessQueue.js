@@ -214,43 +214,56 @@ class ImageProcessQueue {
 }
 
 function computeScaledImageSize (originalSize, options, maxImageWidth) {
+  const { width, height, fit = 'cover' } = options
+
+  const targetWidth = width || originalSize.width
+  const targetHeight = height || originalSize.height
+
+  if (width && height && ['cover', 'fill', 'contain'].includes(fit)) {
+    return {
+      imageWidth: targetWidth,
+      imageHeight: targetHeight
+    }
+  }
+
   // Special handling for fit inside and fit outside to prevent blurry images
   // and page reflow when the images are loaded lazily.
   // Calculates the scaled size of the image according to the equations found in
   // https://github.com/lovell/sharp/blob/master/src/pipeline.cc (see MIN and MAX)
-  if (options.fit === 'inside' || options.fit === 'outside') {
-
-    const targetWidth = options.width || originalSize.width
-    const targetHeight = options.height || originalSize.height
-
+  if (['inside', 'outside'].includes(fit)) {
     const xFactor = originalSize.width / targetWidth
     const yFactor = originalSize.height / targetHeight
 
     let imageWidth = targetWidth
     let imageHeight = targetHeight
 
-    if (options.fit === 'inside' && xFactor > yFactor
-      || options.fit === 'outside' && xFactor < yFactor) {
+    if (
+      (fit === 'inside' && xFactor > yFactor) ||
+      (fit === 'outside' && xFactor < yFactor)
+    ) {
       imageHeight = Math.round(originalSize.height / xFactor)
     } else {
-      imageWidth = Math.round(originalSize.width / yFactor )
+      imageWidth = Math.round(originalSize.width / yFactor)
     }
 
-    return {imageWidth, imageHeight}
+    return { imageWidth, imageHeight }
   }
 
-  // original code
   const imageWidth = Math.min(
-    parseInt(options.width || originalSize.width, 10),
+    parseInt(width || originalSize.width, 10),
     maxImageWidth,
     originalSize.width
   )
 
-  const imageHeight = options.height !== undefined
-    ? parseInt(options.height, 10)
+  let imageHeight = height !== undefined
+    ? parseInt(height, 10)
     : Math.ceil(originalSize.height * (imageWidth / originalSize.width))
 
-  return {imageWidth, imageHeight}
+  if (height && height > originalSize.height) {
+    imageHeight = originalSize.height
+  }
+
+  return { imageWidth, imageHeight }
 }
 
 ImageProcessQueue.uid = 0
