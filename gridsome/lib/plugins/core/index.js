@@ -26,8 +26,8 @@ function corePlugin (api, config) {
   })
 
   api.afterBuild(({ config }) => {
-    const notFoundPath = path.join(config.outDir, '404', 'index.html')
-    const notFoundDest = path.join(config.outDir, '404.html')
+    const notFoundPath = path.join(config.outputDir, '404', 'index.html')
+    const notFoundDest = path.join(config.outputDir, '404.html')
 
     if (fs.existsSync(notFoundPath)) {
       fs.copySync(notFoundPath, notFoundDest)

@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.4.3](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/compare/@gridsome/source-wordpress@0.4.2...@gridsome/source-wordpress@0.4.3) (2019-10-15)
+
+
+### Bug Fixes
+
+* **wordpress:** add references as array fields ([#745](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/issues/745)) ([6058ff1](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/commit/6058ff1))
+
+
+
+
+
 ## [0.4.2](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/compare/@gridsome/source-wordpress@0.4.1...@gridsome/source-wordpress@0.4.2) (2019-10-01)
 
 

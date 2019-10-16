@@ -3,11 +3,11 @@ const slash = require('slash')
 
 class RedirectsPlugin {
   constructor ({ _app: { hooks, config } }) {
-    const { outDir, redirects = [] } = config
+    const { outputDir, redirects = [] } = config
 
     hooks.redirects.tap('RedirectsPlugin', (res, renderQueue) => {
       for (const entry of renderQueue) {
-        const relative = path.relative(outDir, entry.htmlOutput)
+        const relative = path.relative(outputDir, entry.htmlOutput)
         const dirname = slash(path.dirname(relative))
         const url = dirname === '.' ? '/' : `/${dirname}`
 

@@ -267,7 +267,8 @@ function processTypes (schemaComposer, extensions) {
   const seen = new Set()
 
   for (const typeComposer of schemaComposer.values()) {
-    if (seen.has(typeComposer.getTypeName())) continue
+    if (typeof typeComposer.getTypeName !== 'function') continue
+    else if (seen.has(typeComposer.getTypeName())) continue
     else seen.add(typeComposer.getTypeName())
 
     switch (typeComposer.constructor) {

@@ -42,7 +42,7 @@ class RemarkTransformer {
   }
 
   parse (source) {
-    const { data, content, excerpt } = parse(source)
+    const { data, content, excerpt } = parse(source, this.options.grayMatter || {})
 
     // if no title was found by gray-matter,
     // try to find the first one in the content

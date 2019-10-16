@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.6.2](https://github.com/gridsome/gridsome/tree/master/packages/source-filesystem/compare/@gridsome/source-filesystem@0.6.1...@gridsome/source-filesystem@0.6.2) (2019-10-15)
+
+
+### Bug Fixes
+
+* **filesystem:** don’t slugify path prefix ([#739](https://github.com/gridsome/gridsome/tree/master/packages/source-filesystem/issues/739)) ([79a72c7](https://github.com/gridsome/gridsome/tree/master/packages/source-filesystem/commit/79a72c7))
+* **filesystem:** update auto ref nodes in dev mode ([1b3db5b](https://github.com/gridsome/gridsome/tree/master/packages/source-filesystem/commit/1b3db5b))
+
+
+
+
+
 ## [0.6.1](https://github.com/gridsome/gridsome/tree/master/packages/source-filesystem/compare/@gridsome/source-filesystem@0.6.0...@gridsome/source-filesystem@0.6.1) (2019-10-07)
 
 

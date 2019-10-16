@@ -36,8 +36,8 @@ class FileProcessQueue {
       throw new Error(`${filePath} was not found. `)
     }
 
-    const { outDir, pathPrefix } = this.config
-    const filesDir = path.relative(outDir, this.config.filesDir)
+    const { outputDir, pathPrefix } = this.config
+    const filesDir = path.relative(outputDir, this.config.filesDir)
     const relPath = path.relative(this.context, filePath)
 
     let filename = ''

@@ -34,10 +34,10 @@ class Codegen {
   }
 
   async generate (filename = null, ...args) {
-    const outDir = this.app.config.tmpDir
+    const outputDir = this.app.config.tmpDir
 
     const outputFile = async (filename, ...args) => {
-      const filepath = path.join(outDir, filename)
+      const filepath = path.join(outputDir, filename)
       const content = await this.files[filename](this.app, ...args)
 
       if (await fs.exists(filepath)) {
@@ -50,7 +50,7 @@ class Codegen {
     if (filename) {
       await outputFile(filename, ...args)
     } else {
-      await fs.remove(outDir)
+      await fs.remove(outputDir)
 
       for (const filename in this.files) {
         await outputFile(filename)

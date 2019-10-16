@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.7.8](https://github.com/gridsome/gridsome/compare/gridsome@0.7.7...gridsome@0.7.8) (2019-10-15)
+
+
+### Bug Fixes
+
+* **graphql:** apply extensions once per usage ([91f346e](https://github.com/gridsome/gridsome/commit/91f346e))
+* **graphql:** filter collection by reference id ([#745](https://github.com/gridsome/gridsome/issues/745)) ([cbb009a](https://github.com/gridsome/gridsome/commit/cbb009a))
+* **graphql:** keep extensions for third party fields ([b0e3cfb](https://github.com/gridsome/gridsome/commit/b0e3cfb))
+* **graphql:** prevent overriding built-in directives ([878e947](https://github.com/gridsome/gridsome/commit/878e947))
+* **store:** ensure reference node id’s are strings ([98a3edf](https://github.com/gridsome/gridsome/commit/98a3edf))
+* **store:** require unique paths for templates only ([91225f1](https://github.com/gridsome/gridsome/commit/91225f1))
+
+
+
+
+
 ## [0.7.7](https://github.com/gridsome/gridsome/compare/gridsome@0.7.6...gridsome@0.7.7) (2019-10-01)
 
 
