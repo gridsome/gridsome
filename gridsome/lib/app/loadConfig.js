@@ -91,6 +91,7 @@ module.exports = (context, options = {}) => {
   config.imageCacheDir = resolve('.cache', assetsDir, 'static')
   config.maxImageWidth = localConfig.maxImageWidth || 2560
   config.imageExtensions = SUPPORTED_IMAGE_TYPES
+  config.imageBlurDefault = localConfig.imageBlurDefault || 40
   config.pagesDir = resolve(localConfig._pagesDir || './src/pages')
   config.templatesDir = resolve(localConfig._templatesDir || './src/templates')
   config.templates = normalizeTemplates(context, config, localConfig)
