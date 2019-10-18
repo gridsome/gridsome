@@ -5,7 +5,7 @@ const { error } = require('../utils/log')
 
 const MAX_STATE_SIZE = 25000
 
-module.exports = function createRenderFn({
+module.exports = function createRenderFn ({
   htmlTemplate,
   clientManifestPath,
   serverBundlePath
@@ -26,7 +26,7 @@ module.exports = function createRenderFn({
       state: createState(state)
     }
 
-    let app = '';
+    let app = ''
 
     try {
       app = await renderer.renderToString(context)
@@ -64,36 +64,36 @@ module.exports = function createRenderFn({
       vueMetaScripts +
       noscript
 
-    const renderedState =
-      state && stateSize <= MAX_STATE_SIZE ? context.renderState() : '';
+    const renderedState = state && stateSize <= MAX_STATE_SIZE
+      ? context.renderState()
+      : ''
 
-    const scripts =
-      '' +
+    const scripts = '' +
       renderedState +
       context.renderScripts() +
       inject.script.text({ body: true })
 
-    return renderHTML({
-      htmlAttrs: `data-html-server-rendered="true" ${htmlAttrs}`,
-      bodyAttrs,
-      head,
-      title: pageTitle,
-      base: metaBase,
-      hash: gridsomeHash,
-      vueMetaTags,
-      vueMetaLinks,
-      resourceHints,
-      styles,
-      vueMetaStyles,
-      vueMetaScripts,
-      noscript,
-      app,
-      scripts
-    })
-  };
+      return renderHTML({
+        htmlAttrs: `data-html-server-rendered="true" ${htmlAttrs}`,
+        bodyAttrs,
+        head,
+        title: pageTitle,
+        base: metaBase,
+        hash: gridsomeHash,
+        vueMetaTags,
+        vueMetaLinks,
+        resourceHints,
+        styles,
+        vueMetaStyles,
+        vueMetaScripts,
+        noscript,
+        app,
+        scripts
+      })
+  }
 }
 
-function createState(state = {}) {
+function createState (state = {}) {
   return {
     data: state.data || null,
     context: state.context || {}
