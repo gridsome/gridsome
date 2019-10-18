@@ -33,7 +33,8 @@ const createOptionsQuery = attrs => attrs
   .join('&')
 
 function genRequireContext (node, attr, defaultExtensions = []) {
-  const ext = (getAttrValue(node, 'extensions') || '').split(',')
+  const customExtensions = getAttrValue(node, 'extensions') || ''
+  const ext = customExtensions.split(',').filter(Boolean)
   const dir = getAttrValue(node, 'directory')
   const value = attr.value
   let result = attr.value
