@@ -249,8 +249,8 @@ Any `relationships` containing a `meta` object in the JSON:API response will be 
 Taxonomy terms get a little trickier but you can use `Fragments` (and `Inline Fragments`) to generate a query that 'joins' between your node resource and your tag resource:
 
 ```
-  query Tag($path: String!) {
-    tag: drupalTaxonomyTermTags(path: $path) {
+  query Tag($id: String!) {
+    tag: drupalTaxonomyTermTags(id: $id) {
       title
       belongsTo {
         edges {
