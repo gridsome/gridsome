@@ -162,9 +162,9 @@ class WordPressSource {
     for (const endpoint of this.customEndpoints) {
       const makeCollection = actions.addCollection || actions.addContentType
       const cepCollection = makeCollection({
-        typeName: this.createTypeName(camelCase(endpoint.name))
+        typeName: this.createTypeName(endpoint.typeName)
       })
-      const { data } = await this.fetch(`${trimEnd(endpoint.apiRoot, '/')}/${trimEnd(endpoint.apiBase, '/')}`, {}, {})
+      const { data } = await this.fetch(endpoint.route, {}, {})
       for (const item of data) {
         cepCollection.addNode({
           ...item,
@@ -246,14 +246,11 @@ class WordPressSource {
     if (!this.options.customEndpoints) return []
     if (!Array.isArray(this.options.customEndpoints)) throw Error('customEndpoints must be an array')
     this.options.customEndpoints.forEach(endpoint => {
-      if (!endpoint.name) {
+      if (!endpoint.typeName) {
         throw Error('Please provide name option for all customEndpoints\n')
       }
-      if (!endpoint.apiRoot) {
-        throw Error(`No apiRoot option in endpoint: ${endpoint.name}\n Ex: 'apiName/versionNumber'`)
-      }
-      if (!endpoint.apiBase) {
-        throw Error(`No apiBase option in endpoint: ${endpoint.name}\n Ex: 'menu'`)
+      if (!endpoint.route) {
+        throw Error(`No route option in endpoint: ${endpoint.typeName}\n Ex: 'apiName/versionNumber/endpointObject'`)
       }
     })
     return this.options.customEndpoints ? this.options.customEndpoints : []
