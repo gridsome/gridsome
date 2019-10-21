@@ -86,8 +86,10 @@ function createObjectType (schemaComposer, value, fieldName, prefix) {
 }
 
 const {
+  createReferenceOneResolver,
   createReferenceOneUnionResolver,
-  createReferenceManyUnionResolver
+  createReferenceManyUnionResolver,
+  createReferenceManyAdvancedResolver
 } = require('./nodes/resolvers')
 
 function createRefType (schemaComposer, ref, fieldName, fieldTypeName) {
@@ -112,9 +114,27 @@ function createRefType (schemaComposer, ref, fieldName, fieldTypeName) {
   }
 
   const typeComposer = schemaComposer.get(typeNames[0])
-  const resolverName = ref.isList ? 'referenceManyAdvanced' : 'referenceOne'
+  const extensions = typeComposer.getExtensions()
+  const typeName = typeComposer.getTypeName()
 
-  return typeComposer.getResolver(resolverName)
+  if (ref.isList) {
+    return {
+      type: [typeName],
+      args: {
+        sortBy: { type: 'String' },
+        order: { type: 'SortOrder', defaultValue: extensions.defaultSortOrder },
+        skip: { type: 'Int', defaultValue: 0 },
+        sort: { type: '[SortArgument]' },
+        limit: { type: 'Int' }
+      },
+      resolve: createReferenceManyAdvancedResolver(typeComposer)
+    }
+  }
+
+  return {
+    type: typeName,
+    resolve: createReferenceOneResolver(typeComposer)
+  }
 }
 
 module.exports = {

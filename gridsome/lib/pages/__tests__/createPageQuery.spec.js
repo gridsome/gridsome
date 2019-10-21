@@ -149,7 +149,7 @@ test('parse @paginate directive from belongsTo field with id', () => {
 
 test('parse @paginate directive from belongsTo field with path and alias', () => {
   const parsed = parseQuery(app.schema.getSchema(), `query {
-    post: testPost(path: "/2019/03/28/hello-world") {
+    post: testPost(path: { eq: "/2019/03/28/hello-world" }) {
       belongsTo(perPage: 5) @paginate {
         edges {
           node {
@@ -164,7 +164,7 @@ test('parse @paginate directive from belongsTo field with path and alias', () =>
 
   expect(query.paginate.typeName).toEqual('TestPost')
   expect(query.paginate.fieldName).toEqual('testPost')
-  expect(query.paginate.belongsToArgs).toMatchObject({ path: '/2019/03/28/hello-world' })
+  expect(query.paginate.belongsToArgs).toMatchObject({ path: { eq: '/2019/03/28/hello-world' } })
   expect(query.paginate.args.perPage).toEqual(5)
 })
 

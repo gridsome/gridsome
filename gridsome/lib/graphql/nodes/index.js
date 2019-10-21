@@ -28,14 +28,20 @@ module.exports = function createNodesSchema (schemaComposer, store) {
   })
 
   createTypeComposers(schemaComposer, store)
+
+  for (const typeName of typeNames) {
+    const collection = store.getCollection(typeName)
+    const typeComposer = schemaComposer.get(typeName)
+    createFields(schemaComposer, typeComposer, collection)
+    createFilterInput(schemaComposer, typeComposer)
+  }
+
   createResolvers(schemaComposer, store)
 
   for (const typeName of typeNames) {
     const collection = store.getCollection(typeName)
     const typeComposer = schemaComposer.get(typeName)
 
-    createFields(schemaComposer, typeComposer, collection)
-    createFilterInput(schemaComposer, typeComposer)
     createReferenceFields(schemaComposer, typeComposer, collection)
     createThirdPartyFields(typeComposer, collection)
 
@@ -79,6 +85,7 @@ function createTypeComposers (schemaComposer, store) {
       }
     }
 
+    const collection = store.collections[typeName]
     const typeComposer = schemaComposer.getOrCreateOTC(typeName)
     const connectionTypeName = `${typeName}Connection`
     const edgeTypeName = `${typeName}Edge`
@@ -104,6 +111,8 @@ function createTypeComposers (schemaComposer, store) {
     })
 
     typeComposer.addInterface('Node')
+    typeComposer.setExtension('defaultSortBy', collection._defaultSortBy)
+    typeComposer.setExtension('defaultSortOrder', collection._defaultSortOrder)
     typeComposer.setIsTypeOf(node =>
       node.internal && node.internal.typeName === typeName
     )
@@ -195,6 +204,7 @@ function createThirdPartyFields (typeComposer, collection) {
 }
 
 const {
+  wrapResolver,
   createFindOneResolver,
   createFindManyPaginatedResolver,
   createReferenceOneResolver,
@@ -213,6 +223,7 @@ function createResolvers (schemaComposer, store) {
 
 function createTypeResolvers (typeComposer, collection) {
   const typeName = typeComposer.getTypeName()
+  const inputTypeComposer = typeComposer.getInputTypeComposer()
 
   const { _defaultSortBy, _defaultSortOrder } = collection
 
@@ -220,16 +231,10 @@ function createTypeResolvers (typeComposer, collection) {
     name: 'findOne',
     type: typeName,
     args: {
-      id: 'ID',
-      path: 'String',
-      nullable: {
-        type: 'Boolean',
-        defaultValue: false,
-        description: 'Will return an error if not nullable.',
-        deprecationReason: 'Will always return null if not found.'
-      }
+      ...inputTypeComposer.getFields(),
+      id: 'ID'
     },
-    resolve: createFindOneResolver(typeComposer)
+    resolve: wrapResolver(createFindOneResolver(typeComposer))
   })
 
   typeComposer.addResolver({
@@ -248,19 +253,19 @@ function createTypeResolvers (typeComposer, collection) {
         description: `Filter for ${typeName} nodes.`
       }
     },
-    resolve: createFindManyPaginatedResolver(typeComposer)
+    resolve: wrapResolver(createFindManyPaginatedResolver(typeComposer))
   })
 
   typeComposer.addResolver({
     name: 'referenceOne',
     type: typeName,
-    resolve: createReferenceOneResolver(typeComposer)
+    resolve: wrapResolver(createReferenceOneResolver(typeComposer))
   })
 
   typeComposer.addResolver({
     name: 'referenceMany',
     type: [typeName],
-    resolve: createReferenceManyResolver(typeComposer)
+    resolve: wrapResolver(createReferenceManyResolver(typeComposer))
   })
 
   typeComposer.addResolver({
@@ -273,7 +278,7 @@ function createTypeResolvers (typeComposer, collection) {
       sort: { type: '[SortArgument]' },
       limit: { type: 'Int' }
     },
-    resolve: createReferenceManyAdvancedResolver(typeComposer)
+    resolve: wrapResolver(createReferenceManyAdvancedResolver(typeComposer))
   })
 }
 

@@ -1,6 +1,6 @@
 const { isRefField } = require('../../store/utils')
 const { toFilterArgs } = require('../filters/query')
-const { trimEnd } = require('lodash')
+const { omit, trimEnd } = require('lodash')
 
 const {
   applyChainArgs,
@@ -8,30 +8,38 @@ const {
   createPagedNodeEdges
 } = require('./utils')
 
+exports.wrapResolver = resolver => {
+  return ({ source, args, context, info }) => {
+    return resolver(source, args, context, info)
+  }
+}
+
 exports.createFindOneResolver = function (typeComposer) {
   const typeName = typeComposer.getTypeName()
+  const inputTypeComposer = typeComposer.getInputTypeComposer()
 
-  return function findOneResolver ({ args, context }) {
+  return function findOneResolver (source, args, context) {
     const { collection } = context.store.getCollection(typeName)
-    let node = null
 
-    if (args.id) {
-      node = collection.by('id', args.id)
-    } else if (args.path) {
-      // must use collection.findOne() here because
-      // collection.by() doesn't update after changes
-      const re = new RegExp(`^${trimEnd(args.path, '/')}/?$`)
-      node = collection.findOne({ path: { $regex: re } })
+    if (args.id && Object.keys(args).length === 1) {
+      return collection.by('id', args.id)
     }
 
-    return node || null
+    const query = toFilterArgs(omit(args, ['id']), inputTypeComposer)
+
+    if (query.path) {
+      query.path.$regex = new RegExp(`^${trimEnd(query.path.$eq, '/')}/?$`)
+      delete query.path.$eq
+    }
+
+    return collection.findOne(query)
   }
 }
 
 exports.createFindManyPaginatedResolver = function (typeComposer) {
   const typeName = typeComposer.getTypeName()
 
-  return function findManyPaginatedResolver ({ args, context }) {
+  return function findManyPaginatedResolver (source, args, context) {
     const { collection } = context.store.getCollection(typeName)
     const sort = createSortOptions(args)
     const query = {}
@@ -54,7 +62,7 @@ exports.createFindManyPaginatedResolver = function (typeComposer) {
 exports.createReferenceOneResolver = function (typeComposer) {
   const typeName = typeComposer.getTypeName()
 
-  return function referenceOneResolver ({ source, args, context, info }) {
+  return function referenceOneResolver (source, args, context, info) {
     const collection = context.store.getCollection(typeName)
     const fieldValue = source[info.fieldName]
     const referenceValue = isRefField(fieldValue)
@@ -76,7 +84,7 @@ exports.createReferenceOneResolver = function (typeComposer) {
 exports.createReferenceManyResolver = function (typeComposer) {
   const typeName = typeComposer.getTypeName()
 
-  return function referenceManyResolver ({ source, args, context, info }) {
+  return function referenceManyResolver (source, args, context, info) {
     const collection = context.store.getCollection(typeName)
     const fieldValue = source[info.fieldName]
     let referenceValues = Array.isArray(fieldValue)
@@ -101,7 +109,7 @@ exports.createReferenceManyResolver = function (typeComposer) {
 exports.createReferenceManyAdvancedResolver = function (typeComposer) {
   const typeName = typeComposer.getTypeName()
 
-  return function referenceManyAdvancedResolver ({ source, args, context, info }) {
+  return function referenceManyAdvancedResolver (source, args, context, info) {
     const { collection } = context.store.getCollection(typeName)
     const fieldValue = source[info.fieldName]
     let referenceValues = Array.isArray(fieldValue)

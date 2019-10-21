@@ -6,7 +6,6 @@ const { log: logUtil } = require('./log')
 
 const warned = new Map()
 const warnings = new Set()
-const noop = function() {}
 
 const callSiteLocation = callSite => {
   const line = callSite.getLineNumber()
@@ -128,11 +127,6 @@ exports.createDeprecator = namespace => {
     throw new TypeError('Namespace is required')
   }
 
-  if (process.env.GRIDSOME_TEST) {
-    noop.property = noop
-    return noop
-  }
-
   function deprecate(message, options = {}) {
     return log(namespace, message, options)
   }
@@ -140,6 +134,13 @@ exports.createDeprecator = namespace => {
   deprecate.property = wrapProperty(namespace)
 
   return deprecate
+}
+
+exports.warnings = warnings
+
+exports.clearWarnings = () => {
+  warnings.clear()
+  warned.clear()
 }
 
 exports.hasWarnings = () => {

@@ -4,8 +4,11 @@ const {
   visit,
   TypeInfo,
   typeFromAST,
+  astFromValue,
   getNullableType,
-  visitWithTypeInfo
+  visitWithTypeInfo,
+  GraphQLString,
+  GraphQLInputObjectType
 } = require('graphql')
 
 const getNamedAstType = node => {
@@ -14,6 +17,30 @@ const getNamedAstType = node => {
   }
 
   return node
+}
+
+const pathInputObj = new GraphQLInputObjectType({
+  name: 'TempPathInput',
+  fields: {
+    eq: { type: GraphQLString }
+  }
+})
+
+function fixPathInput(schema, type, node) {
+  const nodeInterfaceType = schema.getType('Node')
+  const fixedNodes = []
+
+  if (
+    node.value.kind !== 'ObjectValue' &&
+    schema.isPossibleType(nodeInterfaceType, type)
+  ) {
+    const value = astFromValue({ eq: 'true' }, pathInputObj)
+    value.fields[0].value = node.value
+    node.value = value
+    fixedNodes.push(node)
+  }
+
+  return fixedNodes
 }
 
 function fixIncorrectVariableUsage (schema, ast, variableDef) {
@@ -68,5 +95,6 @@ function fixIncorrectVariableUsage (schema, ast, variableDef) {
 }
 
 module.exports = {
+  fixPathInput,
   fixIncorrectVariableUsage
 }

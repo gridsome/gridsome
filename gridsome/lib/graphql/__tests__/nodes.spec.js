@@ -105,10 +105,10 @@ test('get node by path', async () => {
   posts.addNode({ id: '3', path: '/' })
 
   const { errors, data } = await createSchemaAndExecute(`{
-    testPost (path: "/test") { id }
-    testPost2: testPost (path: "/test/2") { id }
-    testPost3: testPost (path: "/test/") { id }
-    testPost4: testPost (path: "/") { id }
+    testPost (path: { eq: "/test" }) { id }
+    testPost2: testPost (path: { eq: "/test/2" }) { id }
+    testPost3: testPost (path: { eq: "/test/" }) { id }
+    testPost4: testPost (path: { eq: "/" }) { id }
   }`)
 
   expect(errors).toBeUndefined()
@@ -116,6 +116,43 @@ test('get node by path', async () => {
   expect(data.testPost2.id).toEqual('2')
   expect(data.testPost3.id).toEqual('1')
   expect(data.testPost4.id).toEqual('3')
+})
+
+
+test('get node by custom fields', async () => {
+  const posts = api.store.addCollection('TestPost')
+
+  posts.addNode({
+    id: '1',
+    slug: 'test',
+    path: '/test',
+    foo: {
+      bar: true
+    },
+    list: ['1', '2']
+  })
+
+  const { errors, data } = await createSchemaAndExecute(`{
+    testPost (id: "1") { id }
+    testPost2: testPost (slug: { eq: "test" }) { id }
+    testPost3: testPost (foo: { bar: { eq: true } }) { id }
+    testPost4: testPost (list: { contains: ["2"] }) { id }
+    testPost5: testPost (path: { eq: "/test" }) { id }
+
+    testPost6: testPost (slug: { eq: "fail" }) { id }
+    testPost7: testPost (foo: { bar: { eq: false } }) { id }
+    testPost8: testPost (list: { contains: ["3"] }) { id }
+  }`)
+
+  expect(errors).toBeUndefined()
+  expect(data.testPost.id).toEqual('1')
+  expect(data.testPost2.id).toEqual('1')
+  expect(data.testPost3.id).toEqual('1')
+  expect(data.testPost4.id).toEqual('1')
+  expect(data.testPost5.id).toEqual('1')
+  expect(data.testPost6).toEqual(null)
+  expect(data.testPost7).toEqual(null)
+  expect(data.testPost8).toEqual(null)
 })
 
 test('get node by id', async () => {

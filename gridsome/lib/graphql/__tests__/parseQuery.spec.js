@@ -2,6 +2,7 @@ const App = require('../../app/App')
 const { print } = require('graphql')
 const PluginAPI = require('../../app/PluginAPI')
 const parseQuery = require('../parseQuery')
+const { clearWarnings, warnings } = require('../../utils/deprecate')
 
 let app
 
@@ -130,7 +131,11 @@ describe('give useful error messages', () => {
 })
 
 // TODO: remove this in 0.8
-describe('transform incorrect variables', () => {
+describe('transform deprecated queries', () => {
+  beforeEach(() => {
+    clearWarnings()
+  })
+
   test('transform String to ID for collection fields', () => {
     const res = parseQuery(app.schema.getSchema(), `
       query ($id: String!) {
@@ -219,5 +224,38 @@ describe('transform incorrect variables', () => {
     `)
 
     expect(print(res.document)).toMatch('($id: [Int!]!)')
+  })
+
+  test('transform path input field to object', () => {
+    const res = parseQuery(app.schema.getSchema(), `
+      query {
+        customContentType(path: "/path")
+      }
+    `)
+
+    expect(warnings.size).toEqual(1)
+    expect(print(res.document)).toMatch('path: {eq: "/path"}')
+  })
+
+  test('transform path variable input field to object', () => {
+    const res = parseQuery(app.schema.getSchema(), `
+      query ($path: String) {
+        customContentType(path: $path)
+      }
+    `)
+
+    expect(warnings.size).toEqual(1)
+    expect(print(res.document)).toMatch('path: {eq: $path}')
+  })
+
+  test('don\'t transform path input for other types', () => {
+    const res = parseQuery(app.schema.getSchema(), `
+      query ($path: String) {
+        customField(path: $path)
+      }
+    `)
+
+    expect(warnings.size).toEqual(0)
+    expect(print(res.document)).toMatch('path: $path')
   })
 })

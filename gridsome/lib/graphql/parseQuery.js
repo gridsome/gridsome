@@ -1,5 +1,5 @@
 const { Source, findDeprecatedUsages, getLocation } = require('graphql')
-const { fixIncorrectVariableUsage } = require('./transforms')
+const { fixPathInput, fixIncorrectVariableUsage } = require('./transforms')
 const { deprecate } = require('../utils/deprecate')
 
 const {
@@ -61,6 +61,18 @@ module.exports = function parseQuery (schema, source, resourcePath) {
         }
 
         variableDefs.push(variableDef)
+      }
+    },
+    Argument (node) {
+      // TODO: remove this fix before 1.0
+      if (node.name.value === 'path') {
+        const type = typeInfo.getType()
+        fixPathInput(schema, type, node).forEach(() => {
+          const { line, column } = getLocation(src, node.loc.start)
+          deprecate(`The path argument should be an object.`, {
+            customCaller: [resourcePath, line, column]
+          })
+        })
       }
     },
     Field (node) {
