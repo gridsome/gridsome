@@ -7,6 +7,7 @@ import plugins from '~/.temp/plugins-client'
 import linkDirective from './directives/link'
 import imageDirective from './directives/image'
 import { stripPathPrefix } from './utils/helpers'
+import { isFunc, isNil } from './utils/lang'
 
 Vue.directive('g-link', linkDirective)
 Vue.directive('g-image', imageDirective)
@@ -19,7 +20,7 @@ const { app, router } = createApp()
 if (process.env.NODE_ENV === 'production') {
   router.beforeEach((to, from, next) => {
     const components = router.getMatchedComponents(to).map(
-      c => typeof c === 'function' ? c() : c
+      c => isFunc(c) && isNil(c.cid) ? c() : c
     )
 
     Promise.all(components)
