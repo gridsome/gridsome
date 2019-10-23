@@ -124,7 +124,12 @@ module.exports = (context, options = {}) => {
 
   config.siteUrl = localConfig.siteUrl || ''
   config.siteName = localConfig.siteName || path.parse(context).name
-  config.titleTemplate = localConfig.titleTemplate || `%s - ${config.siteName}`
+  config.disableTitleTemplate = localConfig.disableTitleTemplate || false
+  if (!config.disableTitleTemplate) {
+    config.titleTemplate = localConfig.titleTemplate || `%s - ${config.siteName}`
+  } else {
+    config.titleTemplate = ''
+  }
   config.siteDescription = localConfig.siteDescription || ''
   config.metadata = localConfig.metadata || {}
 

@@ -59,6 +59,17 @@ test('load env variables by NODE_ENV', () => {
   expect(process.env.PROD_VARIABLE).toEqual('PROD_2')
 })
 
+test('set custom disableTitleTemplate', () => {
+  const config = loadConfig(context, {
+    localConfig: {
+      disableTitleTemplate: true
+    }
+  })
+
+  expect(config.disableTitleTemplate).toEqual(true)
+  expect(config.titleTemplate).toEqual('')
+})
+
 test('setup custom favicon and touchicon config', () => {
   const config = loadConfig(context, {
     localConfig: {
