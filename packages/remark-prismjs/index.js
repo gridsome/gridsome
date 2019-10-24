@@ -8,12 +8,12 @@ const toHTML = require('hast-util-to-html')
 // load all prismjs languages
 require('prismjs/components/index')()
 
-module.exports = (options = {}) => tree => {
+module.exports = (options = { transformInlineCode: true }) => tree => {
   visit(tree, 'code', (node, index, parent) => {
     parent.children.splice(index, 1, createCode(node))
   })
 
-  if (!options.skipInline) {
+  if (options.transformInlineCode) {
     visit(tree, 'inlineCode', (node, index, parent) => {
       parent.children.splice(index, 1, createInlineCode(node))
     })

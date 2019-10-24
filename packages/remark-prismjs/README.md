@@ -60,7 +60,7 @@ module.exports = {
 }
 ```
 
-If you'd like to disable highlighting of inline code blocks, pass `skipInline: true` in the plugin options
+If you'd like to disable highlighting of inline code blocks, pass `transformInlineCode: false` in the plugin options
 
 ```js
 module.exports = {
@@ -74,7 +74,7 @@ module.exports = {
   transformers: {
     remark: {
       plugins: [
-        ['@gridsome/remark-prismjs', { skipInline: true }]
+        ['@gridsome/remark-prismjs', { transformInlineCode: false }]
       ]
     }
   }
