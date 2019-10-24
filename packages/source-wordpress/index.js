@@ -247,7 +247,7 @@ class WordPressSource {
     if (!Array.isArray(this.options.customEndpoints)) throw Error('customEndpoints must be an array')
     this.options.customEndpoints.forEach(endpoint => {
       if (!endpoint.typeName) {
-        throw Error('Please provide name option for all customEndpoints\n')
+        throw Error('Please provide typeName option for all customEndpoints\n')
       }
       if (!endpoint.route) {
         throw Error(`No route option in endpoint: ${endpoint.typeName}\n Ex: 'apiName/versionNumber/endpointObject'`)
