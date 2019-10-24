@@ -149,6 +149,9 @@ module.exports = (context, options = {}) => {
 
   config.css = defaultsDeep(localConfig.css || {}, css)
 
+  config.prefetch = localConfig.prefetch || {}
+  config.preload = localConfig.preload || {}
+
   return Object.freeze(config)
 }
 
