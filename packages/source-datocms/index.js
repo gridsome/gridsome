@@ -107,6 +107,7 @@ class DatoCmsSource {
         slug: slugField && item[camelize(slugField.apiKey)],
         created: new Date(item.createdAt),
         updated: new Date(item.updatedAt),
+        position: item.position,
         ...item.itemType.fields.reduce((fields, field) => {
           const val = item.readAttribute(field)
 
