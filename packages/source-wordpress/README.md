@@ -54,7 +54,7 @@ add_filter( 'acf/format_value', function ( $value ) {
 
 ## Use Custom REST Endpoints
 
-To use REST endpoints from plugins or defined in your theme add a `customEndpoints` array to plugin options.
+To use REST endpoints from plugins or defined in your theme add a `customEndpoints` array to source-wordpress options.
 
 ```js
   use: '@gridsome/source-wordpress',
