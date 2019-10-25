@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.7.9](https://github.com/gridsome/gridsome/compare/gridsome@0.7.8...gridsome@0.7.9) (2019-10-25)
+
+
+### Bug Fixes
+
+* **app:** don’t resolve constructor components ([#552](https://github.com/gridsome/gridsome/issues/552)) ([a4e22d6](https://github.com/gridsome/gridsome/commit/a4e22d6))
+* **g-image:** always crop by given dimensions ([#759](https://github.com/gridsome/gridsome/issues/759)) ([97ca9db](https://github.com/gridsome/gridsome/commit/97ca9db))
+* **g-link:** don't use router-link for mailto and tel links ([#755](https://github.com/gridsome/gridsome/issues/755)) ([d1b5779](https://github.com/gridsome/gridsome/commit/d1b5779))
+
+
+
+
+
 ## [0.7.8](https://github.com/gridsome/gridsome/compare/gridsome@0.7.7...gridsome@0.7.8) (2019-10-15)
 
 

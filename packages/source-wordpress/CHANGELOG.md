@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.5.0](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/compare/@gridsome/source-wordpress@0.4.3...@gridsome/source-wordpress@0.5.0) (2019-10-25)
+
+
+### Features
+
+* **wordpress:** custom REST route support ([#706](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/issues/706)) ([23bd974](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/commit/23bd974))
+
+
+
+
+
 ## [0.4.3](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/compare/@gridsome/source-wordpress@0.4.2...@gridsome/source-wordpress@0.4.3) (2019-10-15)
 
 
