@@ -13,7 +13,8 @@ export default {
     position: { type: String, default: '' },
     background: { type: String, default: '' },
     blur: { type: String, default: '' },
-    immediate: { type: true, default: undefined }
+    immediate: { type: true, default: undefined },
+    skip_processing: { type: true, default: undefined }
   },
 
   render: (h, { data, props }) => {
@@ -25,65 +26,74 @@ export default {
     const hook = data.hook || {}
     const res = []
 
-    switch (typeof props.src) {
-      case 'string':
-        attrs.src = props.src
+    if (!props.skip_processing){
+      switch (typeof props.src) {
+        case 'string':
+          attrs.src = props.src
 
-        break
+          break
 
-      case 'object': {
-        const { src, srcset, sizes, size, dataUri } = props.src
-        const isLazy = !isImmediate && dataUri
+        case 'object': {
+          const { src, srcset, sizes, size, dataUri } = props.src
+          const isLazy = !isImmediate && dataUri
 
-        attrs.src = isLazy ? dataUri : src
-        attrs.width = size.width
+          attrs.src = isLazy ? dataUri : src
+          attrs.width = size.width
 
-        if (isLazy) attrs['data-src'] = src
-        if (srcset.length) attrs[`${isLazy ? 'data-' : ''}srcset`] = srcset.join(', ')
-        if (sizes) attrs[`${isLazy ? 'data-' : ''}sizes`] = sizes
+          if (isLazy) attrs['data-src'] = src
+          if (srcset.length) attrs[`${isLazy ? 'data-' : ''}srcset`] = srcset.join(', ')
+          if (sizes) attrs[`${isLazy ? 'data-' : ''}sizes`] = sizes
 
-        if (isLazy) {
-          directives.push({ name: 'g-image' })
+
+          if (isLazy) {
+            directives.push({ name: 'g-image' })
+          }
+
+          break
         }
-
-        break
       }
-    }
 
-    hook.update = (oldVnode, vnode) => {
-      const { attrs: oldAttrs = {}} = oldVnode.data
-      const { attrs = {}} = vnode.data
+      hook.update = (oldVnode, vnode) => {
+        const { attrs: oldAttrs = {}} = oldVnode.data
+        const { attrs = {}} = vnode.data
 
-      if (attrs['data-src'] && attrs.src !== oldAttrs.src) {
-        // clear srcset and sizes to show the dataUri image
-        vnode.elm.srcset = ''
-        vnode.elm.sizes = ''
+        if (attrs['data-src'] && attrs.src !== oldAttrs.src) {
+          // clear srcset and sizes to show the dataUri image
+          vnode.elm.srcset = ''
+          vnode.elm.sizes = ''
+        }
       }
-    }
 
-    res.push(h('img', {
-      ...data,
-      class: classNames,
-      directives,
-      props,
-      attrs,
-      hook
-    }))
+      res.push(h('img', {
+        ...data,
+        class: classNames,
+        directives,
+        props,
+        attrs,
+        hook
+      }))
 
-    if (attrs['data-src']) {
-      classNames.push('g-image--lazy')
-      classNames.push('g-image--loading')
-      noscriptClassNames.push('g-image--loaded')
+      if (attrs['data-src']) {
+        classNames.push('g-image--lazy')
+        classNames.push('g-image--loading')
+        noscriptClassNames.push('g-image--loaded')
 
-      // must render as innerHTML to make hydration work
+        // must render as innerHTML to make hydration work
 
-      res.push(h('noscript', {
-        domProps: {
-          innerHTML: `` +
-            `<img src="${props.src.src}" class="${stringifyClass(noscriptClassNames)}"` +
-            (attrs.width ? ` width="${attrs.width}"`: '') +
-            (attrs.alt ? ` alt="${attrs.alt}"` : '') +
-            `>`
+        res.push(h('noscript', {
+          domProps: {
+            innerHTML: `` +
+              `<img src="${props.src.src}" class="${stringifyClass(noscriptClassNames)}"` +
+              (attrs.width ? ` width="${attrs.width}"`: '') +
+              (attrs.alt ? ` alt="${attrs.alt}"` : '') +
+              `>`
+          }
+        }))
+      }
+    } else {
+      res.push(h('img', {
+        attrs: {
+          src: props.src.src.split("?")[0]
         }
       }))
     }
