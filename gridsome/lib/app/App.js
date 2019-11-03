@@ -7,6 +7,7 @@ const { version } = require('../../package.json')
 const { deprecate } = require('../utils/deprecate')
 
 const {
+  SyncHook,
   AsyncSeriesHook,
   SyncWaterfallHook
 } = require('tapable')
@@ -27,7 +28,8 @@ class App {
       beforeBootstrap: new AsyncSeriesHook([]),
       bootstrap: new AsyncSeriesHook(['app']),
       renderQueue: new SyncWaterfallHook(['renderQueue']),
-      redirects: new SyncWaterfallHook(['redirects', 'renderQueue'])
+      redirects: new SyncWaterfallHook(['redirects', 'renderQueue']),
+      server: new SyncHook(['server'])
     }
 
     if (this.config.permalinks.slugify) {
