@@ -99,6 +99,17 @@ function resolveValue (value, currentValue, options, path = []) {
         return currentValue
       }
 
+      if (currentValue) {
+        if (Array.isArray(currentValue.typeName)) {
+          if (!currentValue.typeName.includes(value.typeName)) {
+            currentValue.typeName.push(value.typeName)
+          }
+        } else if (currentValue.typeName !== value.typeName) {
+          // convert to union field if it has multiple typeNames
+          currentValue.typeName = [currentValue.typeName, value.typeName]
+        }
+      }
+
       const ref = currentValue || { typeName: value.typeName }
       ref.isList = ref.isList || Array.isArray(value.id)
 
