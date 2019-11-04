@@ -89,7 +89,9 @@ module.exports = (app, { isProd, isServer }) => {
         preserveWhitespace: false,
         modules: [
           require('./modules/html')(),
-          require('./modules/assets')()
+          require('./modules/assets')({
+            defaultImageExtensions: projectConfig.imageExtensions
+          })
         ]
       },
       cacheDirectory,

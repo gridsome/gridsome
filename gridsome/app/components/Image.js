@@ -13,7 +13,10 @@ export default {
     position: { type: String, default: '' },
     background: { type: String, default: '' },
     blur: { type: String, default: '' },
-    immediate: { type: true, default: undefined }
+    immediate: { type: true, default: undefined },
+    directory: { type: String, default: undefined },
+    extensions: { type: String, default: undefined },
+    deep: { type: true, default: undefined }
   },
 
   render: (h, { data, props }) => {
