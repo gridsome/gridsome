@@ -80,13 +80,17 @@ module.exports = (context, options = {}) => {
   config._pathPrefix = normalizePathPrefix(localConfig.pathPrefix)
   config.publicPath = config.pathPrefix ? `${config.pathPrefix}/` : '/'
   config.staticDir = resolve('static')
-  
+
   // TODO: remove outDir before 1.0
   config.outputDir = resolve(localConfig.outputDir || localConfig.outDir || 'dist')
   config.outDir = config.outputDir
   deprecate.property(config, 'outDir', 'The outDir config is renamed to outputDir.')
-  if (localConfig.outDir) deprecate(`The outDir config is renamed to outputDir.`, { customCaller: ['gridsome.config.js'] })
-  
+  if (localConfig.outDir) {
+    deprecate(`The outDir config is renamed to outputDir.`, {
+      customCaller: ['gridsome.config.js']
+    })
+  }
+
   config.assetsDir = path.join(config.outputDir, assetsDir)
   config.imagesDir = path.join(config.assetsDir, 'static')
   config.filesDir = path.join(config.assetsDir, 'files')
@@ -175,7 +179,7 @@ function resolveEnv (context) {
 
 function resolvePkg (context) {
   const pkgPath = path.resolve(context, 'package.json')
-  let pkg = { dependencies: {}}
+  let pkg = { dependencies: {}, devDependencies: {}}
 
   try {
     const content = fs.readFileSync(pkgPath, 'utf-8')
@@ -184,8 +188,13 @@ function resolvePkg (context) {
     // continue regardless of error
   }
 
+  const dependencies = Object.keys({
+    ...pkg.dependencies,
+    ...pkg.devDependencies
+  })
+
   if (
-    !Object.keys(pkg.dependencies).includes('gridsome') &&
+    !dependencies.includes('gridsome') &&
     !process.env.GRIDSOME_TEST
   ) {
     throw new Error('This is not a Gridsome project.')
