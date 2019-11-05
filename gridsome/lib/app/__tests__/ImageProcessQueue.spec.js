@@ -11,7 +11,10 @@ const baseconfig = {
   imagesDir,
   outputDir: context,
   imageExtensions: ['.jpg', '.png', '.webp'],
-  maxImageWidth: 1000
+  maxImageWidth: 3000,
+  images: {
+    minSizeDistance: 300
+  }
 }
 
 beforeEach(() => (ImageProcessQueue.uid = 0))
@@ -117,11 +120,23 @@ test('resize image by width and height attribute', async () => {
 
   const result = await queue.add(filePath, { width: 500, height: 500 })
 
-  expect(queue.images.queue).toHaveLength(2)
+  expect(queue.images.queue).toHaveLength(1)
   expect(result.src).toEqual('/assets/static/1000x600.95a5738.test.png')
   expect(result.sizes).toEqual('(max-width: 500px) 100vw, 500px')
-  expect(result.sets[0].src).toEqual('/assets/static/1000x600.59e52ae.test.png')
-  expect(result.sets[1].src).toEqual('/assets/static/1000x600.95a5738.test.png')
+  expect(result.sets[0].src).toEqual('/assets/static/1000x600.95a5738.test.png')
+})
+
+test('keep wanted width if wider than largest size', async () => {
+  const filePath = path.resolve(context, 'assets/2560x2560.png')
+  const queue = new AssetsQueue({ context, config: baseconfig })
+
+  const result = await queue.add(filePath, { width: 2000 })
+
+  expect(queue.images.queue).toHaveLength(3)
+  expect(result.sets).toHaveLength(3)
+  expect(result.sets[0].width).toEqual(480)
+  expect(result.sets[1].width).toEqual(1024)
+  expect(result.sets[2].width).toEqual(2000)
 })
 
 test('disable blur filter', async () => {
@@ -179,19 +194,21 @@ test('add custom attributes to markup', async () => {
 
 test('respect config.maxImageWidth', async () => {
   const filePath = path.resolve(context, 'assets/1000x600.png')
-  const config = { ...baseconfig, maxImageWidth: 600 }
+  const config = { ...baseconfig, maxImageWidth: 900 }
   const queue = new AssetsQueue({ context, config })
 
   const result = await queue.add(filePath)
 
   expect(queue.images.queue).toHaveLength(2)
-  expect(result.src).toEqual('/assets/static/1000x600.bd6740a.test.png')
+  expect(result.src).toEqual('/assets/static/1000x600.2671d65.test.png')
   expect(result.sets).toHaveLength(2)
   expect(result.srcset).toHaveLength(2)
   expect(result.sets[0].src).toEqual('/assets/static/1000x600.82a2fbd.test.png')
-  expect(result.sets[1].src).toEqual('/assets/static/1000x600.bd6740a.test.png')
+  expect(result.sets[0].width).toEqual(480)
+  expect(result.sets[1].src).toEqual('/assets/static/1000x600.2671d65.test.png')
+  expect(result.sets[1].width).toEqual(900)
   expect(result.srcset[0]).toEqual('/assets/static/1000x600.82a2fbd.test.png 480w')
-  expect(result.srcset[1]).toEqual('/assets/static/1000x600.bd6740a.test.png 600w')
+  expect(result.srcset[1]).toEqual('/assets/static/1000x600.2671d65.test.png 900w')
 })
 
 test('use all image sizes', async () => {

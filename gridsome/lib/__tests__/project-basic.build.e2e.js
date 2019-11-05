@@ -117,7 +117,7 @@ test('render g-image components', () => {
   expect($home('img.g-image-2 + noscript').html()).toMatch('alt="Test image"')
   expect($home('img.g-image-static').attr('src')).toEqual('/uploads/test.png')
   expect($home('img.g-image-static').attr('alt')).toEqual('Static image')
-  expect($home('img.g-image-immediate').attr('src')).toEqual('/assets/static/test.cbab2cf.test.png')
+  expect($home('img.g-image-immediate').attr('src')).toEqual('/assets/static/test.f64918e.test.png')
   expect($home('img.g-image-immediate').attr('alt')).toEqual('Immediate image')
   expect($home('img.g-image-external').attr('src')).toEqual('https://www.example.com/assets/image.png')
   expect($home('img.g-image-external').attr('alt')).toEqual('External image')

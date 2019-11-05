@@ -9,6 +9,7 @@ const imageSize = require('probe-image-size')
 const svgDataUri = require('mini-svg-data-uri')
 const { forwardSlash } = require('../../utils')
 const { warmupSharp } = require('../../utils/sharp')
+const { reject } = require('lodash')
 
 class ImageProcessQueue {
   constructor ({ context, config }) {
@@ -48,9 +49,9 @@ class ImageProcessQueue {
 
   async preProcess (filePath, options = {}) {
     const { imageExtensions, outputDir, pathPrefix, maxImageWidth } = this.config
+    const { minSizeDistance = 300 } = this.config.images || {}
     const imagesDir = path.relative(outputDir, this.config.imagesDir)
     const relPath = path.relative(this.context, filePath)
-    const customWidth = parseInt(options.width, 10) || null
     const customHeight = parseInt(options.height, 10) || null
     const { name, ext } = path.parse(filePath)
     const mimeType = mime.lookup(filePath)
@@ -73,15 +74,17 @@ class ImageProcessQueue {
     const { imageWidth, imageHeight } = computeScaledImageSize(originalSize, options, maxImageWidth)
 
     const allSizes = options.sizes || [480, 1024, 1920, 2560]
-    const imageSizes = allSizes.filter(size => size <= imageWidth)
+    let imageSizes = allSizes.filter(size => size <= imageWidth)
+    const maxWidth = Math.max(...imageSizes, 0)
 
-    if (
-      (imageSizes.length === 1 && imageSizes[0] <= imageWidth) ||
-      (imageSizes.length === 0)
-    ) {
-      if (imageWidth <= maxImageWidth) {
+    if (!options.sizes) {
+      if (imageWidth > maxWidth || imageSizes.length === 0) {
         imageSizes.push(imageWidth)
       }
+
+      imageSizes = reject(imageSizes, (width, i, arr) => {
+        return arr[i + 1] - width < minSizeDistance
+      })
     }
 
     // validate color string
