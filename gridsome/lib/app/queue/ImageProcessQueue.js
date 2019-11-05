@@ -291,17 +291,19 @@ function createOptionsQuery (arr) {
 }
 
 async function createDataUri (buffer, type, width, height, options = {}) {
-  const blur = options.blur !== undefined ? parseInt(options.blur, 10) : 40
+  const blur = options.blur !== undefined ? options.blur : 40
   const resizeOptions = {}
 
   if (options.fit) resizeOptions.fit = sharp.fit[options.fit]
   if (options.position) resizeOptions.position = sharp.position[options.position]
   if (options.background) resizeOptions.background = options.background
 
+  const blurredSvg = await createBlurSvg(buffer, type, width, height, blur, resizeOptions)
+
   return svgDataUri(
     `<svg fill="none" viewBox="0 0 ${width} ${height}" ` +
     `xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">` +
-    (blur > 0 ? await createBlurSvg(buffer, type, width, height, blur, resizeOptions) : '') +
+    blurredSvg +
     `</svg>`
   )
 }
@@ -313,14 +315,24 @@ async function createBlurSvg (buffer, mimeType, width, height, blur, resize = {}
   const blurBuffer = await warmSharp(buffer).resize(blurWidth, blurHeight, resize).toBuffer()
   const base64 = blurBuffer.toString('base64')
   const id = `__svg-blur-${ImageProcessQueue.uid++}`
+  let defs = ''
 
-  return '' +
-    '<defs>' +
-    `<filter id="${id}">` +
-    `<feGaussianBlur in="SourceGraphic" stdDeviation="${blur}"/>` +
-    `</filter>` +
-    '</defs>' +
-    `<image x="0" y="0" filter="url(#${id})" width="${width}" height="${height}" xlink:href="data:${mimeType};base64,${base64}" />`
+  if (blur > 0) {
+    defs = '' +
+      '<defs>' +
+      `<filter id="${id}">` +
+      `<feGaussianBlur in="SourceGraphic" stdDeviation="${blur}"/>` +
+      `</filter>` +
+      '</defs>'
+  }
+
+  const image = '' +
+    `<image x="0" y="0" ` +
+    (defs ? `filter="url(#${id})" ` : ' ') +
+    `width="${width}" height="${height}" ` +
+    `xlink:href="data:${mimeType};base64,${base64}" />`
+
+  return defs + image
 }
 
 // async function createTracedSvg (buffer, type, width, height) {
