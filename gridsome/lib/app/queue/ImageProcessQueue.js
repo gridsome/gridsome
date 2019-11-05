@@ -52,7 +52,6 @@ class ImageProcessQueue {
     const { minSizeDistance = 300 } = this.config.images || {}
     const imagesDir = path.relative(outputDir, this.config.imagesDir)
     const relPath = path.relative(this.context, filePath)
-    const customHeight = parseInt(options.height, 10) || null
     const { name, ext } = path.parse(filePath)
     const mimeType = mime.lookup(filePath)
 
@@ -73,11 +72,16 @@ class ImageProcessQueue {
 
     const { imageWidth, imageHeight } = computeScaledImageSize(originalSize, options, maxImageWidth)
 
-    const allSizes = options.sizes || [480, 1024, 1920, 2560]
-    let imageSizes = allSizes.filter(size => size <= imageWidth)
+    let imageWidths = options.imageWidths || [480, 1024, 1920, 2560]
+
+    if (typeof imageWidths === 'string') {
+      imageWidths = imageWidths.split(',')
+    }
+
+    let imageSizes = imageWidths.filter(size => size <= imageWidth)
     const maxWidth = Math.max(...imageSizes, 0)
 
-    if (!options.sizes) {
+    if (!options.imageWidths) {
       if (imageWidth > maxWidth || imageSizes.length === 0) {
         imageSizes.push(imageWidth)
       }
@@ -108,7 +112,7 @@ class ImageProcessQueue {
     const sets = imageSizes.map(width => {
       let height
 
-      if (customHeight) {
+      if (options.height) {
         height = Math.ceil(imageHeight * (width / imageWidth))
       }
 
@@ -224,8 +228,8 @@ class ImageProcessQueue {
 function computeScaledImageSize (originalSize, options, maxImageWidth) {
   const { width, height, fit = 'cover' } = options
 
-  const targetWidth = parseInt(width, 10) || originalSize.width
-  const targetHeight = parseInt(height, 10) || originalSize.height
+  const targetWidth = width || originalSize.width
+  const targetHeight = height || originalSize.height
 
   if (width && height && ['cover', 'fill', 'contain'].includes(fit)) {
     return {
@@ -258,13 +262,13 @@ function computeScaledImageSize (originalSize, options, maxImageWidth) {
   }
 
   const imageWidth = Math.min(
-    parseInt(width || originalSize.width, 10),
+    width || originalSize.width,
     maxImageWidth,
     originalSize.width
   )
 
   let imageHeight = height !== undefined
-    ? parseInt(height, 10)
+    ? height
     : Math.ceil(originalSize.height * (imageWidth / originalSize.width))
 
   if (height && height > originalSize.height) {

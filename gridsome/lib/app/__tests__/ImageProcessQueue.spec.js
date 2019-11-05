@@ -229,7 +229,7 @@ test('use custom image sizes', async () => {
   const config = { ...baseconfig, maxImageWidth: 2560 }
   const queue = new AssetsQueue({ context, config })
 
-  const result = await queue.add(filePath, { sizes: [480, 1024] })
+  const result = await queue.add(filePath, { imageWidths: [480, 1024] })
 
   expect(queue.images.queue).toHaveLength(2)
   expect(result.src).toEqual('/assets/static/2560x2560.cbab2cf.test.png')
