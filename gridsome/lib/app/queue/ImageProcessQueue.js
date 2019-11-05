@@ -102,7 +102,8 @@ class ImageProcessQueue {
 
     const createDestPath = (filename, imageOptions) => {
       if (process.env.GRIDSOME_MODE === 'serve') {
-        const query = '?' + createOptionsQuery(imageOptions.concat({ key: 'key', value: cacheKey }))
+        const key = process.env.GRIDSOME_TEST ? 'test' : cacheKey
+        const query = '?' + createOptionsQuery(imageOptions.concat({ key: 'key', value: key }))
         return path.join('/', imagesDir, forwardSlash(relPath)) + query
       }
 
