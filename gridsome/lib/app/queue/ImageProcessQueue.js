@@ -28,15 +28,17 @@ class ImageProcessQueue {
       return asset
     }
 
-    asset.sets.forEach(({ filename, destPath, width }) => {
+    asset.sets.forEach(({ filename, destPath, width, height }) => {
       if (!this._queue.has(destPath + asset.cacheKey)) {
         this._queue.set(destPath + asset.cacheKey, {
-          options: { ...options, width },
+          options: { ...options, width, height },
           cacheKey: asset.cacheKey,
           size: asset.size,
           destPath,
           filename,
-          filePath
+          filePath,
+          width: asset.width,
+          height: asset.height
         })
       }
     })
@@ -48,6 +50,8 @@ class ImageProcessQueue {
     const { imageExtensions, outputDir, pathPrefix, maxImageWidth } = this.config
     const imagesDir = path.relative(outputDir, this.config.imagesDir)
     const relPath = path.relative(this.context, filePath)
+    const customWidth = parseInt(options.width, 10) || null
+    const customHeight = parseInt(options.height, 10) || null
     const { name, ext } = path.parse(filePath)
     const mimeType = mime.lookup(filePath)
 
@@ -87,24 +91,25 @@ class ImageProcessQueue {
       options.background = this.config.imageBackgroundColor
     }
 
+    const cacheKey = genHash(filePath + hash + JSON.stringify(options)).substr(0, 7)
+
     const createDestPath = (filename, imageOptions) => {
       if (process.env.GRIDSOME_MODE === 'serve') {
-        const query = '?' + createOptionsQuery(imageOptions)
+        const query = '?' + createOptionsQuery(imageOptions.concat({ key: 'key', value: cacheKey }))
         return path.join('/', imagesDir, forwardSlash(relPath)) + query
       }
 
       return path.join(imagesDir, filename)
     }
 
-    const sets = imageSizes.map((width = imageWidth) => {
-      const height = Math.ceil(imageHeight * (width / imageWidth))
-      const imageOptions = { ...options, width }
+    const sets = imageSizes.map(width => {
+      let height
 
-      if (options.height !== undefined) {
-        imageOptions.height = height
+      if (customHeight) {
+        height = Math.ceil(imageHeight * (width / imageWidth))
       }
 
-      const arr = this.createImageOptions(imageOptions)
+      const arr = this.createImageOptions({ ...options, width, height })
       const filename = this.createFileName(filePath, arr, hash)
       const relPath = createDestPath(filename, arr)
       const destPath = path.join(this.config.outputDir, relPath)
@@ -116,9 +121,11 @@ class ImageProcessQueue {
     const results = {
       src: sets[sets.length - 1].src,
       size: { width: imageWidth, height: imageHeight },
-      cacheKey: genHash(filePath + hash + JSON.stringify(options)),
+      width: originalSize.width,
+      height: originalSize.height,
       noscriptHTML: '',
       imageHTML: '',
+      cacheKey,
       name,
       ext,
       hash,
@@ -205,9 +212,7 @@ class ImageProcessQueue {
     const string = arr.length ? createOptionsQuery(arr) : ''
 
     const optionsHash = genHash(string).substr(0, 7)
-    const contentHash = !process.env.GRIDSOME_TEST
-      ? hash.substr(0, 7)
-      : 'test'
+    const contentHash = !process.env.GRIDSOME_TEST ? hash : 'test'
 
     return `${name}.${optionsHash}.${contentHash}${ext}`
   }
@@ -216,8 +221,8 @@ class ImageProcessQueue {
 function computeScaledImageSize (originalSize, options, maxImageWidth) {
   const { width, height, fit = 'cover' } = options
 
-  const targetWidth = width || originalSize.width
-  const targetHeight = height || originalSize.height
+  const targetWidth = parseInt(width, 10) || originalSize.width
+  const targetHeight = parseInt(height, 10) || originalSize.height
 
   if (width && height && ['cover', 'fill', 'contain'].includes(fit)) {
     return {

@@ -37,11 +37,11 @@ test('generate srcset for image', async () => {
   expect(result.sets[0].src).toEqual('/assets/static/1000x600.82a2fbd.test.png')
   expect(result.sets[0].destPath).toEqual(path.join(imagesDir, '1000x600.82a2fbd.test.png'))
   expect(result.sets[0].width).toEqual(480)
-  expect(result.sets[0].height).toEqual(288)
+  expect(result.sets[0].height).toEqual(undefined)
   expect(result.sets[1].src).toEqual('/assets/static/1000x600.97c148e.test.png')
   expect(result.sets[1].destPath).toEqual(path.join(imagesDir, '1000x600.97c148e.test.png'))
   expect(result.sets[1].width).toEqual(1000)
-  expect(result.sets[1].height).toEqual(600)
+  expect(result.sets[1].height).toEqual(undefined)
   expect(result.srcset[0]).toEqual('/assets/static/1000x600.82a2fbd.test.png 480w')
   expect(result.srcset[1]).toEqual('/assets/static/1000x600.97c148e.test.png 1000w')
 })
@@ -71,10 +71,10 @@ test('encode src in serve mode', async () => {
   process.env.GRIDSOME_MODE = mode
 
   expect(result.filePath).toEqual(filePath)
-  expect(result.src).toEqual('/assets/static/assets/folder%20name/350%20250.png?width=350')
-  expect(result.sets[0].src).toEqual('/assets/static/assets/folder%20name/350%20250.png?width=350')
-  expect(result.sets[0].destPath).toEqual(path.join(imagesDir, 'assets/folder name/350 250.png?width=350'))
-  expect(result.srcset[0]).toEqual('/assets/static/assets/folder%20name/350%20250.png?width=350 350w')
+  expect(result.src).toEqual('/assets/static/assets/folder%20name/350%20250.png?width=350&key=8c00e11')
+  expect(result.sets[0].src).toEqual('/assets/static/assets/folder%20name/350%20250.png?width=350&key=8c00e11')
+  expect(result.sets[0].destPath).toEqual(path.join(imagesDir, 'assets/folder name/350 250.png?width=350&key=8c00e11'))
+  expect(result.srcset[0]).toEqual('/assets/static/assets/folder%20name/350%20250.png?width=350&key=8c00e11 350w')
 })
 
 test('generate srcset for image with path prefix', async () => {
@@ -107,7 +107,7 @@ test('resize image by width attribute', async () => {
   expect(result.srcset).toHaveLength(1)
   expect(result.sets[0].src).toEqual('/assets/static/1000x600.6b65613.test.png')
   expect(result.sets[0].width).toEqual(300)
-  expect(result.sets[0].height).toEqual(180)
+  expect(result.sets[0].height).toEqual(undefined)
   expect(result.srcset[0]).toEqual('/assets/static/1000x600.6b65613.test.png 300w')
 })
 
@@ -344,8 +344,8 @@ test('get url for server in serve mode', async () => {
   process.env.GRIDSOME_MODE = mode
 
   expect(queue.images.queue).toHaveLength(0)
-  expect(result.src).toEqual('/assets/static/assets/1000x600.png?width=500')
-  expect(result2.src).toEqual('/assets/static/assets/1000x600.png?width=200&quality=50')
+  expect(result.src).toEqual('/assets/static/assets/1000x600.png?width=500&key=f1803fe')
+  expect(result2.src).toEqual('/assets/static/assets/1000x600.png?width=200&quality=50&key=6661cc5')
 })
 
 test('get queue values', async () => {
