@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.2](https://github.com/gridsome/gridsome/tree/master/packages/transformer-csv/compare/@gridsome/transformer-csv@0.2.1...@gridsome/transformer-csv@0.2.2) (2019-10-25)
+
+**Note:** Version bump only for package @gridsome/transformer-csv
+
+
+
+
+
 ## [0.2.1](https://github.com/gridsome/gridsome/tree/master/packages/transformer-csv/compare/@gridsome/transformer-csv@0.2.0...@gridsome/transformer-csv@0.2.1) (2019-06-07)
 
 **Note:** Version bump only for package @gridsome/transformer-csv

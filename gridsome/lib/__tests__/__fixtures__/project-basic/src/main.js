@@ -9,4 +9,18 @@ export default function (Vue, { head, router }) {
   head.meta.push({ key: 'description', name: 'description', content: 'Main description' })
 
   router.options.linkActiveClass = 'is-active'
+
+  router.addRoutes([
+    {
+      props: true,
+      path: '/custom-route/:a/:b',
+      component: () => import('./components/CustomRoute.vue'),
+      children: [
+        {
+          path: '',
+          component: () => import('./components/CustomChildRoute.vue')
+        }
+      ]
+    }
+  ])
 }

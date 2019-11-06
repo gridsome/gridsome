@@ -828,6 +828,60 @@ test('add custom GraphQL schema', async () => {
   expect(data.nestedObject.subField.customRootValue).toEqual('subField foo')
 })
 
+test('add custom GraphQL schema with mutations', async () => {
+  const app = await createApp(api => {
+    api.createSchema(({ addSchema, ...actions }) => {
+      addSchema(new actions.GraphQLSchema({
+        mutation: new actions.GraphQLObjectType({
+          name: 'MyMutations',
+          fields: () => ({
+            doSomething: {
+              type: actions.GraphQLString,
+              args: {
+                input: {
+                  type: actions.GraphQLString,
+                  defaultValue: 'foo'
+                }
+              },
+              resolve: (obj, args) => {
+                return args.input
+              }
+            }
+          })
+        })
+      }))
+      addSchema(new actions.GraphQLSchema({
+        mutation: new actions.GraphQLObjectType({
+          name: 'OtherMutations',
+          fields: () => ({
+            doSomethingElse: {
+              type: actions.GraphQLString,
+              args: {
+                input: {
+                  type: actions.GraphQLString,
+                  defaultValue: 'bar'
+                }
+              },
+              resolve: (obj, args) => {
+                return args.input
+              }
+            }
+          })
+        })
+      }))
+    })
+  })
+
+  const { errors, data } = await app.graphql(`mutation {
+    doSomething(input:"one")
+    doSomethingElse(input:"two")
+  }`)
+
+  expect(errors).toBeUndefined()
+  expect(data.doSomething).toEqual('one')
+  expect(data.doSomethingElse).toEqual('two')
+})
+
 test('add custom Metadata schema', async () => {
   const app = await createApp(api => {
     api.createSchema(({ addMetadata, addSchemaTypes }) => {

@@ -1,5 +1,5 @@
 const fs = require('fs-extra')
-const { SyncWaterfallHook, AsyncSeriesHook } = require('tapable')
+const { SyncHook, SyncWaterfallHook, AsyncSeriesHook } = require('tapable')
 const createClientConfig = require('../webpack/createClientConfig')
 const createServerConfig = require('../webpack/createServerConfig')
 
@@ -9,7 +9,8 @@ class Compiler {
 
     this.hooks = {
       cacheIdentifier: new SyncWaterfallHook(['identifier']),
-      chainWebpack: new AsyncSeriesHook(['chain', 'env'])
+      chainWebpack: new AsyncSeriesHook(['chain', 'env']),
+      done: new SyncHook(['columns', 'env'])
     }
   }
 

@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.3.0](https://github.com/gridsome/gridsome/tree/master/packages/remark-prismjs/compare/@gridsome/remark-prismjs@0.2.0...@gridsome/remark-prismjs@0.3.0) (2019-10-25)
+
+
+### Features
+
+* **prismjs:** option to skip inline code blocks ([#773](https://github.com/gridsome/gridsome/tree/master/packages/remark-prismjs/issues/773)) ([43247d4](https://github.com/gridsome/gridsome/tree/master/packages/remark-prismjs/commit/43247d4))
+
+
+
+
+
 # [0.2.0](https://github.com/gridsome/gridsome/tree/master/packages/remark-prismjs/compare/@gridsome/remark-prismjs@0.1.0...@gridsome/remark-prismjs@0.2.0) (2019-09-13)
 
 

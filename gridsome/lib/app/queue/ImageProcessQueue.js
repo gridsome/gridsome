@@ -9,6 +9,7 @@ const imageSize = require('probe-image-size')
 const svgDataUri = require('mini-svg-data-uri')
 const { forwardSlash } = require('../../utils')
 const { warmupSharp } = require('../../utils/sharp')
+const { reject } = require('lodash')
 
 class ImageProcessQueue {
   constructor ({ context, config }) {
@@ -28,15 +29,17 @@ class ImageProcessQueue {
       return asset
     }
 
-    asset.sets.forEach(({ filename, destPath, width }) => {
+    asset.sets.forEach(({ filename, destPath, width, height }) => {
       if (!this._queue.has(destPath + asset.cacheKey)) {
         this._queue.set(destPath + asset.cacheKey, {
-          options: { ...options, width },
+          options: { ...options, width, height },
           cacheKey: asset.cacheKey,
           size: asset.size,
           destPath,
           filename,
-          filePath
+          filePath,
+          width: asset.width,
+          height: asset.height
         })
       }
     })
@@ -46,6 +49,7 @@ class ImageProcessQueue {
 
   async preProcess (filePath, options = {}) {
     const { imageExtensions, outputDir, pathPrefix, maxImageWidth } = this.config
+    const { minSizeDistance = 300 } = this.config.images || {}
     const imagesDir = path.relative(outputDir, this.config.imagesDir)
     const relPath = path.relative(this.context, filePath)
     const { name, ext } = path.parse(filePath)
@@ -69,16 +73,23 @@ class ImageProcessQueue {
 
     const { imageWidth, imageHeight } = computeScaledImageSize(originalSize, options, maxImageWidth)
 
-    const allSizes = options.sizes || [480, 1024, 1920, 2560]
-    const imageSizes = allSizes.filter(size => size <= imageWidth)
+    let imageWidths = options.imageWidths || [480, 1024, 1920, 2560]
 
-    if (
-      (imageSizes.length === 1 && imageSizes[0] <= imageWidth) ||
-      (imageSizes.length === 0)
-    ) {
-      if (imageWidth <= maxImageWidth) {
+    if (typeof imageWidths === 'string') {
+      imageWidths = imageWidths.split(',')
+    }
+
+    let imageSizes = imageWidths.filter(size => size <= imageWidth)
+    const maxWidth = Math.max(...imageSizes, 0)
+
+    if (!options.imageWidths) {
+      if (imageWidth > maxWidth || imageSizes.length === 0) {
         imageSizes.push(imageWidth)
       }
+
+      imageSizes = reject(imageSizes, (width, i, arr) => {
+        return arr[i + 1] - width < minSizeDistance
+      })
     }
 
     // validate color string
@@ -88,24 +99,26 @@ class ImageProcessQueue {
       options.background = this.config.imageBackgroundColor
     }
 
+    const cacheKey = genHash(filePath + hash + JSON.stringify(options)).substr(0, 7)
+
     const createDestPath = (filename, imageOptions) => {
       if (process.env.GRIDSOME_MODE === 'serve') {
-        const query = '?' + createOptionsQuery(imageOptions)
+        const key = process.env.GRIDSOME_TEST ? 'test' : cacheKey
+        const query = '?' + createOptionsQuery(imageOptions.concat({ key: 'key', value: key }))
         return path.join('/', imagesDir, forwardSlash(relPath)) + query
       }
 
       return path.join(imagesDir, filename)
     }
 
-    const sets = imageSizes.map((width = imageWidth) => {
-      const height = Math.ceil(imageHeight * (width / imageWidth))
-      const imageOptions = { ...options, width }
+    const sets = imageSizes.map(width => {
+      let height
 
-      if (options.height !== undefined) {
-        imageOptions.height = height
+      if (options.height) {
+        height = Math.ceil(imageHeight * (width / imageWidth))
       }
 
-      const arr = this.createImageOptions(imageOptions)
+      const arr = this.createImageOptions({ ...options, width, height })
       const filename = this.createFileName(filePath, arr, hash)
       const relPath = createDestPath(filename, arr)
       const destPath = path.join(this.config.outputDir, relPath)
@@ -117,9 +130,11 @@ class ImageProcessQueue {
     const results = {
       src: sets[sets.length - 1].src,
       size: { width: imageWidth, height: imageHeight },
-      cacheKey: genHash(filePath + hash + JSON.stringify(options)),
+      width: originalSize.width,
+      height: originalSize.height,
       noscriptHTML: '',
       imageHTML: '',
+      cacheKey,
       name,
       ext,
       hash,
@@ -206,9 +221,7 @@ class ImageProcessQueue {
     const string = arr.length ? createOptionsQuery(arr) : ''
 
     const optionsHash = genHash(string).substr(0, 7)
-    const contentHash = !process.env.GRIDSOME_TEST
-      ? hash.substr(0, 7)
-      : 'test'
+    const contentHash = !process.env.GRIDSOME_TEST ? hash : 'test'
 
     return `${name}.${optionsHash}.${contentHash}${ext}`
   }
@@ -251,13 +264,13 @@ function computeScaledImageSize (originalSize, options, maxImageWidth) {
   }
 
   const imageWidth = Math.min(
-    parseInt(width || originalSize.width, 10),
+    width || originalSize.width,
     maxImageWidth,
     originalSize.width
   )
 
   let imageHeight = height !== undefined
-    ? parseInt(height, 10)
+    ? height
     : Math.ceil(originalSize.height * (imageWidth / originalSize.width))
 
   if (height && height > originalSize.height) {
@@ -281,16 +294,19 @@ function createOptionsQuery (arr) {
 
 async function createDataUri (buffer, type, width, height, defaultBlur, options = {}) {
   const blur = options.blur !== undefined ? parseInt(options.blur, 10) : defaultBlur
+
   const resizeOptions = {}
 
   if (options.fit) resizeOptions.fit = sharp.fit[options.fit]
   if (options.position) resizeOptions.position = sharp.position[options.position]
   if (options.background) resizeOptions.background = options.background
 
+  const blurredSvg = await createBlurSvg(buffer, type, width, height, blur, resizeOptions)
+
   return svgDataUri(
     `<svg fill="none" viewBox="0 0 ${width} ${height}" ` +
     `xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">` +
-    (blur > 0 ? await createBlurSvg(buffer, type, width, height, blur, resizeOptions) : '') +
+    blurredSvg +
     `</svg>`
   )
 }
@@ -302,14 +318,24 @@ async function createBlurSvg (buffer, mimeType, width, height, blur, resize = {}
   const blurBuffer = await warmSharp(buffer).resize(blurWidth, blurHeight, resize).toBuffer()
   const base64 = blurBuffer.toString('base64')
   const id = `__svg-blur-${ImageProcessQueue.uid++}`
+  let defs = ''
 
-  return '' +
-    '<defs>' +
-    `<filter id="${id}">` +
-    `<feGaussianBlur in="SourceGraphic" stdDeviation="${blur}"/>` +
-    `</filter>` +
-    '</defs>' +
-    `<image x="0" y="0" filter="url(#${id})" width="${width}" height="${height}" xlink:href="data:${mimeType};base64,${base64}" />`
+  if (blur > 0) {
+    defs = '' +
+      '<defs>' +
+      `<filter id="${id}">` +
+      `<feGaussianBlur in="SourceGraphic" stdDeviation="${blur}"/>` +
+      `</filter>` +
+      '</defs>'
+  }
+
+  const image = '' +
+    `<image x="0" y="0" ` +
+    (defs ? `filter="url(#${id})" ` : ' ') +
+    `width="${width}" height="${height}" ` +
+    `xlink:href="data:${mimeType};base64,${base64}" />`
+
+  return defs + image
 }
 
 // async function createTracedSvg (buffer, type, width, height) {
