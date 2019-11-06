@@ -12,7 +12,9 @@ const baseconfig = {
   outputDir: context,
   imageExtensions: ['.jpg', '.png', '.webp'],
   maxImageWidth: 1000,
-  imageBlurDefault: 20
+  images: {
+    defaultBlur: 20
+  }
 }
 
 beforeEach(() => (ImageProcessQueue.uid = 0))

@@ -97,7 +97,6 @@ module.exports = (context, options = {}) => {
   config.imageCacheDir = resolve('.cache', assetsDir, 'static')
   config.maxImageWidth = localConfig.maxImageWidth || 2560
   config.imageExtensions = SUPPORTED_IMAGE_TYPES
-  config.imageBlurDefault = localConfig.imageBlurDefault || 20
   config.pagesDir = resolve(localConfig._pagesDir || './src/pages')
   config.templatesDir = resolve(localConfig._templatesDir || './src/templates')
   config.templates = normalizeTemplates(context, config, localConfig)
@@ -109,6 +108,8 @@ module.exports = (context, options = {}) => {
   config.configureServer = localConfig.configureServer
 
   config.images = { ...localConfig.images }
+
+  config.images.defaultBlur = config.images.defaultBlur || 20
 
   if (!colorString.get(config.images.backgroundColor || '')) {
     config.images.backgroundColor = null

@@ -50,7 +50,7 @@ class ImageProcessQueue {
     const relPath = path.relative(this.context, filePath)
     const { name, ext } = path.parse(filePath)
     const mimeType = mime.lookup(filePath)
-    const blurDefault = this.config.imageBlurDefault
+    const defaultBlur = this.config.images.defaultBlur
 
     if (!imageExtensions.includes(ext)) {
       throw new Error(
@@ -132,7 +132,7 @@ class ImageProcessQueue {
 
     if (isSrcset) {
       try {
-        results.dataUri = await createDataUri(buffer, mimeType, imageWidth, imageHeight, blurDefault, options)
+        results.dataUri = await createDataUri(buffer, mimeType, imageWidth, imageHeight, defaultBlur, options)
       } catch (err) {
         throw new Error(`Failed to process image ${relPath}. ${err.message}`)
       }
@@ -279,8 +279,8 @@ function createOptionsQuery (arr) {
   }, []).join('&')
 }
 
-async function createDataUri (buffer, type, width, height, blurDefault, options = {}) {
-  const blur = options.blur !== undefined ? parseInt(options.blur, 10) : blurDefault
+async function createDataUri (buffer, type, width, height, defaultBlur, options = {}) {
+  const blur = options.blur !== undefined ? parseInt(options.blur, 10) : defaultBlur
   const resizeOptions = {}
 
   if (options.fit) resizeOptions.fit = sharp.fit[options.fit]
