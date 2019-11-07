@@ -42,7 +42,7 @@ if (icons.favicons.length) {
   head.link.push({ rel: 'icon', href: 'data:,' })
 }
 
-icons.favicons.forEach(({ width, height, src: href }) => {
+icons.favicons.forEach(({ width, height = width, src: href }) => {
   head.link.push({
     rel: 'icon',
     type: icons.faviconMimeType,
@@ -51,7 +51,7 @@ icons.favicons.forEach(({ width, height, src: href }) => {
   })
 })
 
-icons.touchicons.forEach(({ width, height, src: href }) => {
+icons.touchicons.forEach(({ width, height = width, src: href }) => {
   head.link.push({
     rel: `apple-touch-icon${icons.precomposed ? '-precomposed' : ''}`,
     type: icons.touchiconMimeType,
