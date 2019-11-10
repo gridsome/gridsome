@@ -1,4 +1,5 @@
 const path = require('path')
+const fs = require('fs-extra')
 const compiler = require('vue-template-compiler')
 const { parse } = require('@vue/component-compiler-utils')
 
@@ -21,8 +22,15 @@ class VueComponents {
         const { customBlocks } = parse({ filename, source, compiler })
         const pageQuery = customBlocks.find(block => block.type === 'page-query')
 
-        return {
-          pageQuery: pageQuery ? pageQuery.content : null
+        let query = pageQuery ? pageQuery.content : null 
+
+        if (pageQuery && pageQuery.attrs && pageQuery.attrs.src) {
+            const queryPath = path.join(path.dirname(resourcePath), pageQuery.attrs.src)
+            query = fs.readFileSync(queryPath, 'utf8') 
+        }
+        
+       return {
+          pageQuery: query
         }
       })
   }
