@@ -34,7 +34,7 @@ class GhostSource {
     }
 
     api.loadSource(async actions => {
-      console.log(`Loading data from ${options.baseUrl}`)
+      console.log(`Loading data from ${options.url}`)
       await this.loadAuthors(actions)
       await this.loadPosts(actions)
       await this.loadTags(actions)
