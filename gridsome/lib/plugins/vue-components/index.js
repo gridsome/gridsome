@@ -34,7 +34,7 @@ class VueComponents {
     )
     if (firstPageQueryBlock) {
       const hasAttributes = firstPageQueryBlock.attrs.hasOwnProperty('source')
-      const hasContent = firstPageQueryBlock.content
+      let hasContent = firstPageQueryBlock.content
       if (hasAttributes) {
         return fs.readFileSync(
           path.resolve(templateDirectory, '..', '..') +
