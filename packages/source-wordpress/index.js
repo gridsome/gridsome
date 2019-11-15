@@ -167,11 +167,13 @@ class WordPressSource {
         typeName: endpoint.typeName
       })
       const { data } = await this.fetch(endpoint.route, {}, {})
-      for (const item of data) {
-        const normalItem = this.normalizeFields(item)
+      for (let item of data) {
+        if (endpoint.normalize) {
+          item = this.normalizeFields(item)
+        }
 
         cepCollection.addNode({
-          ...normalItem,
+          ...item,
           id: item.id || item.slug
         })
       }
