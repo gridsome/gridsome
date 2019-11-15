@@ -13,7 +13,8 @@ export default {
     position: { type: String, default: '' },
     background: { type: String, default: '' },
     blur: { type: String, default: '' },
-    immediate: { type: true, default: undefined }
+    immediate: { type: true, default: undefined },
+    imageWidths: { type: String, default: undefined }
   },
 
   render: (h, { data, props }) => {
@@ -32,8 +33,10 @@ export default {
         break
 
       case 'object': {
-        const { src, srcset, sizes, size, dataUri } = props.src
+        const { src, srcset, size, dataUri } = props.src
+
         const isLazy = !isImmediate && dataUri
+        const sizes = attrs.sizes || props.src.sizes
 
         attrs.src = isLazy ? dataUri : src
         attrs.width = size.width

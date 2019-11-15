@@ -111,6 +111,7 @@ function createStoreActions (api, app) {
 }
 
 const {
+  createEnumType,
   createObjectType,
   createUnionType,
   createScalarType,
@@ -185,6 +186,7 @@ function createSchemaActions (api, app) {
     },
 
     schema: {
+      createEnumType,
       createObjectType,
       createUnionType,
       createScalarType,

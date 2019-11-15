@@ -4,7 +4,7 @@ const build = require('../build')
 const cheerio = require('cheerio')
 const express = require('express')
 const puppeteer = require('puppeteer')
-const { uniq } = require('lodash')
+const { trim, uniq } = require('lodash')
 
 const context = path.join(__dirname, '__fixtures__', 'project-basic')
 const content = file => fs.readFileSync(path.join(context, file), 'utf8')
@@ -117,7 +117,7 @@ test('render g-image components', () => {
   expect($home('img.g-image-2 + noscript').html()).toMatch('alt="Test image"')
   expect($home('img.g-image-static').attr('src')).toEqual('/uploads/test.png')
   expect($home('img.g-image-static').attr('alt')).toEqual('Static image')
-  expect($home('img.g-image-immediate').attr('src')).toEqual('/assets/static/test.cbab2cf.test.png')
+  expect($home('img.g-image-immediate').attr('src')).toEqual('/assets/static/test.f64918e.test.png')
   expect($home('img.g-image-immediate').attr('alt')).toEqual('Immediate image')
   expect($home('img.g-image-external').attr('src')).toEqual('https://www.example.com/assets/image.png')
   expect($home('img.g-image-external').attr('alt')).toEqual('External image')
@@ -277,6 +277,23 @@ test('navigate to /docs/2/extra', async () => {
 test('navigate to /pages/1', async () => {
   await page.click('.page-link-1')
   await page.waitForSelector('#app.page-template')
+})
+
+test('navigate to /', async () => {
+  await page.click('.home-link')
+  await page.waitForSelector('#app.home')
+})
+
+test('navigate to /custom-route/foo/bar', async () => {
+  await page.click('.custom-route')
+  await page.waitForSelector('#app.foo.bar')
+  await page.waitForSelector('.custom-child-route')
+
+  const title = await page.$eval('.custom-route-title', el => el.textContent)
+  const heading = await page.$eval('.custom-child-route-heading', el => el.textContent)
+
+  expect(trim(title)).toEqual('Gridsome')
+  expect(trim(heading)).toEqual('Gridsome')
 })
 
 test('navigate to /', async () => {

@@ -3,6 +3,21 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.7.10](https://github.com/gridsome/gridsome/compare/gridsome@0.7.9...gridsome@0.7.10) (2019-11-06)
+
+
+### Bug Fixes
+
+* **app:** allow custom routes from router.addRoutes ([fc78a59](https://github.com/gridsome/gridsome/commit/fc78a59))
+* **g-image:** include wanted width in srcset ([#797](https://github.com/gridsome/gridsome/issues/797)) ([26dc27b](https://github.com/gridsome/gridsome/commit/26dc27b))
+* **g-image:** resize correctly when reusing image ([#797](https://github.com/gridsome/gridsome/issues/797)) ([8c2d834](https://github.com/gridsome/gridsome/commit/8c2d834))
+* **graphql:** convert field to union if multiple typeNames ([8bf2931](https://github.com/gridsome/gridsome/commit/8bf2931))
+* **store:** resolve absolute paths in fields correctly ([#792](https://github.com/gridsome/gridsome/issues/792)) ([beb9084](https://github.com/gridsome/gridsome/commit/beb9084))
+
+
+
+
+
 ## [0.7.9](https://github.com/gridsome/gridsome/compare/gridsome@0.7.8...gridsome@0.7.9) (2019-10-25)
 
 

@@ -17,6 +17,8 @@ class Server {
       setup: new SyncHook(['app']),
       afterSetup: new SyncHook(['app'])
     }
+
+    app.hooks.server.call(this)
   }
 
   async createExpressApp() {

@@ -12,6 +12,7 @@
     <g-link class="not-found-link" to="/asdf">Show /404</g-link>
     <g-link class="g-link-file" to="~/assets/dummy.pdf">Download</g-link>
     <a class="external-link" href="/external/">External</a>
+    <router-link class="custom-route" to="/custom-route/foo/bar">Custom route</router-link>
 
     <g-image class="g-image-1" src="~/assets/logo.svg" alt="SVG logo" width="300" />
     <g-image :class="{ 'g-image-2': true, 'g-image-false': false }" src="~/assets/test.png" alt="Test image" width="1000" />

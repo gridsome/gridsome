@@ -4,13 +4,13 @@ const mime = require('mime-types')
 const FileProcessQueue = require('./FileProcessQueue')
 const ImageProcessQueue = require('./ImageProcessQueue')
 
+const isDev = process.env.NODE_ENV === 'development'
 class AssetsQueue {
   constructor (app) {
     this.app = app
+    this.index = new Map()
     this.files = new FileProcessQueue(app)
     this.images = new ImageProcessQueue(app)
-
-    this.index = {}
   }
 
   async add (filePath, options) {
@@ -33,17 +33,21 @@ class AssetsQueue {
       return data
     }
 
-    const results = isImage
+    const asset = isImage
       ? await this.images.add(filePath, options)
       : await this.files.add(filePath, options)
 
-    this.index[filePath] = { ...data, ...results }
+    const entry = { ...data, ...asset }
 
-    return this.index[filePath]
+    if (isDev && asset.cacheKey) {
+      this.index.set(asset.cacheKey, entry)
+    }
+
+    return entry
   }
 
-  get (filePath) {
-    return this.index[filePath]
+  get (key) {
+    return this.index.get(key)
   }
 }
 

@@ -1,4 +1,5 @@
 const isUrl = require('is-url')
+const camelcase = require('camelcase')
 const isRelative = require('is-relative')
 const { isMailtoLink, isTelLink } = require('../../utils')
 
@@ -51,7 +52,7 @@ function createOptionsQuery (attrs) {
   return attrs
     .filter(attr => attr.name !== 'src')
     .filter(attr => isStatic(attr.value))
-    .map(attr => ({ name: attr.name, value: extractValue(attr.value) }))
+    .map(attr => ({ name: camelcase(attr.name), value: extractValue(attr.value) }))
     .map(attr => `${attr.name}=${encodeURIComponent(attr.value)}`)
     .join('&')
 }
