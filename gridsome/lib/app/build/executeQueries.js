@@ -50,6 +50,9 @@ async function executeQueries (renderQueue, { context, pages, schema, graphql },
       }
 
       results.data = data
+      results.data.query.source = route.internal.query.source
+      results.data.query.document = route.internal.query.document
+      results.data.query.variables = entry.queryVariables
     }
 
     return { dataOutput: entry.dataOutput, data: results }
