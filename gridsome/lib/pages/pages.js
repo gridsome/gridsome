@@ -10,7 +10,7 @@ const { parseQuery } = require('../graphql')
 const pathToRegexp = require('path-to-regexp')
 const createPageQuery = require('./createPageQuery')
 const { HookMap, SyncWaterfallHook, SyncBailHook } = require('tapable')
-const { snakeCase, trim, trimEnd } = require('lodash')
+const { snakeCase, trimEnd } = require('lodash')
 const validateInput = require('./schemas')
 
 const TYPE_STATIC = 'static'
@@ -352,7 +352,7 @@ class Pages {
   }
 
   _createPageContext (page, queryVariables = {}) {
-    const route = this.getRouteByPath(page.path)
+    const route = this.getRoute(page.internal.route)
     return this.hooks.pageContext.call({ ...page.context }, {
       pageQuery: route.internal.query.source,
       queryVariables
