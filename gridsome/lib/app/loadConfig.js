@@ -113,7 +113,7 @@ module.exports = (context, options = {}) => {
 
   config.images = { ...localConfig.images }
 
-  config.images.defaultBlur = config.images.defaultBlur || 20
+  config.images.defaultBlur = config.images.defaultBlur || 40
 
   if (!colorString.get(config.images.backgroundColor || '')) {
     config.images.backgroundColor = null
