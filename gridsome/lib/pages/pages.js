@@ -10,7 +10,7 @@ const { parseQuery } = require('../graphql')
 const pathToRegexp = require('path-to-regexp')
 const createPageQuery = require('./createPageQuery')
 const { HookMap, SyncWaterfallHook, SyncBailHook } = require('tapable')
-const { snakeCase, trimEnd } = require('lodash')
+const { snakeCase, trim, trimEnd } = require('lodash')
 const validateInput = require('./schemas')
 
 const TYPE_STATIC = 'static'
@@ -27,7 +27,8 @@ class Pages {
     this.hooks = {
       parseComponent: new HookMap(() => new SyncBailHook(['source', 'resource'])),
       createRoute: new SyncWaterfallHook(['options']),
-      createPage: new SyncWaterfallHook(['options'])
+      createPage: new SyncWaterfallHook(['options']),
+      pageContext: new SyncWaterfallHook(['context', 'data'])
     }
 
     this._componentCache = new LRU({ max: 100 })
@@ -348,6 +349,14 @@ class Pages {
 
   _createPageQuery (parsedQuery, vars = {}) {
     return createPageQuery(parsedQuery, vars)
+  }
+
+  _createPageContext (page, queryVariables = {}) {
+    const route = this.getRouteByPath(page.path)
+    return this.hooks.pageContext.call({ ...page.context }, {
+      pageQuery: route.internal.query.source,
+      queryVariables
+    })
   }
 
   _resolvePriority (path) {
