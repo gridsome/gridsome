@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.5.2](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/compare/@gridsome/source-wordpress@0.5.1...@gridsome/source-wordpress@0.5.2) (2019-11-19)
+
+
+### Bug Fixes
+
+* **wordpress:** normalize option for custom endpoints ([#785](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/issues/785)) ([5f83c93](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/commit/5f83c93))
+
+
+
+
+
 ## [0.5.1](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/compare/@gridsome/source-wordpress@0.5.0...@gridsome/source-wordpress@0.5.1) (2019-11-06)
 
 **Note:** Version bump only for package @gridsome/source-wordpress

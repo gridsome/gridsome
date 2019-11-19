@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.7.11](https://github.com/gridsome/gridsome/compare/gridsome@0.7.10...gridsome@0.7.11) (2019-11-19)
+
+
+### Bug Fixes
+
+* **app:** ensure favicon height is set ([5164258](https://github.com/gridsome/gridsome/commit/5164258))
+* **g-image:** option for setting default blur ([#760](https://github.com/gridsome/gridsome/issues/760)) ([71421f3](https://github.com/gridsome/gridsome/commit/71421f3))
+* **g-image:** set blank src if sets is empty ([#824](https://github.com/gridsome/gridsome/issues/824)) ([8ab30fc](https://github.com/gridsome/gridsome/commit/8ab30fc))
+* **graphql:** createEnumType schema method ([#814](https://github.com/gridsome/gridsome/issues/814)) ([b09b116](https://github.com/gridsome/gridsome/commit/b09b116))
+
+
+
+
+
 ## [0.7.10](https://github.com/gridsome/gridsome/compare/gridsome@0.7.9...gridsome@0.7.10) (2019-11-06)
 
 
