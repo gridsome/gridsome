@@ -129,7 +129,10 @@ async function process (filenames, options = {}, withCache = false) {
     imagesDir,
     outputDir: context,
     maxImageWidth: 1000,
-    imageExtensions: ['.jpg', '.png', '.svg', '.gif', '.webp']
+    imageExtensions: ['.jpg', '.png', '.svg', '.gif', '.webp'],
+    images: {
+      defaultBlur: 20
+    }
   }
 
   const processQueue = new AssetsQueue({ context, config })
