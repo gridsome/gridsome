@@ -111,9 +111,11 @@ module.exports = (context, options = {}) => {
   config.configureWebpack = localConfig.configureWebpack
   config.configureServer = localConfig.configureServer
 
-  config.images = { ...localConfig.images }
-
-  config.images.defaultBlur = config.images.defaultBlur || 40
+  config.images = {
+    defaultBlur: 40,
+    backgroundColor: null,
+    ...localConfig.images
+  }
 
   if (!colorString.get(config.images.backgroundColor || '')) {
     config.images.backgroundColor = null
