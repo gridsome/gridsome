@@ -127,7 +127,7 @@ class ImageProcessQueue {
     })
 
     const results = {
-      src: sets[sets.length - 1].src,
+      src: sets.length != 0 ? sets[sets.length - 1].src : '',
       size: { width: imageWidth, height: imageHeight },
       width: originalSize.width,
       height: originalSize.height,
