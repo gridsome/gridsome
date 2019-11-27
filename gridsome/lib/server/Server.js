@@ -17,6 +17,8 @@ class Server {
       setup: new SyncHook(['app']),
       afterSetup: new SyncHook(['app'])
     }
+
+    app.hooks.server.call(this)
   }
 
   async createExpressApp() {
@@ -75,7 +77,7 @@ class Server {
     )
 
     const assetsMiddleware = require('./middlewares/assets')
-    const assetsDir = path.relative(this._app.config.outDir, this._app.config.assetsDir)
+    const assetsDir = path.relative(this._app.config.outputDir, this._app.config.assetsDir)
     const assetsPath = forwardSlash(path.join(this._app.config.pathPrefix, assetsDir))
     const assetsRE = new RegExp(`${assetsPath}/(files|static)/(.*)`)
 

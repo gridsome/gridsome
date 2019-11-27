@@ -20,6 +20,13 @@ function createFilterInput (schemaComposer, typeComposer) {
 
   typeComposer.setInputTypeComposer(filterTypeComposer)
 
+  if (
+    typeComposer.hasInterface('Node') &&
+    inputTypeComposer.hasField('id')
+  ) {
+    filterTypeComposer.setField('id', inputTypeComposer.getField('id'))
+  }
+
   inputTypeComposer.getFieldNames().forEach(fieldName => {
     const fieldTypeComposer = typeComposer.getFieldTC(fieldName)
     const extensions = typeComposer.getFieldExtensions(fieldName)
@@ -28,22 +35,22 @@ function createFilterInput (schemaComposer, typeComposer) {
 
     if (fieldTypeComposer instanceof ObjectTypeComposer) {
       type = fieldTypeComposer.hasInterface('Node')
-        ? createInputTypeComposer({
+        ? createReferenceInputTypeComposer({
+          inputTypeComposer,
+          fieldTypeComposer,
           schemaComposer,
           typeComposer,
-          inputTypeComposer,
           fieldName
         })
         : createFilterInput(schemaComposer, fieldTypeComposer)
     } else {
       type = createInputTypeComposer({
+        inputTypeComposer,
         schemaComposer,
         typeComposer,
-        inputTypeComposer,
         fieldName
       })
     }
-
 
     if (type) {
       filterTypeComposer.setField(fieldName, { type })
@@ -68,6 +75,48 @@ function removeEmptyTypes (typeComposer) {
   })
 
   return typeComposer
+}
+
+function createReferenceInputTypeComposer({
+  schemaComposer,
+  fieldTypeComposer,
+  typeComposer,
+  fieldName
+}) {
+  const inputTypeName = createInputTypeName(typeComposer, fieldName)
+
+  if (schemaComposer.has(inputTypeName)) {
+    return schemaComposer.get(inputTypeName)
+  }
+
+  const operatorTypeComposer = schemaComposer.createInputTC(inputTypeName)
+  const isPlural = typeComposer.isFieldPlural(fieldName)
+
+  // TODO: filter by all fields on referenced type
+  operatorTypeComposer.setField('id', createInputTypeComposer({
+    inputTypeComposer: fieldTypeComposer.getInputTypeComposer(),
+    typeComposer: fieldTypeComposer,
+    schemaComposer,
+    fieldName: 'id'
+  }))
+
+  operatorTypeComposer.setFieldExtension('id', 'isReference', true)
+  operatorTypeComposer.setFieldExtension('id', 'isPlural', isPlural)
+
+  // TODO: remove these before 1.0
+  const extensions = { isDeprecatedNodeReference: true }
+  const deprecationReason = 'Use the id field instead.'
+  if (isPlural) {
+    operatorTypeComposer.addFields(
+      toOperatorConfig(listOperators, 'ID', extensions, deprecationReason)
+    )
+  } else {
+    operatorTypeComposer.addFields(
+      toOperatorConfig(scalarOperators.ID, 'ID', extensions, deprecationReason)
+    )
+  }
+
+  return operatorTypeComposer
 }
 
 function createInputTypeComposer({
@@ -137,13 +186,14 @@ function createInputTypeName (typeComposer, fieldName) {
 
 function createInputFields (typeComposer, fieldName, typeName, operators) {
   const fieldTypeComposer = typeComposer.getFieldTC(fieldName)
+  const fieldExtensions = typeComposer.getFieldExtensions(fieldName)
   const extensions = {}
 
   if (hasNodeReference(fieldTypeComposer)) {
     extensions.isNodeReference = true
   }
 
-  return toOperatorConfig(operators, typeName, extensions)
+  return toOperatorConfig(operators, typeName, { ...fieldExtensions, ...extensions })
 }
 
 module.exports = {

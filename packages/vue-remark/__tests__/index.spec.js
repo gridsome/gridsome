@@ -182,6 +182,30 @@ test('image inside external link', async () => {
   expect(res).toMatchSnapshot()
 })
 
+test('don\'t use g-link for mailto links', async () => {
+  const plugin = await createPlugin()
+  const res = await plugin.parse('[mailto](mailto:email@example.com)', { onlyTemplate: true })
+
+  expect(res).not.toMatch('g-link')
+  expect(res).toMatch('href="mailto:email@example.com"')
+})
+
+test('don\'t use g-link for email address', async () => {
+  const plugin = await createPlugin()
+  const res = await plugin.parse('<email@example.com>', { onlyTemplate: true })
+
+  expect(res).not.toMatch('g-link')
+  expect(res).toMatch('href="mailto:email@example.com"')
+})
+
+test('don\'t use g-link for phone links', async () => {
+  const plugin = await createPlugin()
+  const res = await plugin.parse('[phone](tel:12345678)', { onlyTemplate: true })
+
+  expect(res).not.toMatch('g-link')
+  expect(res).toMatch('href="tel:12345678"')
+})
+
 test('parse frontmatter', async () => {
   const plugin = await createPlugin()
   const res = await plugin.parse(`

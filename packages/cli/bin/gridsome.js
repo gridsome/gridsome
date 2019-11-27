@@ -28,6 +28,14 @@ program
     return wrapCommand(create)(...args)
   })
 
+program
+  .command('info')
+  .description('output information about the local environment')
+  .action(() => {
+    const info = require('../lib/commands/info')
+    return wrapCommand(info)()
+  })
+
 try {
   const commandsPath = resolveCwd.silent('gridsome/commands')
   const gridsomePath = resolveCwd.silent('gridsome')
@@ -78,7 +86,7 @@ if (notifier.update) {
   (async () => {
     const withYarn = await hasYarn()
     const margin = chalk.bgGreen(' ')
-    const command = withYarn ? `yarn add global ${pkg.name}` : `npm i -g ${pkg.name}`
+    const command = withYarn ? `yarn global add ${pkg.name}` : `npm i -g ${pkg.name}`
     console.log()
     console.log(`${margin} Update available: ${chalk.bold(notifier.update.latest)}`)
     console.log(`${margin} Run ${chalk.cyan(command)} to update`)

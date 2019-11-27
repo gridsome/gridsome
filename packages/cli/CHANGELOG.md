@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.1](https://github.com/gridsome/gridsome/tree/master/packages/cli/compare/@gridsome/cli@0.3.0...@gridsome/cli@0.3.1) (2019-10-15)
+
+**Note:** Version bump only for package @gridsome/cli
+
+
+
+
+
+# [0.3.0](https://github.com/gridsome/gridsome/tree/master/packages/cli/compare/@gridsome/cli@0.2.3...@gridsome/cli@0.3.0) (2019-10-01)
+
+
+### Features
+
+* **cli:** gridsome info command ([#695](https://github.com/gridsome/gridsome/tree/master/packages/cli/issues/695)) ([14c3048](https://github.com/gridsome/gridsome/tree/master/packages/cli/commit/14c3048))
+
+
+
+
+
 ## [0.2.3](https://github.com/gridsome/gridsome/tree/master/packages/cli/compare/@gridsome/cli@0.2.2...@gridsome/cli@0.2.3) (2019-09-11)
 
 

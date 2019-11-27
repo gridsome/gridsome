@@ -47,8 +47,8 @@ Build websites using latest web tech tools that developers love - Vue.js, GraphQ
 
 ### 3. Next steps
 
-1. Create `.vue` components in the `~/src/pages` directory to create pages
-2. Use `gridsome build` to generate static files in a `~/dist` folder
+1. Create `.vue` components in the `./src/pages` directory to create pages
+2. Use `gridsome build` to generate static files in a `./dist` folder
 
 ### Learn more...
 

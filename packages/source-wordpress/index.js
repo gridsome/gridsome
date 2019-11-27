@@ -29,6 +29,8 @@ class WordPressSource {
       throw new Error(`${options.typeName}: perPage cannot be more than 100 or less than 1.`)
     }
 
+    this.customEndpoints = this.sanitizeCustomEndpoints()
+
     const baseUrl = trimEnd(options.baseUrl, '/')
 
     this.client = axios.create({
@@ -46,6 +48,7 @@ class WordPressSource {
       await this.getUsers(actions)
       await this.getTaxonomies(actions)
       await this.getPosts(actions)
+      await this.getCustomEndpoints(actions)
     })
   }
 
@@ -108,6 +111,7 @@ class WordPressSource {
           title: term.name,
           slug: term.slug,
           content: term.description,
+          meta: term.meta,
           count: term.count
         })
       }
@@ -143,14 +147,35 @@ class WordPressSource {
 
           if (post.hasOwnProperty(propName)) {
             const typeName = this.createTypeName(type)
-            const ref = createReference(typeName, post[propName])
             const key = camelCase(propName)
 
-            fields[key] = ref
+            fields[key] = Array.isArray(post[propName])
+              ? post[propName].map(id => createReference(typeName, id))
+              : createReference(typeName, post[propName])
           }
         }
 
         posts.addNode({ ...fields, id: post.id })
+      }
+    }
+  }
+
+  async getCustomEndpoints (actions) {
+    for (const endpoint of this.customEndpoints) {
+      const makeCollection = actions.addCollection || actions.addContentType
+      const cepCollection = makeCollection({
+        typeName: endpoint.typeName
+      })
+      const { data } = await this.fetch(endpoint.route, {}, {})
+      for (let item of data) {
+        if (endpoint.normalize) {
+          item = this.normalizeFields(item)
+        }
+
+        cepCollection.addNode({
+          ...item,
+          id: item.id || item.slug
+        })
       }
     }
   }
@@ -221,6 +246,20 @@ class WordPressSource {
 
       resolve(res.data)
     })
+  }
+
+  sanitizeCustomEndpoints () {
+    if (!this.options.customEndpoints) return []
+    if (!Array.isArray(this.options.customEndpoints)) throw Error('customEndpoints must be an array')
+    this.options.customEndpoints.forEach(endpoint => {
+      if (!endpoint.typeName) {
+        throw Error('Please provide a typeName option for all customEndpoints\n')
+      }
+      if (!endpoint.route) {
+        throw Error(`No route option in endpoint: ${endpoint.typeName}\n Ex: 'apiName/versionNumber/endpointObject'`)
+      }
+    })
+    return this.options.customEndpoints ? this.options.customEndpoints : []
   }
 
   normalizeFields (fields) {

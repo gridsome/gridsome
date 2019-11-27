@@ -146,7 +146,7 @@ test('create missing reference fields from collection.addReference()', async () 
   expect(data.post.author).toBeNull()
 })
 
-test('don\'t process invalid refs from collection.addReference()', () => {
+test('don\'t process invalid refs from collection.addReference()', async () => {
   const authors = api.store.addCollection('Author')
   const posts = api.store.addCollection('Post')
 
@@ -155,7 +155,54 @@ test('don\'t process invalid refs from collection.addReference()', () => {
 
   posts.addReference('authors', 'Author')
 
-  expect(() => app.schema.buildSchema()).not.toThrow('object')
+  const { errors, data } = await createSchemaAndExecute(`{
+    post(id:"1") {
+      authors {
+        id
+      }
+    }
+  }`)
+
+  expect(errors).toBeUndefined()
+  expect(data.post.authors).toBeNull()
+})
+
+test('ensure reference field is a list with collection.addReference()', async () => {
+  const authors = api.store.addCollection('Author')
+  const posts = api.store.addCollection('Post')
+
+  authors.addNode({ id: '1', title: 'An Author' })
+  posts.addNode({ id: '1', authors: null })
+
+  posts.addReference('authors', '[Author]')
+
+  const { errors, data } = await createSchemaAndExecute(`{
+    post(id:"1") {
+      authors { id }
+    }
+  }`)
+
+  expect(errors).toBeUndefined()
+  expect(data.post.authors).toHaveLength(0)
+})
+
+test('set non-null reference with collection.addReference()', async () => {
+  const authors = api.store.addCollection('Author')
+  const posts = api.store.addCollection('Post')
+
+  authors.addNode({ id: '1', title: 'An Author' })
+  posts.addNode({ id: '1', author: null })
+  posts.addNode({ id: '2', author: '1' })
+  posts.addReference('author', 'Author!')
+
+  const { errors } = await createSchemaAndExecute(`{
+    post(id:"1") {
+      author { id }
+    }
+  }`)
+
+  expect(errors).toHaveLength(1)
+  expect(errors[0].message).toMatch('non-nullable')
 })
 
 test('proxy invalid field names in collection.addReference()', async () => {

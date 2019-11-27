@@ -6,7 +6,7 @@ const resolve = p => path.resolve(__dirname, p)
 module.exports = async app => {
   const isProd = process.env.NODE_ENV === 'production'
   const config = createBaseConfig(app, { isProd, isServer: true })
-  const { outDir, serverBundlePath } = app.config
+  const { outputDir, serverBundlePath } = app.config
 
   config.entry('app').add(resolve('../../app/entry.server.js'))
 
@@ -19,7 +19,7 @@ module.exports = async app => {
 
   config.plugin('vue-server-renderer')
     .use(require('vue-server-renderer/server-plugin'), [{
-      filename: path.relative(outDir, serverBundlePath)
+      filename: path.relative(outputDir, serverBundlePath)
     }])
 
   return config

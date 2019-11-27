@@ -51,3 +51,7 @@ exports.isResolvablePath = function (value) {
     (value.startsWith('.') || path.isAbsolute(value))
   )
 }
+
+exports.isMailtoLink = string => String(string).startsWith('mailto:')
+
+exports.isTelLink = string => String(string).startsWith('tel:')

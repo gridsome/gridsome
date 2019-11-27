@@ -214,7 +214,7 @@ Get the details of an individual `DrupalNodeArticle` using `<page-query>` in a G
 
 ```
 <page-query>
-  query Article($id: String!) {
+  query Article($id: ID!) {
     drupalNodeArticle(id: $id) {
       title
       date
@@ -244,4 +244,32 @@ Get the details of an individual `DrupalNodeArticle` using `<page-query>` in a G
 </page-query>
 ```
 
+Note that you can also search through the resources by other filters such are `path` (so you can lookup based on the route, for example). Remember to explore the graphql schema to better see what you can gather, what you can filter on.
+
 Any `relationships` containing a `meta` object in the JSON:API response will be merged as a sibling object alongside `node`. See `field_image` above as an example.
+
+Taxonomy terms get a little trickier but you can use `Fragments` (and `Inline Fragments`) to generate a query that 'joins' between your node resource and your tag resource:
+
+```
+  query Tag($id: ID!) {
+    tag: drupalTaxonomyTermTags(id: $id) {
+      title
+      belongsTo {
+        edges {
+          node {
+            id
+            ... on DrupalNodeArticle {
+              title
+              path
+              date_path
+              body {
+                processed
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+```
+And everything within the `DrupalNodeArticle` can be treated the same as for a regular node query.

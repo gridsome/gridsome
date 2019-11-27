@@ -9,9 +9,13 @@ const pathPrefix = '/'
 const baseconfig = {
   pathPrefix,
   imagesDir,
-  outDir: context,
+  outputDir: context,
   imageExtensions: ['.jpg', '.png', '.webp'],
-  maxImageWidth: 1000
+  maxImageWidth: 3000,
+  images: {
+    minSizeDistance: 300,
+    defaultBlur: 20
+  }
 }
 
 beforeEach(() => (ImageProcessQueue.uid = 0))
@@ -37,11 +41,11 @@ test('generate srcset for image', async () => {
   expect(result.sets[0].src).toEqual('/assets/static/1000x600.82a2fbd.test.png')
   expect(result.sets[0].destPath).toEqual(path.join(imagesDir, '1000x600.82a2fbd.test.png'))
   expect(result.sets[0].width).toEqual(480)
-  expect(result.sets[0].height).toEqual(288)
+  expect(result.sets[0].height).toEqual(undefined)
   expect(result.sets[1].src).toEqual('/assets/static/1000x600.97c148e.test.png')
   expect(result.sets[1].destPath).toEqual(path.join(imagesDir, '1000x600.97c148e.test.png'))
   expect(result.sets[1].width).toEqual(1000)
-  expect(result.sets[1].height).toEqual(600)
+  expect(result.sets[1].height).toEqual(undefined)
   expect(result.srcset[0]).toEqual('/assets/static/1000x600.82a2fbd.test.png 480w')
   expect(result.srcset[1]).toEqual('/assets/static/1000x600.97c148e.test.png 1000w')
 })
@@ -71,10 +75,10 @@ test('encode src in serve mode', async () => {
   process.env.GRIDSOME_MODE = mode
 
   expect(result.filePath).toEqual(filePath)
-  expect(result.src).toEqual('/assets/static/assets/folder%20name/350%20250.png?width=350')
-  expect(result.sets[0].src).toEqual('/assets/static/assets/folder%20name/350%20250.png?width=350')
-  expect(result.sets[0].destPath).toEqual(path.join(imagesDir, 'assets/folder name/350 250.png?width=350'))
-  expect(result.srcset[0]).toEqual('/assets/static/assets/folder%20name/350%20250.png?width=350 350w')
+  expect(result.src).toEqual('/assets/static/assets/folder%20name/350%20250.png?width=350&key=test')
+  expect(result.sets[0].src).toEqual('/assets/static/assets/folder%20name/350%20250.png?width=350&key=test')
+  expect(result.sets[0].destPath).toEqual(path.join(imagesDir, 'assets/folder name/350 250.png?width=350&key=test'))
+  expect(result.srcset[0]).toEqual('/assets/static/assets/folder%20name/350%20250.png?width=350&key=test 350w')
 })
 
 test('generate srcset for image with path prefix', async () => {
@@ -107,7 +111,7 @@ test('resize image by width attribute', async () => {
   expect(result.srcset).toHaveLength(1)
   expect(result.sets[0].src).toEqual('/assets/static/1000x600.6b65613.test.png')
   expect(result.sets[0].width).toEqual(300)
-  expect(result.sets[0].height).toEqual(180)
+  expect(result.sets[0].height).toEqual(undefined)
   expect(result.srcset[0]).toEqual('/assets/static/1000x600.6b65613.test.png 300w')
 })
 
@@ -117,11 +121,23 @@ test('resize image by width and height attribute', async () => {
 
   const result = await queue.add(filePath, { width: 500, height: 500 })
 
-  expect(queue.images.queue).toHaveLength(2)
+  expect(queue.images.queue).toHaveLength(1)
   expect(result.src).toEqual('/assets/static/1000x600.95a5738.test.png')
   expect(result.sizes).toEqual('(max-width: 500px) 100vw, 500px')
-  expect(result.sets[0].src).toEqual('/assets/static/1000x600.59e52ae.test.png')
-  expect(result.sets[1].src).toEqual('/assets/static/1000x600.95a5738.test.png')
+  expect(result.sets[0].src).toEqual('/assets/static/1000x600.95a5738.test.png')
+})
+
+test('keep wanted width if wider than largest size', async () => {
+  const filePath = path.resolve(context, 'assets/2560x2560.png')
+  const queue = new AssetsQueue({ context, config: baseconfig })
+
+  const result = await queue.add(filePath, { width: 2000 })
+
+  expect(queue.images.queue).toHaveLength(3)
+  expect(result.sets).toHaveLength(3)
+  expect(result.sets[0].width).toEqual(480)
+  expect(result.sets[1].width).toEqual(1024)
+  expect(result.sets[2].width).toEqual(2000)
 })
 
 test('disable blur filter', async () => {
@@ -179,19 +195,21 @@ test('add custom attributes to markup', async () => {
 
 test('respect config.maxImageWidth', async () => {
   const filePath = path.resolve(context, 'assets/1000x600.png')
-  const config = { ...baseconfig, maxImageWidth: 600 }
+  const config = { ...baseconfig, maxImageWidth: 900 }
   const queue = new AssetsQueue({ context, config })
 
   const result = await queue.add(filePath)
 
   expect(queue.images.queue).toHaveLength(2)
-  expect(result.src).toEqual('/assets/static/1000x600.bd6740a.test.png')
+  expect(result.src).toEqual('/assets/static/1000x600.2671d65.test.png')
   expect(result.sets).toHaveLength(2)
   expect(result.srcset).toHaveLength(2)
   expect(result.sets[0].src).toEqual('/assets/static/1000x600.82a2fbd.test.png')
-  expect(result.sets[1].src).toEqual('/assets/static/1000x600.bd6740a.test.png')
+  expect(result.sets[0].width).toEqual(480)
+  expect(result.sets[1].src).toEqual('/assets/static/1000x600.2671d65.test.png')
+  expect(result.sets[1].width).toEqual(900)
   expect(result.srcset[0]).toEqual('/assets/static/1000x600.82a2fbd.test.png 480w')
-  expect(result.srcset[1]).toEqual('/assets/static/1000x600.bd6740a.test.png 600w')
+  expect(result.srcset[1]).toEqual('/assets/static/1000x600.2671d65.test.png 900w')
 })
 
 test('use all image sizes', async () => {
@@ -212,7 +230,7 @@ test('use custom image sizes', async () => {
   const config = { ...baseconfig, maxImageWidth: 2560 }
   const queue = new AssetsQueue({ context, config })
 
-  const result = await queue.add(filePath, { sizes: [480, 1024] })
+  const result = await queue.add(filePath, { imageWidths: [480, 1024] })
 
   expect(queue.images.queue).toHaveLength(2)
   expect(result.src).toEqual('/assets/static/2560x2560.cbab2cf.test.png')
@@ -233,48 +251,100 @@ test('do not resize if image is too small', async () => {
   expect(result.srcset).toHaveLength(1)
 })
 
-test('calculate correct image size for fit=inside ', async () => {
-  const filePath = path.resolve(context, 'assets/1000x600.png')
-  const queue = new AssetsQueue({ context, config: baseconfig })
+describe('calculate correct image size', () => {
+  test.each([
+    [
+      'assets/200x300.png',
+      { width: 400 },
+      { width: 200, height: 300 }
+    ],
+    [
+      'assets/200x300.png',
+      { height: 400 },
+      { width: 200, height: 300 }
+    ],
+    [
+      'assets/200x300.png',
+      { width: 400, height: 400 },
+      { width: 400, height: 400 }
+    ],
+    [
+      'assets/200x300.png',
+      { width: 400, height: 400, fit: 'cover' },
+      { width: 400, height: 400 }
+    ],
+    [
+      'assets/200x300.png',
+      { width: 400, height: 400, fit: 'contain' },
+      { width: 400, height: 400 }
+    ],
+    [
+      'assets/200x300.png',
+      { height: 250, fit: 'cover' },
+      { width: 200, height: 250 }
+    ],
+    [
+      'assets/200x300.png',
+      { width: 400, height: 400, fit: 'fill' },
+      { width: 400, height: 400 }
+    ],
+    [
+      'assets/1000x600.png',
+      { width: 400, height: 400, fit: 'contain' },
+      { width: 400, height: 400 }
+    ]
+  ])('%s %p', async (image, options, expected) => {
+    const filePath = path.resolve(context, image)
+    const queue = new AssetsQueue({ context, config: baseconfig })
+    const result = await queue.add(filePath, options)
 
-  const resultFixedSize = await queue.add(filePath, { width: 600, height: 300, fit: 'inside' })
-  const resultAutoHeight = await queue.add(filePath, { width: 600, fit: 'inside' })
-  const resultAutoWidth = await queue.add(filePath, { height: 300, fit: 'inside' })
-  const resultAuto = await queue.add(filePath, { fit: 'inside' })
+    expect(queue.images.queue).toHaveLength(1)
+    expect(result.size).toMatchObject(expected)
+  })
 
-  expect(resultFixedSize.size.width).toBe(500)
-  expect(resultFixedSize.size.height).toBe(300)
+  test('assets/1000x600.png fit=inside ', async () => {
+    const filePath = path.resolve(context, 'assets/1000x600.png')
+    const queue = new AssetsQueue({ context, config: baseconfig })
 
-  expect(resultAutoHeight.size.width).toBe(600)
-  expect(resultAutoHeight.size.height).toBe(360)
+    const resultFixedSize = await queue.add(filePath, { width: 600, height: 300, fit: 'inside' })
+    const resultAutoHeight = await queue.add(filePath, { width: 600, fit: 'inside' })
+    const resultAutoWidth = await queue.add(filePath, { height: 300, fit: 'inside' })
+    const resultAuto = await queue.add(filePath, { fit: 'inside' })
 
-  expect(resultAutoWidth.size.width).toBe(500)
-  expect(resultAutoWidth.size.height).toBe(300)
+    expect(resultFixedSize.size.width).toBe(500)
+    expect(resultFixedSize.size.height).toBe(300)
 
-  expect(resultAuto.size.width).toBe(1000)
-  expect(resultAuto.size.height).toBe(600)
-})
+    expect(resultAutoHeight.size.width).toBe(600)
+    expect(resultAutoHeight.size.height).toBe(360)
 
-test('calculate correct image size for fit=outside', async () => {
-  const filePath = path.resolve(context, 'assets/1000x600.png')
-  const queue = new AssetsQueue({ context, config: baseconfig })
+    expect(resultAutoWidth.size.width).toBe(500)
+    expect(resultAutoWidth.size.height).toBe(300)
 
-  const resultFixedSize = await queue.add(filePath, { width: 600, height: 300, fit: 'outside' })
-  const resultAutoHeight = await queue.add(filePath, { width: 600, fit: 'outside' })
-  const resultAutoWidth = await queue.add(filePath, { height: 300, fit: 'outside' })
-  const resultAuto = await queue.add(filePath, { fit: 'outside' })
+    expect(resultAuto.size.width).toBe(1000)
+    expect(resultAuto.size.height).toBe(600)
+  })
 
-  expect(resultFixedSize.size.width).toBe(600)
-  expect(resultFixedSize.size.height).toBe(360)
+  test('assets/1000x600.png fit=outside', async () => {
+    const filePath = path.resolve(context, 'assets/1000x600.png')
+    const queue = new AssetsQueue({ context, config: baseconfig })
 
-  expect(resultAutoHeight.size.width).toBe(1000)
-  expect(resultAutoHeight.size.height).toBe(600)
+    const resultFixedSize = await queue.add(filePath, { width: 600, height: 300, fit: 'outside' })
+    const resultAutoHeight = await queue.add(filePath, { width: 600, fit: 'outside' })
+    const resultAutoWidth = await queue.add(filePath, { height: 300, fit: 'outside' })
+    const resultAuto = await queue.add(filePath, { fit: 'outside' })
 
-  expect(resultAutoWidth.size.width).toBe(1000)
-  expect(resultAutoWidth.size.height).toBe(600)
+    expect(resultFixedSize.size.width).toBe(600)
+    expect(resultFixedSize.size.height).toBe(360)
 
-  expect(resultAuto.size.width).toBe(1000)
-  expect(resultAuto.size.height).toBe(600)
+    expect(resultAutoHeight.size.width).toBe(1000)
+    expect(resultAutoHeight.size.height).toBe(600)
+
+    expect(resultAutoWidth.size.width).toBe(1000)
+    expect(resultAutoWidth.size.height).toBe(600)
+
+    expect(resultAuto.size.width).toBe(1000)
+    expect(resultAuto.size.height).toBe(600)
+  })
 })
 
 test('get url for server in serve mode', async () => {
@@ -292,8 +362,8 @@ test('get url for server in serve mode', async () => {
   process.env.GRIDSOME_MODE = mode
 
   expect(queue.images.queue).toHaveLength(0)
-  expect(result.src).toEqual('/assets/static/assets/1000x600.png?width=500')
-  expect(result2.src).toEqual('/assets/static/assets/1000x600.png?width=200&quality=50')
+  expect(result.src).toEqual('/assets/static/assets/1000x600.png?width=500&key=test')
+  expect(result2.src).toEqual('/assets/static/assets/1000x600.png?width=200&quality=50&key=test')
 })
 
 test('get queue values', async () => {
@@ -359,5 +429,12 @@ test('fail if file is missing', async () => {
   const filePath = path.resolve(context, 'assets/1000x600-missing.png')
   const queue = new AssetsQueue({ context, config: baseconfig })
 
-  expect(queue.add(filePath, { srcset: false })).rejects.toThrow(/was not found/)
+  await expect(queue.add(filePath, { srcset: false })).rejects.toThrow(/was not found/)
+})
+
+test('give useful error for null byte images', async () => {
+  const filePath = path.resolve(context, 'assets/null-byte.jpg')
+  const queue = new AssetsQueue({ context, config: baseconfig })
+
+  await expect(queue.add(filePath)).rejects.toThrow('Failed to process image')
 })

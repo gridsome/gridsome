@@ -69,6 +69,7 @@ module.exports = (context, options = {}) => {
 
   const assetsDir = localConfig.assetsDir || 'assets'
 
+  config.context = context
   config.pkg = options.pkg || resolvePkg(context)
   config.host = args.host || localConfig.host || '0.0.0.0'
   config.port = parseInt(args.port || localConfig.port, 10) || undefined
@@ -79,8 +80,18 @@ module.exports = (context, options = {}) => {
   config._pathPrefix = normalizePathPrefix(localConfig.pathPrefix)
   config.publicPath = config.pathPrefix ? `${config.pathPrefix}/` : '/'
   config.staticDir = resolve('static')
-  config.outDir = resolve(localConfig.outDir || 'dist')
-  config.assetsDir = path.join(config.outDir, assetsDir)
+
+  // TODO: remove outDir before 1.0
+  config.outputDir = resolve(localConfig.outputDir || localConfig.outDir || 'dist')
+  config.outDir = config.outputDir
+  deprecate.property(config, 'outDir', 'The outDir config is renamed to outputDir.')
+  if (localConfig.outDir) {
+    deprecate(`The outDir config is renamed to outputDir.`, {
+      customCaller: ['gridsome.config.js']
+    })
+  }
+
+  config.assetsDir = path.join(config.outputDir, assetsDir)
   config.imagesDir = path.join(config.assetsDir, 'static')
   config.filesDir = path.join(config.assetsDir, 'files')
   config.dataDir = path.join(config.assetsDir, 'data')
@@ -100,7 +111,11 @@ module.exports = (context, options = {}) => {
   config.configureWebpack = localConfig.configureWebpack
   config.configureServer = localConfig.configureServer
 
-  config.images = { ...localConfig.images }
+  config.images = {
+    defaultBlur: 40,
+    backgroundColor: null,
+    ...localConfig.images
+  }
 
   if (!colorString.get(config.images.backgroundColor || '')) {
     config.images.backgroundColor = null
@@ -142,6 +157,9 @@ module.exports = (context, options = {}) => {
 
   config.css = defaultsDeep(localConfig.css || {}, css)
 
+  config.prefetch = localConfig.prefetch || {}
+  config.preload = localConfig.preload || {}
+
   return Object.freeze(config)
 }
 
@@ -165,7 +183,7 @@ function resolveEnv (context) {
 
 function resolvePkg (context) {
   const pkgPath = path.resolve(context, 'package.json')
-  let pkg = { dependencies: {}}
+  let pkg = { dependencies: {}, devDependencies: {}}
 
   try {
     const content = fs.readFileSync(pkgPath, 'utf-8')
@@ -174,8 +192,13 @@ function resolvePkg (context) {
     // continue regardless of error
   }
 
+  const dependencies = Object.keys({
+    ...pkg.dependencies,
+    ...pkg.devDependencies
+  })
+
   if (
-    !Object.keys(pkg.dependencies).includes('gridsome') &&
+    !dependencies.includes('gridsome') &&
     !process.env.GRIDSOME_TEST
   ) {
     throw new Error('This is not a Gridsome project.')

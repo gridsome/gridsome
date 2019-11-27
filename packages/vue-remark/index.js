@@ -13,7 +13,8 @@ const remarkImagePlugin = require('./lib/plugins/image')
 const {
   createFile,
   makePathParams,
-  normalizeLayout
+  normalizeLayout,
+  createCacheIdentifier
 } = require('./lib/utils')
 
 const normalizeRouteKeys = keys => keys
@@ -160,7 +161,11 @@ class VueRemark {
 
     if (api._app.compiler.hooks.cacheIdentifier) {
       api._app.compiler.hooks.cacheIdentifier.tap('VueRemark', id => {
-        id['vue-remark'] = require('./package.json').version
+        id[`vue-remark-${api._entry.uid}`] = createCacheIdentifier(
+          api.context,
+          this.options.remark,
+          this.remark.processor.attachers
+        )
       })
     }
 

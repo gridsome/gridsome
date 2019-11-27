@@ -523,6 +523,53 @@ test('add custom resolver for invalid field names', async () => {
   expect(data.post.sub_fields.sub_field).toEqual(10)
 })
 
+test('set field extensions with factory methods', async () => {
+  const app = await createApp(api => {
+    api.loadSource(store => {
+      store.addCollection('Post').addNode({
+        id: '1',
+        foo: 10
+      })
+    })
+
+    api.createSchema(({ addSchemaTypes, schema }) => {
+      addSchemaTypes([
+        schema.createObjectType({
+          name: 'Post',
+          interfaces: ['Node'],
+          fields: {
+            one: {
+              type: 'Int',
+              extensions: {
+                proxy: {
+                  from: 'foo'
+                }
+              }
+            },
+            two: {
+              type: 'Int',
+              extensions: [
+                { name: 'proxy', args: { from: 'foo' } }
+              ]
+            }
+          }
+        })
+      ])
+    })
+  })
+
+  const { errors, data } = await app.graphql(`{
+    post(id:"1") {
+      one
+      two
+    }
+  }`)
+
+  expect(errors).toBeUndefined()
+  expect(data.post.one).toEqual(10)
+  expect(data.post.two).toEqual(10)
+})
+
 test('add custom resolvers for content type', async () => {
   const app = await createApp(api => {
     api.loadSource(store => {
@@ -781,6 +828,60 @@ test('add custom GraphQL schema', async () => {
   expect(data.nestedObject.subField.customRootValue).toEqual('subField foo')
 })
 
+test('add custom GraphQL schema with mutations', async () => {
+  const app = await createApp(api => {
+    api.createSchema(({ addSchema, ...actions }) => {
+      addSchema(new actions.GraphQLSchema({
+        mutation: new actions.GraphQLObjectType({
+          name: 'MyMutations',
+          fields: () => ({
+            doSomething: {
+              type: actions.GraphQLString,
+              args: {
+                input: {
+                  type: actions.GraphQLString,
+                  defaultValue: 'foo'
+                }
+              },
+              resolve: (obj, args) => {
+                return args.input
+              }
+            }
+          })
+        })
+      }))
+      addSchema(new actions.GraphQLSchema({
+        mutation: new actions.GraphQLObjectType({
+          name: 'OtherMutations',
+          fields: () => ({
+            doSomethingElse: {
+              type: actions.GraphQLString,
+              args: {
+                input: {
+                  type: actions.GraphQLString,
+                  defaultValue: 'bar'
+                }
+              },
+              resolve: (obj, args) => {
+                return args.input
+              }
+            }
+          })
+        })
+      }))
+    })
+  })
+
+  const { errors, data } = await app.graphql(`mutation {
+    doSomething(input:"one")
+    doSomethingElse(input:"two")
+  }`)
+
+  expect(errors).toBeUndefined()
+  expect(data.doSomething).toEqual('one')
+  expect(data.doSomethingElse).toEqual('two')
+})
+
 test('add custom Metadata schema', async () => {
   const app = await createApp(api => {
     api.createSchema(({ addMetadata, addSchemaTypes }) => {
@@ -841,7 +942,8 @@ test('merge object types', async () => {
   expect(fields.authorId).toBeDefined()
   expect(metaFields.id).toBeDefined()
   expect(metaFields.status).toBeDefined()
-  expect(metaFields.status.extensions.proxy.from).toEqual('bar')
+  expect(metaFields.status.extensions.directives).toHaveLength(1)
+  expect(metaFields.status.extensions.directives[0]).toMatchObject({ name: 'proxy', args: { from: 'bar' } })
   expect(postMetaComposer.getExtensions().foo).toBeDefined()
   expect(postMetaComposer.getExtensions().bar).toBeDefined()
 })
@@ -938,6 +1040,107 @@ test('add a experimental field extension', async () => {
 
   expect(errors).toBeUndefined()
   expect(data.post.title).toEqual('test-test')
+})
+
+test('apply extensions once per field', async () => {
+  const resolve = jest.fn((src, args, ctx, info) => src[info.fieldName])
+  const apply = jest.fn(() => ({ resolve }))
+
+  const app = await createApp(api => {
+    api.loadSource(({ addCollection, addSchemaTypes, addSchemaFieldExtension }) => {
+      addCollection('Post').addNode({ id: '1', title: 'test' })
+      addSchemaTypes(`
+        type Post implements Node {
+          title: String @ext
+          title2: String @ext @proxy(from: "title")
+        }
+      `)
+      addSchemaFieldExtension({ name: 'ext', apply })
+    })
+  })
+
+  const { errors, data } = await app.graphql(`
+    query {
+      post(id:"1") {
+        title
+        title2
+      }
+    }
+  `)
+
+  expect(errors).toBeUndefined()
+  expect(data.post.title).toEqual('test')
+  expect(data.post.title2).toEqual('test')
+  expect(apply.mock.calls).toHaveLength(2)
+  expect(resolve.mock.calls).toHaveLength(2)
+})
+
+test('use extension multiple times on field', async () => {
+  const apply = jest.fn((ext, config) => ({
+    resolve(src, args, ctx, info) {
+      return config.resolve(src, args, ctx, info) + ext.value
+    }
+  }))
+
+  const app = await createApp(api => {
+    api.loadSource(({ addCollection, addSchemaTypes, addSchemaFieldExtension }) => {
+      addCollection('Post').addNode({ id: '1', title: 'test' })
+      addSchemaTypes(`
+        type Post implements Node @infer {
+          title: String @ext(value:"-one") @ext(value:"-two") @ext
+        }
+      `)
+      addSchemaFieldExtension({
+        name: 'ext',
+        args: {
+          value: {
+            type: 'String',
+            defaultValue: '-three'
+          }
+        },
+        apply
+      })
+    })
+  })
+
+  const { errors, data } = await app.graphql(`
+    query {
+      post(id:"1") {
+        title
+      }
+    }
+  `)
+
+  expect(errors).toBeUndefined()
+  expect(data.post.title).toEqual('test-one-two-three')
+  expect(apply.mock.calls).toHaveLength(3)
+})
+
+test('prevent overriding built-in GraphQL directives', done => {
+  createApp(api => {
+    api.loadSource(({ addSchemaFieldExtension }) => {
+      expect(() => addSchemaFieldExtension({ name: 'skip' })).toThrow('@skip')
+      done()
+    })
+  })
+})
+
+test('prevent overriding @paginate directives', done => {
+  createApp(api => {
+    api.loadSource(({ addSchemaFieldExtension }) => {
+      expect(() => addSchemaFieldExtension({ name: 'paginate' })).toThrow('@paginate')
+      done()
+    })
+  })
+})
+
+test('prevent overriding built-in extensions', done => {
+  createApp(api => {
+    api.loadSource(({ addSchemaFieldExtension }) => {
+      expect(() => addSchemaFieldExtension({ name: 'reference' })).toThrow('@reference')
+      done()
+    })
+  })
 })
 
 test('output field value as JSON', async () => {

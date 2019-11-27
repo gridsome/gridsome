@@ -59,3 +59,24 @@ module.exports = {
   }
 }
 ```
+
+If you'd like to disable highlighting of inline code blocks, pass `transformInlineCode: false` in the plugin options
+
+```js
+module.exports = {
+  plugins: [
+    {
+      use: '@gridsome/source-filesystem',
+      options: {}
+    }
+  ],
+
+  transformers: {
+    remark: {
+      plugins: [
+        ['@gridsome/remark-prismjs', { transformInlineCode: false }]
+      ]
+    }
+  }
+}
+```

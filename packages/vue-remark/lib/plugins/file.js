@@ -10,7 +10,8 @@ module.exports = function attacher (options = {}) {
         !isUrl(node.url) &&
         isRelative(node.url) &&
         path.extname(node.url) &&
-        options.processFiles !== false
+        options.processFiles !== false &&
+        !/^mailto:/.test(node.url)
       ) {
         node.type = 'g-link'
       }

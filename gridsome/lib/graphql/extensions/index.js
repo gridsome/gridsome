@@ -1,4 +1,4 @@
-const { GraphQLDirective, DirectiveLocation } = require('graphql')
+const { GraphQLDirective, DirectiveLocation, defaultFieldResolver } = require('graphql')
 
 const objectExtensions = {
   infer: {
@@ -74,24 +74,26 @@ function applyFieldExtensions (typeComposer, customExtensions = {}) {
 
   typeComposer.getFieldNames().forEach(fieldName => {
     const extensions = typeComposer.getFieldExtensions(fieldName)
+    const directives = (extensions.directives || []).filter(({ name }) =>
+      allFieldExtensions.hasOwnProperty(name)
+    )
 
-    Object.keys(extensions)
-      .sort(key => key === 'proxy')
-      .forEach(key => {
-        const { apply } = allFieldExtensions[key] || {}
+    directives.forEach(({ name, args }) => {
+      const { apply } = allFieldExtensions[name] || {}
 
-        if (typeof apply === 'function') {
-          const fieldConfig = typeComposer.getFieldConfig(fieldName)
-          const newFieldConfig = apply(extensions[key], fieldConfig, {
-            typeComposer,
-            fieldName
-          })
+      if (typeof apply === 'function') {
+        const fieldConfig = typeComposer.getFieldConfig(fieldName)
+        const resolve = fieldConfig.resolve || defaultFieldResolver
+        const newFieldConfig = apply(args, { ...fieldConfig, resolve }, {
+          typeComposer,
+          fieldName
+        })
 
-          if (newFieldConfig) {
-            typeComposer.extendField(fieldName, newFieldConfig)
-          }
+        if (newFieldConfig) {
+          typeComposer.extendField(fieldName, newFieldConfig)
         }
-      })
+      }
+    })
   })
 }
 

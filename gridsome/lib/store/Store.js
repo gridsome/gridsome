@@ -6,9 +6,12 @@ const { deprecate } = require('../utils/deprecate')
 const { isArray, isPlainObject } = require('lodash')
 const Collection = require('./Collection')
 const { safeKey } = require('../utils')
+const lokiOps = require('./lokiOps')
 
 const { SyncWaterfallHook } = require('tapable')
 const SyncBailWaterfallHook = require('../app/SyncBailWaterfallHook')
+
+Object.assign(Loki.LokiOps, lokiOps)
 
 class Store {
   constructor (app) {

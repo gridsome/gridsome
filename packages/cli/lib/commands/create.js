@@ -11,6 +11,10 @@ module.exports = async (name, starter = 'default') => {
   const projectName = path.basename(dir)
   const starters = ['default', 'wordpress']
   const useYarn = await hasYarn()
+  const commandName = {
+    develop: 'gridsome develop',
+    build: 'gridsome build'
+  }
 
   try {
     const files = fs.existsSync(dir) ? fs.readdirSync(dir) : []
@@ -26,9 +30,6 @@ module.exports = async (name, starter = 'default') => {
   } else if (starters.includes(starter)) {
     starter = `https://github.com/gridsome/gridsome-starter-${starter}.git`
   }
-
-  const developCommand = 'gridsome develop'
-  const buildCommand = 'gridsome build'
 
   const tasks = new Tasks([
     {
@@ -76,7 +77,7 @@ module.exports = async (name, starter = 'default') => {
           child.stdout.on('data', buffer => {
             let str = buffer.toString().trim()
 
-            if (str && command === 'yarn' && str.indexOf('"type":') !== -1) {
+            if (str && command === 'yarn' && str.includes('"type":')) {
               const newLineIndex = str.lastIndexOf('\n')
 
               if (newLineIndex !== -1) {
@@ -103,7 +104,7 @@ module.exports = async (name, starter = 'default') => {
                   `Failed to install dependencies with ${command}. ` +
                   `Please enter ${chalk.cyan(name)} directory and ` +
                   `install dependencies with yarn or npm manually. ` +
-                  `Then run ${chalk.cyan(developCommand)} to start ` +
+                  `Then run ${chalk.cyan(commandName.develop)} to start ` +
                   `local development.\n\n    Exit code ${code}`
                 )
               )
@@ -122,8 +123,8 @@ module.exports = async (name, starter = 'default') => {
   if (process.cwd() !== dir) {
     console.log(`  - Enter directory ${chalk.green(`cd ${name}`)}`)
   }
-  console.log(`  - Run ${chalk.green(developCommand)} to start local development`)
-  console.log(`  - Run ${chalk.green(buildCommand)} to build for production`)
+  console.log(`  - Run ${chalk.green(commandName.develop)} to start local development`)
+  console.log(`  - Run ${chalk.green(commandName.build)} to build for production`)
   console.log()
 }
 

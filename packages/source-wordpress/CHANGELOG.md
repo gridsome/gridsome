@@ -3,6 +3,59 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.5.2](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/compare/@gridsome/source-wordpress@0.5.1...@gridsome/source-wordpress@0.5.2) (2019-11-19)
+
+
+### Bug Fixes
+
+* **wordpress:** normalize option for custom endpoints ([#785](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/issues/785)) ([5f83c93](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/commit/5f83c93))
+
+
+
+
+
+## [0.5.1](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/compare/@gridsome/source-wordpress@0.5.0...@gridsome/source-wordpress@0.5.1) (2019-11-06)
+
+**Note:** Version bump only for package @gridsome/source-wordpress
+
+
+
+
+
+# [0.5.0](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/compare/@gridsome/source-wordpress@0.4.3...@gridsome/source-wordpress@0.5.0) (2019-10-25)
+
+
+### Features
+
+* **wordpress:** custom REST route support ([#706](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/issues/706)) ([23bd974](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/commit/23bd974))
+
+
+
+
+
+## [0.4.3](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/compare/@gridsome/source-wordpress@0.4.2...@gridsome/source-wordpress@0.4.3) (2019-10-15)
+
+
+### Bug Fixes
+
+* **wordpress:** add references as array fields ([#745](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/issues/745)) ([6058ff1](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/commit/6058ff1))
+
+
+
+
+
+## [0.4.2](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/compare/@gridsome/source-wordpress@0.4.1...@gridsome/source-wordpress@0.4.2) (2019-10-01)
+
+
+### Bug Fixes
+
+* **wordpress:** add meta to taxonomy terms ([#672](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/issues/672)) ([5b359ad](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/commit/5b359ad))
+* **wordpress:** remove starting slash from rest_base ([#712](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/issues/712)) ([bb0f6d5](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/commit/bb0f6d5))
+
+
+
+
+
 ## [0.4.1](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/compare/@gridsome/source-wordpress@0.4.0...@gridsome/source-wordpress@0.4.1) (2019-09-17)
 
 

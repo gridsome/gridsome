@@ -4,6 +4,11 @@ import { getResults, setResults, formatError } from './shared'
 export default (to, from, next) => {
   if (process.isServer) return next()
 
+  if (to.meta && to.meta.__custom) {
+    global.__INITIAL_STATE__ = null
+    return next()
+  }
+
   if (process.isProduction && global.__INITIAL_STATE__) {
     setResults(to.path, global.__INITIAL_STATE__)
     global.__INITIAL_STATE__ = null

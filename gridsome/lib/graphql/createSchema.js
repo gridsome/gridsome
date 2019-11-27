@@ -5,7 +5,7 @@ const createNodesSchema = require('./nodes')
 const createMetadataSchema = require('./metadata')
 const { scalarTypeResolvers } = require('./resolvers')
 const { addDirectives, applyFieldExtensions } = require('./extensions')
-const { isEmpty, get } = require('lodash')
+const { isEmpty, isPlainObject, findLastIndex, get } = require('lodash')
 const { isRefField } = require('../store/utils')
 
 const {
@@ -30,8 +30,7 @@ const {
 const {
   isCreatedType,
   hasNodeReference,
-  CreatedGraphQLType,
-  addObjectTypeExtensions
+  CreatedGraphQLType
 } = require('./utils')
 
 const {
@@ -111,18 +110,19 @@ function getNodeReferenceFields (typeComposer, currentPath = []) {
 
     for (const fieldName in fields) {
       const fieldTypeComposer = typeComposer.getFieldTC(fieldName)
-      const extensions = typeComposer.getFieldExtensions(fieldName)
-      const isList = typeComposer.isFieldPlural(fieldName)
+      const { directives = [] } = typeComposer.getFieldExtensions(fieldName)
 
       if (fieldTypeComposer instanceof ObjectTypeComposer) {
         if (fieldTypeComposer.hasInterface('Node')) {
           const typeName = fieldTypeComposer.getTypeName()
-          const reference = extensions.reference || {}
+          const index = findLastIndex(directives, ['name', 'reference'])
           const path = currentPath.concat(fieldName)
-          const config = { typeName, reference, isList, path }
+          const dir = directives[index]
 
           // TODO: support custom fields
-          if (reference.by === 'id') res.push(config)
+          if (dir && dir.args && dir.args.by === 'id') {
+            res.push({ typeName, path })
+          }
         } else {
           res = res.concat(
             getNodeReferenceFields(
@@ -155,7 +155,9 @@ function addTypeDefNode (schemaComposer, typeNode) {
   const existingTypeComposer = getTypeComposer(schemaComposer, typeName)
   const typeComposer = schemaComposer.typeMapper.makeSchemaDef(typeNode)
 
-  addObjectTypeExtensions(typeComposer)
+  typeComposer.getDirectives().forEach(directive => {
+    typeComposer.setExtension(directive.name, directive.args)
+  })
 
   if (existingTypeComposer) {
     mergeTypes(schemaComposer, existingTypeComposer, typeComposer)
@@ -211,11 +213,31 @@ function validateTypeName (typeComposer) {
   }
 }
 
+function convertExtensionsToDirectives (options) {
+  if (isPlainObject(options.fields)) {
+    for (const fieldName in options.fields) {
+      const fieldConfig = options.fields[fieldName]
+      if (isPlainObject(fieldConfig.extensions)) {
+        const fieldExtensions = []
+        for (const name in fieldConfig.extensions) {
+          fieldExtensions.push({ name, args: fieldConfig.extensions[name] })
+          delete fieldConfig.extensions[name]
+        }
+        fieldConfig.extensions.directives = fieldExtensions
+      } else if (Array.isArray(fieldConfig.extensions)) {
+        const directives = fieldConfig.extensions
+        fieldConfig.extensions = { directives }
+      }
+    }
+  }
+}
+
 function createType (schemaComposer, type, options) {
   switch (type) {
-    case CreatedGraphQLType.Object:
+    case CreatedGraphQLType.Object: {
+      convertExtensionsToDirectives(options)
       return ObjectTypeComposer.createTemp(options, schemaComposer)
-
+    }
     case CreatedGraphQLType.Union:
       return UnionTypeComposer.createTemp(options, schemaComposer)
 
@@ -242,13 +264,21 @@ function mergeTypes (schemaComposer, typeA, typeB) {
 }
 
 function processTypes (schemaComposer, extensions) {
+  const seen = new Set()
+
   for (const typeComposer of schemaComposer.values()) {
+    if (typeof typeComposer.getTypeName !== 'function') continue
+    else if (seen.has(typeComposer.getTypeName())) continue
+    else seen.add(typeComposer.getTypeName())
+
     switch (typeComposer.constructor) {
       case ObjectTypeComposer:
         processObjectTypeFields(schemaComposer, typeComposer, extensions)
         break
     }
   }
+
+  seen.clear()
 }
 
 function processObjectTypeFields (schemaComposer, typeComposer, extensions) {
@@ -303,12 +333,18 @@ function addSchemas (schemaComposer, schemas) {
   schemas.forEach(schema => {
     const typeMap = schema.getTypeMap()
     const queryType = schema.getQueryType()
-    const tempTypeComposer = schemaComposer.createTempTC(queryType)
-    const queryFields = tempTypeComposer.getFields()
+    const mutationType = schema.getMutationType()
 
-    processSchemaFields(queryType, tempTypeComposer)
+    if (queryType) {
+      const tempTypeComposer = schemaComposer.createTempTC(queryType)
+      renameRootTypeName(tempTypeComposer, queryType, 'Query')
+      schemaComposer.Query.addFields(tempTypeComposer.getFields())
+    }
 
-    schemaComposer.Query.addFields(queryFields)
+    if (mutationType) {
+      const tempTypeComposer = schemaComposer.createTempTC(mutationType)
+      schemaComposer.Mutation.addFields(tempTypeComposer.getFields())
+    }
 
     for (const typeName in typeMap) {
       const typeDef = typeMap[typeName]
@@ -327,7 +363,7 @@ function addSchemas (schemaComposer, schemas) {
         typeComposer instanceof ObjectTypeComposer ||
         typeComposer instanceof InterfaceTypeComposer
       ) {
-        processSchemaFields(queryType, typeComposer)
+        renameRootTypeName(typeComposer, queryType, 'Query')
       }
 
       schemaComposer.addSchemaMustHaveType(typeComposer)
@@ -335,7 +371,7 @@ function addSchemas (schemaComposer, schemas) {
   })
 }
 
-function processSchemaFields (queryType, typeComposer) {
+function renameRootTypeName (typeComposer, rootTypeDef, rootTypeName) {
   if (
     typeComposer instanceof ObjectTypeComposer ||
     typeComposer instanceof InterfaceTypeComposer
@@ -343,9 +379,9 @@ function processSchemaFields (queryType, typeComposer) {
     typeComposer.getFieldNames().forEach(fieldName => {
       const fieldType = typeComposer.getFieldType(fieldName)
 
-      if (getNamedType(fieldType) === queryType) {
+      if (getNamedType(fieldType) === rootTypeDef) {
         typeComposer.extendField(fieldName, {
-          type: fieldType.toString().replace(queryType.name, 'Query')
+          type: fieldType.toString().replace(rootTypeDef.name, rootTypeName)
         })
       }
     })

@@ -9,9 +9,9 @@ const normalizeNodeOptions = require('./normalizeNodeOptions')
 const { parseUrl, createFieldName } = require('./utils')
 const { warn } = require('../utils/log')
 const { mapValues, isPlainObject } = require('lodash')
-const { Collection } = require('lokijs')
+const Loki = require('lokijs')
 
-class ContentType {
+class Collection {
   constructor (typeName, options, store) {
     this.typeName = typeName
     this.options = options || {}
@@ -19,9 +19,9 @@ class ContentType {
     this._store = store
     this._transformers = store._transformers
     this._events = new EventEmitter()
-    this._collection = new Collection(typeName, {
-      indices: ['id', 'path', 'internal.typeName'],
-      unique: ['id', 'path'],
+    this._collection = new Loki.Collection(typeName, {
+      indices: ['id', 'internal.typeName', ...(options._indices || [])],
+      unique: ['id', ...(options._unique || [])],
       disableMeta: true
     })
 
@@ -175,9 +175,9 @@ class ContentType {
 
     if (validName !== fieldName) {
       options.extensions = {
-        proxy: {
-          from: fieldName
-        }
+        directives: [
+          { name: 'proxy', args: { from: fieldName } }
+        ]
       }
     }
 
@@ -205,4 +205,4 @@ class ContentType {
   }
 }
 
-module.exports = ContentType
+module.exports = Collection

@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0](https://github.com/gridsome/gridsome/tree/master/packages/transformer-remark/compare/@gridsome/transformer-remark@0.3.4...@gridsome/transformer-remark@0.4.0) (2019-10-25)
+
+
+### Features
+
+* **remark:** set custom grayMatter options ([#284](https://github.com/gridsome/gridsome/tree/master/packages/transformer-remark/issues/284)) ([23a5d82](https://github.com/gridsome/gridsome/tree/master/packages/transformer-remark/commit/23a5d82))
+
+
+
+
+
 ## [0.3.4](https://github.com/gridsome/gridsome/tree/master/packages/transformer-remark/compare/@gridsome/transformer-remark@0.3.3...@gridsome/transformer-remark@0.3.4) (2019-09-20)
 
 

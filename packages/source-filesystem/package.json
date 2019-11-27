@@ -1,5 +1,5 @@
 {
-  "version": "0.6.0",
+  "version": "0.6.2",
   "name": "@gridsome/source-filesystem",
   "description": "Filesystem source for Gridsome",
   "homepage": "https://github.com/gridsome/gridsome/tree/master/packages/source-filesystem#readme",

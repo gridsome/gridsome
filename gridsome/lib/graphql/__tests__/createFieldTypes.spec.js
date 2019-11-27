@@ -1,7 +1,13 @@
 const App = require('../../app/App')
 const { createFieldTypes } = require('../createFieldTypes')
 const createFieldDefinitions = require('../createFieldDefinitions')
-const { SchemaComposer, ObjectTypeComposer } = require('graphql-compose')
+
+const {
+  ListComposer,
+  SchemaComposer,
+  UnionTypeComposer,
+  ObjectTypeComposer
+} = require('graphql-compose')
 
 const nodes = [
   {
@@ -27,13 +33,18 @@ const nodes = [
       { typeName: 'Post3', id: '1' },
       { typeName: undefined, id: '1' }
     ],
+    unionRef: { typeName: 'Post1', id: '1' },
     invalidRef: { typeName: undefined, id: '1' },
     simpleObj: {
       foo: 'bar'
     },
     obj: {
       foo: 'bar',
-      empty: []
+      empty: [],
+      unionRef: { typeName: 'Post1', id: '1' },
+      unionRefs: [
+        { typeName: 'Post1', id: '1' }
+      ]
     }
   },
   {
@@ -51,11 +62,17 @@ const nodes = [
       { typeName: 'Post', id: '1' } // #128, #129
     ],
     ref: { typeName: 'Post', id: '1' },
+    unionRef: { typeName: 'Post2', id: '1' },
     extendObj: {
       bar: 'foo'
     },
     obj: {
       bar: 'foo',
+      unionRef: { typeName: 'Post2', id: '1' },
+      unionRefs: [
+        { typeName: 'Post2', id: '1' },
+        { typeName: 'Post3', id: '1' }
+      ],
       test: {
         foo: 'bar',
         emptyObj: {},
@@ -71,6 +88,8 @@ const nodes = [
     ref: null,
     refs: [],
     objList: [],
+    invalidList: [null, undefined],
+    unionRef: { typeName: 'Post3', id: '1' },
     numberList: [],
     deep: {
       object: {
@@ -102,6 +121,9 @@ test('merge node fields', () => {
   expect(fields.refList.value.typeName).toEqual(expect.arrayContaining(['Post1', 'Post2', 'Post3']))
   expect(fields.refList.value.isList).toEqual(true)
   expect(fields.ref.value).toMatchObject({ typeName: 'Post', isList: false })
+  expect(fields.unionRef.value.isList).toEqual(false)
+  expect(fields.unionRef.value.typeName).toHaveLength(3)
+  expect(fields.unionRef.value.typeName).toEqual(expect.arrayContaining(['Post1', 'Post2', 'Post3']))
   expect(fields.simpleObj.value.foo.value).toEqual('bar')
   expect(fields.extendObj.value.bar.value).toEqual('foo')
   expect(fields.obj.value.foo.value).toEqual('bar')
@@ -109,32 +131,42 @@ test('merge node fields', () => {
   expect(fields.obj.value.test.value.foo.value).toEqual('bar')
   expect(fields.obj.value.test.value.emptyObj).toBeUndefined()
   expect(fields.obj.value.test.value.emptyList).toBeUndefined()
+  expect(fields.obj.value.unionRef.value.isList).toEqual(false)
+  expect(fields.obj.value.unionRef.value.typeName).toHaveLength(2)
+  expect(fields.obj.value.unionRef.value.typeName).toEqual(expect.arrayContaining(['Post1', 'Post2']))
+  expect(fields.obj.value.unionRefs.value.isList).toEqual(true)
+  expect(fields.obj.value.unionRefs.value.typeName).toHaveLength(3)
+  expect(fields.obj.value.unionRefs.value.typeName).toEqual(expect.arrayContaining(['Post1', 'Post2', 'Post3']))
   expect(fields.obj.value.empty).toBeUndefined()
-  expect(fields.invalidRef.value).toBeUndefined()
+  expect(fields.invalidList).toBeUndefined()
+  expect(fields.invalidRef).toBeUndefined()
   expect(fields.emptyObj).toBeUndefined()
   expect(fields.emptyList).toBeUndefined()
   expect(fields.deep).toBeUndefined()
 })
 
 test('camelcase fieldNames', () => {
-  const fields = createFieldDefinitions([{
+  const { field_name, an_object } = createFieldDefinitions([{
     field_name: true,
     an_object: {
       sub_field: true
     }
   }], { camelCase: true })
 
-  expect(fields.field_name.key).toEqual('field_name')
-  expect(fields.field_name.fieldName).toEqual('fieldName')
-  expect(fields.field_name.extensions.proxy).toBeDefined()
-  expect(fields.an_object.fieldName).toEqual('anObject')
-  expect(fields.an_object.value.sub_field.fieldName).toEqual('subField')
+  expect(field_name.key).toEqual('field_name')
+  expect(field_name.fieldName).toEqual('fieldName')
+  expect(field_name.extensions.directives[0]).toMatchObject({ name: 'proxy', args: { from: 'field_name' } })
+  expect(an_object.fieldName).toEqual('anObject')
+  expect(an_object.value.sub_field.fieldName).toEqual('subField')
 })
 
 test('create graphql types from node fields', async () => {
   const app = await createApp(function (api) {
     api.loadSource(actions => {
       actions.addCollection('Post')
+      actions.addCollection('Post1')
+      actions.addCollection('Post2')
+      actions.addCollection('Post3')
     })
   })
 
@@ -162,6 +194,15 @@ test('create graphql types from node fields', async () => {
   expect(types.obj.type.getFields().foo.type.getTypeName()).toEqual('String')
   expect(types.obj.type.getFields().bar.type.getTypeName()).toEqual('String')
   expect(types.obj.type.getFields().test.type).toBeInstanceOf(ObjectTypeComposer)
+  expect(types.unionRef.type).toBeInstanceOf(UnionTypeComposer)
+  expect(types.unionRef.type.getTypes()).toHaveLength(3)
+  expect(types.obj.type.getFields().unionRef.type).toBeInstanceOf(UnionTypeComposer)
+  expect(types.obj.type.getFields().unionRef.type.getTypes()).toHaveLength(2)
+  expect(types.obj.type.getFields().unionRefs.type).toBeInstanceOf(ListComposer)
+  expect(types.obj.type.getFields().unionRefs.type.ofType).toBeInstanceOf(UnionTypeComposer)
+  expect(types.obj.type.getFields().unionRefs.type.ofType.getTypes()).toHaveLength(3)
+  expect(types.invalidList).toBeUndefined()
+  expect(types.invalidRef).toBeUndefined()
   expect(types.nullValue).toBeUndefined()
   expect(types.emptyList).toBeUndefined()
   expect(types.emptyObj).toBeUndefined()

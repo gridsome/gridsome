@@ -3,15 +3,28 @@ const pMap = require('p-map')
 const fs = require('fs-extra')
 const invariant = require('invariant')
 const hirestime = require('hirestime')
+const { validate, specifiedRules } = require('graphql')
 const sysinfo = require('../../utils/sysinfo')
 const { error, info } = require('../../utils/log')
 
-async function executeQueries (renderQueue, { context, pages, graphql }, hash) {
+async function executeQueries (renderQueue, { context, pages, schema, graphql }, hash) {
   const timer = hirestime()
+  const validated = new Set()
+  const withErrors = new Set()
+
+  // TODO: show all query errors
+  const throwError = (err, component) => {
+    if (!withErrors.has(component)) {
+      const relPath = path.relative(context, component)
+      error(`An error occurred while executing page-query for ${relPath}\n`)
+      withErrors.add(component)
+      throw new Error(err)
+    }
+  }
 
   const results = await pMap(renderQueue, async entry => {
     const route = pages.getRoute(entry.routeId)
-    const page =  pages.getPage(entry.pageId)
+    const page = pages.getPage(entry.pageId)
 
     invariant(route, `Could not find a route for: ${entry.path}`)
     invariant(page, `Could not find a page for: ${entry.path}`)
@@ -20,12 +33,20 @@ async function executeQueries (renderQueue, { context, pages, graphql }, hash) {
     const document = route.internal.query.document
 
     if (document) {
+      if (!validated.has(route.component)) {
+        const errors = validate(schema.getSchema(), document, specifiedRules)
+
+        if (errors && errors.length) {
+          throwError(errors[0], route.component)
+        }
+
+        validated.add(route.component)
+      }
+
       const { errors, data } = await graphql(document, entry.queryVariables)
 
-      if (errors) {
-        const relPath = path.relative(context, route.component)
-        error(`An error occurred while executing page-query for ${relPath}\n`)
-        throw new Error(errors[0])
+      if (errors && errors.length) {
+        throwError(errors[0], route.component)
       }
 
       results.data = data

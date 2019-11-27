@@ -3,6 +3,80 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.7.11](https://github.com/gridsome/gridsome/compare/gridsome@0.7.10...gridsome@0.7.11) (2019-11-19)
+
+
+### Bug Fixes
+
+* **app:** ensure favicon height is set ([5164258](https://github.com/gridsome/gridsome/commit/5164258))
+* **g-image:** option for setting default blur ([#760](https://github.com/gridsome/gridsome/issues/760)) ([71421f3](https://github.com/gridsome/gridsome/commit/71421f3))
+* **g-image:** set blank src if sets is empty ([#824](https://github.com/gridsome/gridsome/issues/824)) ([8ab30fc](https://github.com/gridsome/gridsome/commit/8ab30fc))
+* **graphql:** createEnumType schema method ([#814](https://github.com/gridsome/gridsome/issues/814)) ([b09b116](https://github.com/gridsome/gridsome/commit/b09b116))
+
+
+
+
+
+## [0.7.10](https://github.com/gridsome/gridsome/compare/gridsome@0.7.9...gridsome@0.7.10) (2019-11-06)
+
+
+### Bug Fixes
+
+* **app:** allow custom routes from router.addRoutes ([fc78a59](https://github.com/gridsome/gridsome/commit/fc78a59))
+* **g-image:** include wanted width in srcset ([#797](https://github.com/gridsome/gridsome/issues/797)) ([26dc27b](https://github.com/gridsome/gridsome/commit/26dc27b))
+* **g-image:** resize correctly when reusing image ([#797](https://github.com/gridsome/gridsome/issues/797)) ([8c2d834](https://github.com/gridsome/gridsome/commit/8c2d834))
+* **graphql:** convert field to union if multiple typeNames ([8bf2931](https://github.com/gridsome/gridsome/commit/8bf2931))
+* **store:** resolve absolute paths in fields correctly ([#792](https://github.com/gridsome/gridsome/issues/792)) ([beb9084](https://github.com/gridsome/gridsome/commit/beb9084))
+
+
+
+
+
+## [0.7.9](https://github.com/gridsome/gridsome/compare/gridsome@0.7.8...gridsome@0.7.9) (2019-10-25)
+
+
+### Bug Fixes
+
+* **app:** don’t resolve constructor components ([#552](https://github.com/gridsome/gridsome/issues/552)) ([a4e22d6](https://github.com/gridsome/gridsome/commit/a4e22d6))
+* **g-image:** always crop by given dimensions ([#759](https://github.com/gridsome/gridsome/issues/759)) ([97ca9db](https://github.com/gridsome/gridsome/commit/97ca9db))
+* **g-link:** don't use router-link for mailto and tel links ([#755](https://github.com/gridsome/gridsome/issues/755)) ([d1b5779](https://github.com/gridsome/gridsome/commit/d1b5779))
+
+
+
+
+
+## [0.7.8](https://github.com/gridsome/gridsome/compare/gridsome@0.7.7...gridsome@0.7.8) (2019-10-15)
+
+
+### Bug Fixes
+
+* **graphql:** apply extensions once per usage ([91f346e](https://github.com/gridsome/gridsome/commit/91f346e))
+* **graphql:** filter collection by reference id ([#745](https://github.com/gridsome/gridsome/issues/745)) ([cbb009a](https://github.com/gridsome/gridsome/commit/cbb009a))
+* **graphql:** keep extensions for third party fields ([b0e3cfb](https://github.com/gridsome/gridsome/commit/b0e3cfb))
+* **graphql:** prevent overriding built-in directives ([878e947](https://github.com/gridsome/gridsome/commit/878e947))
+* **store:** ensure reference node id’s are strings ([98a3edf](https://github.com/gridsome/gridsome/commit/98a3edf))
+* **store:** require unique paths for templates only ([91225f1](https://github.com/gridsome/gridsome/commit/91225f1))
+
+
+
+
+
+## [0.7.7](https://github.com/gridsome/gridsome/compare/gridsome@0.7.6...gridsome@0.7.7) (2019-10-01)
+
+
+### Bug Fixes
+
+* **assets:** better error message for broken images ([59919aa](https://github.com/gridsome/gridsome/commit/59919aa))
+* **build:** validate page-query during build ([5fff97a](https://github.com/gridsome/gridsome/commit/5fff97a))
+* **graphql:** don’t create empty fields in objects ([#713](https://github.com/gridsome/gridsome/issues/713)) ([b4776e2](https://github.com/gridsome/gridsome/commit/b4776e2))
+* **graphql:** don’t create fields for lists with invalid values ([f635e8b](https://github.com/gridsome/gridsome/commit/f635e8b))
+* **graphql:** set sdl type def with addReference ([619b510](https://github.com/gridsome/gridsome/commit/619b510))
+* **graphql:** validate static queries ([b9e79f2](https://github.com/gridsome/gridsome/commit/b9e79f2))
+
+
+
+
+
 ## [0.7.6](https://github.com/gridsome/gridsome/compare/gridsome@0.7.5...gridsome@0.7.6) (2019-09-27)
 
 

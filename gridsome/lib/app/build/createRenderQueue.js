@@ -61,7 +61,7 @@ function calcTotalPages (paginate, store, schema) {
 }
 
 function createRenderEntry (page, route, config, currentPage = 1) {
-  const { outDir, dataDir, pathPrefix } = config
+  const { outputDir, dataDir, pathPrefix } = config
   const hasTrailingSlash = /\/$/.test(page.publicPath)
 
   let publicPath = page.publicPath
@@ -92,7 +92,7 @@ function createRenderEntry (page, route, config, currentPage = 1) {
   return {
     location,
     path: prettyPath,
-    htmlOutput: path.join(outDir, htmlOutput),
+    htmlOutput: path.join(outputDir, htmlOutput),
     dataOutput: path.join(dataDir, dataOutput),
     publicPath: pathPrefix + publicPath,
     queryVariables,
