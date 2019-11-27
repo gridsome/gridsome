@@ -24,7 +24,7 @@ module.exports = async (context, args) => {
   const queue = createRenderQueue(app)
   const redirects = app.hooks.redirects.call([], queue)
   const stats = await runWebpack(app)
-  const hashString = config.useHash ? stats.hash : 'gridsome'
+  const hashString = config.noFingerprints ? 'gridsome' : stats.hash
 
   await executeQueries(queue, app, hashString)
   await renderHTML(queue, app, hashString)
