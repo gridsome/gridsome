@@ -17,7 +17,7 @@ module.exports = (app, { isProd, isServer }) => {
   const assetsDir = path.relative(projectConfig.outputDir, projectConfig.assetsDir)
   const config = new Config()
 
-  const useHash = isProd && !process.env.GRIDSOME_TEST
+  const useHash = isProd && !process.env.GRIDSOME_TEST && config.useHash
   const filename = `[name]${useHash ? '.[contenthash:8]' : ''}.js`
   const assetname = `[name]${useHash ? '.[hash:8]' : ''}.[ext]`
   const inlineLimit = 10000

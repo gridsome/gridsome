@@ -160,6 +160,8 @@ module.exports = (context, options = {}) => {
   config.prefetch = localConfig.prefetch || {}
   config.preload = localConfig.preload || {}
 
+  config.useHash = localConfig.useHash || true
+
   return Object.freeze(config)
 }
 

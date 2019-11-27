@@ -24,9 +24,10 @@ module.exports = async (context, args) => {
   const queue = createRenderQueue(app)
   const redirects = app.hooks.redirects.call([], queue)
   const stats = await runWebpack(app)
+  const hashString = config.useHash ? stats.hash : 'gridsome'
 
-  await executeQueries(queue, app, stats.hash)
-  await renderHTML(queue, app, stats.hash)
+  await executeQueries(queue, app, hashString)
+  await renderHTML(queue, app, hashString)
   await processFiles(app.assets.files)
   await processImages(app.assets.images, app.config)
 
