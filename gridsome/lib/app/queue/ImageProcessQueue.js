@@ -317,7 +317,7 @@ async function createBlurSvg (buffer, mimeType, width, height, blur, resize = {}
   const warmSharp = await warmupSharp(sharp)
   const blurBuffer = await warmSharp(buffer).resize(blurWidth, blurHeight, resize).toBuffer()
   const base64 = blurBuffer.toString('base64')
-  const id = `__svg-blur-${ImageProcessQueue.uid++}`
+  const id = `__svg-blur-${genHash(base64)}`
   let defs = ''
 
   if (blur > 0) {
