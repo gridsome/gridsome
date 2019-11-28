@@ -27,7 +27,8 @@ class Pages {
     this.hooks = {
       parseComponent: new HookMap(() => new SyncBailHook(['source', 'resource'])),
       createRoute: new SyncWaterfallHook(['options']),
-      createPage: new SyncWaterfallHook(['options'])
+      createPage: new SyncWaterfallHook(['options']),
+      pageContext: new SyncWaterfallHook(['context', 'data'])
     }
 
     this._componentCache = new LRU({ max: 100 })
@@ -348,6 +349,14 @@ class Pages {
 
   _createPageQuery (parsedQuery, vars = {}) {
     return createPageQuery(parsedQuery, vars)
+  }
+
+  _createPageContext (page, queryVariables = {}) {
+    const route = this.getRoute(page.internal.route)
+    return this.hooks.pageContext.call({ ...page.context }, {
+      pageQuery: route.internal.query.source,
+      queryVariables
+    })
   }
 
   _resolvePriority (path) {
