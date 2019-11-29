@@ -160,7 +160,7 @@ module.exports = (context, options = {}) => {
   config.prefetch = localConfig.prefetch || {}
   config.preload = localConfig.preload || {}
 
-  config.noFingerprints = localConfig.noFingerprints || false
+  config.cacheBusting = typeof localConfig.cacheBusting === 'boolean' ? localConfig.cacheBusting : true
 
   return Object.freeze(config)
 }
