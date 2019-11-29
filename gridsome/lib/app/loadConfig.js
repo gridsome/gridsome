@@ -160,6 +160,8 @@ module.exports = (context, options = {}) => {
   config.prefetch = localConfig.prefetch || {}
   config.preload = localConfig.preload || {}
 
+  config.cacheBusting = typeof localConfig.cacheBusting === 'boolean' ? localConfig.cacheBusting : true
+
   return Object.freeze(config)
 }
 
