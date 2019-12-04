@@ -132,7 +132,10 @@ class ContentfulSource {
         const contentType = this.typesIndex[item.sys.contentType.sys.id]
         const typeName = this.createTypeName(contentType.name)
 
-        return store.createReference(typeName, item.sys.id)
+        return {
+          ...store.createReference(typeName, item.sys.id),
+          ...item.fields
+        }
     }
   }
 
