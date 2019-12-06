@@ -12,15 +12,17 @@ module.exports = function (api, options) {
       route: options.route
     })
 
-    await base(options.tableName).select().eachPage((records, fetchNextPage) => {
-      records.forEach((record) => {
-        const item = record._rawJson
-        collection.addNode({
-          id: item.id,
-          ...item.fields
+    await base(options.tableName)
+      .select(options.select || {})
+      .eachPage((records, fetchNextPage) => {
+        records.forEach((record) => {
+          const item = record._rawJson
+          collection.addNode({
+            id: item.id,
+            ...item.fields
+          })
         })
+        fetchNextPage()
       })
-      fetchNextPage()
-    })
   })
 }
