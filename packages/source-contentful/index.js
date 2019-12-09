@@ -85,7 +85,7 @@ class ContentfulSource {
       node.locale = entry.sys.locale
 
       for (const idx in fields) {
-        const key = fields[idx].id;
+        const key = fields[idx].id
         const value = entry.fields[key]
 
         if (Array.isArray(value)) {
