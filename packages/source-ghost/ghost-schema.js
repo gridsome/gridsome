@@ -1,4 +1,4 @@
-const GhostAuthor = ({author}) => `type ${author} implements Node {
+const GhostAuthor = ({ author }) => `type ${author} implements Node {
   id: ID!
   name: String
   slug: String
@@ -14,7 +14,7 @@ const GhostAuthor = ({author}) => `type ${author} implements Node {
   url: String
   postCount: Int
 }`
-const GhostTag = ({tag}) => `type ${tag} implements Node {
+const GhostTag = ({ tag }) => `type ${tag} implements Node {
   id: ID!
   name: String
   slug: String
@@ -27,7 +27,7 @@ const GhostTag = ({tag}) => `type ${tag} implements Node {
   url: String
   visibility: String
 }`
-const GhostPost = ({post, author, tag}) => `type ${post} implements Node {
+const GhostPost = ({ post, author, tag }) => `type ${post} implements Node {
   id: ID!
   uuid: String
   title: String
@@ -62,7 +62,7 @@ const GhostPost = ({post, author, tag}) => `type ${post} implements Node {
   mobiledoc: String
   codeinjection_styles: String
 }`
-const GhostPage = ({page, author, tag}) => `type ${page} implements Node {
+const GhostPage = ({ page, author, tag }) => `type ${page} implements Node {
   id: ID!
   uuid: String
   title: String
