@@ -103,5 +103,5 @@ module.exports = {
   GhostAuthor,
   GhostTag,
   GhostPost,
-  GhostPage,
+  GhostPage
 }
