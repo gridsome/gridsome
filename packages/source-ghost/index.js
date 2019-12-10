@@ -1,6 +1,5 @@
 const GhostContentAPI = require('@tryghost/content-api')
 const camelCase = require('camelcase')
-const getConfig = require('../ghost-config')
 const schemaTypes = require('./ghost-schema')
 
 const TYPE_AUTHOR = 'author'
@@ -9,9 +8,19 @@ const TYPE_PAGE = 'page'
 const TYPE_TAG = 'tag'
 
 class GhostSource {
+  static defaultOptions () {
+    return {
+      baseUrl: '',
+      contentKey: '',
+      perPage: 100,
+      version: 'v2',
+      typeName: 'Ghost',
+      settingsName: null
+    }
+  }
+
   constructor (api, options) {
     this.api = api
-    options = options || getConfig()
     this.options = options
     this.restBases = { posts: {}, taxonomies: {}}
     this.typeNames = {
@@ -40,7 +49,7 @@ class GhostSource {
       await this.loadSettings(actions)
     })
 
-    api.createSchema(async ({ addSchemaTypes, addMetadata, addSchemaResolvers }) => {
+    api.createSchema(async ({ addSchemaTypes }) => {
       addSchemaTypes(schemaTypes.GhostAuthor(this.typeNames))
       addSchemaTypes(schemaTypes.GhostTag(this.typeNames))
       addSchemaTypes(schemaTypes.GhostPost(this.typeNames))
