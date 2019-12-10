@@ -27,7 +27,7 @@ class GhostSource {
       author: this.createTypeName(TYPE_AUTHOR),
       post: this.createTypeName(TYPE_POST),
       page: this.createTypeName(TYPE_PAGE),
-      tag: this.createTypeName(TYPE_TAG),
+      tag: this.createTypeName(TYPE_TAG)
     }
 
     this.contentAPI = new GhostContentAPI({
@@ -95,8 +95,8 @@ class GhostSource {
       dateField: 'published_at'
     })
 
-    const tagTypeName = this.typeNames.tag;
-    const authorTypeName = this.typeNames.author;
+    const tagTypeName = this.typeNames.tag
+    const authorTypeName = this.typeNames.author
 
     let keepGoing = true
     let currentPage = 1
