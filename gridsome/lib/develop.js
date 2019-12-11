@@ -38,6 +38,7 @@ module.exports = async (context, args) => {
   server.hooks.afterSetup.tap('develop', server => {
     const devMiddleware = require('webpack-dev-middleware')(compiler, {
       pathPrefix: webpackConfig.output.pathPrefix,
+      watchOptions: webpackConfig.devServer ? webpackConfig.devServer.watchOptions : null,
       logLevel: 'silent'
     })
 
