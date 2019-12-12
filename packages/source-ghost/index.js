@@ -55,9 +55,6 @@ class GhostSource {
       addSchemaTypes(schemaTypes.GhostPost(this.typeNames))
       addSchemaTypes(schemaTypes.GhostPage(this.typeNames))
     })
-
-    api.createPages(async () => {
-    })
   }
 
   async loadTags ({ addCollection }) {
