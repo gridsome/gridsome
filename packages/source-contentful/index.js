@@ -74,7 +74,7 @@ class ContentfulSource {
 
     for (const entry of entries) {
       const typeId = entry.sys.contentType.sys.id
-      const { typeName, displayField } = this.typesIndex[typeId]
+      const { typeName, displayField, fields } = this.typesIndex[typeId]
       const collection = actions.getCollection(typeName)
       const node = {}
 
@@ -84,7 +84,8 @@ class ContentfulSource {
       node.updatedAt = entry.sys.updatedAt
       node.locale = entry.sys.locale
 
-      for (const key in entry.fields) {
+      for (const idx in fields) {
+        const key = fields[idx].id
         const value = entry.fields[key]
 
         if (Array.isArray(value)) {
