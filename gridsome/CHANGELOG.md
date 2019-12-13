@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.7.12](https://github.com/gridsome/gridsome/compare/gridsome@0.7.11...gridsome@0.7.12) (2019-12-13)
+
+
+### Bug Fixes
+
+* **build:** option for disabling hash in asset filenames ([#840](https://github.com/gridsome/gridsome/issues/840)) ([6765782](https://github.com/gridsome/gridsome/commit/6765782723ae1646a96903eebc15f045df062692))
+* **webpack:** use devServer.watchOptions for dev middleware ([#865](https://github.com/gridsome/gridsome/issues/865)) ([0bedcdb](https://github.com/gridsome/gridsome/commit/0bedcdbf7abd02f340bd94b3a905325eda3c996f))
+
+
+
+
+
 ## [0.7.11](https://github.com/gridsome/gridsome/compare/gridsome@0.7.10...gridsome@0.7.11) (2019-11-19)
 
 
