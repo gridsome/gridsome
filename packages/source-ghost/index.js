@@ -1,5 +1,6 @@
 const GhostContentAPI = require('@tryghost/content-api')
 const camelCase = require('camelcase')
+const schemaTypes = require('./ghost-schema')
 
 const TYPE_AUTHOR = 'author'
 const TYPE_POST = 'post'
@@ -22,6 +23,12 @@ class GhostSource {
     this.api = api
     this.options = options
     this.restBases = { posts: {}, taxonomies: {}}
+    this.typeNames = {
+      author: this.createTypeName(TYPE_AUTHOR),
+      post: this.createTypeName(TYPE_POST),
+      page: this.createTypeName(TYPE_PAGE),
+      tag: this.createTypeName(TYPE_TAG)
+    }
 
     this.contentAPI = new GhostContentAPI({
       url: options.baseUrl,
@@ -41,19 +48,28 @@ class GhostSource {
       await this.loadPages(actions)
       await this.loadSettings(actions)
     })
+
+    api.createSchema(async ({ addSchemaTypes }) => {
+      addSchemaTypes(schemaTypes.GhostAuthor(this.typeNames))
+      addSchemaTypes(schemaTypes.GhostTag(this.typeNames))
+      addSchemaTypes(schemaTypes.GhostPost(this.typeNames))
+      addSchemaTypes(schemaTypes.GhostPage(this.typeNames))
+    })
   }
 
   async loadTags ({ addCollection }) {
+    console.log(`Loading ${TYPE_TAG}`)
     const tags = addCollection({
-      typeName: this.createTypeName(TYPE_TAG)
+      typeName: this.typeNames.tag
     })
 
     await this.loadBasicEntity(tags, this.contentAPI.tags)
   }
 
   async loadPages ({ addCollection }) {
+    console.log(`Loading ${TYPE_PAGE}`)
     const pages = addCollection({
-      typeName: this.createTypeName(TYPE_PAGE),
+      typeName: this.typeNames.page,
       dateField: 'published_at'
     })
 
@@ -61,21 +77,23 @@ class GhostSource {
   }
 
   async loadAuthors ({ addCollection }) {
+    console.log(`Loading ${TYPE_AUTHOR}`)
     const authors = addCollection({
-      typeName: this.createTypeName(TYPE_AUTHOR)
+      typeName: this.typeNames.author
     })
 
     await this.loadBasicEntity(authors, this.contentAPI.authors)
   }
 
   async loadPosts ({ createReference, addCollection }) {
+    console.log(`Loading ${TYPE_POST}`)
     const posts = addCollection({
-      typeName: this.createTypeName(TYPE_POST),
+      typeName: this.typeNames.post,
       dateField: 'published_at'
     })
 
-    const tagTypeName = this.createTypeName(TYPE_TAG)
-    const authorTypeName = this.createTypeName(TYPE_AUTHOR)
+    const tagTypeName = this.typeNames.tag
+    const authorTypeName = this.typeNames.author
 
     let keepGoing = true
     let currentPage = 1
