@@ -13,7 +13,7 @@ class GhostSource {
       baseUrl: '',
       contentKey: '',
       perPage: 100,
-      version: 'v2',
+      version: 'v3',
       typeName: 'Ghost',
       settingsName: null
     }
