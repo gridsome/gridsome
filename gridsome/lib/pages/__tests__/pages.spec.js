@@ -301,7 +301,7 @@ test('find and remove pages by query', async () => {
 test('find pages by query', async () => {
   const { pages } = await createApp()
 
-  const postsSlugs = [
+  const postSlugs = [
     'lorem-ipsum-dolor-amet-brunch',
     'tofu-schlitz-knausgaard-lomo',
     'vaporware-dreamcatcher-tousled',
@@ -309,7 +309,7 @@ test('find pages by query', async () => {
     'listicle-tattooed-quinoa-poke-occupy'
   ]
 
-  for (const slug of postsSlugs) {
+  for (const slug of postSlugs) {
     pages.createPage({
       path: `/posts/${slug}`,
       component: './__fixtures__/DefaultPage.vue'
@@ -329,7 +329,7 @@ test('find pages by query', async () => {
 test('find page by query', async () => {
   const { pages } = await createApp()
 
-  const postsSlugs = [
+  const postSlugs = [
     'lorem-ipsum-dolor-amet-brunch',
     'tofu-schlitz-knausgaard-lomo',
     'vaporware-dreamcatcher-tousled',
@@ -337,7 +337,7 @@ test('find page by query', async () => {
     'listicle-tattooed-quinoa-poke-occupy'
   ]
 
-  for (const slug of postsSlugs) {
+  for (const slug of postSlugs) {
     pages.createPage({
       path: `/posts/${slug}`,
       component: './__fixtures__/DefaultPage.vue'
