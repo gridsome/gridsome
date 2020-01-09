@@ -231,6 +231,22 @@ class Pages {
         this.removeRoute(options.id)
       })
   }
+  
+  findAndRemovePages (query) {
+    this._pages.find(query).forEach(page => {
+      this.removePage(page.id)
+    })
+  }
+
+  findPages (query) {
+    const matchingPages = this._pages.find(query)
+    return matchingPages
+  }
+
+  findPage (query) {
+    const [ matchingPage ] = this._pages.find(query)
+    return matchingPage
+  }
 
   getRoute (id) {
     const options = this._routes.by('id', id)
