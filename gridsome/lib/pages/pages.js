@@ -203,6 +203,7 @@ class Pages {
 
   removePage (id) {
     const page = this.getPage(id)
+    if (!page) return
     const route = this.getRoute(page.internal.route)
 
     if (route.internal.isDynamic) {
