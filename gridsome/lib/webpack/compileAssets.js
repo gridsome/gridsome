@@ -25,9 +25,8 @@ module.exports = async (app, defines = {}) => {
 
       if (stats.hasErrors()) {
         const errors = stats.stats
-          .map(stats => stats.compilation.errors)
-          .reduce((acc, errors) => acc.concat(errors), [])
-          .map(err => err.error)
+          .flatMap(stats => stats.compilation.errors)
+          .map(err => err.error || err)
 
         return reject(errors[0])
       }
