@@ -12,8 +12,8 @@
     "datocms"
   ],
   "dependencies": {
-    "datocms-client": "^0.7.5",
-    "humps": "^2.0.1"
+    "camelcase": "^5.3.1",
+    "datocms-client": "^3.0.14"
   },
   "publishConfig": {
     "access": "public"
