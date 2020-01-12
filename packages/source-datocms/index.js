@@ -1,5 +1,6 @@
 const { SiteClient, Loader } = require('datocms-client')
 const camelcase = require('camelcase')
+const ImgixClient = require('imgix-core-js')
 
 class DatoCmsSource {
   static defaultOptions () {
@@ -14,6 +15,7 @@ class DatoCmsSource {
   constructor (api, options) {
     this.options = options
     api.loadSource(store => this.fetchContent(store))
+    api.loadSource(schema => this.extendSchema(schema))
   }
 
   createTypeName (name) {
@@ -39,7 +41,6 @@ class DatoCmsSource {
     const { upload: uploads, item: items, item_type: itemTypes } = loader.entitiesRepo.entities
 
     const cache = new Map()
-    const imageStore = store.addCollection('DatoCmsImage')
 
     for (const [id, itemType] of Object.entries(itemTypes)) {
       const typeName = this.createTypeName(itemType.name)
@@ -63,6 +64,7 @@ class DatoCmsSource {
       cache.set(id, cachePayload)
     }
 
+    const imageStore = store.addCollection('DatoCmsImage')
     for (const [id, upload] of Object.entries(uploads)) {
       if (!upload.isImage) return
       const metadata = upload.defaultFieldMetadata.en
@@ -72,6 +74,7 @@ class DatoCmsSource {
         height: upload.height,
         format: upload.format,
         url: upload.url,
+        path: upload.path,
         blurhash: upload.blurhash,
         ...metadata
       }
@@ -99,10 +102,42 @@ class DatoCmsSource {
         createdAt: new Date(itemFields.createdAt),
         updatedAt: new Date(itemFields.updatedAt)
       }
-      // console.log(itemNode)
 
       collection.addNode(itemNode)
     }
+  }
+
+  async extendSchema ({ addSchemaTypes, addSchemaResolvers }) {
+    addSchemaTypes(`
+      type DatoCmsImage implements Node @infer {
+        transformUrl: String!
+        srcSet: String!
+      }
+    `)
+    addSchemaResolvers({
+      DatoCmsImage: {
+        transformUrl: {
+          args: {
+            w: 'Int',
+            h: 'Int'
+          },
+          resolve: ({ path }, args) => {
+            const client = new ImgixClient({ domain: 'www.datocms-assets.com', includeLibraryParam: false, useHTTPS: true })
+            return client.buildURL(path, args)
+          }
+        },
+        srcSet: {
+          args: {
+            w: 'Int',
+            h: 'Int'
+          },
+          resolve: ({ path }, args) => {
+            const client = new ImgixClient({ domain: 'www.datocms-assets.com', includeLibraryParam: false, useHTTPS: true })
+            return client.buildSrcSet(path, args)
+          }
+        }
+      }
+    })
   }
 }
 
