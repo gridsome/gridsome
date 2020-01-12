@@ -1,27 +1,5 @@
 const { SiteClient, Loader } = require('datocms-client')
-const { camelize } = require('humps')
-
-const withNoEmptyValues = (object) => {
-  if (Object.prototype.toString.call(object) === '[object Object]') {
-    const result = {}
-
-    for (const [key, value] of Object.entries(object)) {
-      const valueWithNoEmptyValues = withNoEmptyValues(value)
-      if (valueWithNoEmptyValues) {
-        result[key] = valueWithNoEmptyValues
-      }
-    }
-
-    return Object.entries(result).length > 0 ? result : null
-  }
-
-  if (Object.prototype.toString.call(object) === '[object Array]') {
-    const result = object.map(x => withNoEmptyValues(x)).filter(x => !!x)
-    return result.length > 0 ? result : null
-  }
-
-  return object
-}
+const camelcase = require('camelcase')
 
 class DatoCmsSource {
   static defaultOptions () {
@@ -29,114 +7,101 @@ class DatoCmsSource {
       typeName: 'DatoCms',
       apiToken: undefined,
       previewMode: false,
-      apiUrl: undefined
+      apiUrl: 'https://site-api.datocms.com'
     }
   }
 
   constructor (api, options) {
     this.options = options
-    api.loadSource(args => this.fetchContent(args))
+    api.loadSource(store => this.fetchContent(store))
   }
 
   createTypeName (name) {
-    return (
-      this.options.typeName.charAt(0).toUpperCase() +
-      camelize(`${this.options.typeName} ${name}`).slice(1)
-    )
+    return camelcase(`${this.options.typeName} ${name}`, { pascalCase: true })
   }
 
   async fetchContent (store) {
-    const { addCollection, getCollection } = store
     const { apiToken, apiUrl, previewMode } = this.options
+    if (!apiToken) throw new Error('Missing API Token (`apiToken`)')
 
     const clientHeaders = {
       'X-Reason': 'dump',
       'X-SSG': 'gridsome'
     }
 
-    const client = apiUrl
+    const loaderClient = apiUrl
       ? new SiteClient(apiToken, clientHeaders, apiUrl)
       : new SiteClient(apiToken, clientHeaders)
 
-    const loader = new Loader(client, previewMode)
+    const loader = new Loader(loaderClient, previewMode)
     await loader.load()
 
-    const { itemsRepo, entitiesRepo } = loader
+    const { upload: uploads, item: items, item_type: itemTypes } = loader.entitiesRepo.entities
 
-    const cache = {}
+    const cache = new Map()
+    const imageStore = store.addCollection('DatoCmsImage')
 
-    for (const itemType of itemsRepo.itemTypes) {
-      const { titleField, fields } = itemType
+    for (const [id, itemType] of Object.entries(itemTypes)) {
+      const typeName = this.createTypeName(itemType.name)
+      const collection = store.addCollection(typeName)
 
-      const slugField = fields.find(({ fieldType }) => fieldType === 'slug')
+      const slugField = itemType.fields.find(({ fieldType }) => fieldType === 'slug')
+      const seoField = itemType.fields.find(({ fieldType }) => fieldType === 'seo')
 
-      cache[itemType.id] = { titleField, slugField }
+      const imageFields = itemType.fields.filter(({ fieldType }) => fieldType === 'file').map(field => {
+        const apiKey = camelcase(field.apiKey)
+        collection.addReference(apiKey, 'DatoCmsImage')
+        return apiKey
+      })
 
-      const collection = addCollection(
-        this.createTypeName(itemType.name),
-      )
-
-      fields
-        .filter(({ fieldType }) => ['link', 'links', 'rich_text'].includes(fieldType))
-        .forEach((field) => {
-          const typeNames = (
-            field.validators.itemItemType ||
-            field.validators.itemsItemType ||
-            field.validators.richTextBlocks
-          ).itemTypes.map((id) => (
-            this.createTypeName(entitiesRepo.findEntity('item_type', id).name)
-          ))
-
-          collection.addReference(
-            camelize(field.apiKey),
-            {
-              typeName: typeNames.length > 1 ? typeNames : typeNames[0]
-            }
-          )
-        })
+      const cachePayload = {
+        typeName,
+        imageFields,
+        slugField: slugField && slugField.apiKey,
+        seoField: seoField && seoField.apiKey
+      }
+      cache.set(id, cachePayload)
     }
 
-    for (const item of Object.values(itemsRepo.itemsById)) {
-      const { titleField, slugField } = cache[item.itemType.id]
-      const typeName = this.createTypeName(item.itemType.name)
-      const collection = getCollection(typeName)
-
-      const node = {
-        id: item.id,
-        title: titleField && item[camelize(titleField.apiKey)],
-        slug: slugField && item[camelize(slugField.apiKey)],
-        created: new Date(item.createdAt),
-        updated: new Date(item.updatedAt),
-        position: item.position,
-        ...item.itemType.fields.reduce((fields, field) => {
-          const val = item.readAttribute(field)
-
-          if (item.itemType.hasOwnProperty('apiKey')) {
-            fields.model = { apiKey: item.itemType.apiKey }
-          }
-
-          if (!val) return fields
-
-          if (['link', 'links', 'rich_text'].includes(field.fieldType)) {
-            const val = item.entity[camelize(field.apiKey)]
-            const sanitizedVal = Array.isArray(val) ? withNoEmptyValues(val) : val
-
-            if (!sanitizedVal) return fields
-
-            fields[camelize(field.apiKey)] = sanitizedVal
-
-            return fields
-          } else {
-            fields[camelize(field.apiKey)] = val.toMap
-              ? withNoEmptyValues(val.toMap())
-              : withNoEmptyValues(val)
-
-            return fields
-          }
-        }, {})
+    for (const [id, upload] of Object.entries(uploads)) {
+      if (!upload.isImage) return
+      const metadata = upload.defaultFieldMetadata.en
+      const image = {
+        id,
+        width: upload.width,
+        height: upload.height,
+        format: upload.format,
+        url: upload.url,
+        blurhash: upload.blurhash,
+        ...metadata
       }
+      imageStore.addNode(image)
+    }
 
-      collection.addNode(node)
+    for (const [id, item] of Object.entries(items)) {
+      const { typeName, imageFields, slugField, seoField } = cache.get(item.itemType.id)
+      const collection = store.getCollection(typeName)
+
+      const itemImageFields = imageFields.flatMap(imageField => {
+        const itemImageField = item[imageField]
+        if (!itemImageField) return {}
+        return { [imageField]: itemImageField.uploadId }
+      }).reduce((obj, field) => ({ ...obj, ...field }), {})
+
+      const itemFields = Object.entries(item.payload.attributes).reduce((obj, [key, value]) => ({ ...obj, [camelcase(key)]: value }), {})
+
+      const itemNode = {
+        id,
+        ...itemFields,
+        ...itemImageFields,
+        slug: slugField && itemFields[slugField],
+        seo: seoField && itemFields[seoField],
+        createdAt: new Date(itemFields.createdAt),
+        updatedAt: new Date(itemFields.updatedAt)
+      }
+      // console.log(itemNode)
+
+      collection.addNode(itemNode)
     }
   }
 }
