@@ -1,6 +1,8 @@
 const { SiteClient, Loader } = require('datocms-client')
 const camelcase = require('camelcase')
+const decamelize = require('decamelize')
 const ImgixClient = require('imgix-core-js')
+const imgixParams = require('imgix-url-params')
 
 class DatoCmsSource {
   static defaultOptions () {
@@ -107,20 +109,98 @@ class DatoCmsSource {
     }
   }
 
-  async extendSchema ({ addSchemaTypes, addSchemaResolvers }) {
-    addSchemaTypes(`
-      type DatoCmsImage implements Node @infer {
-        transformUrl: String!
-        srcSet: String!
-      }
-    `)
+  async extendSchema ({ addSchemaTypes, schema, addSchemaResolvers }) {
+    const graphQLTypes = new Map([
+      ['integer', 'Int'],
+      ['number', 'Float'],
+      ['string', 'String']
+    ])
+    const inputTypes = []
+    const imgixArgs = Object.entries(imgixParams.parameters).map(([param, info]) => {
+      const { expects, short_description: description, url, available_in: available } = info
+      if (!available.includes('url')) return
+      if (expects.find(({ type }) => type === 'list')) return
+
+      const [{ type }] = expects
+      const name = camelcase(param)
+      const inputType = graphQLTypes.get(type) || 'String'
+
+      return { [name]: { type: inputType, description: `${description} ${url}` }}
+
+      // const inputTypeNames = expects.map(({ type, ...args }) => {
+      //   const graphQLType = graphQLTypes.get(type)
+      //   if (graphQLType) return { name: type, type: graphQLType }
+      //   if (type !== 'list') {
+      //     if (expects.length > 1) {
+      //       const [{ type: insideType }] = expects
+      //       const graphQLType = graphQLTypes.get(insideType)
+      //       return { name: type, type: graphQLType || 'String' }
+      //     }
+      //     return { name: type, type: 'String' }
+      //   }
+
+      //   if (args.possible_values) {
+      //     const inputName = camelcase(`${name}Enum`, { pascalCase: true })
+      //     const values = args.possible_values.reduce((obj, value) => ({ ...obj, [camelcase(value).toUpperCase()]: { value }}), {})
+      //     const inputType = schema.createEnumType({
+      //       name: inputName,
+      //       values
+      //     })
+      //     inputTypes.push(inputType)
+      //     return { name, type: name === 'auto' ? `[${inputName}]` : inputName }
+      //   }
+
+      //   return
+      //   // const { length, ...argValues } = args
+      //   // const inputName = `${name}${length}Input`
+      //   // const fields = Object.entries(argValues).reduce((obj, [key, [{ type }]]) => ({ ...obj, [key]: graphQLTypes.get(type) || 'String' }), {})
+      //   // console.log(fields)
+      //   // const inputType = schema.createInputType({
+      //   //   name: inputName,
+      //   //   fields
+      //   // })
+      //   // inputTypes.push(inputType)
+      //   // return { name, type: inputName }
+      // }).filter(obj => !!obj)
+
+      // if (!inputTypeNames.length) return
+
+      // if (inputTypeNames.length === 1) {
+      //   const [{ type }] = inputTypeNames
+      //   return { [name]: { type, description: `${description} ${url}` }}
+      // }
+
+      // const inputName = `${name}Input`
+      // const inputFields = inputTypeNames.reduce((obj, { name, type }) => ({ ...obj, [name]: type }), {})
+      // const inputObject = schema.createInputType({
+      //   name: inputName,
+      //   fields: inputFields
+      // })
+      // inputTypes.push(inputObject)
+      // return { [name]: { type: inputName, description: `${description} ${url}` }}
+    })
+
+    addSchemaTypes([
+      ...inputTypes,
+      schema.createObjectType({
+        name: 'DatoCmsImage',
+        interfaces: ['Node'],
+        description: 'A custom Image type that lets you create transform URLs using the DatoCMS Image CDN.',
+        fields: {
+          url: 'String!',
+          width: 'Int!',
+          height: 'Int!',
+          blurhash: 'String!',
+          alt: 'String',
+          transformUrl: 'String!',
+          srcSet: 'String!'
+        }
+      })
+    ])
     addSchemaResolvers({
       DatoCmsImage: {
         transformUrl: {
-          args: {
-            w: 'Int',
-            h: 'Int'
-          },
+          args: imgixArgs.reduce((obj, arg) => ({ ...obj, ...arg }), {}),
           resolve: ({ path }, args) => {
             const client = new ImgixClient({ domain: 'www.datocms-assets.com', includeLibraryParam: false, useHTTPS: true })
             return client.buildURL(path, args)
