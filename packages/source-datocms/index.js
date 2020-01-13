@@ -2,7 +2,7 @@ const { SiteClient, Loader } = require('datocms-client')
 const camelcase = require('camelcase')
 const decamelize = require('decamelize')
 const ImgixClient = require('imgix-core-js')
-const imgixParams = require('imgix-url-params')
+const imgixParams = require('imgix-url-params/dist/parameters')
 
 class DatoCmsSource {
   static defaultOptions () {
@@ -178,7 +178,7 @@ class DatoCmsSource {
       // })
       // inputTypes.push(inputObject)
       // return { [name]: { type: inputName, description: `${description} ${url}` }}
-    })
+    }).reduce((obj, arg) => ({ ...obj, ...arg }), {})
 
     addSchemaTypes([
       ...inputTypes,
@@ -197,23 +197,23 @@ class DatoCmsSource {
         }
       })
     ])
+
     addSchemaResolvers({
       DatoCmsImage: {
         transformUrl: {
-          args: imgixArgs.reduce((obj, arg) => ({ ...obj, ...arg }), {}),
+          args: imgixArgs,
           resolve: ({ path }, args) => {
+            const transformParams = Object.entries(args).reduce((obj, [param, value]) => ({ ...obj, [decamelize(param, '-')]: value }), {})
             const client = new ImgixClient({ domain: 'www.datocms-assets.com', includeLibraryParam: false, useHTTPS: true })
-            return client.buildURL(path, args)
+            return client.buildURL(path, transformParams)
           }
         },
         srcSet: {
-          args: {
-            w: 'Int',
-            h: 'Int'
-          },
+          args: imgixArgs,
           resolve: ({ path }, args) => {
+            const transformParams = Object.entries(args).reduce((obj, [param, value]) => ({ ...obj, [decamelize(param, '-')]: value }), {})
             const client = new ImgixClient({ domain: 'www.datocms-assets.com', includeLibraryParam: false, useHTTPS: true })
-            return client.buildSrcSet(path, args)
+            return client.buildSrcSet(path, transformParams)
           }
         }
       }
