@@ -64,6 +64,15 @@ class DatoCmsSource {
         return apiKey
       })
 
+      itemType.fields.filter(({ fieldType }) => ['link', 'links'].includes(fieldType)).forEach(field => {
+        const apiKey = camelcase(field.apiKey)
+        const linkTypeNames = (field.validators.itemItemType || field.validators.itemsItemType).itemTypes.map(id => {
+          const type = itemTypes[id]
+          return this.createTypeName(type.name)
+        })
+        collection.addReference(apiKey, { typeName: linkTypeNames.length > 1 ? linkTypeNames : linkTypeNames[0] })
+      })
+
       const cachePayload = {
         typeName,
         imageFields,
@@ -94,16 +103,16 @@ class DatoCmsSource {
       const { typeName, imageFields, markdownFields, slugField, seoField } = cache.get(item.itemType.id)
       const collection = store.getCollection(typeName)
 
+      const itemFields = Object.entries(item.payload.attributes).reduce((obj, [key, value]) => ({ ...obj, [camelcase(key)]: value }), {})
+
       const itemImageFields = imageFields.flatMap(imageField => {
         const itemImageField = item[imageField]
         if (!itemImageField) return {}
         return { [imageField]: itemImageField.uploadId }
       }).reduce((obj, field) => ({ ...obj, ...field }), {})
 
-      const itemFields = Object.entries(item.payload.attributes).reduce((obj, [key, value]) => ({ ...obj, [camelcase(key)]: value }), {})
-
-      const itemMarkdownFields = markdownFields.flatMap(richFieldKey => {
-        const itemMarkdownField = item[richFieldKey]
+      const itemMarkdownFields = markdownFields.flatMap(markdownFieldKey => {
+        const itemMarkdownField = item[markdownFieldKey]
         if (!itemMarkdownField) return {}
         const markdownNode = markdownStore.addNode({
           internal: {
@@ -112,7 +121,7 @@ class DatoCmsSource {
             origin: id
           }
         })
-        return { [richFieldKey]: markdownNode.id }
+        return { [markdownFieldKey]: markdownNode.id }
       }).reduce((obj, field) => ({ ...obj, ...field }), {})
 
       const itemNode = {
@@ -125,7 +134,6 @@ class DatoCmsSource {
         createdAt: new Date(itemFields.createdAt),
         updatedAt: new Date(itemFields.updatedAt)
       }
-
       collection.addNode(itemNode)
     }
   }
