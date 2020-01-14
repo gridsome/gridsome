@@ -41,8 +41,9 @@ class DatoCmsSource {
     await loader.load()
 
     const { upload: uploads, item: items, item_type: itemTypes } = loader.entitiesRepo.entities
-
     const cache = new Map()
+    const imageStore = store.addCollection('DatoCmsImage')
+    const markdownStore = store.addCollection('DatoCmsContentMarkdown')
 
     for (const [id, itemType] of Object.entries(itemTypes)) {
       const typeName = this.createTypeName(itemType.name)
@@ -57,16 +58,22 @@ class DatoCmsSource {
         return apiKey
       })
 
+      const markdownFields = itemType.fields.filter(({ fieldType, appeareance }) => fieldType === 'text' && appeareance.type === 'markdown').map(field => {
+        const apiKey = camelcase(field.apiKey)
+        collection.addReference(apiKey, 'DatoCmsContentMarkdown')
+        return apiKey
+      })
+
       const cachePayload = {
         typeName,
         imageFields,
+        markdownFields,
         slugField: slugField && slugField.apiKey,
         seoField: seoField && seoField.apiKey
       }
       cache.set(id, cachePayload)
     }
 
-    const imageStore = store.addCollection('DatoCmsImage')
     for (const [id, upload] of Object.entries(uploads)) {
       if (!upload.isImage) return
       const metadata = upload.defaultFieldMetadata.en
@@ -84,7 +91,7 @@ class DatoCmsSource {
     }
 
     for (const [id, item] of Object.entries(items)) {
-      const { typeName, imageFields, slugField, seoField } = cache.get(item.itemType.id)
+      const { typeName, imageFields, markdownFields, slugField, seoField } = cache.get(item.itemType.id)
       const collection = store.getCollection(typeName)
 
       const itemImageFields = imageFields.flatMap(imageField => {
@@ -95,10 +102,23 @@ class DatoCmsSource {
 
       const itemFields = Object.entries(item.payload.attributes).reduce((obj, [key, value]) => ({ ...obj, [camelcase(key)]: value }), {})
 
+      const itemMarkdownFields = markdownFields.flatMap(richFieldKey => {
+        const itemMarkdownField = item[richFieldKey]
+        const markdownNode = markdownStore.addNode({
+          internal: {
+            mimeType: 'text/markdown',
+            content: itemMarkdownField,
+            origin: id
+          }
+        })
+        return { [richFieldKey]: markdownNode.id }
+      }).reduce((obj, field) => ({ ...obj, ...field }), {})
+
       const itemNode = {
         id,
         ...itemFields,
         ...itemImageFields,
+        ...itemMarkdownFields,
         slug: slugField && itemFields[slugField],
         seo: seoField && itemFields[seoField],
         createdAt: new Date(itemFields.createdAt),
