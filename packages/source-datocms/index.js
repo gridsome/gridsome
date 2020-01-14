@@ -104,6 +104,7 @@ class DatoCmsSource {
 
       const itemMarkdownFields = markdownFields.flatMap(richFieldKey => {
         const itemMarkdownField = item[richFieldKey]
+        if (!itemMarkdownField) return {}
         const markdownNode = markdownStore.addNode({
           internal: {
             mimeType: 'text/markdown',
