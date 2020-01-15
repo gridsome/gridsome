@@ -5,7 +5,8 @@ const ImgixClient = require('imgix-core-js')
 const imgixParams = require('imgix-url-params/dist/parameters')
 
 const IMAGE_TYPENAME = 'DatoCmsImage'
-const MARKDOWN_TYPENAME = 'DatoCmsMarkdown'
+const ASSET_TYPENAME = 'DatoCmsAsset'
+const MARKDOWN_TYPENAME = 'DatoCmsContentMarkdown'
 
 class DatoCmsSource {
   static defaultOptions () {
@@ -46,6 +47,7 @@ class DatoCmsSource {
     const { upload: uploads, item: items, item_type: itemTypes } = loader.entitiesRepo.entities
     const cache = new Map()
     const imageStore = store.addCollection(IMAGE_TYPENAME)
+    const assetStore = store.addCollection(ASSET_TYPENAME)
     const markdownStore = store.addCollection(MARKDOWN_TYPENAME)
 
     for (const [id, itemType] of Object.entries(itemTypes)) {
@@ -83,19 +85,20 @@ class DatoCmsSource {
     }
 
     for (const [id, upload] of Object.entries(uploads)) {
-      if (!upload.isImage) continue
-      const metadata = upload.defaultFieldMetadata.en
-      const image = {
-        id,
-        width: upload.width,
-        height: upload.height,
-        format: upload.format,
-        url: upload.url,
-        path: upload.path,
-        blurhash: upload.blurhash,
-        ...metadata
-      }
-      imageStore.addNode(image)
+      if (upload.isImage) {
+        const metadata = upload.defaultFieldMetadata.en
+        const image = {
+          id,
+          width: upload.width,
+          height: upload.height,
+          format: upload.format,
+          url: upload.url,
+          path: upload.path,
+          blurhash: upload.blurhash,
+          ...metadata
+        }
+        imageStore.addNode(image)
+      } else assetStore.addNode({ id, ...upload })
     }
 
     for (const [id, item] of Object.entries(items)) {
