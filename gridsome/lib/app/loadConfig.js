@@ -162,6 +162,8 @@ module.exports = (context, options = {}) => {
 
   config.cacheBusting = typeof localConfig.cacheBusting === 'boolean' ? localConfig.cacheBusting : true
 
+  config.disableAnchorLinks = localConfig.disableAnchorLinks || false
+
   return Object.freeze(config)
 }
 
