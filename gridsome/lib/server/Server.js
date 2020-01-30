@@ -1,5 +1,6 @@
 const path = require('path')
 const http = require('http')
+const https = require('https')
 const express = require('express')
 const { SyncHook } = require('tapable')
 const graphqlHTTP = require('express-graphql')
@@ -96,9 +97,14 @@ class Server {
     return app
   }
 
-  async listen(port, hostname, callback) {
+  async listen(port, hostname, ssl, callback) {
     const app = await this.createExpressApp()
-    const server = http.createServer(app)
+    let server
+    if (ssl) {
+      server = https.createServer(ssl, app)
+    } else {
+      server = http.createServer(app)
+    }
 
     if (process.env.NODE_ENV === 'development') {
       const sockjs = require('sockjs')

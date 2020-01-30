@@ -20,6 +20,7 @@ module.exports = async (context, args) => {
   const app = await createApp(context, { args })
   const port = await resolvePort(app.config.port)
   const hostname = app.config.host
+  const ssl = app.config.ssl
   const urls = prepareUrls(hostname, port)
   const server = new Server(app, urls)
 
@@ -96,7 +97,7 @@ module.exports = async (context, args) => {
     }
   })
 
-  server.listen(port, hostname, err => {
+  server.listen(port, hostname, ssl, err => {
     if (err) throw err
   })
 
