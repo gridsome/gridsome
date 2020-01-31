@@ -43,7 +43,7 @@ document.addEventListener('click', event => {
   const { hostname, port } = document.location
 
   if (
-    config.disableAnchorLinks || // disables this behavior by config settings
+    !config.catchLinks || // disables this behavior by config settings
     event.defaultPrevented || // disables this behavior
     event.which !== 1 || // not a left click
     event.metaKey ||
