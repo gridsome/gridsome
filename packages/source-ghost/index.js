@@ -66,7 +66,7 @@ class GhostSource {
     await this.loadBasicEntity(tags, this.contentAPI.tags)
   }
 
-  async loadPages({ addCollection, createReference }) {
+  async loadPages ({ addCollection, createReference }) {
     console.log(`Loading ${TYPE_PAGE}`)
     const pages = addCollection({
       typeName: this.typeNames.page,
