@@ -123,9 +123,10 @@ class RemarkTransformer {
   createProcessor (options = {}) {
     const processor = unified().data('transformer', this)
     const plugins = createPlugins(this.options, options)
+    const config = this.options.config || {}
 
     return processor
-      .use(remarkParse)
+      .use(remarkParse, config)
       .use(plugins)
       .use(options.stringifier || remarkHtml)
   }

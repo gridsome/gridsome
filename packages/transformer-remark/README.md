@@ -54,7 +54,7 @@ The following example adds the `remark-attr` plugin globally if it is installed 
 
 #### plugins
 
-- Type: `array`
+- Type: `Array`
 - Default: `[]`
 
 Add additional [Remark plugins](https://github.com/remarkjs/remark/blob/master/doc/plugins.md#list-of-plugins).
@@ -83,7 +83,8 @@ Set this option to `false` to disable all built-in plugins.
 
 #### grayMatter
 
-- Type: `object` Default: `{}`
+- Type: `object` 
+- Default: `{}`
 
 Options to pass through to [gray-matter][] for parsing front matter.
 
@@ -157,3 +158,45 @@ Support ASCII guillements (`<<`, `>>`) and mapping them to HTML.
 
 - Type: `boolean`
 - Default: `true`
+
+#### config
+
+- Type: `Object`
+- Default: `{}`
+
+Add additional [Remark options](https://github.com/remarkjs/remark/blob/master/packages/remark-parse/readme.md#options).
+
+This allows you to enable/disable `gfm`, `commonmark`, `footnotes`,  `pedantic` and `blocks`.
+
+* gfm
+  * Type: `boolean`
+  * Default: `true`
+
+* commonmark
+  * Type: `boolean`
+  * Default: `false`
+  
+* footnotes
+  * Type: `boolean`
+  * Default: `false`
+  
+* pedantic
+  * Type: `boolean`
+  * Default: `false`
+  
+* blocks
+  * Type: `Array | string`
+  * Default: list of [block HTML elements](https://github.com/remarkjs/remark/blob/master/packages/remark-parse/lib/block-elements.js)
+
+```js
+{
+  remark: {
+    plugins: [
+      //...
+    ],
+    config: {
+      footnotes: true
+    }
+  }
+}
+```
