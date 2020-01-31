@@ -283,6 +283,77 @@ test('remove pages by component', async () => {
   expect(pages.pages()).toHaveLength(1)
 })
 
+test('find and remove pages by query', async () => {
+  const { pages } = await createApp()
+
+  pages.createPage({
+    path: '/page',
+    component: './__fixtures__/DefaultPage.vue'
+  })
+
+  expect(pages.pages()).toHaveLength(2)
+
+  pages.findAndRemovePages({ path: { '$eq': '/page' }})
+
+  expect(pages.pages()).toHaveLength(1)
+} )
+
+test('find pages by query', async () => {
+  const { pages } = await createApp()
+
+  const postSlugs = [
+    'lorem-ipsum-dolor-amet-brunch',
+    'tofu-schlitz-knausgaard-lomo',
+    'vaporware-dreamcatcher-tousled',
+    'godard-ramps-butcher-mumblecore',
+    'listicle-tattooed-quinoa-poke-occupy'
+  ]
+
+  for (const slug of postSlugs) {
+    pages.createPage({
+      path: `/posts/${slug}`,
+      component: './__fixtures__/DefaultPage.vue'
+    })
+  }
+
+
+  expect(pages.pages()).toHaveLength(6)
+
+  let matchingPages = pages.findPages({ path: { '$eq': '/posts/lorem-ipsum-dolor-amet-brunch' }})
+  expect(matchingPages).toHaveLength(1)
+
+  matchingPages = pages.findPages({ path: { '$contains': 'posts' }})
+  expect(matchingPages).toHaveLength(5)
+})
+
+test('find page by query', async () => {
+  const { pages } = await createApp()
+
+  const postSlugs = [
+    'lorem-ipsum-dolor-amet-brunch',
+    'tofu-schlitz-knausgaard-lomo',
+    'vaporware-dreamcatcher-tousled',
+    'godard-ramps-butcher-mumblecore',
+    'listicle-tattooed-quinoa-poke-occupy'
+  ]
+
+  for (const slug of postSlugs) {
+    pages.createPage({
+      path: `/posts/${slug}`,
+      component: './__fixtures__/DefaultPage.vue'
+    })
+  }
+
+  expect(pages.pages()).toHaveLength(6)
+
+  const pathToMatch = '/posts/lorem-ipsum-dolor-amet-brunch'
+  const matchingPage = pages.findPage({ path: { '$eq': pathToMatch } })
+
+  expect(matchingPage).toEqual(
+    expect.objectContaining({ path: pathToMatch })
+  )
+})
+
 test('api.createManagedPages() should only be called once', async () => {
   const createPages = jest.fn()
   const createManagedPages = jest.fn()
