@@ -102,7 +102,7 @@ class Server {
     const app = await this.createExpressApp()
     let server
     if (useHttps) {
-      const ssl = devcert.certificateFor(hostname)
+      const ssl = await devcert.certificateFor(hostname)
       server = https.createServer(ssl, app)
     } else {
       server = http.createServer(app)
