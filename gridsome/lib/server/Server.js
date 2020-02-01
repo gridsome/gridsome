@@ -1,6 +1,7 @@
 const path = require('path')
 const http = require('http')
 const https = require('https')
+const devcert = require('devcert')
 const express = require('express')
 const { SyncHook } = require('tapable')
 const graphqlHTTP = require('express-graphql')
@@ -97,10 +98,11 @@ class Server {
     return app
   }
 
-  async listen(port, hostname, ssl, callback) {
+  async listen(port, hostname, useHttps, callback) {
     const app = await this.createExpressApp()
     let server
-    if (ssl) {
+    if (useHttps) {
+      const ssl = devcert.certificateFor(hostname)
       server = https.createServer(ssl, app)
     } else {
       server = http.createServer(app)
