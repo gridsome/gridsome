@@ -1,27 +1,12 @@
 const { SiteClient, Loader } = require('datocms-client')
-const { camelize } = require('humps')
+const camelcase = require('camelcase')
+const decamelize = require('decamelize')
+const ImgixClient = require('imgix-core-js')
+const imgixParams = require('imgix-url-params/dist/parameters')
 
-const withNoEmptyValues = (object) => {
-  if (Object.prototype.toString.call(object) === '[object Object]') {
-    const result = {}
-
-    for (const [key, value] of Object.entries(object)) {
-      const valueWithNoEmptyValues = withNoEmptyValues(value)
-      if (valueWithNoEmptyValues) {
-        result[key] = valueWithNoEmptyValues
-      }
-    }
-
-    return Object.entries(result).length > 0 ? result : null
-  }
-
-  if (Object.prototype.toString.call(object) === '[object Array]') {
-    const result = object.map(x => withNoEmptyValues(x)).filter(x => !!x)
-    return result.length > 0 ? result : null
-  }
-
-  return object
-}
+const IMAGE_TYPENAME = 'DatoCmsImage'
+const ASSET_TYPENAME = 'DatoCmsAsset'
+const MARKDOWN_TYPENAME = 'DatoCmsContentMarkdown'
 
 class DatoCmsSource {
   static defaultOptions () {
@@ -29,115 +14,203 @@ class DatoCmsSource {
       typeName: 'DatoCms',
       apiToken: undefined,
       previewMode: false,
-      apiUrl: undefined
+      apiUrl: 'https://site-api.datocms.com'
     }
   }
 
   constructor (api, options) {
     this.options = options
-    api.loadSource(args => this.fetchContent(args))
+    api.loadSource(store => this.fetchContent(store))
+    api.loadSource(schema => this.extendSchema(schema))
   }
 
   createTypeName (name) {
-    return (
-      this.options.typeName.charAt(0).toUpperCase() +
-      camelize(`${this.options.typeName} ${name}`).slice(1)
-    )
+    return camelcase(`${this.options.typeName} ${name}`, { pascalCase: true })
   }
 
   async fetchContent (store) {
-    const { addCollection, getCollection } = store
     const { apiToken, apiUrl, previewMode } = this.options
+    if (!apiToken) throw new Error('Missing API Token (`apiToken`)')
 
     const clientHeaders = {
       'X-Reason': 'dump',
       'X-SSG': 'gridsome'
     }
 
-    const client = apiUrl
+    const loaderClient = apiUrl
       ? new SiteClient(apiToken, clientHeaders, apiUrl)
       : new SiteClient(apiToken, clientHeaders)
 
-    const loader = new Loader(client, previewMode)
+    const loader = new Loader(loaderClient, previewMode)
     await loader.load()
 
-    const { itemsRepo, entitiesRepo } = loader
+    const { upload: uploads, item: items, item_type: itemTypes } = loader.entitiesRepo.entities
+    const cache = new Map()
+    const imageStore = store.addCollection(IMAGE_TYPENAME)
+    const assetStore = store.addCollection(ASSET_TYPENAME)
+    const markdownStore = store.addCollection(MARKDOWN_TYPENAME)
 
-    const cache = {}
+    for (const [id, itemType] of Object.entries(itemTypes)) {
+      const typeName = this.createTypeName(itemType.name)
+      const collection = store.addCollection(typeName)
 
-    for (const itemType of itemsRepo.itemTypes) {
-      const { titleField, fields } = itemType
+      const slugField = itemType.fields.find(({ fieldType }) => fieldType === 'slug')
+      const seoField = itemType.fields.find(({ fieldType }) => fieldType === 'seo')
 
-      const slugField = fields.find(({ fieldType }) => fieldType === 'slug')
+      const imageFields = itemType.fields.filter(({ fieldType }) => ['file', 'gallery'].includes(fieldType)).map(field => {
+        const apiKey = camelcase(field.apiKey)
+        collection.addReference(apiKey, IMAGE_TYPENAME)
+        return apiKey
+      })
 
-      cache[itemType.id] = { titleField, slugField }
+      const markdownFields = itemType.fields.filter(({ fieldType, appeareance }) => fieldType === 'text' && appeareance.type === 'markdown').map(field => {
+        const apiKey = camelcase(field.apiKey)
+        collection.addReference(apiKey, MARKDOWN_TYPENAME)
+        return apiKey
+      })
 
-      const collection = addCollection(
-        this.createTypeName(itemType.name),
-      )
+      itemType.fields.filter(({ fieldType }) => ['link', 'links', 'rich_text'].includes(fieldType)).forEach(field => {
+        const apiKey = camelcase(field.apiKey)
+        const typeNames = (field.validators.itemItemType || field.validators.itemsItemType || field.validators.richTextBlocks).itemTypes.map(id => this.createTypeName(itemTypes[id].name))
+        collection.addReference(apiKey, { typeName: typeNames.length > 1 ? typeNames : typeNames[0] })
+      })
 
-      fields
-        .filter(({ fieldType }) => ['link', 'links', 'rich_text'].includes(fieldType))
-        .forEach((field) => {
-          const typeNames = (
-            field.validators.itemItemType ||
-            field.validators.itemsItemType ||
-            field.validators.richTextBlocks
-          ).itemTypes.map((id) => (
-            this.createTypeName(entitiesRepo.findEntity('item_type', id).name)
-          ))
-
-          collection.addReference(
-            camelize(field.apiKey),
-            {
-              typeName: typeNames.length > 1 ? typeNames : typeNames[0]
-            }
-          )
-        })
+      cache.set(id, {
+        typeName,
+        imageFields,
+        markdownFields,
+        slugField: slugField && slugField.apiKey,
+        seoField: seoField && seoField.apiKey
+      })
     }
 
-    for (const item of Object.values(itemsRepo.itemsById)) {
-      const { titleField, slugField } = cache[item.itemType.id]
-      const typeName = this.createTypeName(item.itemType.name)
-      const collection = getCollection(typeName)
+    for (const [id, upload] of Object.entries(uploads)) {
+      if (upload.isImage) {
+        const metadata = upload.defaultFieldMetadata.en
+        const image = {
+          id,
+          width: upload.width,
+          height: upload.height,
+          format: upload.format,
+          url: upload.url,
+          path: upload.path,
+          blurhash: upload.blurhash,
+          ...metadata
+        }
+        imageStore.addNode(image)
+      } else assetStore.addNode({ id, ...upload })
+    }
 
-      const node = {
-        id: item.id,
-        title: titleField && item[camelize(titleField.apiKey)],
-        slug: slugField && item[camelize(slugField.apiKey)],
-        created: new Date(item.createdAt),
-        updated: new Date(item.updatedAt),
-        position: item.position,
-        ...item.itemType.fields.reduce((fields, field) => {
-          const val = item.readAttribute(field)
+    for (const [id, item] of Object.entries(items)) {
+      const { typeName, imageFields, markdownFields, slugField, seoField } = cache.get(item.itemType.id)
+      const collection = store.getCollection(typeName)
 
-          if (item.itemType.hasOwnProperty('apiKey')) {
-            fields.model = { apiKey: item.itemType.apiKey }
-          }
+      const itemNode = { id }
 
-          if (!val) return fields
+      for (let [key, value] of Object.entries(item.payload.attributes)) {
+        key = camelcase(key)
 
-          if (['link', 'links', 'rich_text'].includes(field.fieldType)) {
-            const val = item.entity[camelize(field.apiKey)]
-            const sanitizedVal = Array.isArray(val) ? withNoEmptyValues(val) : val
+        if (key === slugField) key = 'slug'
+        if (key === seoField) key = 'seo'
 
-            if (!sanitizedVal) return fields
+        if (['created_at', 'updated_at'].includes(key)) value = new Date(value)
 
-            fields[camelize(field.apiKey)] = sanitizedVal
-
-            return fields
-          } else {
-            fields[camelize(field.apiKey)] = val.toMap
-              ? withNoEmptyValues(val.toMap())
-              : withNoEmptyValues(val)
-
-            return fields
-          }
-        }, {})
+        itemNode[key] = value
       }
 
-      collection.addNode(node)
+      for (const imageField of imageFields) {
+        const itemImageField = item[imageField]
+        if (itemImageField) {
+          itemNode[imageField] = Array.isArray(itemImageField) ? itemImageField.map(({ uploadId }) => uploadId) : itemImageField.uploadId
+        }
+      }
+
+      for (const markdownFieldKey of markdownFields) {
+        const itemMarkdownField = item[markdownFieldKey]
+        if (itemMarkdownField) {
+          const markdownNode = markdownStore.addNode({
+            internal: {
+              mimeType: 'text/markdown',
+              content: itemMarkdownField,
+              origin: id
+            }
+          })
+
+          itemNode[markdownFieldKey] = store.createReference(markdownNode)
+        }
+      }
+
+      collection.addNode(itemNode)
     }
+  }
+
+  async extendSchema ({ addSchemaTypes, schema, addSchemaResolvers }) {
+    const client = new ImgixClient({ domain: 'www.datocms-assets.com', includeLibraryParam: false, useHTTPS: true })
+
+    const mappings = {
+      boolean: 'Boolean',
+      hex_color: 'String',
+      integer: 'Int',
+      list: 'String',
+      number: 'Float',
+      path: 'String',
+      string: 'String',
+      timestamp: 'String',
+      unit_scalar: 'Float',
+      font: 'String',
+      ratio: 'String',
+      url: 'String'
+    }
+
+    const imgixParamsFields = {}
+    for (const [param, doc] of Object.entries(imgixParams.parameters)) {
+      let type = 'String'
+
+      if (mappings[doc.expects[0].type]) {
+        type = mappings[doc.expects[0].type]
+      }
+
+      imgixParamsFields[camelcase(param)] = {
+        type,
+        description: `${doc.short_description} (${doc.url})`
+      }
+    }
+
+    const transformParams = args => Object.entries(args).reduce((obj, [param, value]) => ({ ...obj, [decamelize(param, '-')]: value }), {})
+
+    addSchemaTypes([
+      schema.createInputType({
+        name: `DatoCmsImgixParams`,
+        fields: imgixParamsFields
+      }),
+      schema.createObjectType({
+        name: IMAGE_TYPENAME,
+        interfaces: ['Node'],
+        description: 'A custom Image type that lets you create transform URLs using the DatoCMS Image CDN.',
+        fields: {
+          url: 'String!',
+          width: 'Int!',
+          height: 'Int!',
+          blurhash: 'String!',
+          alt: 'String',
+          transformUrl: 'String!',
+          srcSet: 'String!'
+        }
+      })
+    ])
+
+    addSchemaResolvers({
+      [IMAGE_TYPENAME]: {
+        transformUrl: {
+          args: { imgixParams: 'DatoCmsImgixParams' },
+          resolve: ({ path }, { imgixParams }) => client.buildURL(path, transformParams(imgixParams))
+        },
+        srcSet: {
+          args: { imgixParams: 'DatoCmsImgixParams' },
+          resolve: ({ path }, { imgixParams }) => client.buildSrcSet(path, transformParams(imgixParams))
+        }
+      }
+    })
   }
 }
 

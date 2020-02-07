@@ -12,8 +12,11 @@
     "datocms"
   ],
   "dependencies": {
-    "datocms-client": "^0.7.5",
-    "humps": "^2.0.1"
+    "camelcase": "^5.3.1",
+    "datocms-client": "^3.0.14",
+    "decamelize": "^3.2.0",
+    "imgix-core-js": "^2.2.1",
+    "imgix-url-params": "^11.2.0"
   },
   "publishConfig": {
     "access": "public"
