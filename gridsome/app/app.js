@@ -16,8 +16,8 @@ import Image from './components/Image'
 import ClientOnly from './components/ClientOnly'
 
 Vue.mixin(graphqlMixin)
-Vue.component('g-link', Link)
-Vue.component('g-image', Image)
+Vue.component('GLink', Link)
+Vue.component('GImage', Image)
 Vue.component('ClientOnly', ClientOnly)
 
 Vue.prototype.$url = url
