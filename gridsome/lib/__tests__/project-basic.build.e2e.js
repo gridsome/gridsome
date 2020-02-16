@@ -195,9 +195,9 @@ test('compile scripts correctly', () => {
 test('compile scripts includes polyfills', () => {
   const appJS = content('dist/assets/js/app.js')
 
-  expect(appJS).toMatch('core-js/modules/es6.promise.js')
-  expect(appJS).toMatch('core-js/modules/es6.symbol.js')
-  expect(appJS).toMatch('core-js/modules/es6.string.ends-with.js')
+  expect(appJS).toMatch('core-js/modules/es.promise.js')
+  expect(appJS).toMatch('core-js/modules/es.symbol.js')
+  expect(appJS).toMatch('core-js/modules/es.string.ends-with.js')
 })
 
 test('compile a single css file', () => {

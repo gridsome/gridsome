@@ -25,7 +25,7 @@
     "@gridsome/cli": "^0.3.1",
     "@hapi/joi": "^15.1.1",
     "@sindresorhus/slugify": "^0.8.0",
-    "@vue/babel-preset-app": "^3.4.0",
+    "@vue/babel-preset-app": "^4.2.2",
     "@vue/component-compiler-utils": "^2.5.2",
     "address": "^1.1.0",
     "auto-bind": "^2.0.0",
