@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.1](https://github.com/gridsome/gridsome/tree/master/packages/source-ghost/compare/@gridsome/source-ghost@0.3.0...@gridsome/source-ghost@0.3.1) (2020-02-18)
+
+
+### Bug Fixes
+
+* **ghost:** show baseUrl when loading data ([#958](https://github.com/gridsome/gridsome/tree/master/packages/source-ghost/issues/958)) ([ed4fb1a](https://github.com/gridsome/gridsome/tree/master/packages/source-ghost/commit/ed4fb1aaf08d38372976e1fe6bd69b157b18aa2a))
+
+
+
+
+
 # [0.3.0](https://github.com/gridsome/gridsome/tree/master/packages/source-ghost/compare/@gridsome/source-ghost@0.2.0...@gridsome/source-ghost@0.3.0) (2019-12-13)
 
 

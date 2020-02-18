@@ -1,5 +1,5 @@
 {
-  "version": "0.5.2",
+  "version": "0.5.3",
   "name": "@gridsome/source-wordpress",
   "description": "WordPress source for Gridsome",
   "homepage": "https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress#readme",

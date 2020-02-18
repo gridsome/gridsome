@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.5.3](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/compare/@gridsome/source-wordpress@0.5.2...@gridsome/source-wordpress@0.5.3) (2020-02-18)
+
+
+### Bug Fixes
+
+* **wordpress:** update error formatting in fetch method ([#905](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/issues/905)) ([c99c7c0](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/commit/c99c7c0e252f294f2f1f9b7d8df5122dd62b27aa))
+
+
+
+
+
 ## [0.5.2](https://github.com/gridsome/gridsome/tree/master/packages/source-wordpress/compare/@gridsome/source-wordpress@0.5.1...@gridsome/source-wordpress@0.5.2) (2019-11-19)
 
 

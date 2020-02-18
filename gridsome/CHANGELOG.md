@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.7.13](https://github.com/gridsome/gridsome/compare/gridsome@0.7.12...gridsome@0.7.13) (2020-02-18)
+
+
+### Bug Fixes
+
+* **app:** allow pascal cased g-link and g-image ([#985](https://github.com/gridsome/gridsome/issues/985)) ([b4805eb](https://github.com/gridsome/gridsome/commit/b4805eb3b01806fea53ced94e91a55b6754879a2))
+* **app:** option for disabling global link catcher ([#959](https://github.com/gridsome/gridsome/issues/959)) ([3acbada](https://github.com/gridsome/gridsome/commit/3acbada56288327dee7118bde7b0d1e9b898bd5c))
+* **build:** allow overriding cpu count with env var ([#923](https://github.com/gridsome/gridsome/issues/923)) ([12c4865](https://github.com/gridsome/gridsome/commit/12c486545170feb4096ffd88600e618873884a9a))
+* **build:** handle some webpack errors properly ([#932](https://github.com/gridsome/gridsome/issues/932)) ([63bd6a3](https://github.com/gridsome/gridsome/commit/63bd6a3966db687fce74c5e13564d33451fe4748))
+* **pages:** add missing find* API methods ([#927](https://github.com/gridsome/gridsome/issues/927)) ([bfc1104](https://github.com/gridsome/gridsome/commit/bfc1104b332c62f7c948c2e5bc14541df44099e5))
+* **pages:** return if no page is found in `removePage()` ([#926](https://github.com/gridsome/gridsome/issues/926)) ([9d8aef7](https://github.com/gridsome/gridsome/commit/9d8aef77b5eae5be7776af93a72d1b336a58e8d1))
+* **webpack:** ignore missing default export in main.js ([a81ed0e](https://github.com/gridsome/gridsome/commit/a81ed0e99a6cf78dffb5a42e5cfc0293b76f069e))
+
+
+
+
+
 ## [0.7.12](https://github.com/gridsome/gridsome/compare/gridsome@0.7.11...gridsome@0.7.12) (2019-12-13)
 
 
