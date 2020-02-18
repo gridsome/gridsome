@@ -39,6 +39,7 @@
     "color-string": "^1.5.3",
     "columnify": "^1.5.4",
     "connect-history-api-fallback": "^1.6.0",
+    "core-js": "^3.6.4",
     "css-loader": "^2.1.0",
     "didyoumean": "^1.2.1",
     "dotenv": "^6.2.0",
