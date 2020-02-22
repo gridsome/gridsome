@@ -74,7 +74,8 @@ class VueRemark {
       includePaths: [],
       plugins: [],
       remark: {},
-      refs: {}
+      refs: {},
+      path: '**/*.md'
     }
   }
 
@@ -85,6 +86,10 @@ class VueRemark {
 
     if (!options.typeName) {
       throw new Error(`@gridsome/vue-remark requires the 'typeName' option.`)
+    }
+
+    if (!options.path) {
+      throw new Error(`@gridsome/vue-remark requires the 'path' option.`)
     }
 
     if (api.config.templates[options.typeName]) {
@@ -120,7 +125,7 @@ class VueRemark {
     }
 
     this.filesystem = new Filesystem(api, {
-      path: '**/*.md',
+      path: options.path,
       typeName: options.typeName,
       baseDir: options.baseDir,
       pathPrefix: options.pathPrefix,

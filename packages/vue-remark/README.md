@@ -151,6 +151,8 @@ It is also possible to use slots inside `<VueRemarkContent>`.
 <slot name="tags">
 ```
 
+
+
 #### route
 
 - Type: `string`
@@ -171,6 +173,12 @@ module.exports = {
   ]
 }
 ```
+
+#### paths
+- Type: `Array`
+- Default: `['**/*.md']`
+
+Where to look for files. Will get combined to a single glob pattern.
 
 #### includePaths
 
