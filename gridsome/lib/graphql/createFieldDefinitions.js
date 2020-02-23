@@ -9,7 +9,8 @@ const {
   isEmpty,
   isNumber,
   isInteger,
-  isPlainObject
+  isPlainObject,
+  isArrayLike
 } = require('lodash')
 
 module.exports = function createFieldDefinitions (nodes, options = {}) {
@@ -24,6 +25,9 @@ module.exports = function createFieldDefinitions (nodes, options = {}) {
 }
 
 function resolveValues (obj, currentObj = {}, options = {}, path = []) {
+  if (isArrayLike(currentObj)) {
+    throw new Error(`Cannot resolve field for: ${obj} and ${currentObj}, please check to make sure your data sources have compatible shapes`)
+  }
   const res = { ...currentObj }
 
   for (const key in obj) {
