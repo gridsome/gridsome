@@ -151,8 +151,6 @@ It is also possible to use slots inside `<VueRemarkContent>`.
 <slot name="tags">
 ```
 
-
-
 #### route
 
 - Type: `string`
