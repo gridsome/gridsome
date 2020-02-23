@@ -174,11 +174,11 @@ module.exports = {
 }
 ```
 
-#### paths
+#### ignore
 - Type: `Array`
-- Default: `['**/*.md']`
+- Default: `[]`
 
-Where to look for files. Will get combined to a single glob pattern.
+List of glob patterns that should be ignored when searching for markdown files.
 
 #### includePaths
 

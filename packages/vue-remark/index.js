@@ -75,7 +75,7 @@ class VueRemark {
       plugins: [],
       remark: {},
       refs: {},
-      path: '**/*.md'
+      ignore: []
     }
   }
 
@@ -86,10 +86,6 @@ class VueRemark {
 
     if (!options.typeName) {
       throw new Error(`@gridsome/vue-remark requires the 'typeName' option.`)
-    }
-
-    if (!options.path) {
-      throw new Error(`@gridsome/vue-remark requires the 'path' option.`)
     }
 
     if (api.config.templates[options.typeName]) {
@@ -124,8 +120,13 @@ class VueRemark {
       this.route.routeKeys = normalizeRouteKeys(routeKeys)
     }
 
+    const paths = [
+      '**/*.md',
+      ...options.ignore.map((path) => `!${path}`)
+    ]
+
     this.filesystem = new Filesystem(api, {
-      path: options.path,
+      path: paths,
       typeName: options.typeName,
       baseDir: options.baseDir,
       pathPrefix: options.pathPrefix,
