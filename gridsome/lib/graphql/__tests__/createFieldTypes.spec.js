@@ -300,6 +300,24 @@ test('infer file fields', () => {
   expect(types.file4.type).toEqual('String')
 })
 
+test('it should crash if input node isn\'t the same shape', () => {
+  const testStr = 'testing with erroneous value'
+  const arrUnderTest = [
+    {
+      layout: testStr
+    },
+    {
+      layout: {
+        nested: 'abc',
+        nested2: 'def'
+      }
+    }
+  ]
+
+  expect(() => createFieldDefinitions(arrUnderTest)).toThrowError(testStr)
+})
+
+
 const { BOOTSTRAP_PAGES } = require('../../utils/constants')
 
 function createApp (plugin, phase = BOOTSTRAP_PAGES) {
