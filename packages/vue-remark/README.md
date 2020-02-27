@@ -172,6 +172,12 @@ module.exports = {
 }
 ```
 
+#### ignore
+- Type: `Array`
+- Default: `[]`
+
+List of glob patterns that should be ignored when searching for markdown files.
+
 #### includePaths
 
 - Type: `Array`

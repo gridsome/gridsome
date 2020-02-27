@@ -74,7 +74,8 @@ class VueRemark {
       includePaths: [],
       plugins: [],
       remark: {},
-      refs: {}
+      refs: {},
+      ignore: []
     }
   }
 
@@ -119,8 +120,13 @@ class VueRemark {
       this.route.routeKeys = normalizeRouteKeys(routeKeys)
     }
 
+    const paths = [
+      '**/*.md',
+      ...options.ignore.map((path) => `!${path}`)
+    ]
+
     this.filesystem = new Filesystem(api, {
-      path: '**/*.md',
+      path: paths,
       typeName: options.typeName,
       baseDir: options.baseDir,
       pathPrefix: options.pathPrefix,
