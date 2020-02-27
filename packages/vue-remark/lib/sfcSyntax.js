@@ -3,7 +3,8 @@ const htmlTags = require('html-tags')
 const isImport = value => /^import\s+/.test(value)
 const isStyle = value => /^<style/.test(value)
 const isScript = value => /^<script/.test(value)
-const isTag = value => /^<\/?[\w-]+/.test(value)
+const isStartTag = value => /^<\/?[\w-]+/.test(value)
+const isEndTag = value => /<\/?[\w-]+>$/.test(value)
 const isQuery = value => /^<(page|static)-query/.test(value)
 
 const getValue = value => {
@@ -39,11 +40,18 @@ function tokenizeSFCBlocks (eat, value) {
 function tokenizeVueComponents (eat, value) {
   value = getValue(value)
 
-  if (isTag(value)) {
+  if (isStartTag(value)) {
     const [, name] = value.match(/^<\/?([\w-]+)[>\s]/) || []
 
     if (name && !htmlTags.includes(name)) {
       return eat(value)({ type: 'html', value })
+    }
+  } else if (isEndTag(value)) {
+    const [, name] = value.match(/<\/?([\w-]+)[>\s]$/) || []
+
+    if (name && !htmlTags.includes(name)) {
+      const portion = value.substr(0, value.length - name.length - 3)
+      return eat(portion)({ type: 'html', value: portion })
     }
   }
 }
