@@ -3,15 +3,15 @@ const fs = require('fs-extra')
 const glob = require('globby')
 const slash = require('slash')
 const chokidar = require('chokidar')
-const { trimEnd } = require('lodash')
-const { createPagePath } = require('./lib/utils')
+const {trimEnd} = require('lodash')
+const {createPagePath} = require('./lib/utils')
 
 class VuePages {
-  static defaultOptions () {
+  static defaultOptions() {
     return {}
   }
 
-  constructor (api) {
+  constructor(api) {
     this.api = api
     this.pagesDir = api.config.pagesDir
 
@@ -20,7 +20,7 @@ class VuePages {
     }
   }
 
-  createGraphQLRule (config, type, loader) {
+  createGraphQLRule(config, type, loader) {
     const re = new RegExp(`blockType=(${type})`)
 
     config.module.rule(type)
@@ -37,15 +37,15 @@ class VuePages {
       .loader(require.resolve(loader))
   }
 
-  async createPages ({ slugify, createPage, removePagesByComponent }) {
-    const files = await glob('**/*.vue', { cwd: this.pagesDir })
+  async createPages({slugify, createPage, removePagesByComponent}) {
+    const files = await glob('**/*.{js,jsx,vue}', {cwd: this.pagesDir})
 
     for (const file of files) {
       createPage(this.createPageOptions(file, slugify))
     }
 
     if (process.env.NODE_ENV === 'development') {
-      const watcher = chokidar.watch('**/*.vue', {
+      const watcher = chokidar.watch(['**/*.vue', '**/*.js', '**/*.jsx'], {
         ignoreInitial: true,
         cwd: this.pagesDir
       })
@@ -60,13 +60,13 @@ class VuePages {
     }
   }
 
-  createPageOptions (file, slugify) {
-    const { trailingSlash } = this.api.config.permalinks
+  createPageOptions(file, slugify) {
+    const {trailingSlash} = this.api.config.permalinks
     const pagePath = createPagePath(file, slugify)
 
     return {
       path: trailingSlash ? trimEnd(pagePath, '/') + '/' : pagePath,
-      name: /^[iI]ndex\.vue$/.test(file) ? 'home' : undefined,
+      name: /^[iI]ndex\.(vue|jsx?)$/.test(file) ? 'home' : undefined,
       component: path.join(this.pagesDir, file)
     }
   }
