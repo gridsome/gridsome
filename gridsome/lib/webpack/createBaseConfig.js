@@ -1,19 +1,19 @@
 const path = require('path')
 const hash = require('hash-sum')
-const { pick } = require('lodash')
+const {pick} = require('lodash')
 const Config = require('webpack-chain')
-const { forwardSlash } = require('../utils')
-const { VueLoaderPlugin } = require('vue-loader')
+const {forwardSlash} = require('../utils')
+const {VueLoaderPlugin} = require('vue-loader')
 const createHTMLRenderer = require('../server/createHTMLRenderer')
 const GridsomeResolverPlugin = require('./plugins/GridsomeResolverPlugin')
 const CSSExtractPlugin = require('mini-css-extract-plugin')
 
 const resolve = (p, c) => path.resolve(c || __dirname, p)
 
-module.exports = (app, { isProd, isServer }) => {
-  const { config: projectConfig } = app
-  const { publicPath } = projectConfig
-  const { cacheDirectory, cacheIdentifier } = createCacheOptions()
+module.exports = (app, {isProd, isServer}) => {
+  const {config: projectConfig} = app
+  const {publicPath} = projectConfig
+  const {cacheDirectory, cacheIdentifier} = createCacheOptions()
   const assetsDir = path.relative(projectConfig.outputDir, projectConfig.assetsDir)
   const config = new Config()
 
@@ -47,11 +47,11 @@ module.exports = (app, { isProd, isServer }) => {
 
   config.resolve
     .plugin('gridsome-fallback-resolver-plugin')
-      .use(GridsomeResolverPlugin, [{
-        fallbackDir: path.join(projectConfig.appPath, 'fallbacks'),
-        optionalDir: path.join(app.context, 'src'),
-        resolve: ['main', 'App.vue']
-      }])
+    .use(GridsomeResolverPlugin, [{
+      fallbackDir: path.join(projectConfig.appPath, 'fallbacks'),
+      optionalDir: path.join(app.context, 'src'),
+      resolve: ['main', 'App.vue']
+    }])
 
   config.resolveLoader
     .set('symlinks', true)
@@ -218,7 +218,7 @@ module.exports = (app, { isProd, isServer }) => {
     config.plugin('html')
       .use(require('html-webpack-plugin'), [{
         minify: true,
-        templateContent () {
+        templateContent() {
           return createHTMLRenderer(projectConfig.htmlTemplate)({
             app: '<div id="app"></div>'
           })
@@ -243,7 +243,7 @@ module.exports = (app, { isProd, isServer }) => {
 
   // helpes
 
-  function createCacheOptions () {
+  function createCacheOptions() {
     const values = app.compiler.hooks.cacheIdentifier.call({
       'gridsome': require('../../package.json').version,
       'cache-loader': require('cache-loader/package.json').version,
@@ -262,8 +262,8 @@ module.exports = (app, { isProd, isServer }) => {
     }
   }
 
-  function createCSSRule (config, lang, test, loader = null, options = {}) {
-    const { css = {}, postcss = {}} = projectConfig.css.loaderOptions
+  function createCSSRule(config, lang, test, loader = null, options = {}) {
+    const {css = {}, postcss = {}} = projectConfig.css.loaderOptions
     const baseRule = config.module.rule(lang).test(test)
     const modulesRule = baseRule.oneOf('modules').resourceQuery(/module/)
     const normalRule = baseRule.oneOf('normal')
@@ -271,7 +271,7 @@ module.exports = (app, { isProd, isServer }) => {
     applyLoaders(modulesRule, true)
     applyLoaders(normalRule, false)
 
-    function applyLoaders (rule, modules) {
+    function applyLoaders(rule, modules) {
       if (!isServer) {
         if (isProd) {
           rule.use('extract-css-loader').loader(CSSExtractPlugin.loader)
@@ -304,7 +304,7 @@ module.exports = (app, { isProd, isServer }) => {
     }
   }
 
-  function createEnv () {
+  function createEnv() {
     const assetsUrl = forwardSlash(path.join(publicPath, assetsDir, '/'))
     const dataUrl = forwardSlash(path.join(assetsUrl, 'data', '/'))
 

@@ -38,14 +38,14 @@ class VuePages {
   }
 
   async createPages({slugify, createPage, removePagesByComponent}) {
-    const files = await glob('**/*.{js,jsx,vue}', {cwd: this.pagesDir})
+    const files = await glob('**/*.{js,jsx,ts,tsx,vue}', {cwd: this.pagesDir})
 
     for (const file of files) {
       createPage(this.createPageOptions(file, slugify))
     }
 
     if (process.env.NODE_ENV === 'development') {
-      const watcher = chokidar.watch(['**/*.vue', '**/*.js', '**/*.jsx'], {
+      const watcher = chokidar.watch(['**/*.vue', '**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx'], {
         ignoreInitial: true,
         cwd: this.pagesDir
       })
@@ -66,7 +66,7 @@ class VuePages {
 
     return {
       path: trailingSlash ? trimEnd(pagePath, '/') + '/' : pagePath,
-      name: /^[iI]ndex\.(vue|jsx?)$/.test(file) ? 'home' : undefined,
+      name: /^[iI]ndex\.(vue|jsx?|tsx?)$/.test(file) ? 'home' : undefined,
       component: path.join(this.pagesDir, file)
     }
   }
