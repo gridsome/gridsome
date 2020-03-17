@@ -1,4 +1,5 @@
 import fetch from '../fetch'
+import config from '~/.temp/config'
 import { getResults, setResults, formatError } from './shared'
 
 export default (to, from, next) => {
@@ -32,7 +33,8 @@ export default (to, from, next) => {
         console.error(err)
         next({ name: '*', params: { 0: to.path } })
       } else if (err.code === 'INVALID_HASH' && to.path !== window.location.pathname) {
-        window.location.assign(to.fullPath)
+        const fullPathWithPrefix = (config.pathPrefix ?? '') + to.fullPath
+        window.location.assign(fullPathWithPrefix)
       } else {
         formatError(err, to)
         next(err)
