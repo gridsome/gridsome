@@ -28,7 +28,8 @@ if (process.env.NODE_ENV === 'production') {
       .catch(err => {
         // reload page if a component failed to load
         if (err.request && to.path !== window.location.pathname) {
-          window.location.assign(to.fullPath)
+          const fullPathWithPrefix = (config.pathPrefix ?? '') + to.fullPath
+          window.location.assign(fullPathWithPrefix)
         } else {
           next(err)
         }
