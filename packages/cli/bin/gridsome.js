@@ -54,9 +54,9 @@ program.arguments('<command>').action(async command => {
   const { isGridsomeProject, hasYarn } = require('../lib/utils')
   const availableCommands = program.commands.map(cmd => cmd._name)
   const suggestion = availableCommands.find(cmd => {
-    const steps = leven(cmd, command);
-    return steps < 3;
-  });
+    const steps = leven(cmd, command)
+    return steps < 3
+  })
 
   if (isGridsomeProject(pkgPath) && !suggestion) {
     const useYarn = await hasYarn()
