@@ -6,8 +6,8 @@ const { deprecate } = require('../utils/deprecate')
 
 function createBaseActions (api, app) {
   return {
-    graphql (docOrQuery, variables = {}) {
-      return app.schema.runQuery(docOrQuery, variables)
+    graphql (docOrQuery, variables = {}, operationName) {
+      return app.schema.runQuery(docOrQuery, variables, operationName)
     },
     resolve (...args) {
       return app.resolve(...args)
