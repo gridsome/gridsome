@@ -22,6 +22,12 @@ test('warn about unknown command', async () => {
   expect(stdout).toMatch('Unknown command asdf')
 })
 
+test('suggest matching command', async () => {
+  const { stdout } = await execa(cli, ['creaet'])
+
+  expect(stdout).toContain('Did you mean create?')
+})
+
 test('warn about missing dependencies', async () => {
   const { stdout } = await execa(cli, ['noop'], {
     cwd: path.join(__dirname, '__fixtures__', 'project')
