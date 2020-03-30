@@ -2,7 +2,7 @@ const path = require('path')
 const pathToRegexp = require('path-to-regexp')
 const Filesystem = require('@gridsome/source-filesystem')
 const RemarkTransformer = require('@gridsome/transformer-remark')
-const { trimEnd, kebabCase } = require('lodash')
+const { omit, trimEnd, kebabCase } = require('lodash')
 
 const toSFC = require('./lib/toSfc')
 const sfcSyntax = require('./lib/sfcSyntax')
@@ -210,7 +210,7 @@ class VueRemark {
 
         if (!parsed.excerpt) parsed.excerpt = null
 
-        Object.assign(options, parsed)
+        Object.assign(options, omit(parsed, ['layout']))
 
         options.internal.mimeType = null
         options.internal.content = null
