@@ -1,9 +1,9 @@
 const path = require('path')
 const glob = require('globby')
+const leven = require('leven')
 const crypto = require('crypto')
 const moment = require('moment')
 const chokidar = require('chokidar')
-const didYouMean = require('didyoumean')
 const pathToRegexp = require('path-to-regexp')
 const { deprecate } = require('../utils/deprecate')
 const { ISO_8601_FORMAT } = require('../utils/constants')
@@ -231,7 +231,9 @@ class TemplatesPlugin {
 
       for (const typeName of templates.byTypeName.keys()) {
         if (!typeNames.includes(typeName)) {
-          const suggestion = didYouMean(typeName, typeNames)
+          const suggestion = typeNames.find(value => {
+            return leven(value, typeName) < 3
+          })
 
           throw new Error(
             `A content type for the ${typeName} template does not exist.` +
