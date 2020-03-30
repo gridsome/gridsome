@@ -149,7 +149,9 @@ class WordPressSource {
         if (customPostTypeReferences) {
           for (const customReference of customPostTypeReferences) {
             if (post.type !== TYPE_ATTACHEMENT && post[customReference.sourceField]) {
-              fields[customReference.targetField] = createReference(this.createTypeName(customReference.type), parseInt(post[customReference.sourceField]))
+              // if it's an array we have to parseInt each item
+              const sourceField = Array.isArray(post[customReference.sourceField]) ? post[customReference.sourceField].map((x) =>parseInt(x)) : parseInt(post[customReference.sourceField])
+              fields[customReference.targetField] = createReference(this.createTypeName(customReference.type), sourceField)
             }
           }
         }
