@@ -21,10 +21,11 @@ export function url (string = '/') {
 export function stripPageParam (route) {
   const { path, params: { page }} = route
   const normalizedPath = unslashEnd(path)
+  const suffix = /\/$/.test(path) ? '/' : ''
 
   return page && /^\d+$/.test(page) && /\/\d+$/.test(normalizedPath)
-    ? normalizedPath.split('/').slice(0, -1).join('/') || '/'
-    : normalizedPath || '/'
+    ? `${normalizedPath.split('/').slice(0, -1).join('/')}${suffix}` || '/'
+    : `${normalizedPath}${suffix}` || '/'
 }
 
 export function stripPathPrefix (string) {
