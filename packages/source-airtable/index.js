@@ -1,6 +1,6 @@
 const Airtable = require('airtable')
 // eslint-disable-next-line node/no-unpublished-require
-const { deprecate } = require('../../gridsome/lib/utils/deprecate')
+const { deprecate } = require('gridsome/lib/utils/deprecate')
 
 class AirtableSource {
   constructor (api, options) {
