@@ -122,36 +122,30 @@ class RemarkTransformer {
         args: {
           length: {
             type: GraphQLInt,
-            description: 'Characters',
+            description: 'Maximum length (characters)',
             defaultValue: 200
-          },
-          ellipses: {
-            type: GraphQLString,
-            description: 'String to add to end of excerpt',
-            defaultValue: '…'
           }
         },
-        resolve: async (node, { length, ellipses }) => {
+        resolve: async (node, { length }) => {
           const key = cacheKey(node, 'excerpt')
-          let cached = cache.get(key)
+          let excerpt = node.excerpt || cache.get(key)
 
-          if (!cached) {
+          if (!excerpt) {
             const html = await this._nodeToHTML(node)
             // Remove html tags, then newlines.
-            const text = sanitizeHTML(html, {
+            excerpt = sanitizeHTML(html, {
               allowedAttributes: {},
               allowedTags: []
             }).replace(/\r?\n|\r/g, ' ')
 
-            if (text.length <= length) {
-              cached = text
-            } else {
-              cached = text.substr(0, text.lastIndexOf(' ', length)) + ellipses
+            if (excerpt.length > length && length) {
+              excerpt = excerpt.substr(0, excerpt.lastIndexOf(' ', length - 1))
             }
-            cache.set(key, cached)
+
+            cache.set(key, excerpt)
           }
 
-          return cached
+          return excerpt
         }
       }
     }
