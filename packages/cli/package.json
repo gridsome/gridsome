@@ -25,7 +25,7 @@
     "resolve-cwd": "^2.0.0",
     "semver": "^5.6.0",
     "sort-package-json": "^1.15.0",
-    "update-notifier": "^3.0.1"
+    "update-notifier": "^4.1.0"
   },
   "publishConfig": {
     "access": "public"
