@@ -33,6 +33,9 @@
     "unist-builder": "^1.0.3",
     "unist-util-visit": "^1.4.0"
   },
+  "peerDependencies": {
+    "gridsome": "0.x"
+  },
   "publishConfig": {
     "access": "public"
   },
