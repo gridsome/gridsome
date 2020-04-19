@@ -122,7 +122,7 @@ class RemarkTransformer {
         args: {
           length: {
             type: GraphQLInt,
-            description: 'Maximum length (characters)',
+            description: 'Maximum length of generated excerpt (characters)',
             defaultValue: 200
           }
         },
