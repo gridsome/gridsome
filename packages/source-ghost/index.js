@@ -66,14 +66,45 @@ class GhostSource {
     await this.loadBasicEntity(tags, this.contentAPI.tags)
   }
 
-  async loadPages ({ addCollection }) {
+  async loadPages ({ addCollection, createReference }) {
     console.log(`Loading ${TYPE_PAGE}`)
     const pages = addCollection({
       typeName: this.typeNames.page,
       dateField: 'published_at'
     })
+    const tagTypeName = this.typeNames.tag
+    const authorTypeName = this.typeNames.author
 
-    await this.loadBasicEntity(pages, this.contentAPI.pages)
+    let keepGoing = true
+    let currentPage = 1
+
+    while (keepGoing) {
+      const entities = await this.contentAPI.pages.browse({
+        limit: this.options.perPage,
+        include: 'tags,authors',
+        page: currentPage
+      })
+
+      entities.forEach(entity => {
+        const { tags = [], authors = [], ...options } = entity
+        const { primary_tag, primary_author } = options // eslint-disable-line
+
+        options.primary_tag = primary_tag // eslint-disable-line
+          ? createReference(tagTypeName, primary_tag.id)
+          : null
+        options.primary_author = createReference(authorTypeName, primary_author.id)
+        options.tags = tags.map(tag => createReference(tagTypeName, tag.id))
+        options.authors = authors.map(author => createReference(authorTypeName, author.id))
+
+        pages.addNode(options)
+      })
+
+      if (currentPage === entities.meta.pagination.pages) {
+        keepGoing = false
+      }
+
+      currentPage++
+    }
   }
 
   async loadAuthors ({ addCollection }) {

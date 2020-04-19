@@ -3,12 +3,18 @@ const pathToRegexp = require('path-to-regexp')
 const Filesystem = require('@gridsome/source-filesystem')
 const RemarkTransformer = require('@gridsome/transformer-remark')
 const { omit, trimEnd, kebabCase } = require('lodash')
+const { GraphQLList, GraphQLBoolean } = require('gridsome/graphql')
 
 const toSFC = require('./lib/toSfc')
 const sfcSyntax = require('./lib/sfcSyntax')
 const toVueRemarkAst = require('./lib/toVueRemarkAst')
 const remarkFilePlugin = require('./lib/plugins/file')
 const remarkImagePlugin = require('./lib/plugins/image')
+
+const {
+  HeadingType,
+  HeadingLevels
+} = require('./lib/types/HeadingType')
 
 const {
   createFile,
@@ -231,7 +237,21 @@ class VueRemark {
       const { headings } = this.remark.extendNodeType()
 
       addSchemaResolvers({
-        [this.options.typeName]: { headings }
+        [this.options.typeName]: {
+          headings: {
+            ...headings,
+            type: new GraphQLList(HeadingType),
+            args: {
+              ...headings.args,
+              depth: {
+                type: HeadingLevels
+              },
+              stripTags: {
+                type: GraphQLBoolean, defaultValue: true
+              }
+            }
+          }
+        }
       })
     })
   }
