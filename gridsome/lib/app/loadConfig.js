@@ -34,7 +34,9 @@ module.exports = (context, options = {}) => {
     split: false,
     loaderOptions: {
       sass: {
-        indentedSyntax: true
+        sassOptions: {
+          indentedSyntax: true
+        }
       },
       stylus: {
         preferPathResolver: 'webpack'
