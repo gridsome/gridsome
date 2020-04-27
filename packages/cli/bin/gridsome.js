@@ -62,6 +62,7 @@ program.arguments('<command>').action(async command => {
     console.log(`  Please run ${chalk.cyan(useYarn ? 'yarn' : 'npm install')} to install dependencies first.`)
     console.log()
   } else {
+    program.outputHelp()
     console.log(chalk.red(`Unknown command ${chalk.bold(command)}`))
     if (suggestion) {
       console.log()
@@ -69,6 +70,8 @@ program.arguments('<command>').action(async command => {
     }
   }
 })
+
+// output help information on unknown commands
 
 program.on('--help', () => {
   console.log()
