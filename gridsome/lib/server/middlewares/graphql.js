@@ -32,7 +32,7 @@ module.exports = ({ pages }) => {
       params = match.params
     }
 
-    if (!route) return next()
+    if (!route) return notFound()
 
     // page/1/index.html is not statically generated
     // in production and should return 404 in develop
