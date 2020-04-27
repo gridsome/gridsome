@@ -4,7 +4,7 @@ const { createQueryVariables } = require('../../graphql/utils')
 
 module.exports = ({ pages }) => {
   return async function graphqlMiddleware (req, res, next) {
-    const { body = {}} = req
+    const { body = {}, query = {} } = req
 
     const notFound = () => res
       .status(404)
@@ -15,7 +15,7 @@ module.exports = ({ pages }) => {
       return res.sendStatus(200)
     }
 
-    if (body.query) {
+    if (body.query || query.query) {
       return next()
     }
 
