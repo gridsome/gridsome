@@ -71,8 +71,6 @@ program.arguments('<command>').action(async command => {
   }
 })
 
-// output help information on unknown commands
-
 program.on('--help', () => {
   console.log()
   console.log(`  Run ${chalk.cyan('gridsome <command> --help')} for detailed usage of given command.`)
