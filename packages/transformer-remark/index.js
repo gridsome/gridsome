@@ -116,6 +116,37 @@ class RemarkTransformer {
 
           return cached
         }
+      },
+      excerpt: {
+        type: GraphQLString,
+        args: {
+          length: {
+            type: GraphQLInt,
+            description: 'Maximum length of generated excerpt (characters)',
+            defaultValue: 200
+          }
+        },
+        resolve: async (node, { length }) => {
+          const key = cacheKey(node, 'excerpt')
+          let excerpt = node.excerpt || cache.get(key)
+
+          if (!excerpt) {
+            const html = await this._nodeToHTML(node)
+            // Remove html tags, then newlines.
+            excerpt = sanitizeHTML(html, {
+              allowedAttributes: {},
+              allowedTags: []
+            }).replace(/\r?\n|\r/g, ' ')
+
+            if (excerpt.length > length && length) {
+              excerpt = excerpt.substr(0, excerpt.lastIndexOf(' ', length - 1))
+            }
+
+            cache.set(key, excerpt)
+          }
+
+          return excerpt
+        }
       }
     }
   }
