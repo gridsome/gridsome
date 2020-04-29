@@ -138,6 +138,9 @@ module.exports = (context, options = {}) => {
   const fallbackIndex = path.resolve(config.appPath, 'fallbacks', 'index.html')
   config.templatePath = fs.existsSync(localIndex) ? localIndex : fallbackIndex
   config.htmlTemplate = fs.readFileSync(config.templatePath, 'utf-8')
+  // add AMP template path - fallback goes to standard template
+  const ampIndex = resolve('src/amp.html')
+  config.ampTemplate = fs.existsSync(ampIndex) ? fs.readFileSync(ampIndex, 'utf-8') : config.htmlTemplate
 
   config.css = defaultsDeep(localConfig.css || {}, css)
 
