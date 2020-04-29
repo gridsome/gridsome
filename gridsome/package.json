@@ -1,10 +1,10 @@
 {
   "version": "0.7.1",
-  "name": "gridsome",
+  "name": "amp-gridsome",
   "description": "A JAMstack framework for building blazing fast websites with Vue.js",
   "homepage": "https://gridsome.org",
-  "repository": "https://github.com/gridsome/gridsome",
-  "bugs": "https://github.com/gridsome/gridsome/issues",
+  "repository": "https://github.com/baffo/gridsome",
+  "bugs": "https://github.com/baffo/gridsome/issues",
   "license": "MIT",
   "main": "index.js",
   "browser": "app/index.js",
