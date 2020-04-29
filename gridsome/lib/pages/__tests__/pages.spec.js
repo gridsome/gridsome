@@ -527,7 +527,7 @@ describe('dynamic pages', () => {
     expect(route.path).toEqual('/user/:id')
     expect(route.id).toEqual('9c1d306d222b94fa197459d7b9a32712')
     expect(route.options.name).toEqual('__user_id')
-    expect(route.internal.regexp).toEqual(/^\/user\/([^/]+?)(?:\/)?$/i)
+    expect(route.internal.regexp).toEqual(/^\/user\/([^\/]+?)(?:\/)?$/i) // eslint-disable-line no-useless-escape
     expect(route.internal.isDynamic).toEqual(true)
   })
 })
@@ -548,7 +548,7 @@ describe('create routes', () => {
     expect(route.path).toEqual('/page/:id/:page(\\d+)?/')
     expect(route.internal.path).toEqual('/page/:id')
     expect(route.internal.isDynamic).toEqual(true)
-    expect(route.internal.regexp).toEqual(/^\/page\/([^/]+?)(?:\/(\d+))?(?:\/)?$/i)
+    expect(route.internal.regexp).toEqual(/^\/page\/([^\/]+?)(?:\/(\d+))?(?:\/)?$/i) // eslint-disable-line no-useless-escape
   })
 
   test('add pages to route', async () => {
