@@ -5,10 +5,18 @@ exports.render = async function ({
   hash,
   pages,
   htmlTemplate,
+  ampTemplate,
   clientManifestPath,
   serverBundlePath
 }) {
   const render = createRenderFn({
+    htmlTemplate,
+    clientManifestPath,
+    serverBundlePath
+  })
+  
+  htmlTemplate = ampTemplate
+  const ampRender = createRenderFn({
     htmlTemplate,
     clientManifestPath,
     serverBundlePath
@@ -29,7 +37,7 @@ exports.render = async function ({
       state = JSON.parse(content)
     }
 
-    html = await render(page, state, stateSize, hash)
+    html = page.publicPath.includes('/amp/') ? await ampRender(page, state, stateSize, hash) : await render(page, state, stateSize, hash)
 
     await fs.outputFile(page.htmlOutput, html)
   }
