@@ -59,10 +59,10 @@ program.arguments('<command>').action(async command => {
     const useYarn = await hasYarn()
 
     console.log()
-    console.log(`  Please run ${chalk.cyan(useYarn ? 'yarn' : 'npm install')} to install dependencies first.`)
+    console.log(chalk.red(`Unknown command ${chalk.bold(command)}`))
     console.log()
-  } else {
     program.outputHelp()
+  } else {
     console.log(chalk.red(`Unknown command ${chalk.bold(command)}`))
     if (suggestion) {
       console.log()
