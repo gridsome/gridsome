@@ -106,6 +106,8 @@ class VueRemark {
     this.options = options
     this.context = options.baseDir ? api.resolve(options.baseDir) : api.context
 
+    api.setClientOptions({})
+
     if (typeof options.template === 'string') {
       this.template = api.resolve(options.template)
     }
