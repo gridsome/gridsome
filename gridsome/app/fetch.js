@@ -69,7 +69,10 @@ export default (route, options = {}) => {
 
     return isLoaded[jsonPath]
       .then(res => {
-        if (res.hash !== hashMeta) reject(createError('Hash did not match.', 'INVALID_HASH'))
+        if (res.hash !== hashMeta) reject(
+          createError(`Hash did not match: json=${res.hash}, document=${hashMeta}`,
+                      'INVALID_HASH')
+          )
         else resolve(res)
       })
       .catch(reject)
