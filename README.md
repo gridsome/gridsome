@@ -43,7 +43,7 @@ Only critical HTML, CSS, and JavaScript get loaded first. The next pages are the
 Gridsome automatically optimizes your frontend to load and perform blazing fast. You get code-splitting, image optimization, lazy-loading, and almost perfect lighthouse scores out-of-the-box.
 
 ### Build future ready websites
-The future of the web is JavaScript, API's, and Markup - the [JAMstack](https://jamstack.org/). Gridsome uses the power of blazing-fast static site generator, JavaScript and APIs to create stunning dynamic web experiences.
+The future of the web is JavaScript, API's, and Markup - the [Jamstack](https://jamstack.org/). Gridsome uses the power of blazing-fast static site generator, JavaScript and APIs to create stunning dynamic web experiences.
 
 ### Ready for global domination
 Gridsome sites are usually not connected to any database and can be hosted entirely on a global CDN. It can handle thousands to millions of hits without breaking - and no expensive server costs.
