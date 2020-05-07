@@ -53,7 +53,14 @@ class Plugins {
         ? Plugin.defaultOptions()
         : {}
 
-      entry.name = Plugin.name || 'AnonymousPlugin'
+      if (entry.use === context) {
+        entry.name = 'project'
+      } else if (typeof entry.use === 'function') {
+        entry.name = entry.use.name || 'AnonymousFunction'
+      } else {
+        entry.name = entry.use
+      }
+
       entry.options = defaultsDeep(entry.options, defaults)
 
       const api = new PluginAPI(this._app, { entry })
@@ -116,6 +123,8 @@ class Plugins {
     await this.run('createManagedPages', api => {
       return createManagedPagesActions(api, this._app, { digest })
     })
+
+    pages.runOnCreatePageHooks()
 
     // remove unmanaged pages created
     // in earlier digest cycles

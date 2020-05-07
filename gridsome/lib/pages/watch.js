@@ -2,14 +2,45 @@ const path = require('path')
 const { debounce } = require('lodash')
 
 module.exports = (app, pages) => {
-  const createPages = debounce(() => app.plugins.createPages(), 16)
-  const fetchQueries = debounce(() => app.broadcast({ type: 'fetch' }), 16)
-  const generateRoutes = debounce(() => app.codegen.generate('routes.js'), 16)
+  const createPages = debounce(
+    () => app.isBootstrapped && app.plugins.createPages(),
+    16
+  )
+  const fetchQueries = debounce(
+    () => app.isBootstrapped && app.broadcast({ type: 'fetch' }),
+    16
+  )
+  const generateRoutes = debounce(
+    () => app.isBootstrapped && app.codegen.generate('routes.js'),
+    16
+  )
 
-  app.store.on('change', () => app.isBootstrapped ? createPages() : null)
-  pages._routes.on('insert', () => app.isBootstrapped ? generateRoutes() : null)
-  pages._routes.on('delete', () => app.isBootstrapped ? generateRoutes() : null)
+  const insertedPages = []
 
+  const onCreatePage = debounce(() => {
+    console.log(insertedPages)
+    pages.runOnCreatePageHooks(insertedPages)
+    insertedPages.splice(0, insertedPages.length)
+    app.codegen.generate('routes.js')
+  }, 16)
+
+  // Re-runs `api.onCreatePage()` when a new page is created.
+  pages._pages.on('insert', page => {
+    if (app.isBootstrapped) {
+      insertedPages.push(page)
+      onCreatePage()
+    }
+  })
+
+  // Re-creates pages that was created in `api.createPages()`
+  // when any node is added, removed or updated..
+  app.store.on('change', () => createPages())
+
+  // Re-generate routes.js when a page is removed.
+  pages._pages.on('delete', () => generateRoutes())
+
+  // Tells the client to fetch GraphQL queries
+  // when a route component has changed.
   pages._routes.on('update', (route, oldRoute) => {
     if (!app.isBootstrapped) return
 

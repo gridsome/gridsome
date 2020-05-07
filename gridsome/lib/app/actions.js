@@ -198,7 +198,8 @@ function createSchemaActions (api, app) {
 
 function createPagesActions (api, app, { digest }) {
   const baseActions = createBaseActions(api, app)
-  const internals = { digest, isManaged: false }
+  const owner = api._entry.name
+  const internals = { owner, digest, isManaged: false }
 
   return {
     ...baseActions,
@@ -238,7 +239,8 @@ function createPagesActions (api, app, { digest }) {
 
 function createManagedPagesActions (api, app, { digest }) {
   const baseActions = createPagesActions(api, app, { digest })
-  const internals = { digest, isManaged: true }
+  const owner = api._entry.name
+  const internals = { owner, digest, isManaged: true }
 
   return {
     ...baseActions,

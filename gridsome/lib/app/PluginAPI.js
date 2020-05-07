@@ -93,6 +93,10 @@ class PluginAPI {
     this._app.store.hooks.addNode.tap(name, fn)
   }
 
+  onCreatePage(fn) {
+    this._app.pages.onCreatePage(fn)
+  }
+
   //
   // build hooks
   //

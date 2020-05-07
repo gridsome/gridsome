@@ -170,6 +170,12 @@ test('generate /404.html', () => {
   expect($404('span.page-query-value').text().trim()).toEqual('string from custom schema')
 })
 
+test('modify page from plugin with api.onCreatePage()', () => {
+  expect(exists('dist/about-us/index.html')).toBeTruthy()
+  expect(exists('dist/plugin-page/index.html')).not.toBeTruthy()
+  expect(load('dist/plugin-page-2/index.html')('h1').text()).toEqual('changed value')
+})
+
 test('compile scripts correctly', () => {
   const appJS = content('dist/assets/js/app.js')
   const homeJS = content('dist/assets/js/page--src--pages--index-vue.js')
@@ -306,6 +312,13 @@ test('navigate to /asdf', async () => {
 })
 
 test('navigate to /', async () => {
+  await page.click('.home-link')
+  await page.waitForSelector('#app.home')
+})
+
+test('navigate to /plugin-page-2', async () => {
+  await page.click('.plugin-page-link')
+  await page.waitForSelector('#app.plugin-page')
   await page.click('.home-link')
   await page.waitForSelector('#app.home')
 })

@@ -38,7 +38,9 @@ module.exports = function (api) {
         }
       })
     })
+  })
 
+  api.createManagedPages(({ createPage }) => {
     createPage({
       path: '/about-us',
       component: './src/pages/About.vue',
@@ -52,6 +54,23 @@ module.exports = function (api) {
         }
       }
     })
+  })
+
+  api.onCreatePage((options, { removePage, createPage }) => {
+    if (options.path === '/about-us') {
+      removePage(options)
+    }
+    if (options.path === '/plugin-page') {
+      removePage(options)
+      createPage({
+        ...options,
+        path: '/plugin-page-2',
+        context: {
+          ...options.context,
+          title: 'changed value'
+        }
+      })
+    }
   })
 
   api.chainWebpack(config => {

@@ -15,7 +15,7 @@ function corePlugin (api, config) {
     }
   })
 
-  api.createPages(({ createPage }) => {
+  api.createManagedPages(({ createPage }) => {
     createPage({
       path: '/404' + (config.permalinks.trailingSlash ? '/' : ''),
       component: path.join(config.appPath, 'pages', '404.vue'),

@@ -10,7 +10,7 @@ const { parseQuery } = require('../graphql')
 const pathToRegexp = require('path-to-regexp')
 const createPageQuery = require('./createPageQuery')
 const { HookMap, SyncWaterfallHook, SyncBailHook } = require('tapable')
-const { snakeCase, trimEnd } = require('lodash')
+const { snakeCase, trimEnd, omit } = require('lodash')
 const validateInput = require('./schemas')
 
 const TYPE_STATIC = 'static'
@@ -33,6 +33,7 @@ class Pages {
 
     this._componentCache = new LRU({ max: 100 })
     this._queryCache = new LRU({ max: 100 })
+    this._onCreatePageFns = []
     this._watched = new Map()
     this._watcher = null
 
@@ -201,13 +202,17 @@ class Pages {
     })
   }
 
-  removePage (id) {
-    const page = this.getPage(id)
+  removePage (idOrPage) {
+    const page = typeof idOrPage === 'string'
+      ? this.getPage(idOrPage)
+      : idOrPage
+
     if (!page) return
+
     const route = this.getRoute(page.internal.route)
 
     if (route.internal.isDynamic) {
-      route.removePage(id)
+      route.removePage(page.id)
     } else {
       this.removeRoute(route.id)
     }
@@ -232,7 +237,7 @@ class Pages {
         this.removeRoute(options.id)
       })
   }
-  
+
   findAndRemovePages (query) {
     this._pages.find(query).forEach(page => {
       this.removePage(page.id)
@@ -300,6 +305,61 @@ class Pages {
 
   getPage (id) {
     return this._pages.by('id', id)
+  }
+
+  onCreatePage(fn) {
+    invariant(
+      typeof fn === 'function',
+      'The `api.onCreatePage()` listener must be a function.'
+    )
+    this._onCreatePageFns.push(fn)
+  }
+
+  runOnCreatePageHooks(pages) {
+    if (!pages) {
+      pages = this.pages().filter(
+        page => (
+          page.internal.isManaged &&
+          page.internal.owner !== 'project'
+        )
+      )
+    }
+
+    const createdPages = []
+    const removedPages = new Set()
+    const count = pages.length
+
+    for (let i = 0; i < count; i++) {
+      for (const fn of this._onCreatePageFns) {
+        const page = pages[i]
+
+        if (removedPages.has(page.path)) {
+          continue
+        }
+
+        const { internal } = page
+
+        fn(internal.options, {
+          removePage: options => {
+            this.removePageByPath(options.path)
+            removedPages.add(options.path)
+          },
+          createPage: options => {
+            createdPages.push(
+              this.createPage(omit(options, ['id']), {
+                owner: internal.owner,
+                digest: internal.digest,
+                isManaged: internal.isManaged
+              })
+            )
+          }
+        })
+      }
+    }
+
+    if (createdPages.length) {
+      this.runOnCreatePageHooks(createdPages)
+    }
   }
 
   _createRouteOptions (options, meta = {}) {
@@ -503,7 +563,7 @@ class Route {
 
   _createPageOptions (input) {
     const { permalinks: { trailingSlash }} = this._factory.app.config
-    const { regexp, digest, isManaged, query } = this.internal
+    const { regexp, owner, digest, isManaged, query } = this.internal
     const { id: _id, path: _path, context, queryVariables } = validateInput('routePage', input)
 
     let path = trimEnd(_path.replace(/\/+/g, '/'), '/') || '/'
@@ -544,6 +604,18 @@ class Route {
       internal: {
         queryVariables,
         route: this.id,
+        options: {
+          id,
+          path,
+          context,
+          queryVariables,
+          component: this.component,
+          route: {
+            name: this.name,
+            meta: this.internal.meta
+          }
+        },
+        owner,
         digest,
         isManaged,
         isDynamic,

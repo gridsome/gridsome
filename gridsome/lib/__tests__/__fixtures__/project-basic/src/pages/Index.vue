@@ -7,6 +7,7 @@
     <g-link href="https://outsidelink2.com">External Links</g-link>
     <g-link href="//outsidelink3.com">External Links</g-link>
     <g-link href="https://www.gridsome.org/docs">Internal Links</g-link>
+    <g-link class="plugin-page-link" to="/plugin-page-2/">Plugin page</g-link>
     <g-link class="g-link-1" to="/">Home</g-link>
     <g-link :class="{ 'g-link-2': true }" to="/" active-class="test-active">Home</g-link>
     <g-link class="not-found-link" to="/asdf">Show /404</g-link>

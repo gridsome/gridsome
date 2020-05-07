@@ -37,7 +37,8 @@ const schemas = {
       id: Joi.string(),
       path: Joi.string().regex(/^\//, 'leading slash').required(),
       context: Joi.object().default({}),
-      queryVariables: Joi.object().default(null).allow(null)
+      queryVariables: Joi.object().default(null).allow(null),
+      options: Joi.object().default({})
     }),
 
   component: Joi.object()

@@ -28,10 +28,11 @@ test('create render queue for basic project', async () => {
     '/docs/4/extra/',
     '/docs/5/',
     '/pages/1/',
-    '/pages/2/'
+    '/pages/2/',
+    '/plugin-page-2/'
   ]))
 
-  expect(renderPaths).toHaveLength(18)
+  expect(renderPaths).toHaveLength(19)
 })
 
 test('create render queue for blog project', async () => {
