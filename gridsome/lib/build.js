@@ -24,9 +24,10 @@ module.exports = async (context, args) => {
   const queue = createRenderQueue(app)
   const redirects = app.hooks.redirects.call([], queue)
   const stats = await runWebpack(app)
+  const hashString = config.cacheBusting ? stats.hash : 'gridsome'
 
-  await executeQueries(queue, app, stats.hash)
-  await renderHTML(queue, app, stats.hash)
+  await executeQueries(queue, app, hashString)
+  await renderHTML(queue, app, hashString)
   await processFiles(app.assets.files)
   await processImages(app.assets.images, app.config)
 
@@ -74,7 +75,7 @@ async function renderHTML (renderQueue, app, hash) {
   const { createWorker } = require('./workers')
   const timer = hirestime()
   const worker = createWorker('html-writer')
-  const { htmlTemplate, clientManifestPath, serverBundlePath } = app.config
+  const { htmlTemplate, clientManifestPath, serverBundlePath, prefetch, preload } = app.config
 
   await Promise.all(chunk(renderQueue, 350).map(async pages => {
     try {
@@ -83,7 +84,8 @@ async function renderHTML (renderQueue, app, hash) {
         pages,
         htmlTemplate,
         clientManifestPath,
-        serverBundlePath
+        serverBundlePath,
+        prefetch, preload
       })
     } catch (err) {
       worker.end()

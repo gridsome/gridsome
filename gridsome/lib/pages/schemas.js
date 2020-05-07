@@ -44,7 +44,8 @@ const schemas = {
     .label('Parsed component results')
     .keys({
       pageQuery: Joi.string().allow(null),
-      chunkName: Joi.string().allow(null)
+      chunkName: Joi.string().allow(null),
+      variableName: Joi.string().allow(null)
     })
 }
 

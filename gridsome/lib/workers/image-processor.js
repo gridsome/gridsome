@@ -11,7 +11,8 @@ const sysinfo = require('../utils/sysinfo')
 const { warmupSharp } = require('../utils/sharp')
 
 exports.processImage = async function ({
-  size,
+  width,
+  height,
   filePath,
   destPath,
   cachePath,
@@ -29,15 +30,18 @@ exports.processImage = async function ({
     const config = {
       pngCompressionLevel: parseInt(options.pngCompressionLevel, 10) || 9,
       quality: parseInt(options.quality, 10) || 75,
-      width: parseInt(options.width, 10),
-      height: parseInt(options.height, 10),
+      width: parseInt(options.width, 10) || null,
+      height: parseInt(options.height, 10) || null,
       jpegProgressive: true
     }
 
     const plugins = []
     let pipeline = sharp(buffer)
 
-    if (config.width && config.width <= size.width || config.height && config.height <= size.height) {
+    if (
+      (config.width && config.width <= width) ||
+      (config.height && config.height <= height)
+    ) {
       const resizeOptions = {}
 
       if (config.height) resizeOptions.height = config.height

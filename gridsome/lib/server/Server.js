@@ -17,6 +17,8 @@ class Server {
       setup: new SyncHook(['app']),
       afterSetup: new SyncHook(['app'])
     }
+
+    app.hooks.server.call(this)
   }
 
   async createExpressApp() {
@@ -49,9 +51,11 @@ class Server {
               path: variables.__path
             })
 
-            return {
-              context: page ? page.context : {}
-            }
+            const context = page
+              ? this._app.pages._createPageContext(page, variables)
+              : {}
+
+            return { context }
           }
         }
       })

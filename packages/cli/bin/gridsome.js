@@ -3,7 +3,7 @@
 const path = require('path')
 const chalk = require('chalk')
 const program = require('commander')
-const didYouMean = require('didyoumean')
+const leven = require('leven')
 const resolveCwd = require('resolve-cwd')
 const updateNotifier = require('update-notifier')
 const resolveVersions = require('../lib/utils/version')
@@ -53,7 +53,10 @@ try {
 program.arguments('<command>').action(async command => {
   const { isGridsomeProject, hasYarn } = require('../lib/utils')
   const availableCommands = program.commands.map(cmd => cmd._name)
-  const suggestion = didYouMean(command, availableCommands)
+  const suggestion = availableCommands.find(cmd => {
+    const steps = leven(cmd, command)
+    return steps < 3
+  })
 
   if (isGridsomeProject(pkgPath) && !suggestion) {
     const useYarn = await hasYarn()

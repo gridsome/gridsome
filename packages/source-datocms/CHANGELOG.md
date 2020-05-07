@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.1](https://github.com/gridsome/gridsome/tree/master/packages/source-datocms/compare/@gridsome/source-datocms@0.2.0...@gridsome/source-datocms@0.2.1) (2019-10-25)
+
+
+### Bug Fixes
+
+* **datocms:** include position for custom sorting ([#778](https://github.com/gridsome/gridsome/tree/master/packages/source-datocms/issues/778)) ([e6795ba](https://github.com/gridsome/gridsome/tree/master/packages/source-datocms/commit/e6795ba))
+
+
+
+
+
 # [0.2.0](https://github.com/gridsome/gridsome/tree/master/packages/source-datocms/compare/@gridsome/source-datocms@0.1.0...@gridsome/source-datocms@0.2.0) (2019-09-20)
 
 

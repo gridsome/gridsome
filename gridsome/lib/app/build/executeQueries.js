@@ -7,6 +7,15 @@ const { validate, specifiedRules } = require('graphql')
 const sysinfo = require('../../utils/sysinfo')
 const { error, info } = require('../../utils/log')
 
+function withoutCodeMeta(meta) {
+  return Object.keys(meta).reduce((acc, key) => {
+    if (key[0] !== '$') {
+      acc[key] = meta[key]
+    }
+    return acc
+  }, {})
+}
+
 async function executeQueries (renderQueue, { context, pages, schema, graphql }, hash) {
   const timer = hirestime()
   const validated = new Set()
@@ -29,8 +38,9 @@ async function executeQueries (renderQueue, { context, pages, schema, graphql },
     invariant(route, `Could not find a route for: ${entry.path}`)
     invariant(page, `Could not find a page for: ${entry.path}`)
 
-    const results = { data: null, context: page.context }
     const document = route.internal.query.document
+    const context = pages._createPageContext(page, entry.queryVariables)
+    const results = { data: null, context }
 
     if (document) {
       if (!validated.has(route.component)) {
@@ -54,8 +64,8 @@ async function executeQueries (renderQueue, { context, pages, schema, graphql },
 
     return {
       path: page.routePath,
-      meta: route.internal.meta,
-      chunkName: route.internal.chunkName,
+      meta: withoutCodeMeta(route.internal.meta),
+      variableName: route.internal.variableName,
       dataOutput: entry.dataOutput,
       ...results
     }

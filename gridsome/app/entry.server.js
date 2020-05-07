@@ -1,5 +1,5 @@
 import createApp, { runMain } from './app'
-import { components } from '~/.temp/routes'
+import * as components from '~/.temp/routes'
 
 runMain()
 
@@ -15,7 +15,7 @@ export default context => new Promise((resolve, reject) => {
   if (location.path) {
     router.addRoutes([{
       path: context.state.path,
-      component: components[context.state.chunkName]
+      component: components[context.state.variableName]
     }])
   }
 

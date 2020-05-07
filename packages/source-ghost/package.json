@@ -1,5 +1,5 @@
 {
-  "version": "0.2.0",
+  "version": "0.4.0",
   "name": "@gridsome/source-ghost",
   "description": "ghost source for Gridsome",
   "homepage": "https://github.com/gridsome/gridsome/tree/master/packages/source-ghost#readme",
@@ -12,7 +12,7 @@
     "ghost"
   ],
   "dependencies": {
-    "@tryghost/content-api": "^1.2.2",
+    "@tryghost/content-api": "^1.3.4",
     "camelcase": "^5.0.0"
   },
   "publishConfig": {

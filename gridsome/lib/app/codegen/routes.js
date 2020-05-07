@@ -1,25 +1,37 @@
 const slash = require('slash')
-const { uniqBy } = require('lodash')
 const { relative } = require('path')
 const { pathToFilePath } = require('../../pages/utils')
 const { NOT_FOUND_NAME } = require('../../utils/constants')
+const { uniqBy } = require('lodash')
+
+const isUnitTest = process.env.GRIDSOME_TEST === 'unit'
 
 const isDev = process.env.NODE_ENV === 'development'
 
-function genRoutes(app) {
-  const createRouteItem = (route, name = route.name, path = route.path) => ({
-    name,
-    id: route.id,
-    component: relative(app.config.tmpDir, route.component),
-    chunkName: route.internal.chunkName,
-    meta: route.internal.meta,
-    type: route.type,
-    path
-  })
+function hasCodeMeta(item) {
+  return Object
+    .keys(item.meta)
+    .filter(key => key[0] === '$')
+    .length > 0
+}
 
+function genRoutes(app) {
   const redirects = app.config.redirects.filter(rule => rule.status === 301)
   const fallback = app.pages._routes.findOne({ name: NOT_FOUND_NAME })
   const items = []
+
+  const createRouteItem = (route, name = route.name, path = route.path) => ({
+    name,
+    path,
+    id: route.id,
+    chunkName: route.internal.chunkName,
+    variableName: route.internal.variableName,
+    meta: route.internal.meta,
+    type: route.type,
+    component: isUnitTest
+      ? relative(app.context, route.component)
+      : route.component
+  })
 
   for (const redirect of redirects) {
     items.push(redirect)
@@ -29,33 +41,42 @@ function genRoutes(app) {
     items.push(createRouteItem(route))
   }
 
-  const components = uniqBy(items, 'component')
-    .filter(item => item.type === 'static')
-    .map(item => genComponent(item))
-
-  components.push(genComponent(createRouteItem(fallback), 'not-found'))
-
-  const redirectRoutes = items
-    .filter(item => item.from && item.to)
-    .map(item => genRedirect(item))
+  // use the /404 page as fallback route
+  if (fallback) {
+    items.push(createRouteItem(fallback, '*', '*'))
+  }
 
   const routes = items
-    .filter(item => item.type === 'dynamic')
-    .map(item => genRoute(item))
+    .map(item => {
+      if (item.from && item.to) {
+        return genRedirect(item)
+      }
+      return (
+        item.type === 'dynamic' ||
+        hasCodeMeta(item)
+      ) && genRoute(item)
+    })
+    .filter(Boolean)
 
-  let code = ''
+  const componentItems = uniqBy(
+    items.filter(item => item.component),
+    'component'
+  )
 
-  code += `export const components = {\n${components.join(',\n')}\n}\n\n`
-  code += `export default [${redirectRoutes.concat(routes).join(',')}\n]\n\n`
-
-  return code
+  return [
+    `${componentItems.map(genComponent).join('\n')}\n\n`,
+    `export default [${routes.join(',')}\n]\n`
+  ].join('')
 }
 
-function genComponent (item, key = item.chunkName) {
+function genComponent(item) {
   const component = JSON.stringify(item.component)
   const chunkName = JSON.stringify(item.chunkName)
 
-  return `  ${JSON.stringify(key)}: () => import(/* webpackChunkName: ${chunkName} */ ${component})`
+  return [
+    `export const ${item.variableName} = `,
+    `() => import(/* webpackChunkName: ${chunkName} */ ${component})`
+  ].join('')
 }
 
 function genRedirect (rule) {
@@ -68,14 +89,11 @@ function genRedirect (rule) {
 }
 
 function genRoute (item) {
-  const component = JSON.stringify(item.component)
-  const chunkName = JSON.stringify(item.chunkName)
-
   const props = []
   const metas = []
 
   props.push(`    path: ${JSON.stringify(item.path)}`)
-  props.push(`    component: () => import(/* webpackChunkName: ${chunkName} */ ${component})`)
+  props.push(`    component: ${item.variableName}`)
 
   if (item.type === 'dynamic') {
     const dataPath = pathToFilePath(item.path, 'json')

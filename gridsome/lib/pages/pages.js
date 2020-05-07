@@ -10,7 +10,7 @@ const { parseQuery } = require('../graphql')
 const pathToRegexp = require('path-to-regexp')
 const createPageQuery = require('./createPageQuery')
 const { HookMap, SyncWaterfallHook, SyncBailHook } = require('tapable')
-const { snakeCase, trimEnd } = require('lodash')
+const { snakeCase, camelCase, trimEnd } = require('lodash')
 const { genChunkName } = require('./utils')
 const validateInput = require('./schemas')
 
@@ -28,7 +28,8 @@ class Pages {
     this.hooks = {
       parseComponent: new HookMap(() => new SyncBailHook(['source', 'resource'])),
       createRoute: new SyncWaterfallHook(['options']),
-      createPage: new SyncWaterfallHook(['options'])
+      createPage: new SyncWaterfallHook(['options']),
+      pageContext: new SyncWaterfallHook(['context', 'data'])
     }
 
     this._componentCache = new LRU({ max: 100 })
@@ -203,6 +204,7 @@ class Pages {
 
   removePage (id) {
     const page = this.getPage(id)
+    if (!page) return
     const route = this.getRoute(page.internal.route)
 
     if (route.internal.isDynamic) {
@@ -230,6 +232,22 @@ class Pages {
       .forEach(options => {
         this.removeRoute(options.id)
       })
+  }
+
+  findAndRemovePages (query) {
+    this._pages.find(query).forEach(page => {
+      this.removePage(page.id)
+    })
+  }
+
+  findPages (query) {
+    const matchingPages = this._pages.find(query)
+    return matchingPages
+  }
+
+  findPage (query) {
+    const [ matchingPage ] = this._pages.find(query)
+    return matchingPage
   }
 
   getRoute (id) {
@@ -287,7 +305,7 @@ class Pages {
 
   _createRouteOptions (options, meta = {}) {
     const component = this.app.resolve(options.component)
-    const { chunkName, pageQuery } = this._parseComponent(component)
+    const { variableName, chunkName, pageQuery } = this._parseComponent(component)
     const query = this._parseQuery(pageQuery, component)
     const { permalinks: { trailingSlash }} = this.app.config
 
@@ -325,6 +343,7 @@ class Pages {
       internal: Object.assign({}, meta, {
         meta: options.meta || {},
         path: prettyPath,
+        variableName,
         chunkName,
         isDynamic,
         priority,
@@ -350,6 +369,14 @@ class Pages {
 
   _createPageQuery (parsedQuery, vars = {}) {
     return createPageQuery(parsedQuery, vars)
+  }
+
+  _createPageContext (page, queryVariables = {}) {
+    const route = this.getRoute(page.internal.route)
+    return this.hooks.pageContext.call({ ...page.context }, {
+      pageQuery: route.internal.query.source,
+      queryVariables
+    })
   }
 
   _resolvePriority (path) {
@@ -387,7 +414,8 @@ class Pages {
     const ext = path.extname(component).substring(1)
     const hook = this.hooks.parseComponent.get(ext)
     const chunkName = genChunkName(this.app.context, component)
-    const results = { chunkName }
+    const variableName = camelCase(chunkName)
+    const results = { chunkName, variableName }
 
     if (hook) {
       const source = fs.readFileSync(component, 'utf8')

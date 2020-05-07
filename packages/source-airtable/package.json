@@ -1,6 +1,6 @@
 {
   "name": "@gridsome/source-airtable",
-  "version": "0.1.2",
+  "version": "0.1.4",
   "description": "Airtable source for Gridsome",
   "homepage": "https://github.com/gridsome/gridsome/tree/master/packages/source-airtable",
   "repository": "https://github.com/gridsome/gridsome/tree/master/packages/source-airtable#readme",
@@ -12,7 +12,7 @@
     "airtable"
   ],
   "dependencies": {
-    "airtable": "^0.6.0"
+    "airtable": "^0.7.2"
   },
   "publishConfig": {
     "access": "public"

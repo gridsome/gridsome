@@ -6,8 +6,8 @@ const { deprecate } = require('../utils/deprecate')
 
 function createBaseActions (api, app) {
   return {
-    graphql (docOrQuery, variables = {}) {
-      return app.schema.runQuery(docOrQuery, variables)
+    graphql (docOrQuery, variables = {}, operationName) {
+      return app.schema.runQuery(docOrQuery, variables, operationName)
     },
     resolve (...args) {
       return app.resolve(...args)
@@ -111,6 +111,7 @@ function createStoreActions (api, app) {
 }
 
 const {
+  createEnumType,
   createObjectType,
   createUnionType,
   createScalarType,
@@ -185,6 +186,7 @@ function createSchemaActions (api, app) {
     },
 
     schema: {
+      createEnumType,
       createObjectType,
       createUnionType,
       createScalarType,

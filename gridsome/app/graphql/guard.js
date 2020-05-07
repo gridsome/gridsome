@@ -1,5 +1,6 @@
 import fetch from '../fetch'
-import { components } from '~/.temp/routes'
+import config from '~/.temp/config'
+import * as components from '~/.temp/routes'
 import { NOT_FOUND_NAME } from '~/.temp/constants'
 import { getResults, setResults, formatError } from './shared'
 
@@ -27,13 +28,18 @@ export default router => (to, from, _next) => {
     else _next(path)
   }
 
-  if (global.__INITIAL_STATE__) {
-    const { meta, path, chunkName } = global.__INITIAL_STATE__
+  if (to.meta && to.meta.__custom) {
+    global.__INITIAL_STATE__ = null
+    return next()
+  }
+
+  if (process.isProduction && global.__INITIAL_STATE__) {
+    const { meta, path, variableName } = global.__INITIAL_STATE__
 
     setResults(to.path, global.__INITIAL_STATE__)
 
     if (name === NOT_FOUND_NAME) addNotFoundRoute(to.path)
-    else addRoute({ meta, path, component: components[chunkName] })
+    else addRoute({ meta, path, component: components[variableName] })
 
     global.__INITIAL_STATE__ = null
 
@@ -54,7 +60,7 @@ export default router => (to, from, _next) => {
         addRoute({
           path: res.path,
           meta: res.meta,
-          component: components[res.chunkName]
+          component: components[res.variableName]
         })
       }
 
@@ -66,7 +72,8 @@ export default router => (to, from, _next) => {
         addNotFoundRoute(to.path)
         next(to.path)
       } else if (err.code === 'INVALID_HASH' && to.path !== window.location.pathname) {
-        window.location.assign(to.fullPath)
+        const fullPathWithPrefix = (config.pathPrefix ?? '') + to.fullPath
+        window.location.assign(fullPathWithPrefix)
       } else {
         formatError(err, to)
         next(err)

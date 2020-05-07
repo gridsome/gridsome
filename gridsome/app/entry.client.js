@@ -7,6 +7,7 @@ import plugins from '~/.temp/plugins-client'
 import linkDirective from './directives/link'
 import imageDirective from './directives/image'
 import { stripPathPrefix } from './utils/helpers'
+import { isFunc, isNil } from './utils/lang'
 
 Vue.directive('g-link', linkDirective)
 Vue.directive('g-image', imageDirective)
@@ -19,7 +20,7 @@ const { app, router } = createApp()
 if (process.env.NODE_ENV === 'production') {
   router.beforeEach((to, from, next) => {
     const components = router.getMatchedComponents(to).map(
-      c => typeof c === 'function' ? c() : c
+      c => isFunc(c) && isNil(c.cid) ? c() : c
     )
 
     Promise.all(components)
@@ -27,7 +28,8 @@ if (process.env.NODE_ENV === 'production') {
       .catch(err => {
         // reload page if a component failed to load
         if (err.request && to.path !== window.location.pathname) {
-          window.location.assign(to.fullPath)
+          const fullPathWithPrefix = (config.pathPrefix ?? '') + to.fullPath
+          window.location.assign(fullPathWithPrefix)
         } else {
           next(err)
         }
@@ -42,6 +44,7 @@ document.addEventListener('click', event => {
   const { hostname, port } = document.location
 
   if (
+    !config.catchLinks || // disables this behavior by config settings
     event.defaultPrevented || // disables this behavior
     event.which !== 1 || // not a left click
     event.metaKey ||

@@ -57,7 +57,7 @@ class Schema {
     return context
   }
 
-  runQuery (docOrQuery, variables = {}) {
+  runQuery (docOrQuery, variables = {}, operationName) {
     const context = this.createContext()
     const func = typeof docOrQuery === 'string' ? graphql : execute
 
@@ -65,7 +65,7 @@ class Schema {
       throw new Error(`GraphQL schema is not generated yet...`)
     }
 
-    return func(this._schema, docOrQuery, undefined, context, variables)
+    return func(this._schema, docOrQuery, undefined, context, variables, operationName)
   }
 }
 
