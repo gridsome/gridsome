@@ -3,6 +3,62 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.7.14](https://github.com/gridsome/gridsome/compare/gridsome@0.7.13...gridsome@0.7.14) (2020-04-18)
+
+
+### Bug Fixes
+
+* **app:** add trailing slash to paths in Pager component ([#1073](https://github.com/gridsome/gridsome/issues/1073)) ([a559bb8](https://github.com/gridsome/gridsome/commit/a559bb8138f5021c22d00777c7b6021c5a4f36dd))
+* **app:** include pathPrefix when hard reloading app ([#1044](https://github.com/gridsome/gridsome/issues/1044)) ([4d22712](https://github.com/gridsome/gridsome/commit/4d2271222cb44e94b9e6f7c0ca04740226c0a7ce))
+* **graphql:** pass operationName argument to graphql method ([#1047](https://github.com/gridsome/gridsome/issues/1047)) ([a5c2d3b](https://github.com/gridsome/gridsome/commit/a5c2d3b1b812f8f80f3f96b7fa30d30e1ed64035))
+
+
+
+
+
+## [0.7.13](https://github.com/gridsome/gridsome/compare/gridsome@0.7.12...gridsome@0.7.13) (2020-02-18)
+
+
+### Bug Fixes
+
+* **app:** allow pascal cased g-link and g-image ([#985](https://github.com/gridsome/gridsome/issues/985)) ([b4805eb](https://github.com/gridsome/gridsome/commit/b4805eb3b01806fea53ced94e91a55b6754879a2))
+* **app:** option for disabling global link catcher ([#959](https://github.com/gridsome/gridsome/issues/959)) ([3acbada](https://github.com/gridsome/gridsome/commit/3acbada56288327dee7118bde7b0d1e9b898bd5c))
+* **build:** allow overriding cpu count with env var ([#923](https://github.com/gridsome/gridsome/issues/923)) ([12c4865](https://github.com/gridsome/gridsome/commit/12c486545170feb4096ffd88600e618873884a9a))
+* **build:** handle some webpack errors properly ([#932](https://github.com/gridsome/gridsome/issues/932)) ([63bd6a3](https://github.com/gridsome/gridsome/commit/63bd6a3966db687fce74c5e13564d33451fe4748))
+* **pages:** add missing find* API methods ([#927](https://github.com/gridsome/gridsome/issues/927)) ([bfc1104](https://github.com/gridsome/gridsome/commit/bfc1104b332c62f7c948c2e5bc14541df44099e5))
+* **pages:** return if no page is found in `removePage()` ([#926](https://github.com/gridsome/gridsome/issues/926)) ([9d8aef7](https://github.com/gridsome/gridsome/commit/9d8aef77b5eae5be7776af93a72d1b336a58e8d1))
+* **webpack:** ignore missing default export in main.js ([a81ed0e](https://github.com/gridsome/gridsome/commit/a81ed0e99a6cf78dffb5a42e5cfc0293b76f069e))
+
+
+
+
+
+## [0.7.12](https://github.com/gridsome/gridsome/compare/gridsome@0.7.11...gridsome@0.7.12) (2019-12-13)
+
+
+### Bug Fixes
+
+* **build:** option for disabling hash in asset filenames ([#840](https://github.com/gridsome/gridsome/issues/840)) ([6765782](https://github.com/gridsome/gridsome/commit/6765782723ae1646a96903eebc15f045df062692))
+* **webpack:** use devServer.watchOptions for dev middleware ([#865](https://github.com/gridsome/gridsome/issues/865)) ([0bedcdb](https://github.com/gridsome/gridsome/commit/0bedcdbf7abd02f340bd94b3a905325eda3c996f))
+
+
+
+
+
+## [0.7.11](https://github.com/gridsome/gridsome/compare/gridsome@0.7.10...gridsome@0.7.11) (2019-11-19)
+
+
+### Bug Fixes
+
+* **app:** ensure favicon height is set ([5164258](https://github.com/gridsome/gridsome/commit/5164258))
+* **g-image:** option for setting default blur ([#760](https://github.com/gridsome/gridsome/issues/760)) ([71421f3](https://github.com/gridsome/gridsome/commit/71421f3))
+* **g-image:** set blank src if sets is empty ([#824](https://github.com/gridsome/gridsome/issues/824)) ([8ab30fc](https://github.com/gridsome/gridsome/commit/8ab30fc))
+* **graphql:** createEnumType schema method ([#814](https://github.com/gridsome/gridsome/issues/814)) ([b09b116](https://github.com/gridsome/gridsome/commit/b09b116))
+
+
+
+
+
 ## [0.7.10](https://github.com/gridsome/gridsome/compare/gridsome@0.7.9...gridsome@0.7.10) (2019-11-06)
 
 

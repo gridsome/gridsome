@@ -111,7 +111,11 @@ module.exports = (context, options = {}) => {
   config.configureWebpack = localConfig.configureWebpack
   config.configureServer = localConfig.configureServer
 
-  config.images = { ...localConfig.images }
+  config.images = {
+    defaultBlur: 40,
+    backgroundColor: null,
+    ...localConfig.images
+  }
 
   if (!colorString.get(config.images.backgroundColor || '')) {
     config.images.backgroundColor = null
@@ -155,6 +159,10 @@ module.exports = (context, options = {}) => {
 
   config.prefetch = localConfig.prefetch || {}
   config.preload = localConfig.preload || {}
+
+  config.cacheBusting = typeof localConfig.cacheBusting === 'boolean' ? localConfig.cacheBusting : true
+
+  config.catchLinks = typeof localConfig.catchLinks === 'boolean' ? localConfig.catchLinks : true
 
   return Object.freeze(config)
 }

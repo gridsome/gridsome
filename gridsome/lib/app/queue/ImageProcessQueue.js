@@ -54,6 +54,7 @@ class ImageProcessQueue {
     const relPath = path.relative(this.context, filePath)
     const { name, ext } = path.parse(filePath)
     const mimeType = mime.lookup(filePath)
+    const defaultBlur = this.config.images.defaultBlur
 
     if (!imageExtensions.includes(ext)) {
       throw new Error(
@@ -127,7 +128,7 @@ class ImageProcessQueue {
     })
 
     const results = {
-      src: sets[sets.length - 1].src,
+      src: sets.length != 0 ? sets[sets.length - 1].src : '',
       size: { width: imageWidth, height: imageHeight },
       width: originalSize.width,
       height: originalSize.height,
@@ -146,7 +147,7 @@ class ImageProcessQueue {
 
     if (isSrcset) {
       try {
-        results.dataUri = await createDataUri(buffer, mimeType, imageWidth, imageHeight, options)
+        results.dataUri = await createDataUri(buffer, mimeType, imageWidth, imageHeight, defaultBlur, options)
       } catch (err) {
         throw new Error(`Failed to process image ${relPath}. ${err.message}`)
       }
@@ -291,8 +292,9 @@ function createOptionsQuery (arr) {
   }, []).join('&')
 }
 
-async function createDataUri (buffer, type, width, height, options = {}) {
-  const blur = options.blur !== undefined ? options.blur : 40
+async function createDataUri (buffer, type, width, height, defaultBlur, options = {}) {
+  const blur = options.blur !== undefined ? parseInt(options.blur, 10) : defaultBlur
+
   const resizeOptions = {}
 
   if (options.fit) resizeOptions.fit = sharp.fit[options.fit]
@@ -315,7 +317,7 @@ async function createBlurSvg (buffer, mimeType, width, height, blur, resize = {}
   const warmSharp = await warmupSharp(sharp)
   const blurBuffer = await warmSharp(buffer).resize(blurWidth, blurHeight, resize).toBuffer()
   const base64 = blurBuffer.toString('base64')
-  const id = `__svg-blur-${ImageProcessQueue.uid++}`
+  const id = `__svg-blur-${genHash(base64)}`
   let defs = ''
 
   if (blur > 0) {

@@ -13,7 +13,8 @@ const baseconfig = {
   imageExtensions: ['.jpg', '.png', '.webp'],
   maxImageWidth: 3000,
   images: {
-    minSizeDistance: 300
+    minSizeDistance: 300,
+    defaultBlur: 20
   }
 }
 

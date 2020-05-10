@@ -48,6 +48,18 @@ test('parse nested Vue components', async () => {
   expect(res).toMatchSnapshot()
 })
 
+test('don\'t wrap end tag in paragraph', async () => {
+  const plugin = await createPlugin()
+  const res = await plugin.parse(`
+<GridCol col="span-4">
+
+Some text...
+</GridCol>
+`, { onlyTemplate: true })
+
+  expect(res).toMatchSnapshot()
+})
+
 test('add v-pre to fenced code blocks', async () => {
   const plugin = await createPlugin()
   const res = await plugin.parse(`
