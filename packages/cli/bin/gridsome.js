@@ -51,23 +51,19 @@ try {
 
 // show a warning if the command does not exist
 program.arguments('<command>').action(async command => {
-  const { isGridsomeProject, hasYarn } = require('../lib/utils')
+  const { isGridsomeProject } = require('../lib/utils')
   const availableCommands = program.commands.map(cmd => cmd._name)
   const suggestion = didYouMean(command, availableCommands)
 
-  if (isGridsomeProject(pkgPath) && !suggestion) {
-    const useYarn = await hasYarn()
+  console.log(chalk.red(`Unknown command ${chalk.bold(command)}`))
 
+  if (isGridsomeProject(pkgPath) && !suggestion) {
     console.log()
-    console.log(chalk.red(`Unknown command ${chalk.bold(command)}`))
     console.log()
     program.outputHelp()
-  } else {
-    console.log(chalk.red(`Unknown command ${chalk.bold(command)}`))
-    if (suggestion) {
-      console.log()
-      console.log(`Did you mean ${suggestion}?`)
-    }
+  } else if (suggestion) {
+    console.log()
+    console.log(`Did you mean ${suggestion}?`)
   }
 })
 
