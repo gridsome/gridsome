@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.4](https://github.com/gridsome/gridsome/tree/master/packages/source-airtable/compare/@gridsome/source-airtable@0.1.3...@gridsome/source-airtable@0.1.4) (2019-12-13)
+
+
+### Bug Fixes
+
+* **airtable:** add select option for queries ([#861](https://github.com/gridsome/gridsome/tree/master/packages/source-airtable/issues/861)) ([6e8ce58](https://github.com/gridsome/gridsome/tree/master/packages/source-airtable/commit/6e8ce58560d7e7ae1d2c4b18ef44b0946fe0bedf))
+
+
+
+
+
+## [0.1.3](https://github.com/gridsome/gridsome/tree/master/packages/source-airtable/compare/@gridsome/source-airtable@0.1.2...@gridsome/source-airtable@0.1.3) (2019-11-19)
+
+**Note:** Version bump only for package @gridsome/source-airtable
+
+
+
+
+
 ## [0.1.2](https://github.com/gridsome/gridsome/tree/master/packages/source-airtable/compare/@gridsome/source-airtable@0.1.1...@gridsome/source-airtable@0.1.2) (2019-09-11)
 
 

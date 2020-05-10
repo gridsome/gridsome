@@ -26,6 +26,17 @@ exports[`don't touch normal HTML tags multiple sections 1`] = `
 </template>"
 `;
 
+exports[`don't wrap end tag in paragraph 1`] = `
+"<template>
+<VueRemarkRoot>
+<GridCol col=\\"span-4\\">
+Some text...
+
+</GridCol>
+</VueRemarkRoot>
+</template>"
+`;
+
 exports[`image inside external link 1`] = `
 "<template>
 <VueRemarkRoot>

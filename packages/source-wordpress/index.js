@@ -167,7 +167,11 @@ class WordPressSource {
         typeName: endpoint.typeName
       })
       const { data } = await this.fetch(endpoint.route, {}, {})
-      for (const item of data) {
+      for (let item of data) {
+        if (endpoint.normalize) {
+          item = this.normalizeFields(item)
+        }
+
         cepCollection.addNode({
           ...item,
           id: item.id || item.slug
@@ -186,14 +190,11 @@ class WordPressSource {
         throw new Error(`${code} - ${config.url}`)
       }
 
-      const { url } = response.config
-      const { status } = response.data.data
-
-      if ([401, 403].includes(status)) {
-        console.warn(`Error: Status ${status} - ${url}`)
+      if ([401, 403].includes(response.status)) {
+        console.warn(`Error: Status ${response.status} - ${config.url}`)
         return { ...response, data: fallbackData }
       } else {
-        throw new Error(`${status} - ${url}`)
+        throw new Error(`${response.status} - ${config.url}`)
       }
     }
 

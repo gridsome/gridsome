@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.5.0](https://github.com/gridsome/gridsome/tree/master/packages/transformer-remark/compare/@gridsome/transformer-remark@0.4.0...@gridsome/transformer-remark@0.5.0) (2020-02-18)
+
+
+### Features
+
+* **remark:** set custom parser config ([#944](https://github.com/gridsome/gridsome/tree/master/packages/transformer-remark/issues/944)) ([81de8c1](https://github.com/gridsome/gridsome/tree/master/packages/transformer-remark/commit/81de8c109b394769baef91ab83d0fa77e0da1a91))
+
+
+
+
+
 # [0.4.0](https://github.com/gridsome/gridsome/tree/master/packages/transformer-remark/compare/@gridsome/transformer-remark@0.3.4...@gridsome/transformer-remark@0.4.0) (2019-10-25)
 
 

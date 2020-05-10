@@ -29,8 +29,9 @@ async function executeQueries (renderQueue, { context, pages, schema, graphql },
     invariant(route, `Could not find a route for: ${entry.path}`)
     invariant(page, `Could not find a page for: ${entry.path}`)
 
-    const results = { data: null, context: page.context }
     const document = route.internal.query.document
+    const context = pages._createPageContext(page, entry.queryVariables)
+    const results = { data: null, context }
 
     if (document) {
       if (!validated.has(route.component)) {
