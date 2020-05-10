@@ -10,7 +10,7 @@ const { parseQuery } = require('../graphql')
 const pathToRegexp = require('path-to-regexp')
 const createPageQuery = require('./createPageQuery')
 const { HookMap, SyncWaterfallHook, SyncBailHook } = require('tapable')
-const { snakeCase, camelCase, trimEnd } = require('lodash')
+const { snakeCase, camelCase, trimEnd, pickBy } = require('lodash')
 const { genChunkName } = require('./utils')
 const validateInput = require('./schemas')
 
@@ -305,7 +305,7 @@ class Pages {
 
   _createRouteOptions (options, meta = {}) {
     const component = this.app.resolve(options.component)
-    const { variableName, chunkName, pageQuery } = this._parseComponent(component)
+    const { componentId, chunkName, pageQuery } = this._parseComponent(component)
     const query = this._parseQuery(pageQuery, component)
     const { permalinks: { trailingSlash }} = this.app.config
 
@@ -343,7 +343,7 @@ class Pages {
       internal: Object.assign({}, meta, {
         meta: options.meta || {},
         path: prettyPath,
-        variableName,
+        componentId,
         chunkName,
         isDynamic,
         priority,
@@ -371,12 +371,26 @@ class Pages {
     return createPageQuery(parsedQuery, vars)
   }
 
-  _createPageContext (page, queryVariables = {}) {
-    const route = this.getRoute(page.internal.route)
-    return this.hooks.pageContext.call({ ...page.context }, {
-      pageQuery: route.internal.query.source,
-      queryVariables
-    })
+  _createPageData(route, page, vars = {}) {
+    const queryVariables = {
+      ...page.internal.query.variables,
+      ...vars,
+      __path: page.publicPath
+    }
+    return {
+      route: {
+        path: page.routePath,
+        name: route.name,
+        componentId: route.internal.componentId,
+        meta: pickBy(route.internal.meta, (_, key) => key[0] !== '$')
+      },
+      context: this.hooks.pageContext.call({ ...page.context }, {
+        pageQuery: route.internal.query.source,
+        queryVariables
+      }),
+      queryVariables,
+      data: null
+    }
   }
 
   _resolvePriority (path) {
@@ -414,8 +428,8 @@ class Pages {
     const ext = path.extname(component).substring(1)
     const hook = this.hooks.parseComponent.get(ext)
     const chunkName = genChunkName(this.app.context, component)
-    const variableName = camelCase(chunkName)
-    const results = { chunkName, variableName }
+    const componentId = camelCase(chunkName)
+    const results = { chunkName, componentId }
 
     if (hook) {
       const source = fs.readFileSync(component, 'utf8')

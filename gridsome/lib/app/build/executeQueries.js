@@ -7,15 +7,6 @@ const { validate, specifiedRules } = require('graphql')
 const sysinfo = require('../../utils/sysinfo')
 const { error, info } = require('../../utils/log')
 
-function withoutCodeMeta(meta) {
-  return Object.keys(meta).reduce((acc, key) => {
-    if (key[0] !== '$') {
-      acc[key] = meta[key]
-    }
-    return acc
-  }, {})
-}
-
 async function executeQueries (renderQueue, { context, pages, schema, graphql }, hash) {
   const timer = hirestime()
   const validated = new Set()
@@ -39,8 +30,9 @@ async function executeQueries (renderQueue, { context, pages, schema, graphql },
     invariant(page, `Could not find a page for: ${entry.path}`)
 
     const document = route.internal.query.document
-    const context = pages._createPageContext(page, entry.queryVariables)
-    const results = { data: null, context }
+    const results = pages._createPageData(route, page, entry.queryVariables)
+
+    results.dataOutput = entry.dataOutput
 
     if (document) {
       if (!validated.has(route.component)) {
@@ -53,7 +45,7 @@ async function executeQueries (renderQueue, { context, pages, schema, graphql },
         validated.add(route.component)
       }
 
-      const { errors, data } = await graphql(document, entry.queryVariables)
+      const { errors, data } = await graphql(document, results.queryVariables)
 
       if (errors && errors.length) {
         throwError(errors[0], route.component)
@@ -62,13 +54,10 @@ async function executeQueries (renderQueue, { context, pages, schema, graphql },
       results.data = data
     }
 
-    return {
-      path: page.routePath,
-      meta: withoutCodeMeta(route.internal.meta),
-      variableName: route.internal.variableName,
-      dataOutput: entry.dataOutput,
-      ...results
-    }
+    // Exclude query variables in the final JSON file.
+    delete results.queryVariables
+
+    return results
   }, { concurrency: sysinfo.cpus.physical })
 
   info(`Execute GraphQL (${renderQueue.length} queries) - ${timer(hirestime.S)}s`)

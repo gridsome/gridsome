@@ -1,6 +1,5 @@
 const path = require('path')
 const { pathToFilePath } = require('../../pages/utils')
-const { createQueryVariables } = require('../../graphql/utils')
 const { trimEnd } = require('lodash')
 
 const {
@@ -65,7 +64,6 @@ function createRenderEntry (page, route, config, currentPage = 1) {
   const hasTrailingSlash = /\/$/.test(page.publicPath)
 
   let publicPath = page.publicPath
-  let queryVariables = {}
 
   if (currentPage > 1) {
     const prefix = hasTrailingSlash ? '' : '/'
@@ -77,26 +75,18 @@ function createRenderEntry (page, route, config, currentPage = 1) {
   const dataOutput = pathToFilePath(publicPath, 'json')
   const prettyPath = trimEnd(publicPath, '/') || '/'
 
-  const location = route.type === 'dynamic'
-    ? { name: route.name }
-    : { path: publicPath }
-
-  if (route.internal.query.document) {
-    queryVariables = createQueryVariables(
-      publicPath,
-      page.internal.query.variables,
-      currentPage
-    )
-  }
-
   return {
-    location,
+    type: route.type,
     path: prettyPath,
+    location: route.type === 'dynamic'
+      ? { name: route.name }
+      : { path: publicPath },
     htmlOutput: path.join(outputDir, htmlOutput),
     dataOutput: path.join(dataDir, dataOutput),
     publicPath: pathPrefix + publicPath,
-    queryVariables,
-    type: route.type,
+    queryVariables: route.internal.query.document
+      ? { page: currentPage || undefined }
+      : {},
     routeId: page.internal.route,
     pageId: page.id
   }

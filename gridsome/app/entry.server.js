@@ -13,9 +13,11 @@ export default context => new Promise((resolve, reject) => {
   else router.history.current = startRoute
 
   if (location.path) {
+    const { route } = context.state
+
     router.addRoutes([{
-      path: context.state.path,
-      component: components[context.state.variableName]
+      ...route,
+      component: components[route.componentId]
     }])
   }
 

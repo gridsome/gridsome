@@ -73,7 +73,7 @@ module.exports = function createRenderFn ({
       : ''
 
     const scripts = '' +
-      renderedState +
+      // renderedState +
       context.renderScripts() +
       inject.script.text({ body: true })
 

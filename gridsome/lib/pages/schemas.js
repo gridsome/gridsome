@@ -45,7 +45,7 @@ const schemas = {
     .keys({
       pageQuery: Joi.string().allow(null),
       chunkName: Joi.string().allow(null),
-      variableName: Joi.string().allow(null)
+      componentId: Joi.string().allow(null)
     })
 }
 

@@ -45,22 +45,14 @@ module.exports = ({ pages, schema }) => {
 
     if (!page) return notFound()
 
-    const result = {
-      path: page.routePath,
-      meta: route.internal.meta,
-      chunkName: route.internal.chunkName,
-      context: page.context,
-      data: null
-    }
+    const result = pages._createPageData(route, page, {
+      page: currentPage || undefined
+    })
 
     if (route.internal.query.document) {
       const { data } = await schema.runQuery(
         route.internal.query.document,
-        createQueryVariables(
-          page.path,
-          page.internal.query.variables,
-          currentPage || undefined
-        )
+        result.queryVariables
       )
 
       result.data = data

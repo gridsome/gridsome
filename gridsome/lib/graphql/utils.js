@@ -16,13 +16,6 @@ const CreatedGraphQLType = {
   Input: 'Input'
 }
 
-exports.createQueryVariables = function (path, variables, currentPage = undefined) {
-  return Object.assign({}, variables, {
-    page: currentPage,
-    __path: path
-  })
-}
-
 exports.is32BitInt = function (x) {
   return (x | 0) === x
 }

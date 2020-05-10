@@ -16,19 +16,25 @@ function hasCodeMeta(item) {
 }
 
 function genRoutes(app) {
+  const { lazyLoadRoutes } = app.config.experimental
   const redirects = app.config.redirects.filter(rule => rule.status === 301)
   const fallback = app.pages._routes.findOne({ name: NOT_FOUND_NAME })
   const items = []
 
-  const createRouteItem = (route, name = route.name, path = route.path) => ({
+  const createRouteItem = (
+    route,
+    name = route.name,
+    path = route.path,
+    componentId = route.internal.componentId
+  ) => ({
     name,
     path,
     id: route.id,
-    chunkName: route.internal.chunkName,
-    variableName: route.internal.variableName,
-    meta: route.internal.meta,
     type: route.type,
-    component: isUnitTest
+    meta: route.internal.meta,
+    chunkName: route.internal.chunkName,
+    componentId,
+    componentPath: isUnitTest
       ? relative(app.context, route.component)
       : route.component
   })
@@ -43,7 +49,7 @@ function genRoutes(app) {
 
   // use the /404 page as fallback route
   if (fallback) {
-    items.push(createRouteItem(fallback, '*', '*'))
+    items.push(createRouteItem(fallback, '*', '*', 'notFound'))
   }
 
   const routes = items
@@ -52,15 +58,17 @@ function genRoutes(app) {
         return genRedirect(item)
       }
       return (
-        item.type === 'dynamic' ||
+        lazyLoadRoutes
+          ? item.type === 'dynamic'
+          : true ||
         hasCodeMeta(item)
       ) && genRoute(item)
     })
     .filter(Boolean)
 
   const componentItems = uniqBy(
-    items.filter(item => item.component),
-    'component'
+    items.filter(item => item.componentId),
+    'componentId'
   )
 
   return [
@@ -70,12 +78,12 @@ function genRoutes(app) {
 }
 
 function genComponent(item) {
-  const component = JSON.stringify(item.component)
+  const componentPath = JSON.stringify(item.componentPath)
   const chunkName = JSON.stringify(item.chunkName)
 
   return [
-    `export const ${item.variableName} = `,
-    `() => import(/* webpackChunkName: ${chunkName} */ ${component})`
+    `export const ${item.componentId} = `,
+    `() => import(/* webpackChunkName: ${chunkName} */ ${componentPath})`
   ].join('')
 }
 
@@ -93,7 +101,7 @@ function genRoute (item) {
   const metas = []
 
   props.push(`    path: ${JSON.stringify(item.path)}`)
-  props.push(`    component: ${item.variableName}`)
+  props.push(`    component: ${item.componentId}`)
 
   if (item.type === 'dynamic') {
     const dataPath = pathToFilePath(item.path, 'json')

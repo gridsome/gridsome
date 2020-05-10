@@ -4,50 +4,81 @@ import * as components from '~/.temp/routes'
 import { NOT_FOUND_NAME } from '~/.temp/constants'
 import { getResults, setResults, formatError } from './shared'
 
-const resolved = []
+const resolved = new Set()
 
 export default router => (to, from, _next) => {
   if (process.isServer) return _next()
 
-  const addRoute = route => {
-    if (!resolved.includes(route.path) && !to.meta.dynamic) {
-      router.addRoutes([route])
-      router.options.routes.push(route)
-      resolved.push(route.path)
-    }
+  if (config.lazyLoadRoutes && !resolved.size) {
+    router.options.routes.forEach(route => {
+      resolved.add(route.path)
+    })
   }
-
-  const addNotFoundRoute = path => addRoute({
-    component: components['not-found'],
-    meta: { dataPath: '/404/index.json' },
-    path
-  })
 
   const next = path => {
     if (to.matched.length) _next()
     else _next(path)
   }
 
+  const addRoute = route => {
+    if (
+      config.lazyLoadRoutes &&
+      !resolved.has(route.path) &&
+      !to.meta.dynamic
+    ) {
+      console.log('addRoute', route)
+      const { routes } = router.options
+
+      router.addRoutes([route])
+      resolved.add(route.path)
+
+      // add route to the router options to make it visible in Vue devtools
+      routes.push(route)
+
+      // ensure wildcard routes are always at the end, this doesn't have any
+      // impact on how routes are resolved but look better in devtools
+      for (let i = 0, l = routes.length; i < l; i++) {
+        if (routes[i].path === '*') {
+          routes.push(routes.splice(i, 1)[0])
+          l--
+          i--
+        }
+      }
+    }
+  }
+
+  const addNotFoundRoute = path => addRoute({
+    component: components.notFound,
+    meta: { dataPath: '/404/index.json' },
+    path
+  })
+
   if (to.meta && to.meta.__custom) {
     global.__INITIAL_STATE__ = null
     return next()
   }
 
-  if (process.isProduction && global.__INITIAL_STATE__) {
-    const { meta, path, variableName } = global.__INITIAL_STATE__
+  if (process.isProduction) {
+    if (global.__INITIAL_STATE__) {
+      const { route } = global.__INITIAL_STATE__
 
-    setResults(to.path, global.__INITIAL_STATE__)
+      setResults(to.path, global.__INITIAL_STATE__)
 
-    if (name === NOT_FOUND_NAME) addNotFoundRoute(to.path)
-    else addRoute({ meta, path, component: components[variableName] })
+      if (route.name === NOT_FOUND_NAME) {
+        addNotFoundRoute(to.path)
+      } else {
+        addRoute({
+          ...route,
+          component: components[route.componentId]
+        })
+      }
 
-    global.__INITIAL_STATE__ = null
+      global.__INITIAL_STATE__ = null
 
-    return next(to.path)
-  }
-
-  if (process.isProduction && getResults(to.path)) {
-    return next()
+      return next(to.path)
+    } else if (getResults(to.path)) {
+      return next()
+    }
   }
 
   fetch(to)
@@ -58,9 +89,8 @@ export default router => (to, from, _next) => {
       } else {
         setResults(to.path, res)
         addRoute({
-          path: res.path,
-          meta: res.meta,
-          component: components[res.variableName]
+          ...res.route,
+          component: components[res.route.componentId]
         })
       }
 

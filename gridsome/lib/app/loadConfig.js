@@ -164,6 +164,11 @@ module.exports = (context, options = {}) => {
 
   config.catchLinks = typeof localConfig.catchLinks === 'boolean' ? localConfig.catchLinks : true
 
+  config.experimental = {
+    ...localConfig.experimental,
+    lazyLoadRoutes: false
+  }
+
   return Object.freeze(config)
 }
 
