@@ -4,7 +4,7 @@ const parse = require('gray-matter')
 const remarkHtml = require('remark-html')
 const remarkParse = require('remark-parse')
 const sanitizeHTML = require('sanitize-html')
-const { words, defaultsDeep } = require('lodash')
+const { defaultsDeep } = require('lodash')
 
 const cache = new LRU({ max: 1000 })
 
@@ -14,6 +14,8 @@ const {
   findHeadings,
   createPlugins
 } = require('./lib/utils')
+
+const { estimateTimeToRead } = require('./lib/timeToRead')
 
 const {
   HeadingType,
@@ -109,8 +111,7 @@ class RemarkTransformer {
               allowedTags: []
             })
 
-            const count = words(text).length
-            cached = Math.round(count / speed) || 1
+            cached = estimateTimeToRead(text, speed)
             cache.set(key, cached)
           }
 
