@@ -7,6 +7,11 @@ function estimateTimeToRead (text, speed) {
   const m = text.match(pattern)
   let count = 0
 
+  // Empty string
+  if (!m) {
+    return 0
+  }
+
   for (const c of m) {
     if (c.charCodeAt(0) >= 0x4e00) {
       count += c.length
