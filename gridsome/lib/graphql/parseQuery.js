@@ -138,7 +138,7 @@ module.exports = function parseQuery (schema, source, resourcePath) {
       path: name.split('__'),
       defaultValue: node.defaultValue
         ? valueFromASTUntyped(node.defaultValue)
-        : null
+        : undefined
     }
   })
 

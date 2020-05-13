@@ -232,6 +232,7 @@ test('parse page-query with context', () => {
   const parsed = parseQuery(app.schema.getSchema(), `query (
     $page: Int
     $path: String
+    $unknown: String
     $id: String
     $title: String
     $custom: String
@@ -268,4 +269,5 @@ test('parse page-query with context', () => {
   expect(query.variables.list__1__value).toEqual(2)
   expect(query.variables.ref).toEqual('1')
   expect(query.variables.refs__1).toEqual('2')
+  expect(query.variables.unknown).toBeUndefined()
 })

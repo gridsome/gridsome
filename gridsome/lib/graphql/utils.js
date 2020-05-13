@@ -1,5 +1,5 @@
 const camelCase = require('camelcase')
-const { isObject, isPlainObject } = require('lodash')
+const { pickBy, isObject, isPlainObject } = require('lodash')
 
 const {
   ThunkComposer,
@@ -17,10 +17,10 @@ const CreatedGraphQLType = {
 }
 
 exports.createQueryVariables = function (path, variables, currentPage = undefined) {
-  return Object.assign({}, variables, {
-    page: currentPage,
-    __path: path
-  })
+  return pickBy(
+    { ...variables, page: currentPage, __path: path },
+    value => value !== undefined
+  )
 }
 
 exports.is32BitInt = function (x) {
