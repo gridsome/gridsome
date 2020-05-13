@@ -27,11 +27,3 @@ test('suggest matching command', async () => {
 
   expect(stdout).toContain('Did you mean create?')
 })
-
-test('warn about missing dependencies', async () => {
-  const { stdout } = await execa(cli, ['noop'], {
-    cwd: path.join(__dirname, '__fixtures__', 'project')
-  })
-
-  expect(stdout).toMatch('install dependencies')
-})
