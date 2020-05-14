@@ -91,6 +91,7 @@ function createReferenceInputTypeComposer({
   }
 
   const operatorTypeComposer = schemaComposer.createInputTC(inputTypeName)
+  const fieldExtensions = typeComposer.getFieldExtensions(fieldName)
   const isPlural = typeComposer.isFieldPlural(fieldName)
 
   // TODO: filter by all fields on referenced type
@@ -105,7 +106,10 @@ function createReferenceInputTypeComposer({
   operatorTypeComposer.setFieldExtension('id', 'isPlural', isPlural)
 
   // TODO: remove these before 1.0
-  const extensions = { isDeprecatedNodeReference: true }
+  // Mark field as deprecated if not created by `store.addReference()`.
+  const extensions = {
+    isInferredReference: !fieldExtensions.isDefinedReference
+  }
   const deprecationReason = 'Use the id field instead.'
   if (isPlural) {
     operatorTypeComposer.addFields(

@@ -35,8 +35,8 @@ module.exports = function createNodesSchema (schemaComposer, store) {
     const typeComposer = schemaComposer.get(typeName)
 
     createFields(schemaComposer, typeComposer, collection)
-    createFilterInput(schemaComposer, typeComposer)
     createReferenceFields(schemaComposer, typeComposer, collection)
+    createFilterInput(schemaComposer, typeComposer)
     createThirdPartyFields(typeComposer, collection)
 
     const fieldName = camelCase(typeName)

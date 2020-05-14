@@ -74,7 +74,7 @@ test('create filter operators for node references', () => {
         break
 
       default:
-        expect(extensions.isDeprecatedNodeReference).toEqual(true)
+        expect(extensions.isInferredReference).toEqual(true)
         expect(typeComposer.getTypeName()).toEqual('ID')
         break
     }
