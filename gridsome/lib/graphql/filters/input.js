@@ -1,4 +1,5 @@
 const { hasNodeReference } = require('../utils')
+const { without } = require('lodash')
 
 const {
   EnumTypeComposer,
@@ -112,7 +113,12 @@ function createReferenceInputTypeComposer({
     )
   } else {
     operatorTypeComposer.addFields(
-      toOperatorConfig(scalarOperators.ID, 'ID', extensions, deprecationReason)
+      toOperatorConfig(
+        without(scalarOperators.ID, 'exists'),
+        'ID',
+        extensions,
+        deprecationReason
+      )
     )
   }
 

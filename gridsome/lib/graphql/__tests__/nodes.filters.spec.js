@@ -152,6 +152,36 @@ test('filter dates by gt', async () => {
   expect(data.allProduct.edges[1].node.id).toEqual('3')
 })
 
+test('filter by exists: true', async () => {
+  const { errors, data } = await createSchemaAndExecute(`{
+    allProduct (filter: { optional: { exists: true } }) {
+      edges {
+        node { id }
+      }
+    }
+  }`)
+
+  expect(errors).toBeUndefined()
+  expect(data.allProduct.edges).toHaveLength(2)
+  expect(data.allProduct.edges[0].node.id).toEqual('4')
+  expect(data.allProduct.edges[1].node.id).toEqual('2')
+})
+
+test('filter by exists: false', async () => {
+  const { errors, data } = await createSchemaAndExecute(`{
+    allProduct (filter: { optional: { exists: false } }) {
+      edges {
+        node { id }
+      }
+    }
+  }`)
+
+  expect(errors).toBeUndefined()
+  expect(data.allProduct.edges).toHaveLength(2)
+  expect(data.allProduct.edges[0].node.id).toEqual('3')
+  expect(data.allProduct.edges[1].node.id).toEqual('1')
+})
+
 test('deprecated: filter by reference id', async () => {
   const { errors, data } = await createSchemaAndExecute(`{
     allProduct (filter: { related: { eq: "2" } }) {
@@ -548,11 +578,14 @@ test('setup inferred filter input types', async () => {
 
   expect(Object.keys(inputType.fields).sort()).toEqual([
     'alternativeIds', 'alternatives', 'date', 'deep', 'discount',
-    'featured', 'id', 'price', 'related', 'relatedId', 'tags', 'title'
+    'featured', 'id', 'optional', 'price', 'related', 'relatedId',
+    'tags', 'title'
   ])
 
   expect(inputType.fields.id.type).toEqual(schema.getType('IDQueryOperatorInput'))
   expect(inputType.fields.id.extensions.isInferred).toBeUndefined()
+  expect(inputType.fields.optional.type).toEqual(schema.getType('StringQueryOperatorInput'))
+  expect(inputType.fields.optional.extensions.isInferred).toBe(true)
   expect(inputType.fields.date.type).toEqual(schema.getType('DateQueryOperatorInput'))
   expect(inputType.fields.date.extensions.isInferred).toBe(true)
   expect(inputType.fields.title.type).toEqual(schema.getType('StringQueryOperatorInput'))
@@ -757,6 +790,7 @@ function createCollections (api) {
       id: '2',
       date: '2018-03-28',
       title: 'Dojor Inceptos Venenatis Nibh',
+      optional: 'test',
       price: 199,
       discount: 0.5,
       featured: false,
@@ -802,6 +836,7 @@ function createCollections (api) {
       id: '4',
       date: '2018-12-20',
       title: 'Vestibulum Aenean Bibendum Euismod',
+      optional: null,
       price: 119,
       featured: false,
       tags: ['one', 'two'],
