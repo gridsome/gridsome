@@ -20,8 +20,7 @@ function estimateTimeToRead (text, speed) {
     }
   }
 
-  const timeToRead = Math.round(count / speed) || 1
-  return timeToRead
+  return Math.round(count / speed) || 1
 }
 
 module.exports = {
