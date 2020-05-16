@@ -13,7 +13,8 @@ class WordPressSource {
       apiBase: 'wp-json',
       perPage: 100,
       concurrent: 10,
-      typeName: 'WordPress'
+      typeName: 'WordPress',
+      maxNumberOfPosts: undefined
     }
   }
 
@@ -132,7 +133,7 @@ class WordPressSource {
 
       const data = await this.fetchPaged(`wp/v2/${restBase}`)
 
-      for (const post of data) {
+      for (const post of data.slice(0, this.options.maxNumberOfPosts)) {
         const fields = this.normalizeFields(post)
 
         fields.author = createReference(AUTHOR_TYPE_NAME, post.author || '0')
