@@ -17,7 +17,6 @@ module.exports = {
     {
       use: '@gridsome/plugin-sitemap',
       options: {
-        cacheTime: 600000, // default
         exclude: ['/exclude-me'],
         config: {
           '/articles/*': {
@@ -35,7 +34,56 @@ module.exports = {
 }
 ```
 
-### Adding static urls
+### Options
+
+#### output
+
+- Type: `string`
+- Default `/sitemap.xml`
+
+Your sitemap will be available at `/sitemap.xml`.
+
+#### config
+
+- Type: `object`
+
+Set custom config for specific URLs.
+
+```js
+config: {
+  '/articles/*': {
+    changefreq: 'weekly',
+    priority: 0.5
+  },
+  '/about': {
+    changefreq: 'monthly',
+    priority: 0.7
+  }
+}
+```
+
+#### include
+
+- Type: `string[]`
+
+Specify which paths to include in the sitemap. Each path can be a glob pattern.
+
+```js
+include: ['/blog', '/blog/**']
+```
+
+#### exclude
+
+- Type: `string[]`
+
+Specify which paths to exclude from the sitemap. Each path can be a glob pattern. The `/404` path is always excluded.
+
+#### staticUrls
+
+- Type: `Array`
+
+Add custom URLs to the sitemap.
+
 ```js
 module.exports = {
   plugins: [
@@ -68,6 +116,3 @@ module.exports = {
   ]
 }
 ```
-
-
-Your sitemap will be available at `/sitemap.xml` after your site is built.
