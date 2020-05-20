@@ -3,9 +3,9 @@
 exports[`add v-pre to fenced code blocks 1`] = `
 "<template>
 <VueRemarkRoot>
-<pre><code class=\\"language-html\\" v-pre>&#x3C;div>
+<pre><code class=\\"language-html\\" v-pre>&lt;div id=\\"test\\">
 # title
-&#x3C;/div>
+&lt;/div>
 </code></pre>
 </VueRemarkRoot>
 </template>"

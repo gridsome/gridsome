@@ -42,7 +42,12 @@ module.exports = function toSfc () {
       }
     })
 
-    const html = toHTML(hast, { allowDangerousHTML: true })
+    const html = toHTML(hast, {
+      allowDangerousHTML: true,
+      entities: {
+        useNamedReferences: true
+      }
+    })
 
     if (file.data.onlyBlocks) {
       return blocks.join('\n\n')

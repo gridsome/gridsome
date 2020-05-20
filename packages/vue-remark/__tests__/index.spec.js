@@ -1,5 +1,5 @@
 const VueRemark = require('..')
-const App = require('../../../gridsome/lib/app/App')
+const App = require('gridsome/lib/app/App')
 
 test('parse simple title', async () => {
   const plugin = await createPlugin()
@@ -64,7 +64,7 @@ test('add v-pre to fenced code blocks', async () => {
   const plugin = await createPlugin()
   const res = await plugin.parse(`
 \`\`\`html
-<div>
+<div id="test">
 # title
 </div>
 \`\`\`
@@ -84,7 +84,7 @@ test('parse inline code with tag-like syntax', async () => {
   const plugin = await createPlugin()
   const res = await plugin.parse('`<test>.example.com`', { onlyTemplate: true })
 
-  expect(res).toMatch('<code v-pre>&#x3C;test>.example.com</code>')
+  expect(res).toMatch('<code v-pre>&lt;test>.example.com</code>')
 })
 
 test('parse markdown inside Vue component', async () => {
@@ -178,6 +178,13 @@ test('disable g-link for urls', async () => {
   expect(res).toMatch(
     '<p><a href="https://example.com"'
   )
+})
+
+test('use named entities when encoding attributes', async () => {
+  const plugin = await createPlugin()
+  const res = await plugin.parse('[External](https://example.com/?x&y)', { onlyTemplate: true })
+
+  expect(res).toMatch('href="https://example.com/?x&amp;y"')
 })
 
 test('keep italic text in links', async () => {
