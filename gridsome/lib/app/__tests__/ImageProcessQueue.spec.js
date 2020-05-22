@@ -292,6 +292,11 @@ describe('calculate correct image size', () => {
       'assets/1000x600.png',
       { width: 400, height: 400, fit: 'contain' },
       { width: 400, height: 400 }
+    ],
+    [
+      'assets/rotated.jpg',
+      { width: 480 },
+      { width: 480, height: 640 }
     ]
   ])('%s %p', async (image, options, expected) => {
     const filePath = path.resolve(context, image)

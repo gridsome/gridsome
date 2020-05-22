@@ -68,7 +68,20 @@ class ImageProcessQueue {
     }
 
     const hash = await md5File(filePath)
-    const buffer = await fs.readFile(filePath)
+    const fileBuffer = await fs.readFile(filePath)
+    const warmSharp = await warmupSharp(sharp)
+
+    let pipeline
+    let buffer
+
+    try {
+      // Rotate based on EXIF Orientation tag
+      pipeline = warmSharp(fileBuffer).rotate()
+      buffer = await pipeline.toBuffer()
+    } catch (err) {
+      throw new Error(`Failed to process image ${relPath}. ${err.message}`)
+    }
+
     const originalSize = imageSize.sync(buffer) || { width: 1, height: 1 }
 
     const { imageWidth, imageHeight } = computeScaledImageSize(originalSize, options, maxImageWidth)
@@ -146,13 +159,16 @@ class ImageProcessQueue {
     const isLazy = options.immediate === undefined
 
     if (isSrcset) {
-      try {
-        results.dataUri = await createDataUri(buffer, mimeType, imageWidth, imageHeight, defaultBlur, options)
-      } catch (err) {
-        throw new Error(`Failed to process image ${relPath}. ${err.message}`)
-      }
       results.sizes = options.sizes || `(max-width: ${imageWidth}px) 100vw, ${imageWidth}px`
       results.srcset = results.sets.map(({ src, width }) => `${src} ${width}w`)
+      results.dataUri = await createDataUri(
+        pipeline,
+        mimeType,
+        imageWidth,
+        imageHeight,
+        defaultBlur,
+        options
+      )
     }
 
     if (isLazy && isSrcset) {
@@ -292,7 +308,7 @@ function createOptionsQuery (arr) {
   }, []).join('&')
 }
 
-async function createDataUri (buffer, type, width, height, defaultBlur, options = {}) {
+async function createDataUri (pipeline, type, width, height, defaultBlur, options = {}) {
   const blur = options.blur !== undefined ? parseInt(options.blur, 10) : defaultBlur
 
   const resizeOptions = {}
@@ -301,7 +317,7 @@ async function createDataUri (buffer, type, width, height, defaultBlur, options 
   if (options.position) resizeOptions.position = sharp.position[options.position]
   if (options.background) resizeOptions.background = options.background
 
-  const blurredSvg = await createBlurSvg(buffer, type, width, height, blur, resizeOptions)
+  const blurredSvg = await createBlurSvg(pipeline, type, width, height, blur, resizeOptions)
 
   return svgDataUri(
     `<svg fill="none" viewBox="0 0 ${width} ${height}" ` +
@@ -311,12 +327,13 @@ async function createDataUri (buffer, type, width, height, defaultBlur, options 
   )
 }
 
-async function createBlurSvg (buffer, mimeType, width, height, blur, resize = {}) {
+async function createBlurSvg (pipeline, mimeType, width, height, blur, resize = {}) {
   const blurWidth = 64
   const blurHeight = Math.round(height * (blurWidth / width))
-  const warmSharp = await warmupSharp(sharp)
-  const blurBuffer = await warmSharp(buffer).resize(blurWidth, blurHeight, resize).toBuffer()
-  const base64 = blurBuffer.toString('base64')
+  const buffer = await pipeline
+    .resize(blurWidth, blurHeight, resize)
+    .toBuffer()
+  const base64 = buffer.toString('base64')
   const id = `__svg-blur-${genHash(base64)}`
   let defs = ''
 

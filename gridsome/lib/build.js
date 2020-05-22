@@ -128,7 +128,7 @@ async function processImages (images, config) {
         outputDir: config.outputDir,
         context: config.context,
         cacheDir: config.imageCacheDir,
-        backgroundColor: config.images.backgroundColor
+        imagesConfig: config.images
       })
 
       writeLine(`Processing images (${totalAssets} images) - ${Math.round((++progress) * 100 / totalJobs)}%`)
