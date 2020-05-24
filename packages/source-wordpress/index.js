@@ -130,7 +130,7 @@ class WordPressSource {
       const restBase = this.restBases.posts[type]
       const typeName = this.createTypeName(type)
       const posts = getCollection(typeName)
-      const maxPosts = restBase == 'posts' ? this.options.maxNumberOfPosts: undefined;
+      const maxPosts = restBase === 'posts' ? this.options.maxNumberOfPosts : undefined
       const data = await this.fetchPaged(`wp/v2/${restBase}`)
 
       for (const post of data.slice(0, maxPosts)) {
