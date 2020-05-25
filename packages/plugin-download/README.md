@@ -24,12 +24,12 @@ module.exports = {
         files: [
           {
             url: 'https://server.com/strings.json',
-            dest: '/src/strings.json'
+            dest: 'src/strings.json'
           },
           // Make use of env variable
           {
             url: `https://server.com/${process.env.GRIDSOME_LOCALE}.json`,
-            dest: '/src/lang.json'
+            dest: 'src/lang.json'
           }
         ]
       }
@@ -52,6 +52,13 @@ module.exports = {
 ```js
 {
   url: 'https://...',
-  dest: 'path'
+  dest: 'path',
+  // Optional advanced request
+  request: {
+    method: 'POST' // default GET
+    headers: {
+      Authentication: 'Bearer 123456'
+    }
+  }
 }
 ```

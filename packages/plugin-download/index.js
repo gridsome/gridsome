@@ -3,11 +3,13 @@ const fs = require('fs-extra')
 const axios = require('axios')
 const ProgressBar = require('progress')
 
-async function downloadFile (url, dest) {
+async function downloadFile (url, dest, reqOpts) {
   await fs.outputFile(path.join(dest), '')
+
   const { data, headers } = await axios({
-    url,
     method: 'GET',
+    ...reqOpts,
+    url,
     responseType: 'stream'
   })
   const totalLength = headers['content-length'] || 100
@@ -20,7 +22,7 @@ async function downloadFile (url, dest) {
     total: parseInt(totalLength)
   })
 
-  const writer = fs.createWriteStream(path.join(dest))
+  const writer = fs.createWriteStream(path.join(dest.replace(/^\/(.+)$/, '$1')))
 
   data.on('data', (chunk) => progressBar.tick(chunk.length))
   data.pipe(writer)
@@ -36,7 +38,7 @@ module.exports = function (api, options) {
 
     console.log('Downloading files …')
 
-    const queue = files.map(({ url, dest }) => downloadFile(url, dest).catch(() => {
+    const queue = files.map(({ url, dest, request }) => downloadFile(url, dest, request).catch(() => {
       throw new Error(`Failed to download ${url}`)
     }))
 
