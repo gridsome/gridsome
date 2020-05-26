@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.3.0](https://github.com/gridsome/gridsome/tree/master/packages/plugin-sitemap/compare/@gridsome/plugin-sitemap@0.2.3...@gridsome/plugin-sitemap@0.3.0) (2020-05-26)
+
+
+### Features
+
+* **sitemap:** option to include paths ([5a311df](https://github.com/gridsome/gridsome/tree/master/packages/plugin-sitemap/commit/5a311dfdc8775933f7586f00fefa6695e69a096f))
+
+
+
+
+
 ## [0.2.3](https://github.com/gridsome/gridsome/tree/master/packages/plugin-sitemap/compare/@gridsome/plugin-sitemap@0.2.2...@gridsome/plugin-sitemap@0.2.3) (2019-10-25)
 
 **Note:** Version bump only for package @gridsome/plugin-sitemap

@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.6.0](https://github.com/gridsome/gridsome/tree/master/packages/transformer-remark/compare/@gridsome/transformer-remark@0.5.0...@gridsome/transformer-remark@0.6.0) (2020-05-26)
+
+
+### Features
+
+* **remark:** generate excerpt automatically ([#1085](https://github.com/gridsome/gridsome/tree/master/packages/transformer-remark/issues/1085)) ([8fc1c5a](https://github.com/gridsome/gridsome/tree/master/packages/transformer-remark/commit/8fc1c5a6a36324ceb679c4bdefa7e47a5e56770c))
+* **remark:** timeToRead with CJK support ([#1160](https://github.com/gridsome/gridsome/tree/master/packages/transformer-remark/issues/1160)) ([f9ec161](https://github.com/gridsome/gridsome/tree/master/packages/transformer-remark/commit/f9ec1619e2702715c95e052fee68bfed0fb6956a))
+
+
+
+
+
 # [0.5.0](https://github.com/gridsome/gridsome/tree/master/packages/transformer-remark/compare/@gridsome/transformer-remark@0.4.0...@gridsome/transformer-remark@0.5.0) (2020-02-18)
 
 

@@ -1,5 +1,5 @@
 {
-  "version": "0.3.2",
+  "version": "0.3.3",
   "name": "@gridsome/cli",
   "description": "A command line tool for creating new Gridsome projects.",
   "homepage": "https://github.com/gridsome/gridsome/tree/master/packages/cli#readme",

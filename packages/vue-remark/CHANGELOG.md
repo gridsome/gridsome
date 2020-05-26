@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.1](https://github.com/gridsome/gridsome/tree/master/packages/vue-remark/compare/@gridsome/vue-remark@0.2.0...@gridsome/vue-remark@0.2.1) (2020-05-26)
+
+
+### Bug Fixes
+
+* **vue-remark:** exclude remark-cli in cache identifier ([#1128](https://github.com/gridsome/gridsome/tree/master/packages/vue-remark/issues/1128)) ([a8cfa84](https://github.com/gridsome/gridsome/tree/master/packages/vue-remark/commit/a8cfa84254e45b73c9bde98e274d7b89ad4bd0e3))
+* **vue-remark:** use named entities when encoding ([#1179](https://github.com/gridsome/gridsome/tree/master/packages/vue-remark/issues/1179)) ([1fcecc0](https://github.com/gridsome/gridsome/tree/master/packages/vue-remark/commit/1fcecc0f47f88f8e0d4992defc30fb3862c226cb))
+
+
+
+
+
 # [0.2.0](https://github.com/gridsome/gridsome/tree/master/packages/vue-remark/compare/@gridsome/vue-remark@0.1.10...@gridsome/vue-remark@0.2.0) (2020-04-18)
 
 
