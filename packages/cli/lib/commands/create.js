@@ -18,8 +18,8 @@ module.exports = async (name, starter = 'default') => {
 
   try {
     const files = fs.existsSync(dir) ? fs.readdirSync(dir) : []
-    if (files.length > 1) {
-      return console.log(chalk.red(`Directory «${projectName}» is not empty.`))
+    if (files.length) {
+      return console.log(chalk.red(`Can't create ${projectName} because there's already a non-empty directory ${projectName} existing in path.`))
     }
   } catch (err) {
     throw new Error(err.message)
