@@ -13,7 +13,7 @@ Gridsome is a <a href="//vuejs.org">Vue-powered</a> static site generator for bu
 
 <p align="center">
   <a title="Total downloads" href="https://www.npmjs.com/package/gridsome">
-    <img src="https://img.shields.io/npm/dt/gridsome.svg?style=flat-square">
+    <img src="https://img.shields.io/npm/dm/gridsome.svg?style=flat-square">
   </a>
   <a title="Current version" href="https://www.npmjs.com/package/gridsome">
     <img src="https://img.shields.io/npm/v/gridsome.svg?style=flat-square">
@@ -57,8 +57,8 @@ Gridsome sites are usually not connected to any database and can be hosted entir
 ### 2. Create a Gridsome project
 
 1. `gridsome create my-gridsome-site` to create a new project
-2. `cd my-gridsome-site` to open folder
-3. `gridsome develop` to start local dev server at `http://localhost:8080`
+2. `cd my-gridsome-site` to open the folder
+3. `gridsome develop` to start a local dev server at `http://localhost:8080`
 4. Happy coding 🎉🙌
 
 ### 3. Next steps
@@ -68,8 +68,8 @@ Gridsome sites are usually not connected to any database and can be hosted entir
 
 ### Learn more...
 
-- [How it works](https://gridsome.org/docs/how-it-works)
-- [How to deploy](https://gridsome.org/docs/deployment)
+- [How it works](https://gridsome.org/docs/how-it-works/)
+- [How to deploy](https://gridsome.org/docs/deployment/)
 
 ## How to Contribute
 
