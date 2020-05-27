@@ -66,6 +66,9 @@ Gridsome sites are usually not connected to any database and can be hosted entir
 1. Create `.vue` components in the `./src/pages` directory to create pages
 2. Use `gridsome build` to generate static files in a `./dist` folder
 
+## Demo
+Small demo - [![Runme](https://runme.io/static/button.svg)](https://runme.io/run?app_id=da856b58-d204-409d-9746-0dd6277da1fd)
+
 ### Learn more...
 
 - [How it works](https://gridsome.org/docs/how-it-works/)
