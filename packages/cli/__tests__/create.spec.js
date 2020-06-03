@@ -1,16 +1,17 @@
-const fs = require('fs')
+const fs = require('fs-extra')
+const { join } = require('path')
 
 const runCLI = require('./utils/helpers')
 
-const genPath = `${__dirname}/my-project`
+const genPath = join(__dirname, 'my-project')
 
 beforeEach(() => {
-  fs.mkdirSync(genPath)
-  fs.writeFileSync(`${genPath}/index.js`, '// Test')
+  fs.ensureDirSync(genPath)
+  fs.writeFileSync(join(genPath, 'index.js'), '// Test')
 })
 
 afterEach(() => {
-  fs.rmdirSync(genPath, { recursive: true })
+  fs.removeSync(genPath)
 })
 
 test('warns if a directory with the same name exists in path', async () => {
