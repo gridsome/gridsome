@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.7.16](https://github.com/gridsome/gridsome/compare/gridsome@0.7.15...gridsome@0.7.16) (2020-06-03)
+
+
+### Bug Fixes
+
+* **graphql:** calculate pagination in dev mode ([#1198](https://github.com/gridsome/gridsome/issues/1198)) ([39e9381](https://github.com/gridsome/gridsome/commit/39e9381e764a634dd6af7e17fc085e66f7f1a674))
+
+
+
+
+
 ## [0.7.15](https://github.com/gridsome/gridsome/compare/gridsome@0.7.14...gridsome@0.7.15) (2020-05-26)
 
 
