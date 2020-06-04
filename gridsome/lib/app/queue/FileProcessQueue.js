@@ -59,7 +59,8 @@ class FileProcessQueue {
 
     return {
       src: encodeURI(src),
-      destPath
+      destPath,
+      relPath
     }
   }
 }

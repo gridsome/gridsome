@@ -41,6 +41,8 @@ class AssetsQueue {
 
     if (isDev && asset.cacheKey) {
       this.index.set(asset.cacheKey, entry)
+    } else if (!asset.cacheKey && asset.relPath) {
+      this.index.set(asset.relPath, entry)
     }
 
     return entry
