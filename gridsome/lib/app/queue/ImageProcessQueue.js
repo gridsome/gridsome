@@ -5,7 +5,6 @@ const crypto = require('crypto')
 const mime = require('mime-types')
 const colorString = require('color-string')
 const md5File = require('md5-file/promise')
-const imageSize = require('probe-image-size')
 const svgDataUri = require('mini-svg-data-uri')
 const { forwardSlash } = require('../../utils')
 const { warmupSharp } = require('../../utils/sharp')
@@ -72,17 +71,26 @@ class ImageProcessQueue {
     const warmSharp = await warmupSharp(sharp)
 
     let pipeline
-    let buffer
+    let metadata
 
     try {
       // Rotate based on EXIF Orientation tag
       pipeline = warmSharp(fileBuffer).rotate()
-      buffer = await pipeline.toBuffer()
+      metadata = await pipeline.metadata()
     } catch (err) {
       throw new Error(`Failed to process image ${relPath}. ${err.message}`)
     }
 
-    const originalSize = imageSize.sync(buffer) || { width: 1, height: 1 }
+    const originalSize = {
+      width: metadata.width,
+      height: metadata.height
+    }
+
+    // https://www.impulseadventure.com/photo/exif-orientation.html
+    if (metadata.orientation && metadata.orientation >= 5) {
+      originalSize.width = metadata.height
+      originalSize.height = metadata.width
+    }
 
     const { imageWidth, imageHeight } = computeScaledImageSize(originalSize, options, maxImageWidth)
 
