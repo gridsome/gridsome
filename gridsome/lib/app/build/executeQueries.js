@@ -63,7 +63,7 @@ async function executeQueries (renderQueue, { context, pages, schema, graphql },
 
   const timer2 = hirestime()
 
-  await pMap( files, ({ path, content }) => fs.outputFile(path, content), {
+  await pMap(files, ({ path, content }) => fs.outputFile(path, content), {
     concurrency: sysinfo.cpus.physical
   })
 

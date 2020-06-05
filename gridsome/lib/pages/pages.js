@@ -232,7 +232,7 @@ class Pages {
         this.removeRoute(options.id)
       })
   }
-  
+
   findAndRemovePages (query) {
     this._pages.find(query).forEach(page => {
       this.removePage(page.id)
@@ -520,10 +520,12 @@ class Route {
         publicPath = trimEnd(path, '/') + '/'
       }
 
-      invariant(
-        regexp.test(path),
-        `The path ${path} does not match ${regexp}`
-      )
+      if (this.internal.path !== path) {
+        invariant(
+          regexp.test(path),
+          `The path ${path} does not match ${regexp}`
+        )
+      }
     }
 
     if (this.type === TYPE_DYNAMIC) {
