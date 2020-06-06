@@ -36,7 +36,7 @@ test('add custom GraphQL object types', async () => {
   })
 
   const { errors, data } = await app.graphql(`{
-    post(id:"1") {
+    post(id: { eq: "1" }) {
       title
       content
       author {
@@ -98,7 +98,7 @@ test('add custom GraphQL union type with Node interface', async () => {
   })
 
   const { errors, data } = await app.graphql(`{
-    track(id:"1") {
+    track(id: { eq: "1" }) {
       appearsOn {
         __typename
       }
@@ -152,7 +152,7 @@ test('add custom GraphQL union type', async () => {
   })
 
   const { errors, data } = await app.graphql(`{
-    post(id:"1") {
+    post(id: { eq: "1" }) {
       test {
         __typename
       }
@@ -193,7 +193,7 @@ test('add custom GraphQL union type', async () => {
   })
 
   const { errors, data } = await app.graphql(`{
-    post(id:"1") {
+    post(id: { eq: "1" }) {
       ref {
         __typename
       }
@@ -244,7 +244,7 @@ test('add custom GraphQL types from SDL', async () => {
   })
 
   const { errors, data } = await app.graphql(`{
-    post(id:"1") {
+    post(id: { eq: "1" }) {
       title
       content
       proxyContent
@@ -290,7 +290,7 @@ describe('add reference resolvers', () => {
     })
 
     const { errors, data } = await app.graphql(`{
-      track(id:"1") {
+      track(id: { eq: "1" }) {
         album { name }
         albums { name }
       }
@@ -320,7 +320,7 @@ describe('add reference resolvers', () => {
     })
 
     const { errors, data } = await app.graphql(`{
-      track(id:"1") {
+      track(id: { eq: "1" }) {
         anotherAlbum { name }
         otherAlbums(limit:1, skip:1) { name }
       }
@@ -350,7 +350,7 @@ describe('add reference resolvers', () => {
     })
 
     const { errors, data } = await app.graphql(`{
-      track(id:"1") {
+      track(id: { eq: "1" }) {
         albumBySlug { name }
         albumsBySlug { name }
       }
@@ -391,7 +391,7 @@ describe('add reference resolvers', () => {
     })
 
     const { errors, data } = await app.graphql(`{
-      track(id:"1") {
+      track(id: { eq: "1" }) {
         overiddenAlbum { name }
         customAlbum(id:"2") { name }
       }
@@ -423,7 +423,7 @@ describe('add reference resolvers', () => {
     })
 
     const { errors, data } = await app.graphql(`{
-      track(id:"1") {
+      track(id: { eq: "1" }) {
         union {
           ... on Single { name }
         }
@@ -517,7 +517,7 @@ test('add custom resolver for invalid field names', async () => {
   })
 
   const { errors, data } = await app.graphql(`{
-    post(id:"1") {
+    post(id: { eq: "1" }) {
       _123
       _456_test
       _789_test
@@ -572,7 +572,7 @@ test('set field extensions with factory methods', async () => {
   })
 
   const { errors, data } = await app.graphql(`{
-    post(id:"1") {
+    post(id: { eq: "1" }) {
       one
       two
     }
@@ -603,7 +603,7 @@ test('add custom resolvers for content type', async () => {
   })
 
   const { errors, data } = await app.graphql(`{
-    post(id:"1") {
+    post(id: { eq: "1" }) {
       title
       customField
     }
@@ -632,7 +632,7 @@ test('disable field inference with SDL', async () => {
   })
 
   const { errors } = await app.graphql(`{
-    post(id:"1") {
+    post(id: { eq: "1" }) {
       title
       content
     }
@@ -664,7 +664,7 @@ test('disable field inference with createObjectType', async () => {
   })
 
   const { errors } = await app.graphql(`{
-    post(id:"1") {
+    post(id: { eq: "1" }) {
       title
       content
     }
@@ -709,7 +709,7 @@ test('insert default resolvers for SDL', async () => {
   })
 
   const { errors, data } = await app.graphql(`{
-    post(id:"1") {
+    post(id: { eq: "1" }) {
       title
       object {
         year(format:"DD.MM.YYYY")
@@ -764,7 +764,7 @@ test('insert default resolvers with createObjectType', async () => {
   })
 
   const { errors, data } = await app.graphql(`{
-    post(id:"1") {
+    post(id: { eq: "1" }) {
       title
       object {
         year(format:"DD.MM.YYYY")
@@ -1045,7 +1045,7 @@ test('add a experimental field extension', async () => {
 
   const { errors, data } = await app.graphql(`
     query {
-      post(id:"1") {
+      post(id: { eq: "1" }) {
         title
       }
     }
@@ -1074,7 +1074,7 @@ test('apply extensions once per field', async () => {
 
   const { errors, data } = await app.graphql(`
     query {
-      post(id:"1") {
+      post(id: { eq: "1" }) {
         title
         title2
       }
@@ -1118,7 +1118,7 @@ test('use extension multiple times on field', async () => {
 
   const { errors, data } = await app.graphql(`
     query {
-      post(id:"1") {
+      post(id: { eq: "1" }) {
         title
       }
     }
@@ -1166,7 +1166,7 @@ test('output field value as JSON', async () => {
   })
 
   const { errors, data } = await app.graphql(`{
-    track(id:"1") {
+    track(id: { eq: "1" }) {
       albumsBySlug
     }
   }`)
@@ -1196,7 +1196,7 @@ test('add custom scalar types with createScalarType()', async () => {
   })
 
   const { errors, data } = await app.graphql(`{
-    album(id:"1") {
+    album(id: { eq: "1" }) {
       myField
     }
   }`)

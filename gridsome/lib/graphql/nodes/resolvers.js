@@ -1,6 +1,5 @@
 const { isRefField } = require('../../store/utils')
 const { toFilterArgs } = require('../filters/query')
-const { omit } = require('lodash')
 
 const {
   applyChainArgs,
@@ -21,12 +20,12 @@ exports.createFindOneResolver = function (typeComposer) {
     const inputTypeComposer = typeComposer.getInputTypeComposer()
     const { collection } = context.store.getCollection(typeName)
 
-    if (args.id && Object.keys(args).length === 1) {
-      return collection.by('id', args.id)
+    if (args.id && args.id.$eq && Object.keys(args).length === 1) {
+      return collection.by('id', args.id.$eq)
     }
 
     return collection.findOne(
-      toFilterArgs(omit(args, ['id']), inputTypeComposer)
+      toFilterArgs(args, inputTypeComposer)
     )
   }
 }

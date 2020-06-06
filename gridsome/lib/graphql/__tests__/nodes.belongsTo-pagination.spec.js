@@ -233,7 +233,7 @@ async function graphql (id, count, ...args) {
   await app.bootstrap(BOOTSTRAP_PAGES)
 
   return app.graphql(`{
-    tag(id: "${id}") {
+    tag(id: { eq: "${id}" }) {
       id
       belongsTo(${argsArr.join(', ')}) {
         totalCount

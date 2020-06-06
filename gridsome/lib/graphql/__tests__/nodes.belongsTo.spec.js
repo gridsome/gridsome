@@ -57,7 +57,7 @@ test('create node reference', async () => {
   })
 
   const query = `query {
-    author (id: "2") {
+    author (id: { eq: "2" }) {
       belongsTo (sortBy: "title", order: ASC) {
         totalCount
         pageInfo {
@@ -100,7 +100,7 @@ test('get references from custom schema', async () => {
   books.addNode({ id: '3', title: 'Book 3', authors: ['2'] })
 
   const query = `query {
-    author (id: "1") {
+    author (id: { eq: "1" }) {
       belongsTo (sortBy: "title", order: ASC) {
         totalCount
         pageInfo {
@@ -140,7 +140,7 @@ test('sort belongsTo by multiple fields', async () => {
   books.addNode({ id: '3', title: 'C', author: '1', featured: false })
 
   const query = `query {
-    author (id: "1") {
+    author (id: { eq: "1" }) {
       belongsTo (sort: [{ by: "featured" }, { by: "title", order: ASC }]) {
         edges {
           node {
@@ -177,7 +177,7 @@ test('handle pagination for filtered belongsTo', async () => {
   }
 
   const query = `query {
-    author (id: "1") {
+    author (id: { eq: "1" }) {
       belongsTo (perPage: 3, filter: { typeName: { eq: Book }}) {
         totalCount
         pageInfo {

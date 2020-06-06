@@ -49,7 +49,7 @@ module.exports = function createNodesSchema (schemaComposer, store) {
     const findOneResolver = typeComposer.getResolver('findOne')
     const inputTypeComposer = typeComposer.getInputTypeComposer()
     const inputFields = inputTypeComposer.getFields()
-    findOneResolver.addArgs(omit(inputFields, ['id']))
+    findOneResolver.addArgs(inputFields)
 
     const fieldName = camelCase(typeName)
     const allFieldName = camelCase(`all ${typeName}`)
@@ -224,12 +224,10 @@ function createTypeResolvers (typeComposer, collection) {
 
   const { _defaultSortBy, _defaultSortOrder } = collection
 
+  // The arguments for this resolver is added later in the process.
   typeComposer.addResolver({
     name: 'findOne',
     type: typeName,
-    args: {
-      id: 'ID'
-    },
     resolve: wrapResolver(createFindOneResolver(typeComposer))
   })
 

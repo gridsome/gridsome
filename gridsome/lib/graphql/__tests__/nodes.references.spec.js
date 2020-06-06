@@ -44,12 +44,12 @@ test('create node reference', async () => {
   })
 
   const query = `{
-    post1: testPost (id: "1") {
+    post1: testPost (id: { eq: "1" }) {
       author { id }
       customRef { id }
       customRefs { id }
     }
-    post2: testPost (id: "2") {
+    post2: testPost (id: { eq: "2" }) {
       author { id }
       customRef { id }
       customRefs { id }
@@ -84,10 +84,10 @@ test('create node reference to same typeName', async () => {
   })
 
   const query = `{
-    post1: testPost (id: "2") {
+    post1: testPost (id: { eq: "2" }) {
       rel { id }
     }
-    post2: testPost (id: "3") {
+    post2: testPost (id: { eq: "3" }) {
       rel { id }
     }
   }`
@@ -112,7 +112,7 @@ test('create references with collection.addReference()', async () => {
   posts.addNode({ id: '1', author1: '1', author2: '1', authors: ['1'] })
 
   const query = `{
-    post (id: "1") {
+    post (id: { eq: "1" }) {
       author1 { id }
       author2 { id }
       authors { id }
@@ -135,7 +135,7 @@ test('create missing reference fields from collection.addReference()', async () 
   posts.addNode({ id: '1' })
 
   const query = `{
-    post (id: "1") {
+    post (id: { eq: "1" }) {
       author { id }
     }
   }`
@@ -156,7 +156,7 @@ test('don\'t process invalid refs from collection.addReference()', async () => {
   posts.addReference('authors', 'Author')
 
   const { errors, data } = await createSchemaAndExecute(`{
-    post(id:"1") {
+    post(id: { eq: "1" }) {
       authors {
         id
       }
@@ -177,7 +177,7 @@ test('ensure reference field is a list with collection.addReference()', async ()
   posts.addReference('authors', '[Author]')
 
   const { errors, data } = await createSchemaAndExecute(`{
-    post(id:"1") {
+    post(id: { eq: "1" }) {
       authors { id }
     }
   }`)
@@ -196,7 +196,7 @@ test('set non-null reference with collection.addReference()', async () => {
   posts.addReference('author', 'Author!')
 
   const { errors } = await createSchemaAndExecute(`{
-    post(id:"1") {
+    post(id: { eq: "1" }) {
       author { id }
     }
   }`)
@@ -215,7 +215,7 @@ test('proxy invalid field names in collection.addReference()', async () => {
   posts.addNode({ id: '1', ['main-author']: '1' })
 
   const query = `{
-    post (id: "1") {
+    post (id: { eq: "1" }) {
       main_author { id }
     }
   }`
@@ -241,11 +241,11 @@ test('union reference with collection.addReference()', async () => {
   posts.addNode({ id: '5'})
 
   const { errors, data } = await createSchemaAndExecute(`{
-    author (id: "1") {
+    author (id: { eq: "1" }) {
       works { __typename }
       selected { __typename }
     }
-    book(id:"2") {
+    book(id: { eq: "2" }) {
       belongsTo {
         edges {
           node { __typename }
@@ -274,7 +274,7 @@ test('create references with collection.addReference() and camelCased fields', a
   posts.addNode({ id: '1', author_one: '1', author_two: '1' })
 
   const query = `{
-    post (id: "1") {
+    post (id: { eq: "1" }) {
       authorOne { id }
       authorTwo { id }
     }
@@ -304,7 +304,7 @@ test('union reference with store.createReference()', async () => {
   posts.addNode({ id: '3', author: api.store.createReference('Author', '1') })
 
   const { errors, data } = await createSchemaAndExecute(`{
-    author (id: "1") {
+    author (id: { eq: "1" }) {
       works {
         __typename
       }
@@ -312,7 +312,7 @@ test('union reference with store.createReference()', async () => {
         __typename
       }
     }
-    book(id:"2") {
+    book(id: { eq: "2" }) {
       belongsTo {
         edges {
           node {
@@ -368,7 +368,7 @@ test('create node list reference', async () => {
   })
 
   const query = `{
-    testPost (id: "1") {
+    testPost (id: { eq: "1" }) {
       author { id title }
       customRefs {
         authors (sortBy: "title", limit: 2, skip: 1) {
@@ -403,7 +403,7 @@ test('create node list reference with id as array', async () => {
   })
 
   const query = `{
-    testPost (id: "1") {
+    testPost (id: { eq: "1" }) {
       authors (sortBy: "title", order: ASC, limit: 2, skip: 1) {
         id
       }
@@ -437,7 +437,7 @@ test('create node reference to same type', async () => {
   posts.addNode({ id: '1', related: '2' })
   posts.addNode({ id: '2', title: 'Test' })
 
-  const query = '{ testPost (id: "1") { related { id title }}}'
+  const query = '{ testPost (id: { eq: "1" }) { related { id title }}}'
   const { errors, data } = await createSchemaAndExecute(query)
 
   expect(errors).toBeUndefined()
@@ -463,7 +463,7 @@ test('create reference with multiple node types', async () => {
   })
 
   const query = `{
-    testPost (id: "3") {
+    testPost (id: { eq: "3" }) {
       id
       people {
         ...on Node {

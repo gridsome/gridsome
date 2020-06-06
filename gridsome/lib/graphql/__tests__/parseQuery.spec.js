@@ -138,100 +138,21 @@ describe('give useful error messages', () => {
   })
 })
 
-// TODO: remove this in 0.8
+// TODO: remove this in 0.9
 describe('transform deprecated queries', () => {
   beforeEach(() => {
     clearWarnings()
   })
 
-  test('transform String to ID for collection fields', () => {
+  test('transform id input field to object', () => {
     const res = parseQuery(app.schema.getSchema(), `
-      query ($id: String!) {
-        customContentType(id: $id)
+      query {
+        customContentType(id: "1")
       }
     `)
 
-    expect(print(res.document)).toMatch('($id: ID!)')
-  })
-
-  test('transform String to ID for collection fields', () => {
-    const res = parseQuery(app.schema.getSchema(), `
-      query ($id: String) {
-        customContentType(id: $id)
-      }
-    `)
-
-    expect(print(res.document)).toMatch('($id: ID)')
-  })
-
-  test('transform String to ID for collection fields', () => {
-    const res = parseQuery(app.schema.getSchema(), `
-      query ($id: Int) {
-        customContentType(id: $id)
-      }
-    `)
-
-    expect(print(res.document)).toMatch('($id: ID)')
-  })
-
-  test('don\'t transform incorrect variables for other types', () => {
-    const res = parseQuery(app.schema.getSchema(), `
-      query ($id: Int) {
-        customField(id: $id)
-      }
-    `)
-
-    expect(print(res.document)).toMatch('($id: Int)')
-  })
-
-  test('don\'t transform incorrect variables for other types', () => {
-    const res = parseQuery(app.schema.getSchema(), `
-      query ($id: Int!) {
-        customField(id: $id)
-      }
-    `)
-
-    expect(print(res.document)).toMatch('($id: Int!)')
-  })
-
-  test('don\'t transform incorrect variables for other types', () => {
-    const res = parseQuery(app.schema.getSchema(), `
-      query ($id: [Int]) {
-        customField(id: $id)
-      }
-    `)
-
-    expect(print(res.document)).toMatch('($id: [Int])')
-  })
-
-  test('don\'t transform incorrect variables for other types', () => {
-    const res = parseQuery(app.schema.getSchema(), `
-      query ($id: [Int]!) {
-        customField(id: $id)
-      }
-    `)
-
-    expect(print(res.document)).toMatch('($id: [Int]!)')
-  })
-
-  test('don\'t transform incorrect variables for other types', () => {
-    const res = parseQuery(app.schema.getSchema(), `
-      query ($id: [Int!]) {
-        customField(id: $id)
-      }
-    `)
-
-    expect(print(res.document)).toMatch('($id: [Int!])')
-  })
-
-  test('don\'t transform incorrect variables for other types', () => {
-    const res = parseQuery(app.schema.getSchema(), `
-      query ($id: [Int!]!) {
-        customField(id: $id)
-      }
-    `)
-
-    expect(print(res.document)).toMatch('($id: [Int!]!)')
+    expect(warnings.size).toEqual(1)
+    expect(print(res.document)).toMatch('id: {eq: "1"}')
   })
 
   test('transform path input field to object', () => {

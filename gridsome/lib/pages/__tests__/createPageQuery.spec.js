@@ -128,7 +128,7 @@ test('parse @paginate with perPage default inline value', () => {
 
 test('parse @paginate directive from belongsTo field with id', () => {
   const parsed = parseQuery(app.schema.getSchema(), `query {
-    testPost(id: "1") {
+    testPost(id: { eq: "1" }) {
       belongsTo(perPage: 5) @paginate {
         edges {
           node {
@@ -143,7 +143,7 @@ test('parse @paginate directive from belongsTo field with id', () => {
 
   expect(query.paginate.typeName).toEqual('TestPost')
   expect(query.paginate.fieldName).toEqual('testPost')
-  expect(query.paginate.belongsToArgs.id).toEqual('1')
+  expect(query.paginate.belongsToArgs.id.eq).toEqual('1')
   expect(query.paginate.args.perPage).toEqual(5)
 })
 
@@ -170,7 +170,7 @@ test('parse @paginate directive from belongsTo field with path and alias', () =>
 
 test('parse @paginate directive from belongsTo field with variable', () => {
   const parsed = parseQuery(app.schema.getSchema(), `query ($post: String!, $limit: Int!) {
-    testPost(id: $post) {
+    testPost(id: { eq: $post }) {
       belongsTo(perPage: $limit) @paginate {
         edges {
           node {
@@ -188,7 +188,7 @@ test('parse @paginate directive from belongsTo field with variable', () => {
 
   expect(query.paginate.typeName).toEqual('TestPost')
   expect(query.paginate.fieldName).toEqual('testPost')
-  expect(query.paginate.belongsToArgs).toMatchObject({ id: '2' })
+  expect(query.paginate.belongsToArgs).toMatchObject({ id: { eq: '2' } })
   expect(query.paginate.args.perPage).toEqual(10)
 })
 

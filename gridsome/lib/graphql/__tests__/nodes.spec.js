@@ -71,7 +71,7 @@ test('create node type with custom fields', async () => {
   })
 
   const query = `{
-    testPost (id: "2") {
+    testPost (id: { eq: "2" }) {
       foo
       list
       price
@@ -132,7 +132,7 @@ test('get node by custom fields', async () => {
   })
 
   const { errors, data } = await createSchemaAndExecute(`{
-    testPost (id: "1") { id }
+    testPost (id: { eq: "1" }) { id }
     testPost2: testPost (slug: { eq: "test" }) { id }
     testPost3: testPost (foo: { bar: { eq: true } }) { id }
     testPost4: testPost (list: { contains: ["2"] }) { id }
@@ -163,8 +163,8 @@ test('get node by id', async () => {
   collection.addNode({ id: 21, title: 'Test' })
 
   const { errors, data } = await createSchemaAndExecute(`{
-    testPost (id: "20") { id title }
-    testPost2: testPost (id: "21") { id title }
+    testPost (id: { eq: "20" }) { id title }
+    testPost2: testPost (id: { eq: "21" }) { id title }
   }`)
 
   expect(errors).toBeUndefined()
@@ -302,7 +302,7 @@ test('should get values from object fields', async () => {
   })
 
   const { errors, data } = await createSchemaAndExecute(`{
-    testPost (id: "1") {
+    testPost (id: { eq: "1" }) {
       myObject {
         value
         otherObject {
@@ -337,7 +337,7 @@ test('should convert keys to valid field names', async () => {
   const node = collection.addNode(nodeOptions)
 
   const { errors, data } = await createSchemaAndExecute(`{
-    testPost (id: "1") {
+    testPost (id: { eq: "1" }) {
       my_object {
         _valid_name
         _validName
@@ -388,7 +388,7 @@ test('should format dates from schema', async () => {
   })
 
   const { errors, data } = await createSchemaAndExecute(`{
-    post1: testPostDate (id: "1") {
+    post1: testPostDate (id: { eq: "1" }) {
       date
       customDate
       date2: date(format: "YYYY-MM-DD")
@@ -397,11 +397,11 @@ test('should format dates from schema', async () => {
         date(format: "DD/MM/YYYY")
       }
     }
-    post2: testPostDate (id: "2") {
+    post2: testPostDate (id: { eq: "2" }) {
       date
       dateType(format: "DD/MM/YYYY")
     }
-    post3: testPostDate (id: "2") {
+    post3: testPostDate (id: { eq: "2" }) {
       date(format: "DD/MM/YYYY")
     }
   }`)
@@ -448,7 +448,7 @@ test('collection.addSchemaField', async () => {
     }
   })
 
-  const query = '{ testPost (id: "1") { myField }}'
+  const query = '{ testPost (id: { eq: "1" }) { myField }}'
   const { errors, data } = await createSchemaAndExecute(query)
 
   expect(errors).toBeUndefined()
@@ -466,7 +466,7 @@ test('transformer extends node type', async () => {
     }
   })
 
-  const query = '{ testPost (id: "1") { myField }}'
+  const query = '{ testPost (id: { eq: "1" }) { myField }}'
   const { errors, data } = await createSchemaAndExecute(query)
 
   expect(errors).toBeUndefined()
@@ -489,7 +489,7 @@ test('transformer should resolve absolute paths', async () => {
   })
 
   const { errors, data } = await createSchemaAndExecute(`{
-    testPost (id: "1") {
+    testPost (id: { eq: "1" }) {
       fileField
     }
   }`)
@@ -539,7 +539,7 @@ test('process image types in schema', async () => {
   })
 
   const { errors, data } = await createSchemaAndExecute(`{
-    testPost (id: "1") {
+    testPost (id: { eq: "1" }) {
       image
       image2
       image3 (width: 300, quality: 100, blur: 0)
@@ -547,7 +547,7 @@ test('process image types in schema', async () => {
       image5
       images (width: 300, quality: 100, blur: 0)
     }
-    testPost2: testPost (id: "2") {
+    testPost2: testPost (id: { eq: "2" }) {
       image
       image2
       image3 (width: 300, quality: 100, blur: 0)
@@ -597,7 +597,7 @@ test('set background color for contain', async () => {
   })
 
   const { errors, data } = await createSchemaAndExecute(`{
-    post (id: "1") {
+    post (id: { eq: "1" }) {
       image (width: 260, height: 70, fit:contain, background:"blue")
     }
   }`)
@@ -627,7 +627,7 @@ test('process file types in schema', async () => {
   })
 
   const { errors, data } = await createSchemaAndExecute(`{
-    testPost (id: "1") {
+    testPost (id: { eq: "1" }) {
       file
       file2
       file3
