@@ -8,7 +8,9 @@ const MAX_STATE_SIZE = 25000
 module.exports = function createRenderFn ({
   htmlTemplate,
   clientManifestPath,
-  serverBundlePath
+  serverBundlePath,
+  shouldPrefetch,
+  shouldPreload
 }) {
   const renderHTML = createHTMLRenderer(htmlTemplate)
   const clientManifest = require(clientManifestPath)
@@ -16,7 +18,9 @@ module.exports = function createRenderFn ({
 
   const renderer = createBundleRenderer(serverBundle, {
     clientManifest,
-    runInNewContext: false
+    runInNewContext: false,
+    shouldPrefetch,
+    shouldPreload
   })
 
   return async function render(page, state, stateSize, hash) {
@@ -40,17 +44,29 @@ module.exports = function createRenderFn ({
     const htmlAttrs = inject.htmlAttrs.text()
     const bodyAttrs = inject.bodyAttrs.text()
 
-    const head = '' +
-      inject.title.text() +
-      inject.base.text() +
-      `<meta name="gridsome:hash" content="${hash}">` +
-      inject.meta.text() +
-      inject.link.text() +
-      inject.style.text() +
-      inject.script.text() +
-      inject.noscript.text() +
-      context.renderResourceHints() +
-      context.renderStyles()
+    const pageTitle = inject.title.text()
+    const metaBase = inject.base.text()
+    const gridsomeHash = `<meta name="gridsome:hash" content="${hash}">`
+    const vueMetaTags = inject.meta.text()
+    const vueMetaLinks = inject.link.text()
+    const styles = context.renderStyles()
+    const noscript = inject.noscript.text()
+    const vueMetaStyles = inject.style.text()
+    const vueMetaScripts = inject.script.text()
+    const resourceHints = context.renderResourceHints()
+
+    const head =
+      '' +
+      pageTitle +
+      metaBase +
+      gridsomeHash +
+      vueMetaTags +
+      vueMetaLinks +
+      resourceHints +
+      styles +
+      vueMetaStyles +
+      vueMetaScripts +
+      noscript
 
     const renderedState = state && stateSize <= MAX_STATE_SIZE
       ? context.renderState()
@@ -61,13 +77,23 @@ module.exports = function createRenderFn ({
       context.renderScripts() +
       inject.script.text({ body: true })
 
-    return renderHTML({
-      htmlAttrs: `data-html-server-rendered="true" ${htmlAttrs}`,
-      bodyAttrs,
-      scripts,
-      head,
-      app
-    })
+      return renderHTML({
+        htmlAttrs: `data-html-server-rendered="true" ${htmlAttrs}`,
+        bodyAttrs,
+        head,
+        title: pageTitle,
+        base: metaBase,
+        hash: gridsomeHash,
+        vueMetaTags,
+        vueMetaLinks,
+        resourceHints,
+        styles,
+        vueMetaStyles,
+        vueMetaScripts,
+        noscript,
+        app,
+        scripts
+      })
   }
 }
 

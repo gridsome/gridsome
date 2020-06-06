@@ -152,9 +152,83 @@ test('filter dates by gt', async () => {
   expect(data.allProduct.edges[1].node.id).toEqual('3')
 })
 
-test('deprecated: filter by reference id', async () => {
+test('filter by exists: true', async () => {
   const { errors, data } = await createSchemaAndExecute(`{
-    allProduct (filter: { related: { eq: "2" } }) {
+    allProduct (filter: { optional: { exists: true } }) {
+      edges {
+        node { id }
+      }
+    }
+  }`)
+
+  expect(errors).toBeUndefined()
+  expect(data.allProduct.edges).toHaveLength(2)
+  expect(data.allProduct.edges[0].node.id).toEqual('4')
+  expect(data.allProduct.edges[1].node.id).toEqual('2')
+})
+
+test('filter by exists: false', async () => {
+  const { errors, data } = await createSchemaAndExecute(`{
+    allProduct (filter: { optional: { exists: false } }) {
+      edges {
+        node { id }
+      }
+    }
+  }`)
+
+  expect(errors).toBeUndefined()
+  expect(data.allProduct.edges).toHaveLength(2)
+  expect(data.allProduct.edges[0].node.id).toEqual('3')
+  expect(data.allProduct.edges[1].node.id).toEqual('1')
+})
+
+describe('deprecated: filter by reference id', () => {
+  test('filter by reference id', async () => {
+    const { errors, data } = await createSchemaAndExecute(`{
+      allProduct (filter: { related: { eq: "2" } }) {
+        edges {
+          node { id }
+        }
+      }
+    }`)
+
+    expect(errors).toBeUndefined()
+    expect(data.allProduct.edges).toHaveLength(1)
+    expect(data.allProduct.edges[0].node.id).toEqual('3')
+  })
+
+  test('filter by reference created by addReference()', async () => {
+    const { errors, data } = await createSchemaAndExecute(`{
+      allProduct (filter: { item: { eq: "6" } }) {
+        edges {
+          node { id }
+        }
+      }
+    }`)
+
+    expect(errors).toBeUndefined()
+    expect(data.allProduct.edges).toHaveLength(1)
+    expect(data.allProduct.edges[0].node.id).toEqual('1')
+  })
+
+  test('filter by reference created by addReference()', async () => {
+    const { errors, data } = await createSchemaAndExecute(`{
+      allProduct (filter: { items: { contains: ["5"] } }) {
+        edges {
+          node { id }
+        }
+      }
+    }`)
+
+    expect(errors).toBeUndefined()
+    expect(data.allProduct.edges).toHaveLength(1)
+    expect(data.allProduct.edges[0].node.id).toEqual('1')
+  })
+})
+
+test('filter by reference created by addReference()', async () => {
+  const { errors, data } = await createSchemaAndExecute(`{
+    allProduct (filter: { item: { id: { eq: "6" } } }) {
       edges {
         node { id }
       }
@@ -163,7 +237,21 @@ test('deprecated: filter by reference id', async () => {
 
   expect(errors).toBeUndefined()
   expect(data.allProduct.edges).toHaveLength(1)
-  expect(data.allProduct.edges[0].node.id).toEqual('3')
+  expect(data.allProduct.edges[0].node.id).toEqual('1')
+})
+
+test('filter by reference created by addReference()', async () => {
+  const { errors, data } = await createSchemaAndExecute(`{
+    allProduct (filter: { items: { id: { in: ["5"] } } }) {
+      edges {
+        node { id }
+      }
+    }
+  }`)
+
+  expect(errors).toBeUndefined()
+  expect(data.allProduct.edges).toHaveLength(1)
+  expect(data.allProduct.edges[0].node.id).toEqual('1')
 })
 
 test('filter by multiple reference ids', async () => {
@@ -548,11 +636,18 @@ test('setup inferred filter input types', async () => {
 
   expect(Object.keys(inputType.fields).sort()).toEqual([
     'alternativeIds', 'alternatives', 'date', 'deep', 'discount',
-    'featured', 'id', 'price', 'related', 'relatedId', 'tags', 'title'
+    'featured', 'id', 'item', 'items', 'optional', 'price', 'related', 'relatedId',
+    'tags', 'title'
   ])
 
   expect(inputType.fields.id.type).toEqual(schema.getType('IDQueryOperatorInput'))
   expect(inputType.fields.id.extensions.isInferred).toBeUndefined()
+  expect(inputType.fields.optional.type).toEqual(schema.getType('StringQueryOperatorInput'))
+  expect(inputType.fields.optional.extensions.isInferred).toBe(true)
+  expect(inputType.fields.item.type).toEqual(schema.getType('ProductQueryOperatorInput'))
+  expect(inputType.fields.item.extensions.isInferred).toBeUndefined()
+  expect(inputType.fields.items.type).toEqual(schema.getType('ProductListQueryOperatorInput'))
+  expect(inputType.fields.items.extensions.isInferred).toBeUndefined()
   expect(inputType.fields.date.type).toEqual(schema.getType('DateQueryOperatorInput'))
   expect(inputType.fields.date.extensions.isInferred).toBe(true)
   expect(inputType.fields.title.type).toEqual(schema.getType('StringQueryOperatorInput'))
@@ -600,7 +695,7 @@ test('setup filter input types from SDL', async () => {
 
   const inputType = schema.getType('ProductFilterInput').toConfig()
 
-  expect(Object.keys(inputType.fields).sort()).toEqual(['id', 'related', 'title'])
+  expect(Object.keys(inputType.fields).sort()).toEqual(['id', 'item', 'items', 'related', 'title'])
   expect(inputType.fields.id.type).toEqual(schema.getType('IDQueryOperatorInput'))
   expect(inputType.fields.id.extensions.isInferred).toBeUndefined()
   expect(inputType.fields.title.type).toEqual(schema.getType('StringQueryOperatorInput'))
@@ -622,7 +717,7 @@ test('setup filter input types with @reference directive', async () => {
 
   const inputType = schema.getType('ProductFilterInput').toConfig()
 
-  expect(Object.keys(inputType.fields).sort()).toEqual(['alternatives', 'id'])
+  expect(Object.keys(inputType.fields).sort()).toEqual(['alternatives', 'id', 'item', 'items'])
   expect(inputType.fields.alternatives.type).toEqual(schema.getType('ProductListQueryOperatorInput'))
   expect(inputType.fields.alternatives.extensions.isInferred).toBeUndefined()
 })
@@ -641,7 +736,7 @@ test('setup custom filter input type @reference by', async () => {
   const inputType = schema.getType('ProductFilterInput').toConfig()
   const { related: { type, extensions } } = inputType.fields
 
-  expect(Object.keys(inputType.fields).sort()).toEqual(['id', 'related'])
+  expect(Object.keys(inputType.fields).sort()).toEqual(['id', 'item', 'items', 'related'])
   expect(type).toEqual(schema.getType('ProductQueryOperatorInput'))
   expect(extensions.directives[0]).toMatchObject({ name: 'reference', args: { by: 'test' } })
   expect(extensions.isInferred).toBeUndefined()
@@ -661,7 +756,7 @@ test('setup custom filter input type with @proxy', async () => {
   const inputType = schema.getType('ProductFilterInput').toConfig()
   const { testRelated: { type, extensions } } = inputType.fields
 
-  expect(Object.keys(inputType.fields).sort()).toEqual(['id', 'testRelated'])
+  expect(Object.keys(inputType.fields).sort()).toEqual(['id', 'item', 'items', 'testRelated'])
   expect(type).toEqual(schema.getType('ProductQueryOperatorInput'))
   expect(extensions.directives[0]).toMatchObject({ name: 'proxy', args: { from: 'related' } })
   expect(extensions.isInferred).toBeUndefined()
@@ -728,7 +823,7 @@ test('setup custom filter input types for custom object types', async () => {
   const inputType = schema.getType('ProductFilterInput').toConfig()
   const deepType = schema.getType('ProductInfoFilterInput').toConfig()
 
-  expect(Object.keys(inputType.fields).sort()).toEqual(['deep', 'id'])
+  expect(Object.keys(inputType.fields).sort()).toEqual(['deep', 'id', 'item', 'items'])
   expect(Object.keys(deepType.fields).sort()).toEqual(['related'])
   expect(inputType.fields.deep.type).toEqual(schema.getType('ProductInfoFilterInput'))
   expect(deepType.fields.related.type).toEqual(schema.getType('ProductQueryOperatorInput'))
@@ -739,11 +834,16 @@ function createCollections (api) {
     const products = addCollection('Product')
     const items = addCollection('Item')
 
+    products.addReference('items', '[Product]')
+    products.addReference('item', 'Product')
+
     products.addNode({
       id: '1',
       date: '2017-10-08',
       title: 'Cursus Ridiculus Dolor Justo',
       price: 99,
+      items: ['5', '7'],
+      item: '6',
       featured: false,
       tags: ['one', 'two', 'four'],
       alternatives: [
@@ -757,6 +857,7 @@ function createCollections (api) {
       id: '2',
       date: '2018-03-28',
       title: 'Dojor Inceptos Venenatis Nibh',
+      optional: 'test',
       price: 199,
       discount: 0.5,
       featured: false,
@@ -802,6 +903,7 @@ function createCollections (api) {
       id: '4',
       date: '2018-12-20',
       title: 'Vestibulum Aenean Bibendum Euismod',
+      optional: null,
       price: 119,
       featured: false,
       tags: ['one', 'two'],
@@ -815,6 +917,8 @@ function createCollections (api) {
     })
 
     items.addNode({ id: '5', title: 'Item 1' })
+    items.addNode({ id: '6', title: 'Item 2' })
+    items.addNode({ id: '7', title: 'Item 3' })
   })
 }
 

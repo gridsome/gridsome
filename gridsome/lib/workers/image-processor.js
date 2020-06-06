@@ -11,33 +11,42 @@ const sysinfo = require('../utils/sysinfo')
 const { warmupSharp } = require('../utils/sharp')
 
 exports.processImage = async function ({
-  size,
+  width,
+  height,
   filePath,
   destPath,
   cachePath,
-  options = {},
-  backgroundColor = null
+  imagesConfig,
+  options = {}
 }) {
   if (cachePath && await fs.exists(cachePath)) {
     return fs.copy(cachePath, destPath)
   }
 
   const { ext } = path.parse(filePath)
+  const { backgroundColor } = imagesConfig
+
   let buffer = await fs.readFile(filePath)
 
   if (['.png', '.jpeg', '.jpg', '.webp'].includes(ext)) {
     const config = {
       pngCompressionLevel: parseInt(options.pngCompressionLevel, 10) || 9,
       quality: parseInt(options.quality, 10) || 75,
-      width: parseInt(options.width, 10),
-      height: parseInt(options.height, 10),
+      width: parseInt(options.width, 10) || null,
+      height: parseInt(options.height, 10) || null,
       jpegProgressive: true
     }
 
     const plugins = []
-    let pipeline = sharp(buffer)
+    const sharpImage = sharp(buffer)
 
-    if (config.width && config.width <= size.width || config.height && config.height <= size.height) {
+    // Rotate based on EXIF Orientation tag
+    sharpImage.rotate()
+
+    if (
+      (config.width && config.width <= width) ||
+      (config.height && config.height <= height)
+    ) {
       const resizeOptions = {}
 
       if (config.height) resizeOptions.height = config.height
@@ -50,23 +59,22 @@ exports.processImage = async function ({
         resizeOptions.background = backgroundColor
       }
 
-      pipeline = pipeline.resize(resizeOptions)
+      sharpImage.resize(resizeOptions)
     }
 
     if (/\.png$/.test(ext)) {
-      const quality = config.quality / 100
-
-      pipeline = pipeline.png({
+      sharpImage.png({
         compressionLevel: config.pngCompressionLevel,
         adaptiveFiltering: false
       })
+      const quality = config.quality / 100
       plugins.push(imageminPngquant({
         quality: [quality, quality]
       }))
     }
 
     if (/\.jpe?g$/.test(ext)) {
-      pipeline = pipeline.jpeg({
+      sharpImage.jpeg({
         progressive: config.jpegProgressive,
         quality: config.quality
       })
@@ -77,7 +85,7 @@ exports.processImage = async function ({
     }
 
     if (/\.webp$/.test(ext)) {
-      pipeline = pipeline.webp({
+      sharpImage.webp({
         quality: config.quality
       })
       plugins.push(imageminWebp({
@@ -85,14 +93,19 @@ exports.processImage = async function ({
       }))
     }
 
-    buffer = await pipeline.toBuffer()
+    buffer = await sharpImage.toBuffer()
     buffer = await imagemin.buffer(buffer, { plugins })
   }
 
   await fs.outputFile(destPath, buffer)
 }
 
-exports.process = async function ({ queue, context, cacheDir, backgroundColor }) {
+exports.process = async function ({
+  queue,
+  context,
+  cacheDir,
+  imagesConfig
+}) {
   await warmupSharp(sharp)
   await pMap(queue, async set => {
     const cachePath = cacheDir ? path.join(cacheDir, set.filename) : null
@@ -100,7 +113,7 @@ exports.process = async function ({ queue, context, cacheDir, backgroundColor })
     try {
       await exports.processImage({
         destPath: set.destPath,
-        backgroundColor,
+        imagesConfig,
         cachePath,
         ...set
       })

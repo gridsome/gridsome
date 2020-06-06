@@ -14,7 +14,8 @@ class NodeIndex {
     this.index = new Collection('NodeIndex', {
       indices: ['typeName', 'id'],
       unique: ['uid'],
-      disableMeta: true
+      disableMeta: true,
+      adaptiveBinaryIndices: false
     })
   }
 

@@ -29,6 +29,8 @@ class WordPressSource {
       throw new Error(`${options.typeName}: perPage cannot be more than 100 or less than 1.`)
     }
 
+    this.customEndpoints = this.sanitizeCustomEndpoints()
+
     const baseUrl = trimEnd(options.baseUrl, '/')
 
     this.client = axios.create({
@@ -46,6 +48,7 @@ class WordPressSource {
       await this.getUsers(actions)
       await this.getTaxonomies(actions)
       await this.getPosts(actions)
+      await this.getCustomEndpoints(actions)
     })
   }
 
@@ -157,6 +160,26 @@ class WordPressSource {
     }
   }
 
+  async getCustomEndpoints (actions) {
+    for (const endpoint of this.customEndpoints) {
+      const makeCollection = actions.addCollection || actions.addContentType
+      const cepCollection = makeCollection({
+        typeName: endpoint.typeName
+      })
+      const { data } = await this.fetch(endpoint.route, {}, {})
+      for (let item of data) {
+        if (endpoint.normalize) {
+          item = this.normalizeFields(item)
+        }
+
+        cepCollection.addNode({
+          ...item,
+          id: item.id || item.slug
+        })
+      }
+    }
+  }
+
   async fetch (url, params = {}, fallbackData = []) {
     let res
 
@@ -167,14 +190,11 @@ class WordPressSource {
         throw new Error(`${code} - ${config.url}`)
       }
 
-      const { url } = response.config
-      const { status } = response.data.data
-
-      if ([401, 403].includes(status)) {
-        console.warn(`Error: Status ${status} - ${url}`)
+      if ([401, 403].includes(response.status)) {
+        console.warn(`Error: Status ${response.status} - ${config.url}`)
         return { ...response, data: fallbackData }
       } else {
-        throw new Error(`${status} - ${url}`)
+        throw new Error(`${response.status} - ${config.url}`)
       }
     }
 
@@ -223,6 +243,20 @@ class WordPressSource {
 
       resolve(res.data)
     })
+  }
+
+  sanitizeCustomEndpoints () {
+    if (!this.options.customEndpoints) return []
+    if (!Array.isArray(this.options.customEndpoints)) throw Error('customEndpoints must be an array')
+    this.options.customEndpoints.forEach(endpoint => {
+      if (!endpoint.typeName) {
+        throw Error('Please provide a typeName option for all customEndpoints\n')
+      }
+      if (!endpoint.route) {
+        throw Error(`No route option in endpoint: ${endpoint.typeName}\n Ex: 'apiName/versionNumber/endpointObject'`)
+      }
+    })
+    return this.options.customEndpoints ? this.options.customEndpoints : []
   }
 
   normalizeFields (fields) {

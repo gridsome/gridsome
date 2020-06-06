@@ -3,9 +3,9 @@
 exports[`add v-pre to fenced code blocks 1`] = `
 "<template>
 <VueRemarkRoot>
-<pre><code class=\\"language-html\\" v-pre>&#x3C;div>
+<pre><code class=\\"language-html\\" v-pre>&lt;div id=\\"test\\">
 # title
-&#x3C;/div>
+&lt;/div>
 </code></pre>
 </VueRemarkRoot>
 </template>"
@@ -22,6 +22,17 @@ exports[`don't touch normal HTML tags multiple sections 1`] = `
 <p><img src=\\"...\\"/> Lorem ipsum
 <sup>1</sup> Lorem ipsum</p>
 <p>Lorem <sup>1</sup> ipsum</p>
+</VueRemarkRoot>
+</template>"
+`;
+
+exports[`don't wrap end tag in paragraph 1`] = `
+"<template>
+<VueRemarkRoot>
+<GridCol col=\\"span-4\\">
+Some text...
+
+</GridCol>
 </VueRemarkRoot>
 </template>"
 `;

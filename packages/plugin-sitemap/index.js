@@ -1,14 +1,16 @@
+const path = require('path')
+const fs = require('fs-extra')
+const micromatch = require('micromatch')
+
+const normalize = p => p.replace(/\/+$/, '') || '/'
+
 module.exports = function (api, options) {
-  const path = require('path')
-  const fs = require('fs-extra')
-  const micromatch = require('micromatch')
+  const include = options.include.map(normalize)
+  const exclude = options.exclude.map(normalize)
 
-  const normalize = p => p.replace(/\/+$/, '') || '/'
-  const exclude = options.exclude.slice().map(p => normalize(p))
+  exclude.push('/404') // allways exclude /404 page
 
-  exclude.push('/404') // always exclude 404 page
-
-  api.afterBuild(({ queue, config }) => {
+  api.afterBuild(async ({ queue, config }) => {
     if (!config.siteUrl) {
       throw new Error(`Sitemap plugin is missing a required siteUrl config.`)
     }
@@ -21,9 +23,16 @@ module.exports = function (api, options) {
     const filename = path.join(config.outputDir, options.output)
     const pathPrefix = config.pathPrefix !== '/' ? config.pathPrefix : ''
     const staticUrls = options.staticUrls || []
-    const pages = queue
-      .filter(page => page.type ? page.type === 'static' : true)
-      .filter(page => micromatch(page.path, exclude).length < 1)
+
+    let pages = queue.filter(page => page.type ? page.type === 'static' : true)
+
+    if (include.length) {
+      pages = pages.filter(page => micromatch(page.path, include).length > 0)
+    }
+
+    if (exclude.length) {
+      pages = pages.filter(page => micromatch(page.path, exclude).length < 1)
+    }
 
     console.log(`Generate ${options.output} (${pages.length + staticUrls.length} pages)`)
 
@@ -47,7 +56,7 @@ module.exports = function (api, options) {
       urls: [...generatedUrls, ...staticUrls]
     })
 
-    return fs.outputFile(filename, sitemap.toString())
+    await fs.outputFile(filename, sitemap.toString())
   })
 }
 
@@ -55,6 +64,7 @@ module.exports.defaultOptions = () => ({
   output: '/sitemap.xml',
   cacheTime: 600000,
   staticUrls: [],
+  include: [],
   exclude: [],
   config: {}
 })

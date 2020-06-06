@@ -69,8 +69,11 @@ exports.resolvePath = function (origin, toPath, options = {}) {
   }
 
   if (typeof contextPath === 'string') {
-    const { rootPath, basePath } = parsePath(contextPath)
-    return rootPath + resolver.join(basePath, toPath)
+    if (isUrl(contextPath)) {
+      const { rootPath, basePath } = parsePath(contextPath)
+      return rootPath + resolver.join(basePath, toPath)
+    }
+    return resolver.join(contextPath, toPath)
   }
 
   return toPath

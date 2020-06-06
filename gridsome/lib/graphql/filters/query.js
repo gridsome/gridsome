@@ -31,7 +31,7 @@ function toFilterArgs (filter, typeComposer, currentKey = '') {
     const extensions = typeComposer.getFieldExtensions(key)
 
     // TODO: remove this workaround
-    if (extensions.isDeprecatedNodeReference) {
+    if (extensions.isInferredReference) {
       currentKey += '.id'
     }
 

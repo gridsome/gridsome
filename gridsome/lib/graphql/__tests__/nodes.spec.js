@@ -106,8 +106,8 @@ test('get node by path', async () => {
 
   const { errors, data } = await createSchemaAndExecute(`{
     testPost (path: { eq: "/test" }) { id }
-    testPost2: testPost (path: { eq: "/test/2" }) { id }
-    testPost3: testPost (path: { eq: "/test/" }) { id }
+    testPost2: testPost (path: { eq: "/test/2/" }) { id }
+    testPost3: testPost (path: { eq: "/test" }) { id }
     testPost4: testPost (path: { eq: "/" }) { id }
   }`)
 
@@ -117,7 +117,6 @@ test('get node by path', async () => {
   expect(data.testPost3.id).toEqual('1')
   expect(data.testPost4.id).toEqual('3')
 })
-
 
 test('get node by custom fields', async () => {
   const posts = api.store.addCollection('TestPost')

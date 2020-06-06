@@ -22,15 +22,16 @@ async function executeQueries (renderQueue, { context, pages, schema, graphql },
     }
   }
 
-  const results = await pMap(renderQueue, async entry => {
+  const files = await pMap(renderQueue, async entry => {
     const route = pages.getRoute(entry.routeId)
     const page = pages.getPage(entry.pageId)
 
     invariant(route, `Could not find a route for: ${entry.path}`)
     invariant(page, `Could not find a page for: ${entry.path}`)
 
-    const results = { data: null, context: page.context }
     const document = route.internal.query.document
+    const context = pages._createPageContext(page, entry.queryVariables)
+    const result = { hash, data: null, context }
 
     if (document) {
       if (!validated.has(route.component)) {
@@ -49,22 +50,24 @@ async function executeQueries (renderQueue, { context, pages, schema, graphql },
         throwError(errors[0], route.component)
       }
 
-      results.data = data
+      result.data = data
     }
 
-    return { dataOutput: entry.dataOutput, data: results }
+    return {
+      path: entry.dataOutput,
+      content: JSON.stringify(result)
+    }
   }, { concurrency: sysinfo.cpus.physical })
 
   info(`Execute GraphQL (${renderQueue.length} queries) - ${timer(hirestime.S)}s`)
 
   const timer2 = hirestime()
 
-  await Promise.all(results.map(result => {
-    const content = JSON.stringify({ hash, ...result.data })
-    return fs.outputFile(result.dataOutput, content)
-  }))
+  await pMap(files, ({ path, content }) => fs.outputFile(path, content), {
+    concurrency: sysinfo.cpus.physical
+  })
 
-  info(`Write out page data (${results.length} files) - ${timer2(hirestime.S)}s`)
+  info(`Write out page data (${files.length} files) - ${timer2(hirestime.S)}s`)
 }
 
 module.exports = executeQueries

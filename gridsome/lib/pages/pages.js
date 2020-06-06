@@ -27,7 +27,8 @@ class Pages {
     this.hooks = {
       parseComponent: new HookMap(() => new SyncBailHook(['source', 'resource'])),
       createRoute: new SyncWaterfallHook(['options']),
-      createPage: new SyncWaterfallHook(['options'])
+      createPage: new SyncWaterfallHook(['options']),
+      pageContext: new SyncWaterfallHook(['context', 'data'])
     }
 
     this._componentCache = new LRU({ max: 100 })
@@ -202,6 +203,7 @@ class Pages {
 
   removePage (id) {
     const page = this.getPage(id)
+    if (!page) return
     const route = this.getRoute(page.internal.route)
 
     if (route.internal.isDynamic) {
@@ -229,6 +231,22 @@ class Pages {
       .forEach(options => {
         this.removeRoute(options.id)
       })
+  }
+
+  findAndRemovePages (query) {
+    this._pages.find(query).forEach(page => {
+      this.removePage(page.id)
+    })
+  }
+
+  findPages (query) {
+    const matchingPages = this._pages.find(query)
+    return matchingPages
+  }
+
+  findPage (query) {
+    const [ matchingPage ] = this._pages.find(query)
+    return matchingPage
   }
 
   getRoute (id) {
@@ -348,6 +366,14 @@ class Pages {
 
   _createPageQuery (parsedQuery, vars = {}) {
     return createPageQuery(parsedQuery, vars)
+  }
+
+  _createPageContext (page, queryVariables = {}) {
+    const route = this.getRoute(page.internal.route)
+    return this.hooks.pageContext.call({ ...page.context }, {
+      pageQuery: route.internal.query.source,
+      queryVariables
+    })
   }
 
   _resolvePriority (path) {
@@ -494,10 +520,12 @@ class Route {
         publicPath = trimEnd(path, '/') + '/'
       }
 
-      invariant(
-        regexp.test(path),
-        `The path ${path} does not match ${regexp}`
-      )
+      if (this.internal.path !== path) {
+        invariant(
+          regexp.test(path),
+          `The path ${path} does not match ${regexp}`
+        )
+      }
     }
 
     if (this.type === TYPE_DYNAMIC) {

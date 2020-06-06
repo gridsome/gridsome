@@ -17,7 +17,7 @@ async function genIcons ({ config, context, assets }) {
 
   if (await fs.exists(touchiconPath)) {
     const touchicons = await assets.add(touchiconPath, {
-      sizes: touchicon.sizes,
+      imageWidths: touchicon.sizes,
       srcset: false
     })
 
@@ -28,7 +28,7 @@ async function genIcons ({ config, context, assets }) {
 
   if (await fs.exists(faviconPath)) {
     const favicons = await assets.add(faviconPath, {
-      sizes: favicon.sizes,
+      imageWidths: favicon.sizes,
       srcset: false
     })
 

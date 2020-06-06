@@ -1,7 +1,7 @@
 const { valueFromASTUntyped } = require('graphql')
 const { PER_PAGE } = require('../utils/constants')
 const { isRefField } = require('../store/utils')
-const { get } = require('lodash')
+const { get, isUndefined } = require('lodash')
 
 module.exports = function createPageQuery (parsed, context = {}) {
   const res = {
@@ -47,6 +47,10 @@ module.exports = function createPageQuery (parsed, context = {}) {
 function variablesFromContext (context, queryVariables = []) {
   return queryVariables.reduce((acc, { path, name, defaultValue }) => {
     let value = get(context, path, defaultValue)
+
+    if (isUndefined(value)) {
+      return acc
+    }
 
     if (value && isRefField(value)) {
       value = value.id

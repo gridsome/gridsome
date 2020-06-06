@@ -1,8 +1,14 @@
 import fetch from '../fetch'
+import config from '~/.temp/config'
 import { getResults, setResults, formatError } from './shared'
 
 export default (to, from, next) => {
   if (process.isServer) return next()
+
+  if (to.meta && to.meta.__custom) {
+    global.__INITIAL_STATE__ = null
+    return next()
+  }
 
   if (process.isProduction && global.__INITIAL_STATE__) {
     setResults(to.path, global.__INITIAL_STATE__)
@@ -27,7 +33,8 @@ export default (to, from, next) => {
         console.error(err)
         next({ name: '*', params: { 0: to.path } })
       } else if (err.code === 'INVALID_HASH' && to.path !== window.location.pathname) {
-        window.location.assign(to.fullPath)
+        const fullPathWithPrefix = (config.pathPrefix ?? '') + to.fullPath
+        window.location.assign(fullPathWithPrefix)
       } else {
         formatError(err, to)
         next(err)

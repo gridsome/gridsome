@@ -25,9 +25,10 @@ module.exports = async (app, defines = {}) => {
 
       if (stats.hasErrors()) {
         const errors = stats.stats
+          // .flatMap(stats => stats.compilation.errors) only exists in Node v11+
           .map(stats => stats.compilation.errors)
           .reduce((acc, errors) => acc.concat(errors), [])
-          .map(err => err.error)
+          .map(err => err.error || err)
 
         return reject(errors[0])
       }

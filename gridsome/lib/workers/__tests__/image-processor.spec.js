@@ -87,6 +87,14 @@ test('resize image', async () => {
   expect(height).toEqual(60)
 })
 
+test('rotate image based on EXIF', async () => {
+  const files = await process(['rotated.jpg'], { width: 480 })
+  const { width, height } = imageSize.sync(files[0].buffer)
+
+  expect(width).toEqual(480)
+  expect(height).toEqual(640)
+})
+
 test('crop image', async () => {
   const files = await process(['1000x600.png'], { width: 500, height: 500 })
   const { type, width, height } = imageSize.sync(files[0].buffer)
@@ -129,7 +137,10 @@ async function process (filenames, options = {}, withCache = false) {
     imagesDir,
     outputDir: context,
     maxImageWidth: 1000,
-    imageExtensions: ['.jpg', '.png', '.svg', '.gif', '.webp']
+    imageExtensions: ['.jpg', '.png', '.svg', '.gif', '.webp'],
+    images: {
+      defaultBlur: 20
+    }
   }
 
   const processQueue = new AssetsQueue({ context, config })
@@ -142,6 +153,7 @@ async function process (filenames, options = {}, withCache = false) {
   await processImages({
     queue: processQueue.images.queue,
     cacheDir: withCache ? imageCacheDir : false,
+    imagesConfig: config.images,
     outputDir: context
   })
 

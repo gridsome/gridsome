@@ -33,17 +33,23 @@ module.exports = function createNodesSchema (schemaComposer, store) {
     const collection = store.getCollection(typeName)
     const typeComposer = schemaComposer.get(typeName)
     createFields(schemaComposer, typeComposer, collection)
-    createFilterInput(schemaComposer, typeComposer)
+    createTypeResolvers(typeComposer, collection)
   }
-
-  createResolvers(schemaComposer, store)
 
   for (const typeName of typeNames) {
     const collection = store.getCollection(typeName)
     const typeComposer = schemaComposer.get(typeName)
 
     createReferenceFields(schemaComposer, typeComposer, collection)
+    createFilterInput(schemaComposer, typeComposer)
     createThirdPartyFields(typeComposer, collection)
+
+    // Extend `findOne` resolver arguments
+    // to query single nodes by custom fields.
+    const findOneResolver = typeComposer.getResolver('findOne')
+    const inputTypeComposer = typeComposer.getInputTypeComposer()
+    const inputFields = inputTypeComposer.getFields()
+    findOneResolver.addArgs(omit(inputFields, ['id']))
 
     const fieldName = camelCase(typeName)
     const allFieldName = camelCase(`all ${typeName}`)
@@ -212,18 +218,9 @@ const {
   createReferenceManyAdvancedResolver
 } = require('./resolvers')
 
-function createResolvers (schemaComposer, store) {
-  for (const typeName in store.collections) {
-    const typeComposer = schemaComposer.get(typeName)
-    const collection = store.getCollection(typeName)
-
-    createTypeResolvers(typeComposer, collection)
-  }
-}
 
 function createTypeResolvers (typeComposer, collection) {
   const typeName = typeComposer.getTypeName()
-  const inputTypeComposer = typeComposer.getInputTypeComposer()
 
   const { _defaultSortBy, _defaultSortOrder } = collection
 
@@ -231,7 +228,6 @@ function createTypeResolvers (typeComposer, collection) {
     name: 'findOne',
     type: typeName,
     args: {
-      ...inputTypeComposer.getFields(),
       id: 'ID'
     },
     resolve: wrapResolver(createFindOneResolver(typeComposer))
