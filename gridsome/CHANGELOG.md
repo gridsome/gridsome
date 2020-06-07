@@ -3,6 +3,21 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.7.17](https://github.com/gridsome/gridsome/compare/gridsome@0.7.16...gridsome@0.7.17) (2020-06-07)
+
+
+### Performance Improvements
+
+* **build:** improve page-query output performance ([#1190](https://github.com/gridsome/gridsome/issues/1190)) ([2d81133](https://github.com/gridsome/gridsome/commit/2d811337bb61627ebb51e90404fcb24425bffd1d))
+* **g-image:** get dimensions from sharp metadata ([4f8ed20](https://github.com/gridsome/gridsome/commit/4f8ed20c30608fe624f3e3dad87174f600b50e1d))
+* **graphql:** improve path argument performance ([#1190](https://github.com/gridsome/gridsome/issues/1190)) ([8f15b4c](https://github.com/gridsome/gridsome/commit/8f15b4c01e650476c174b3e1c8b0f00ee66dd739))
+* **store:** disable adaptive indices for node index ([#1190](https://github.com/gridsome/gridsome/issues/1190)) ([52f90e4](https://github.com/gridsome/gridsome/commit/52f90e4196971411b1559e601b38abf798c63198))
+* **templates:** cache date while generating paths ([#1190](https://github.com/gridsome/gridsome/issues/1190)) ([c4f17a0](https://github.com/gridsome/gridsome/commit/c4f17a020491d1d7238e416a9911f543aac4b3e1))
+
+
+
+
+
 ## [0.7.16](https://github.com/gridsome/gridsome/compare/gridsome@0.7.15...gridsome@0.7.16) (2020-06-03)
 
 
