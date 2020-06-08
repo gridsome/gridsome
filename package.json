@@ -13,10 +13,10 @@
     "lint": "eslint \"@(gridsome|packages)/**/*.js\""
   },
   "devDependencies": {
-    "@lerna/conventional-commits": "^3.4.1",
+    "@lerna/conventional-commits": "^3.22.0",
     "babel-eslint": "^10.0.1",
     "cheerio": "^1.0.0-rc.2",
-    "conventional-changelog": "^2.0.3",
+    "conventional-changelog": "^3.1.21",
     "eslint": "^5.2.0",
     "eslint-plugin-import": "^2.17.3",
     "eslint-plugin-node": "^7.0.1",
@@ -24,7 +24,7 @@
     "eslint-plugin-vue-libs": "^3.0.0",
     "execa": "^1.0.0",
     "jest": "^24.1.0",
-    "lerna": "^3.4.0",
+    "lerna": "^3.22.0",
     "memfs": "^2.9.4",
     "minimist": "^1.2.0",
     "puppeteer": "^1.12.2",
