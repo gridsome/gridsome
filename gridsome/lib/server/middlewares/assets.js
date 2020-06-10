@@ -36,8 +36,9 @@ module.exports = ({ context, config, assets }) => {
         res.header('Expires', '-1')
       }
 
+      res.header('Accept-Ranges', 'bytes')
       res.contentType(ext)
-      res.end(buffer, 'binary')
+      res.end(buffer)
     }
 
     try {
