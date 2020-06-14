@@ -24,6 +24,11 @@ module.exports = function (api, options) {
     const pathPrefix = config.pathPrefix !== '/' ? config.pathPrefix : ''
     const staticUrls = options.staticUrls || []
 
+    // use today's day as lastmod, convert to W3C Datetime format
+    const today = new Date()
+    const yearMonthDay = [today.getFullYear(), today.getMonth(), today.getDate()]
+    const lastmod = yearMonthDay.map((date) => date.toString().padStart(2, '0')).join('-')
+
     let pages = queue.filter(page => page.type ? page.type === 'static' : true)
 
     if (include.length) {
@@ -46,7 +51,8 @@ module.exports = function (api, options) {
           ? url.substr(pathPrefix.length)
           : url,
         priority: urlConfig.priority,
-        changefreq: urlConfig.changefreq
+        changefreq: urlConfig.changefreq,
+        lastmod: urlConfig.lastmod,
       }
     })
 
