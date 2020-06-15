@@ -47,7 +47,7 @@ module.exports = function (api, options) {
           : url,
         priority: urlConfig.priority,
         changefreq: urlConfig.changefreq,
-        lastmod: urlConfig.lastmod,
+        lastmod: urlConfig.lastmod
       }
     })
 
