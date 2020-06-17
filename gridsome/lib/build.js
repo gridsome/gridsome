@@ -21,10 +21,11 @@ module.exports = async (context, args) => {
 
   await fs.emptyDir(config.outputDir)
 
-  const queue = createRenderQueue(app)
-  const redirects = app.hooks.redirects.call([], queue)
   const stats = await runWebpack(app)
   const hashString = config.cacheBusting ? stats.hash : 'gridsome'
+
+  const queue = createRenderQueue(app)
+  const redirects = app.hooks.redirects.call([], queue)
 
   await executeQueries(queue, app, hashString)
   await renderHTML(queue, app, hashString)
@@ -85,7 +86,8 @@ async function renderHTML (renderQueue, app, hash) {
         htmlTemplate,
         clientManifestPath,
         serverBundlePath,
-        prefetch, preload
+        prefetch,
+        preload
       })
     } catch (err) {
       worker.end()

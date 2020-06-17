@@ -192,8 +192,8 @@ test('create render queue for createPages hook', async () => {
   renderQueue.forEach(entry => {
     expect(entry.type).toBeDefined()
     expect(entry.path).toBeDefined()
+    expect(entry.dataOutput).toBeDefined()
     expect(entry.htmlOutput).toBeDefined()
-    expect(entry.queryVariables).toBeDefined()
     expect(entry.pageId).toBeDefined()
     expect(entry.routeId).toBeDefined()
   })
