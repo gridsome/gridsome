@@ -67,8 +67,7 @@ export default {
         }
       }, [text])
     }
-
-    const { linkClass }  = props
+    
     const links = showLinks
       ? pages.map(page => renderLink(page, page, props.ariaLinkLabel))
       : []
