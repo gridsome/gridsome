@@ -21,11 +21,13 @@ module.exports = {
         config: {
           '/articles/*': {
             changefreq: 'weekly',
-            priority: 0.5
+            priority: 0.5,
+            lastmod: '2020-02-19',
           },
           '/about': {
             changefreq: 'monthly',
-            priority: 0.7
+            priority: 0.7,
+            lastmod: '2020-05-12',
           }
         }
       }
@@ -53,11 +55,13 @@ Set custom config for specific URLs.
 config: {
   '/articles/*': {
     changefreq: 'weekly',
-    priority: 0.5
+    priority: 0.5,
+    lastmod: '2020-02-19',
   },
   '/about': {
     changefreq: 'monthly',
-    priority: 0.7
+    priority: 0.7,
+    lastmod: '2020-05-12',
   }
 }
 ```

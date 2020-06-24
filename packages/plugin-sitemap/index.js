@@ -46,7 +46,8 @@ module.exports = function (api, options) {
           ? url.substr(pathPrefix.length)
           : url,
         priority: urlConfig.priority,
-        changefreq: urlConfig.changefreq
+        changefreq: urlConfig.changefreq,
+        lastmod: urlConfig.lastmod
       }
     })
 
