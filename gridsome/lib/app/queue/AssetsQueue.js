@@ -39,8 +39,12 @@ class AssetsQueue {
 
     const entry = { ...data, ...asset }
 
-    if (isDev && asset.cacheKey) {
-      this.index.set(asset.cacheKey, entry)
+    if (isDev) {
+      if (asset.cacheKey) {
+        this.index.set(asset.cacheKey, entry)
+      } else {
+        this.index.set(asset.src, entry)
+      }
     }
 
     return entry

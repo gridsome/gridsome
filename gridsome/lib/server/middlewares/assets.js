@@ -23,7 +23,7 @@ module.exports = ({ context, config, assets }) => {
       return decodeURIComponent(value)
     })
 
-    const asset = assets.get(key)
+    const asset = assets.get(key || req.url)
 
     if (!asset) return res.sendStatus(404)
 
