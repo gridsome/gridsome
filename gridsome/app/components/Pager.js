@@ -4,7 +4,6 @@ import { unslashEnd, stripPageParam } from '../utils/helpers'
 // @vue/component
 export default {
   functional: true,
-
   props: {
     info: { type: Object, required: true },
     showLinks: { type: Boolean, default: true },
@@ -32,7 +31,6 @@ export default {
     ariaNextLabel: { type: String, default: 'Go to next page. Page %n' },
     ariaLastLabel: { type: String, default: 'Go to last page. Page %n' }
   },
-
   render: (h, { props, data, parent }) => {
     const { info, showLinks, showNavigation, ariaLabel } = props
     const { current, total, pages, start, end } = resolveRange(info, props.range)
@@ -54,12 +52,8 @@ export default {
         linkProps.exactActiveClass = props.exactActiveLinkClass
       }
 
-      if (!Array.isArray(linkClass)) {
-        linkClass = [linkClass]
-      }
-
       return h(Link, {
-        class: [props.linkClass, ...linkClass],
+        class: [props.linkClass, linkClass],
         attrs: {
           ...linkProps,
           'aria-label': ariaLabel.replace('%n', page),
@@ -67,7 +61,7 @@ export default {
         }
       }, [text])
     }
-    
+
     const links = showLinks
       ? pages.map(page => renderLink(page, page, props.ariaLinkLabel))
       : []
@@ -102,9 +96,9 @@ function createPagePath (path, page) {
 }
 
 function resolveRange ({
-                         currentPage: current = 1,
-                         totalPages: total = 1
-                       }, range) {
+   currentPage: current = 1,
+   totalPages: total = 1
+  }, range) {
   const offset = Math.ceil(range / 2)
 
   let start = Math.floor(current - offset)
