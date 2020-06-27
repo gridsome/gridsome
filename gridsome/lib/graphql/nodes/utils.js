@@ -1,4 +1,4 @@
-const { PER_PAGE } = require('../../utils/constants')
+const { PER_PAGE, SORT_ORDER } = require('../../utils/constants')
 
 exports.applyChainArgs = function (chain, args = {}, sort = []) {
   if (sort.length) chain = applySort(chain, sort)
@@ -6,6 +6,24 @@ exports.applyChainArgs = function (chain, args = {}, sort = []) {
   if (args.limit) chain = chain.limit(args.limit)
 
   return chain
+}
+
+/**
+ * Create the arguments for {@link createPagedNodeEdges} method.
+ *
+ * @param {string} sortBy The field want used for sort
+ * @param {('ASC'|'DESC')} order The order of the sort
+ */
+exports.createPagedNodeEdgesArgs = function (sortBy, order = SORT_ORDER) {
+  return {
+    sortBy: { type: 'String', defaultValue: sortBy },
+    order: { type: 'SortOrder', defaultValue: order },
+    perPage: { type: 'Int', description: `Defaults to ${PER_PAGE} when page is provided.` },
+    skip: { type: 'Int', defaultValue: 0 },
+    limit: { type: 'Int' },
+    page: { type: 'Int' },
+    sort: '[SortArgument!]'
+  }
 }
 
 exports.createPagedNodeEdges = function (chain, args = {}, sort = []) {
@@ -83,4 +101,3 @@ function applySort (chain, sort = []) {
 
   return chain
 }
-

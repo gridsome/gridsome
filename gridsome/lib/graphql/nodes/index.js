@@ -1,7 +1,7 @@
 const graphql = require('../graphql')
 const camelCase = require('camelcase')
 const { createBelongsTo } = require('./belongsTo')
-const { PER_PAGE } = require('../../utils/constants')
+const { createPagedNodeEdgesArgs } = require('./utils')
 const { createFilterInput } = require('../filters/input')
 const createFieldDefinitions = require('../createFieldDefinitions')
 const { createFieldTypes } = require('../createFieldTypes')
@@ -236,13 +236,7 @@ function createTypeResolvers (typeComposer, collection) {
     name: 'findManyPaginated',
     type: `${typeName}Connection`,
     args: {
-      sortBy: { type: 'String', defaultValue: _defaultSortBy },
-      order: { type: 'SortOrder', defaultValue: _defaultSortOrder },
-      perPage: { type: 'Int', description: `Defaults to ${PER_PAGE} when page is provided.` },
-      skip: { type: 'Int', defaultValue: 0 },
-      limit: { type: 'Int' },
-      page: { type: 'Int' },
-      sort: { type: '[SortArgument]' },
+      ...createPagedNodeEdgesArgs(_defaultSortBy, _defaultSortOrder),
       filter: {
         type: `${typeName}FilterInput`,
         description: `Filter for ${typeName} nodes.`
