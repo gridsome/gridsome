@@ -95,6 +95,12 @@ test('render belongsTo with pagination', () => {
   expect($category1page2('nav[role="navigation"] a[href="/category/first/2/"]').attr('aria-label')).toEqual('Current page. Page 2')
 })
 
+test('keep webpack hash if nothing has changed', () => {
+  const $home = load('dist/index.html')
+  const webpackHash = $home('meta[name="gridsome:hash"]').attr('content')
+  expect(webpackHash).toEqual('e72b5a027a636e0431ea75d7f56cb2f573bbb969')
+})
+
 test('open blog in browser', async () => {
   await page.goto('http://localhost:8080/', { waitUntil: 'networkidle2' })
   await page.waitForSelector('#app.is-mounted')
