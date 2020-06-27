@@ -205,7 +205,9 @@ describe('dynamic pages', () => {
     const component = './__fixtures__/DefaultPage.vue'
 
     app.pages.createPage({ path: '/', component })
-    app.pages.createPage({ path: '/a', component })
+    app.pages.createPage({ path: '/ab', component })
+    app.pages.createPage({ path: '/ac', component })
+    app.pages.createPage({ path: '/aa', component })
     app.pages.createPage({ path: '/a/b', component })
     app.pages.createPage({ path: '/a/:b', component })
     app.pages.createPage({ path: '/a/:b(\\d+)', component })
@@ -227,7 +229,9 @@ describe('dynamic pages', () => {
       '/a/:b',
       '/a/:b*',
       '/a/:b+',
-      '/a/',
+      '/aa/',
+      '/ab/',
+      '/ac/',
       '/404/',
       '/'
     ])
@@ -246,7 +250,9 @@ describe('dynamic pages', () => {
       'a/_b.html',
       'a/_b_star.html',
       'a/_b_plus.html',
-      'a/index.html',
+      'aa/index.html',
+      'ab/index.html',
+      'ac/index.html',
       '404/index.html',
       'index.html'
     ])

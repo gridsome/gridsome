@@ -60,7 +60,10 @@ class Pages {
   routes () {
     return this._routes
       .chain()
-      .simplesort('internal.priority', true)
+      .compoundsort([
+        ['internal.priority', /* desc */ true],
+        ['path', /* asc */ false]
+      ])
       .data()
       .map(route => {
         return new Route(route, this)
@@ -455,9 +458,11 @@ class Route {
   }
 
   pages () {
-    return this._pages.find({
-      'internal.route': this.id
-    })
+    return this._pages
+      .chain()
+      .simplesort('path', false)
+      .find({ 'internal.route': this.id })
+      .data()
   }
 
   addPage (input) {
