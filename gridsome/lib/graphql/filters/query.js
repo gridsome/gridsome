@@ -5,14 +5,16 @@ const listRefOpsMap = {
   '$in': '$refListIn',
   '$nin': '$refListNin',
   '$eq': '$refListEq',
-  '$ne': '$refListNe'
+  '$ne': '$refListNe',
+  '$exists': '$refListExists'
 }
 
 const refOpsMap = {
   '$in': '$refIn',
   '$nin': '$refNin',
   '$eq': '$refEq',
-  '$ne': '$refNe'
+  '$ne': '$refNe',
+  '$exists': '$refExists'
 }
 
 function toFilterArgs (filter, typeComposer, currentKey = '') {
