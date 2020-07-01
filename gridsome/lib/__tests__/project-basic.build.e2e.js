@@ -65,7 +65,7 @@ test('set title in custom App.vue', () => {
 test('keep webpack hash if nothing has changed', () => {
   const $home = load('dist/index.html')
   const webpackHash = $home('meta[name="gridsome:hash"]').attr('content')
-  expect(webpackHash).toEqual('ca943480c78588804edef99645461019ddf34996')
+  expect(webpackHash).toEqual('0d257fe5c6c829b428da151a9ae0a8128eeb16e2')
 })
 
 test('render custom html template', () => {

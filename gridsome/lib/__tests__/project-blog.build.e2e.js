@@ -98,7 +98,7 @@ test('render belongsTo with pagination', () => {
 test('keep webpack hash if nothing has changed', () => {
   const $home = load('dist/index.html')
   const webpackHash = $home('meta[name="gridsome:hash"]').attr('content')
-  expect(webpackHash).toEqual('e72b5a027a636e0431ea75d7f56cb2f573bbb969')
+  expect(webpackHash).toEqual('7df45afeb7d115be8bc3a59d0dd8fcabb9bc11eb')
 })
 
 test('open blog in browser', async () => {

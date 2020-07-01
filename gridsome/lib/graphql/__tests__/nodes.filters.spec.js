@@ -681,6 +681,35 @@ test('setup inferred filter input types', async () => {
   expect(deepType.fields.related.extensions.isInferred).toBe(true)
 })
 
+// #718
+test('ensure inferred fields are added to filters', async () => {
+  const { errors, data } = await buildSchema(api => {
+    api.loadSource(({ addCollection, store }) => {
+      addCollection({ typeName: 'Post' }).addNode({
+        title: 'The post',
+        author1: store.createReference('Author', '1')
+      })
+
+      addCollection({ typeName: 'Author' }).addNode({
+        id: '1',
+        title: 'The author'
+      })
+    })
+  }, `{
+    allAuthor(filter: { title: { eq: "The author" } }) {
+      edges {
+        node {
+          id
+          title
+        }
+      }
+    }
+  }`)
+
+  expect(errors).toBeUndefined()
+  expect(data.allAuthor.edges).toHaveLength(1)
+})
+
 test('setup filter input types from SDL', async () => {
   const schema = await buildSchema(api => {
     api.loadSource(({ addSchemaTypes }) => {

@@ -29,13 +29,12 @@ module.exports = function createNodesSchema (schemaComposer, store) {
 
   createTypeComposers(schemaComposer, store)
   createResolvers(schemaComposer, store)
+  createFields(schemaComposer, store)
 
   for (const typeName of typeNames) {
     const collection = store.getCollection(typeName)
     const typeComposer = schemaComposer.get(typeName)
 
-    createFields(schemaComposer, typeComposer, collection)
-    createReferenceFields(schemaComposer, typeComposer, collection)
     createFilterInput(schemaComposer, typeComposer)
     createThirdPartyFields(typeComposer, collection)
 
@@ -112,12 +111,16 @@ function createTypeComposers (schemaComposer, store) {
   }
 }
 
-function createFields (schemaComposer, typeComposer, collection) {
-  const typeName = typeComposer.getTypeName()
-  const fieldDefs = inferFields(typeComposer, collection)
-  const fieldTypes = createFieldTypes(schemaComposer, fieldDefs, typeName)
+function createFields (schemaComposer, store) {
+  for (const typeName in store.collections) {
+    const collection = store.getCollection(typeName)
+    const typeComposer = schemaComposer.get(typeName)
+    const fieldDefs = inferFields(typeComposer, collection)
+    const fieldTypes = createFieldTypes(schemaComposer, fieldDefs, typeName)
 
-  addInferredFields(typeComposer, fieldDefs, fieldTypes)
+    createInferredFields(typeComposer, fieldDefs, fieldTypes)
+    createReferenceFields(schemaComposer, typeComposer, collection)
+  }
 }
 
 function inferFields (typeComposer, collection) {
@@ -133,7 +136,7 @@ function inferFields (typeComposer, collection) {
   })
 }
 
-function addInferredFields (typeComposer, fieldDefs, fieldTypes) {
+function createInferredFields (typeComposer, fieldDefs, fieldTypes) {
   for (const key in fieldDefs) {
     const options = fieldDefs[key]
     const fieldType = fieldTypes[options.fieldName]
