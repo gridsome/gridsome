@@ -62,12 +62,6 @@ test('set title in custom App.vue', () => {
   expect($home('head > title').text()).toEqual('Gridsome [basic] | Test')
 })
 
-test('keep webpack hash if nothing has changed', () => {
-  const $home = load('dist/index.html')
-  const webpackHash = $home('meta[name="gridsome:hash"]').attr('content')
-  expect(webpackHash).toEqual('0d257fe5c6c829b428da151a9ae0a8128eeb16e2')
-})
-
 test('render custom html template', () => {
   const $home = load('dist/index.html')
   expect($home('div.custom-html-template').text().trim()).toEqual('custom html template')
