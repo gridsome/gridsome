@@ -60,23 +60,20 @@ module.exports = {
 }
 ```
 
+## Options
+
+#### transformInlineCode
+
+- Type: `Boolean`
+- Default: `false`
+
 If you'd like to disable highlighting of inline code blocks, pass `transformInlineCode: false` in the plugin options
 
-```js
-module.exports = {
-  plugins: [
-    {
-      use: '@gridsome/source-filesystem',
-      options: {}
-    }
-  ],
+#### showLineNumbers
 
-  transformers: {
-    remark: {
-      plugins: [
-        ['@gridsome/remark-prismjs', { transformInlineCode: false }]
-      ]
-    }
-  }
-}
-```
+- Type: `Boolean`
+- Default: `false`
+
+If you'd like to add line numbers alongside the code. pass `showLineNumbers: true` in the plugin options
+
+If you wish to only show line numbers on certain code blocks, you can leave `false` and use the `{ numberLines: true }` syntax below
