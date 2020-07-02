@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0](https://github.com/gridsome/gridsome/tree/master/packages/plugin-sitemap/compare/@gridsome/plugin-sitemap@0.3.0...@gridsome/plugin-sitemap@0.4.0) (2020-07-02)
+
+
+### Features
+
+* **sitemap:** set lastmod config for urls ([#1228](https://github.com/gridsome/gridsome/tree/master/packages/plugin-sitemap/issues/1228)) ([1672636](https://github.com/gridsome/gridsome/tree/master/packages/plugin-sitemap/commit/16726365c4ab5dd1aaad57de268f8e284cb05dbc))
+
+
+
+
+
 # [0.3.0](https://github.com/gridsome/gridsome/tree/master/packages/plugin-sitemap/compare/@gridsome/plugin-sitemap@0.2.3...@gridsome/plugin-sitemap@0.3.0) (2020-05-26)
 
 

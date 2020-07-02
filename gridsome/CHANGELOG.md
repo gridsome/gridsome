@@ -3,6 +3,29 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.7.18](https://github.com/gridsome/gridsome/compare/gridsome@0.7.17...gridsome@0.7.18) (2020-07-02)
+
+
+### Bug Fixes
+
+* **app:** redirect to fallback route if not found ([#1239](https://github.com/gridsome/gridsome/issues/1239)) ([41f2b0f](https://github.com/gridsome/gridsome/commit/41f2b0ff411b319cd2a018c5d1b8d256088d9e57))
+* **app:** set custom classes for <Pager> links ([#1234](https://github.com/gridsome/gridsome/issues/1234)) ([f2ba2a3](https://github.com/gridsome/gridsome/commit/f2ba2a385591cf09bd07b64652ee314febd431ee))
+* **build:** ensure routes always have the same order ([#1247](https://github.com/gridsome/gridsome/issues/1247)) ([da5674f](https://github.com/gridsome/gridsome/commit/da5674fd248fd518963328628d578c0c93451d95))
+* **build:** keep webpack hash between builds ([#1247](https://github.com/gridsome/gridsome/issues/1247)) ([e184813](https://github.com/gridsome/gridsome/commit/e1848132f0466cb4bf2dc0a4bfe621cc9599e1ad))
+* **develop:** audio/video playback issues in Chrome ([#1220](https://github.com/gridsome/gridsome/issues/1220)) ([3a3c235](https://github.com/gridsome/gridsome/commit/3a3c235331449011a05117667215b71f71b2416d))
+* **develop:** fallback to url when no key param is set ([809aaf8](https://github.com/gridsome/gridsome/commit/809aaf8a8b40d07ef89c34c32bfe783e33b61f43))
+* **graphql:** add missing ref exists functions ([#1252](https://github.com/gridsome/gridsome/issues/1252)) ([83b0f96](https://github.com/gridsome/gridsome/commit/83b0f966fcdd3ae6a1e0231985d45c3f2e74a308))
+* **graphql:** ensure inferred fields are added to filters ([#718](https://github.com/gridsome/gridsome/issues/718)) ([18d0091](https://github.com/gridsome/gridsome/commit/18d009168c01955a1f006a1cbf95073e33634afc))
+
+
+### Performance Improvements
+
+* **build:** improve page-query runner ([e3a88be](https://github.com/gridsome/gridsome/commit/e3a88be673b58fd563c4528038e6dca77d5ec7fa))
+
+
+
+
+
 ## [0.7.17](https://github.com/gridsome/gridsome/compare/gridsome@0.7.16...gridsome@0.7.17) (2020-06-07)
 
 
