@@ -4,7 +4,7 @@ const camelCase = require('camelcase')
 const { mapKeys, isPlainObject, trimEnd, trimStart } = require('lodash')
 
 const TYPE_AUTHOR = 'author'
-const TYPE_ATTACHEMENT = 'attachment'
+const TYPE_ATTACHMENT = 'attachment'
 
 class WordPressSource {
   static defaultOptions () {
@@ -123,7 +123,7 @@ class WordPressSource {
     const getCollection = actions.getCollection || actions.getContentType
 
     const AUTHOR_TYPE_NAME = this.createTypeName(TYPE_AUTHOR)
-    const ATTACHEMENT_TYPE_NAME = this.createTypeName(TYPE_ATTACHEMENT)
+    const ATTACHEMENT_TYPE_NAME = this.createTypeName(TYPE_ATTACHMENT)
 
     for (const type in this.restBases.posts) {
       const restBase = this.restBases.posts[type]
@@ -137,7 +137,7 @@ class WordPressSource {
 
         fields.author = createReference(AUTHOR_TYPE_NAME, post.author || '0')
 
-        if (post.type !== TYPE_ATTACHEMENT) {
+        if (post.type !== TYPE_ATTACHMENT) {
           fields.featuredMedia = createReference(ATTACHEMENT_TYPE_NAME, post.featured_media)
         }
 
@@ -285,7 +285,7 @@ class WordPressSource {
 
         return this.store.createReference(typeName, id)
       } else if (value.filename && (value.ID || value.id)) {
-        const typeName = this.createTypeName(TYPE_ATTACHEMENT)
+        const typeName = this.createTypeName(TYPE_ATTACHMENT)
         const id = value.ID || value.id
 
         return this.store.createReference(typeName, id)
