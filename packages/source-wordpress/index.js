@@ -123,7 +123,7 @@ class WordPressSource {
     const getCollection = actions.getCollection || actions.getContentType
 
     const AUTHOR_TYPE_NAME = this.createTypeName(TYPE_AUTHOR)
-    const ATTACHEMENT_TYPE_NAME = this.createTypeName(TYPE_ATTACHMENT)
+    const ATTACHMENT_TYPE_NAME = this.createTypeName(TYPE_ATTACHMENT)
 
     for (const type in this.restBases.posts) {
       const restBase = this.restBases.posts[type]
@@ -138,7 +138,7 @@ class WordPressSource {
         fields.author = createReference(AUTHOR_TYPE_NAME, post.author || '0')
 
         if (post.type !== TYPE_ATTACHMENT) {
-          fields.featuredMedia = createReference(ATTACHEMENT_TYPE_NAME, post.featured_media)
+          fields.featuredMedia = createReference(ATTACHMENT_TYPE_NAME, post.featured_media)
         }
 
         // add references if post has any taxonomy rest bases as properties
