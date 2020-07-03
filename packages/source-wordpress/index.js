@@ -54,28 +54,20 @@ class WordPressSource {
 
   async getPostTypes (actions) {
     const { data } = await this.fetch('wp/v2/types', {}, {})
-    const addCollection = actions.addCollection || actions.addContentType
 
     for (const type in data) {
       const options = data[type]
 
       this.restBases.posts[type] = trimStart(options.rest_base, '/')
 
-      addCollection({
-        typeName: this.createTypeName(type),
-        route: this.routes[type]
-      })
+      actions.addCollection(this.createTypeName(type))
     }
   }
 
   async getUsers (actions) {
     const { data } = await this.fetch('wp/v2/users')
-    const addCollection = actions.addCollection || actions.addContentType
 
-    const authors = addCollection({
-      typeName: this.createTypeName(TYPE_AUTHOR),
-      route: this.routes.author
-    })
+    const authors = actions.addCollection(this.createTypeName(TYPE_AUTHOR))
 
     for (const author of data) {
       const fields = this.normalizeFields(author)
@@ -92,14 +84,10 @@ class WordPressSource {
 
   async getTaxonomies (actions) {
     const { data } = await this.fetch('wp/v2/taxonomies', {}, {})
-    const addCollection = actions.addCollection || actions.addContentType
 
     for (const type in data) {
       const options = data[type]
-      const taxonomy = addCollection({
-        typeName: this.createTypeName(type),
-        route: this.routes[type]
-      })
+      const taxonomy = actions.addCollection(this.createTypeName(type))
 
       this.restBases.taxonomies[type] = trimStart(options.rest_base, '/')
 
@@ -119,26 +107,23 @@ class WordPressSource {
   }
 
   async getPosts (actions) {
-    const { createReference } = actions
-    const getCollection = actions.getCollection || actions.getContentType
-
     const AUTHOR_TYPE_NAME = this.createTypeName(TYPE_AUTHOR)
     const ATTACHMENT_TYPE_NAME = this.createTypeName(TYPE_ATTACHMENT)
 
     for (const type in this.restBases.posts) {
       const restBase = this.restBases.posts[type]
       const typeName = this.createTypeName(type)
-      const posts = getCollection(typeName)
+      const posts = actions.getCollection(typeName)
 
       const data = await this.fetchPaged(`wp/v2/${restBase}`)
 
       for (const post of data) {
         const fields = this.normalizeFields(post)
 
-        fields.author = createReference(AUTHOR_TYPE_NAME, post.author || '0')
+        fields.author = actions.createReference(AUTHOR_TYPE_NAME, post.author || '0')
 
         if (post.type !== TYPE_ATTACHMENT) {
-          fields.featuredMedia = createReference(ATTACHMENT_TYPE_NAME, post.featured_media)
+          fields.featuredMedia = actions.createReference(ATTACHMENT_TYPE_NAME, post.featured_media)
         }
 
         // add references if post has any taxonomy rest bases as properties
@@ -150,8 +135,8 @@ class WordPressSource {
             const key = camelCase(propName)
 
             fields[key] = Array.isArray(post[propName])
-              ? post[propName].map(id => createReference(typeName, id))
-              : createReference(typeName, post[propName])
+              ? post[propName].map(id => actions.createReference(typeName, id))
+              : actions.createReference(typeName, post[propName])
           }
         }
 
@@ -162,17 +147,16 @@ class WordPressSource {
 
   async getCustomEndpoints (actions) {
     for (const endpoint of this.customEndpoints) {
-      const makeCollection = actions.addCollection || actions.addContentType
-      const cepCollection = makeCollection({
-        typeName: endpoint.typeName
-      })
+      const customCollection = actions.addCollection(endpoint.typeName)
+
       const { data } = await this.fetch(endpoint.route, {}, {})
+
       for (let item of data) {
         if (endpoint.normalize) {
           item = this.normalizeFields(item)
         }
 
-        cepCollection.addNode({
+        customCollection.addNode({
           ...item,
           id: item.id || item.slug
         })
