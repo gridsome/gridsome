@@ -78,23 +78,30 @@ function createCode (node, showLineNumbersGlobal) {
   const className = `language-${lang}`
   const showLineNumbers = showLineNumbersLocal || showLineNumbersGlobal
 
-  const codeNode = h('code', { className }, u('raw', code))
+  const codeNode = showLineNumbers
+    ? h(
+      'code',
+      { className },
+      [
+        u('raw', code),
+        createLineNumberWrapper(code)
+      ]
+    )
+    : h('code', { className }, [u('raw', code)])
+
   const preNode = showLineNumbers
     ? h(
       'pre',
       {
         className: [className, 'line-numbers'],
-        style: {
-          'counter-reset': numberLinesStartAt - 1
-            ? `linenumber ${numberLinesStartAt - 1}`
-            : null
-        },
+        style: numberLinesStartAt - 1
+          ? {
+            'counter-reset': `linenumber ${numberLinesStartAt - 1}`
+          }
+          : null,
         ...props
       },
-      [
-        codeNode,
-        createLineNumberWrapper(code)
-      ]
+      [codeNode]
     )
     : h('pre', { className, ...props }, [codeNode])
 
