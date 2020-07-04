@@ -3,6 +3,7 @@ const consola = require('consola')
 const got = require('got').default
 const isPlainObject = require('lodash.isplainobject')
 const pMap = require('p-map')
+const os = require('os')
 
 const TYPE_AUTHOR = 'author'
 const TYPE_ATTACHMENT = 'attachment'
@@ -20,7 +21,7 @@ class WordPressSource {
       baseUrl: '',
       apiBase: 'wp-json',
       perPage: 100,
-      concurrent: 10,
+      concurrent: os.cpus().length,
       typeName: 'WordPress'
     }
   }
@@ -58,6 +59,10 @@ class WordPressSource {
       await this.getTaxonomies(actions)
       await this.getPosts(actions)
       await this.getCustomEndpoints(actions)
+    })
+
+    api.onBootstrap(async () => {
+      this.downloadImages(api)
     })
   }
 
@@ -204,6 +209,10 @@ class WordPressSource {
     }, { concurrency: this.options.concurrent })
 
     return allData.flat()
+  }
+
+  async downloadImages (api) {
+    console.log(api)
   }
 
   sanitizeCustomEndpoints () {
