@@ -176,7 +176,7 @@ class WordPressSource {
 
   async fetch (url, params = {}, fallbackData = []) {
     try {
-      const data = await this.client.get(url)
+      const data = await this.client.get(url, { searchParams: params })
       return data
     } catch ({ response }) {
       consola.error(`Status ${response.statusCode} fetching ${response.requestUrl}`)
