@@ -12,7 +12,6 @@
     "wordpress"
   ],
   "dependencies": {
-    "axios": "^0.19.0",
     "camelcase": "^5.0.0",
     "consola": "^2.14.0",
     "fs-extra": "^9.0.1",
