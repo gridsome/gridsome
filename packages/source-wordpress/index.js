@@ -1,9 +1,13 @@
 const camelCase = require('camelcase')
 const consola = require('consola')
+const fs = require('fs-extra')
 const got = require('got').default
 const isPlainObject = require('lodash.isplainobject')
-const pMap = require('p-map')
 const os = require('os')
+const pMap = require('p-map')
+const path = require('path')
+const stream = require('stream')
+const { promisify } = require('util')
 
 const TYPE_AUTHOR = 'author'
 const TYPE_ATTACHMENT = 'attachment'
@@ -22,7 +26,8 @@ class WordPressSource {
       apiBase: 'wp-json',
       perPage: 100,
       concurrent: os.cpus().length,
-      typeName: 'WordPress'
+      typeName: 'WordPress',
+      images: false
     }
   }
 
@@ -54,6 +59,8 @@ class WordPressSource {
 
       console.info(`Loading data from ${options.baseUrl}`)
 
+      this.addSchemaTypes(actions)
+
       await this.getPostTypes(actions)
       await this.getUsers(actions)
       await this.getTaxonomies(actions)
@@ -64,6 +71,14 @@ class WordPressSource {
     api.onBootstrap(async () => {
       this.downloadImages(api)
     })
+  }
+
+  addSchemaTypes (actions) {
+    actions.addSchemaTypes(`
+      type ${this.createTypeName(TYPE_ATTACHMENT)} implements Node @infer {
+        downloaded: Image
+      }
+    `)
   }
 
   async getPostTypes (actions) {
@@ -212,7 +227,39 @@ class WordPressSource {
   }
 
   async downloadImages (api) {
-    console.log(api)
+    if (!this.options.images) return
+    const { original = false, folder = '.images/wordpress', cache = true, concurrent = os.cpus().length } = this.options.images
+
+    const imageStore = api._store.getCollection(this.createTypeName(TYPE_ATTACHMENT))
+    const images = imageStore.data()
+
+    const pipeline = promisify(stream.pipeline)
+
+    await pMap(images, async image => {
+      const { pathname } = new URL(image.sourceUrl)
+      const { name, dir, ext } = path.parse(pathname)
+
+      const targetFileName = original ? name : image.id
+      const targetFolder = path.join(process.cwd(), folder, original ? dir : '')
+
+      const filePath = path.format({ ext, name: targetFileName, dir: targetFolder })
+
+      const updatedNode = { ...image, downloaded: filePath }
+
+      if (cache && await fs.pathExists(filePath)) return imageStore.updateNode(updatedNode)
+
+      try {
+        await fs.ensureFile(filePath)
+        await pipeline(
+          got.stream(image.sourceUrl),
+          fs.createWriteStream(filePath)
+        )
+
+        return imageStore.updateNode(updatedNode)
+      } catch (error) {
+        console.error(error.message)
+      }
+    }, { concurrency: concurrent })
   }
 
   sanitizeCustomEndpoints () {
