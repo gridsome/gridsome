@@ -26,7 +26,7 @@ exports.processImage = async function ({
   const { ext } = path.parse(filePath)
   const { backgroundColor } = imagesConfig
 
-  let buffer = await fs.readFile(filePath)
+  const buffer = await fs.readFile(filePath)
 
   if (['.png', '.jpeg', '.jpg', '.webp'].includes(ext)) {
     const config = {
@@ -93,11 +93,18 @@ exports.processImage = async function ({
       }))
     }
 
-    buffer = await sharpImage.toBuffer()
-    buffer = await imagemin.buffer(buffer, { plugins })
+    const sharpBuffer = await sharpImage.toBuffer()
+    const resultBuffer = await imagemin.buffer(sharpBuffer, { plugins })
+    const resultLength = Buffer.byteLength(resultBuffer)
+    const initLength = Buffer.byteLength(buffer)
+
+    return fs.outputFile(
+      destPath,
+      resultLength < initLength ? resultBuffer : buffer
+    )
   }
 
-  await fs.outputFile(destPath, buffer)
+  return fs.outputFile(destPath, buffer)
 }
 
 exports.process = async function ({

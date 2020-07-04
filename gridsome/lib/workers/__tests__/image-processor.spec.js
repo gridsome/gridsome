@@ -113,6 +113,23 @@ test('do not upscale images', async () => {
   expect(height).toEqual(250)
 })
 
+
+test('do not use processed image if file size gets bigger', async () => {
+  const files = await process([
+    'rotated.jpg',
+    '1000x600.jpg',
+    '350x250.png',
+    '1000x600-compressed.jpg',
+    '350x250-compressed.png'
+  ], { quality: 100 })
+
+  for (const file of files) {
+    const originalImage = fs.statSync(file.filePath)
+    const resultImage = fs.statSync(file.destPath)
+    expect(resultImage.size).toBeLessThanOrEqual(originalImage.size)
+  }
+})
+
 test('use cached process results', async () => {
   await fs.copy(
     path.join(context, 'assets', '1000x600.png'),
@@ -154,7 +171,7 @@ async function process (filenames, options = {}, withCache = false) {
     queue: processQueue.images.queue,
     cacheDir: withCache ? imageCacheDir : false,
     imagesConfig: config.images,
-    outputDir: context
+    context
   })
 
   return Promise.all(assets.map(async ({ filePath, src, hash }) => {
