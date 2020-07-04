@@ -185,8 +185,6 @@ class WordPressSource {
   }
 
   async fetchPaged (path) {
-    const { perPage, concurrent } = this.options
-
     const { headers } = await this.client.head(path, { resolveBodyOnly: false })
 
     const totalItems = parseInt(headers['x-wp-total'], 10)
@@ -194,16 +192,16 @@ class WordPressSource {
 
     if (!totalItems) return []
 
-    const queue = [...Array(totalPages)].map((_, page) => ({ per_page: perPage, page }))
+    const queue = [...Array(totalPages)].map((_, i) => i + 1)
 
-    const allData = await pMap(queue, async params => {
+    const allData = await pMap(queue, async page => {
       try {
-        const data = await this.fetch(path, params)
+        const data = await this.fetch(path, { page })
         return this.ensureArrayData(path, data)
       } catch (error) {
         console.log(error.message)
       }
-    }, { concurrency: concurrent })
+    }, { concurrency: this.options.concurrent })
 
     return allData.flat()
   }
