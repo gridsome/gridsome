@@ -43,6 +43,7 @@ class WordPressSource {
 
     this.client = got.extend({
       prefixUrl: `${options.baseUrl}/${options.apiBase}`,
+      searchParams: { per_page: options.perPage },
       resolveBodyOnly: true,
       responseType: 'json'
     })
