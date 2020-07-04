@@ -1,7 +1,7 @@
 const pMap = require('p-map')
-const axios = require('axios')
+const got = require('got').default
 const camelCase = require('camelcase')
-const { mapKeys, isPlainObject, trimEnd, trimStart } = require('lodash')
+const isPlainObject = require('lodash.isplainobject')
 
 const TYPE_AUTHOR = 'author'
 const TYPE_ATTACHMENT = 'attachment'
@@ -31,18 +31,16 @@ class WordPressSource {
 
     this.customEndpoints = this.sanitizeCustomEndpoints()
 
-    const baseUrl = trimEnd(options.baseUrl, '/')
-
-    this.client = axios.create({
-      baseURL: `${baseUrl}/${options.apiBase}`
+    this.client = got.extend({
+      prefixUrl: `${options.baseUrl}/${options.apiBase}`,
+      resolveBodyOnly: true,
+      responseType: 'json'
     })
-
-    this.routes = this.options.routes || {}
 
     api.loadSource(async actions => {
       this.store = actions
 
-      console.log(`Loading data from ${baseUrl}`)
+      console.log(`Loading data from ${options.baseUrl}`)
 
       await this.getPostTypes(actions)
       await this.getUsers(actions)
@@ -53,25 +51,26 @@ class WordPressSource {
   }
 
   async getPostTypes (actions) {
-    const { data } = await this.fetch('wp/v2/types', {}, {})
+    const data = await this.fetch('wp/v2/types', {}, {})
 
     for (const type in data) {
       const options = data[type]
 
-      this.restBases.posts[type] = trimStart(options.rest_base, '/')
+      this.restBases.posts[type] = options.rest_base
 
       actions.addCollection(this.createTypeName(type))
     }
   }
 
   async getUsers (actions) {
-    const { data } = await this.fetch('wp/v2/users')
+    const data = await this.fetch('wp/v2/users')
 
     const authors = actions.addCollection(this.createTypeName(TYPE_AUTHOR))
 
     for (const author of data) {
       const fields = this.normalizeFields(author)
-      const avatars = mapKeys(author.avatar_urls, (v, key) => `avatar${key}`)
+
+      const avatars = Object.entries(author.avatar_urls).reduce((obj, [key, value]) => ({ ...obj, [`avatar${key}`]: value }), {})
 
       authors.addNode({
         ...fields,
@@ -83,13 +82,13 @@ class WordPressSource {
   }
 
   async getTaxonomies (actions) {
-    const { data } = await this.fetch('wp/v2/taxonomies', {}, {})
+    const data = await this.fetch('wp/v2/taxonomies', {}, {})
 
     for (const type in data) {
       const options = data[type]
       const taxonomy = actions.addCollection(this.createTypeName(type))
 
-      this.restBases.taxonomies[type] = trimStart(options.rest_base, '/')
+      this.restBases.taxonomies[type] = options.rest_base
 
       const terms = await this.fetchPaged(`wp/v2/${options.rest_base}`)
 
@@ -149,7 +148,7 @@ class WordPressSource {
     for (const endpoint of this.customEndpoints) {
       const customCollection = actions.addCollection(endpoint.typeName)
 
-      const { data } = await this.fetch(endpoint.route, {}, {})
+      const data = await this.fetch(endpoint.route, {}, {})
 
       for (let item of data) {
         if (endpoint.normalize) {
@@ -165,68 +164,47 @@ class WordPressSource {
   }
 
   async fetch (url, params = {}, fallbackData = []) {
-    let res
-
     try {
-      res = await this.client.request({ url, params })
-    } catch ({ response, code, config }) {
-      if (!response && code) {
-        throw new Error(`${code} - ${config.url}`)
-      }
+      const data = await this.client.get(url)
+      return data
+    } catch (e) {
+      console.log(e)
+      return fallbackData
+      // if (!response && code) {
+      //   throw new Error(`${code} - ${config.url}`)
+      // }
 
-      if ([401, 403].includes(response.status)) {
-        console.warn(`Error: Status ${response.status} - ${config.url}`)
-        return { ...response, data: fallbackData }
-      } else {
-        throw new Error(`${response.status} - ${config.url}`)
-      }
+      // if ([401, 403].includes(response.status)) {
+      //   console.warn(`Error: Status ${response.status} - ${config.url}`)
+      //   return { ...response, data: fallbackData }
+      // } else {
+      //   throw new Error(`${response.status} - ${config.url}`)
+      // }
     }
-
-    return res
   }
 
   async fetchPaged (path) {
     const { perPage, concurrent } = this.options
 
-    return new Promise(async (resolve, reject) => {
-      let res
+    const { headers } = await this.client.head(path, { resolveBodyOnly: false })
 
+    const totalItems = parseInt(headers['x-wp-total'], 10)
+    const totalPages = parseInt(headers['x-wp-totalpages'], 10)
+
+    if (!totalItems) return []
+
+    const queue = [...Array(totalPages)].map((_, page) => ({ per_page: perPage, page }))
+
+    const allData = await pMap(queue, async params => {
       try {
-        res = await this.fetch(path, { per_page: perPage })
+        const data = await this.fetch(path, params)
+        return this.ensureArrayData(path, data)
       } catch (err) {
-        return reject(err)
+        console.log(err.message)
       }
+    }, { concurrency: concurrent })
 
-      const totalItems = parseInt(res.headers['x-wp-total'], 10)
-      const totalPages = parseInt(res.headers['x-wp-totalpages'], 10)
-
-      try {
-        res.data = ensureArrayData(path, res.data)
-      } catch (err) {
-        return reject(err)
-      }
-
-      if (!totalItems || totalPages <= 1) {
-        return resolve(res.data)
-      }
-
-      const queue = []
-
-      for (let page = 2; page <= totalPages; page++) {
-        queue.push({ per_page: perPage, page })
-      }
-
-      await pMap(queue, async params => {
-        try {
-          const { data } = await this.fetch(path, params)
-          res.data.push(...ensureArrayData(path, data))
-        } catch (err) {
-          console.log(err.message)
-        }
-      }, { concurrency: concurrent })
-
-      resolve(res.data)
-    })
+    return allData.flat()
   }
 
   sanitizeCustomEndpoints () {
@@ -282,25 +260,24 @@ class WordPressSource {
 
     return value
   }
+w
+  ensureArrayData (url, data) {
+    if (Array.isArray(data)) return data
 
-  createTypeName (name = '') {
-    return camelCase(`${this.options.typeName} ${name}`, { pascalCase: true })
-  }
-}
-
-function ensureArrayData (url, data) {
-  if (!Array.isArray(data)) {
     try {
       data = JSON.parse(data)
     } catch (err) {
       throw new Error(
-        `Failed to fetch ${url}\n` +
-        `Expected JSON response but received:\n` +
+        `Failed to fetch ${url} -\n` +
+        `Expected JSON response, but received ${typeof data}:\n` +
         `${data.trim().substring(0, 150)}...\n`
       )
     }
   }
-  return data
+
+  createTypeName (name = '') {
+    return camelCase(`${this.options.typeName} ${name}`, { pascalCase: true })
+  }
 }
 
 module.exports = WordPressSource
