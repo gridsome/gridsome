@@ -199,7 +199,7 @@ class WordPressSource {
         const data = await this.fetch(path, { page })
         return this.ensureArrayData(path, data)
       } catch (error) {
-        console.log(error.message)
+        console.error(error.message)
       }
     }, { concurrency: this.options.concurrent })
 
