@@ -222,6 +222,16 @@ class WordPressSource {
     return this.options.customEndpoints ? this.options.customEndpoints : []
   }
 
+  ensureArrayData (url, data) {
+    if (Array.isArray(data)) return data
+
+    try {
+      data = JSON.parse(data)
+    } catch (err) {
+      console.error(`Failed to fetch ${url} - expected JSON response, but received ${typeof data} type.`)
+    }
+  }
+
   normalizeFields (fields) {
     const res = {}
 
@@ -260,16 +270,6 @@ class WordPressSource {
     }
 
     return value
-  }
-
-  ensureArrayData (url, data) {
-    if (Array.isArray(data)) return data
-
-    try {
-      data = JSON.parse(data)
-    } catch (err) {
-      console.error(`Failed to fetch ${url} - expected JSON response, but received ${typeof data} type.`)
-    }
   }
 
   createTypeName (name = '') {
