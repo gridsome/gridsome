@@ -70,7 +70,7 @@ function createCode (node, showLineNumbersGlobal) {
 
   const {
     showLineNumbersLocal,
-    numberLinesStartAt
+    lineNumbersStartAt
   } = parseOptions(node.meta || '')
 
   const data = node.data || {}
@@ -94,9 +94,9 @@ function createCode (node, showLineNumbersGlobal) {
       'pre',
       {
         className: [className, 'line-numbers'],
-        style: numberLinesStartAt - 1
+        style: lineNumbersStartAt - 1
           ? {
-            'counter-reset': `linenumber ${numberLinesStartAt - 1}`
+            'counter-reset': `linenumber ${lineNumbersStartAt - 1}`
           }
           : null,
         ...props
