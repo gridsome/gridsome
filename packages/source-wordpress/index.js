@@ -1,10 +1,18 @@
-const pMap = require('p-map')
-const got = require('got').default
 const camelCase = require('camelcase')
+const consola = require('consola')
+const got = require('got').default
 const isPlainObject = require('lodash.isplainobject')
+const pMap = require('p-map')
 
 const TYPE_AUTHOR = 'author'
 const TYPE_ATTACHMENT = 'attachment'
+
+// Add prefix to error messages
+const console = {
+  info: msg => consola.info(`WordPress Source: ${msg}`),
+  warn: msg => consola.warn(`WordPress Source: ${msg}`),
+  error: msg => consola.error(`WordPress Source: ${msg}`)
+}
 
 class WordPressSource {
   static defaultOptions () {
@@ -18,16 +26,18 @@ class WordPressSource {
   }
 
   constructor (api, options) {
-    this.options = options
-    this.restBases = { posts: {}, taxonomies: {}}
-
     if (!options.typeName) {
-      throw new Error(`Missing typeName option.`)
+      options.typeName = 'WordPress'
+      console.warn('Missing the `typeName` option - defaulting to `WordPress`.')
     }
 
     if (options.perPage > 100 || options.perPage < 1) {
-      throw new Error(`${options.typeName}: perPage cannot be more than 100 or less than 1.`)
+      options.perPage = 100
+      console.warn('`perPage` cannot be more than 100 or less than 1 - defaulting to 100.')
     }
+
+    this.options = options
+    this.restBases = { posts: {}, taxonomies: {}}
 
     this.customEndpoints = this.sanitizeCustomEndpoints()
 
@@ -40,7 +50,7 @@ class WordPressSource {
     api.loadSource(async actions => {
       this.store = actions
 
-      console.log(`Loading data from ${options.baseUrl}`)
+      console.info(`Loading data from ${options.baseUrl}`)
 
       await this.getPostTypes(actions)
       await this.getUsers(actions)
@@ -167,19 +177,9 @@ class WordPressSource {
     try {
       const data = await this.client.get(url)
       return data
-    } catch (e) {
-      console.log(e)
+    } catch ({ response }) {
+      consola.error(`Status ${response.statusCode} fetching ${response.requestUrl}`)
       return fallbackData
-      // if (!response && code) {
-      //   throw new Error(`${code} - ${config.url}`)
-      // }
-
-      // if ([401, 403].includes(response.status)) {
-      //   console.warn(`Error: Status ${response.status} - ${config.url}`)
-      //   return { ...response, data: fallbackData }
-      // } else {
-      //   throw new Error(`${response.status} - ${config.url}`)
-      // }
     }
   }
 
@@ -209,13 +209,15 @@ class WordPressSource {
 
   sanitizeCustomEndpoints () {
     if (!this.options.customEndpoints) return []
-    if (!Array.isArray(this.options.customEndpoints)) throw Error('customEndpoints must be an array')
+    if (!Array.isArray(this.options.customEndpoints)) {
+      return console.error('`customeEndpoints` must be an array.')
+    }
     this.options.customEndpoints.forEach(endpoint => {
       if (!endpoint.typeName) {
-        throw Error('Please provide a typeName option for all customEndpoints\n')
+        return console.error('Please provide a `typeName` option for all customEndpoints')
       }
       if (!endpoint.route) {
-        throw Error(`No route option in endpoint: ${endpoint.typeName}\n Ex: 'apiName/versionNumber/endpointObject'`)
+        return console.error(`\`route\` option is missing in endpoint ${endpoint.typeName}. Ex: \`apiName/versionNumber/endpointObject\``)
       }
     })
     return this.options.customEndpoints ? this.options.customEndpoints : []
@@ -260,18 +262,14 @@ class WordPressSource {
 
     return value
   }
-w
+
   ensureArrayData (url, data) {
     if (Array.isArray(data)) return data
 
     try {
       data = JSON.parse(data)
     } catch (err) {
-      throw new Error(
-        `Failed to fetch ${url} -\n` +
-        `Expected JSON response, but received ${typeof data}:\n` +
-        `${data.trim().substring(0, 150)}...\n`
-      )
+      console.error(`Failed to fetch ${url} - expected JSON response, but received ${typeof data} type.`)
     }
   }
 
