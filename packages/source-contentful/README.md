@@ -94,9 +94,9 @@ The Contentful renderer is imported, then used to convert the JSON response from
 
 Custom parsing and more configuration details can be found on the [Contentful Rich Text HTML Render package documentation](https://www.npmjs.com/package/@contentful/rich-text-html-renderer)
 
-#### Embeded Assets (images in Rich text)
+#### Embedded Assets (images in Rich text)
 
-The Contentful HTML renderer doesn't automatically render embeded assets, instead, you can configure how you want to render them using `BLOCK` types and the configuration options.
+The Contentful HTML renderer doesn't automatically render embedded assets, instead, you can configure how you want to render them using `BLOCK` types and the configuration options.
 
 To do so, import `BLOCKS` and setup a custom renderer before calling the `documentToHtmlString` method. Here, we're getting the image title and source url (contentful CDN src) and passing it to a string template.
 
@@ -158,7 +158,7 @@ query Location {
 
 ### JSON
 
-In Contentful JSON ContentTypes, rather than recieving the entire object when querying for the field, GraphQL requires that you query for each field that you need.
+In Contentful JSON ContentTypes, rather than receiving the entire object when querying for the field, GraphQL requires that you query for each field that you need.
 
 ```graphql
 query Json {
