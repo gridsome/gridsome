@@ -179,7 +179,7 @@ class WordPressSource {
       const data = await this.client.get(url, { searchParams: params })
       return data
     } catch ({ response }) {
-      consola.error(`Status ${response.statusCode} fetching ${response.requestUrl}`)
+      console.error(`Status ${response.statusCode} fetching ${response.requestUrl}`)
       return fallbackData
     }
   }
