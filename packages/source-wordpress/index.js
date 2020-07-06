@@ -29,7 +29,7 @@ class WordPressSource {
       concurrent: os.cpus().length,
       typeName: 'WordPress',
       images: false,
-      links: true
+      content: true
     }
   }
 
@@ -165,18 +165,43 @@ class WordPressSource {
           fields.featuredMedia = actions.createReference(ATTACHMENT_TYPE_NAME, post.featured_media)
         }
 
-        if (this.options.links) {
-          const fieldsToInclude = Array.isArray(this.options.links) ? ['content', ...this.options.links] : ['content']
+        if (this.options.content) {
+          const { links = true, images = true } = this.options.content
+          const fieldsToInclude = Array.isArray(links) ? ['content', ...links] : ['content']
 
-          for (const key of fieldsToInclude) {
+          for await (const key of fieldsToInclude) {
             const html = HTMLParser.parse(fields[key])
             if (!html) continue
 
-            html.querySelectorAll('a').forEach(link => {
-              const originalLink = link.getAttribute('href')
-              const updatedLink = originalLink.replace(this.options.baseUrl, '')
-              link.setAttribute('href', updatedLink)
-            })
+            if (links) {
+              for (const link of html.querySelectorAll('a')) {
+                const originalLink = link.getAttribute('href')
+                const updatedLink = originalLink.replace(this.options.baseUrl, '')
+                link.setAttribute('href', updatedLink)
+              }
+            }
+
+            if (images) {
+              const pipeline = promisify(stream.pipeline)
+              for await (const img of html.querySelectorAll('img')) {
+                const originalSrc = img.getAttribute('src')
+                if (!originalSrc.includes(this.options.baseUrl)) continue
+
+                const { pathname } = new URL(originalSrc)
+                const fileUrl = pathname.replace('/wp-content', '')
+                const filePath = path.join(process.cwd(), 'static', fileUrl)
+
+                img.setAttribute('src', fileUrl)
+
+                if (await fs.pathExists(filePath)) continue
+
+                await fs.ensureFile(filePath)
+                await pipeline(
+                  got.stream(originalSrc),
+                  fs.createWriteStream(filePath)
+                )
+              }
+            }
 
             fields[key] = html.toString()
           }
