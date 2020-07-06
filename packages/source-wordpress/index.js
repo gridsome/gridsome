@@ -255,7 +255,6 @@ class WordPressSource {
   }
 
   async fetch (url, params = {}, fallbackData = []) {
-    console.log(url)
     try {
       const data = await this.client.get(url, { searchParams: params })
       return data
@@ -266,7 +265,6 @@ class WordPressSource {
   }
 
   async fetchPaged (path) {
-    console.log(path)
     try {
       const { headers } = await this.client.head(path, { resolveBodyOnly: false })
 
