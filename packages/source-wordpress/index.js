@@ -2,6 +2,7 @@ const camelCase = require('camelcase')
 const consola = require('consola')
 const fs = require('fs-extra')
 const got = require('got').default
+const HTMLParser = require('node-html-parser')
 const isPlainObject = require('lodash.isplainobject')
 const os = require('os')
 const pMap = require('p-map')
@@ -27,7 +28,8 @@ class WordPressSource {
       perPage: 100,
       concurrent: os.cpus().length,
       typeName: 'WordPress',
-      images: false
+      images: false,
+      links: true
     }
   }
 
@@ -161,6 +163,23 @@ class WordPressSource {
 
         if (post.type !== TYPE_ATTACHMENT) {
           fields.featuredMedia = actions.createReference(ATTACHMENT_TYPE_NAME, post.featured_media)
+        }
+
+        if (this.options.links) {
+          const fieldsToInclude = Array.isArray(this.options.links) ? ['content', ...this.options.links] : ['content']
+
+          for (const key of fieldsToInclude) {
+            const html = HTMLParser.parse(fields[key])
+            if (!html) continue
+
+            html.querySelectorAll('a').forEach(link => {
+              const originalLink = link.getAttribute('href')
+              const updatedLink = originalLink.replace(this.options.baseUrl, '')
+              link.setAttribute('href', updatedLink)
+            })
+
+            fields[key] = html.toString()
+          }
         }
 
         // add references if post has any taxonomy rest bases as properties

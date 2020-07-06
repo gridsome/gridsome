@@ -17,6 +17,7 @@
     "fs-extra": "^9.0.1",
     "got": "^11.3.0",
     "lodash.isplainobject": "^4.0.6",
+    "node-html-parser": "^1.2.20",
     "p-map": "^1.2.0"
   },
   "publishConfig": {
