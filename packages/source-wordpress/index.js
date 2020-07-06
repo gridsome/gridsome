@@ -32,6 +32,10 @@ class WordPressSource {
   }
 
   constructor (api, options) {
+    if (!options.baseUrl) {
+      return report.error('Missing the `baseUrl` option - please add, and try again.')
+    }
+
     if (!options.typeName) {
       options.typeName = 'WordPress'
       report.warn('Missing the `typeName` option - defaulting to `WordPress`.')
