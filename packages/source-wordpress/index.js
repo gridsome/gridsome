@@ -42,15 +42,17 @@ class WordPressSource {
       report.warn('`perPage` cannot be more than 100 or less than 1 - defaulting to 100.')
     }
 
-    this.api = api
-    this.options = options
+    this.options = {
+      ...options,
+      baseUrl: options.baseUrl.replace(/\/$/, '')
+    }
     this.restBases = { posts: {}, taxonomies: {}}
 
     this.customEndpoints = this.sanitizeCustomEndpoints()
 
     this.client = got.extend({
-      prefixUrl: `${options.baseUrl}/${options.apiBase}`,
-      searchParams: { per_page: options.perPage },
+      prefixUrl: `${this.options.baseUrl}/${this.options.apiBase}`,
+      searchParams: { per_page: this.options.perPage },
       resolveBodyOnly: true,
       responseType: 'json'
     })
@@ -58,7 +60,7 @@ class WordPressSource {
     api.loadSource(async actions => {
       this.store = actions
 
-      report.info(`Loading data from ${options.baseUrl}`)
+      report.info(`Loading data from ${this.options.baseUrl}`)
 
       this.addSchemaTypes(actions)
 
