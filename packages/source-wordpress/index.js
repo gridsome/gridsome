@@ -35,7 +35,11 @@ class WordPressSource {
 
   constructor (api, options) {
     if (!options.baseUrl) {
-      return report.error('Missing the `baseUrl` option - please add, and try again.')
+      // report.error( 'Missing the `baseUrl` option - please add, and try again.' )
+      throw new Error(report.error('Missing the `baseUrl` option - please add, and try again.'))
+    }
+    if (!options.baseUrl.includes('http')) {
+      throw new Error(report.error('`baseUrl` does not include the protocol - please add, and try again (`http://` or `https://`).'))
     }
 
     if (!options.typeName) {
