@@ -318,19 +318,23 @@ class WordPressSource {
   }
 
   sanitizeCustomEndpoints () {
-    if (!this.options.customEndpoints) return []
-    if (!Array.isArray(this.options.customEndpoints)) {
-      return report.error('`customeEndpoints` must be an array.')
+    const { customEndpoints } = this.options
+    if (!customEndpoints) return []
+
+    if (!Array.isArray(customEndpoints)) {
+      throw new Error(report.error('`customEndpoints` must be an array.'))
     }
-    this.options.customEndpoints.forEach(endpoint => {
+
+    for (const endpoint of customEndpoints) {
       if (!endpoint.typeName) {
-        return report.error('Please provide a `typeName` option for all customEndpoints')
+        throw new Error(report.error('Please provide a `typeName` option for all customEndpoints'))
       }
       if (!endpoint.route) {
-        return report.error(`\`route\` option is missing in endpoint ${endpoint.typeName}. Ex: \`apiName/versionNumber/endpointObject\``)
+        throw new Error(report.error(`\`route\` option is missing in endpoint ${endpoint.typeName}. Ex: \`apiName/versionNumber/endpointObject\``))
       }
-    })
-    return this.options.customEndpoints ? this.options.customEndpoints : []
+    }
+
+    return customEndpoints
   }
 
   ensureArrayData (url, data) {
