@@ -234,7 +234,7 @@ class WordPressSource {
     for (const endpoint of this.customEndpoints) {
       const customCollection = actions.addCollection(endpoint.typeName)
 
-      const data = await this.fetch(endpoint.route, {}, {})
+      const data = await this.fetch(endpoint.route)
 
       for (let item of data) {
         if (endpoint.normalize) {
