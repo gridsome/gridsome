@@ -13,7 +13,7 @@ const TYPE_AUTHOR = 'author'
 const TYPE_ATTACHMENT = 'attachment'
 
 // Add prefix to error messages
-const console = {
+const report = {
   info: msg => consola.info(`WordPress Source: ${msg}`),
   warn: msg => consola.warn(`WordPress Source: ${msg}`),
   error: msg => consola.error(`WordPress Source: ${msg}`)
@@ -34,14 +34,15 @@ class WordPressSource {
   constructor (api, options) {
     if (!options.typeName) {
       options.typeName = 'WordPress'
-      console.warn('Missing the `typeName` option - defaulting to `WordPress`.')
+      report.warn('Missing the `typeName` option - defaulting to `WordPress`.')
     }
 
     if (options.perPage > 100 || options.perPage < 1) {
       options.perPage = 100
-      console.warn('`perPage` cannot be more than 100 or less than 1 - defaulting to 100.')
+      report.warn('`perPage` cannot be more than 100 or less than 1 - defaulting to 100.')
     }
 
+    this.api = api
     this.options = options
     this.restBases = { posts: {}, taxonomies: {}}
 
@@ -57,7 +58,7 @@ class WordPressSource {
     api.loadSource(async actions => {
       this.store = actions
 
-      console.info(`Loading data from ${options.baseUrl}`)
+      report.info(`Loading data from ${options.baseUrl}`)
 
       this.addSchemaTypes(actions)
 
@@ -199,7 +200,7 @@ class WordPressSource {
       const data = await this.client.get(url, { searchParams: params })
       return data
     } catch ({ response }) {
-      console.error(`Status ${response.statusCode} fetching ${response.requestUrl}`)
+      report.error(`Status ${response.statusCode} fetching ${response.requestUrl}`)
       return fallbackData
     }
   }
@@ -219,7 +220,7 @@ class WordPressSource {
         const data = await this.fetch(path, { page })
         return this.ensureArrayData(path, data)
       } catch (error) {
-        console.error(error.message)
+        report.error(error.message)
       }
     }, { concurrency: this.options.concurrent })
 
@@ -257,7 +258,7 @@ class WordPressSource {
 
         return imageStore.updateNode(updatedNode)
       } catch (error) {
-        console.error(error.message)
+        report.error(error.message)
       }
     }, { concurrency: concurrent })
   }
@@ -265,14 +266,14 @@ class WordPressSource {
   sanitizeCustomEndpoints () {
     if (!this.options.customEndpoints) return []
     if (!Array.isArray(this.options.customEndpoints)) {
-      return console.error('`customeEndpoints` must be an array.')
+      return report.error('`customeEndpoints` must be an array.')
     }
     this.options.customEndpoints.forEach(endpoint => {
       if (!endpoint.typeName) {
-        return console.error('Please provide a `typeName` option for all customEndpoints')
+        return report.error('Please provide a `typeName` option for all customEndpoints')
       }
       if (!endpoint.route) {
-        return console.error(`\`route\` option is missing in endpoint ${endpoint.typeName}. Ex: \`apiName/versionNumber/endpointObject\``)
+        return report.error(`\`route\` option is missing in endpoint ${endpoint.typeName}. Ex: \`apiName/versionNumber/endpointObject\``)
       }
     })
     return this.options.customEndpoints ? this.options.customEndpoints : []
@@ -284,7 +285,7 @@ class WordPressSource {
     try {
       data = JSON.parse(data)
     } catch (err) {
-      console.error(`Failed to fetch ${url} - expected JSON response, but received ${typeof data} type.`)
+      report.error(`Failed to fetch ${url} - expected JSON response, but received ${typeof data} type.`)
     }
   }
 
