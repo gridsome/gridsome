@@ -25,6 +25,7 @@ class WordPressSource {
     return {
       baseUrl: '',
       apiBase: 'wp-json',
+      hostingWPCOM: false,
       perPage: 100,
       concurrent: os.cpus().length,
       typeName: 'WordPress',
@@ -38,7 +39,8 @@ class WordPressSource {
       // report.error( 'Missing the `baseUrl` option - please add, and try again.' )
       throw new Error(report.error('Missing the `baseUrl` option - please add, and try again.'))
     }
-    if (!options.baseUrl.includes('http')) {
+
+    if (!options.baseUrl.includes('http') && !options.hostingWPCOM) {
       throw new Error(report.error('`baseUrl` does not include the protocol - please add, and try again (`http://` or `https://`).'))
     }
 
@@ -52,16 +54,19 @@ class WordPressSource {
       report.warn('`perPage` cannot be more than 100 or less than 1 - defaulting to 100.')
     }
 
+    const baseUrl = options.baseUrl.replace(/\/$/, '')
+    const clientBase = options.hostingWPCOM ? `https://public-api.wordpress.com/wp/v2/sites/${baseUrl}/` : `${baseUrl}/${options.apiBase}/wp/v2/`
+
     this.options = {
       ...options,
-      baseUrl: options.baseUrl.replace(/\/$/, '')
+      baseUrl
     }
     this.restBases = { posts: {}, taxonomies: {}}
 
     this.customEndpoints = this.sanitizeCustomEndpoints()
 
     this.client = got.extend({
-      prefixUrl: `${this.options.baseUrl}/${this.options.apiBase}`,
+      prefixUrl: clientBase,
       searchParams: { per_page: this.options.perPage },
       resolveBodyOnly: true,
       responseType: 'json'
@@ -95,7 +100,7 @@ class WordPressSource {
   }
 
   async getPostTypes (actions) {
-    const data = await this.fetch('wp/v2/types', {}, {})
+    const data = await this.fetch('types', {}, {})
 
     for (const type in data) {
       const options = data[type]
@@ -107,7 +112,7 @@ class WordPressSource {
   }
 
   async getUsers (actions) {
-    const data = await this.fetch('wp/v2/users')
+    const data = await this.fetch('users')
 
     const authors = actions.addCollection(this.createTypeName(TYPE_AUTHOR))
 
@@ -126,7 +131,7 @@ class WordPressSource {
   }
 
   async getTaxonomies (actions) {
-    const data = await this.fetch('wp/v2/taxonomies', {}, {})
+    const data = await this.fetch('taxonomies', {}, {})
 
     for (const type in data) {
       const options = data[type]
@@ -134,7 +139,7 @@ class WordPressSource {
 
       this.restBases.taxonomies[type] = options.rest_base
 
-      const terms = await this.fetchPaged(`wp/v2/${options.rest_base}`)
+      const terms = await this.fetchPaged(options.rest_base)
 
       for (const term of terms) {
         taxonomy.addNode({
@@ -158,7 +163,7 @@ class WordPressSource {
       const typeName = this.createTypeName(type)
       const posts = actions.getCollection(typeName)
 
-      const data = await this.fetchPaged(`wp/v2/${restBase}`)
+      const data = await this.fetchPaged(restBase)
 
       for (const post of data) {
         const fields = this.normalizeFields(post)
@@ -250,6 +255,7 @@ class WordPressSource {
   }
 
   async fetch (url, params = {}, fallbackData = []) {
+    console.log(url)
     try {
       const data = await this.client.get(url, { searchParams: params })
       return data
@@ -260,25 +266,31 @@ class WordPressSource {
   }
 
   async fetchPaged (path) {
-    const { headers } = await this.client.head(path, { resolveBodyOnly: false })
+    console.log(path)
+    try {
+      const { headers } = await this.client.head(path, { resolveBodyOnly: false })
 
-    const totalItems = parseInt(headers['x-wp-total'], 10)
-    const totalPages = parseInt(headers['x-wp-totalpages'], 10)
+      const totalItems = parseInt(headers['x-wp-total'], 10)
+      const totalPages = parseInt(headers['x-wp-totalpages'], 10)
 
-    if (!totalItems) return []
+      if (!totalItems) return []
 
-    const queue = [...Array(totalPages)].map((_, i) => i + 1)
+      const queue = [...Array(totalPages)].map((_, i) => i + 1)
 
-    const allData = await pMap(queue, async page => {
-      try {
-        const data = await this.fetch(path, { page })
-        return this.ensureArrayData(path, data)
-      } catch (error) {
-        report.error(error.message)
-      }
-    }, { concurrency: this.options.concurrent })
+      const allData = await pMap(queue, async page => {
+        try {
+          const data = await this.fetch(path, { page })
+          return this.ensureArrayData(path, data)
+        } catch (error) {
+          report.error(error.message)
+        }
+      }, { concurrency: this.options.concurrent })
 
-    return allData.flat()
+      return allData.flat()
+    } catch ({ response }) {
+      report.warn(`Status ${response.statusCode} fetching ${response.requestUrl}`)
+      return []
+    }
   }
 
   async downloadImages (api) {

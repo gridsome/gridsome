@@ -35,6 +35,7 @@ module.exports = {
 | `baseUrl` | The base URL of your WordPress instance. This is required, and must include the protocol used. |  |
 | `apiBase` | The API base for your WordPress instance - this may change if you are using wordpress.com for example. | `wp-json` |
 | `typeName` | The downloader will skip images that already exist locally, but you can force it to download every image if needed. | `false` |
+| `hostingWPCOM` | Change this to `true` if your site is hosted on wordpress.com, and set `baseUrl` to your site name (e.g. `staticsitegeneration.wordpress.com`) | `false` |
 | `perPage` | The amount of items that will be fetched per API call - minimum of 1, and maximum of 100. | `100` |
 | `concurrent` | The amount of API calls that will run at once. | `8` |
 | `images` | Whether to download images locally to be used with `g-image`. This can also be an object, with options to keep the original file path/name, cache images, and change the download folder. | `{ original: true, folder: '.images/wordpress', cache: true }` |
@@ -74,7 +75,7 @@ To use REST endpoints from plugins or defined in your theme add a `customEndpoin
     ... // other source-wordpress options
     customEndpoints: [
       {
-        typeName: "WPMenu",
+        typeName: "Menu",
         route: 'myApi/v1/menus',
       }
     ]
@@ -84,13 +85,13 @@ To use REST endpoints from plugins or defined in your theme add a `customEndpoin
 If you are trying to query posts, you will need to add the `normalize: true` option to make sure the data is properly added:
 
 ```js
-    customEndpoints: [
-        {
-            typeName: "Posts",
-            route: "/wp/v2/posts",
-            normalize: true,
-        },
-    ]
+  customEndpoints: [
+    {
+      typeName: "Posts",
+      route: "/wp/v2/posts",
+      normalize: true
+    }
+  ]
 ```
 
 ## Create Collections based on REST Endpoints
@@ -98,16 +99,16 @@ If you are trying to query posts, you will need to add the `normalize: true` opt
 `customEndpoints` allow you to neatly create separate [Collections](https://gridsome.org/docs/collections/#collections) by querying different REST endpoints.
 
 ```js
-    customEndpoints: [
-        {
-            typeName: "Collection1",
-            route: "/wp/v2/posts?categories=<category_id>",
-            normalize: true,
-        },
-        {
-            typeName: "Collection2",
-            route: "/wp/v2/posts?tags=<tag_id>",
-            normalize: true,
-        },
-    ]
+  customEndpoints: [
+    {
+      typeName: "Collection1",
+      route: "/wp/v2/posts?categories=<category_id>",
+      normalize: true
+    },
+    {
+      typeName: "Collection2",
+      route: "/wp/v2/posts?tags=<tag_id>",
+      normalize: true
+    }
+  ]
 ```
