@@ -254,7 +254,7 @@ class WordPressSource {
       const data = await this.client.get(url, { searchParams: params })
       return data
     } catch ({ response }) {
-      report.error(`Status ${response.statusCode} fetching ${response.requestUrl}`)
+      report.warn(`Status ${response.statusCode} fetching ${response.requestUrl}`)
       return fallbackData
     }
   }
