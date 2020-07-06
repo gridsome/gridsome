@@ -15,11 +15,10 @@ module.exports = {
     {
       use: '@gridsome/source-wordpress',
       options: {
-        baseUrl: 'WEBSITE_URL', // required
+        baseUrl: '<WEBSITE_URL>', // required
         apiBase: 'wp-json',
         typeName: 'WordPress',
-        perPage: 100,
-        concurrent: 10
+        images: true
       }
     }
   ],
@@ -28,6 +27,18 @@ module.exports = {
   }
 }
 ```
+
+## Options
+
+| Option | Explanation | Default |
+|-|-|-|
+| `baseUrl` | The base URL of your WordPress instance. This is required, and must include the protocol used. |  |
+| `apiBase` | The API base for your WordPress instance - this may change if you are using wordpress.com for example. | `wp-json` |
+| `typeName` | The downloader will skip images that already exist locally, but you can force it to download every image if needed. | `false` |
+| `perPage` | The amount of items that will be fetched per API call - minimum of 1, and maximum of 100. | `100` |
+| `concurrent` | The amount of API calls that will run at once. | `8` |
+| `images` | Whether to download images locally to be used with `g-image`. This can also be an object, with options to keep the original file path/name, cache images, and change the download folder. | `{ original: true, folder: '.images/wordpress', cache: true }` |
+| `content` | Whether to transform content fields of posts, to update any internal links, and download any images in the post content. It can also be an object, with the option to set the fields to transform, or disable one of the two operations. | `{ links: ['content'], images: true }` |
 
 ## Use with Advanced Custom Fields
 
