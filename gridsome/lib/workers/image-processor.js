@@ -24,14 +24,14 @@ exports.processImage = async function ({
   }
 
   const { ext } = path.parse(filePath)
-  const { backgroundColor } = imagesConfig
+  const { backgroundColor, defaultQuality = 75 } = imagesConfig
 
   const buffer = await fs.readFile(filePath)
 
   if (['.png', '.jpeg', '.jpg', '.webp'].includes(ext)) {
     const config = {
       pngCompressionLevel: parseInt(options.pngCompressionLevel, 10) || 9,
-      quality: parseInt(options.quality, 10) || 75,
+      quality: parseInt(options.quality, 10) || defaultQuality,
       width: parseInt(options.width, 10) || null,
       height: parseInt(options.height, 10) || null,
       jpegProgressive: true
@@ -39,6 +39,7 @@ exports.processImage = async function ({
 
     const plugins = []
     const sharpImage = sharp(buffer)
+    const compress = imagesConfig.compress !== false && config.quality < 100
 
     // Rotate based on EXIF Orientation tag
     sharpImage.rotate()
@@ -62,45 +63,55 @@ exports.processImage = async function ({
       sharpImage.resize(resizeOptions)
     }
 
-    if (/\.png$/.test(ext)) {
-      sharpImage.png({
-        compressionLevel: config.pngCompressionLevel,
-        adaptiveFiltering: false
-      })
-      const quality = config.quality / 100
-      plugins.push(imageminPngquant({
-        quality: [quality, quality]
-      }))
-    }
+    if (compress) {
+      if (/\.png$/.test(ext)) {
+        sharpImage.png({
+          compressionLevel: config.pngCompressionLevel,
+          adaptiveFiltering: false
+        })
+        const quality = config.quality / 100
+        plugins.push(imageminPngquant({
+          quality: [quality, quality],
+          strip: true
+        }))
+      }
 
-    if (/\.jpe?g$/.test(ext)) {
-      sharpImage.jpeg({
-        progressive: config.jpegProgressive,
-        quality: config.quality
-      })
-      plugins.push(imageminMozjpeg({
-        progressive: config.jpegProgressive,
-        quality: config.quality
-      }))
-    }
+      if (/\.jpe?g$/.test(ext)) {
+        sharpImage.jpeg({
+          progressive: config.jpegProgressive,
+          quality: config.quality
+        })
+        plugins.push(imageminMozjpeg({
+          progressive: config.jpegProgressive,
+          quality: config.quality
+        }))
+      }
 
-    if (/\.webp$/.test(ext)) {
-      sharpImage.webp({
-        quality: config.quality
-      })
-      plugins.push(imageminWebp({
-        quality: config.quality
-      }))
+      if (/\.webp$/.test(ext)) {
+        sharpImage.webp({
+          quality: config.quality
+        })
+        plugins.push(imageminWebp({
+          quality: config.quality
+        }))
+      }
     }
 
     const sharpBuffer = await sharpImage.toBuffer()
-    const resultBuffer = await imagemin.buffer(sharpBuffer, { plugins })
+    const resultBuffer = compress
+      ? await imagemin.buffer(sharpBuffer, { plugins })
+      : sharpBuffer
     const resultLength = Buffer.byteLength(resultBuffer)
+    const sharpLength = Buffer.byteLength(sharpBuffer)
     const initLength = Buffer.byteLength(buffer)
 
     return fs.outputFile(
       destPath,
-      resultLength < initLength ? resultBuffer : buffer
+      resultLength < initLength
+        ? resultLength < sharpLength
+          ? resultBuffer
+          : sharpBuffer
+        : buffer
     )
   }
 

@@ -112,7 +112,9 @@ module.exports = (context, options = {}) => {
   config.configureServer = localConfig.configureServer
 
   config.images = {
+    compress: true,
     defaultBlur: 40,
+    defaultQuality: 75,
     backgroundColor: null,
     ...localConfig.images
   }
