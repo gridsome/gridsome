@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.7.19](https://github.com/gridsome/gridsome/compare/gridsome@0.7.18...gridsome@0.7.19) (2020-07-08)
+
+
+### Bug Fixes
+
+* **g-image:** option for disabling compression ([#1256](https://github.com/gridsome/gridsome/issues/1256)) ([7e6691f](https://github.com/gridsome/gridsome/commit/7e6691febd5ba7de40b33a15de6940fead8316cd))
+* **g-image:** prevent increased image sizes ([#1256](https://github.com/gridsome/gridsome/issues/1256)) ([20776c9](https://github.com/gridsome/gridsome/commit/20776c90e8ad48bbb653ed5358e303d44093750e))
+
+
+
+
+
 ## [0.7.18](https://github.com/gridsome/gridsome/compare/gridsome@0.7.17...gridsome@0.7.18) (2020-07-02)
 
 
