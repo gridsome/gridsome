@@ -344,7 +344,7 @@ function isListTC (anyTC) {
 }
 
 function createReferenceManyUnionResolver (typeNames) {
-    return (src, args , ctx, info) => {
+    return (src, args, ctx, info) => {
       const fieldValue = src[info.fieldName] || []
 
       if (fieldValue.length && isRefField(fieldValue[0])) {

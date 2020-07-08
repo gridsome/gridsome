@@ -9,7 +9,7 @@ module.exports = function (source, map) {
   const resourcePath = this.resourcePath
 
   // Must have a default export or else webpack will randomly
-  // replace this  module with a boolean and a placeholder module.
+  // replace this module with a boolean and a placeholder module.
   const defaultExport = 'export default null'
 
   const cacheKey = hash({ source, resourcePath })
