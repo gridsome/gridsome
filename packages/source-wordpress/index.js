@@ -13,12 +13,9 @@ const { promisify } = require('util')
 const TYPE_AUTHOR = 'author'
 const TYPE_ATTACHMENT = 'attachment'
 
-// Add prefix to error messages
-const report = {
-  info: msg => consola.info(`WordPress Source: ${msg}`),
-  warn: msg => consola.warn(`WordPress Source: ${msg}`),
-  error: msg => consola.error(`WordPress Source: ${msg}`)
-}
+const logger = consola.create({
+  defaults: { tag: '@gridsome/source-wordpress' }
+})
 
 class WordPressSource {
   static defaultOptions () {
@@ -36,22 +33,21 @@ class WordPressSource {
 
   constructor (api, options) {
     if (!options.baseUrl) {
-      // report.error( 'Missing the `baseUrl` option - please add, and try again.' )
-      throw new Error(report.error('Missing the `baseUrl` option - please add, and try again.'))
+      throw new Error(logger.error('Missing the `baseUrl` option - please add, and try again.'))
     }
 
     if (!options.baseUrl.includes('http') && !options.hostingWPCOM) {
-      throw new Error(report.error('`baseUrl` does not include the protocol - please add, and try again (`http://` or `https://`).'))
+      throw new Error(logger.error('`baseUrl` does not include the protocol - please add, and try again (`http://` or `https://`).'))
     }
 
     if (!options.typeName) {
       options.typeName = 'WordPress'
-      report.warn('Missing the `typeName` option - defaulting to `WordPress`.')
+      logger.warn('Missing the `typeName` option - defaulting to `WordPress`.')
     }
 
     if (options.perPage > 100 || options.perPage < 1) {
       options.perPage = 100
-      report.warn('`perPage` cannot be more than 100 or less than 1 - defaulting to 100.')
+      logger.warn('`perPage` cannot be more than 100 or less than 1 - defaulting to 100.')
     }
 
     const baseUrl = options.baseUrl.replace(/\/$/, '')
@@ -75,7 +71,7 @@ class WordPressSource {
     api.loadSource(async actions => {
       this.store = actions
 
-      report.info(`Loading data from ${this.options.baseUrl}`)
+      logger.info(`Loading data from ${this.options.baseUrl}`)
 
       this.addSchemaTypes(actions)
 
@@ -259,7 +255,7 @@ class WordPressSource {
       const data = await this.client.get(url, { searchParams: params })
       return data
     } catch ({ response }) {
-      report.warn(`Status ${response.statusCode} fetching ${response.requestUrl}`)
+      logger.warn(`Status ${response.statusCode} fetching ${response.requestUrl}`)
       return fallbackData
     }
   }
@@ -280,13 +276,13 @@ class WordPressSource {
           const data = await this.fetch(path, { page })
           return this.ensureArrayData(path, data)
         } catch (error) {
-          report.error(error.message)
+          logger.error(error.message)
         }
       }, { concurrency: this.options.concurrent })
 
       return allData.flat()
     } catch ({ response }) {
-      report.warn(`Status ${response.statusCode} fetching ${response.requestUrl}`)
+      logger.warn(`Status ${response.statusCode} fetching ${response.requestUrl}`)
       return []
     }
   }
@@ -322,7 +318,7 @@ class WordPressSource {
 
         return imageStore.updateNode(updatedNode)
       } catch (error) {
-        report.error(error.message)
+        logger.error(error.message)
       }
     }, { concurrency: concurrent })
   }
@@ -332,15 +328,15 @@ class WordPressSource {
     if (!customEndpoints) return []
 
     if (!Array.isArray(customEndpoints)) {
-      throw new Error(report.error('`customEndpoints` must be an array.'))
+      throw new Error(logger.error('`customEndpoints` must be an array.'))
     }
 
     for (const endpoint of customEndpoints) {
       if (!endpoint.typeName) {
-        throw new Error(report.error('Please provide a `typeName` option for all customEndpoints'))
+        throw new Error(logger.error('Please provide a `typeName` option for all customEndpoints'))
       }
       if (!endpoint.route) {
-        throw new Error(report.error(`\`route\` option is missing in endpoint ${endpoint.typeName}. Ex: \`apiName/versionNumber/endpointObject\``))
+        throw new Error(logger.error(`\`route\` option is missing in endpoint ${endpoint.typeName}. Ex: \`apiName/versionNumber/endpointObject\``))
       }
     }
 
@@ -353,7 +349,7 @@ class WordPressSource {
     try {
       data = JSON.parse(data)
     } catch (err) {
-      report.error(`Failed to fetch ${url} - expected JSON response, but received ${typeof data} type.`)
+      logger.error(`Failed to fetch ${url} - expected JSON response, but received ${typeof data} type.`)
     }
   }
 
