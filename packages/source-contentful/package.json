@@ -12,9 +12,9 @@
     "contentful"
   ],
   "dependencies": {
-    "@contentful/rich-text-html-renderer": "^13.1.0",
-    "camelcase": "^5.3.1",
-    "contentful": "^6.1.1"
+    "@contentful/rich-text-html-renderer": "^14.1.1",
+    "camelcase": "^6.0.0",
+    "contentful": "^7.14.6"
   },
   "peerDependencies": {
     "gridsome": ">= 0.6.0"

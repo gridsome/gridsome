@@ -12,7 +12,7 @@
     "yaml"
   ],
   "dependencies": {
-    "js-yaml": "^3.12.1"
+    "js-yaml": "^3.14.0"
   },
   "publishConfig": {
     "access": "public"

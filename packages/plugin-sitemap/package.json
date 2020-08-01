@@ -13,9 +13,9 @@
     "seo"
   ],
   "dependencies": {
-    "fs-extra": "^7.0.0",
-    "micromatch": "^3.1.10",
-    "sitemap": "^2.1.0"
+    "fs-extra": "^9.0.1",
+    "micromatch": "^4.0.2",
+    "sitemap": "^6.2.0"
   },
   "publishConfig": {
     "access": "public"

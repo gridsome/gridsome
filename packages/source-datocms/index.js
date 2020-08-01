@@ -73,7 +73,7 @@ class DatoCmsSource {
       cache[itemType.id] = { titleField, slugField }
 
       const collection = addCollection(
-        this.createTypeName(itemType.name),
+        this.createTypeName(itemType.name)
       )
 
       fields

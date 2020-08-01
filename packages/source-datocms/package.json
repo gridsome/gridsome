@@ -12,7 +12,7 @@
     "datocms"
   ],
   "dependencies": {
-    "datocms-client": "^0.7.5",
+    "datocms-client": "^3.0.34",
     "humps": "^2.0.1"
   },
   "publishConfig": {

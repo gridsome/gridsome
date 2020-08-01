@@ -21,6 +21,6 @@ module.exports = {
     'semi': ['error', 'never'],
     'no-console': 'off',
     // Allow unresolved imports
-    'import/no-unresolved': 'off',
+    'import/no-unresolved': 'off'
   }
 }

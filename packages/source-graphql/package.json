@@ -11,9 +11,9 @@
     "gridsome-source"
   ],
   "dependencies": {
-    "apollo-link-context": "^1.0.17",
-    "apollo-link-http": "^1.5.14",
-    "graphql-tools": "^4.0.4",
+    "apollo-link-context": "^1.0.20",
+    "apollo-link-http": "^1.5.17",
+    "graphql-tools": "^6.0.15",
     "node-fetch": "^2.6.0"
   },
   "peerDependencies": {

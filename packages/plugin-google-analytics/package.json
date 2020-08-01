@@ -18,7 +18,7 @@
     "access": "public"
   },
   "dependencies": {
-    "vue-analytics": "^5.16.1"
+    "vue-analytics": "^5.22.1"
   },
   "engines": {
     "node": ">=8"

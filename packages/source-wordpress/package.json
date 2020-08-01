@@ -12,10 +12,10 @@
     "wordpress"
   ],
   "dependencies": {
-    "axios": "^0.19.0",
-    "camelcase": "^5.0.0",
-    "lodash": "^4.17.11",
-    "p-map": "^1.2.0"
+    "axios": "^0.19.2",
+    "camelcase": "^6.0.0",
+    "lodash": "^4.17.19",
+    "p-map": "^4.0.0"
   },
   "publishConfig": {
     "access": "public"
