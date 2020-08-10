@@ -59,7 +59,10 @@ module.exports = async (name, starter = 'default') => {
     {
       title: `Install dependencies`,
       task: (_, task) => {
-        const command = useYarn ? 'yarn' : 'npm'
+        let command = 'npm'
+        if (!fs.existsSync(path.join(dir, 'package-lock.json'))) {
+          command = useYarn ? 'yarn' : 'npm'
+        }
         const stdio = ['ignore', 'pipe', 'ignore']
         const options = { cwd: dir, stdio }
         const args = []
