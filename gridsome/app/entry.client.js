@@ -68,7 +68,7 @@ document.addEventListener('click', event => {
 
   const path = stripPathPrefix($el.pathname)
   const { route, location } = router.resolve({
-    path: path + ($el.search || '') + ($el.hash || '')
+    path: path + ($el.search || '') + decodeURI($el.hash || '')
   })
 
   if (route.name === '*') {
