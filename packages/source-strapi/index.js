@@ -4,7 +4,7 @@ const { trimEnd, upperFirst, camelCase } = require('lodash')
 
 module.exports = function (api, options) {
   api.loadSource(async ({ addCollection }) => {
-    const { queryLimit, contentTypes, singleTypes, loginData } = options
+    const { queryLimit, contentTypes, singleTypes, loginData, mediaDownloadFolder, mediaDownloadParameters } = options
     const apiURL = trimEnd(options.apiURL, '/')
     let jwtToken = null
 
@@ -36,18 +36,34 @@ module.exports = function (api, options) {
         const typeName = upperFirst(camelCase(`${options.typeName} ${resourceName}`))
         const collection = addCollection({ typeName, dateField: 'created_at' })
         const isSingleType = false
-        return query({ apiURL, resourceName, jwtToken, queryLimit, isSingleType })
-          .then(docs => docs.forEach(doc => {
-            collection.addNode(doc)
-          })
-          )
+        return query({
+          apiURL,
+          resourceName,
+          jwtToken,
+          queryLimit,
+          isSingleType,
+          mediaDownloadFolder,
+          mediaDownloadParameters
+        })
+        .then(docs => docs.forEach(doc => {
+          collection.addNode(doc)
+        })
+        )
       })),
       Promise.all(singleTypes.map(resourceName => {
         const typeName = upperFirst(camelCase(`${options.typeName} ${resourceName}`))
         const collection = addCollection({ typeName, dateField: 'created_at' })
         const isSingleType = true
-        return query({ apiURL, resourceName, jwtToken, queryLimit, isSingleType })
-          .then(data => collection.addNode(data))
+        return query({
+          apiURL,
+          resourceName,
+          jwtToken,
+          queryLimit,
+          isSingleType,
+          mediaDownloadFolder,
+          mediaDownloadParameters
+         })
+        .then(data => collection.addNode(data))
       }))]
     )
   })
@@ -59,5 +75,7 @@ module.exports.defaultOptions = () => ({
   singleTypes: [],
   loginData: {},
   queryLimit: 100,
-  typeName: 'Strapi'
+  typeName: 'Strapi',
+  mediaDownloadFolder: undefined,
+  mediaDownloadParameters: []
 })
