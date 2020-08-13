@@ -1,8 +1,8 @@
 const axios = require('axios')
 const pluralize = require('pluralize')
 const execSync = require('child_process').execSync
-const path = require("path")
-const fs = require("fs")
+const path = require('path')
+const fs = require('fs')
 
 function downloadMedia (image, apiUrl) {
   const { url, sha256, ext } = image
@@ -13,11 +13,11 @@ function downloadMedia (image, apiUrl) {
     method: 'GET',
     responseType: 'stream'
   })
-  .then(response => [response.data, imageUrl])
-  .catch(e => {
-    console.error(remoteUrl, e)
-    throw Error(e)
-  })
+    .then(response => [response.data, imageUrl])
+    .catch(e => {
+      console.error(remoteUrl, e)
+      throw Error(e)
+    })
 }
 
 function saveImage (data, imageUrl, mediaFolder) {
@@ -31,7 +31,7 @@ function saveImage (data, imageUrl, mediaFolder) {
   })
 }
 
-function downloadAllMedia(data, apiURL, params, mediaFolder) {
+function downloadAllMedia (data, apiURL, params, mediaFolder) {
   params.map(p => {
     if (data[p]) {
       const mediaArray = Array.isArray(data[p]) ? data[p] : [data[p]]

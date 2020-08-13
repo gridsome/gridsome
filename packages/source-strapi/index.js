@@ -45,10 +45,10 @@ module.exports = function (api, options) {
           mediaDownloadFolder,
           mediaDownloadParameters
         })
-        .then(docs => docs.forEach(doc => {
-          collection.addNode(doc)
-        })
-        )
+          .then(docs => docs.forEach(doc => {
+            collection.addNode(doc)
+          })
+          )
       })),
       Promise.all(singleTypes.map(resourceName => {
         const typeName = upperFirst(camelCase(`${options.typeName} ${resourceName}`))
@@ -62,8 +62,8 @@ module.exports = function (api, options) {
           isSingleType,
           mediaDownloadFolder,
           mediaDownloadParameters
-         })
-        .then(data => collection.addNode(data))
+        })
+          .then(data => collection.addNode(data))
       }))]
     )
   })
