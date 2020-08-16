@@ -150,6 +150,9 @@ module.exports = (app, { isProd, isServer }) => {
             resolve('../../app/entry.client.js')
           ]
         }]
+      ],
+      plugins: [
+        require.resolve('./plugins/corejsBabelPlugin.js')
       ]
     })
 
