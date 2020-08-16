@@ -40,10 +40,6 @@ module.exports = (app, { isProd, isServer }) => {
     .extensions
     .merge(['.js', '.vue'])
     .end()
-    .modules
-    .add(resolve('../../node_modules'))
-    .add(resolve('../../../packages'))
-    .add('node_modules')
 
   config.resolve
     .plugin('gridsome-fallback-resolver-plugin')
@@ -63,11 +59,6 @@ module.exports = (app, { isProd, isServer }) => {
       .use({ ...require('pnp-webpack-plugin').topLevelLoader })
       .end()
     .set('symlinks', true)
-    .modules
-      .add(resolve('./loaders'))
-      .add(resolve('../../node_modules'))
-      .add(resolve('../../../packages'))
-      .add('node_modules')
 
   config.module.noParse(/^(vue|vue-router|vue-meta)$/)
 
