@@ -52,14 +52,22 @@ module.exports = (app, { isProd, isServer }) => {
         optionalDir: path.join(app.context, 'src'),
         resolve: ['main', 'App.vue']
       }])
-
+      .end()
+    // TODO: Remove plugin when using webpack 5
+    .plugin('pnp')
+      .use({...require(`pnp-webpack-plugin`)})
+    
   config.resolveLoader
+    // TODO: Remove plugin when using webpack 5
+    .plugin('pnp-loaders')
+      .use({ ...require('pnp-webpack-plugin').topLevelLoader })
+      .end()
     .set('symlinks', true)
     .modules
-    .add(resolve('./loaders'))
-    .add(resolve('../../node_modules'))
-    .add(resolve('../../../packages'))
-    .add('node_modules')
+      .add(resolve('./loaders'))
+      .add(resolve('../../node_modules'))
+      .add(resolve('../../../packages'))
+      .add('node_modules')
 
   config.module.noParse(/^(vue|vue-router|vue-meta)$/)
 
