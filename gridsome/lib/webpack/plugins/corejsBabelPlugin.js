@@ -8,6 +8,6 @@ module.exports = () => ({
       }
 
       path.node.source.value = corejsPath + path.node.source.value.substr('core-js'.length)
-    },
-  },
+    }
+  }
 })
