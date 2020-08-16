@@ -303,7 +303,11 @@ module.exports = (app, { isProd, isServer }) => {
         }))
 
       if (loader) {
-        rule.use(loader).loader(loader).options(options)
+        try {
+          rule.use(loader).loader(require.resolve(loader)).options(options)
+        } catch {
+          rule.use(loader).loader(loader).options(options)
+        }
       }
     }
   }
