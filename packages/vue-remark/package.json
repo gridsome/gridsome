@@ -18,6 +18,7 @@
     "@babel/traverse": "^7.0.0",
     "@gridsome/source-filesystem": "^0.6.2",
     "@gridsome/transformer-remark": "^0.6.4",
+    "babel-loader": "8.0.5",
     "hash-sum": "^1.0.2",
     "hast-util-to-html": "^5.0.0",
     "he": "^1.2.0",
@@ -31,7 +32,8 @@
     "moment": "^2.24.0",
     "path-to-regexp": "^3.1.0",
     "unist-builder": "^1.0.3",
-    "unist-util-visit": "^1.4.0"
+    "unist-util-visit": "^1.4.0",
+    "vue-loader": "^15.7.1"
   },
   "peerDependencies": {
     "gridsome": "0.x"
