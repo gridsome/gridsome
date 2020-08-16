@@ -405,7 +405,10 @@ function resolvePluginEntries (id, context) {
   } else if (id.startsWith('~/')) {
     dirName = path.join(context, id.replace(/^~\//, ''))
   } else {
-    dirName = path.dirname(require.resolve(id))
+    // TODO: Replace with require.resolve(id, { paths: [context] }) when support for node is >= v8.9.0    
+    // https://nodejs.org/api/modules.html#modules_require_resolve_request_options
+    const resolvedPath = require('resolve-from')(context, id)
+    dirName = path.dirname(resolvedPath)
   }
 
   if (
