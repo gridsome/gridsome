@@ -76,14 +76,14 @@ module.exports = (app, { isProd, isServer }) => {
   config.module.rule('vue')
     .test(/\.vue$/)
     .use('cache-loader')
-    .loader('cache-loader')
+    .loader(require.resolve('cache-loader'))
     .options({
       cacheDirectory,
       cacheIdentifier
     })
     .end()
     .use('vue-loader')
-    .loader('vue-loader')
+    .loader(require.resolve('vue-loader'))
     .options({
       compilerOptions: {
         preserveWhitespace: false,
@@ -126,14 +126,14 @@ module.exports = (app, { isProd, isServer }) => {
     })
     .end()
     .use('cache-loader')
-    .loader('cache-loader')
+    .loader(require.resolve('cache-loader'))
     .options({
       cacheDirectory,
       cacheIdentifier
     })
     .end()
     .use('babel-loader')
-    .loader('babel-loader')
+    .loader(require.resolve('babel-loader'))
     .options({
       presets: [
         [require.resolve('@vue/babel-preset-app'), {
@@ -159,7 +159,7 @@ module.exports = (app, { isProd, isServer }) => {
   config.module.rule('images')
     .test(/\.(png|jpe?g|gif|webp)(\?.*)?$/)
     .use('url-loader')
-    .loader('url-loader')
+    .loader(require.resolve('url-loader'))
     .options({
       limit: inlineLimit,
       name: `${assetsDir}/img/${assetname}`
@@ -168,7 +168,7 @@ module.exports = (app, { isProd, isServer }) => {
   config.module.rule('svg')
     .test(/\.(svg)(\?.*)?$/)
     .use('file-loader')
-    .loader('file-loader')
+    .loader(require.resolve('file-loader'))
     .options({
       name: `${assetsDir}/img/${assetname}`
     })
@@ -176,7 +176,7 @@ module.exports = (app, { isProd, isServer }) => {
   config.module.rule('media')
     .test(/\.(mp4|webm|ogg|mp3|wav|flac|aac)(\?.*)?$/)
     .use('url-loader')
-    .loader('url-loader')
+    .loader(require.resolve('url-loader'))
     .options({
       limit: inlineLimit,
       name: `${assetsDir}/media/${assetname}`
@@ -185,7 +185,7 @@ module.exports = (app, { isProd, isServer }) => {
   config.module.rule('fonts')
     .test(/\.(woff2?|eot|ttf|otf)(\?.*)?$/i)
     .use('url-loader')
-    .loader('url-loader')
+    .loader(require.resolve('url-loader'))
     .options({
       limit: inlineLimit,
       name: `${assetsDir}/fonts/${assetname}`
@@ -196,10 +196,10 @@ module.exports = (app, { isProd, isServer }) => {
   config.module.rule('yaml')
     .test(/\.ya?ml$/)
     .use('json-loader')
-    .loader('json-loader')
+    .loader(require.resolve('json-loader'))
     .end()
     .use('yaml-loader')
-    .loader('yaml-loader')
+    .loader(require.resolve('yaml-loader'))
 
   // plugins
 
@@ -280,12 +280,12 @@ module.exports = (app, { isProd, isServer }) => {
         if (isProd) {
           rule.use('extract-css-loader').loader(CSSExtractPlugin.loader)
         } else {
-          rule.use('vue-style-loader').loader('vue-style-loader')
+          rule.use('vue-style-loader').loader(require.resolve('vue-style-loader'))
         }
       }
 
       rule.use('css-loader')
-        .loader('css-loader')
+        .loader(require.resolve('css-loader'))
         .options(Object.assign({
           modules,
           exportOnlyLocals: isServer,
@@ -295,7 +295,7 @@ module.exports = (app, { isProd, isServer }) => {
         }, css))
 
       rule.use('postcss-loader')
-        .loader('postcss-loader')
+        .loader(require.resolve('postcss-loader'))
         .options(Object.assign({
           sourceMap: !isProd
         }, postcss, {
