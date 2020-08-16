@@ -72,7 +72,9 @@ module.exports = (app, { isProd, isServer }) => {
   config.module.noParse(/^(vue|vue-router|vue-meta)$/)
 
   if (app.config.runtimeCompiler) {
-    config.resolve.alias.set('vue$', 'vue/dist/vue.esm.js')
+    config.resolve.alias.set('vue$', require.resolve('vue/dist/vue.esm.js'))
+  } else {
+    config.resolve.alias.set('vue$', path.dirname(require.resolve('vue/package.json')))
   }
 
   if (!isProd) {
