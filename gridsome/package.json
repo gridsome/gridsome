@@ -79,6 +79,7 @@
     "p-map": "^2.0.0",
     "path-to-regexp": "^2.2.1",
     "physical-cpu-count": "^2.0.0",
+    "pnp-webpack-plugin": "^1.6.4",
     "portfinder": "^1.0.20",
     "postcss-loader": "^3.0.0",
     "probe-image-size": "^4.0.0",
