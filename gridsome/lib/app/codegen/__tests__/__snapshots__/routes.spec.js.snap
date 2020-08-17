@@ -82,7 +82,7 @@ export default [
   },
   {
     name: \\"*\\",
-    path: \\"*\\",
+    path: \\"/:pathMatch(.*)\\",
     component: c2
   }
 ]

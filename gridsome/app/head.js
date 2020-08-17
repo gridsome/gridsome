@@ -1,13 +1,5 @@
-import Vue from 'vue'
-import Meta from 'vue-meta'
 import icons from '~/.temp/icons.js'
 import config from '~/.temp/config.js'
-
-Vue.use(Meta, {
-  attribute: 'data-vue-tag',
-  ssrAttribute: 'data-html-server-rendered',
-  tagIDKeyName: 'key'
-})
 
 const head = {
   titleTemplate: config.titleTemplate,

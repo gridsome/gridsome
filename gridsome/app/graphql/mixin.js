@@ -1,26 +1,21 @@
-import { getResults } from './shared'
+import { defineComponent } from 'vue'
+import { usePageContext, usePageQuery, useStaticQuery } from '../useApi'
 
-export default {
+/**
+ * These are just to support the `$page`, `$static` and `$context` properties
+ * in components. We should maybe show a deprecation message and tell
+ * people to use `usePageContext` and `usePageQuery` instead.
+ */
+export default defineComponent({
   computed: {
-    $context () {
-      if (process.isServer) {
-        return this.$ssrContext.state.context || {}
-      }
-
-      const { path } = this.$route
-      const results = getResults(path)
-
-      return results ? results.context : {}
+    $context() {
+      return usePageContext()
     },
-    $page () {
-      if (process.isServer) {
-        return this.$ssrContext.state.data || null
-      }
-
-      const { path } = this.$route
-      const results = getResults(path)
-
-      return results ? results.data : null
+    $page() {
+      return usePageQuery()
+    },
+    $static() {
+      return useStaticQuery()
     }
   }
-}
+})

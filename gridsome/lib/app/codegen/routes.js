@@ -37,7 +37,7 @@ function genRoutes(app) {
 
   // use the /404 page as fallback route
   if (fallback) {
-    items.push(createRouteItem(fallback, '*', '*'))
+    items.push(createRouteItem(fallback, '*', '/:pathMatch(.*)'))
   }
 
   const routes = items.map(item => {

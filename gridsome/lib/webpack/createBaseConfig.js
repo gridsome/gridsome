@@ -36,6 +36,7 @@ module.exports = (app, { isProd, isServer }) => {
     .set('~', resolve('src', app.context))
     .set('@', resolve('src', app.context))
     .set('gridsome$', path.resolve(projectConfig.appPath, 'index.js'))
+    .set('vue', '@vue/runtime-dom')
     .end()
     .extensions
     .merge(['.js', '.vue'])
@@ -86,10 +87,9 @@ module.exports = (app, { isProd, isServer }) => {
     .loader('vue-loader')
     .options({
       compilerOptions: {
-        preserveWhitespace: false,
-        modules: [
-          require('./modules/html')(),
-          require('./modules/assets')()
+        nodeTransforms: [
+          require('./modules/html'),
+          require('./modules/assets')
         ]
       },
       cacheDirectory,
@@ -219,9 +219,7 @@ module.exports = (app, { isProd, isServer }) => {
       .use(require('html-webpack-plugin'), [{
         minify: true,
         templateContent () {
-          return createHTMLRenderer(projectConfig.htmlTemplate)({
-            app: '<div id="app"></div>'
-          })
+          return createHTMLRenderer(projectConfig.htmlTemplate)()
         }
       }])
   }
@@ -313,6 +311,8 @@ module.exports = (app, { isProd, isServer }) => {
     const dataUrl = forwardSlash(path.join(assetsUrl, 'data', '/'))
 
     const baseEnv = {
+      __VUE_OPTIONS_API__: true,
+      __VUE_PROD_DEVTOOLS__: false,
       'process.env.PUBLIC_PATH': JSON.stringify(publicPath),
       'process.env.ASSETS_URL': JSON.stringify(assetsUrl),
       'process.env.DATA_URL': JSON.stringify(dataUrl),

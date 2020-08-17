@@ -1,21 +1,27 @@
 import fetch from '../fetch'
-import router from '../router'
 import caniuse from '../utils/caniuse'
 import { stripPathPrefix } from '../utils/helpers'
 import { createObserver } from '../utils/intersectionObserver'
 
 const isPreloaded = {}
 
+const observed = new Map()
 const observer = caniuse.IntersectionObserver
   ? createObserver(intersectionHandler)
   : null
 
 export default {
-  inserted (el) {
-    observer && observer.observe(el)
+  mounted (el, binding) {
+    if (observer) {
+      observed.set(el, binding.value)
+      observer.observe(el)
+    }
   },
-  unbind (el) {
-    observer && observer.unobserve(el)
+  beforeUnmount (el) {
+    if (observer) {
+      observer.unobserve(el)
+      observed.delete(el)
+    }
   }
 }
 
@@ -28,10 +34,14 @@ function intersectionHandler ({ intersectionRatio, target }) {
         if (isPreloaded[target.pathname]) return
         else isPreloaded[target.pathname] = true
 
-        const path = stripPathPrefix(target.pathname)
-        const { route } = router.resolve({ path })
+        const router = observed.get(target)
 
-        setTimeout(() => fetch(route, { shouldPrefetch: true }), 250)
+        if (router) {
+          const path = stripPathPrefix(target.pathname)
+          const route = router.resolve({ path })
+
+          setTimeout(() => fetch(route, { shouldPrefetch: true }), 250)
+        }
       }
     }
   }

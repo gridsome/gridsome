@@ -180,6 +180,10 @@ test('compile scripts correctly', () => {
   const appJS = content('dist/assets/js/app.js')
   const homeJS = content('dist/assets/js/page--src--pages--index-vue.js')
 
+  // tree-shake development modules
+  expect(appJS).not.toMatch('SockJS')
+  expect(appJS).not.toMatch('createSockJSClient')
+
   // never include the context path
   expect(appJS).not.toMatch(context)
   expect(homeJS).not.toMatch(context)

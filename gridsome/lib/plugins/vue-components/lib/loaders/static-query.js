@@ -60,22 +60,16 @@ module.exports = async function (source, map) {
   }
 
   const res = `
-    import Vue from 'vue'
+    import { reactive } from 'vue'
 
-    const { computed } = Vue.config.optionMergeStrategies
     const data = ${JSON.stringify(data)}
 
-    export default ({ options }) => {
-      if (options.__staticData) {
-        options.__staticData.data = data
-        return
+    export default (script) => {
+      if (script.__staticQuery) {
+        script.__staticQuery.data = data
+      } else {
+        script.__staticQuery = reactive({ data })
       }
-
-      options.__staticData = Vue.observable({ data })
-
-      options.computed = computed({
-        $static: () => options.__staticData.data
-      }, options.computed)
     }
   `
 

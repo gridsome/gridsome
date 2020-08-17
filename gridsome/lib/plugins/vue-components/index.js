@@ -1,6 +1,5 @@
 const path = require('path')
-const compiler = require('vue-template-compiler')
-const { parse } = require('@vue/component-compiler-utils')
+const { parse } = require('@vue/compiler-sfc')
 
 class VueComponents {
   static defaultOptions () {
@@ -18,8 +17,9 @@ class VueComponents {
     api._app.pages.hooks.parseComponent.for('vue')
       .tap('VueComponentsPlugin', (source, { resourcePath }) => {
         const filename = path.parse(resourcePath).name
-        const { customBlocks } = parse({ filename, source, compiler })
-        const pageQuery = customBlocks.find(block => block.type === 'page-query')
+        const { descriptor } = parse(source, { filename })
+
+        const pageQuery = descriptor.customBlocks.find(block => block.type === 'page-query')
 
         return {
           pageQuery: pageQuery ? pageQuery.content : null

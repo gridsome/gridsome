@@ -6,6 +6,8 @@ module.exports = {
   NOT_FOUND_NAME: '404',
   NOT_FOUND_PATH: '/404',
 
+  CLIENT_APP_ID: '__gridsome',
+
   SUPPORTED_IMAGE_TYPES: ['.png', '.jpeg', '.jpg', '.gif', '.svg', '.webp'],
 
   BOOTSTRAP_CONFIG: 0,

@@ -1,9 +1,12 @@
 const { template } = require('lodash')
+const { CLIENT_APP_ID } = require('../utils/constants')
 
 function createHTMLRenderer (htmlTemplate) {
   const render = template(htmlTemplate)
 
-  return variables => {
+  return function renderHTML(variables = {}) {
+    const app = `<div id="${CLIENT_APP_ID}">${variables.app || ''}</div>`
+
     return render(Object.assign({
       htmlAttrs: '',
       bodyAttrs: '',
@@ -20,7 +23,7 @@ function createHTMLRenderer (htmlTemplate) {
       noscript: '',
       app: '',
       scripts: ''
-    }, variables))
+    }, { ...variables, app }))
   }
 }
 

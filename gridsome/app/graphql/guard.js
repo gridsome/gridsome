@@ -1,6 +1,6 @@
 import fetch from '../fetch'
 import config from '~/.temp/config'
-import { getResults, setResults, formatError } from './shared'
+import { setResults, formatError } from './shared'
 
 export default (to, from, next) => {
   if (process.isServer) return next()
@@ -11,39 +11,32 @@ export default (to, from, next) => {
     return next()
   }
 
-  const cached = getResults(to.path)
-
-  // Stop here if data for the next page is already fetched.
-  if (cached) {
-    return cached.context.__notFound && to.name !== '*'
-      ? next({ name: '*', params: { 0: to.path }})
-      : next()
-  }
+  const notFound = { name: '*', params: { pathMatch: to.path }}
 
   // The data already exists in the markup for the initial page.
   if (process.isProduction && global.__INITIAL_STATE__) {
     const { context } = global.__INITIAL_STATE__
-    setResults(to.path, global.__INITIAL_STATE__)
+    setResults(to, global.__INITIAL_STATE__)
     global.__INITIAL_STATE__ = null
 
     return context.__notFound && to.name !== '*'
-      ? next({ name: '*', params: { 0: to.path }})
+      ? next(notFound)
       : next()
   }
 
-  fetch(to)
+  return fetch(to)
     .then(res => {
       if (res.code === 404) {
-        next({ name: '*', params: { 0: to.path }})
+        next(notFound)
       } else {
-        setResults(to.path, res)
+        setResults(to, res)
         next()
       }
     })
     .catch(err => {
       if (err.code === 'MODULE_NOT_FOUND' || err.code === 404) {
         console.error(err)
-        next({ name: '*', params: { 0: to.path } })
+        next(notFound)
       } else if (err.code === 'INVALID_HASH' && to.path !== window.location.pathname) {
         const fullPathWithPrefix = (config.pathPrefix ?? '') + to.fullPath
         window.location.assign(fullPathWithPrefix)

@@ -7,13 +7,13 @@ const observer = caniuse.IntersectionObserver
   : null
 
 export default {
-  inserted (el) {
+  mounted (el) {
     observe(el)
   },
-  update (el) {
+  updated (el) {
     observe(el)
   },
-  unbind (el) {
+  beforeUnmount (el) {
     unobserve(el)
   }
 }

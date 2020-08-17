@@ -1,29 +1,34 @@
+import { createWebHistory } from 'vue-router'
+
 import './polyfills'
 
-import Vue from 'vue'
-import createApp, { runPlugins, runMain } from './app'
+import createApp from './app'
 import config from '~/.temp/config'
 import plugins from '~/.temp/plugins-client'
+import { CLIENT_APP_ID } from '~/.temp/constants'
 import linkDirective from './directives/link'
 import imageDirective from './directives/image'
-import { stripPathPrefix } from './utils/helpers'
+import { stripPathPrefix, unslashEnd } from './utils/helpers'
 import { isFunc, isNil } from './utils/lang'
+import { createSockJSClient } from './sockjs'
 
-Vue.directive('g-link', linkDirective)
-Vue.directive('g-image', imageDirective)
+const { app, router } = createApp({
+  plugins,
+  routerHistory: createWebHistory(
+    unslashEnd(process.env.PUBLIC_PATH)
+  )
+})
 
-runPlugins(plugins)
-runMain()
-
-const { app, router } = createApp()
+app.directive('g-link', linkDirective)
+app.directive('g-image', imageDirective)
 
 if (process.env.NODE_ENV === 'production') {
   router.beforeEach((to, from, next) => {
-    const components = router.getMatchedComponents(to).map(
+    const components = to.matched.map(
       c => isFunc(c) && isNil(c.cid) ? c() : c
     )
 
-    Promise.all(components)
+    return Promise.all(components)
       .then(() => next())
       .catch(err => {
         // reload page if a component failed to load
@@ -79,10 +84,10 @@ document.addEventListener('click', event => {
   event.preventDefault()
 }, false)
 
-router.onError((err) => {
-  console.error(err)
-})
+if (process.env.NODE_ENV === 'development') {
+  createSockJSClient({ router })
+}
 
-router.onReady(() => {
-  app.$mount('#app')
+router.isReady().then(() => {
+  app.mount(`#${CLIENT_APP_ID}`)
 })
