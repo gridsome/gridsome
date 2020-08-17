@@ -79,6 +79,10 @@ document.addEventListener('click', event => {
   event.preventDefault()
 }, false)
 
+router.onError((err) => {
+  console.error(err)
+})
+
 router.onReady(() => {
   app.$mount('#app')
 })
