@@ -18,19 +18,19 @@ module.exports = {
     {
       use: '@gridsome/vue-remark',
       options: {
-        typeName: 'Documentation', // required
-        baseDir: './docs', // where .md files are located.
-        template: './src/templates/Documentation.vue' // optional
+        typeName: 'Documentation', // Required
+        baseDir: './content/docs', // Where .md files are located
+        pathPrefix: '/docs', // Add route prefix. Optional
+        template: './src/templates/Documentation.vue' // Optional
       }
     }
   ]
 }
 ```
+In this example `/content/docs/index.md` will be `website.com/docs/`,
+and `/content/docs/install-guide.md` will be `website.com/docs/install-guide/`.
 
-By default it takes any **.md** files in `baseDir` folder and uses them for file-based routing like [Pages](/docs/pages) works. You can override this by using a `route` config.
-
-In this example `/docs/index.md` will be `website.com/docs/`,
-and `/docs/install-guide.md` will be `website.com/docs/install-guide/`.
+By default it takes any **.md** files in `baseDir` folder and uses them for file-based routing like [Pages](/docs/pages/) works. You can override this by using a `route` config.
 
 
 **2.** Setup a template and include the `<VueRemarkContent />` component:
@@ -171,6 +171,12 @@ module.exports = {
   ]
 }
 ```
+
+#### ignore
+- Type: `Array`
+- Default: `[]`
+
+List of glob patterns that should be ignored when searching for markdown files.
 
 #### includePaths
 

@@ -6,9 +6,12 @@ const { deprecate } = require('../utils/deprecate')
 const { isArray, isPlainObject } = require('lodash')
 const Collection = require('./Collection')
 const { safeKey } = require('../utils')
+const lokiOps = require('./lokiOps')
 
 const { SyncWaterfallHook } = require('tapable')
 const SyncBailWaterfallHook = require('../app/SyncBailWaterfallHook')
+
+Object.assign(Loki.LokiOps, lokiOps)
 
 class Store {
   constructor (app) {
@@ -131,8 +134,14 @@ class Store {
     this.nodeIndex.index.update({ ...entry, belongsTo })
   }
 
-  chainIndex (query = {}) {
-    return this.nodeIndex.getChain().find(query).map(entry => {
+  chainIndex (query = {}, resolveNodes = true) {
+    const chain = this.nodeIndex.getChain().find(query)
+
+    if (!resolveNodes) {
+      return chain
+    }
+
+    return chain.map(entry => {
       const collection = this.collections[entry.typeName]
       const node = collection.collection.by('id', entry.id)
 

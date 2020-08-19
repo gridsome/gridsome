@@ -18,6 +18,16 @@ export default (route, options = {}) => {
     }
 
     return new Promise((resolve, reject) => {
+      const onFail = err => {
+        isLoaded[route.path] = null
+        reject(err)
+      }
+
+      const onSuccess = res => {
+        isLoaded[route.path] = null
+        resolve(res)
+      }
+
       if (force || !isLoaded[route.path]) {
         isLoaded[route.path] = fetch(process.env.GRAPHQL_ENDPOINT, {
           method: 'POST',
@@ -25,22 +35,21 @@ export default (route, options = {}) => {
           body: JSON.stringify({ path, dynamic })
         })
           .then(res => res.json())
-          .catch(reject)
       }
 
       isLoaded[route.path]
         .then(res => {
-          if (res.errors) reject(res.errors[0])
-          else if (res.code) resolve({ code: res.code })
-          else resolve({
+          if (res.errors) onFail(res.errors[0])
+          else if (res.code) onSuccess({ code: res.code })
+          else onSuccess({
             data: res.data,
             context: res.extensions
               ? res.extensions.context
               : {}
           })
-
           isLoaded[route.path] = null
         })
+        .catch(onFail)
     })
   }
 
@@ -69,10 +78,21 @@ export default (route, options = {}) => {
 
     return isLoaded[jsonPath]
       .then(res => {
-        if (res.hash !== hashMeta) reject(createError('Hash did not match.', 'INVALID_HASH'))
-        else resolve(res)
+        if (res.hash !== hashMeta) {
+          reject(
+            createError(
+              `Hash did not match: json=${res.hash}, document=${hashMeta}`,
+              'INVALID_HASH'
+            )
+          )
+        } else {
+          resolve(res)
+        }
       })
-      .catch(reject)
+      .catch(err => {
+        isLoaded[jsonPath] = null
+        reject(err)
+      })
   })
 }
 
@@ -115,6 +135,10 @@ function fetchJSON (jsonPath) {
         }
       }
 
+      reject(new Error(`Failed to fetch ${jsonPath}.`))
+    }
+
+    req.onerror = () => {
       reject(new Error(`Failed to fetch ${jsonPath}.`))
     }
 

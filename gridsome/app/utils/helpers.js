@@ -1,4 +1,6 @@
-const publicPath = process.env.PUBLIC_PATH
+import config from '~/.temp/config'
+
+const re = new RegExp(`^${config.pathPrefix}/?`)
 
 export function unslash (string) {
   return string.replace(/^\/+|\/+$/g, '')
@@ -12,23 +14,22 @@ export function unslashEnd (string) {
   return string.replace(/\/+$/g, '')
 }
 
-export function url (string) {
-  return `${publicPath}${string}`.replace(/\/+/g, '/')
+export function url (string = '/') {
+  return normalizePath(`${config.pathPrefix}/${string}`)
 }
 
 export function stripPageParam (route) {
   const { path, params: { page }} = route
   const normalizedPath = unslashEnd(path)
+  const suffix = /\/$/.test(path) ? '/' : ''
 
   return page && /^\d+$/.test(page) && /\/\d+$/.test(normalizedPath)
-    ? normalizedPath.split('/').slice(0, -1).join('/') || '/'
-    : normalizedPath || '/'
+    ? `${normalizedPath.split('/').slice(0, -1).join('/')}${suffix}` || '/'
+    : `${normalizedPath}${suffix}` || '/'
 }
 
-const re = new RegExp(`^${publicPath}`)
-const replacement = publicPath !== '/' ? '' : '/'
 export function stripPathPrefix (string) {
-  return string.replace(re, replacement)
+  return '/' + unslashStart(string.replace(re, ''))
 }
 
 export function parsePath (path) {
@@ -47,6 +48,9 @@ export function parsePath (path) {
 }
 
 export function normalizePath (path = '/') {
-  // TODO: warn if path misses a leading slash
-  return `/${unslashStart(path)}`.replace(/\/+/g, '/')
+  return `/${path}`.replace(/\/+/g, '/')
 }
+
+export const isMailtoLink = string => String(string).startsWith('mailto:')
+
+export const isTelLink = string => String(string).startsWith('tel:')

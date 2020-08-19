@@ -1,5 +1,5 @@
 const camelCase = require('camelcase')
-const { isObject } = require('lodash')
+const { pickBy, isObject, isPlainObject } = require('lodash')
 
 const {
   ThunkComposer,
@@ -11,15 +11,16 @@ const CreatedGraphQLType = {
   Enum: 'Enum',
   Object: 'Object',
   Union: 'Union',
+  Scalar: 'Scalar',
   Interface: 'Interface',
   Input: 'Input'
 }
 
 exports.createQueryVariables = function (path, variables, currentPage = undefined) {
-  return Object.assign({}, variables, {
-    page: currentPage,
-    __path: path
-  })
+  return pickBy(
+    { ...variables, page: currentPage, __path: path },
+    value => value !== undefined
+  )
 }
 
 exports.is32BitInt = function (x) {
@@ -28,13 +29,9 @@ exports.is32BitInt = function (x) {
 
 exports.CreatedGraphQLType = CreatedGraphQLType
 
-exports.is32BitInt = function (x) {
-  return (x | 0) === x
-}
-
 exports.isRefFieldDefinition = function (field) {
   return (
-    typeof field === 'object' &&
+    isPlainObject(field) &&
     Object.keys(field).length === 2 &&
     field.hasOwnProperty('typeName') &&
     field.hasOwnProperty('isList')
@@ -49,12 +46,14 @@ exports.createEnumType = options => ({ options, type: CreatedGraphQLType.Enum })
 exports.createObjectType = options => ({ options, type: CreatedGraphQLType.Object })
 exports.createUnionType = options => ({ options, type: CreatedGraphQLType.Union })
 exports.createInterfaceType = options => ({ options, type: CreatedGraphQLType.Interface })
+exports.createScalarType = options => ({ options, type: CreatedGraphQLType.Scalar })
 exports.createInputType = options => ({ options, type: CreatedGraphQLType.Input })
 
 exports.isEnumType = value => isObject(value) && value.type === CreatedGraphQLType.Enum
 exports.isObjectType = value => isObject(value) && value.type === CreatedGraphQLType.Object
 exports.isUnionType = value => isObject(value) && value.type === CreatedGraphQLType.Union
 exports.isInterfaceType = value => isObject(value) && value.type === CreatedGraphQLType.Interface
+exports.isScalarType = value => isObject(value) && value.type === CreatedGraphQLType.Scalar
 exports.isInputType = value => isObject(value) && value.type === CreatedGraphQLType.Input
 
 const typeNameCounter = {}
@@ -72,20 +71,6 @@ exports.createTypeName = function (typeName, suffix = '') {
   }
 
   return name
-}
-
-exports.addObjectTypeExtensions = function (typeComposer) {
-  if (typeComposer instanceof ObjectTypeComposer) {
-    typeComposer.getDirectives().forEach(directive => {
-      typeComposer.setExtension(directive.name, directive.args)
-    })
-
-    Object.keys(typeComposer.getFields()).forEach(fieldName => {
-      typeComposer.getFieldDirectives(fieldName).forEach(directive => {
-        typeComposer.setFieldExtension(fieldName, directive.name, directive.args)
-      })
-    })
-  }
 }
 
 exports.hasNodeReference = function (typeComposer) {

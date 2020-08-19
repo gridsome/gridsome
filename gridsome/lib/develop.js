@@ -1,8 +1,9 @@
 const fs = require('fs-extra')
 const chalk = require('chalk')
+const isUrl = require('is-url')
 const columnify = require('columnify')
 const resolvePort = require('./server/resolvePort')
-const { prepareUrls } = require('./server/utils')
+const { prepareUrls, formatPrettyUrl } = require('./server/utils')
 
 const {
   hasWarnings,
@@ -37,6 +38,7 @@ module.exports = async (context, args) => {
   server.hooks.afterSetup.tap('develop', server => {
     const devMiddleware = require('webpack-dev-middleware')(compiler, {
       pathPrefix: webpackConfig.output.pathPrefix,
+      watchOptions: webpackConfig.devServer ? webpackConfig.devServer.watchOptions : null,
       logLevel: 'silent'
     })
 
@@ -48,23 +50,42 @@ module.exports = async (context, args) => {
       return
     }
 
-    const columns = []
+    const list = []
+    const addTerm = (name, description) => list.push({ name, description })
+    const addSeparator = () => list.push({ name: '' })
 
     if (urls.lan.pretty) {
-      columns.push({ label: 'Site running at:' })
-      columns.push({ label: '- Local:', url: chalk.cyan(urls.local.pretty) })
-      columns.push({ label: '- Network:', url: chalk.cyan(urls.lan.pretty) })
-      columns.push({ label: '' })
+      addTerm('Site running at:')
+      addTerm('- Local:', urls.local.pretty)
+      addTerm('- Network:', urls.lan.pretty)
+      addSeparator()
     } else {
-      columns.push({ label: 'Site running at:', url: chalk.cyan(urls.local.pretty) })
+      addTerm('Site running at:', urls.local.pretty)
     }
 
-    columns.push({ label: 'Explore GraphQL data at:', url: chalk.cyan(urls.explore.pretty) })
+    addTerm('Explore GraphQL data at:', urls.explore.pretty)
 
-    const renderedColumns = columnify(columns, { showHeaders: false })
+    app.compiler.hooks.done.call(
+      { addTerm, addSeparator },
+      { stats, hostname, port, formatPrettyUrl }
+    )
+
+    const columns = list
+      .filter((term, i, terms) => (
+        // remove consecutive separators etc...
+        i && term.name ? terms[i - 1].name !== term.name : true
+      ))
+      .map(term => ({
+        name: term.name,
+        description: isUrl(term.description)
+          ? chalk.cyan(term.description)
+          : term.description
+      }))
+
+    const rendered = columnify(columns, { showHeaders: false })
 
     console.log()
-    console.log(`  ${renderedColumns.split('\n').join('\n  ')}`)
+    console.log(`  ${rendered.split('\n').join('\n  ')}`)
     console.log()
 
     if (hasWarnings()) {

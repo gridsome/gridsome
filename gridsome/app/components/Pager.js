@@ -4,15 +4,19 @@ import { unslashEnd, stripPageParam } from '../utils/helpers'
 // @vue/component
 export default {
   functional: true,
-
   props: {
     info: { type: Object, required: true },
     showLinks: { type: Boolean, default: true },
     showNavigation: { type: Boolean, default: true },
     firstLabel: { type: String, default: '«' },
+    firstClass: { type: String, default: '' },
     prevLabel: { type: String, default: '‹' },
+    prevClass: { type: String, default: '' },
     nextLabel: { type: String, default: '›' },
+    nextClass: { type: String, default: '' },
     lastLabel: { type: String, default: '»' },
+    lastClass: { type: String, default: '' },
+    navClass: { type: String, default: '' },
     linkClass: { type: String, default: '' },
     range: { type: Number, default: 5 },
     activeLinkClass: { type: String, default: undefined },
@@ -27,13 +31,12 @@ export default {
     ariaNextLabel: { type: String, default: 'Go to next page. Page %n' },
     ariaLastLabel: { type: String, default: 'Go to last page. Page %n' }
   },
-
   render: (h, { props, data, parent }) => {
     const { info, showLinks, showNavigation, ariaLabel } = props
     const { current, total, pages, start, end } = resolveRange(info, props.range)
     const currentPath = stripPageParam(parent.$route)
 
-    const renderLink = (page, text = page, ariaLabel = text) => {
+    const renderLink = (page, text = page, ariaLabel = text, linkClass = '') => {
       if (page === current) ariaLabel = props.ariaCurrentLabel
 
       const linkProps = {
@@ -50,7 +53,7 @@ export default {
       }
 
       return h(Link, {
-        class: props.linkClass,
+        class: [props.linkClass, linkClass],
         attrs: {
           ...linkProps,
           'aria-label': ariaLabel.replace('%n', page),
@@ -67,11 +70,12 @@ export default {
     if (showNavigation) {
       const { firstLabel, prevLabel, nextLabel, lastLabel } = props
       const { ariaFirstLabel, ariaPrevLabel, ariaNextLabel, ariaLastLabel } = props
+      const { firstClass, prevClass, nextClass, lastClass, navClass } = props
 
-      if (current > 1) links.unshift(renderLink(current - 1, prevLabel, ariaPrevLabel))
-      if (start > 0) links.unshift(renderLink(1, firstLabel, ariaFirstLabel))
-      if (current < total) links.push(renderLink(current + 1, nextLabel, ariaNextLabel))
-      if (end < total) links.push(renderLink(total, lastLabel, ariaLastLabel))
+      if (current > 1) links.unshift(renderLink(current - 1, prevLabel, ariaPrevLabel, [prevClass,navClass]))
+      if (start > 0) links.unshift(renderLink(1, firstLabel, ariaFirstLabel, [firstClass, navClass]))
+      if (current < total) links.push(renderLink(current + 1, nextLabel, ariaNextLabel, [nextClass, navClass]))
+      if (end < total) links.push(renderLink(total, lastLabel, ariaLastLabel, [lastClass, navClass]))
     }
 
     if (links.length < 2) return null
@@ -92,9 +96,9 @@ function createPagePath (path, page) {
 }
 
 function resolveRange ({
-  currentPage: current = 1,
-  totalPages: total = 1
-}, range) {
+   currentPage: current = 1,
+   totalPages: total = 1
+  }, range) {
   const offset = Math.ceil(range / 2)
 
   let start = Math.floor(current - offset)

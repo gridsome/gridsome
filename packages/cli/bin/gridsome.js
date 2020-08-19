@@ -3,7 +3,7 @@
 const path = require('path')
 const chalk = require('chalk')
 const program = require('commander')
-const didYouMean = require('didyoumean')
+const leven = require('leven')
 const resolveCwd = require('resolve-cwd')
 const updateNotifier = require('update-notifier')
 const resolveVersions = require('../lib/utils/version')
@@ -28,6 +28,14 @@ program
     return wrapCommand(create)(...args)
   })
 
+program
+  .command('info')
+  .description('output information about the local environment')
+  .action(() => {
+    const info = require('../lib/commands/info')
+    return wrapCommand(info)()
+  })
+
 try {
   const commandsPath = resolveCwd.silent('gridsome/commands')
   const gridsomePath = resolveCwd.silent('gridsome')
@@ -43,22 +51,22 @@ try {
 
 // show a warning if the command does not exist
 program.arguments('<command>').action(async command => {
-  const { isGridsomeProject, hasYarn } = require('../lib/utils')
+  const { isGridsomeProject } = require('../lib/utils')
   const availableCommands = program.commands.map(cmd => cmd._name)
-  const suggestion = didYouMean(command, availableCommands)
+  const suggestion = availableCommands.find(cmd => {
+    const steps = leven(cmd, command)
+    return steps < 3
+  })
+
+  console.log(chalk.red(`Unknown command ${chalk.bold(command)}`))
 
   if (isGridsomeProject(pkgPath) && !suggestion) {
-    const useYarn = await hasYarn()
-
     console.log()
-    console.log(`  Please run ${chalk.cyan(useYarn ? 'yarn' : 'npm install')} to install dependencies first.`)
     console.log()
-  } else {
-    console.log(chalk.red(`Unknown command ${chalk.bold(command)}`))
-    if (suggestion) {
-      console.log()
-      console.log(`Did you mean ${suggestion}?`)
-    }
+    program.outputHelp()
+  } else if (suggestion) {
+    console.log()
+    console.log(`Did you mean ${suggestion}?`)
   }
 })
 
@@ -78,7 +86,7 @@ if (notifier.update) {
   (async () => {
     const withYarn = await hasYarn()
     const margin = chalk.bgGreen(' ')
-    const command = withYarn ? `yarn add global ${pkg.name}` : `npm i -g ${pkg.name}`
+    const command = withYarn ? `yarn global add ${pkg.name}` : `npm i -g ${pkg.name}`
     console.log()
     console.log(`${margin} Update available: ${chalk.bold(notifier.update.latest)}`)
     console.log(`${margin} Run ${chalk.cyan(command)} to update`)

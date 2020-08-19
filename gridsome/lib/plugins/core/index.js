@@ -26,12 +26,21 @@ function corePlugin (api, config) {
   })
 
   api.afterBuild(({ config }) => {
-    const notFoundPath = path.join(config.outDir, '404', 'index.html')
-    const notFoundDest = path.join(config.outDir, '404.html')
+    const notFoundPath = path.join(config.outputDir, '404', 'index.html')
+    const notFoundDest = path.join(config.outputDir, '404.html')
 
     if (fs.existsSync(notFoundPath)) {
       fs.copySync(notFoundPath, notFoundDest)
     }
+  })
+
+  // Flags the `/404` page to detect it in the router guard.
+  api._app.pages.hooks.createPage.tap('Gridsome', (options) => {
+    if (options.path === '/404') {
+      const context = { ...options.context, __notFound: true }
+      return { ...options, context }
+    }
+    return options
   })
 
   api._app.pages.hooks.createRoute.tap('Gridsome', options => {

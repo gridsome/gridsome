@@ -1,3 +1,4 @@
+const path = require('path')
 const { debounce } = require('lodash')
 
 module.exports = (app, pages) => {
@@ -19,9 +20,10 @@ module.exports = (app, pages) => {
     fetchQueries()
   })
 
-  pages._watcher.on('change', component => {
+  pages._watcher.on('change', filePath => {
     if (!app.isBootstrapped) return
 
+    const component = path.normalize(filePath)
     const routes = pages._routes.find({ component })
     const length = routes.length
 

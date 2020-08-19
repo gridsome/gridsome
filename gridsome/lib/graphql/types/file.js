@@ -41,7 +41,7 @@ exports.fileType = {
 
     if (!value) return null
 
-    const result = await context.queue.add(value)
+    const result = await context.assets.add(value)
 
     if (result.isUrl) {
       return result.src

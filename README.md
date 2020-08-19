@@ -13,7 +13,7 @@ Gridsome is a <a href="//vuejs.org">Vue-powered</a> static site generator for bu
 
 <p align="center">
   <a title="Total downloads" href="https://www.npmjs.com/package/gridsome">
-    <img src="https://img.shields.io/npm/dt/gridsome.svg?style=flat-square">
+    <img src="https://img.shields.io/npm/dm/gridsome.svg?style=flat-square">
   </a>
   <a title="Current version" href="https://www.npmjs.com/package/gridsome">
     <img src="https://img.shields.io/npm/v/gridsome.svg?style=flat-square">
@@ -43,7 +43,7 @@ Only critical HTML, CSS, and JavaScript get loaded first. The next pages are the
 Gridsome automatically optimizes your frontend to load and perform blazing fast. You get code-splitting, image optimization, lazy-loading, and almost perfect lighthouse scores out-of-the-box.
 
 ### Build future ready websites
-The future of the web is JavaScript, API's, and Markup - the [JAMstack](https://jamstack.org/). Gridsome uses the power of blazing-fast static site generator, JavaScript and APIs to create stunning dynamic web experiences.
+The future of the web is JavaScript, API's, and Markup - the [Jamstack](https://jamstack.org/). Gridsome uses the power of blazing-fast static site generator, JavaScript and APIs to create stunning dynamic web experiences.
 
 ### Ready for global domination
 Gridsome sites are usually not connected to any database and can be hosted entirely on a global CDN. It can handle thousands to millions of hits without breaking - and no expensive server costs.
@@ -57,38 +57,38 @@ Gridsome sites are usually not connected to any database and can be hosted entir
 ### 2. Create a Gridsome project
 
 1. `gridsome create my-gridsome-site` to create a new project
-2. `cd my-gridsome-site` to open folder
-3. `gridsome develop` to start local dev server at `http://localhost:8080`
+2. `cd my-gridsome-site` to open the folder
+3. `gridsome develop` to start a local dev server at `http://localhost:8080`
 4. Happy coding 🎉🙌
 
 ### 3. Next steps
 
-1. Create `.vue` components in the `~/src/pages` directory to create pages
-2. Use `gridsome build` to generate static files in a `~/dist` folder
+1. Create `.vue` components in the `./src/pages` directory to create pages
+2. Use `gridsome build` to generate static files in a `./dist` folder
 
 ### Learn more...
 
-- [How it works](https://gridsome.org/docs/how-it-works)
-- [How to deploy](https://gridsome.org/docs/deployment)
+- [How it works](https://gridsome.org/docs/how-it-works/)
+- [How to deploy](https://gridsome.org/docs/deployment/)
 
 ## How to Contribute
 
 Install [Node.js 8.3](https://nodejs.org/en/download/) or higher and [Yarn](https://yarnpkg.com/lang/en/docs/install/).
 
 1. Clone this repository.
-2. Create a new Gridsome project inside the `~/projects` folder.
+2. Create a new Gridsome project inside the `./projects` folder.
 3. Enter the new project folder and run `yarn install`.
 4. The project will now use the local packages when you run `gridsome develop`.
 
 Make sure your test project has a version number in its `package.json` if you use an existing project.
 
-To use the local version of `@gridsome/cli` as the global command, enter the `~/packages/cli` folder and run `npm link`.
+To use the local version of `@gridsome/cli` as the global command, enter the `./packages/cli` folder and run `npm link`.
 
-Yarn will add dependencies from your test projects to the root `yarn.lock` file. So you should not commit changes in that file unless you have added dependencies to any of the core packages. If you need to commit it, remove your projects from the `~/projects` folder temporary and run `yarn install` in the root folder. Yarn will then clean up the lock file with only necessary dependencies. Commit the file and move your projects back and run `yarn install` again to start developing.
+Yarn will add dependencies from your test projects to the root `yarn.lock` file. So you should not commit changes in that file unless you have added dependencies to any of the core packages. If you need to commit it, remove your projects from the `./projects` folder temporary and run `yarn install` in the root folder. Yarn will then clean up the lock file with only necessary dependencies. Commit the file and move your projects back and run `yarn install` again to start developing.
 
 ### Code of Conduct
 
-In the interest of fostering an open and welcoming environment please read and follow our [Code of Conduct](./CODE_OF_CONDUCT.md).  
+In the interest of fostering an open and welcoming environment please read and follow our [Code of Conduct](./CODE_OF_CONDUCT.md).
 
 ## License
 

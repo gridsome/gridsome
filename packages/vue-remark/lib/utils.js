@@ -1,3 +1,4 @@
+const path = require('path')
 const moment = require('moment')
 const { isPlainObject, get } = require('lodash')
 
@@ -44,8 +45,35 @@ exports.createFile = function (options) {
   return file
 }
 
+exports.createCacheIdentifier = function (context, options, attachers = []) {
+  const version = require('../package.json').version
+  const pkg = require(path.resolve(context, 'package.json'))
+  const { dependencies: deps1 = {}, devDependencies: deps2 = {}} = pkg
+
+  const remarkPlugins = Object.keys({ ...deps1, ...deps2 })
+    .filter(name => /remark-(?!cli$)/.test(name))
+    .map(name => ({
+      fn: require(name),
+      pkg: require(`${name}/package.json`)
+    }))
+
+  const plugins = attachers
+    .map(([fn, options = {}]) => {
+      const plugin = remarkPlugins.find(plugin => plugin.fn === fn)
+
+      return plugin && {
+        name: plugin.pkg.name,
+        version: plugin.pkg.version,
+        options
+      }
+    })
+    .filter(Boolean)
+
+  return JSON.stringify({ version, options, plugins })
+}
+
 exports.normalizeLayout = function (layout) {
-  const defaultLayout = require.resolve('../src/VueRemarkLayout.js')
+  const defaultLayout = require.resolve('../src/VueRemarkRoot.js')
 
   if (typeof layout === 'string') {
     return { component: layout, props: {}}

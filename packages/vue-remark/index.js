@@ -2,19 +2,25 @@ const path = require('path')
 const pathToRegexp = require('path-to-regexp')
 const Filesystem = require('@gridsome/source-filesystem')
 const RemarkTransformer = require('@gridsome/transformer-remark')
-const { trimEnd } = require('lodash')
+const { omit, trimEnd, kebabCase } = require('lodash')
+const { GraphQLList, GraphQLBoolean } = require('gridsome/graphql')
 
 const toSFC = require('./lib/toSfc')
 const sfcSyntax = require('./lib/sfcSyntax')
 const toVueRemarkAst = require('./lib/toVueRemarkAst')
 const remarkFilePlugin = require('./lib/plugins/file')
 const remarkImagePlugin = require('./lib/plugins/image')
-const { genFrontMatterBlock } = require('./lib/codegen')
+
+const {
+  HeadingType,
+  HeadingLevels
+} = require('./lib/types/HeadingType')
 
 const {
   createFile,
   makePathParams,
-  normalizeLayout
+  normalizeLayout,
+  createCacheIdentifier
 } = require('./lib/utils')
 
 const normalizeRouteKeys = keys => keys
@@ -37,6 +43,30 @@ const normalizeRouteKeys = keys => keys
     }
   })
 
+const createCustomBlockRule = (config, type) => {
+  const re = new RegExp(`blockType=(${type})`)
+
+  config.module.rule(type)
+    .resourceQuery(re)
+    .use('babel-loader')
+    .loader('babel-loader')
+    .options({
+      presets: [
+        require.resolve('@babel/preset-env')
+      ]
+    })
+}
+
+const genChunkName = (context, component) => {
+  const chunkName = path.relative(context, component)
+    .split('/')
+    .filter(s => s !== '..')
+    .map(s => kebabCase(s))
+    .join('--')
+
+  return `vue-remark--${chunkName}`
+}
+
 // TODO: refactor and clean up
 
 class VueRemark {
@@ -50,7 +80,8 @@ class VueRemark {
       includePaths: [],
       plugins: [],
       remark: {},
-      refs: {}
+      refs: {},
+      ignore: []
     }
   }
 
@@ -63,9 +94,19 @@ class VueRemark {
       throw new Error(`@gridsome/vue-remark requires the 'typeName' option.`)
     }
 
+    if (api.config.templates[options.typeName]) {
+      throw new Error(
+        `@gridsome/vue-remark does not work with a template. ` +
+        `Remove "${options.typeName}" from the global templates config ` +
+        `and use the "template" option for the plugin instead.`
+      )
+    }
+
     this.api = api
     this.options = options
     this.context = options.baseDir ? api.resolve(options.baseDir) : api.context
+
+    api.setClientOptions({})
 
     if (typeof options.template === 'string') {
       this.template = api.resolve(options.template)
@@ -87,8 +128,13 @@ class VueRemark {
       this.route.routeKeys = normalizeRouteKeys(routeKeys)
     }
 
+    const paths = [
+      '**/*.md',
+      ...options.ignore.map((path) => `!${path}`)
+    ]
+
     this.filesystem = new Filesystem(api, {
-      path: '**/*.md',
+      path: paths,
       typeName: options.typeName,
       baseDir: options.baseDir,
       pathPrefix: options.pathPrefix,
@@ -96,18 +142,28 @@ class VueRemark {
       refs: options.refs
     })
 
+    const remarkOptions = options.remark || {}
+
     this.remark = new RemarkTransformer({}, {
       assets: api._app.assets,
       localOptions: {
-        ...options.remark,
+        ...remarkOptions,
         processFiles: false,
         processImages: false,
         stringifier: toSFC,
         plugins: [
           sfcSyntax,
           toVueRemarkAst,
-          remarkFilePlugin,
-          remarkImagePlugin,
+          [remarkFilePlugin, {
+            processFiles: remarkOptions.processFiles
+          }],
+          [remarkImagePlugin, {
+            processImages: remarkOptions.processImages,
+            blur: remarkOptions.imageBlurRatio,
+            quality: remarkOptions.imageQuality,
+            background: remarkOptions.imageBackground,
+            immediate: remarkOptions.lazyLoadImages === false ? true : undefined
+          }],
           ...options.plugins
         ]
       }
@@ -116,6 +172,16 @@ class VueRemark {
     api.transpileDependencies([path.resolve(__dirname, 'src')])
     api.chainWebpack(config => this.chainWebpack(config))
     api.createPages(actions => this.createPages(actions))
+
+    if (api._app.compiler.hooks.cacheIdentifier) {
+      api._app.compiler.hooks.cacheIdentifier.tap('VueRemark', id => {
+        id[`vue-remark-${api._entry.uid}`] = createCacheIdentifier(
+          api.context,
+          this.options.remark,
+          this.remark.processor.attachers
+        )
+      })
+    }
 
     api._app.pages.hooks.parseComponent.for('md').tap('VueRemark', source => {
       const pageQueryRE = /<page-query>([^</]+)<\/page-query>/
@@ -152,7 +218,7 @@ class VueRemark {
 
         if (!parsed.excerpt) parsed.excerpt = null
 
-        Object.assign(options, parsed)
+        Object.assign(options, omit(parsed, ['layout']))
 
         options.internal.mimeType = null
         options.internal.content = null
@@ -166,10 +232,28 @@ class VueRemark {
     })
 
     api.createSchema(({ addSchemaResolvers }) => {
+      if (options.remark.autolinkHeadings === false) {
+        return
+      }
+
       const { headings } = this.remark.extendNodeType()
 
       addSchemaResolvers({
-        [this.options.typeName]: { headings }
+        [this.options.typeName]: {
+          headings: {
+            ...headings,
+            type: new GraphQLList(HeadingType),
+            args: {
+              ...headings.args,
+              depth: {
+                type: HeadingLevels
+              },
+              stripTags: {
+                type: GraphQLBoolean, defaultValue: true
+              }
+            }
+          }
+        }
       })
     })
   }
@@ -177,6 +261,9 @@ class VueRemark {
   chainWebpack (config) {
     const vueLoader = config.module.rule('vue').use('vue-loader')
     const includePaths = this.options.includePaths.map(p => this.api.resolve(p))
+
+    createCustomBlockRule(config, 'vue-remark-import')
+    createCustomBlockRule(config, 'vue-remark-frontmatter')
 
     config.module.rule('vue-remark')
       .test(/\.md$/)
@@ -207,13 +294,18 @@ class VueRemark {
       const node = nodes[i]
 
       if (this.template) {
+        const chunkName = genChunkName(
+          this.api.context,
+          node.internal.origin
+        )
+
         createPage({
           path: node.path,
           component: this.template,
           queryVariables: node,
           route: {
             meta: {
-              $vueRemark: `() => import(${JSON.stringify(node.internal.origin)})`
+              $vueRemark: `() => import(/* webpackChunkName: "${chunkName}" */ ${JSON.stringify(node.internal.origin)})`
             }
           }
         })
@@ -227,31 +319,33 @@ class VueRemark {
     }
   }
 
-  async parse (source, resourcePath = null) {
+  async parse (source, options = {}) {
     const { content, ...data } = this.remark.parse(source.trim())
-    const defaultLayout = require.resolve('./src/VueRemarkLayout.js')
+    const defaultLayout = require.resolve('./src/VueRemarkRoot.js')
     const layout = normalizeLayout(data.layout || defaultLayout)
-    const frontMatterBlock = genFrontMatterBlock(data)
 
     if (!data.layout && !path.isAbsolute(layout.component)) {
       layout.component = path.resolve(this.api.context, layout.component)
     }
 
+    if (!data.excerpt) data.excerpt = null
+
     const file = createFile({
       contents: content,
-      path: resourcePath,
       data: {
-        layout
+        data,
+        layout,
+        ...options
       }
     })
 
-    if (resourcePath) {
-      file.path = resourcePath
+    if (options.resourcePath) {
+      file.path = options.resourcePath
     }
 
     const sfc = await this.remark.processor.process(file)
 
-    return `${sfc}\n\n${frontMatterBlock}`
+    return sfc.contents
   }
 }
 

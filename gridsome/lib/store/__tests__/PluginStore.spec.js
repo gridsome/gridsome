@@ -618,6 +618,30 @@ test('resolve file paths', async () => {
   expect(node.text3).toEqual('md')
 })
 
+test('resolve file paths when folder as extension', async () => {
+  const api = await createPlugin('/absolute/dir/to/project.com')
+
+  const collection = api.store.addCollection({
+    typeName: 'Test',
+    resolveAbsolutePaths: true
+  })
+
+  const node = collection.addNode({
+    file: 'image.png',
+    file2: '/image.png',
+    file3: '../image.png',
+    filepath: 'dir/to/image.png',
+    internal: {
+      origin: '/absolute/dir/to/project.com/a/b/file.md'
+    }
+  })
+
+  expect(node.file).toEqual('image.png')
+  expect(node.file2).toEqual('/absolute/dir/to/project.com/image.png')
+  expect(node.file3).toEqual('/absolute/dir/to/project.com/a/image.png')
+  expect(node.filepath).toEqual('dir/to/image.png')
+})
+
 test('resolve absolute file paths with no origin', async () => {
   const api = await createPlugin('/absolute/dir/to/project')
 

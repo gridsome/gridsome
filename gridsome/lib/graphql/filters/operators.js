@@ -48,6 +48,10 @@ const allOperators = {
   },
   len: {
     description: 'Filter which have a string property of specified length.'
+  },
+  exists: {
+    type: 'Boolean',
+    description: 'Filter nodes that contain the field, including nodes where the field value is null.'
   }
 }
 
@@ -67,33 +71,34 @@ const listFields = [
   'containsNone'
 ]
 
-const defaultOperators = ['eq', 'ne', 'in', 'nin']
+const defaultOperators = ['eq', 'ne', 'in', 'nin', 'exists']
 
 const scalarOperators = {
-  ID: ['eq', 'ne', 'in', 'nin'],
-  Enum: ['eq', 'ne', 'in', 'nin'],
-  Boolean: ['eq', 'ne', 'in', 'nin'],
-  JSON: ['eq', 'ne', 'in', 'nin', 'regex'],
-  File: ['eq', 'ne', 'in', 'nin', 'regex'],
-  Image: ['eq', 'ne', 'in', 'nin', 'regex'],
-  String: ['eq', 'ne', 'in', 'nin', 'regex'],
-  Int: ['eq', 'ne', 'gt', 'gte', 'lt', 'lte', 'in', 'nin', 'between'],
-  Float: ['eq', 'ne', 'gt', 'gte', 'lt', 'lte', 'in', 'nin', 'between'],
-  Date: ['eq', 'ne', 'gt', 'gte', 'lt', 'lte', 'in', 'nin', 'dteq', 'between']
+  ID: defaultOperators,
+  Enum: defaultOperators,
+  Boolean: defaultOperators,
+  JSON: [...defaultOperators, 'regex'],
+  File: [...defaultOperators, 'regex'],
+  Image: [...defaultOperators, 'regex'],
+  String: [...defaultOperators, 'regex'],
+  Int: [...defaultOperators, 'gt', 'gte', 'lt', 'lte', 'between'],
+  Float: [...defaultOperators, 'gt', 'gte', 'lt', 'lte', 'between'],
+  Date: [...defaultOperators, 'gt', 'gte', 'lt', 'lte', 'dteq', 'between']
 }
 
 exports.defaultOperators = defaultOperators
 exports.scalarOperators = scalarOperators
 exports.listOperators = listOperators
 
-exports.toOperatorConfig = function (operators, typeName, extraExtensions = {}) {
+exports.toOperatorConfig = function (operators, typeName, extraExtensions, deprecationReason) {
   return operators.reduce((fields, name) => {
     const { type = typeName, description, extensions } = allOperators[name]
 
     fields[name] = {
       type: listFields.includes(name) ? [type] : type,
       extensions: { ...extensions, ...extraExtensions },
-      description
+      description: deprecationReason || description,
+      deprecationReason
     }
 
     return fields

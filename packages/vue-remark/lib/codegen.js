@@ -9,27 +9,30 @@ exports.genTemplateBlock = function (html, file) {
 
   return '' +
     `<template>\n` +
-    `  <VueRemarkLayout${attrs}>\n${html}\n</VueRemarkLayout>\n` +
-    `</template>\n`
+    `<VueRemarkRoot${attrs}>\n${html}\n</VueRemarkRoot>\n` +
+    `</template>`
 }
 
 exports.genImportBlock = function (statements, file) {
   const layout = normalizeLayout(file.data.layout)
 
   let code = statements.concat(
-    `import VueRemarkLayout from ${JSON.stringify(layout.component)}`
+    `import VueRemarkRoot from ${JSON.stringify(layout.component)}`
   ).join('\n')
 
   const ast = parse(code, { sourceType: 'module' })
   const identifiers = {}
 
   traverse(ast, {
-    Identifier (path) {
-      identifiers[path.node.name] = true
+    ImportDefaultSpecifier (path) {
+      identifiers[path.node.local.name] = true
+    },
+    ImportSpecifier (path) {
+      identifiers[path.node.local.name] = true
     }
   })
 
-  code += '\n\n' +
+  code += '\n' +
     `import Vue from 'vue'\n\n` +
     `const strats = Vue.config.optionMergeStrategies\n` +
     `const imported = {${Object.keys(identifiers).join(', ')}}\n\n` +
@@ -38,6 +41,8 @@ exports.genImportBlock = function (statements, file) {
     `  const computed = Component.options.computed = Component.options.computed || {}\n` +
     `  Object.keys(imported).forEach(function (key) {\n` +
     `    if (typeof imported[key] === 'object' && typeof imported[key].render === 'function') {\n` +
+    `      components[key] = imported[key]\n` +
+    `    } else if (typeof imported[key] === 'function' && typeof imported[key].options.render === 'function') {\n` +
     `      components[key] = imported[key]\n` +
     `    } else {\n` +
     `      computed[key] = function () {\n` +
@@ -58,7 +63,7 @@ exports.genFrontMatterBlock = function (data) {
       return acc
     }, {})
 
-  return '\n' +
+  return '' +
    `<vue-remark-frontmatter>\n` +
    `import Vue from 'vue'\n\n` +
    `const strats = Vue.config.optionMergeStrategies\n` +
@@ -75,7 +80,7 @@ exports.genFrontMatterBlock = function (data) {
    `    }\n` +
    `  }, Component.options.computed)\n` +
    `}\n` +
-   `</vue-remark-frontmatter>\n`
+   `</vue-remark-frontmatter>`
 }
 
 function propsToAttrs (props = {}) {

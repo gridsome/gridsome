@@ -4,7 +4,7 @@ const { createQueryVariables } = require('../../graphql/utils')
 
 module.exports = ({ pages }) => {
   return async function graphqlMiddleware (req, res, next) {
-    const { body = {}} = req
+    const { body = {}, query = {} } = req
 
     const notFound = () => res
       .status(404)
@@ -15,12 +15,12 @@ module.exports = ({ pages }) => {
       return res.sendStatus(200)
     }
 
-    if (body.query) {
+    if (body.query || query.query) {
       return next()
     }
 
     let route = null
-    let currentPage = null
+    let currentPage = undefined
     let params = {}
 
     if (body.dynamic) {
@@ -34,14 +34,16 @@ module.exports = ({ pages }) => {
 
     if (!route) return notFound()
 
-    // page/1/index.html is not statically generated
-    // in production and should return 404 in develop
     if (route.internal.query.directives.paginate) {
-      currentPage = parseInt(params.page, 10) || 0
+      const pageParam = parseInt(params.page, 10)
 
-      if (params.page && currentPage <= 1) {
+      // page/1/index.html is not statically generated
+      // in production and should return 404 in develop
+      if (pageParam && pageParam <= 1) {
         return notFound()
       }
+
+      currentPage = Math.max(pageParam || 0, 1)
 
       delete params.page
     }
@@ -68,7 +70,7 @@ module.exports = ({ pages }) => {
       variables: createQueryVariables(
         page.path,
         page.internal.query.variables,
-        currentPage || undefined
+        currentPage
       )
     }
 

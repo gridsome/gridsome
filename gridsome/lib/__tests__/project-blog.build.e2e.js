@@ -85,14 +85,14 @@ test('render belongsTo with pagination', () => {
   expect($tag3('.post-3 a').text()).toEqual('Third post')
   expect($tag4('.post-3 a').text()).toEqual('Third post')
   expect($tag4('.post-2 a').text()).toEqual('Second post')
-  expect($tag4('nav[role="navigation"] a[href="/tag/fourth-tag"]').attr('aria-label')).toEqual('Current page. Page 1')
+  expect($tag4('nav[role="navigation"] a[href="/tag/fourth-tag/"]').attr('aria-label')).toEqual('Current page. Page 1')
   expect($tag4page2('.post-1 a').text()).toEqual('First post')
-  expect($tag4page2('nav[role="navigation"] a[href="/tag/fourth-tag/2"]').attr('aria-label')).toEqual('Current page. Page 2')
+  expect($tag4page2('nav[role="navigation"] a[href="/tag/fourth-tag/2/"]').attr('aria-label')).toEqual('Current page. Page 2')
   expect($category1('.post-3 a').text()).toEqual('Third post')
   expect($category1('.post-2 a').text()).toEqual('Second post')
-  expect($category1('nav[role="navigation"] a[href="/category/first"]').attr('aria-label')).toEqual('Current page. Page 1')
+  expect($category1('nav[role="navigation"] a[href="/category/first/"]').attr('aria-label')).toEqual('Current page. Page 1')
   expect($category1page2('.post-1 a').text()).toEqual('First post')
-  expect($category1page2('nav[role="navigation"] a[href="/category/first/2"]').attr('aria-label')).toEqual('Current page. Page 2')
+  expect($category1page2('nav[role="navigation"] a[href="/category/first/2/"]').attr('aria-label')).toEqual('Current page. Page 2')
 })
 
 test('open blog in browser', async () => {

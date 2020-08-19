@@ -19,20 +19,22 @@ module.exports = async (context, args) => {
 
   await app.plugins.run('beforeBuild', { context, config })
 
-  await fs.emptyDir(config.outDir)
+  await fs.emptyDir(config.outputDir)
+
+  const stats = await runWebpack(app)
+  const hashString = config.cacheBusting ? stats.hash : 'gridsome'
 
   const queue = createRenderQueue(app)
   const redirects = app.hooks.redirects.call([], queue)
-  const stats = await runWebpack(app)
 
-  await executeQueries(queue, app, stats.hash)
-  await renderHTML(queue, app, stats.hash)
+  await executeQueries(queue, app, hashString)
+  await renderHTML(queue, app, hashString)
   await processFiles(app.assets.files)
   await processImages(app.assets.images, app.config)
 
   // copy static files
   if (fs.existsSync(config.staticDir)) {
-    await fs.copy(config.staticDir, config.outDir, {
+    await fs.copy(config.staticDir, config.outputDir, {
       dereference: true
     })
   }
@@ -62,7 +64,7 @@ async function runWebpack (app) {
   const stats = await compileAssets(app)
 
   if (app.config.css.split !== true) {
-    await removeStylesJsChunk(stats, app.config.outDir)
+    await removeStylesJsChunk(stats, app.config.outputDir)
   }
 
   info(`Compile assets - ${compileTime(hirestime.S)}s`)
@@ -74,7 +76,7 @@ async function renderHTML (renderQueue, app, hash) {
   const { createWorker } = require('./workers')
   const timer = hirestime()
   const worker = createWorker('html-writer')
-  const { htmlTemplate, clientManifestPath, serverBundlePath } = app.config
+  const { htmlTemplate, clientManifestPath, serverBundlePath, prefetch, preload } = app.config
 
   await Promise.all(chunk(renderQueue, 350).map(async pages => {
     try {
@@ -83,7 +85,9 @@ async function renderHTML (renderQueue, app, hash) {
         pages,
         htmlTemplate,
         clientManifestPath,
-        serverBundlePath
+        serverBundlePath,
+        prefetch,
+        preload
       })
     } catch (err) {
       worker.end()
@@ -123,9 +127,10 @@ async function processImages (images, config) {
     await pMap(chunks, async queue => {
       await worker.process({
         queue,
-        outDir: config.outDir,
+        outputDir: config.outputDir,
+        context: config.context,
         cacheDir: config.imageCacheDir,
-        backgroundColor: config.images.backgroundColor
+        imagesConfig: config.images
       })
 
       writeLine(`Processing images (${totalAssets} images) - ${Math.round((++progress) * 100 / totalJobs)}%`)

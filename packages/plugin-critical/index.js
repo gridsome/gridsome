@@ -5,7 +5,7 @@ const normalize = p => p.replace(/\/+$/, '') || '/'
 
 module.exports = function (api, options) {
   api.afterBuild(async ({ queue, config }) => {
-    const { outDir: base, pathPrefix, publicPath } = config
+    const { outputDir: base, pathPrefix, publicPath } = config
     const patterns = options.paths.map(p => normalize(p))
 
     const pages = queue.filter(page => {

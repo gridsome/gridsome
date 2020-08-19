@@ -1,5 +1,6 @@
 const { isRefField } = require('../../store/utils')
 const { toFilterArgs } = require('../filters/query')
+const { trimEnd } = require('lodash')
 
 const {
   applyChainArgs,
@@ -17,9 +18,14 @@ exports.createFindOneResolver = function (typeComposer) {
     if (args.id) {
       node = collection.by('id', args.id)
     } else if (args.path) {
-      // must use collection.findOne() here because
-      // collection.by() doesn't update after changes
-      node = collection.findOne({ path: args.path })
+      const path = trimEnd(args.path, '/') + '/'
+      const path2 = trimEnd(args.path, '/') || '/'
+      node = collection.findOne({
+        $or: [
+          { path },
+          { path: path2 }
+        ]
+      })
     }
 
     return node || null

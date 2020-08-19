@@ -1,5 +1,5 @@
 {
-  "version": "0.2.1",
+  "version": "0.2.2",
   "name": "@gridsome/transformer-csv",
   "description": "CSV transformer for Gridsome",
   "homepage": "https://github.com/gridsome/gridsome/tree/master/packages/transformer-csv#readme",
@@ -13,7 +13,7 @@
     "csv"
   ],
   "dependencies": {
-    "csv-parse": "^4.3.4"
+    "csv-parse": "^4.6.3"
   },
   "publishConfig": {
     "access": "public"

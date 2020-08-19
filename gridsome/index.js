@@ -42,11 +42,13 @@ module.exports = ({ context, program }) => {
 function wrapCommand (fn) {
   return (context, args) => {
     return fn(context, args).catch(err => {
-      const callSite = getCallSite(err)
-      const fileName = callSite ? callSite.getFileName() : ''
-      const filePath = path.resolve(context, fileName)
+      const callSite = getCallSite(context, err)
+      const fileName = callSite ? callSite.getFileName() : null
+      const filePath = typeof fileName === 'string'
+        ? path.resolve(context, fileName)
+        : null
 
-      if (callSite && fs.existsSync(filePath)) {
+      if (filePath && fs.existsSync(filePath)) {
         const line = callSite.getLineNumber()
         const column = callSite.getColumnNumber() || 0
         const fileContent = fs.readFileSync(filePath, 'utf8')
@@ -69,8 +71,13 @@ function wrapCommand (fn) {
   }
 }
 
-function getCallSite (err) {
+function getCallSite (context, err) {
   return stackTrace.parse(err).find(callSite => {
-    return !/node_modules/.test(callSite.getFileName())
+    const fileName = callSite.getFileName() || ''
+
+    return (
+      fileName.startsWith(context) &&
+      !/node_modules/.test(fileName)
+    )
   })
 }

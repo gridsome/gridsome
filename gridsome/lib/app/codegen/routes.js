@@ -1,22 +1,31 @@
-const path = require('path')
 const slash = require('slash')
+const { relative } = require('path')
 const { slugify } = require('../../utils')
 const { pathToFilePath } = require('../../pages/utils')
 const { NOT_FOUND_NAME } = require('../../utils/constants')
+const { uniqBy } = require('lodash')
+
+const isUnitTest = process.env.GRIDSOME_TEST === 'unit'
 
 function genRoutes(app) {
-  const createRouteItem = (route, name = route.name, path = route.path) => ({
-    name,
-    component: route.component,
-    chunkName: genChunkName(app.context, route),
-    meta: route.internal.meta,
-    type: route.type,
-    path
-  })
-
   const redirects = app.config.redirects.filter(rule => rule.status === 301)
   const fallback = app.pages._routes.findOne({ name: NOT_FOUND_NAME })
+  const components = []
   const items = []
+
+  const createRouteItem = (route, name = route.name, path = route.path) => ({
+    name,
+    path,
+    chunkName: genChunkName(app.context, route),
+    variableName: components.includes(route.component)
+      ? `c${(components.indexOf(route.component) + 1)}`
+      : `c${components.push(route.component)}`,
+    meta: route.internal.meta,
+    type: route.type,
+    component: isUnitTest
+      ? relative(app.context, route.component)
+      : route.component
+  })
 
   for (const redirect of redirects) {
     items.push(redirect)
@@ -27,17 +36,36 @@ function genRoutes(app) {
   }
 
   // use the /404 page as fallback route
-  items.push(createRouteItem(fallback, '*', '*'))
+  if (fallback) {
+    items.push(createRouteItem(fallback, '*', '*'))
+  }
 
   const routes = items.map(item => {
     if (item.from && item.to) {
       return genRedirect(item)
     }
-
     return genRoute(item)
   })
 
-  return `export default [${routes.join(',')}\n]\n\n`
+  const componentItems = uniqBy(
+    items.filter(item => item.component),
+    'component'
+  )
+
+  return [
+    `${componentItems.map(genComponent).join('\n')}\n\n`,
+    `export default [${routes.join(',')}\n]\n`
+  ].join('')
+}
+
+function genComponent(item) {
+  const component = JSON.stringify(item.component)
+  const chunkName = JSON.stringify(item.chunkName)
+
+  return [
+    `const ${item.variableName} = `,
+    `() => import(/* webpackChunkName: ${chunkName} */ ${component})`
+  ].join('')
 }
 
 function genRedirect (rule) {
@@ -50,14 +78,11 @@ function genRedirect (rule) {
 }
 
 function genRoute (item) {
-  const component = JSON.stringify(item.component)
-  const chunkName = JSON.stringify(item.chunkName)
-
   const props = []
   const metas = []
 
   props.push(`    path: ${JSON.stringify(item.path)}`)
-  props.push(`    component: () => import(/* webpackChunkName: ${chunkName} */ ${component})`)
+  props.push(`    component: ${item.variableName}`)
 
   if (item.type === 'dynamic') {
     const dataPath = pathToFilePath(item.path, 'json')
@@ -89,7 +114,7 @@ function genRoute (item) {
 }
 
 function genChunkName (context, route) {
-  const chunkName = path.relative(context, route.component)
+  const chunkName = relative(context, route.component)
     .split('/')
     .filter(s => s !== '..')
     .map(s => slugify(s))

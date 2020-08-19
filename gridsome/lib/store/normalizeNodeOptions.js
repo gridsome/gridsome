@@ -13,6 +13,13 @@ module.exports = function normalizeNodeOptions (options, collection, useFallback
 
   nodeOptions.internal = createInternal(collection, nodeOptions.internal)
 
+  if (
+    typeof nodeOptions.id !== 'undefined' &&
+    typeof nodeOptions.id !== 'string'
+  ) {
+    nodeOptions.id = String(nodeOptions.id)
+  }
+
   if (useFallbacks) {
     if (!nodeOptions.id) {
       nodeOptions.id = hash(options)

@@ -4,6 +4,7 @@ const isUrl = require('is-url')
 const mime = require('mime-types')
 const camelCase = require('camelcase')
 const isRelative = require('is-relative')
+const { isPlainObject } = require('lodash')
 const { isResolvablePath } = require('../utils')
 
 const nonValidCharsRE = new RegExp('[^a-zA-Z0-9_]', 'g')
@@ -19,7 +20,7 @@ exports.createFieldName = function (key, camelCased = false) {
 
 exports.isRefField = function (field) {
   return (
-    typeof field === 'object' &&
+    isPlainObject(field) &&
     Object.keys(field).length === 2 &&
     field.hasOwnProperty('typeName') &&
     field.hasOwnProperty('id')
@@ -68,8 +69,11 @@ exports.resolvePath = function (origin, toPath, options = {}) {
   }
 
   if (typeof contextPath === 'string') {
-    const { rootPath, basePath } = parsePath(contextPath)
-    return rootPath + resolver.join(basePath, toPath)
+    if (isUrl(contextPath)) {
+      const { rootPath, basePath } = parsePath(contextPath)
+      return rootPath + resolver.join(basePath, toPath)
+    }
+    return resolver.join(contextPath, toPath)
   }
 
   return toPath

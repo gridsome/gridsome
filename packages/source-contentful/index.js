@@ -17,7 +17,6 @@ class ContentfulSource {
 
   constructor (api, options) {
     this.options = options
-    this.store = api.store
     this.typesIndex = {}
 
     this.client = contentful.createClient({
@@ -38,20 +37,22 @@ class ContentfulSource {
     const contentTypes = await this.fetch('getContentTypes')
     const richTextType = createRichTextType(this.options)
 
-    const addCollection = actions.addCollection || actions.addContentType
-
     for (const contentType of contentTypes) {
       const { name, sys: { id }} = contentType
       const typeName = this.createTypeName(name)
       const route = this.options.routes[name]
-
-      const collection = addCollection({ typeName, route })
+      const resolvers = {}
 
       for (const field of contentType.fields) {
         if (field.type === 'RichText') {
-          collection.addSchemaField(field.id, () => richTextType)
+          resolvers[field.id] = richTextType
         }
       }
+
+      actions.addCollection({ typeName, route })
+      actions.addSchemaResolvers({
+        [typeName]: resolvers
+      })
 
       this.typesIndex[id] = { ...contentType, typeName }
     }
@@ -60,10 +61,8 @@ class ContentfulSource {
   async getAssets (actions) {
     const assets = await this.fetch('getAssets')
     const typeName = this.createTypeName('asset')
-    const route = this.options.routes.asset || '/asset/:id'
-
-    const addCollection = actions.addCollection || actions.addContentType
-    const collection = addCollection({ typeName, route })
+    const route = this.options.routes.asset
+    const collection = actions.addCollection({ typeName, route })
 
     for (const asset of assets) {
       collection.addNode({ ...asset.fields, id: asset.sys.id })
@@ -72,12 +71,11 @@ class ContentfulSource {
 
   async getEntries (actions) {
     const entries = await this.fetch('getEntries')
-    const getCollection = actions.getCollection || actions.getContentType
 
     for (const entry of entries) {
       const typeId = entry.sys.contentType.sys.id
-      const { typeName, displayField } = this.typesIndex[typeId]
-      const collection = getCollection(typeName)
+      const { typeName, displayField, fields } = this.typesIndex[typeId]
+      const collection = actions.getCollection(typeName)
       const node = {}
 
       node.title = entry.fields[displayField]
@@ -86,7 +84,8 @@ class ContentfulSource {
       node.updatedAt = entry.sys.updatedAt
       node.locale = entry.sys.locale
 
-      for (const key in entry.fields) {
+      for (const idx in fields) {
+        const key = fields[idx].id
         const value = entry.fields[key]
 
         if (Array.isArray(value)) {

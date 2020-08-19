@@ -17,7 +17,8 @@ module.exports = {
       options: {
         typeName: 'Ghost',
         baseUrl: 'http://localhost:2368',
-        contentKey: '0b7050113fba7147f358cc2f4d'
+        contentKey: '0b7050113fba7147f358cc2f4d',
+        version: 'v3' // default
       }
     }
   ],

@@ -10,20 +10,22 @@ module.exports = ({ context, config, assets }) => {
   return async (req, res, next) => {
     const relPath = req.params[1].replace(/(%2e|\.){2}/g, '')
     const filePath = path.join(context, relPath)
-    const asset = assets.get(filePath)
 
     if (
       !filePath.startsWith(context) ||
-      !fs.existsSync(filePath) ||
-      !asset
+      !fs.existsSync(filePath)
     ) {
       return res.sendStatus(404)
     }
 
     const { ext } = path.parse(filePath)
-    const options = mapValues(req.query, value => {
+    const { key, ...options } = mapValues(req.query, value => {
       return decodeURIComponent(value)
     })
+
+    const asset = assets.get(key || req.url)
+
+    if (!asset) return res.sendStatus(404)
 
     const serveFile = async file => {
       const buffer = await fs.readFile(file)
@@ -34,8 +36,9 @@ module.exports = ({ context, config, assets }) => {
         res.header('Expires', '-1')
       }
 
+      res.header('Accept-Ranges', 'bytes')
       res.contentType(ext)
-      res.end(buffer, 'binary')
+      res.end(buffer)
     }
 
     try {
@@ -46,8 +49,9 @@ module.exports = ({ context, config, assets }) => {
 
         if (!fs.existsSync(destPath)) {
           await worker.processImage({
-            backgroundColor: config.images.backgroundColor,
-            size: asset.size,
+            imagesConfig: config.images,
+            width: asset.width,
+            height: asset.height,
             filePath,
             destPath,
             options

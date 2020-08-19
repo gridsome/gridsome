@@ -1,8 +1,16 @@
-const { omit, isPlainObject, isNumber, isInteger } = require('lodash')
-const { isRefFieldDefinition } = require('./utils')
-const { isRefField } = require('../store/utils')
-const { warn } = require('../utils/log')
 const camelCase = require('camelcase')
+const { warn } = require('../utils/log')
+const { isRefField } = require('../store/utils')
+const { isRefFieldDefinition } = require('./utils')
+
+const {
+  omit,
+  isNil,
+  isEmpty,
+  isNumber,
+  isInteger,
+  isPlainObject
+} = require('lodash')
 
 module.exports = function createFieldDefinitions (nodes, options = {}) {
   let res = {}
@@ -23,18 +31,24 @@ function resolveValues (obj, currentObj = {}, options = {}, path = []) {
 
     if (key.startsWith('$')) continue
     if (key.startsWith('__')) continue
-    if (value === undefined) continue
-    if (value === null) continue
+    if (isNil(value)) continue
 
-    const fieldName = createFieldName(key, options.camelCase)
     const currentValue = currentObj[key] ? currentObj[key].value : undefined
     const resolvedValue = resolveValue(value, currentValue, options, path.concat(key))
-    const extensions = { isInferred: true }
+
+    if (
+      isNil(resolvedValue) ||
+      (Array.isArray(resolvedValue) && !resolvedValue.length) ||
+      (isPlainObject(resolvedValue) && isEmpty(resolvedValue))
+    ) {
+      continue
+    }
+
+    const fieldName = createFieldName(key, options.camelCase)
+    const extensions = { isInferred: true, directives: [] }
 
     if (fieldName !== key) {
-      extensions.proxy = {
-        from: key
-      }
+      extensions.directives.push({ name: 'proxy', args: { from: key } })
     }
 
     res[key] = {
@@ -77,12 +91,23 @@ function resolveValue (value, currentValue, options, path = []) {
       arr[0] = resolveValue(value[i], arr[0], options, path.concat(i))
     }
 
-    return arr
+    return arr.filter(v => !isNil(v))
   } else if (isPlainObject(value)) {
     if (isRefField(value)) {
       if (!value.typeName) {
         warn(`Missing typeName for reference in field: ${path.join('.')}`)
         return currentValue
+      }
+
+      if (currentValue) {
+        if (Array.isArray(currentValue.typeName)) {
+          if (!currentValue.typeName.includes(value.typeName)) {
+            currentValue.typeName.push(value.typeName)
+          }
+        } else if (currentValue.typeName !== value.typeName) {
+          // convert to union field if it has multiple typeNames
+          currentValue.typeName = [currentValue.typeName, value.typeName]
+        }
       }
 
       const ref = currentValue || { typeName: value.typeName }
@@ -98,7 +123,7 @@ function resolveValue (value, currentValue, options, path = []) {
       : value
   }
 
-  return currentValue !== undefined ? currentValue : value
+  return isNil(currentValue) ? value : currentValue
 }
 
 const nonValidCharsRE = new RegExp('[^a-zA-Z0-9_]', 'g')

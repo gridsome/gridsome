@@ -97,6 +97,24 @@ test('set custom favicon sizes', () => {
   })
 })
 
+test('set custom image processing options', () => {
+  const config = loadConfig(context, {
+    localConfig: {
+      images: {
+        compress: false,
+        defaultBlur: 5,
+        defaultQuality: 90,
+        backgroundColor: 'red'
+      }
+    }
+  })
+
+  expect(config.images.compress).toEqual(false)
+  expect(config.images.defaultBlur).toEqual(5)
+  expect(config.images.defaultQuality).toEqual(90)
+  expect(config.images.backgroundColor).toEqual('red')
+})
+
 test('setup templates config from string', () => {
   const config = loadConfig(context, {
     localConfig: {

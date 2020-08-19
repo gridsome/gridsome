@@ -54,7 +54,7 @@ test('include pathPrefix in scripts', () => {
   // __webpack_public_path__
   expect(appJS).toMatch('__webpack_require__.p = "/sub/-/dir/"')
   // stripPathPrefix(path) helper
-  expect(appJS).toMatch('publicPath = "/sub/-/dir/"')
+  expect(appJS).toMatch('"pathPrefix": "/sub/-/dir"')
   // router base
   expect(appJS).toMatch('base: "/sub/-/dir/"')
 })

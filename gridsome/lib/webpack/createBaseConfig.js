@@ -14,10 +14,10 @@ module.exports = (app, { isProd, isServer }) => {
   const { config: projectConfig } = app
   const { publicPath } = projectConfig
   const { cacheDirectory, cacheIdentifier } = createCacheOptions()
-  const assetsDir = path.relative(projectConfig.outDir, projectConfig.assetsDir)
+  const assetsDir = path.relative(projectConfig.outputDir, projectConfig.assetsDir)
   const config = new Config()
 
-  const useHash = isProd && !process.env.GRIDSOME_TEST
+  const useHash = isProd && !process.env.GRIDSOME_TEST && projectConfig.cacheBusting
   const filename = `[name]${useHash ? '.[contenthash:8]' : ''}.js`
   const assetname = `[name]${useHash ? '.[hash:8]' : ''}.[ext]`
   const inlineLimit = 10000
@@ -26,7 +26,7 @@ module.exports = (app, { isProd, isServer }) => {
 
   config.output
     .publicPath(publicPath)
-    .path(projectConfig.outDir)
+    .path(projectConfig.outputDir)
     .chunkFilename(`${assetsDir}/js/${filename}`)
     .filename(`${assetsDir}/js/${filename}`)
 
@@ -236,15 +236,19 @@ module.exports = (app, { isProd, isServer }) => {
       }])
   }
 
+  // Short hashes as ids for better long term caching.
+  config.optimization.merge({ moduleIds: 'hashed' })
+
   if (process.env.GRIDSOME_TEST) {
     config.output.pathinfo(true)
     config.optimization.minimize(false)
+    config.optimization.merge({ moduleIds: 'named' })
   }
 
   // helpes
 
   function createCacheOptions () {
-    const values = {
+    const values = app.compiler.hooks.cacheIdentifier.call({
       'gridsome': require('../../package.json').version,
       'cache-loader': require('cache-loader/package.json').version,
       'vue-loader': require('vue-loader/package.json').version,
@@ -254,7 +258,7 @@ module.exports = (app, { isProd, isServer }) => {
       config: (
         (projectConfig.chainWebpack || '').toString()
       )
-    }
+    })
 
     return {
       cacheDirectory: app.resolve('node_modules/.cache/gridsome'),

@@ -141,7 +141,9 @@ class PluginStore {
       return { typeName: typeName.internal.typeName, id: typeName.id }
     }
 
-    return { typeName, id }
+    const value = Array.isArray(id) ? id.map(String) : String(id)
+
+    return { typeName, id: value }
   }
 
   //
