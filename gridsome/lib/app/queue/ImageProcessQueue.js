@@ -155,6 +155,7 @@ class ImageProcessQueue {
       height: originalSize.height,
       noscriptHTML: '',
       imageHTML: '',
+      dataUri: undefined,
       cacheKey,
       name,
       ext,
@@ -164,11 +165,16 @@ class ImageProcessQueue {
 
     const classNames = (options.classNames || []).concat(['g-image'])
     const isSrcset = options.srcset !== false
-    const isLazy = options.immediate === undefined
+    const isLazy = options.immediate !== true
 
     if (isSrcset) {
       results.sizes = options.sizes || `(max-width: ${imageWidth}px) 100vw, ${imageWidth}px`
       results.srcset = results.sets.map(({ src, width }) => `${src} ${width}w`)
+    }
+
+    if (isLazy && isSrcset) {
+      classNames.push('g-image--lazy')
+
       results.dataUri = await createDataUri(
         pipeline,
         mimeType,
@@ -177,10 +183,6 @@ class ImageProcessQueue {
         defaultBlur,
         options
       )
-    }
-
-    if (isLazy && isSrcset) {
-      classNames.push('g-image--lazy')
 
       results.noscriptHTML = '' +
         `<noscript>` +

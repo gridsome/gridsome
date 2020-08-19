@@ -389,6 +389,7 @@ test('disable lazy loading', async () => {
   expect(queue.images.queue).toHaveLength(2)
   expect(result.imageHTML).toMatchSnapshot()
   expect(result.noscriptHTML).toEqual('')
+  expect(result.dataUri).toBeUndefined()
 })
 
 test('skip srcset and dataUri', async () => {

@@ -41,11 +41,11 @@ function transformAttrValue(node, attr) {
 }
 
 function isStatic(value) {
-  return /^"[^"]+"$/.test(value)
+  return value[0] === '"' && value[value.length - 1] === '"'
 }
 
 function extractValue(value) {
-  return value.substr(1, value.length - 2)
+  return value.substr(1, value.length - 2) || true
 }
 
 function createOptionsQuery(attrs) {
