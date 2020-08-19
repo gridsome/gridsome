@@ -13,33 +13,30 @@ jobs:
     name: Lint
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
-    - uses: actions/setup-node@v1
+    - uses: actions/checkout@v2
+    - name: Use Node.js
+      uses: actions/setup-node@v1
       with:
         node-version: 12.x
-    - name: Install Yarn
-      run: npm install --global yarn
     - name: Install dependencies
-      run: yarn install
+      run: yarn --frozen-lockfile
     - name: Run linter
       run: yarn lint
 
   test:
-    name: Test with Node.js ${{ matrix.node-version }} on ${{ matrix.os }}
+    name: Test Node.js ${{ matrix.node-version }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         node-version: [10.x, 12.x, 14.x]
         os: [windows-latest, macOS-latest, ubuntu-latest]
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
-    - name: Install Yarn
-      run: npm install --global yarn
     - name: Install dependencies
-      run: yarn install
+      run: yarn --frozen-lockfile
     - name: Run unit tests
       run: yarn test:unit
