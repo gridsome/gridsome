@@ -12,15 +12,18 @@
     "wordpress"
   ],
   "dependencies": {
-    "axios": "^0.19.0",
     "camelcase": "^5.0.0",
-    "lodash": "^4.17.11",
+    "consola": "^2.14.0",
+    "fs-extra": "^9.0.1",
+    "got": "^11.3.0",
+    "lodash.isplainobject": "^4.0.6",
+    "node-html-parser": "^1.2.20",
     "p-map": "^1.2.0"
   },
   "publishConfig": {
     "access": "public"
   },
   "engines": {
-    "node": ">=8.3"
+    "node": ">=10"
   }
 }
