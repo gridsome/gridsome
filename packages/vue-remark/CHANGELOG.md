@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.3](https://github.com/gridsome/gridsome/tree/master/packages/vue-remark/compare/@gridsome/vue-remark@0.2.2...@gridsome/vue-remark@0.2.3) (2020-08-20)
+
+
+### Bug Fixes
+
+* **vue-remark:** support VueComponent function ([#1264](https://github.com/gridsome/gridsome/tree/master/packages/vue-remark/issues/1264)) ([b4eb3ec](https://github.com/gridsome/gridsome/tree/master/packages/vue-remark/commit/b4eb3ecd23baf25719f5bdbe45fc5a9cabb0c4ba))
+
+
+
+
+
 ## [0.2.2](https://github.com/gridsome/gridsome/tree/master/packages/vue-remark/compare/@gridsome/vue-remark@0.2.1...@gridsome/vue-remark@0.2.2) (2020-07-02)
 
 **Note:** Version bump only for package @gridsome/vue-remark

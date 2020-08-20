@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.7.20](https://github.com/gridsome/gridsome/compare/gridsome@0.7.19...gridsome@0.7.20) (2020-08-20)
+
+
+### Bug Fixes
+
+* **app:** clear cache if the request fails ([#1312](https://github.com/gridsome/gridsome/issues/1312)) ([f3f473e](https://github.com/gridsome/gridsome/commit/f3f473e9883bc7879f21b3c69522cf2c9a32a82f))
+* **app:** decode anchor hash value ([#1281](https://github.com/gridsome/gridsome/issues/1281)) ([#1293](https://github.com/gridsome/gridsome/issues/1293)) ([b93eb39](https://github.com/gridsome/gridsome/commit/b93eb39ec41384f9ec1869650e29d783d93a5d48))
+* **develop:** ensure dynamic page loads on first run ([6357f19](https://github.com/gridsome/gridsome/commit/6357f1934510e8fae2d950c6074818b35e70fcba))
+* **g-image:** exclude base64 data when not lazy loading ([#1318](https://github.com/gridsome/gridsome/issues/1318)) ([be15ba8](https://github.com/gridsome/gridsome/commit/be15ba89518d73178613ca50d19cbe091363e6d0))
+
+
+
+
+
 ## [0.7.19](https://github.com/gridsome/gridsome/compare/gridsome@0.7.18...gridsome@0.7.19) (2020-07-08)
 
 
