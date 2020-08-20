@@ -509,7 +509,7 @@ test('get matched route by path', async () => {
 })
 
 describe('dynamic pages', () => {
-  test('create dynamic page', async () => {
+  test('create page', async () => {
     const { pages } = await createApp()
 
     const component = './__fixtures__/DefaultPage.vue'
@@ -529,6 +529,17 @@ describe('dynamic pages', () => {
     expect(route.options.name).toEqual('__user_id')
     expect(route.internal.regexp).toEqual(/^\/user\/([^\/]+?)(?:\/)?$/i) // eslint-disable-line no-useless-escape
     expect(route.internal.isDynamic).toEqual(true)
+  })
+
+  test('trim trailing slash', async () => {
+    const { pages } = await createApp()
+
+    const component = './__fixtures__/DefaultPage.vue'
+    const page = pages.createPage({ path: '/products/:slug/', component })
+    const route = pages.getRoute(page.internal.route)
+
+    expect(page.path).toEqual('/products/:slug')
+    expect(route.path).toEqual('/products/:slug')
   })
 })
 

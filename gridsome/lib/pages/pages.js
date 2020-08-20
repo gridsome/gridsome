@@ -37,8 +37,8 @@ class Pages {
     this._watcher = null
 
     this._routes = new Collection('routes', {
-      indices: ['id'],
-      unique: ['id', 'path', 'internal.priority'],
+      indices: ['id', 'internal.priority'],
+      unique: ['id', 'path'],
       disableMeta: true
     })
 
@@ -319,16 +319,15 @@ class Pages {
     const hasTrailingSlash = /\/$/.test(options.path)
     const isDynamic = /:/.test(options.path)
 
-    if (type === TYPE_DYNAMIC) {
-      name = name || `__${snakeCase(path)}`
-    }
-
     if (query.directives.paginate) {
       path = trimEnd(path, '/') + '/:page(\\d+)?' + (hasTrailingSlash ? '/' : '')
     }
 
     if (type === TYPE_STATIC && trailingSlash) {
       path = trimEnd(path, '/') + '/'
+    } else if (type === TYPE_DYNAMIC) {
+      path = trimEnd(path, '/') || '/'
+      name = name || `__${snakeCase(path)}`
     }
 
     const keys = []
