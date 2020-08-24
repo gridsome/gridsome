@@ -451,6 +451,19 @@ describe('add reference resolvers', () => {
     expect(data.track.unionRefs[0].name).toEqual('First Album')
     expect(data.track.unionRefs[1].name).toEqual('Second Single')
   })
+
+  test('throw if referencing missing collection', async () => {
+    expect(initApp(({ addSchemaTypes }) => {
+      addSchemaTypes(`
+        type Track implements Node {
+          album: MissingType
+        }
+        type MissingType implements Node {
+          id: ID!
+        }
+      `)
+    })).rejects.toThrow('Track.album')
+  })
 })
 
 test('add custom resolver for invalid field names', async () => {

@@ -113,7 +113,9 @@ module.exports = (context, options = {}) => {
   config.configureServer = localConfig.configureServer
 
   config.images = {
+    compress: true,
     defaultBlur: 40,
+    defaultQuality: 75,
     backgroundColor: null,
     ...localConfig.images
   }
@@ -162,6 +164,8 @@ module.exports = (context, options = {}) => {
   config.preload = localConfig.preload || {}
 
   config.cacheBusting = typeof localConfig.cacheBusting === 'boolean' ? localConfig.cacheBusting : true
+
+  config.catchLinks = typeof localConfig.catchLinks === 'boolean' ? localConfig.catchLinks : true
 
   return Object.freeze(config)
 }
@@ -299,7 +303,7 @@ function normalizeTemplates (context, config, localConfig) {
 }
 
 function normalizePlugins (context, plugins) {
-  return plugins.map((plugin, index) => {
+  return plugins.filter(Boolean).map((plugin, index) => {
     if (typeof plugin !== 'object') {
       plugin = { use: plugin }
     }

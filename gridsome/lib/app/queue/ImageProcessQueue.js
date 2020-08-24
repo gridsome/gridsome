@@ -5,7 +5,6 @@ const crypto = require('crypto')
 const mime = require('mime-types')
 const colorString = require('color-string')
 const md5File = require('md5-file/promise')
-const imageSize = require('probe-image-size')
 const svgDataUri = require('mini-svg-data-uri')
 const { forwardSlash } = require('../../utils')
 const { warmupSharp } = require('../../utils/sharp')
@@ -68,8 +67,30 @@ class ImageProcessQueue {
     }
 
     const hash = await md5File(filePath)
-    const buffer = await fs.readFile(filePath)
-    const originalSize = imageSize.sync(buffer) || { width: 1, height: 1 }
+    const fileBuffer = await fs.readFile(filePath)
+    const warmSharp = await warmupSharp(sharp)
+
+    let pipeline
+    let metadata
+
+    try {
+      // Rotate based on EXIF Orientation tag
+      pipeline = warmSharp(fileBuffer).rotate()
+      metadata = await pipeline.metadata()
+    } catch (err) {
+      throw new Error(`Failed to process image ${relPath}. ${err.message}`)
+    }
+
+    const originalSize = {
+      width: metadata.width,
+      height: metadata.height
+    }
+
+    // https://www.impulseadventure.com/photo/exif-orientation.html
+    if (metadata.orientation && metadata.orientation >= 5) {
+      originalSize.width = metadata.height
+      originalSize.height = metadata.width
+    }
 
     const { imageWidth, imageHeight } = computeScaledImageSize(originalSize, options, maxImageWidth)
 
@@ -134,6 +155,7 @@ class ImageProcessQueue {
       height: originalSize.height,
       noscriptHTML: '',
       imageHTML: '',
+      dataUri: undefined,
       cacheKey,
       name,
       ext,
@@ -143,20 +165,24 @@ class ImageProcessQueue {
 
     const classNames = (options.classNames || []).concat(['g-image'])
     const isSrcset = options.srcset !== false
-    const isLazy = options.immediate === undefined
+    const isLazy = options.immediate !== true
 
     if (isSrcset) {
-      try {
-        results.dataUri = await createDataUri(buffer, mimeType, imageWidth, imageHeight, defaultBlur, options)
-      } catch (err) {
-        throw new Error(`Failed to process image ${relPath}. ${err.message}`)
-      }
       results.sizes = options.sizes || `(max-width: ${imageWidth}px) 100vw, ${imageWidth}px`
       results.srcset = results.sets.map(({ src, width }) => `${src} ${width}w`)
     }
 
     if (isLazy && isSrcset) {
       classNames.push('g-image--lazy')
+
+      results.dataUri = await createDataUri(
+        pipeline,
+        mimeType,
+        imageWidth,
+        imageHeight,
+        defaultBlur,
+        options
+      )
 
       results.noscriptHTML = '' +
         `<noscript>` +
@@ -292,7 +318,7 @@ function createOptionsQuery (arr) {
   }, []).join('&')
 }
 
-async function createDataUri (buffer, type, width, height, defaultBlur, options = {}) {
+async function createDataUri (pipeline, type, width, height, defaultBlur, options = {}) {
   const blur = options.blur !== undefined ? parseInt(options.blur, 10) : defaultBlur
 
   const resizeOptions = {}
@@ -301,7 +327,7 @@ async function createDataUri (buffer, type, width, height, defaultBlur, options 
   if (options.position) resizeOptions.position = sharp.position[options.position]
   if (options.background) resizeOptions.background = options.background
 
-  const blurredSvg = await createBlurSvg(buffer, type, width, height, blur, resizeOptions)
+  const blurredSvg = await createBlurSvg(pipeline, type, width, height, blur, resizeOptions)
 
   return svgDataUri(
     `<svg fill="none" viewBox="0 0 ${width} ${height}" ` +
@@ -311,12 +337,13 @@ async function createDataUri (buffer, type, width, height, defaultBlur, options 
   )
 }
 
-async function createBlurSvg (buffer, mimeType, width, height, blur, resize = {}) {
+async function createBlurSvg (pipeline, mimeType, width, height, blur, resize = {}) {
   const blurWidth = 64
   const blurHeight = Math.round(height * (blurWidth / width))
-  const warmSharp = await warmupSharp(sharp)
-  const blurBuffer = await warmSharp(buffer).resize(blurWidth, blurHeight, resize).toBuffer()
-  const base64 = blurBuffer.toString('base64')
+  const buffer = await pipeline
+    .resize(blurWidth, blurHeight, resize)
+    .toBuffer()
+  const base64 = buffer.toString('base64')
   const id = `__svg-blur-${genHash(base64)}`
   let defs = ''
 

@@ -3,6 +3,36 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.4](https://github.com/gridsome/gridsome/tree/master/packages/cli/compare/@gridsome/cli@0.3.3...@gridsome/cli@0.3.4) (2020-08-20)
+
+
+### Bug Fixes
+
+* **cli:** prefer npm if the starter has package-lock.json ([#1282](https://github.com/gridsome/gridsome/tree/master/packages/cli/issues/1282)) ([5252622](https://github.com/gridsome/gridsome/tree/master/packages/cli/commit/5252622dfbcc8df4a09ff1bf564acbe2bd9adcf0))
+
+
+
+
+
+## [0.3.3](https://github.com/gridsome/gridsome/tree/master/packages/cli/compare/@gridsome/cli@0.3.2...@gridsome/cli@0.3.3) (2020-05-26)
+
+
+### Bug Fixes
+
+* **cli:** show help for unknown commands ([#1130](https://github.com/gridsome/gridsome/tree/master/packages/cli/issues/1130)) ([e8a1b59](https://github.com/gridsome/gridsome/tree/master/packages/cli/commit/e8a1b5902266ed473ff5e3c2f6206390aaeeb99a))
+
+
+
+
+
+## [0.3.2](https://github.com/gridsome/gridsome/tree/master/packages/cli/compare/@gridsome/cli@0.3.1...@gridsome/cli@0.3.2) (2020-04-18)
+
+**Note:** Version bump only for package @gridsome/cli
+
+
+
+
+
 ## [0.3.1](https://github.com/gridsome/gridsome/tree/master/packages/cli/compare/@gridsome/cli@0.3.0...@gridsome/cli@0.3.1) (2019-10-15)
 
 **Note:** Version bump only for package @gridsome/cli

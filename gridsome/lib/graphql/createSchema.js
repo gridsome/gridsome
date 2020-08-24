@@ -316,6 +316,14 @@ function processObjectTypeFields (schemaComposer, typeComposer, extensions) {
     ) {
       const isPlural = typeComposer.isFieldPlural(fieldName)
       const resolverName = isPlural ? 'referenceMany' : 'referenceOne'
+
+      if (!fieldTypeComposer.hasResolver(resolverName)) {
+        throw new Error(
+          `The ${typeComposer.getTypeName()}.${fieldName} field is ` +
+          `referencing a node type, but no "${typeName}" collection exists. `
+        )
+      }
+
       const resolver = fieldTypeComposer.getResolver(resolverName)
 
       typeComposer.setField(fieldName, resolver)

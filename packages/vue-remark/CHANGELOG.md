@@ -3,6 +3,63 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.3](https://github.com/gridsome/gridsome/tree/master/packages/vue-remark/compare/@gridsome/vue-remark@0.2.2...@gridsome/vue-remark@0.2.3) (2020-08-20)
+
+
+### Bug Fixes
+
+* **vue-remark:** support VueComponent function ([#1264](https://github.com/gridsome/gridsome/tree/master/packages/vue-remark/issues/1264)) ([b4eb3ec](https://github.com/gridsome/gridsome/tree/master/packages/vue-remark/commit/b4eb3ecd23baf25719f5bdbe45fc5a9cabb0c4ba))
+
+
+
+
+
+## [0.2.2](https://github.com/gridsome/gridsome/tree/master/packages/vue-remark/compare/@gridsome/vue-remark@0.2.1...@gridsome/vue-remark@0.2.2) (2020-07-02)
+
+**Note:** Version bump only for package @gridsome/vue-remark
+
+
+
+
+
+## [0.2.1](https://github.com/gridsome/gridsome/tree/master/packages/vue-remark/compare/@gridsome/vue-remark@0.2.0...@gridsome/vue-remark@0.2.1) (2020-05-26)
+
+
+### Bug Fixes
+
+* **vue-remark:** exclude remark-cli in cache identifier ([#1128](https://github.com/gridsome/gridsome/tree/master/packages/vue-remark/issues/1128)) ([a8cfa84](https://github.com/gridsome/gridsome/tree/master/packages/vue-remark/commit/a8cfa84254e45b73c9bde98e274d7b89ad4bd0e3))
+* **vue-remark:** use named entities when encoding ([#1179](https://github.com/gridsome/gridsome/tree/master/packages/vue-remark/issues/1179)) ([1fcecc0](https://github.com/gridsome/gridsome/tree/master/packages/vue-remark/commit/1fcecc0f47f88f8e0d4992defc30fb3862c226cb))
+
+
+
+
+
+# [0.2.0](https://github.com/gridsome/gridsome/tree/master/packages/vue-remark/compare/@gridsome/vue-remark@0.1.10...@gridsome/vue-remark@0.2.0) (2020-04-18)
+
+
+### Bug Fixes
+
+* **vue-remark:** don't wrap end tag in paragraph ([#941](https://github.com/gridsome/gridsome/tree/master/packages/vue-remark/issues/941)) ([7a48f0c](https://github.com/gridsome/gridsome/tree/master/packages/vue-remark/commit/7a48f0c81c1b5ae870cc6b06190d53936553baa9))
+* **vue-remark:** exclude layout settings from schema ([#991](https://github.com/gridsome/gridsome/tree/master/packages/vue-remark/issues/991)) ([dcafdcc](https://github.com/gridsome/gridsome/tree/master/packages/vue-remark/commit/dcafdcc5010147d458b887076ec530330edca3fd))
+* **vue-remark:** prevent type name conflicts in schema ([#815](https://github.com/gridsome/gridsome/tree/master/packages/vue-remark/issues/815)) ([c56182e](https://github.com/gridsome/gridsome/tree/master/packages/vue-remark/commit/c56182ed9c8047555d842a09fc29adccde36600d))
+
+
+### Features
+
+* **vue-remark:** option for ignoring files with glob patterns ([#1003](https://github.com/gridsome/gridsome/tree/master/packages/vue-remark/issues/1003)) ([9a605fb](https://github.com/gridsome/gridsome/tree/master/packages/vue-remark/commit/9a605fbf86ef6bc1dcfd3775ee6544f226c92832))
+
+
+
+
+
+## [0.1.10](https://github.com/gridsome/gridsome/tree/master/packages/vue-remark/compare/@gridsome/vue-remark@0.1.9...@gridsome/vue-remark@0.1.10) (2020-02-18)
+
+**Note:** Version bump only for package @gridsome/vue-remark
+
+
+
+
+
 ## [0.1.9](https://github.com/gridsome/gridsome/tree/master/packages/vue-remark/compare/@gridsome/vue-remark@0.1.8...@gridsome/vue-remark@0.1.9) (2019-11-19)
 
 

@@ -1,13 +1,13 @@
 const path = require('path')
 const glob = require('globby')
+const leven = require('leven')
 const crypto = require('crypto')
 const moment = require('moment')
 const chokidar = require('chokidar')
-const didYouMean = require('didyoumean')
 const pathToRegexp = require('path-to-regexp')
 const { deprecate } = require('../utils/deprecate')
 const { ISO_8601_FORMAT } = require('../utils/constants')
-const { isPlainObject, trimStart, trimEnd, get } = require('lodash')
+const { isPlainObject, trimStart, trimEnd, get, memoize } = require('lodash')
 
 const isDev = process.env.NODE_ENV === 'development'
 const FROM_CONTENT_TYPE = 'content-type'
@@ -18,7 +18,7 @@ const makeId = (uid, name) => {
 }
 
 const makePath = (object, { path, routeKeys, createPath }, dateField = 'date', slugify) => {
-  const date = moment.utc(object[dateField], ISO_8601_FORMAT, true)
+  const date = memoize(() => moment.utc(object[dateField], ISO_8601_FORMAT, true))
   const length = routeKeys.length
   const params = {}
 
@@ -46,9 +46,9 @@ const makePath = (object, { path, routeKeys, createPath }, dateField = 'date', s
     const field = get(object, fieldPath, fieldName)
 
     if (fieldName === 'id') params.id = object.id
-    else if (fieldName === 'year' && !object.year) params.year = date.format('YYYY')
-    else if (fieldName === 'month' && !object.month) params.month = date.format('MM')
-    else if (fieldName === 'day' && !object.day) params.day = date.format('DD')
+    else if (fieldName === 'year' && !object.year) params.year = date().format('YYYY')
+    else if (fieldName === 'month' && !object.month) params.month = date().format('MM')
+    else if (fieldName === 'day' && !object.day) params.day = date().format('DD')
     else {
       const repeated = repeat && Array.isArray(field)
       const values = repeated ? field : [field]
@@ -231,7 +231,9 @@ class TemplatesPlugin {
 
       for (const typeName of templates.byTypeName.keys()) {
         if (!typeNames.includes(typeName)) {
-          const suggestion = didYouMean(typeName, typeNames)
+          const suggestion = typeNames.find(value => {
+            return leven(value, typeName) < 3
+          })
 
           throw new Error(
             `A content type for the ${typeName} template does not exist.` +

@@ -18,8 +18,8 @@ module.exports = async (name, starter = 'default') => {
 
   try {
     const files = fs.existsSync(dir) ? fs.readdirSync(dir) : []
-    if (files.length > 1) {
-      return console.log(chalk.red(`Directory «${projectName}» is not empty.`))
+    if (files.length) {
+      return console.log(chalk.red(`Can't create ${projectName} because there's already a non-empty directory ${projectName} existing in path.`))
     }
   } catch (err) {
     throw new Error(err.message)
@@ -59,7 +59,10 @@ module.exports = async (name, starter = 'default') => {
     {
       title: `Install dependencies`,
       task: (_, task) => {
-        const command = useYarn ? 'yarn' : 'npm'
+        let command = 'npm'
+        if (!fs.existsSync(path.join(dir, 'package-lock.json'))) {
+          command = useYarn ? 'yarn' : 'npm'
+        }
         const stdio = ['ignore', 'pipe', 'ignore']
         const options = { cwd: dir, stdio }
         const args = []

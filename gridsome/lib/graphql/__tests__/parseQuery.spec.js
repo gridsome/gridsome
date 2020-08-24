@@ -42,8 +42,16 @@ test('get variable definitions', async () => {
   const res = parseQuery(app.schema.getSchema(), query)
 
   expect(res.variables).toHaveLength(2)
-  expect(res.variables[0]).toMatchObject({ name: 'foo', defaultValue: null, path: ['foo'] })
-  expect(res.variables[1]).toMatchObject({ name: 'foo__bar', defaultValue: 5, path: ['foo', 'bar'] })
+  expect(res.variables[0]).toMatchObject({
+    name: 'foo',
+    defaultValue: undefined,
+    path: ['foo']
+  })
+  expect(res.variables[1]).toMatchObject({
+    name: 'foo__bar',
+    defaultValue: 5,
+    path: ['foo', 'bar']
+  })
 })
 
 describe('pagination with @paginate directive', () => {

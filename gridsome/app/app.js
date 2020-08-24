@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import plugins from '~/.temp/plugins-server'
 
-import main from '~/main'
+import * as main from '~/main'
 import App from '~/App.vue'
 
 import head from './head'
@@ -16,8 +16,8 @@ import Image from './components/Image'
 import ClientOnly from './components/ClientOnly'
 
 Vue.mixin(graphqlMixin)
-Vue.component('g-link', Link)
-Vue.component('g-image', Image)
+Vue.component('GLink', Link)
+Vue.component('GImage', Image)
 Vue.component('ClientOnly', ClientOnly)
 
 Vue.prototype.$url = url
@@ -50,8 +50,9 @@ export function runPlugins(plugins) {
 }
 
 export function runMain() {
-  if (typeof main === 'function') {
-    main(Vue, context)
+  const defaultExport = 'default'
+  if (main && typeof main[defaultExport] === 'function') {
+    main[defaultExport](Vue, context)
   }
 }
 

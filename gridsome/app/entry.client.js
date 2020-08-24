@@ -28,7 +28,8 @@ if (process.env.NODE_ENV === 'production') {
       .catch(err => {
         // reload page if a component failed to load
         if (err.request && to.path !== window.location.pathname) {
-          window.location.assign(to.fullPath)
+          const fullPathWithPrefix = (config.pathPrefix ?? '') + to.fullPath
+          window.location.assign(fullPathWithPrefix)
         } else {
           next(err)
         }
@@ -43,6 +44,7 @@ document.addEventListener('click', event => {
   const { hostname, port } = document.location
 
   if (
+    !config.catchLinks || // disables this behavior by config settings
     event.defaultPrevented || // disables this behavior
     event.which !== 1 || // not a left click
     event.metaKey ||
@@ -66,7 +68,7 @@ document.addEventListener('click', event => {
 
   const path = stripPathPrefix($el.pathname)
   const { route, location } = router.resolve({
-    path: path + ($el.search || '') + ($el.hash || '')
+    path: path + ($el.search || '') + decodeURI($el.hash || '')
   })
 
   if (route.name === '*') {
@@ -76,6 +78,10 @@ document.addEventListener('click', event => {
   router.push(location, () => {})
   event.preventDefault()
 }, false)
+
+router.onError((err) => {
+  console.error(err)
+})
 
 router.onReady(() => {
   app.$mount('#app')

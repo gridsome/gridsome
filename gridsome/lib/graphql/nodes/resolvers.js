@@ -18,10 +18,14 @@ exports.createFindOneResolver = function (typeComposer) {
     if (args.id) {
       node = collection.by('id', args.id)
     } else if (args.path) {
-      // must use collection.findOne() here because
-      // collection.by() doesn't update after changes
-      const re = new RegExp(`^${trimEnd(args.path, '/')}/?$`)
-      node = collection.findOne({ path: { $regex: re } })
+      const path = trimEnd(args.path, '/') + '/'
+      const path2 = trimEnd(args.path, '/') || '/'
+      node = collection.findOne({
+        $or: [
+          { path },
+          { path: path2 }
+        ]
+      })
     }
 
     return node || null

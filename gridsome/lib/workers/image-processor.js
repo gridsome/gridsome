@@ -16,27 +16,33 @@ exports.processImage = async function ({
   filePath,
   destPath,
   cachePath,
-  options = {},
-  backgroundColor = null
+  imagesConfig,
+  options = {}
 }) {
   if (cachePath && await fs.exists(cachePath)) {
     return fs.copy(cachePath, destPath)
   }
 
   const { ext } = path.parse(filePath)
-  let buffer = await fs.readFile(filePath)
+  const { backgroundColor, defaultQuality = 75 } = imagesConfig
+
+  const buffer = await fs.readFile(filePath)
 
   if (['.png', '.jpeg', '.jpg', '.webp'].includes(ext)) {
     const config = {
       pngCompressionLevel: parseInt(options.pngCompressionLevel, 10) || 9,
-      quality: parseInt(options.quality, 10) || 75,
+      quality: parseInt(options.quality, 10) || defaultQuality,
       width: parseInt(options.width, 10) || null,
       height: parseInt(options.height, 10) || null,
       jpegProgressive: true
     }
 
     const plugins = []
-    let pipeline = sharp(buffer)
+    const sharpImage = sharp(buffer)
+    const compress = imagesConfig.compress !== false && config.quality < 100
+
+    // Rotate based on EXIF Orientation tag
+    sharpImage.rotate()
 
     if (
       (config.width && config.width <= width) ||
@@ -54,49 +60,70 @@ exports.processImage = async function ({
         resizeOptions.background = backgroundColor
       }
 
-      pipeline = pipeline.resize(resizeOptions)
+      sharpImage.resize(resizeOptions)
     }
 
-    if (/\.png$/.test(ext)) {
-      const quality = config.quality / 100
+    if (compress) {
+      if (/\.png$/.test(ext)) {
+        sharpImage.png({
+          compressionLevel: config.pngCompressionLevel,
+          adaptiveFiltering: false
+        })
+        const quality = config.quality / 100
+        plugins.push(imageminPngquant({
+          quality: [quality, quality],
+          strip: true
+        }))
+      }
 
-      pipeline = pipeline.png({
-        compressionLevel: config.pngCompressionLevel,
-        adaptiveFiltering: false
-      })
-      plugins.push(imageminPngquant({
-        quality: [quality, quality]
-      }))
+      if (/\.jpe?g$/.test(ext)) {
+        sharpImage.jpeg({
+          progressive: config.jpegProgressive,
+          quality: config.quality
+        })
+        plugins.push(imageminMozjpeg({
+          progressive: config.jpegProgressive,
+          quality: config.quality
+        }))
+      }
+
+      if (/\.webp$/.test(ext)) {
+        sharpImage.webp({
+          quality: config.quality
+        })
+        plugins.push(imageminWebp({
+          quality: config.quality
+        }))
+      }
     }
 
-    if (/\.jpe?g$/.test(ext)) {
-      pipeline = pipeline.jpeg({
-        progressive: config.jpegProgressive,
-        quality: config.quality
-      })
-      plugins.push(imageminMozjpeg({
-        progressive: config.jpegProgressive,
-        quality: config.quality
-      }))
-    }
+    const sharpBuffer = await sharpImage.toBuffer()
+    const resultBuffer = compress
+      ? await imagemin.buffer(sharpBuffer, { plugins })
+      : sharpBuffer
+    const resultLength = Buffer.byteLength(resultBuffer)
+    const sharpLength = Buffer.byteLength(sharpBuffer)
+    const initLength = Buffer.byteLength(buffer)
 
-    if (/\.webp$/.test(ext)) {
-      pipeline = pipeline.webp({
-        quality: config.quality
-      })
-      plugins.push(imageminWebp({
-        quality: config.quality
-      }))
-    }
-
-    buffer = await pipeline.toBuffer()
-    buffer = await imagemin.buffer(buffer, { plugins })
+    return fs.outputFile(
+      destPath,
+      resultLength < initLength
+        ? resultLength < sharpLength
+          ? resultBuffer
+          : sharpBuffer
+        : buffer
+    )
   }
 
-  await fs.outputFile(destPath, buffer)
+  return fs.outputFile(destPath, buffer)
 }
 
-exports.process = async function ({ queue, context, cacheDir, backgroundColor }) {
+exports.process = async function ({
+  queue,
+  context,
+  cacheDir,
+  imagesConfig
+}) {
   await warmupSharp(sharp)
   await pMap(queue, async set => {
     const cachePath = cacheDir ? path.join(cacheDir, set.filename) : null
@@ -104,7 +131,7 @@ exports.process = async function ({ queue, context, cacheDir, backgroundColor })
     try {
       await exports.processImage({
         destPath: set.destPath,
-        backgroundColor,
+        imagesConfig,
         cachePath,
         ...set
       })

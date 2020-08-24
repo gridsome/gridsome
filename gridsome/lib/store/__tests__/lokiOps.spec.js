@@ -3,10 +3,12 @@ const {
   $refListNin,
   $refListEq,
   $refListNe,
+  $refListExists,
   $refIn,
   $refNin,
   $refEq,
-  $refNe
+  $refNe,
+  $refExists
 } = require('../lokiOps')
 
 test('$refListIn', () => {
@@ -45,6 +47,16 @@ test('$refListNe', () => {
   expect($refListNe(null)).toEqual(true)
 })
 
+test('$refListExists', () => {
+  expect($refListExists(['1', '2', '3'], false)).toEqual(false)
+  expect($refListExists(['1', '2', '3'], true)).toEqual(true)
+  expect($refListExists([{ id: '1' }, { id: '2' }], true)).toEqual(true)
+  expect($refListExists([{ id: undefined }, { id: undefined }], false)).toEqual(true)
+  expect($refListExists([{ id: undefined }, { id: undefined }], true)).toEqual(false)
+  expect($refListExists(null, false)).toEqual(false)
+  expect($refListExists(null)).toEqual(false)
+})
+
 test('$refIn', () => {
   expect($refIn('2', ['1', '2'])).toEqual(true)
   expect($refIn('3', ['1', '2'])).toEqual(false)
@@ -76,4 +88,18 @@ test('$refNe', () => {
   expect($refNe({ id: '3' }, '2')).toEqual(true)
   expect($refNe({ id: '3' })).toEqual(true)
   expect($refNe(null)).toEqual(true)
+})
+
+test('$refExists', () => {
+  expect($refExists('2', false)).toEqual(false)
+  expect($refExists('2', true)).toEqual(true)
+  expect($refExists(undefined, false)).toEqual(true)
+  expect($refExists(undefined, true)).toEqual(false)
+  expect($refExists({ id: '2' }, false)).toEqual(false)
+  expect($refExists({ id: '2' }, true)).toEqual(true)
+  expect($refExists({ id: undefined }, false)).toEqual(true)
+  expect($refExists({ id: undefined }, true)).toEqual(false)
+  expect($refExists({ id: '2' })).toEqual(false)
+  expect($refExists(null, false)).toEqual(false)
+  expect($refExists(null)).toEqual(false)
 })

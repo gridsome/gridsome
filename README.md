@@ -13,7 +13,7 @@ Gridsome is a <a href="//vuejs.org">Vue-powered</a> static site generator for bu
 
 <p align="center">
   <a title="Total downloads" href="https://www.npmjs.com/package/gridsome">
-    <img src="https://img.shields.io/npm/dt/gridsome.svg?style=flat-square">
+    <img src="https://img.shields.io/npm/dm/gridsome.svg?style=flat-square">
   </a>
   <a title="Current version" href="https://www.npmjs.com/package/gridsome">
     <img src="https://img.shields.io/npm/v/gridsome.svg?style=flat-square">
@@ -43,7 +43,7 @@ Only critical HTML, CSS, and JavaScript get loaded first. The next pages are the
 Gridsome automatically optimizes your frontend to load and perform blazing fast. You get code-splitting, image optimization, lazy-loading, and almost perfect lighthouse scores out-of-the-box.
 
 ### Build future ready websites
-The future of the web is JavaScript, API's, and Markup - the [JAMstack](https://jamstack.org/). Gridsome uses the power of blazing-fast static site generator, JavaScript and APIs to create stunning dynamic web experiences.
+The future of the web is JavaScript, API's, and Markup - the [Jamstack](https://jamstack.org/). Gridsome uses the power of blazing-fast static site generator, JavaScript and APIs to create stunning dynamic web experiences.
 
 ### Ready for global domination
 Gridsome sites are usually not connected to any database and can be hosted entirely on a global CDN. It can handle thousands to millions of hits without breaking - and no expensive server costs.
@@ -57,8 +57,8 @@ Gridsome sites are usually not connected to any database and can be hosted entir
 ### 2. Create a Gridsome project
 
 1. `gridsome create my-gridsome-site` to create a new project
-2. `cd my-gridsome-site` to open folder
-3. `gridsome develop` to start local dev server at `http://localhost:8080`
+2. `cd my-gridsome-site` to open the folder
+3. `gridsome develop` to start a local dev server at `http://localhost:8080`
 4. Happy coding 🎉🙌
 
 ### 3. Next steps
@@ -68,8 +68,8 @@ Gridsome sites are usually not connected to any database and can be hosted entir
 
 ### Learn more...
 
-- [How it works](https://gridsome.org/docs/how-it-works)
-- [How to deploy](https://gridsome.org/docs/deployment)
+- [How it works](https://gridsome.org/docs/how-it-works/)
+- [How to deploy](https://gridsome.org/docs/deployment/)
 
 ## How to Contribute
 

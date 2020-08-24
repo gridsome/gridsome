@@ -51,7 +51,7 @@ exports.createCacheIdentifier = function (context, options, attachers = []) {
   const { dependencies: deps1 = {}, devDependencies: deps2 = {}} = pkg
 
   const remarkPlugins = Object.keys({ ...deps1, ...deps2 })
-    .filter(name => /remark-/.test(name))
+    .filter(name => /remark-(?!cli$)/.test(name))
     .map(name => ({
       fn: require(name),
       pkg: require(`${name}/package.json`)

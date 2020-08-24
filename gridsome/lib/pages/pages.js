@@ -37,8 +37,8 @@ class Pages {
     this._watcher = null
 
     this._routes = new Collection('routes', {
-      indices: ['id'],
-      unique: ['id', 'path', 'internal.priority'],
+      indices: ['id', 'internal.priority'],
+      unique: ['id', 'path'],
       disableMeta: true
     })
 
@@ -60,7 +60,10 @@ class Pages {
   routes () {
     return this._routes
       .chain()
-      .simplesort('internal.priority', true)
+      .compoundsort([
+        ['internal.priority', /* desc */ true],
+        ['path', /* asc */ false]
+      ])
       .data()
       .map(route => {
         return new Route(route, this)
@@ -203,6 +206,7 @@ class Pages {
 
   removePage (id) {
     const page = this.getPage(id)
+    if (!page) return
     const route = this.getRoute(page.internal.route)
 
     if (route.internal.isDynamic) {
@@ -230,6 +234,22 @@ class Pages {
       .forEach(options => {
         this.removeRoute(options.id)
       })
+  }
+
+  findAndRemovePages (query) {
+    this._pages.find(query).forEach(page => {
+      this.removePage(page.id)
+    })
+  }
+
+  findPages (query) {
+    const matchingPages = this._pages.find(query)
+    return matchingPages
+  }
+
+  findPage (query) {
+    const [ matchingPage ] = this._pages.find(query)
+    return matchingPage
   }
 
   getRoute (id) {
@@ -299,16 +319,15 @@ class Pages {
     const hasTrailingSlash = /\/$/.test(options.path)
     const isDynamic = /:/.test(options.path)
 
-    if (type === TYPE_DYNAMIC) {
-      name = name || `__${snakeCase(path)}`
-    }
-
     if (query.directives.paginate) {
       path = trimEnd(path, '/') + '/:page(\\d+)?' + (hasTrailingSlash ? '/' : '')
     }
 
     if (type === TYPE_STATIC && trailingSlash) {
       path = trimEnd(path, '/') + '/'
+    } else if (type === TYPE_DYNAMIC) {
+      path = trimEnd(path, '/') || '/'
+      name = name || `__${snakeCase(path)}`
     }
 
     const keys = []
@@ -438,9 +457,11 @@ class Route {
   }
 
   pages () {
-    return this._pages.find({
-      'internal.route': this.id
-    })
+    return this._pages
+      .chain()
+      .simplesort('path', false)
+      .find({ 'internal.route': this.id })
+      .data()
   }
 
   addPage (input) {
@@ -503,10 +524,12 @@ class Route {
         publicPath = trimEnd(path, '/') + '/'
       }
 
-      invariant(
-        regexp.test(path),
-        `The path ${path} does not match ${regexp}`
-      )
+      if (this.internal.path !== path) {
+        invariant(
+          regexp.test(path),
+          `The path ${path} does not match ${regexp}`
+        )
+      }
     }
 
     if (this.type === TYPE_DYNAMIC) {
