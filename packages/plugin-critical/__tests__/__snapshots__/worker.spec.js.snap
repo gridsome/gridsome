@@ -1,0 +1,53 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`inline critical css 1`] = `
+"<!DOCTYPE html>
+<html lang=\\"en\\">
+
+<head>
+  <title>Gridsome</title>
+  <meta charset=\\"utf-8\\" />
+  <meta name=\\"generator\\" content=\\"Gridsome v0.0.1\\" />
+  <meta name=\\"viewport\\" content=\\"width=device-width, initial-scale=1, viewport-fit=cover\\" />
+  <style id=\\"___critical-css\\">h1{font-size:6rem}h2{font-size:4rem}</style>
+  <link rel=\\"preload\\" href=\\"/css/styles.css\\" as=\\"style\\" onload=\\"this.onload=null;this.rel='stylesheet'\\"><noscript><link rel=\\"stylesheet\\" href=\\"/css/styles.css\\"></noscript>
+  <link rel=\\"preload\\" href=\\"/js/app.js\\" as=\\"script\\">
+</head>
+
+<body>
+  <div id=\\"app\\">
+    <h1>1</h1>
+    <h2>2</h2>
+  </div>
+  <script src=\\"/js/app.js\\" defer></script>
+</body>
+
+</html>
+"
+`;
+
+exports[`inline critical with publicPath 1`] = `
+"<!DOCTYPE html>
+<html lang=\\"en\\">
+
+<head>
+  <title>Gridsome</title>
+  <meta charset=\\"utf-8\\" />
+  <meta name=\\"generator\\" content=\\"Gridsome v0.0.1\\" />
+  <meta name=\\"viewport\\" content=\\"width=device-width, initial-scale=1, viewport-fit=cover\\" />
+  <style id=\\"___critical-css\\">h1{font-size:6rem}h3{font-size:2rem}</style>
+  <link rel=\\"preload\\" href=\\"/path/to/subdir/css/styles.css\\" as=\\"style\\" onload=\\"this.onload=null;this.rel='stylesheet'\\"><noscript><link rel=\\"stylesheet\\" href=\\"/path/to/subdir/css/styles.css\\"></noscript>
+  <link rel=\\"preload\\" href=\\"/path/to/subdir/js/app.js\\" as=\\"script\\">
+</head>
+
+<body>
+  <div id=\\"app\\">
+    <h1>1</h1>
+    <h3>2</h3>
+  </div>
+  <script src=\\"/path/to/subdir/js/app.js\\" defer></script>
+</body>
+
+</html>
+"
+`;
