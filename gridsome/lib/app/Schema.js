@@ -39,6 +39,7 @@ class Schema {
     this._schemas = []
     this._types = []
 
+    this._app.pageQuery.init(this._schema)
     return this
   }
 
