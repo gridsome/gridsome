@@ -39,8 +39,8 @@ export default (route, options = {}) => {
 
       isLoaded[route.path]
         .then(res => {
-          if (res.errors) onFail(res.errors[0])
-          else if (res.code) onSuccess({ code: res.code })
+          if (res && res.errors) onFail(res.errors[0])
+          else if (res && res.code) onSuccess({ code: res.code })
           else onSuccess({
             data: res.data,
             context: res.extensions
