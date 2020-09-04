@@ -141,7 +141,7 @@ class Pages {
     const route = new Route(newOptions, this)
 
     if (options.internal.query.source !== oldOptions.internal.query.source
-      || options.internal.query.usedFragments.join('-') === oldOptions.internal.query.usedFragments.join('-')) {
+      || options.internal.query.hashFragments !== oldOptions.internal.query.hashFragments) {
       for (const page of route.pages()) {
         const vars = page.internal.queryVariables || page.context || {}
         const fragmentsDefinitions = this.app.pageQuery.getFragmentsDefinitions()

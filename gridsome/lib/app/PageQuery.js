@@ -3,11 +3,11 @@ const fs = require('fs-extra')
 const glob = require('globby')
 const chokidar = require('chokidar')
 const compiler = require('vue-template-compiler')
+const crypto = require('crypto')
+const { Collection } = require('lokijs')
 const { parse } = require('@vue/component-compiler-utils')
-const { print } = require('graphql')
-const { omit, get } = require('lodash')
+const { omit } = require('lodash')
 const { parseQuery } = require('../graphql')
-const { error, info } = require('../utils/log')
 
 const isDev = process.env.NODE_ENV === 'development'
 
@@ -17,9 +17,10 @@ class PageQuery {
   constructor(app) {
     this.app = app
     this.schema = null
-    this.components = new Map()
-    this.fragments = new Map()
-    this.usedFragments = new Map()
+    this.fragments = new Collection('fragments', {
+      indices: ['name', 'use', 'define'],
+      unique: ['name']
+    })
 
     if (isDev) {
       this.watcher = chokidar.watch(componentsPath, { cwd: this.app.context, ignoreInitial: true })
@@ -41,15 +42,18 @@ class PageQuery {
 
   watchedFile (resourcePath, event) {
     let definedFragment = []
-    definedFragment = definedFragment.concat(get(this.components.get(resourcePath), 'defineFragments', []))
+    // Get previous definedFragment
+    definedFragment = definedFragment.concat(this._getFragmentsName({ define: { '$contains': resourcePath } }))
     if(event === 'delete') {
       this.deleteByPath(resourcePath)
       return
     }
     this.parseComponent(resourcePath)
-    definedFragment = definedFragment.concat(get(this.components.get(resourcePath), 'defineFragments', []))
+    // Get new definedFragment
+    definedFragment = definedFragment.concat(this._getFragmentsName({ define: { '$contains': resourcePath } }))
     // Dedup fragments names
     definedFragment = [...new Set(definedFragment)]
+
     // Update routes need fragments
     const routes = this.app.pages._routes.where(({ internal: { query } }) =>
       query.neededFragments.some(({ name }) => definedFragment.includes(name.value))
@@ -59,10 +63,14 @@ class PageQuery {
     })
   }
 
+  _getFragmentsName(query) {
+    return this.fragments.find(query).map(({ name }) => (name))
+  }
+
   getFragmentsDefinitions() {
     const definitions = {}
-    this.fragments.forEach(({ fragment }, key) => {
-      definitions[key] = fragment
+    this.fragments.chain().data().forEach(({ name, fragment }) => {
+      definitions[name] = fragment
     })
     return definitions
   }
@@ -77,81 +85,93 @@ class PageQuery {
     const filename = path.parse(resourcePath).name
     const pageQuery = this.getPageQuery(fs.readFileSync(path.resolve(this.app.context, resourcePath), 'utf-8'), filename)
     // If have no longer page-query remove previous data
-    if (!pageQuery && this.components.has(resourcePath)) {
+    if (!pageQuery) {
       this.deleteByPath(resourcePath)
     }
     return pageQuery && this.parseQuery(pageQuery, resourcePath)
   }
 
   deleteByPath (resourcePath) {
-    const prev = this.components.get(resourcePath)
-    this.components.delete(resourcePath)
-
-    prev.defineFragments.forEach((name) => {
-      this.fragments.delete(name)
+    const references = this.fragments.find({
+      '$or': [
+        {
+          use: {
+            '$contains': resourcePath
+          }
+        },
+        {
+          define: {
+            '$contains': resourcePath
+          }
+        }
+      ]
     })
 
-    prev.usedFragments.forEach((name) => {
-      this.usedFragments.delete(name)
+    references.forEach((fragment) => {
+      if (fragment.define.includes(resourcePath)) {
+        fragment.define = fragment.define.filter((path) => path !== resourcePath)
+      }
+      if (fragment.use.includes(resourcePath)) {
+        fragment.use = fragment.use.filter((path) => path !== resourcePath)
+      }
+
+      // If is no longer define remove fragment
+      if (fragment.define.length < 1) {
+        return this.fragments.remove(fragment)
+      }
+      this.fragments.update(fragment)
     })
   }
 
   parseQuery (pageQuery, resourcePath) {
-    // if components has allready parsed delete previous data to update
-    if (this.components.has(resourcePath)) {
-      this.deleteByPath(resourcePath)
-    }
+    // Clear previous references
+    this.deleteByPath(resourcePath)
     const parsed = parseQuery(this.schema, pageQuery, resourcePath)
 
     const defineFragments = []
-    const _fragments = new Map(this.fragments)
     parsed.fragments.forEach((fragment) => {
       const defName = fragment.name.value
       defineFragments.push(defName)
 
       // Detect duplicated fragments
-      if (_fragments.has(defName)) {
-        error(`Duplicate fragment "${defName}" in ${resourcePath}`, '[PageQuery]')
-        info(`\n${print(fragment)}\n`)
-        // We don't know which one to use so we delete both and save in duplicate
-        _fragments.delete(defName)
+      const prevDefinition = this.fragments.by('name', defName)
+      if (typeof prevDefinition !== 'undefined') {
+        this.fragments.update({
+          ...prevDefinition,
+          define: prevDefinition.define.concat(resourcePath)
+        })
         return
       }
 
-      _fragments.set(defName, {
+      this.fragments.insert({
         name: defName,
         fragment,
-        resourcePath
+        resourcePath,
+        define: [resourcePath],
+        use: []
       })
     })
-    this.fragments = _fragments
 
-
-    const needFragments = []
-    const usedFragments = []
-    const _usedFragments = new Map(this.usedFragments)
     parsed.usedFragments = parsed.neededFragments.reduce((acc, needed) => {
       const neededName = needed.name.value
-      needFragments.push(neededName)
 
-      if (this.fragments.has(neededName)) {
-        usedFragments.push(neededName)
-        _usedFragments.set(neededName, needed)
+      const needFragment = this.fragments.by('name', neededName)
+      if (typeof needFragment !== 'undefined') {
+        this.fragments.update({
+          ...needFragment,
+          use: needFragment.use.concat(resourcePath)
+        })
+
         // If definition of fragment is not in same component but exist
         if (parsed.fragments.findIndex(({ name }) => name.value === neededName) === -1) {
           acc.push(neededName)
-          parsed.document.definitions.push(this.fragments.get(neededName).fragment)
+          parsed.document.definitions.push(needFragment.fragment)
         }
       }
       return acc
     }, [])
-    this.usedFragments = _usedFragments
 
-    this.components.set(resourcePath, {
-      defineFragments,
-      needFragments,
-      usedFragments
-    })
+    parsed.hashFragments = crypto.createHash('md5').update(parsed.usedFragments.join('-')).digest('hex')
 
     return parsed
   }
