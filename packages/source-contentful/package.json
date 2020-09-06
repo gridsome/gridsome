@@ -1,9 +1,9 @@
 {
   "version": "0.5.3",
-  "name": "@gridsome/source-contentful",
+  "name": "@helloiamlukas/source-contentful",
   "description": "Contentful source for Gridsome",
-  "homepage": "https://github.com/gridsome/gridsome/tree/master/packages/source-contentful#readme",
-  "repository": "https://github.com/gridsome/gridsome/tree/master/packages/source-contentful",
+  "homepage": "https://github.com/helloiamlukas/gridsome/tree/master/packages/source-contentful#readme",
+  "repository": "https://github.com/helloiamlukas/gridsome/tree/master/packages/source-contentful",
   "main": "index.js",
   "keywords": [
     "gridsome",
