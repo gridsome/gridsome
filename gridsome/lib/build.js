@@ -15,7 +15,7 @@ module.exports = async (context, args) => {
   const buildTime = hirestime()
   const createApp = require('./app')
   const app = await createApp(context, { args })
-  const { config } = app
+  const { config, graphql } = app
 
   await app.plugins.run('beforeBuild', { context, config })
 
@@ -39,7 +39,7 @@ module.exports = async (context, args) => {
     })
   }
 
-  await app.plugins.run('afterBuild', () => ({ context, config, queue, redirects }))
+  await app.plugins.run('afterBuild', () => ({ context, config, graphql, queue, redirects }))
 
   // clean up
   await fs.remove(config.manifestsDir)
