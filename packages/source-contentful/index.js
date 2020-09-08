@@ -10,6 +10,7 @@ class ContentfulSource {
       environment: 'master',
       host: 'cdn.contentful.com',
       typeName: 'Contentful',
+      entiresBatchSize: 1000,
       richText: {},
       routes: {}
     }
@@ -70,7 +71,7 @@ class ContentfulSource {
   }
 
   async getEntries (actions) {
-    const entries = await this.fetch('getEntries')
+    const entries = await this.fetch('getEntries', this.options.entiresBatchSize)
 
     for (const entry of entries) {
       const typeId = entry.sys.contentType.sys.id
