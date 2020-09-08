@@ -111,7 +111,7 @@ class ContentfulSource {
   }
 
   async fetch (method, limit = 1000, order = 'sys.createdAt', parameters = {}) {
-    const fetch = skip => this.client[method]({ skip, limit, order, ...parameters })
+    const fetch = skip => this.client[method]({ ...parameters, skip, limit, order })
     const { total, items } = await fetch(0)
     const pages = Math.ceil(total / limit)
 
