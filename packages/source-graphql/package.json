@@ -14,11 +14,11 @@
     "apollo-link-context": "^1.0.17",
     "apollo-link-http": "^1.5.14",
     "graphql-tools": "^4.0.4",
-    "node-fetch": "^2.6.0"
+    "node-fetch": "^2.6.0",
+    "graphql": "^14.4.2"
   },
   "peerDependencies": {
-    "gridsome": "0.x",
-    "graphql": "^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0"
+    "gridsome": "0.x"
   },
   "publishConfig": {
     "access": "public"
