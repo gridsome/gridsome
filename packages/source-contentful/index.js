@@ -77,7 +77,7 @@ class ContentfulSource {
     const entries = []
 
     for (const locale of locales) {
-      entries.push(...await this.fetch('getEntries', 1000, 'sys.createdAt', locale ? {...parameters, locale}: parameters))
+      entries.push(...await this.fetch('getEntries', 1000, 'sys.createdAt', locale ? { ...parameters, locale } : parameters))
     }
 
     for (const entry of entries) {
@@ -109,7 +109,6 @@ class ContentfulSource {
           node[key] = value
         }
       }
-
 
       if (node.locale === undefined) {
         node.id = entry.sys.id
