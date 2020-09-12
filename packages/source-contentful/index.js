@@ -12,7 +12,8 @@ class ContentfulSource {
       typeName: 'Contentful',
       richText: {},
       routes: {},
-      parameters: {}
+      parameters: {},
+      locales: [undefined]
     }
   }
 
@@ -72,7 +73,12 @@ class ContentfulSource {
 
   async getEntries (actions) {
     const parameters = this.options.parameters
-    const entries = await this.fetch('getEntries', 1000, 'sys.createdAt', parameters)
+    const locales = this.options.locales
+    const entries = []
+
+    for (const locale of locales) {
+      entries.push(...await this.fetch('getEntries', 1000, 'sys.createdAt', locale ? {...parameters, locale}: parameters))
+    }
 
     for (const entry of entries) {
       const typeId = entry.sys.contentType.sys.id
@@ -104,9 +110,14 @@ class ContentfulSource {
         }
       }
 
-      node.id = entry.sys.id
 
-      collection.addNode(node)
+      if (node.locale === undefined) {
+        node.id = entry.sys.id
+        collection.addNode(node)
+        return
+      }
+
+      collection.addNode(node, [entry.sys.id, node.locale])
     }
   }
 
