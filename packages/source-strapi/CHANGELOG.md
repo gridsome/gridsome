@@ -8,4 +8,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ### Features
 
+Option to download media source from strapi into a proper folder. 
+
+
 * **strapi:** initial strapi source plugin ([#217](https://github.com/gridsome/gridsome/tree/master/packages/source-strapi/issues/217)) ([7186ff1](https://github.com/gridsome/gridsome/tree/master/packages/source-strapi/commit/7186ff1))

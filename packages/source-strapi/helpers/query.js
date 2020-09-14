@@ -1,8 +1,7 @@
 const axios = require('axios')
 const pluralize = require('pluralize')
-const execSync = require('child_process').execSync
 const path = require('path')
-const fs = require('fs')
+const fs = require('fs-extra')
 
 function downloadMedia (image, apiUrl) {
   const { url, sha256, ext } = image
@@ -14,10 +13,6 @@ function downloadMedia (image, apiUrl) {
     responseType: 'stream'
   })
     .then(response => [response.data, imageUrl])
-    .catch(e => {
-      console.error(remoteUrl, e)
-      throw Error(e)
-    })
 }
 
 function saveImage (data, imageUrl, mediaFolder) {
@@ -31,14 +26,14 @@ function saveImage (data, imageUrl, mediaFolder) {
   })
 }
 
-function downloadAllMedia (data, apiURL, params, mediaFolder) {
+function downloadAllMedia (graphqlItem, apiURL, params, mediaFolder) {
   params.map(p => {
-    if (data[p]) {
-      const mediaArray = Array.isArray(data[p]) ? data[p] : [data[p]]
+    if (graphqlItem[p]) {
+      const mediaArray = Array.isArray(graphqlItem[p]) ? graphqlItem[p] : [graphqlItem[p]]
       mediaArray.map(media => {
         downloadMedia(media, apiURL)
           .then(([mediaData, name]) => saveImage(mediaData, name, mediaFolder))
-          .catch(e => console.error(e))
+          .catch(() => console.log(`Image ${p} not found`))
       })
     }
   })
@@ -66,14 +61,14 @@ module.exports = async ({ apiURL, resourceName, jwtToken, queryLimit, isSingleTy
   // Make API request.
   return axios(apiEndpoint, fetchRequestConfig)
     .then(res => res.data)
-    .then(async data => {
+    .then(async graphqlResponse => {
       if (mediaDownloadFolder) {
-        await execSync(`mkdir -p ${mediaDownloadFolder}`)
-        data.map(dataItem => {
-          downloadAllMedia(dataItem, apiURL, mediaDownloadParameters, mediaDownloadFolder)
+        fs.ensureDirSync(mediaDownloadFolder)
+        graphqlResponse.map(graphqlItem => {
+          downloadAllMedia(graphqlItem, apiURL, mediaDownloadParameters, mediaDownloadFolder)
         })
       }
-      return data
+      return graphqlResponse
     })
     .catch(err => {
       console.error(`Unable to get content type (${resource}). Did you enable permissions in the Strapi admin for this?`)
