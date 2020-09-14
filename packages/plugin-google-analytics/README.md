@@ -10,6 +10,8 @@ See [VueAnalytics](https://github.com/MatteoGabriele/vue-analytics/blob/master/R
 
 ## Usage
 
+Add the below config in your gridsome config file. By default, it is `gridsome.config.js`
+
 ```js
 module.exports = {
   plugins: [
