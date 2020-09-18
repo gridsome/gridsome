@@ -25,7 +25,6 @@
     "execa": "^1.0.0",
     "jest": "^24.1.0",
     "lerna": "^3.22.0",
-    "memfs": "^2.9.4",
     "minimist": "^1.2.0",
     "puppeteer": "^1.12.2",
     "supertest": "^4.0.2"
