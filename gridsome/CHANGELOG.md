@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.7.21](https://github.com/gridsome/gridsome/compare/gridsome@0.7.20...gridsome@0.7.21) (2020-09-18)
+
+
+### Bug Fixes
+
+* **graphql:** convert to input type correctly ([#1338](https://github.com/gridsome/gridsome/issues/1338)) ([09478fc](https://github.com/gridsome/gridsome/commit/09478fc16b8701581e339aec8e09e6e5ab384d7f))
+* **graphql:** prevent infinite loop while creating input types ([7e5f863](https://github.com/gridsome/gridsome/commit/7e5f863199d86b9d0eeb288719cbe96765cbc7ac))
+
+
+
+
+
 ## [0.7.20](https://github.com/gridsome/gridsome/compare/gridsome@0.7.19...gridsome@0.7.20) (2020-08-20)
 
 
