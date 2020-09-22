@@ -1,6 +1,6 @@
 const h = require('hastscript')
 const Prism = require('prismjs')
-require('prismjs/plugins/custom-class/prism-custom-class');
+require('prismjs/plugins/custom-class/prism-custom-class')
 const u = require('unist-builder')
 const escapeHtml = require('escape-html')
 const visit = require('unist-util-visit')
@@ -13,7 +13,7 @@ require('prismjs/components/index')()
 
 module.exports = (
   {
-    customClassPrefix = "",
+    customClassPrefix = '',
     transformInlineCode = false,
     showLineNumbers: showLineNumbersGlobal = false
   } = {}
