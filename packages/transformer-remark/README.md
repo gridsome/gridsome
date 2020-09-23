@@ -138,7 +138,7 @@ Automatically add links to headings. Disabled if `slug` is `false`.
 - Type: `boolean`
 - Default: `true`
 
-Support ASCII guillements (`<<`, `>>`) and mapping them to HTML.
+Support ASCII guillemets (`<<`, `>>`) and mapping them to HTML.
 
 #### imageQuality
 
