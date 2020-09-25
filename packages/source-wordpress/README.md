@@ -100,3 +100,25 @@ If you are trying to query posts, you will need to add the `normalize: true` opt
         },
     ]
 ```
+
+## Authentication
+
+### JSON Web Token
+
+If you add a `jwtAuth` object to the options, the plugin will first authenticate with the username and password provided. All data fetched afterwards will use the JWT in the header.
+
+1. Install and activate a JWT wordpress plugin (tested with `https://github.com/usefulteam/jwt-auth`) 
+2. Add the following fields to gridsome.config.js
+
+```js
+  use: '@gridsome/source-wordpress',
+  options: {
+    ... // other source-wordpress options
+    jwtAuth: {
+      route: 'jwt-auth/v1/token',
+      username: process.env.WP_BUILD_USER,
+      password: process.env.WP_BUILD_PW
+	},
+  }
+```
+

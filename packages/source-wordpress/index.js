@@ -20,6 +20,7 @@ class WordPressSource {
   constructor (api, options) {
     this.options = options
     this.restBases = { posts: {}, taxonomies: {}}
+    this.jwtAuth = options.jwtAuth
 
     if (!options.typeName) {
       throw new Error(`Missing typeName option.`)
@@ -42,6 +43,8 @@ class WordPressSource {
     api.loadSource(async actions => {
       this.store = actions
 
+      if (this.jwtAuth !== undefined) await this.authenticateWithJwt()
+
       console.log(`Loading data from ${baseUrl}`)
 
       await this.getPostTypes(actions)
@@ -53,7 +56,7 @@ class WordPressSource {
   }
 
   async getPostTypes (actions) {
-    const { data } = await this.fetch('wp/v2/types', {}, {})
+    const { data } = await this.fetch('get', 'wp/v2/types', {}, {})
     const addCollection = actions.addCollection || actions.addContentType
 
     for (const type in data) {
@@ -69,7 +72,7 @@ class WordPressSource {
   }
 
   async getUsers (actions) {
-    const { data } = await this.fetch('wp/v2/users')
+    const { data } = await this.fetch('get', 'wp/v2/users')
     const addCollection = actions.addCollection || actions.addContentType
 
     const authors = addCollection({
@@ -91,7 +94,7 @@ class WordPressSource {
   }
 
   async getTaxonomies (actions) {
-    const { data } = await this.fetch('wp/v2/taxonomies', {}, {})
+    const { data } = await this.fetch('get', 'wp/v2/taxonomies', {}, {})
     const addCollection = actions.addCollection || actions.addContentType
 
     for (const type in data) {
@@ -166,7 +169,7 @@ class WordPressSource {
       const cepCollection = makeCollection({
         typeName: endpoint.typeName
       })
-      const { data } = await this.fetch(endpoint.route, {}, {})
+      const { data } = await this.fetch('get', endpoint.route, {}, {})
       for (let item of data) {
         if (endpoint.normalize) {
           item = this.normalizeFields(item)
@@ -180,11 +183,11 @@ class WordPressSource {
     }
   }
 
-  async fetch (url, params = {}, fallbackData = []) {
+  async fetch (method, url, params = {}, fallbackData = [], data = {}) {
     let res
-
+     
     try {
-      res = await this.client.request({ url, params })
+      res = await this.client.request({ method, url, params, data })
     } catch ({ response, code, config }) {
       if (!response && code) {
         throw new Error(`${code} - ${config.url}`)
@@ -208,7 +211,7 @@ class WordPressSource {
       let res
 
       try {
-        res = await this.fetch(path, { per_page: perPage })
+        res = await this.fetch('get', path, { per_page: perPage })
       } catch (err) {
         return reject(err)
       }
@@ -234,7 +237,7 @@ class WordPressSource {
 
       await pMap(queue, async params => {
         try {
-          const { data } = await this.fetch(path, params)
+          const { data } = await this.fetch('get', path, params)
           res.data.push(...ensureArrayData(path, data))
         } catch (err) {
           console.log(err.message)
@@ -301,6 +304,35 @@ class WordPressSource {
 
   createTypeName (name = '') {
     return camelCase(`${this.options.typeName} ${name}`, { pascalCase: true })
+  }
+
+  async getJwtToken () {
+    if (this.jwtAuth.username && this.jwtAuth.password && this.jwtAuth.route) {
+      const body = { username: this.jwtAuth.username, password: this.jwtAuth.password }
+      const { data } = await this.fetch('post', this.jwtAuth.route, {}, {}, body)
+      return data
+    }
+    throw new Error(
+      `Missing fields in options.jwtAuth:\n` +
+      `Make sure to include username, password and route\n`
+    )
+  }
+
+  async authenticateWithJwt() {
+    console.log('Attempting authentication with wordpress...')
+    const jwtRespnse = await this.getJwtToken()
+    if (jwtRespnse.success) {
+      const token = jwtRespnse.data.token
+      console.log('JWT received, adding to headers')
+      this.client.defaults.headers.common['Authorization'] = `Bearer ${token}`
+    }
+    else {
+      throw new Error(
+        `Failed to authenticate.\n` +
+        `Error Code: ${jwtRespnse.code}\n` +
+        `Error Message: ${jwtRespnse.message}`
+      )
+    }
   }
 }
 
