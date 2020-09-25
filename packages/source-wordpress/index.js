@@ -185,7 +185,7 @@ class WordPressSource {
 
   async fetch (method, url, params = {}, fallbackData = [], data = {}) {
     let res
-     
+
     try {
       res = await this.client.request({ method, url, params, data })
     } catch ({ response, code, config }) {
@@ -318,15 +318,14 @@ class WordPressSource {
     )
   }
 
-  async authenticateWithJwt() {
+  async authenticateWithJwt () {
     console.log('Attempting authentication with wordpress...')
     const jwtRespnse = await this.getJwtToken()
     if (jwtRespnse.success) {
       const token = jwtRespnse.data.token
       console.log('JWT received, adding to headers')
       this.client.defaults.headers.common['Authorization'] = `Bearer ${token}`
-    }
-    else {
+    } else {
       throw new Error(
         `Failed to authenticate.\n` +
         `Error Code: ${jwtRespnse.code}\n` +
