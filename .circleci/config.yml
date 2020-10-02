@@ -45,6 +45,21 @@ jobs:
           name: Run unit tests
           command: yarn run test:unit
 
+  test-pnp:
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: ~/
+      - run: |
+          git clone https://github.com/gridsome/gridsome-starter-default.git pnp-e2e
+          cd pnp-e2e
+          touch yarn.lock
+          yarn set version 2
+          yarn config set pnpFallbackMode none
+          yarn config set compressionLevel 0
+          yarn link -A ../
+          yarn build
+
 workflows:
   version: 2
   lint-and-test:
@@ -54,5 +69,8 @@ workflows:
           requires:
             - install
       - test-unit:
+          requires:
+            - install
+      - test-pnp:
           requires:
             - install

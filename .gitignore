@@ -3,3 +3,4 @@
 node_modules
 coverage
 dist
+pnp-e2e
