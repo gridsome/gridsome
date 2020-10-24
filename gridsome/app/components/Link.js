@@ -69,6 +69,7 @@ export default {
       attrs,
       directives,
       domProps: {
+        ...data.domProps,
         __gLink__: true
       }
     }, children)
