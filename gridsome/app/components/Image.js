@@ -13,14 +13,14 @@ export default {
     position: { type: String, default: '' },
     background: { type: String, default: '' },
     blur: { type: String, default: '' },
-    immediate: { type: true, default: undefined },
+    immediate: { type: Boolean, default: false },
     imageWidths: { type: String, default: undefined }
   },
 
   render: (h, { data, props }) => {
     const classNames = [data.class, 'g-image']
     const noscriptClassNames = [data.staticClass, classNames.slice()]
-    const isImmediate = props.immediate || props.immediate !== undefined
+    const isImmediate = props.immediate
     const directives = data.directives || []
     const attrs = data.attrs || {}
     const hook = data.hook || {}
