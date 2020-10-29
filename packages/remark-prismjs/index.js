@@ -1,5 +1,6 @@
 const h = require('hastscript')
 const Prism = require('prismjs')
+require('prismjs/plugins/custom-class/prism-custom-class')
 const u = require('unist-builder')
 const escapeHtml = require('escape-html')
 const visit = require('unist-util-visit')
@@ -12,10 +13,13 @@ require('prismjs/components/index')()
 
 module.exports = (
   {
+    customClassPrefix = '',
     transformInlineCode = false,
     showLineNumbers: showLineNumbersGlobal = false
   } = {}
 ) => tree => {
+  Prism.plugins.customClass.prefix(customClassPrefix)
+
   visit(tree, 'code', (node, index, parent) => {
     parent.children.splice(index, 1, createCode(node, showLineNumbersGlobal))
   })
