@@ -5,7 +5,7 @@
     width="135"
   />
 
-  <h1>{{ $page.metadata.siteName }}</h1>
+  <h1>{{ staticQuery.metadata.siteName }}</h1>
 
   <teleport to="#endofbody">
     <div>Teleported #endofbody</div>
@@ -24,14 +24,19 @@
       <g-link :to="post.path">{{ post.title }}</g-link>
     </li>
   </ul>
-  <Pager class="pagination" :info="$page.allPost.pageInfo" />
+  <Pager class="pagination" :info="pageQuery.allPost.pageInfo" />
 </template>
 
-<page-query>
-query ($page: Int) {
+<static-query>
+query {
   metadata {
     siteName
   }
+}
+</static-query>
+
+<page-query>
+query ($page: Int) {
   allPost(page: $page, perPage: 3) @paginate {
     pageInfo {
       currentPage
@@ -50,10 +55,9 @@ query ($page: Int) {
 
 <script setup>
 import { computed, onMounted } from 'vue'
-import { usePageQuery, useFetch } from 'gridsome'
+import { usePageQuery, useStaticQuery, useFetch } from 'gridsome'
 
 const fetch = useFetch()
-const data = usePageQuery()
 
 onMounted(() => {
   fetch('/blog/post-10').then(({ data }) => {
@@ -63,8 +67,11 @@ onMounted(() => {
 
 export { Pager } from 'gridsome'
 
+export const pageQuery = usePageQuery()
+export const staticQuery = useStaticQuery()
+
 export const posts = computed(() => {
-  return data.allPost.edges.map(({ node }) => node)
+  return pageQuery.allPost.edges.map(({ node }) => node)
 })
 </script>
 

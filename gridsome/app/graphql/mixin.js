@@ -1,4 +1,3 @@
-import { defineComponent } from 'vue'
 import { usePageContext, usePageQuery, useStaticQuery } from '../useApi'
 
 /**
@@ -6,7 +5,7 @@ import { usePageContext, usePageQuery, useStaticQuery } from '../useApi'
  * in components. We should maybe show a deprecation message and tell
  * people to use `usePageContext` and `usePageQuery` instead.
  */
-export default defineComponent({
+export default {
   computed: {
     $context() {
       return usePageContext()
@@ -18,4 +17,4 @@ export default defineComponent({
       return useStaticQuery()
     }
   }
-})
+}

@@ -24,7 +24,7 @@ export default (to, from, next) => {
       : next()
   }
 
-  return fetch(to)
+  fetch(to)
     .then(res => {
       if (res.code === 404) {
         next(notFound)

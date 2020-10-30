@@ -11,7 +11,7 @@ module.exports = async app => {
   config.entry('app').add(resolve('../../app/entry.server.js'))
 
   config.target('node')
-  config.externals([/^(vue|vue-router|vue-meta)$/])
+  config.externals([/^(vue|vue-router|vue-meta|@vue\/[a-z-]+)$/])
   config.devtool('source-map')
 
   config.optimization.minimize(false)

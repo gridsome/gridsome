@@ -3,7 +3,7 @@ import createApp from './app'
 import { unslashEnd } from './utils/helpers'
 import plugins from '~/.temp/plugins-server'
 
-export default async (context) => {
+export default async (ssrContext) => {
   const { app, router } = createApp({
     plugins,
     routerHistory: createMemoryHistory(
@@ -14,7 +14,7 @@ export default async (context) => {
   app.directive('g-link', {})
   app.directive('g-image', {})
 
-  router.push(context.location)
+  router.push(ssrContext.location)
 
   await router.isReady()
 
