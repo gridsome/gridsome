@@ -15,6 +15,10 @@
     Lorem ipsum dolor sit amet, consectetur adipisicing elit. Pariatur excepturi labore tempore expedita, et iste tenetur suscipit explicabo! Dolores, aperiam non officia eos quod asperiores.
   </p>
 
+  <ClientOnly>
+    <ClientOnlyComponent />
+  </ClientOnly>
+
   <h3>Posts:</h3>
   <ul>
     <li
@@ -66,6 +70,7 @@ onMounted(() => {
 })
 
 export { Pager } from 'gridsome'
+export { default as ClientOnlyComponent } from '../components/ClientOnlyComponent.vue'
 
 export const pageQuery = usePageQuery()
 export const staticQuery = useStaticQuery()

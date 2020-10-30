@@ -1,14 +1,15 @@
-// @vue/component
-export default {
-  functional: true,
+import { getCurrentInstance, onMounted } from 'vue'
 
-  render (h, { parent, children }) {
-    if (parent._isMounted) {
-      return children
-    } else {
-      parent.$once('hook:mounted', () => {
-        parent.$forceUpdate()
-      })
-    }
+const ClientOnly = (props, { slots }) => {
+  const instance = getCurrentInstance()
+
+  onMounted(() => {
+    instance.parent.proxy.$forceUpdate()
+  }, instance.parent)
+
+  if (instance.parent.isMounted) {
+    return slots.default()
   }
 }
+
+export default ClientOnly
