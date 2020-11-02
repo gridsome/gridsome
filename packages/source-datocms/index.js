@@ -1,4 +1,4 @@
-const { SiteClient, Loader } = require('datocms-client')
+const { SiteClient, Loader, ItemsRepo } = require('datocms-client')
 const { camelize } = require('humps')
 
 const withNoEmptyValues = (object) => {
@@ -38,11 +38,14 @@ class DatoCmsSource {
     api.loadSource(args => this.fetchContent(args))
   }
 
-  createTypeName (name) {
-    return (
-      this.options.typeName.charAt(0).toUpperCase() +
-      camelize(`${this.options.typeName} ${name}`).slice(1)
-    )
+  createTypeName(name) {
+    const cleanName = name.replace(/[^a-zA-Z0-9 ]/g, "")
+
+    return camelize(
+      `${this.options.typeName} ${
+        cleanName.charAt(0).toUpperCase() + cleanName.slice(1)
+      }`
+    );
   }
 
   async fetchContent (store) {
@@ -61,7 +64,8 @@ class DatoCmsSource {
     const loader = new Loader(client, previewMode)
     await loader.load()
 
-    const { itemsRepo, entitiesRepo } = loader
+    const { entitiesRepo } = loader
+    const itemsRepo = new ItemsRepo(loader.entitiesRepo)
 
     const cache = {}
 
