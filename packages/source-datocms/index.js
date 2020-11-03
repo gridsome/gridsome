@@ -41,7 +41,7 @@ class DatoCmsSource {
   createTypeName (name) {
     const cleanName = name.replace(/[^a-zA-Z0-9 ]/g, '')
 
-    return(
+    return (
       this.options.typeName.charAt(0).toUpperCase() +
       camelize(`${this.options.typeName} ${cleanName}`).slice(1)
     )
