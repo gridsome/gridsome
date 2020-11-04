@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.7.22](https://github.com/gridsome/gridsome/compare/gridsome@0.7.21...gridsome@0.7.22) (2020-11-04)
+
+
+### Bug Fixes
+
+* **g-image:** proper immediate typing and behaviour ([#1372](https://github.com/gridsome/gridsome/issues/1372)) ([a4c9d1f](https://github.com/gridsome/gridsome/commit/a4c9d1f061427a50ae84b3dea3f2881e0562cbd3))
+* **g-link:** add support for v-html ([#1373](https://github.com/gridsome/gridsome/issues/1373)) ([3762ecd](https://github.com/gridsome/gridsome/commit/3762ecd1d5d16d91d2976ef2dbdcea86fb5f0dba))
+* **pages:** dynamic route params in directories on windows ([#1359](https://github.com/gridsome/gridsome/issues/1359)) ([3d36051](https://github.com/gridsome/gridsome/commit/3d360512ed51045df876df426c450beb891d29e9))
+
+
+
+
+
 ## [0.7.21](https://github.com/gridsome/gridsome/compare/gridsome@0.7.20...gridsome@0.7.21) (2020-09-18)
 
 
