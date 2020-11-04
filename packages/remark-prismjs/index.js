@@ -1,6 +1,5 @@
 const h = require('hastscript')
 const Prism = require('prismjs')
-require('prismjs/plugins/custom-class/prism-custom-class')
 const u = require('unist-builder')
 const escapeHtml = require('escape-html')
 const visit = require('unist-util-visit')
@@ -8,7 +7,7 @@ const toHTML = require('hast-util-to-html')
 
 const parseOptions = require('./parse-options')
 
-// load all prismjs languages
+require('prismjs/plugins/custom-class/prism-custom-class')
 require('prismjs/components/index')()
 
 module.exports = (
