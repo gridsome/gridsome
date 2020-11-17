@@ -42,7 +42,7 @@ module.exports = ({ context, config, assets }) => {
     }
 
     try {
-      if (SUPPORTED_IMAGE_TYPES.includes(ext)) {
+      if (SUPPORTED_IMAGE_TYPES.includes(ext.toLowerCase())) {
         const imageOptions = assets.images.createImageOptions(options)
         const filename = assets.images.createFileName(filePath, imageOptions, asset.hash)
         const destPath = path.join(config.imageCacheDir, filename)
