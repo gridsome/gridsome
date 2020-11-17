@@ -167,6 +167,13 @@ test('use cached process results', async () => {
   expect(destStats.size).toEqual(cacheStats.size)
 })
 
+test('ignore extension casing', async () => {
+  const files = await process(['600x400-2.JPG'], { width: 500, height: 500 })
+  const stats = await fs.stat(files[0].destPath)
+
+  expect(stats.size).toBeLessThan(10000)
+})
+
 async function process (
   filenames,
   options = {},

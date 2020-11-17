@@ -380,6 +380,17 @@ test('get queue values', async () => {
   expect(queue.images.queue).toHaveLength(2)
 })
 
+test('ignore extension casing', async () => {
+  const filePath = path.resolve(context, 'assets/600x400-2.JPG')
+  const queue = new AssetsQueue({ context, config: baseconfig })
+
+  const result = await queue.add(filePath)
+
+  expect(queue.images.queue).toHaveLength(1)
+  expect(result.mimeType).toEqual('image/jpeg')
+  expect(result.ext).toEqual('.JPG')
+})
+
 test('disable lazy loading', async () => {
   const filePath = path.resolve(context, 'assets/1000x600.png')
   const queue = new AssetsQueue({ context, config: baseconfig })
