@@ -1,7 +1,25 @@
 const { template } = require('lodash')
+const { parse } = require('node-html-parser')
 const { CLIENT_APP_ID } = require('../utils/constants')
 
-function createHTMLRenderer (htmlTemplate) {
+function createHTMLRenderer (htmlTemplate, insertions = []) {
+  if (Array.isArray(insertions) && insertions.length) {
+    const root = parse(htmlTemplate)
+
+    for (const selector in insertions) {
+      const target = root.querySelector(selector)
+      const value = insertions[selector]
+
+      if (target && target.childNodes) {
+        target.childNodes.push(value)
+      } else {
+        throw new Error(`Failed to locate target with selector "${selector}".`)
+      }
+    }
+
+    htmlTemplate = root.toString()
+  }
+
   const render = template(htmlTemplate)
 
   return function renderHTML(variables = {}) {

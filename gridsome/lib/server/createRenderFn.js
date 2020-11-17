@@ -1,5 +1,4 @@
 const chalk = require('chalk')
-const { parse } = require('node-html-parser')
 const createHTMLRenderer = require('./createHTMLRenderer')
 const { createBundleRenderer } = require('./bundleRenderer')
 const { error } = require('../utils/log')
@@ -38,27 +37,7 @@ module.exports = function createRenderFn ({
       throw err
     }
 
-    // Inserts Teleports to the HTML template.
-    if (ssrContext.teleports) {
-      const template = parse(htmlTemplate)
-
-      for (const selector in ssrContext.teleports) {
-        const target = template.querySelector(selector)
-        const value = ssrContext.teleports[selector]
-
-        if (target && target.childNodes) {
-          target.childNodes.push(value)
-        } else {
-          const location = page.location.name || page.location.path
-          error(chalk.red(`Could not generate HTML for "${location}":`))
-          throw new Error(`Failed to locate Teleport target with selector "${selector}".`)
-        }
-      }
-
-      htmlTemplate = template.toString()
-    }
-
-    const renderHTML = createHTMLRenderer(htmlTemplate)
+    const renderHTML = createHTMLRenderer(htmlTemplate, ssrContext.teleports)
 
     // const inject = ssrContext.meta.inject()
     // const htmlAttrs = inject.htmlAttrs.text()
