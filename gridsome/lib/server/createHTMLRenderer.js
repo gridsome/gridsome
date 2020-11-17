@@ -1,9 +1,9 @@
-const { template } = require('lodash')
 const { parse } = require('node-html-parser')
+const { template, isPlainObject, isEmpty } = require('lodash')
 const { CLIENT_APP_ID } = require('../utils/constants')
 
-function createHTMLRenderer (htmlTemplate, insertions = []) {
-  if (Array.isArray(insertions) && insertions.length) {
+function createHTMLRenderer (htmlTemplate, insertions) {
+  if (isPlainObject(insertions) && !isEmpty(insertions)) {
     const root = parse(htmlTemplate)
 
     for (const selector in insertions) {

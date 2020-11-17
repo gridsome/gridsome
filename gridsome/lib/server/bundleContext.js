@@ -1,5 +1,4 @@
 const path = require('path')
-const serialize = require('serialize-javascript')
 
 function isJS(file) {
   return /\.js(\?[^.]+)?$/.test(file)
@@ -174,7 +173,7 @@ exports.createBundleContext = ({ clientManifest, shouldPrefetch, shouldPreload }
 
   function renderState(ssrContext) {
     const name = '__INITIAL_STATE__'
-    const state = serialize(ssrContext.state)
+    const state = JSON.stringify(ssrContext.state)
     const nonceAttr = ssrContext.nonce ? ` nonce="${ssrContext.nonce}"` : ''
 
     return `<script${nonceAttr}>window.${name}=${state}</script>`
