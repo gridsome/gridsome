@@ -105,6 +105,7 @@ class Server {
       const echo = sockjs.createServer({ log: () => null })
 
       echo.on('connection', connection => {
+        if(!connection) return
         this._app.clients[connection.id] = connection
 
         connection.on('close', () => {
