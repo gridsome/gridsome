@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.7.23](https://github.com/gridsome/gridsome/compare/gridsome@0.7.22...gridsome@0.7.23) (2020-11-22)
+
+
+### Bug Fixes
+
+* **develop:** guard against sockjs `null` argument ([#1383](https://github.com/gridsome/gridsome/issues/1383)) ([ed99c62](https://github.com/gridsome/gridsome/commit/ed99c62fc81c7886484a55493c5502cb900832ea))
+* **g-image:** support uppercase file extensions ([#1381](https://github.com/gridsome/gridsome/issues/1381)) ([063c984](https://github.com/gridsome/gridsome/commit/063c98444d3e3c59c0536e5b3b784dedc5d9e109))
+
+
+
+
+
 ## [0.7.22](https://github.com/gridsome/gridsome/compare/gridsome@0.7.21...gridsome@0.7.22) (2020-11-04)
 
 
