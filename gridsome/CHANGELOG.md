@@ -3,6 +3,43 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.7.23](https://github.com/gridsome/gridsome/compare/gridsome@0.7.22...gridsome@0.7.23) (2020-11-22)
+
+
+### Bug Fixes
+
+* **develop:** guard against sockjs `null` argument ([#1383](https://github.com/gridsome/gridsome/issues/1383)) ([ed99c62](https://github.com/gridsome/gridsome/commit/ed99c62fc81c7886484a55493c5502cb900832ea))
+* **g-image:** support uppercase file extensions ([#1381](https://github.com/gridsome/gridsome/issues/1381)) ([063c984](https://github.com/gridsome/gridsome/commit/063c98444d3e3c59c0536e5b3b784dedc5d9e109))
+
+
+
+
+
+## [0.7.22](https://github.com/gridsome/gridsome/compare/gridsome@0.7.21...gridsome@0.7.22) (2020-11-04)
+
+
+### Bug Fixes
+
+* **g-image:** proper immediate typing and behaviour ([#1372](https://github.com/gridsome/gridsome/issues/1372)) ([a4c9d1f](https://github.com/gridsome/gridsome/commit/a4c9d1f061427a50ae84b3dea3f2881e0562cbd3))
+* **g-link:** add support for v-html ([#1373](https://github.com/gridsome/gridsome/issues/1373)) ([3762ecd](https://github.com/gridsome/gridsome/commit/3762ecd1d5d16d91d2976ef2dbdcea86fb5f0dba))
+* **pages:** dynamic route params in directories on windows ([#1359](https://github.com/gridsome/gridsome/issues/1359)) ([3d36051](https://github.com/gridsome/gridsome/commit/3d360512ed51045df876df426c450beb891d29e9))
+
+
+
+
+
+## [0.7.21](https://github.com/gridsome/gridsome/compare/gridsome@0.7.20...gridsome@0.7.21) (2020-09-18)
+
+
+### Bug Fixes
+
+* **graphql:** convert to input type correctly ([#1338](https://github.com/gridsome/gridsome/issues/1338)) ([09478fc](https://github.com/gridsome/gridsome/commit/09478fc16b8701581e339aec8e09e6e5ab384d7f))
+* **graphql:** prevent infinite loop while creating input types ([7e5f863](https://github.com/gridsome/gridsome/commit/7e5f863199d86b9d0eeb288719cbe96765cbc7ac))
+
+
+
+
+
 ## [0.7.20](https://github.com/gridsome/gridsome/compare/gridsome@0.7.19...gridsome@0.7.20) (2020-08-20)
 
 

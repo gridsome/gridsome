@@ -7,15 +7,18 @@ const toHTML = require('hast-util-to-html')
 
 const parseOptions = require('./parse-options')
 
-// load all prismjs languages
+require('prismjs/plugins/custom-class/prism-custom-class')
 require('prismjs/components/index')()
 
 module.exports = (
   {
+    customClassPrefix = '',
     transformInlineCode = false,
     showLineNumbers: showLineNumbersGlobal = false
   } = {}
 ) => tree => {
+  Prism.plugins.customClass.prefix(customClassPrefix)
+
   visit(tree, 'code', (node, index, parent) => {
     parent.children.splice(index, 1, createCode(node, showLineNumbersGlobal))
   })

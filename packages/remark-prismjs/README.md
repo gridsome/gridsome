@@ -62,6 +62,14 @@ module.exports = {
 
 ## Options
 
+#### customClassPrefix
+
+- Type: `String`
+- Default: `''`
+
+If Prism's default classes are too generic and cause conflicts, you can add a prefix like `"prism--"` to all Prism
+classes by passing it in as the `customClassPrefix`. 
+
 #### transformInlineCode
 
 - Type: `Boolean`

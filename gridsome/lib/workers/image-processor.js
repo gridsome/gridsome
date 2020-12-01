@@ -28,7 +28,7 @@ exports.processImage = async function ({
 
   const buffer = await fs.readFile(filePath)
 
-  if (['.png', '.jpeg', '.jpg', '.webp'].includes(ext)) {
+  if (['.png', '.jpeg', '.jpg', '.webp'].includes(ext.toLowerCase())) {
     const config = {
       pngCompressionLevel: parseInt(options.pngCompressionLevel, 10) || 9,
       quality: parseInt(options.quality, 10) || defaultQuality,

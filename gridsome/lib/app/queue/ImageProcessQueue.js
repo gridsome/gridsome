@@ -55,7 +55,7 @@ class ImageProcessQueue {
     const mimeType = mime.lookup(filePath)
     const defaultBlur = this.config.images.defaultBlur
 
-    if (!imageExtensions.includes(ext)) {
+    if (!imageExtensions.includes(ext.toLowerCase())) {
       throw new Error(
         `${ext} is not a supported image format. ` +
         `Supported extensions are ${imageExtensions.join(', ')}.`

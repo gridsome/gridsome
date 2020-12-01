@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.6.0](https://github.com/gridsome/gridsome/tree/master/packages/source-contentful/compare/@gridsome/source-contentful@0.5.3...@gridsome/source-contentful@0.6.0) (2020-09-18)
+
+
+### Features
+
+* **contentful:** custom search parameters for entries ([#1331](https://github.com/gridsome/gridsome/tree/master/packages/source-contentful/issues/1331)) ([d78703c](https://github.com/gridsome/gridsome/tree/master/packages/source-contentful/commit/d78703c9cd99edfb0b5ea145d4e66257015a5f4f))
+
+
+
+
+
 ## [0.5.3](https://github.com/gridsome/gridsome/tree/master/packages/source-contentful/compare/@gridsome/source-contentful@0.5.2...@gridsome/source-contentful@0.5.3) (2020-07-08)
 
 **Note:** Version bump only for package @gridsome/source-contentful
