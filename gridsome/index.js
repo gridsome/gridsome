@@ -9,6 +9,7 @@ module.exports = ({ context, program }) => {
     .description('start development server')
     .option('-p, --port <port>', 'use specified port (default: 8080)')
     .option('-h, --host <host>', 'use specified host (default: 0.0.0.0)')
+    .option('-s, --https', 'enable HTTPS for the dev server')
     .action(args => {
       wrapCommand(require('./lib/develop'))(context, args)
     })

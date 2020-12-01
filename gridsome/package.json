@@ -41,6 +41,7 @@
     "connect-history-api-fallback": "^1.6.0",
     "core-js": "^3.6.4",
     "css-loader": "^2.1.0",
+    "devcert": "^1.1.0",
     "dotenv": "^6.2.0",
     "eventemitter3": "^3.1.0",
     "express": "^4.16.4",

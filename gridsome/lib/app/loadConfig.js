@@ -73,6 +73,7 @@ module.exports = (context, options = {}) => {
   config.pkg = options.pkg || resolvePkg(context)
   config.host = args.host || localConfig.host || '0.0.0.0'
   config.port = parseInt(args.port || localConfig.port, 10) || undefined
+  config.https = args.https
   config.plugins = normalizePlugins(context, plugins)
   config.redirects = normalizeRedirects(localConfig)
   config.transformers = resolveTransformers(config.pkg, localConfig)
