@@ -40,6 +40,7 @@ export default {
 
         attrs.src = isLazy ? dataUri : src
         attrs.width = size.width
+        attrs.height = size.height
 
         if (isLazy) attrs['data-src'] = src
         if (srcset.length) attrs[`${isLazy ? 'data-' : ''}srcset`] = Array.isArray(srcset) ? srcset.join(', ') : srcset
