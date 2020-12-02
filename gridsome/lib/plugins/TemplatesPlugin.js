@@ -1,5 +1,6 @@
 const path = require('path')
 const glob = require('globby')
+const fs = require('fs-extra')
 const leven = require('leven')
 const crypto = require('crypto')
 const moment = require('moment')
@@ -10,6 +11,7 @@ const { ISO_8601_FORMAT } = require('../utils/constants')
 const { isPlainObject, trimStart, trimEnd, get, memoize } = require('lodash')
 
 const isDev = process.env.NODE_ENV === 'development'
+const isUnitTest = process.env.GRIDSOME_TEST === 'unit'
 const FROM_CONTENT_TYPE = 'content-type'
 const FROM_CONFIG = 'config'
 
@@ -123,7 +125,7 @@ const createTemplateOptions = (options, trailingSlash) => {
   }
 }
 
-const setupTemplates = ({ templates, permalinks }) => {
+const setupTemplates = ({ context, templates, permalinks }) => {
   const res = {
     byComponent: new Map(),
     byTypeName: new Map()
@@ -131,6 +133,11 @@ const setupTemplates = ({ templates, permalinks }) => {
 
   for (const typeName in templates) {
     templates[typeName].forEach(options => {
+      if (!isDev && !isUnitTest && !fs.existsSync(options.component)) {
+        const relPath = path.relative(context, options.component)
+        throw new Error(`Could not find component for the ${typeName} template: ${relPath}`)
+      }
+
       const byTypeName = res.byTypeName.get(typeName) || []
       const byComponent = res.byComponent.get(options.component) || []
       const template = createTemplateOptions(options, permalinks.trailingSlash)
