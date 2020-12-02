@@ -1,11 +1,9 @@
 const Server = require('../Server')
 const App = require('../../app/App')
 const request = require('supertest')
-const { prepareUrls } = require('../utils')
 const { BOOTSTRAP_CONFIG } = require('../../utils/constants')
 
 test('api.configureServer()', async () => {
-  const urls = prepareUrls('localhost', 8080)
   const callback = jest.fn((req, res) => res.send('Hello, world!'))
   const gridsome = await createApp(api => {
     api.configureServer(app => {
@@ -13,7 +11,7 @@ test('api.configureServer()', async () => {
     })
   })
 
-  const server = new Server(gridsome, urls)
+  const server = new Server(gridsome, 'localhost', 8080)
   const app = await server.createExpressApp()
   const res = await request(app).get('/my-endpoint')
 

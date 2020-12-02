@@ -18,7 +18,7 @@ const formatUrl = (hostname, port, useHttps, pathname = '/') => {
   if (isUnspecifiedHost(hostname)) hostname = 'localhost'
 
   return url.format({
-    protocol: useHttps !== false ? 'https' : 'http',
+    protocol: useHttps ? 'https' : 'http',
     hostname,
     port,
     pathname
@@ -29,7 +29,7 @@ const formatPrettyUrl = (hostname, port, useHttps, pathname = '/') => {
   if (isUnspecifiedHost(hostname)) hostname = 'localhost'
 
   return url.format({
-    protocol: useHttps !== false ? 'https' : 'http',
+    protocol: useHttps ? 'https' : 'http',
     hostname,
     port: chalk.bold(port),
     pathname

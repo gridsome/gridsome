@@ -3,7 +3,7 @@ const chalk = require('chalk')
 const isUrl = require('is-url')
 const columnify = require('columnify')
 const resolvePort = require('./server/resolvePort')
-const { prepareUrls, formatPrettyUrl } = require('./server/utils')
+const { formatPrettyUrl } = require('./server/utils')
 
 const {
   hasWarnings,
@@ -20,9 +20,11 @@ module.exports = async (context, args) => {
   const app = await createApp(context, { args })
   const port = await resolvePort(app.config.port)
   const hostname = app.config.host
-  const useHttps = app.config.https
-  const urls = prepareUrls(hostname, port)
-  const server = new Server(app, urls)
+  const server = new Server(app, hostname, port)
+
+  if (app.config.https) {
+    await server.generateCertificate()
+  }
 
   await fs.emptyDir(app.config.cacheDir)
 
@@ -55,16 +57,16 @@ module.exports = async (context, args) => {
     const addTerm = (name, description) => list.push({ name, description })
     const addSeparator = () => list.push({ name: '' })
 
-    if (urls.lan.pretty) {
+    if (server.urls.lan.pretty) {
       addTerm('Site running at:')
-      addTerm('- Local:', urls.local.pretty)
-      addTerm('- Network:', urls.lan.pretty)
+      addTerm('- Local:', server.urls.local.pretty)
+      addTerm('- Network:', server.urls.lan.pretty)
       addSeparator()
     } else {
-      addTerm('Site running at:', urls.local.pretty)
+      addTerm('Site running at:', server.urls.local.pretty)
     }
 
-    addTerm('Explore GraphQL data at:', urls.explore.pretty)
+    addTerm('Explore GraphQL data at:', server.urls.explore.pretty)
 
     app.compiler.hooks.done.call(
       { addTerm, addSeparator },
@@ -97,7 +99,7 @@ module.exports = async (context, args) => {
     }
   })
 
-  server.listen(port, hostname, useHttps, err => {
+  server.listen(port, hostname, err => {
     if (err) throw err
   })
 
@@ -118,8 +120,8 @@ module.exports = async (context, args) => {
         const definitions = args[0]
         args[0] = {
           ...definitions,
-          'process.env.SOCKJS_ENDPOINT': JSON.stringify(urls.sockjs.endpoint),
-          'process.env.GRAPHQL_ENDPOINT': JSON.stringify(urls.graphql.endpoint)
+          'process.env.SOCKJS_ENDPOINT': JSON.stringify(server.urls.sockjs.endpoint),
+          'process.env.GRAPHQL_ENDPOINT': JSON.stringify(server.urls.graphql.endpoint)
         }
         return args
       })

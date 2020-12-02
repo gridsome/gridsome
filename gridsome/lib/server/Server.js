@@ -1,6 +1,6 @@
+const url = require('url')
 const path = require('path')
-const http = require('http')
-const https = require('https')
+const chalk = require('chalk')
 const devcert = require('devcert')
 const express = require('express')
 const { SyncHook } = require('tapable')
@@ -9,11 +9,14 @@ const graphqlMiddleware = require('./middlewares/graphql')
 const historyApiFallback = require('connect-history-api-fallback')
 const { default: playground } = require('graphql-playground-middleware-express')
 const { forwardSlash } = require('../utils')
+const { info } = require('../utils/log')
+const { prepareUrls } = require('./utils')
 
 class Server {
-  constructor(app, urls) {
+  constructor(app, hostname, port) {
     this._app = app
-    this._urls = urls
+    this.httpsOptions = null
+    this.urls = prepareUrls(hostname, port, app.config.https)
 
     this.hooks = {
       setup: new SyncHook(['app']),
@@ -38,7 +41,7 @@ class Server {
     this.hooks.setup.call(app)
 
     app.use(
-      this._urls.graphql.endpoint,
+      this.urls.graphql.endpoint,
       express.json(),
       graphqlMiddleware(this._app),
       graphqlHTTP({
@@ -66,9 +69,9 @@ class Server {
 
     if (isDev) {
       app.get(
-        this._urls.explore.endpoint,
+        this.urls.explore.endpoint,
         playground({
-          endpoint: this._urls.graphql.endpoint,
+          endpoint: this.urls.graphql.endpoint,
           title: 'Gridsome GraphQL Explorer',
           faviconUrl: 'https://avatars0.githubusercontent.com/u/17981963?s=200&v=4'
         })
@@ -98,15 +101,29 @@ class Server {
     return app
   }
 
-  async listen(port, hostname, useHttps, callback) {
-    const app = await this.createExpressApp()
-    let server
-    if (useHttps) {
-      const ssl = await devcert.certificateFor(hostname)
-      server = https.createServer(ssl, app)
-    } else {
-      server = http.createServer(app)
+  async generateCertificate() {
+    const { hostname } = url.parse(this.urls.local.pretty)
+
+    if (!devcert.hasCertificateFor(hostname)) {
+      info(`Creating SSL certificate for: ${chalk.bold(hostname)}`)
     }
+
+    const { caPath, key, cert } = await devcert.certificateFor(hostname, {
+      getCaPath: true
+    })
+
+    if (caPath) {
+      process.env.NODE_EXTRA_CA_CERTS = caPath
+    }
+
+    this.httpsOptions = { key, cert }
+  }
+
+  async listen(port, hostname, callback) {
+    const app = await this.createExpressApp()
+    const server = this.httpsOptions
+      ? require('https').createServer(this.httpsOptions, app)
+      : require('http').createServer(app)
 
     if (process.env.NODE_ENV === 'development') {
       const sockjs = require('sockjs')
@@ -122,7 +139,7 @@ class Server {
       })
 
       echo.installHandlers(server, {
-        prefix: this._urls.sockjs.endpoint
+        prefix: this.urls.sockjs.endpoint
       })
     }
 
