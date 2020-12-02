@@ -187,8 +187,7 @@ class ImageProcessQueue {
       results.noscriptHTML = '' +
         `<noscript>` +
         `<img class="${classNames.join(' ')} g-image--loaded" ` +
-        `src="${results.src}" width="${results.size.width}"` +
-        (options.height ? ` height="${options.height}"` : '') +
+        `src="${results.src}" width="${results.size.width}" height="${results.size.height}"` +
         (options.alt ? ` alt="${options.alt}">` : '>') +
         `</noscript>`
 
@@ -198,8 +197,8 @@ class ImageProcessQueue {
     results.imageHTML = '' +
       `<img class="${classNames.join(' ')}" ` +
       `src="${isLazy ? results.dataUri || results.src : results.src}" ` +
-      `width="${results.size.width}"` +
-      (options.height ? ` height="${options.height}"` : '') +
+      `width="${results.size.width}" ` +
+      `height="${results.size.height}"` +
       (options.alt ? ` alt="${options.alt}"` : '') +
       (isLazy && isSrcset ? ` data-srcset="${results.srcset.join(', ')}"` : '') +
       (isLazy && isSrcset ? ` data-sizes="${results.sizes}"` : '') +
@@ -364,21 +363,5 @@ async function createBlurSvg (pipeline, mimeType, width, height, blur, resize = 
 
   return defs + image
 }
-
-// async function createTracedSvg (buffer, type, width, height) {
-//   // TODO: traced svg fallback
-//   if (!/(jpe?g|png|bmp)/.test(type)) {
-//     return svgDataUri(
-//       `<svg fill="none" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg"/>`
-//     )
-//   }
-
-//   return new Promise((resolve, reject) => {
-//     potrace.trace(buffer, (err, svg) => {
-//       if (err) reject(err)
-//       else resolve(svgDataUri(svg))
-//     })
-//   })
-// }
 
 module.exports = ImageProcessQueue

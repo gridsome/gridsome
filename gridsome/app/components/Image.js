@@ -86,6 +86,7 @@ export default {
           innerHTML: `` +
             `<img src="${props.src.src}" class="${stringifyClass(noscriptClassNames)}"` +
             (attrs.width ? ` width="${attrs.width}"`: '') +
+            (attrs.height ? ` height="${attrs.height}"`: '') +
             (attrs.alt ? ` alt="${attrs.alt}"` : '') +
             `>`
         }
