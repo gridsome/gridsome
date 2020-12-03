@@ -97,19 +97,27 @@ class App {
   async init () {
     const Plugins = require('./Plugins')
     const Store = require('../store/Store')
+    const Server = require('../server/Server')
     const Schema = require('./Schema')
     const AssetsQueue = require('./queue/AssetsQueue')
     const Codegen = require('./codegen')
     const Pages = require('../pages/pages')
     const Compiler = require('./Compiler')
 
+    if (process.env.NODE_ENV === 'development' && !this.config.port) {
+      this.config.port = await require('../server/resolvePort')()
+    }
+
     this.plugins = new Plugins(this)
     this.store = new Store(this)
+    this.server = new Server(this)
     this.schema = new Schema(this)
     this.assets = new AssetsQueue(this)
     this.pages = new Pages(this)
     this.codegen = new Codegen(this)
     this.compiler = new Compiler(this)
+
+    this.config = Object.freeze(this.config)
 
     // TODO: remove before 1.0
     this.queue = this.assets
@@ -135,6 +143,8 @@ class App {
     if (typeof this.config.configureServer === 'function') {
       this.plugins.on('configureServer', { handler: this.config.configureServer })
     }
+
+    await this.compiler.initialize()
 
     this.isInitialized = true
 

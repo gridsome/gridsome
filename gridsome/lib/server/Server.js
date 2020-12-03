@@ -13,17 +13,19 @@ const { info } = require('../utils/log')
 const { prepareUrls } = require('./utils')
 
 class Server {
-  constructor(app, hostname, port) {
+  constructor(app) {
+    const { host, port, https } = app.config
+
     this._app = app
+    this.hostname = host
+    this.port = port
     this.httpsOptions = null
-    this.urls = prepareUrls(hostname, port, app.config.https)
+    this.urls = prepareUrls(host, port, https)
 
     this.hooks = {
       setup: new SyncHook(['app']),
       afterSetup: new SyncHook(['app'])
     }
-
-    app.hooks.server.call(this)
   }
 
   async createExpressApp() {
@@ -119,8 +121,11 @@ class Server {
     this.httpsOptions = { key, cert }
   }
 
-  async listen(port, hostname, callback) {
+  async listen() {
+    this._app.hooks.server.call(this)
+
     const app = await this.createExpressApp()
+
     const server = this.httpsOptions
       ? require('https').createServer(this.httpsOptions, app)
       : require('http').createServer(app)
@@ -143,7 +148,9 @@ class Server {
       })
     }
 
-    server.listen(port, hostname, callback)
+    server.listen(this.port, this.host, err => {
+      if (err) throw err
+    })
   }
 }
 
