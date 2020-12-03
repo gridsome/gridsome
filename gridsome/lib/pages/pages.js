@@ -15,7 +15,6 @@ const validateInput = require('./schemas')
 
 const TYPE_STATIC = 'static'
 const TYPE_DYNAMIC = 'dynamic'
-const isDev = process.env.NODE_ENV === 'development'
 
 const createHash = value => crypto.createHash('md5').update(value).digest('hex')
 const getRouteType = value => /:/.test(value) ? TYPE_DYNAMIC : TYPE_STATIC
@@ -33,11 +32,10 @@ class Pages {
 
     this._componentCache = new LRU({ max: 100 })
     this._queryCache = new LRU({ max: 100 })
-    this._watched = new Map()
     this._watcher = null
 
     this._routes = new Collection('routes', {
-      indices: ['id', 'internal.priority'],
+      indices: ['id', 'internal.priority', 'internal.dependencies'],
       unique: ['id', 'path'],
       disableMeta: true
     })
@@ -48,13 +46,27 @@ class Pages {
       disableMeta: true
     })
 
-    if (isDev) {
-      this._watcher = new FSWatcher({
-        disableGlobbing: true
-      })
-
-      initWatcher(app, this)
+    if (process.env.NODE_ENV === 'development') {
+      this.createWatcher()
     }
+  }
+
+  createWatcher() {
+    this._watcher = new FSWatcher({
+      disableGlobbing: true
+    })
+
+    if (!process.env.GRIDSOME_TEST) {
+      initWatcher(this.app, this)
+    }
+
+    return this._watcher
+  }
+
+  closeWatcher() {
+    return this._watcher.close().then(() => {
+      this._watcher = null
+    })
   }
 
   routes () {
@@ -118,7 +130,7 @@ class Pages {
     }
 
     this._routes.insert(options)
-    this._watchComponent(options.component)
+    this._watchFiles(options.internal.dependencies)
 
     return new Route(options, this)
   }
@@ -137,7 +149,13 @@ class Pages {
       meta: oldOptions.meta
     })
 
+    const prevFiles = oldOptions.internal.dependencies.filter(file => {
+      return !newOptions.internal.dependencies.includes(file)
+    })
+
     this._routes.update(newOptions)
+    this._unwatchFiles(prevFiles)
+    this._watchFiles(newOptions.internal.dependencies)
 
     const route = new Route(newOptions, this)
 
@@ -161,7 +179,7 @@ class Pages {
 
     this._pages.findAndRemove({ 'internal.route': id })
     this._routes.findAndRemove({ id })
-    this._unwatchComponent(options.component)
+    this._unwatchFiles(options.internal.dependencies)
   }
 
   createPage (input, meta = {}) {
@@ -307,7 +325,7 @@ class Pages {
 
   _createRouteOptions (options, meta = {}) {
     const component = this.app.resolve(options.component)
-    const { pageQuery } = this._parseComponent(component)
+    const { pageQuery, watchFiles = [] } = this._parseComponent(component)
     const query = this._parseQuery(pageQuery, component)
     const { permalinks: { trailingSlash }} = this.app.config
 
@@ -342,6 +360,7 @@ class Pages {
       path,
       component,
       internal: Object.assign({}, meta, {
+        dependencies: [component, ...watchFiles],
         meta: options.meta || {},
         path: prettyPath,
         isDynamic,
@@ -424,17 +443,21 @@ class Pages {
     return results
   }
 
-  _watchComponent (component) {
-    if (!this._watched.has(component)) {
-      this._watched.set(component, true)
-      if (this._watcher) this._watcher.add(component)
+  _watchFiles (files) {
+    if (this._watcher) {
+      this._watcher.add(files)
     }
   }
 
-  _unwatchComponent (component) {
-    if (this._routes.find({ component }).length <= 0) {
-      this._watched.delete(component)
-      if (this._watcher) this._watcher.unwatch(component)
+  _unwatchFiles (files) {
+    if (this._watcher) {
+      for (const filePath of files) {
+        const query = { 'internal.dependencies': { $contains: filePath } }
+
+        if (!this._routes.count(query)) {
+          this._watcher.unwatch(filePath)
+        }
+      }
     }
   }
 }

@@ -43,7 +43,8 @@ const schemas = {
   component: Joi.object()
     .label('Parsed component results')
     .keys({
-      pageQuery: Joi.string().allow(null)
+      pageQuery: Joi.string().allow(null),
+      watchFiles: Joi.array().items(Joi.string()).default([]).optional()
     })
 }
 
