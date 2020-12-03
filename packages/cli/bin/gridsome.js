@@ -28,14 +28,6 @@ program
     return wrapCommand(create)(...args)
   })
 
-program
-  .command('info')
-  .description('output information about the local environment')
-  .action(() => {
-    const info = require('../lib/commands/info')
-    return wrapCommand(info)()
-  })
-
 try {
   const commandsPath = resolveCwd.silent('gridsome/commands')
   const gridsomePath = resolveCwd.silent('gridsome')
@@ -48,6 +40,14 @@ try {
 } catch (err) {
   console.log(err)
 }
+
+program
+  .command('info')
+  .description('output information about the local environment')
+  .action(() => {
+    const info = require('../lib/commands/info')
+    return wrapCommand(info)()
+  })
 
 // show a warning if the command does not exist
 program.arguments('<command>').action(async command => {
