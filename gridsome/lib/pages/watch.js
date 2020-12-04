@@ -29,8 +29,6 @@ module.exports = (app, pages) => {
       }
     })
 
-    pages.disableIndices()
-
     for (let i = 0; i < routes.length; i++) {
       const { type, name, component, internal } = routes[i]
       const options = { type, name, path: internal.path, component }
@@ -40,7 +38,5 @@ module.exports = (app, pages) => {
         isManaged: internal.isManaged
       })
     }
-
-    pages.enableIndices()
   })
 }

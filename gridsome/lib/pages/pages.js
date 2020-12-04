@@ -37,13 +37,15 @@ class Pages {
     this._routes = new Collection('routes', {
       indices: ['id', 'internal.priority', 'internal.dependencies'],
       unique: ['id', 'path'],
-      disableMeta: true
+      disableMeta: true,
+      adaptiveBinaryIndices: false
     })
 
     this._pages = new Collection('pages', {
       indices: ['id'],
       unique: ['id', 'path'],
-      disableMeta: true
+      disableMeta: true,
+      adaptiveBinaryIndices: false
     })
 
     if (process.env.NODE_ENV === 'development') {
@@ -94,23 +96,6 @@ class Pages {
   clearComponentCache (component) {
     this._componentCache.del(component)
     this._queryCache.del(component)
-  }
-
-  disableIndices () {
-    ['_routes', '_pages'].forEach(prop => {
-      this[prop].configureOptions({
-        adaptiveBinaryIndices: false
-      })
-    })
-  }
-
-  enableIndices () {
-    ['_routes', '_pages'].forEach(prop => {
-      this[prop].ensureAllIndexes()
-      this[prop].configureOptions({
-        adaptiveBinaryIndices: true
-      })
-    })
   }
 
   createRoute (input, meta = {}) {
