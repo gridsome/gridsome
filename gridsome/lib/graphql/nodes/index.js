@@ -5,7 +5,7 @@ const { PER_PAGE } = require('../../utils/constants')
 const { createFilterInput } = require('../filters/input')
 const createFieldDefinitions = require('../createFieldDefinitions')
 const { createFieldTypes } = require('../createFieldTypes')
-const { isRefFieldDefinition, createTypeName } = require('../utils')
+const { isRefFieldDefinition, createTypeName, validateTypeName } = require('../utils')
 const { isRefField } = require('../../store/utils')
 
 const {
@@ -21,6 +21,14 @@ const { omit, mapValues, isEmpty, isPlainObject } = require('lodash')
 module.exports = function createNodesSchema (schemaComposer, store) {
   const typeNames = Object.keys(store.collections)
   const schema = {}
+
+  try {
+    typeNames.forEach(validateTypeName)
+  } catch (err) {
+    throw new Error(
+      `Failed to generate GraphQL types for collection. ${err.message}`
+    )
+  }
 
   schemaComposer.createEnumTC({
     name: 'TypeName',
