@@ -224,13 +224,7 @@ function createTypeResolvers (typeComposer, collection) {
     type: typeName,
     args: {
       id: 'ID',
-      path: 'String',
-      nullable: {
-        type: 'Boolean',
-        defaultValue: false,
-        description: 'Will return an error if not nullable.',
-        deprecationReason: 'Will always return null if not found.'
-      }
+      path: 'String'
     },
     resolve: createFindOneResolver(typeComposer)
   })
