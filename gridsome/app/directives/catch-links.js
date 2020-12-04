@@ -1,5 +1,6 @@
 import router from '../router'
 import config from '~/.temp/config'
+import { NOT_FOUND_NAME } from '~/.temp/constants'
 import { stripPathPrefix } from '../utils/helpers'
 
 function onCatchLink(event) {
@@ -33,7 +34,7 @@ function onCatchLink(event) {
     path: path + ($el.search || '') + decodeURI($el.hash || '')
   })
 
-  if (route.name === '*') {
+  if (route.name === NOT_FOUND_NAME) {
     return
   }
 

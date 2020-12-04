@@ -1,6 +1,6 @@
 import prefetch from './utils/prefetch'
 import { unslashEnd } from './utils/helpers'
-import { NOT_FOUND_PATH } from '~/.temp/constants'
+import { NOT_FOUND_PATH, NOT_FOUND_NAME } from '~/.temp/constants'
 
 const dataUrl = process.env.DATA_URL
 const isPrefetched = {}
@@ -13,7 +13,7 @@ export default (route, options = {}) => {
     const { dynamic = false } = route.meta
     let path = dynamic ? route.matched[0].path : route.path
 
-    if (route.name === '*') {
+    if (route.name === NOT_FOUND_NAME) {
       path = NOT_FOUND_PATH
     }
 
@@ -58,7 +58,7 @@ export default (route, options = {}) => {
     .getAttribute('content')
 
   return new Promise((resolve, reject) => {
-    const usePath = route.name === '*' ? NOT_FOUND_PATH : route.path
+    const usePath = route.name === NOT_FOUND_NAME ? NOT_FOUND_PATH : route.path
     const jsonPath = route.meta.dataPath || unslashEnd(usePath) + '/index.json'
     const absPath = unslashEnd(dataUrl) + jsonPath
 

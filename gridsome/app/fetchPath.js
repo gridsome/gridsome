@@ -1,5 +1,6 @@
 import fetch from './fetch'
 import router from './router'
+import { NOT_FOUND_NAME } from '~/.temp/constants'
 
 import {
   getResults,
@@ -21,7 +22,7 @@ export default function fetchPath (path) {
 
   return new Promise((resolve, reject) => {
     if (route.fullPath !== path) return reject(notFoundErr)
-    if (route.name === '*') return reject(notFoundErr)
+    if (route.name === NOT_FOUND_NAME) return reject(notFoundErr)
     if (cached) return resolve(cached)
 
     fetch(route)
