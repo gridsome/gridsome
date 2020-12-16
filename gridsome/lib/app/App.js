@@ -104,10 +104,6 @@ class App {
     const Pages = require('../pages/pages')
     const Compiler = require('./Compiler')
 
-    if (process.env.NODE_ENV === 'development' && !this.config.port) {
-      this.config.port = await require('../server/resolvePort')()
-    }
-
     this.plugins = new Plugins(this)
     this.store = new Store(this)
     this.server = new Server(this)
@@ -145,6 +141,10 @@ class App {
     }
 
     await this.compiler.initialize()
+
+    if (this.config.mode === 'development') {
+      await this.server.initialize()
+    }
 
     this.isInitialized = true
 

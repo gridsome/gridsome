@@ -2,8 +2,8 @@ const fs = require('fs-extra')
 const chalk = require('chalk')
 const isUrl = require('is-url')
 const columnify = require('columnify')
-const { formatPrettyUrl } = require('./server/utils')
 const { builtInPlugins } = require('./app/loadConfig')
+const { formatPrettyUrl, sockjsEndpoint, graphqlEndpoint } = require('./server/utils')
 
 const {
   hasWarnings,
@@ -12,8 +12,6 @@ const {
 
 builtInPlugins.push(api => {
   api.chainWebpack(async config => {
-    const { urls } = api._app.server
-
     config
       .plugin('friendly-errors')
       .use(require('friendly-errors-webpack-plugin'))
@@ -24,8 +22,8 @@ builtInPlugins.push(api => {
         const definitions = args[0]
         args[0] = {
           ...definitions,
-          'process.env.SOCKJS_ENDPOINT': JSON.stringify(urls.sockjs.endpoint),
-          'process.env.GRAPHQL_ENDPOINT': JSON.stringify(urls.graphql.endpoint)
+          'process.env.SOCKJS_ENDPOINT': JSON.stringify(sockjsEndpoint),
+          'process.env.GRAPHQL_ENDPOINT': JSON.stringify(graphqlEndpoint)
         }
         return args
       })
@@ -43,7 +41,7 @@ module.exports = async (context, args) => {
   process.env.GRIDSOME_MODE = 'serve'
 
   const createApp = require('./app')
-  const app = await createApp(context, { args })
+  const app = await createApp(context, { args, mode: 'development' })
 
   if (app.config.https) {
     await app.server.generateCertificate()

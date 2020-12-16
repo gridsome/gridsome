@@ -14,18 +14,39 @@ const { prepareUrls } = require('./utils')
 
 class Server {
   constructor(app) {
-    const { host, port, https } = app.config
-
     this._app = app
-    this.hostname = host
-    this.port = port
-    this.httpsOptions = null
-    this.urls = prepareUrls(host, port, https)
 
     this.hooks = {
       setup: new SyncHook(['app']),
       afterSetup: new SyncHook(['app'])
     }
+  }
+
+  async initialize() {
+    const { host, port, https } = this._app.config
+    const { devServer = {} } = this._app.compiler.getClientConfig()
+
+    this.hostname = host || devServer.host || '0.0.0.0'
+    this.port = port || devServer.port
+    this.https = https || devServer.https
+    this.httpsOptions = null
+
+    if (devServer.https) {
+      this.httpsOptions = {
+        key: devServer.key,
+        cert: devServer.cert
+      }
+      if (devServer.ca) {
+        process.env.NODE_EXTRA_CA_CERTS = devServer.ca
+      }
+    }
+
+    if (!this.port) {
+      // Find an available port if none is specified.
+      this.port = await require('./resolvePort')()
+    }
+
+    this.urls = prepareUrls(this.hostname, this.port, this.https)
   }
 
   async createExpressApp() {
@@ -104,6 +125,10 @@ class Server {
   }
 
   async generateCertificate() {
+    if (this.httpsOptions) {
+      return
+    }
+
     const { hostname } = url.parse(this.urls.local.pretty)
 
     if (!devcert.hasCertificateFor(hostname)) {
@@ -148,9 +173,11 @@ class Server {
       })
     }
 
-    server.listen(this.port, this.host, err => {
+    server.listen(this.port, this.hostname, err => {
       if (err) throw err
     })
+
+    return server
   }
 }
 

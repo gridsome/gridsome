@@ -5,6 +5,10 @@ const address = require('address')
 
 const isUnspecifiedHost = host => host === '0.0.0.0' || host === '::'
 
+const graphqlEndpoint = '/___graphql'
+const exploreEndpoint = '/___explore'
+const sockjsEndpoint = '/___echo'
+
 // https://stackoverflow.com/a/20012536
 const isInContainer = () => {
   const content = fs.existsSync('/proc/1/cgroup')
@@ -53,18 +57,18 @@ const prepareUrls = (hostname, port, useHttps) => {
   }
 
   const explore = {
-    endpoint: '/___explore',
-    pretty: formatPrettyUrl(hostname, port, useHttps, '/___explore')
+    endpoint: exploreEndpoint,
+    pretty: formatPrettyUrl(hostname, port, useHttps, exploreEndpoint)
   }
 
   const graphql = {
-    endpoint: '/___graphql',
-    pretty: formatPrettyUrl(hostname, port, useHttps, '/___graphql')
+    endpoint: graphqlEndpoint,
+    pretty: formatPrettyUrl(hostname, port, useHttps, graphqlEndpoint)
   }
 
   const sockjs = {
-    endpoint: '/___echo',
-    pretty: formatPrettyUrl(hostname, port, useHttps, '/___echo')
+    endpoint: sockjsEndpoint,
+    pretty: formatPrettyUrl(hostname, port, useHttps, sockjsEndpoint)
   }
 
   if (process.env.GRAPHQL_ENDPOINT) {
@@ -87,6 +91,9 @@ const prepareUrls = (hostname, port, useHttps) => {
 }
 
 module.exports = {
+  graphqlEndpoint,
+  exploreEndpoint,
+  sockjsEndpoint,
   formatUrl,
   formatPrettyUrl,
   prepareUrls

@@ -23,7 +23,6 @@ module.exports = (context, options = {}) => {
   Object.assign(process.env, env)
 
   const resolve = (...p) => path.join(context, ...p)
-  const isProd = process.env.NODE_ENV === 'production'
   const customConfig = options.config || options.localConfig
   const configPath = resolve('gridsome.config.js')
   const args = options.args || {}
@@ -72,14 +71,15 @@ module.exports = (context, options = {}) => {
   const assetsDir = localConfig.assetsDir || 'assets'
 
   config.context = context
+  config.mode = options.mode || 'production'
   config.pkg = options.pkg || resolvePkg(context)
-  config.host = args.host || localConfig.host || '0.0.0.0'
+  config.host = args.host || localConfig.host || undefined
   config.port = parseInt(args.port || localConfig.port, 10) || undefined
   config.https = args.https
   config.plugins = normalizePlugins(context, plugins)
   config.redirects = normalizeRedirects(localConfig)
   config.transformers = resolveTransformers(config.pkg, localConfig)
-  config.pathPrefix = normalizePathPrefix(isProd ? localConfig.pathPrefix : '')
+  config.pathPrefix = normalizePathPrefix(config.mode === 'production' ? localConfig.pathPrefix : '')
   config._pathPrefix = normalizePathPrefix(localConfig.pathPrefix)
   config.publicPath = config.pathPrefix ? `${config.pathPrefix}/` : '/'
   config.staticDir = resolve('static')
