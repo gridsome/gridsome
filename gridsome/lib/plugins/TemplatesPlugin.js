@@ -239,7 +239,7 @@ class TemplatesPlugin {
       for (const typeName of templates.byTypeName.keys()) {
         if (!typeNames.includes(typeName)) {
           const suggestion = typeNames.find(value => {
-            return leven(value, typeName) < 3
+            return distance(value, typeName) < 3
           })
 
           throw new Error(
