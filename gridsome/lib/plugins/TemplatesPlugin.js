@@ -1,7 +1,7 @@
 const path = require('path')
 const glob = require('globby')
 const fs = require('fs-extra')
-const leven = require('leven')
+const { distance } = require('fastest-levenshtein')
 const crypto = require('crypto')
 const moment = require('moment')
 const chokidar = require('chokidar')
