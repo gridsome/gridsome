@@ -69,7 +69,7 @@ class WordPressSource {
   }
 
   async getUsers (actions) {
-    const { data } = await this.fetch('wp/v2/users')
+    const data = await this.fetchPaged('wp/v2/users')
     const addCollection = actions.addCollection || actions.addContentType
 
     const authors = addCollection({
