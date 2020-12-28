@@ -8,7 +8,6 @@ const resolveCwd = require('resolve-cwd')
 const updateNotifier = require('update-notifier')
 const resolveVersions = require('../lib/utils/version')
 const pkgPath = require('find-up').sync('package.json')
-const { hasYarn } = require('../lib/utils')
 
 const pkg = require('../package.json')
 const notifier = updateNotifier({ pkg })
@@ -40,6 +39,18 @@ try {
 } catch (err) {
   console.log(err)
 }
+
+program
+  .command('config [value]')
+  .option('-g, --get <key>', 'get option value')
+  .option('-s, --set <key> <value>', 'set option value')
+  .option('-d, --delete <key>', 'delete an option')
+  .option('--json', 'output all options as JSON')
+  .description('inspect or set config')
+  .action((...args) => {
+    const config = require('../lib/commands/config')
+    return wrapCommand(config)(...args)
+  })
 
 program
   .command('info')
@@ -84,12 +95,8 @@ if (!process.argv.slice(2).length) {
 
 if (notifier.update) {
   (async () => {
-    const withYarn = await hasYarn()
-    const margin = chalk.bgGreen(' ')
-    const command = withYarn ? `yarn global add ${pkg.name}` : `npm i -g ${pkg.name}`
     console.log()
-    console.log(`${margin} Update available: ${chalk.bold(notifier.update.latest)}`)
-    console.log(`${margin} Run ${chalk.cyan(command)} to update`)
+    console.log(`${chalk.bgGreen(' ')} Update available: ${chalk.bold(notifier.update.latest)}`)
     console.log()
   })()
 }

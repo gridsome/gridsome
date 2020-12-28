@@ -1,28 +1,27 @@
 const path = require('path')
 const fs = require('fs-extra')
-const execa = require('execa')
 const chalk = require('chalk')
+const execa = require('execa')
+const inquirer = require('inquirer')
 const Tasks = require('@hjvedvik/tasks')
 const sortPackageJson = require('sort-package-json')
-const { hasYarn } = require('../utils')
+const { config, hasYarn, hasPnpm, installDependencies } = require('../utils')
 
 module.exports = async (name, starter = 'default') => {
   const dir = absolutePath(name)
   const projectName = path.basename(dir)
   const starters = ['default', 'wordpress']
-  const useYarn = await hasYarn()
   const commandName = {
     develop: 'gridsome develop',
     build: 'gridsome build'
   }
 
-  try {
-    const files = fs.existsSync(dir) ? fs.readdirSync(dir) : []
-    if (files.length) {
-      return console.log(chalk.red(`Can't create ${projectName} because there's already a non-empty directory ${projectName} existing in path.`))
-    }
-  } catch (err) {
-    throw new Error(err.message)
+  if (fs.existsSync(dir) && fs.readdirSync(dir).length) {
+    return console.log(
+      chalk.red(
+        `Could not create project in ${chalk.bold(projectName)} because the directory is not empty.`
+      )
+    )
   }
 
   if (/^([a-z0-9_-]+)\//i.test(starter)) {
@@ -31,24 +30,77 @@ module.exports = async (name, starter = 'default') => {
     starter = `https://github.com/gridsome/gridsome-starter-${starter}.git`
   }
 
+  let packageManager = config.get('packageManager')
+
+  const withYarn = await hasYarn()
+  const withPnpm = await hasPnpm()
+  const answers = await inquirer.prompt([
+    {
+      type: 'list',
+      name: 'packageManager',
+      default: 'npm',
+      message: 'Pick the package manager that should install dependencies',
+      when: () => !packageManager,
+      prefix: '',
+      choices: [
+        'npm',
+        {
+          name: 'Yarn',
+          value: 'yarn',
+          disabled: () => withYarn ? false : 'not detected…'
+        },
+        {
+          name: 'pnpm',
+          disabled: () => withPnpm ? false : 'not detected…'
+        },
+        {
+          name: 'None, install them manually later',
+          value: 'none'
+        }
+      ]
+    },
+    {
+      type: 'confirm',
+      name: 'preservePackageManager',
+      default: false,
+      when: (answers) => answers.packageManager,
+      message: (answers) => answers.packageManager !== 'none'
+        ? `Do you want to use ${answers.packageManager} for all future Gridsome projects?`
+        : 'Do you always want to install dependencies manually?',
+      prefix: ''
+    }
+  ])
+
+  if (answers.packageManager) {
+    console.log('')
+    packageManager = answers.packageManager
+    if (answers.preservePackageManager) {
+      config.set('packageManager', answers.packageManager)
+      console.log('')
+      console.log(
+        `  - Run ${chalk.green(chalk.bold('gridsome config --set packageManager yarn'))} to install\n` +
+        `    with Yarn or other supported package managers by default.\n` +
+        `  - Run ${chalk.green(chalk.bold('gridsome config --delete packageManager'))} to clear\n` +
+        `    the preferred package manager.\n`
+      )
+    }
+  }
+
   const tasks = new Tasks([
     {
       title: `Clone ${starter}`,
-      task: async () => {
+      task: async (context, task) => {
+        await execa('git', ['clone', starter, dir, '--single-branch'], {
+          cwd: process.cwd(),
+          stdio: 'ignore'
+        })
+
+        await fs.remove(path.join(dir, '.git'))
+
         try {
-          await exec('git', ['clone', starter, dir, '--single-branch'])
-          await fs.remove(path.join(dir, '.git'))
-        } catch (err) {
-          throw new Error(err.message)
-        }
-      }
-    },
-    {
-      title: 'Update project package.json',
-      task: async (_, task) => {
-        try {
-          await updatePkg(`${dir}/package.json`, {
+          await updatePkg(path.join(dir, 'package.json'), {
             name: projectName,
+            version: '1.0.0',
             private: true
           })
         } catch (err) {
@@ -56,78 +108,34 @@ module.exports = async (name, starter = 'default') => {
         }
       }
     },
-    {
-      title: `Install dependencies`,
-      task: (_, task) => {
-        let command = 'npm'
-        if (!fs.existsSync(path.join(dir, 'package-lock.json'))) {
-          command = useYarn ? 'yarn' : 'npm'
+    packageManager !== 'none' && {
+      title: `Install dependencies with ${packageManager}`,
+      task: async (context, task) => {
+        try {
+          task.setStatus('Installing dependencies...')
+          await installDependencies(packageManager || 'npm', dir, task)
+          context.didInstall = true
+        } catch (err) {
+          throw new Error(`\n\n${err.message}`)
         }
-        const stdio = ['ignore', 'pipe', 'ignore']
-        const options = { cwd: dir, stdio }
-        const args = []
-
-        if (command === 'npm') {
-          task.setStatus('Installing dependencies with npm...')
-          args.push('install', '--loglevel', 'error')
-        } else if (command === 'yarn') {
-          args.push('--json')
-        }
-
-        return new Promise((resolve, reject) => {
-          const child = exec(command, args, options, dir)
-
-          child.stdout.on('data', buffer => {
-            let str = buffer.toString().trim()
-
-            if (str && command === 'yarn' && str.includes('"type":')) {
-              const newLineIndex = str.lastIndexOf('\n')
-
-              if (newLineIndex !== -1) {
-                str = str.substr(newLineIndex)
-              }
-
-              try {
-                const { type, data } = JSON.parse(str)
-
-                if (type === 'step') {
-                  const { message, current, total } = data
-                  task.setStatus(`${message} (${current} of ${total})`)
-                }
-              } catch (e) {}
-            } else {
-              task.setStatus(`Installing dependencies with ${command}...`)
-            }
-          })
-
-          child.on('close', code => {
-            if (code !== 0) {
-              return reject(
-                new Error(
-                  `Failed to install dependencies with ${command}. ` +
-                  `Please enter ${chalk.cyan(name)} directory and ` +
-                  `install dependencies with yarn or npm manually. ` +
-                  `Then run ${chalk.cyan(commandName.develop)} to start ` +
-                  `local development.\n\n    Exit code ${code}`
-                )
-              )
-            }
-
-            resolve()
-          })
-        })
       }
     }
-  ])
+  ].filter(Boolean))
 
-  await tasks.run()
+  const context = await tasks.run({ didInstall: false })
 
   console.log()
+  console.log('A new Gridsome project was created successfully!')
+  console.log('Follow these steps to get started:')
+  console.log()
   if (process.cwd() !== dir) {
-    console.log(`  - Enter directory ${chalk.green(`cd ${name}`)}`)
+    console.log(`  - Enter the directory by running ${chalk.green.bold(`cd ${name}`)}`)
   }
-  console.log(`  - Run ${chalk.green(commandName.develop)} to start local development`)
-  console.log(`  - Run ${chalk.green(commandName.build)} to build for production`)
+  if (!context.didInstall) {
+    console.log(`  - Install dependencies with your preferred package manager`)
+  }
+  console.log(`  - Run ${chalk.green.bold(commandName.develop)} to start local development`)
+  console.log(`  - Run ${chalk.green.bold(commandName.build)} to build for production`)
   console.log()
 }
 
@@ -137,13 +145,6 @@ async function updatePkg (pkgPath, obj) {
   const newPkg = sortPackageJson(Object.assign(pkg, obj))
 
   await fs.outputFile(pkgPath, JSON.stringify(newPkg, null, 2))
-}
-
-function exec (cmd, args = [], options = {}, context = process.cwd()) {
-  return execa(cmd, args, {
-    stdio: options.stdio || 'ignore',
-    cwd: context
-  })
 }
 
 function absolutePath (string) {

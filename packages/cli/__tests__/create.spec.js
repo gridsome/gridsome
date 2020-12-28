@@ -17,5 +17,5 @@ afterEach(() => {
 test('warns if a directory with the same name exists in path', async () => {
   const { stdout } = await runCLI(['create', 'my-project'], __dirname)
 
-  expect(stdout).toBe(`Can't create my-project because there's already a non-empty directory my-project existing in path.`)
+  expect(stdout).toMatch('because the directory is not empty')
 })
