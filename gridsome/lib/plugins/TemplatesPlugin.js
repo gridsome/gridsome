@@ -1,7 +1,7 @@
 const path = require('path')
 const glob = require('globby')
 const fs = require('fs-extra')
-const leven = require('leven')
+const { distance } = require('fastest-levenshtein')
 const crypto = require('crypto')
 const moment = require('moment')
 const chokidar = require('chokidar')
@@ -239,7 +239,7 @@ class TemplatesPlugin {
       for (const typeName of templates.byTypeName.keys()) {
         if (!typeNames.includes(typeName)) {
           const suggestion = typeNames.find(value => {
-            return leven(value, typeName) < 3
+            return distance(value, typeName) < 3
           })
 
           throw new Error(

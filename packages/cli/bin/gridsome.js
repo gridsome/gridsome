@@ -3,7 +3,7 @@
 const path = require('path')
 const chalk = require('chalk')
 const program = require('commander')
-const leven = require('leven')
+const { distance } = require('fastest-levenshtein')
 const resolveCwd = require('resolve-cwd')
 const updateNotifier = require('update-notifier')
 const resolveVersions = require('../lib/utils/version')
@@ -54,7 +54,7 @@ program.arguments('<command>').action(async command => {
   const { isGridsomeProject } = require('../lib/utils')
   const availableCommands = program.commands.map(cmd => cmd._name)
   const suggestion = availableCommands.find(cmd => {
-    const steps = leven(cmd, command)
+    const steps = distance(cmd, command)
     return steps < 3
   })
 
