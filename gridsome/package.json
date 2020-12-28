@@ -24,7 +24,7 @@
     "@babel/core": "^7.0.0",
     "@gridsome/cli": "^0.3.4",
     "@hapi/joi": "^15.1.1",
-    "@sindresorhus/slugify": "^0.8.0",
+    "@sindresorhus/slugify": "^1.1.0",
     "@vue/babel-preset-app": "^4.2.2",
     "@vue/component-compiler-utils": "^2.5.2",
     "address": "^1.1.0",
