@@ -34,7 +34,7 @@ function createMap (clientManifest) {
 function createMapper(clientManifest) {
   const map = createMap(clientManifest)
   // map server-side moduleIds to client-side files
-  return function mapper (moduleIds) {
+  return function mapper(moduleIds) {
     const res = new Set()
     for (let i = 0; i < moduleIds.length; i++) {
       const mapped = map.get(moduleIds[i])
@@ -48,7 +48,7 @@ function createMapper(clientManifest) {
   }
 }
 
-function getPreloadType (ext) {
+function getPreloadType(ext) {
   if (ext === 'js') {
     return 'script'
   } else if (ext === 'css') {
@@ -63,7 +63,7 @@ function getPreloadType (ext) {
   }
 }
 
-function normalizeFile (file) {
+function normalizeFile(file) {
   const withoutQuery = file.replace(/\?.*/, '')
   const extension = path.extname(withoutQuery).slice(1)
 
@@ -83,7 +83,7 @@ exports.createBundleContext = ({ clientManifest, shouldPrefetch, shouldPreload }
 
   let asyncFilesCache
 
-  function getUsedAsyncFiles (ssrContext) {
+  function getUsedAsyncFiles(ssrContext) {
     if (!asyncFilesCache && ssrContext._registeredComponents) {
       const registered = Array.from(ssrContext._registeredComponents)
       asyncFilesCache = mapFiles(registered).map(normalizeFile)
@@ -92,7 +92,7 @@ exports.createBundleContext = ({ clientManifest, shouldPrefetch, shouldPreload }
     return asyncFilesCache || []
   }
 
-  function getPreloadFiles (ssrContext) {
+  function getPreloadFiles(ssrContext) {
     const usedAsyncFiles = getUsedAsyncFiles(ssrContext)
     if (preloadFiles || usedAsyncFiles) {
       return preloadFiles.concat(usedAsyncFiles)
@@ -172,11 +172,9 @@ exports.createBundleContext = ({ clientManifest, shouldPrefetch, shouldPreload }
   }
 
   function renderState(ssrContext) {
-    const name = '__INITIAL_STATE__'
-    const state = JSON.stringify(ssrContext.state)
-    const nonceAttr = ssrContext.nonce ? ` nonce="${ssrContext.nonce}"` : ''
-
-    return `<script${nonceAttr}>window.${name}=${state}</script>`
+    const state = JSON.stringify(JSON.stringify(ssrContext.state))
+    const attrs = ssrContext.nonce ? ` nonce="${ssrContext.nonce}"` : ''
+    return `<script${attrs}>__INITIAL_STATE__=JSON.parse(${state})</script>`
   }
 
   return {
