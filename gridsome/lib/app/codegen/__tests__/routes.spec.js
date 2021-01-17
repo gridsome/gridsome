@@ -4,7 +4,7 @@ const { NOT_FOUND_NAME } = require('../../../utils/constants')
 
 function fixwinpath(routestr) {
   routestr = routestr.replace(/\\\\/g, '/')
-  routestr = routestr.replace(/page--fixtures-/g, 'page--fixtures--')
+  routestr = routestr.replace(/page--fixtures-page/g, 'page--fixtures--page')
   return routestr
 }
 
