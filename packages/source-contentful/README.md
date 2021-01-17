@@ -273,7 +273,7 @@ After the successful installation you can access `$locale` from the page context
 </template>
 
 <page-query>
-    query News($locale: String!) {
+    query News($locale: String! = "en") {
       news: allContentfulNews(filter: { locale: { eq: $locale } }) {
         edges {
           node {
