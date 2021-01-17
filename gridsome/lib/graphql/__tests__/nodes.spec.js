@@ -2,6 +2,7 @@ const path = require('path')
 const App = require('../../app/App')
 const PluginAPI = require('../../app/PluginAPI')
 const JSONTransformer = require('./__fixtures__/JSONTransformer')
+const { unwinpath } = require('../../utils/helpers')
 
 const context = path.resolve(__dirname, '../../__tests__')
 const imagesDir = path.join(context, 'assets', 'static')
@@ -491,7 +492,7 @@ test('transformer should resolve absolute paths', async () => {
   }`)
 
   expect(errors).toBeUndefined()
-  expect(data.testPost.fileField).toEqual(`${context}/assets/image.png`)
+  expect(unwinpath(data.testPost.fileField)).toEqual(`${unwinpath(context)}/assets/image.png`)
 })
 
 test('process image types in schema', async () => {

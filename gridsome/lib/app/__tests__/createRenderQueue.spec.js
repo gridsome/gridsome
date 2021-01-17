@@ -3,6 +3,7 @@ const App = require('../App')
 const createApp = require('../index')
 const { BOOTSTRAP_PAGES } = require('../../utils/constants')
 const createRenderQueue = require('../build/createRenderQueue')
+const { unwinpath } = require('../../utils/helpers')
 
 test('create render queue for basic project', async () => {
   const context = path.resolve(__dirname, '../../__tests__/__fixtures__/project-basic')
@@ -243,6 +244,10 @@ describe('dynamic pages', () => {
     const outputs = renderQueue.map(entry =>
       path.relative(app.config.outputDir, entry.htmlOutput)
     )
+
+    outputs.forEach(function(item, index, array) {
+      outputs[index] = unwinpath(item)
+    })
 
     expect(outputs).toEqual([
       'a/b/index.html',
