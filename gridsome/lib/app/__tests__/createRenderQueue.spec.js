@@ -245,7 +245,7 @@ describe('dynamic pages', () => {
       path.relative(app.config.outputDir, entry.htmlOutput)
     )
 
-    outputs.forEach(function(item, index, array) {
+    outputs.forEach(function(item, index) {
       outputs[index] = unwinpath(item)
     })
 

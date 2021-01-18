@@ -5,7 +5,7 @@ const cheerio = require('cheerio')
 const express = require('express')
 const puppeteer = require('puppeteer')
 const { trim, uniq } = require('lodash')
-const os = require("os");
+const os = require('os')
 
 const context = path.join(__dirname, '__fixtures__', 'project-basic')
 const content = file => fs.readFileSync(path.join(context, file), 'utf8')
