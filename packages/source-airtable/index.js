@@ -4,43 +4,48 @@ const { deprecate } = require('gridsome/lib/utils/deprecate')
 class AirtableSource {
   constructor (api, options) {
     // renamed "baseId" config to "base"
-    options.base = options.base || options.baseId
-    this.base = new Airtable({ apiKey: options.apiKey }).base(options.base)
+    this.bases = []
+    // options now contains an array of bases, each one with its tables
+    for(const base of options.bases){
+      let baseObject = new Airtable({ apiKey: options.apiKey }).base(base.id)
+      baseObject.tables = base.tables
+      this.bases.push(baseObject)
+    }
 
     api.loadSource(async ({ addCollection, store }) => {
       this.store = store
       this.addCollection = addCollection
-      // to avoid breaking changes when someone is using old config options
-      // convert to new format and show deprecation warning
-      if (!!options.tableName && !options.tables) {
-        options.tables = [
-          {
-            name: options.tableName,
-            typeName: options.typeName
+      // kept the tableName deprecation check, but I would suggest just removing it straight away.
+      for(const base of options.bases){
+        for(const table of base.tables){
+          if (!!table.tableName && !table.name) {
+            table.name = table.tableName
+            delete table.tableName
+            deprecate(`@gridsome/airtable-source: "tableName" option in config will be deprecated. Use "name" instead.)
           }
-        ]
-        deprecate(`@gridsome/airtable-source: "tableName" option in config will be deprecated. 
-          You should switch to "tables" array config instead`)
+        }
       }
       await this.loadRecordsToCollections(options)
     })
   }
 
-  loadRecordsToCollections = async function (options) {
-    for (const table of options.tables) {
-      const collection = this.addCollection({
-        camelCasedFieldNames: true,
-        typeName: table.typeName,
-        route: table.route
-      })
-      await this.base(table.name)
-        .select(table.select || {})
-        .eachPage((records, fetchNextPage) => {
-          records.forEach((record) => {
-            this.addRecordToNode(record._rawJson, table, collection)
-          })
-          fetchNextPage()
+  loadRecordsToCollections = async function () {
+    for(const base of this.bases){
+      for (const table of base.tables) {
+        const collection = this.addCollection({
+          camelCasedFieldNames: true,
+          typeName: table.typeName,
+          route: table.route
         })
+        await base(table.name)
+          .select(table.select || {})
+          .eachPage((records, fetchNextPage) => {
+            records.forEach((record) => {
+              this.addRecordToNode(record._rawJson, table, collection)
+            })
+            fetchNextPage()
+          })
+      }
     }
   }
 
