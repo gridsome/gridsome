@@ -7,6 +7,7 @@ const moment = require('moment')
 const chokidar = require('chokidar')
 const pathToRegexp = require('path-to-regexp')
 const { deprecate } = require('../utils/deprecate')
+const { validateTypeName } = require('../graphql/utils')
 const { ISO_8601_FORMAT } = require('../utils/constants')
 const { isPlainObject, trimStart, trimEnd, get, memoize } = require('lodash')
 
@@ -132,6 +133,7 @@ const setupTemplates = ({ context, templates, permalinks }) => {
   }
 
   for (const typeName in templates) {
+    validateTypeName(typeName)
     templates[typeName].forEach(options => {
       if (!isDev && !isUnitTest && !fs.existsSync(options.component)) {
         const relPath = path.relative(context, options.component)
