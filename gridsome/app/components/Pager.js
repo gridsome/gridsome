@@ -78,7 +78,8 @@ export default {
       if (end < total) links.push(renderLink(total, lastLabel, ariaLastLabel, [lastClass, navClass]))
     }
 
-    if (links.length < 2) return null
+    if (showLinks && links.length < 2) return null
+    if (!showLinks && links.length === 0) return null
 
     return h('nav', {
       ...data,
