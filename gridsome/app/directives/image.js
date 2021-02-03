@@ -64,14 +64,23 @@ function loadImage (el) {
   const src = el.getAttribute('data-src')
   const sizes = el.getAttribute('data-sizes')
   const srcset = el.getAttribute('data-srcset')
+  const dataUri = el.src
 
-  if (!src || el.src.endsWith(src)) {
+  if (!src || dataUri.endsWith(src)) {
     return // src is already switched
   }
 
   el.onload = () => {
     removeClass(el, 'g-image--loading')
     addClass(el, 'g-image--loaded')
+  }
+  
+  el.onerror = () => {
+    el.srcset = ''
+    el.sizes = ''
+    el.src = dataUri
+    removeClass(el, 'g-image--loading')
+    addClass(el, 'g-image--error')
   }
 
   el.srcset = srcset
