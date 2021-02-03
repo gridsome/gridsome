@@ -5,6 +5,7 @@ const cheerio = require('cheerio')
 const express = require('express')
 const puppeteer = require('puppeteer')
 const { trim, uniq } = require('lodash')
+const os = require('os')
 
 const context = path.join(__dirname, '__fixtures__', 'project-basic')
 const content = file => fs.readFileSync(path.join(context, file), 'utf8')
@@ -105,7 +106,14 @@ test('render g-link components', () => {
 test('render g-image components', () => {
   const $home = load('dist/index.html')
   const $about = load('dist/about/index.html')
-  const aboutJS = content('dist/assets/js/page--src--pages--about-vue.js')
+
+  let aboutJS
+  if (os.platform() === 'win32') {
+    aboutJS = content('dist/assets/js/page--src-pages-about-vue.js')
+  }
+  else {
+    aboutJS = content('dist/assets/js/page--src--pages--about-vue.js')
+  }
 
   // #1318 - Exclude `dataUri` from bundle when not lazy loading the image.
   expect(aboutJS).not.toMatch('"dataUri":"data:image/svg+xml')
@@ -178,7 +186,14 @@ test('generate /404.html', () => {
 
 test('compile scripts correctly', () => {
   const appJS = content('dist/assets/js/app.js')
-  const homeJS = content('dist/assets/js/page--src--pages--index-vue.js')
+  
+  let homeJS
+  if (os.platform() === 'win32') {
+    homeJS = content('dist/assets/js/page--src-pages-index-vue.js')
+  }
+  else {
+    homeJS = content('dist/assets/js/page--src--pages--index-vue.js')
+  }
 
   // never include the context path
   expect(appJS).not.toMatch(context)

@@ -2,6 +2,7 @@ const App = require('../../app/App')
 const PluginAPI = require('../../app/PluginAPI')
 const JSONTransformer = require('./__fixtures__/JSONTransformer')
 const { BOOTSTRAP_PAGES } = require('../../utils/constants')
+const { unwinpath } = require('../../utils/helpers')
 
 async function createPlugin (context = '/', localConfig) {
   const app = await new App(context, { localConfig }).init()
@@ -604,8 +605,8 @@ test('resolve file paths', async () => {
   })
 
   expect(node.file).toEqual('image.png')
-  expect(node.file2).toEqual('/absolute/dir/to/project/image.png')
-  expect(node.file3).toEqual('/absolute/dir/to/image.png')
+  expect(unwinpath(node.file2)).toEqual('/absolute/dir/to/project/image.png')
+  expect(unwinpath(node.file3)).toEqual('/absolute/dir/to/image.png')
   expect(node.filepath).toEqual('dir/to/image.png')
   expect(node.url).toEqual('https://example.com/image.jpg')
   expect(node.url2).toEqual('//example.com/image.jpg')
@@ -637,8 +638,8 @@ test('resolve file paths when folder as extension', async () => {
   })
 
   expect(node.file).toEqual('image.png')
-  expect(node.file2).toEqual('/absolute/dir/to/project.com/image.png')
-  expect(node.file3).toEqual('/absolute/dir/to/project.com/a/image.png')
+  expect(unwinpath(node.file2)).toEqual('/absolute/dir/to/project.com/image.png')
+  expect(unwinpath(node.file3)).toEqual('/absolute/dir/to/project.com/a/image.png')
   expect(node.filepath).toEqual('dir/to/image.png')
 })
 
@@ -656,7 +657,7 @@ test('resolve absolute file paths with no origin', async () => {
   })
 
   expect(node.file).toEqual('image.png')
-  expect(node.file2).toEqual('/absolute/dir/to/project/image.png')
+  expect(unwinpath(node.file2)).toEqual('/absolute/dir/to/project/image.png')
 })
 
 test('resolve absolute file paths with a custom path', async () => {
@@ -678,8 +679,8 @@ test('resolve absolute file paths with a custom path', async () => {
     file: '/image.png'
   })
 
-  expect(node1.file).toEqual('/path/to/dir/image.png')
-  expect(node2.file).toEqual('/path/to/dir/image.png')
+  expect(unwinpath(node1.file)).toEqual('/path/to/dir/image.png')
+  expect(unwinpath(node2.file)).toEqual('/path/to/dir/image.png')
 })
 
 test('don\'t touch absolute paths when resolveAbsolutePaths is not set', async () => {
@@ -698,7 +699,7 @@ test('don\'t touch absolute paths when resolveAbsolutePaths is not set', async (
 
   expect(node.file).toEqual('image.png')
   expect(node.file2).toEqual('/image.png')
-  expect(node.file3).toEqual('/absolute/dir/to/image.png')
+  expect(unwinpath(node.file3)).toEqual('/absolute/dir/to/image.png')
 })
 
 test('always resolve relative paths from filesystem sources', async () => {
@@ -713,7 +714,7 @@ test('always resolve relative paths from filesystem sources', async () => {
     }
   })
 
-  expect(node.file).toEqual('/absolute/dir/to/image.png')
+  expect(unwinpath(node.file)).toEqual('/absolute/dir/to/image.png')
 })
 
 test('dont resolve relative paths when no origin', async () => {

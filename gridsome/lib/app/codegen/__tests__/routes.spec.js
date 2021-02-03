@@ -2,6 +2,12 @@ const App = require('../../App')
 const genRoutes = require('../routes')
 const { NOT_FOUND_NAME } = require('../../../utils/constants')
 
+function fixwinpath(routestr) {
+  routestr = routestr.replace(/\\\\/g, '/')
+  routestr = routestr.replace(/page--fixtures-page/g, 'page--fixtures--page')
+  return routestr
+}
+
 test('generate a simple route', async () => {
   const app = await new App(__dirname).init()
 
@@ -10,7 +16,8 @@ test('generate a simple route', async () => {
     component: './__fixtures__/PageA.vue'
   })
 
-  expect(genRoutes(app)).toMatchSnapshot()
+  let testroutes = fixwinpath(genRoutes(app))
+  expect(testroutes).toMatchSnapshot()
 })
 
 test('generate a route with meta', async () => {
@@ -28,7 +35,8 @@ test('generate a route with meta', async () => {
     }
   })
 
-  expect(genRoutes(app)).toMatchSnapshot()
+  let testroutes = fixwinpath(genRoutes(app))
+  expect(testroutes).toMatchSnapshot()
 })
 
 test('generate a route with raw code as meta', async () => {
@@ -44,7 +52,8 @@ test('generate a route with raw code as meta', async () => {
     }
   })
 
-  expect(genRoutes(app)).toMatchSnapshot()
+  let testroutes = fixwinpath(genRoutes(app))
+  expect(testroutes).toMatchSnapshot()
 })
 
 test('generate component imports as variables', async () => {
@@ -73,7 +82,8 @@ test('generate component imports as variables', async () => {
     component: './__fixtures__/PageC.vue'
   })
 
-  expect(genRoutes(app)).toMatchSnapshot()
+  let testroutes = fixwinpath(genRoutes(app))
+  expect(testroutes).toMatchSnapshot()
 })
 
 
@@ -91,5 +101,6 @@ test('generate redirect routes', async () => {
     component: './__fixtures__/PageA.vue'
   })
 
-  expect(genRoutes(app)).toMatchSnapshot()
+  let testroutes = fixwinpath(genRoutes(app))
+  expect(testroutes).toMatchSnapshot()
 })
