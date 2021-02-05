@@ -23,7 +23,8 @@ module.exports = {
   SORT_ORDER: 'DESC',
   PER_PAGE: 25,
 
-  ISO_8601_FORMAT: [
+  SUPPORTED_DATE_FORMATS: [
+    // ISO8601
     'YYYY',
     'YYYY-MM',
     'YYYY-MM-DD',
@@ -52,7 +53,13 @@ module.exports = {
     'YYYY-[W]WW-E',
     'YYYY[W]WWE',
     'YYYY-DDDD',
-    'YYYYDDDD'
+    'YYYYDDDD',
+
+    'YYYY-MM-DD HH:mm:ss Z',
+    'YYYY-MM-DD HH:mm:ss',
+
+    'YYYY-MM-DD HH:mm:ss.SSSS Z',
+    'YYYY-MM-DD HH:mm:ss.SSSS'
   ]
 }
 
