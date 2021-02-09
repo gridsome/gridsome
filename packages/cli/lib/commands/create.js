@@ -2,15 +2,19 @@ const path = require('path')
 const fs = require('fs-extra')
 const chalk = require('chalk')
 const execa = require('execa')
+const axios = require('axios')
+const jsYaml = require('js-yaml')
 const inquirer = require('inquirer')
 const Tasks = require('@hjvedvik/tasks')
 const sortPackageJson = require('sort-package-json')
+const autocompletePrompt = require('inquirer-autocomplete-prompt')
 const { config, hasYarn, hasPnpm, installDependencies } = require('../utils')
 
-module.exports = async (name, starter = 'default') => {
+inquirer.registerPrompt('autocomplete', autocompletePrompt)
+
+module.exports = async (name, starter = '') => {
   const dir = absolutePath(name)
   const projectName = path.basename(dir)
-  const starters = ['default', 'wordpress']
   const commandName = {
     develop: 'gridsome develop',
     build: 'gridsome build'
@@ -24,37 +28,56 @@ module.exports = async (name, starter = 'default') => {
     )
   }
 
-  if (/^([a-z0-9_-]+)\//i.test(starter)) {
-    starter = `https://github.com/${starter}.git`
-  } else if (starters.includes(starter)) {
-    starter = `https://github.com/gridsome/gridsome-starter-${starter}.git`
-  }
-
   let packageManager = config.get('packageManager')
 
   const withYarn = await hasYarn()
   const withPnpm = await hasPnpm()
+  const starters = await fetchStarters()
+
   const answers = await inquirer.prompt([
+    {
+      type: 'autocomplete',
+      name: 'starter',
+      message: 'Pick a starter template',
+      prefix: ' ',
+      when: () => !starter && starters.length,
+      async source (answers, input) {
+        const choices = starters.map((starter) => ({
+          name: `${starter.title} by ${starter.author} (${starter.platforms || 'any'})`,
+          short: `${starter.title} by ${starter.author}`,
+          value: starter.repo
+        }))
+
+        if (input) {
+          return choices.filter((choice) => {
+            return choice.name.toLowerCase().search(input) >= 0
+          })
+        }
+
+        return choices
+      }
+    },
     {
       type: 'list',
       name: 'packageManager',
       default: 'npm',
-      message: 'Pick the package manager that should install dependencies',
+      message: 'Pick a package manager that will install dependencies',
       when: () => !packageManager,
-      prefix: '',
+      prefix: ' ',
       choices: [
         'npm',
         {
           name: 'Yarn',
           value: 'yarn',
-          disabled: () => withYarn ? false : 'not detected…'
+          disabled: () => withYarn ? false : 'not available…'
         },
         {
           name: 'pnpm',
-          disabled: () => withPnpm ? false : 'not detected…'
+          disabled: () => withPnpm ? false : 'not available…'
         },
         {
           name: 'None, install them manually later',
+          short: 'None',
           value: 'none'
         }
       ]
@@ -67,9 +90,21 @@ module.exports = async (name, starter = 'default') => {
       message: (answers) => answers.packageManager !== 'none'
         ? `Do you want to use ${answers.packageManager} for all future Gridsome projects?`
         : 'Do you always want to install dependencies manually?',
-      prefix: ''
+      prefix: ' '
     }
   ])
+
+  if (answers.starter) {
+    starter = answers.starter
+  }
+
+  if (starter) {
+    if (/^([a-z0-9_-]+)\//i.test(starter)) {
+      starter = `https://github.com/${starter}.git`
+    }
+  } else {
+    starter = 'https://github.com/gridsome/gridsome-starter-default'
+  }
 
   if (answers.packageManager) {
     console.log('')
@@ -137,6 +172,15 @@ module.exports = async (name, starter = 'default') => {
   console.log(`  - Run ${chalk.green.bold(commandName.develop)} to start local development`)
   console.log(`  - Run ${chalk.green.bold(commandName.build)} to build for production`)
   console.log()
+}
+
+async function fetchStarters () {
+  try {
+    const res = await axios('https://raw.githubusercontent.com/gridsome/gridsome.org/master/starters/starters.yaml')
+    return jsYaml.load(res.data)
+  } catch (err) {
+    return []
+  }
 }
 
 async function updatePkg (pkgPath, obj) {
