@@ -21,6 +21,8 @@ exports.processImage = async function ({
 }) {
   if (cachePath && await fs.exists(cachePath)) {
     return fs.copy(cachePath, destPath)
+  } else if (await fs.exists(destPath)) {
+    return
   }
 
   const { ext } = path.parse(filePath)
