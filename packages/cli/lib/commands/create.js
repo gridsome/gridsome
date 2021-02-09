@@ -39,14 +39,20 @@ module.exports = async (name, starter = '') => {
       type: 'autocomplete',
       name: 'starter',
       message: 'Pick a starter template',
+      pageSize: 12,
       prefix: ' ',
       when: () => !starter && starters.length,
       async source (answers, input) {
-        const choices = starters.map((starter) => ({
-          name: `${starter.title} by ${starter.author} (${starter.platforms || 'any'})`,
-          short: `${starter.title} by ${starter.author}`,
-          value: starter.repo
-        }))
+        const choices = starters.map((starter) => {
+          const preview = starter.preview ? chalk.dim(`\n  - ${starter.preview}`) : ''
+          const platforms = starter.platforms ? ` (${starter.platforms})` : ''
+          const title = `${starter.title} by ${starter.author}`
+          return {
+            name: `${title}${platforms}${preview}`,
+            value: starter.repo,
+            short: title
+          }
+        })
 
         if (input) {
           return choices.filter((choice) => {
