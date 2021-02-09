@@ -32,8 +32,8 @@ builtInPlugins.push(api => {
 
     config.entryPoints.store.forEach((entry, name) => {
       config.entry(name)
-        .prepend(`webpack-hot-middleware/client?name=${name}&reload=true&noInfo=true`)
-        .prepend('webpack/hot/dev-server')
+        .prepend(`${require.resolve('webpack-hot-middleware/client')}?name=${name}&reload=true&noInfo=true`)
+        .prepend(require.resolve('webpack/hot/dev-server'))
     })
   })
 })
