@@ -74,7 +74,7 @@ function loadImage (el) {
     removeClass(el, 'g-image--loading')
     addClass(el, 'g-image--loaded')
   }
-  
+
   el.onerror = () => {
     el.srcset = ''
     el.sizes = ''

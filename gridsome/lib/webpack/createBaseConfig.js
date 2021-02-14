@@ -52,7 +52,7 @@ module.exports = (app, { isProd, isServer }) => {
     // TODO: Remove plugin when using webpack 5
     .plugin('pnp')
       .use({...require(`pnp-webpack-plugin`)})
-    
+
   config.resolveLoader
     // TODO: Remove plugin when using webpack 5
     .plugin('pnp-loaders')
