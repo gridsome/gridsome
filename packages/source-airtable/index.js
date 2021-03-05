@@ -19,7 +19,7 @@ class AirtableSource {
             typeName: options.typeName
           }
         ]
-        deprecate(`@gridsome/airtable-source: "tableName" option in config will be deprecated. 
+        deprecate(`@gridsome/airtable-source: "tableName" option in config will be deprecated.
           You should switch to "tables" array config instead`)
       }
       await this.loadRecordsToCollections(options)
