@@ -328,7 +328,8 @@ async function createDataUri (pipeline, type, width, height, defaultBlur, option
 
   const blurredSvg = await createBlurSvg(pipeline, type, width, height, blur, resizeOptions)
 
-  return svgDataUri(
+  // #1438 - Using `toSrcset()` for W3C compliance.
+  return svgDataUri.toSrcset(
     `<svg fill="none" viewBox="0 0 ${width} ${height}" ` +
     `xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">` +
     blurredSvg +
