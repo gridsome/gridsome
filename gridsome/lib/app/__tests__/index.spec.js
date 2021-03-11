@@ -232,6 +232,46 @@ test('fail if two templates have the same name', () => {
   })).toThrow('already exist')
 })
 
+test('normalize images config', () => {
+  const config = loadConfig(context)
+  expect(config.images).toMatchObject({
+    compress: true,
+    defaultQuality: 75,
+    backgroundColor: null,
+    placeholder: { type: 'svg', defaultBlur: 40 }
+  })
+})
+
+test('normalize images placeholder config', () => {
+  const config = loadConfig(context, {
+    localConfig: {
+      images: {
+        placeholder: {
+          defaultBlur: 90
+        }
+      }
+    }
+  })
+  expect(config.images.placeholder).toMatchObject({
+    type: 'svg',
+    defaultBlur: 90
+  })
+})
+
+test('normalize images placeholder config', () => {
+  const config = loadConfig(context, {
+    localConfig: {
+      images: {
+        placeholder: 'blurhash'
+      }
+    }
+  })
+  expect(config.images.placeholder).toMatchObject({
+    type: 'blurhash',
+    components: 5
+  })
+})
+
 test('setup webpack client config', async () => {
   const app = await createApp(context, undefined, BOOTSTRAP_CONFIG)
   const config = await app.compiler.resolveWebpackConfig()

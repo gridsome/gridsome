@@ -190,8 +190,11 @@ async function process (
     imageExtensions: ['.jpg', '.png', '.svg', '.gif', '.webp'],
     images: {
       process: true,
-      defaultBlur: 20,
       defaultQuality: 75,
+      placeholder: {
+        type: 'svg',
+        defaultBlur: 20
+      },
       ...images
     }
   }

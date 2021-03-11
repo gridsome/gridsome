@@ -108,19 +108,13 @@ module.exports = (context, options = {}) => {
   config.templatesDir = resolve(localConfig._templatesDir || './src/templates')
   config.templates = normalizeTemplates(context, config, localConfig)
   config.permalinks = normalizePermalinks(localConfig.permalinks)
+  config.images = normalizeImages(localConfig.images)
   config.componentParsers = []
 
   config.chainWebpack = localConfig.chainWebpack
   config.configureWebpack = localConfig.configureWebpack
   config.configureServer = localConfig.configureServer
 
-  config.images = {
-    compress: true,
-    defaultBlur: 40,
-    defaultQuality: 75,
-    backgroundColor: null,
-    ...localConfig.images
-  }
 
   if (!colorString.get(config.images.backgroundColor || '')) {
     config.images.backgroundColor = null
@@ -467,6 +461,58 @@ function resolveTransformers (pkg, config) {
   }
 
   return result
+}
+
+function normalizeImages (config = {}) {
+  const defaultPlaceholder = {
+    type: 'svg',
+    defaultBlur: 40
+  }
+
+  if (typeof config.placeholder === 'string') {
+    config.placeholder = {
+      type: config.placeholder
+    }
+  }
+
+  if (typeof config.defaultBlur !== 'undefined') {
+    config.placeholder = {
+      ...defaultPlaceholder,
+      defaultBlur: config.defaultBlur,
+      ...config.placeholder
+    }
+    deprecate(`The images.defaultBlur option has moved to images.placeholder.defaultBlur.`, {
+      customCaller: ['gridsome.config.js']
+    })
+  }
+
+  const { error, value } = Joi.validate(
+    config,
+    Joi.object().label('Images').keys({
+      compress: Joi.boolean().default(true),
+      defaultQuality: Joi.number().default(75).min(0).max(100),
+      backgroundColor: Joi.string().allow(null).default(null),
+      defaultBlur: Joi.number().default(defaultPlaceholder.defaultBlur),
+      placeholder: Joi.alternatives()
+        .default(defaultPlaceholder)
+        .try([
+          Joi.object().label('SVG').keys({
+            type: Joi.string().default('svg').valid('svg'),
+            defaultBlur: Joi.number().min(0).default(defaultPlaceholder.defaultBlur)
+          }),
+          Joi.object().label('Blurhash').keys({
+            type: Joi.string().required().valid('blurhash'),
+            components: Joi.number().default(5).min(1).max(9)
+          })
+        ])
+    })
+  )
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  return value
 }
 
 function normalizeIconsConfig (config = {}) {

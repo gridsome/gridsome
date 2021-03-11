@@ -3,6 +3,7 @@ const fs = require('fs-extra')
 const sharp = require('sharp')
 const crypto = require('crypto')
 const mime = require('mime-types')
+const blurhash = require('blurhash')
 const colorString = require('color-string')
 const md5File = require('md5-file/promise')
 const svgDataUri = require('mini-svg-data-uri')
@@ -53,7 +54,6 @@ class ImageProcessQueue {
     const relPath = path.relative(this.context, filePath)
     const { name, ext } = path.parse(filePath)
     const mimeType = mime.lookup(filePath)
-    const defaultBlur = this.config.images.defaultBlur
 
     if (!imageExtensions.includes(ext.toLowerCase())) {
       throw new Error(
@@ -176,11 +176,11 @@ class ImageProcessQueue {
       classNames.push('g-image--lazy')
 
       results.dataUri = await createDataUri(
+        this.config.images.placeholder,
         pipeline,
         mimeType,
         imageWidth,
         imageHeight,
-        defaultBlur,
         options
       )
 
@@ -317,52 +317,124 @@ function createOptionsQuery (arr) {
   }, []).join('&')
 }
 
-async function createDataUri (pipeline, type, width, height, defaultBlur, options = {}) {
-  const blur = options.blur !== undefined ? parseInt(options.blur, 10) : defaultBlur
-
+async function createDataUri (placeholder, pipeline, mimeType, width, height, options = {}) {
   const resizeOptions = {}
 
   if (options.fit) resizeOptions.fit = sharp.fit[options.fit]
   if (options.position) resizeOptions.position = sharp.position[options.position]
   if (options.background) resizeOptions.background = options.background
 
-  const blurredSvg = await createBlurSvg(pipeline, type, width, height, blur, resizeOptions)
-
-  // #1438 - Using `toSrcset()` for W3C compliance.
-  return svgDataUri.toSrcset(
-    `<svg fill="none" viewBox="0 0 ${width} ${height}" ` +
-    `xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">` +
-    blurredSvg +
-    `</svg>`
-  )
-}
-
-async function createBlurSvg (pipeline, mimeType, width, height, blur, resize = {}) {
-  const blurWidth = 64
-  const blurHeight = Math.round(height * (blurWidth / width))
-  const buffer = await pipeline
-    .resize(blurWidth, blurHeight, resize)
-    .toBuffer()
-  const base64 = buffer.toString('base64')
-  const id = `__svg-blur-${genHash(base64)}`
-  let defs = ''
-
-  if (blur > 0) {
-    defs = '' +
-      '<defs>' +
-      `<filter id="${id}">` +
-      `<feGaussianBlur in="SourceGraphic" stdDeviation="${blur}"/>` +
-      `</filter>` +
-      '</defs>'
+  const placeholderWidth = 64
+  const placeholderHeight = Math.floor(height * (placeholderWidth / width))
+  const params = {
+    mimeType,
+    options,
+    pipeline,
+    placeholder,
+    placeholderWidth,
+    placeholderHeight,
+    width,
+    height,
+    resizeOptions
   }
 
-  const image = '' +
-    `<image x="0" y="0" ` +
-    (defs ? `filter="url(#${id})" ` : ' ') +
-    `width="${width}" height="${height}" ` +
-    `xlink:href="data:${mimeType};base64,${base64}" />`
+  switch (placeholder.type) {
+    case 'svg':
+      return createSVG(params)
+    case 'blurhash':
+      return createBlurhash(params)
+  }
 
-  return defs + image
+  throw new Error(`Unknown placeholder type: ${placeholder.type}`)
+}
+
+async function createSVG ({
+  width,
+  height,
+  mimeType,
+  options,
+  pipeline,
+  resizeOptions,
+  placeholder,
+  placeholderWidth,
+  placeholderHeight
+}) {
+  const blur = options.blur !== undefined ? parseInt(options.blur, 10) : placeholder.defaultBlur
+
+  return new Promise((resolve, reject) => {
+    pipeline
+      .resize(placeholderWidth, placeholderHeight, resizeOptions)
+      .toBuffer(async (err, buffer) => {
+        if (err) return reject(err)
+
+        const base64 = buffer.toString('base64')
+        const id = `__svg-blur-${genHash(base64)}`
+        let defs = ''
+
+        if (blur > 0) {
+          defs = '' +
+            '<defs>' +
+            `<filter id="${id}">` +
+            `<feGaussianBlur in="SourceGraphic" stdDeviation="${blur}"/>` +
+            `</filter>` +
+            '</defs>'
+        }
+
+        const image = '' +
+          `<image x="0" y="0" ` +
+          (defs ? `filter="url(#${id})" ` : ' ') +
+          `width="${width}" height="${height}" ` +
+          `xlink:href="data:${mimeType};base64,${base64}" />`
+
+        resolve(
+          svgDataUri.toSrcset(
+            `<svg fill="none" viewBox="0 0 ${width} ${height}" ` +
+            `xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">` +
+            defs +
+            image +
+            `</svg>`
+          )
+        )
+      })
+  })
+}
+
+async function createBlurhash ({
+  mimeType,
+  pipeline,
+  resizeOptions,
+  placeholder,
+  placeholderWidth,
+  placeholderHeight
+}) {
+  const componentX = Math.max(1, Math.min(placeholder.components, 9))
+  const componentY = Math.max(1, Math.min(Math.floor(componentX * (placeholderHeight / placeholderWidth)), 9))
+  const warmSharp = await warmupSharp(sharp)
+
+  return new Promise((resolve, reject) => {
+    pipeline
+      .raw()
+      .ensureAlpha()
+      .resize(placeholderWidth, placeholderHeight, resizeOptions)
+      .toBuffer(async (err, buffer, { width, height, channels }) => {
+        if (err) return reject(err)
+
+        const hash = blurhash.encode(new Uint8ClampedArray(buffer), width, height, componentX, componentY)
+        const pixels = blurhash.decode(hash, width, height)
+
+        const jpeg = await warmSharp(Buffer.from(pixels), {
+            raw: {
+              width,
+              height,
+              channels
+            }
+          })
+          .jpeg()
+          .toBuffer()
+
+        resolve(`data:${mimeType};base64,${jpeg.toString('base64')}`)
+      })
+  })
 }
 
 module.exports = ImageProcessQueue

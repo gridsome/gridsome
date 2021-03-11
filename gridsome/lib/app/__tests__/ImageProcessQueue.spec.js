@@ -14,7 +14,10 @@ const baseconfig = {
   maxImageWidth: 3000,
   images: {
     minSizeDistance: 300,
-    defaultBlur: 20
+    placeholder: {
+      type: 'svg',
+      defaultBlur: 20
+    }
   }
 }
 
@@ -170,6 +173,28 @@ test('set custom blur', async () => {
   expect(result.src).toEqual('/assets/static/1000x600.248ba3a.test.png')
 })
 
+test('placeholder with blurhash', async () => {
+  const filePath = path.resolve(context, 'assets/1000x600.png')
+  const queue = new AssetsQueue({
+    context,
+    config: {
+      ...baseconfig,
+      images: {
+        ...baseconfig.images,
+        placeholder: {
+          type: 'blurhash',
+          components: 4
+        }
+      }
+    }
+  })
+
+  const result = await queue.add(filePath)
+
+  expect(queue.images.queue).toHaveLength(2)
+  expect(result.dataUri).toMatchSnapshot()
+})
+
 test('add custom attributes to markup', async () => {
   const filePath = path.resolve(context, 'assets/1000x600.png')
   const queue = new AssetsQueue({ context, config: baseconfig })
@@ -308,7 +333,7 @@ describe('calculate correct image size', () => {
     expect(result.size).toMatchObject(expected)
   })
 
-  test('assets/1000x600.png fit=inside ', async () => {
+  test('assets/1000x600.png fit=inside', async () => {
     const filePath = path.resolve(context, 'assets/1000x600.png')
     const queue = new AssetsQueue({ context, config: baseconfig })
 
