@@ -400,7 +400,6 @@ async function createSVG ({
 }
 
 async function createBlurhash ({
-  mimeType,
   pipeline,
   resizeOptions,
   placeholder,
@@ -408,7 +407,11 @@ async function createBlurhash ({
   placeholderHeight
 }) {
   const componentX = Math.max(1, Math.min(placeholder.components, 9))
-  const componentY = Math.max(1, Math.min(Math.floor(componentX * (placeholderHeight / placeholderWidth)), 9))
+  const componentY = Math.max(
+    Math.max(Math.floor(componentX / 2), 1),
+    Math.min(Math.floor(componentX * (placeholderHeight / placeholderWidth)),
+    9)
+  )
   const warmSharp = await warmupSharp(sharp)
 
   return new Promise((resolve, reject) => {
@@ -429,10 +432,13 @@ async function createBlurhash ({
               channels
             }
           })
-          .jpeg()
+          .jpeg({
+            progressive: true,
+            quality: 85
+          })
           .toBuffer()
 
-        resolve(`data:${mimeType};base64,${jpeg.toString('base64')}`)
+        resolve(`data:image/jpeg;base64,${jpeg.toString('base64')}`)
       })
   })
 }
