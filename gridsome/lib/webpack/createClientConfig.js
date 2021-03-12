@@ -10,10 +10,6 @@ module.exports = async app => {
 
   config.entry('app').add(resolve('../../app/entry.client.js'))
 
-  config.node.merge({
-    setImmediate: false
-  })
-
   if (isProd) {
     config.plugin('vue-server-renderer')
       .use(require('./plugins/VueSSRClientPlugin'), [{

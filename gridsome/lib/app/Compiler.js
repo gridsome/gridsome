@@ -54,7 +54,8 @@ class Compiler {
 
   getCompiler() {
     if (!this._compiler) {
-      this._compiler = webpack(this.getConfigs())
+      const configs = this.getConfigs()
+      this._compiler = webpack(configs.length === 1 ? configs[0] : configs)
     }
     return this._compiler
   }

@@ -38,7 +38,7 @@ module.exports = (app, { isProd, isServer }) => {
     .set('gridsome$', path.resolve(projectConfig.appPath, 'index.js'))
     .end()
     .extensions
-    .merge(['.js', '.vue'])
+    .merge(['.js', '.mjs', '.vue'])
     .end()
 
   config.resolve
@@ -49,15 +49,8 @@ module.exports = (app, { isProd, isServer }) => {
         resolve: ['main', 'App.vue']
       }])
       .end()
-    // TODO: Remove plugin when using webpack 5
-    .plugin('pnp')
-      .use({...require(`pnp-webpack-plugin`)})
 
   config.resolveLoader
-    // TODO: Remove plugin when using webpack 5
-    .plugin('pnp-loaders')
-      .use({ ...require('pnp-webpack-plugin').topLevelLoader })
-      .end()
     .set('symlinks', true)
 
   config.module.noParse(/^(vue|vue-router|vue-meta)$/)
@@ -69,20 +62,20 @@ module.exports = (app, { isProd, isServer }) => {
   }
 
   if (!isProd) {
-    config.devtool('cheap-module-eval-source-map')
+    config.devtool('eval-cheap-module-source-map')
   }
 
   // vue
 
   config.module.rule('vue')
     .test(/\.vue$/)
-    .use('cache-loader')
-    .loader(require.resolve('cache-loader'))
-    .options({
-      cacheDirectory,
-      cacheIdentifier
-    })
-    .end()
+    // .use('cache-loader')
+    // .loader(require.resolve('cache-loader'))
+    // .options({
+    //   cacheDirectory,
+    //   cacheIdentifier
+    // })
+    // .end()
     .use('vue-loader')
     .loader(require.resolve('vue-loader'))
     .options({
@@ -100,39 +93,20 @@ module.exports = (app, { isProd, isServer }) => {
   // js
 
   config.module.rule('js')
-    .test(/\.js$/)
-    .exclude
-    .add(filepath => {
-      if (/\.vue\.js$/.test(filepath)) {
-        return false
+    .test(/\.m?js$/)
+    .merge({
+      resolve: {
+        // https://github.com/webpack/webpack/issues/11467#issuecomment-727014123
+        fullySpecified: false
       }
-
-      if (/gridsome\.client\.js$/.test(filepath)) {
-        return false
-      }
-
-      if (filepath.startsWith(projectConfig.appPath)) {
-        return false
-      }
-
-      if (app.config.transpileDependencies.some(dep => {
-        return typeof dep === 'string'
-          ? filepath.includes(path.normalize(dep))
-          : filepath.match(dep)
-      })) {
-        return false
-      }
-
-      return /node_modules/.test(filepath)
     })
-    .end()
-    .use('cache-loader')
-    .loader(require.resolve('cache-loader'))
-    .options({
-      cacheDirectory,
-      cacheIdentifier
-    })
-    .end()
+    // .use('cache-loader')
+    // .loader(require.resolve('cache-loader'))
+    // .options({
+    //   cacheDirectory,
+    //   cacheIdentifier
+    // })
+    // .end()
     .use('babel-loader')
     .loader(require.resolve('babel-loader'))
     .options({
@@ -160,48 +134,73 @@ module.exports = (app, { isProd, isServer }) => {
 
   // assets
 
+  // config.merge({
+  //   experiments: {
+  //     asset: true
+  //   }
+  // })
+
   config.module.rule('images')
     .test(/\.(png|jpe?g|gif|webp)(\?.*)?$/)
-    .use('url-loader')
-    .loader(require.resolve('url-loader'))
-    .options({
-      limit: inlineLimit,
-      name: `${assetsDir}/img/${assetname}`
+    .type('asset')
+    .parser({
+      dataUrlCondition: {
+        maxSize: inlineLimit
+      }
+    })
+    .merge({
+      generator: {
+        filename: `${assetsDir}/img/${assetname}`
+      }
     })
 
   config.module.rule('svg')
     .test(/\.(svg)(\?.*)?$/)
-    .use('file-loader')
-    .loader(require.resolve('file-loader'))
-    .options({
-      name: `${assetsDir}/img/${assetname}`
+    .type('asset/resource')
+    .merge({
+      generator: {
+        filename: `${assetsDir}/img/${assetname}`
+      }
     })
 
   config.module.rule('media')
     .test(/\.(mp4|webm|ogg|mp3|wav|flac|aac)(\?.*)?$/)
-    .use('url-loader')
-    .loader(require.resolve('url-loader'))
-    .options({
-      limit: inlineLimit,
-      name: `${assetsDir}/media/${assetname}`
+    .type('asset')
+    .parser({
+      dataUrlCondition: {
+        maxSize: inlineLimit
+      }
+    })
+    .merge({
+      generator: {
+        filename: `${assetsDir}/media/${assetname}`
+      }
     })
 
   config.module.rule('fonts')
     .test(/\.(woff2?|eot|ttf|otf)(\?.*)?$/i)
-    .use('url-loader')
-    .loader(require.resolve('url-loader'))
-    .options({
-      limit: inlineLimit,
-      name: `${assetsDir}/fonts/${assetname}`
+    .type('asset')
+    .parser({
+      dataUrlCondition: {
+        maxSize: inlineLimit
+      }
     })
+    .merge({
+      generator: {
+        filename: `${assetsDir}/fonts/${assetname}`
+      }
+    })
+
+  // Disable asset modules for images loaded via `g-image`
+  config.module.rule('g-image')
+    .resourceQuery(/g-image/)
+    .type('javascript/auto')
 
   // data
 
   config.module.rule('yaml')
     .test(/\.ya?ml$/)
-    .use('json-loader')
-    .loader(require.resolve('json-loader'))
-    .end()
+    .type('json')
     .use('yaml-loader')
     .loader(require.resolve('yaml-loader'))
 
@@ -241,7 +240,7 @@ module.exports = (app, { isProd, isServer }) => {
   }
 
   // Short hashes as ids for better long term caching.
-  config.optimization.merge({ moduleIds: 'hashed' })
+  config.optimization.merge({ moduleIds: 'deterministic' })
 
   if (process.env.GRIDSOME_TEST) {
     config.output.pathinfo(true)
@@ -276,7 +275,10 @@ module.exports = (app, { isProd, isServer }) => {
     const modulesRule = baseRule.oneOf('modules').resourceQuery(/module/)
     const normalRule = baseRule.oneOf('normal')
 
-    applyLoaders(modulesRule, true)
+    applyLoaders(modulesRule, {
+      exportOnlyLocals: isServer,
+      localIdentName: `[local]_[hash:base64:8]`
+    })
     applyLoaders(normalRule, false)
 
     function applyLoaders (rule, modules) {
@@ -292,19 +294,18 @@ module.exports = (app, { isProd, isServer }) => {
         .loader(require.resolve('css-loader'))
         .options(Object.assign({
           modules,
-          exportOnlyLocals: isServer,
-          localIdentName: `[local]_[hash:base64:8]`,
           importLoaders: 1,
           sourceMap: !isProd
         }, css))
 
       rule.use('postcss-loader')
         .loader(require.resolve('postcss-loader'))
-        .options(Object.assign({
-          sourceMap: !isProd
-        }, postcss, {
-          plugins: (postcss.plugins || []).concat(require('autoprefixer'))
-        }))
+        .options({
+          sourceMap: !isProd,
+          postcssOptions: Object.assign({}, postcss, {
+            plugins: (postcss.plugins || []).concat(require('autoprefixer'))
+          })
+        })
 
       if (loader) {
         try {
