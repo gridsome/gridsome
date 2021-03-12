@@ -465,7 +465,7 @@ function resolveTransformers (pkg, config) {
 
 function normalizeImages (config = {}) {
   const defaultPlaceholder = {
-    type: 'svg',
+    type: 'blur',
     defaultBlur: 40
   }
 
@@ -496,8 +496,8 @@ function normalizeImages (config = {}) {
       placeholder: Joi.alternatives()
         .default(defaultPlaceholder)
         .try([
-          Joi.object().label('SVG').keys({
-            type: Joi.string().default('svg').valid('svg'),
+          Joi.object().label('Blur').keys({
+            type: Joi.string().default('blur').valid('blur'),
             defaultBlur: Joi.number().min(0).default(defaultPlaceholder.defaultBlur)
           }),
           Joi.object().label('Trace').keys({
