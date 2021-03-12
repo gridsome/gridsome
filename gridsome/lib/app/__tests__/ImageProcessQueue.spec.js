@@ -195,6 +195,48 @@ test('placeholder with blurhash', async () => {
   expect(result.dataUri).toMatchSnapshot()
 })
 
+test('placeholder with trace', async () => {
+  const filePath = path.resolve(context, 'assets/1000x600.png')
+  const queue = new AssetsQueue({
+    context,
+    config: {
+      ...baseconfig,
+      images: {
+        ...baseconfig.images,
+        placeholder: {
+          type: 'trace'
+        }
+      }
+    }
+  })
+
+  const result = await queue.add(filePath)
+
+  expect(queue.images.queue).toHaveLength(2)
+  expect(result.dataUri).toMatchSnapshot()
+})
+
+test('placeholder with dominant', async () => {
+  const filePath = path.resolve(context, 'assets/1000x600.png')
+  const queue = new AssetsQueue({
+    context,
+    config: {
+      ...baseconfig,
+      images: {
+        ...baseconfig.images,
+        placeholder: {
+          type: 'dominant'
+        }
+      }
+    }
+  })
+
+  const result = await queue.add(filePath)
+
+  expect(queue.images.queue).toHaveLength(2)
+  expect(result.dataUri).toMatchSnapshot()
+})
+
 test('add custom attributes to markup', async () => {
   const filePath = path.resolve(context, 'assets/1000x600.png')
   const queue = new AssetsQueue({ context, config: baseconfig })

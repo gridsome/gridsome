@@ -3,13 +3,11 @@ const fs = require('fs-extra')
 const sharp = require('sharp')
 const crypto = require('crypto')
 const mime = require('mime-types')
-const blurhash = require('blurhash')
 const colorString = require('color-string')
 const md5File = require('md5-file/promise')
-const svgDataUri = require('mini-svg-data-uri')
 const { forwardSlash } = require('../../utils')
 const { warmupSharp } = require('../../utils/sharp')
-const { reject } = require('lodash')
+const { reject, pickBy } = require('lodash')
 
 class ImageProcessQueue {
   constructor ({ context, config }) {
@@ -175,7 +173,7 @@ class ImageProcessQueue {
     if (isLazy && isSrcset) {
       classNames.push('g-image--lazy')
 
-      results.dataUri = await createDataUri(
+      results.dataUri = await createPlaceholder(
         this.config.images.placeholder,
         pipeline,
         mimeType,
@@ -317,7 +315,18 @@ function createOptionsQuery (arr) {
   }, []).join('&')
 }
 
-async function createDataUri (placeholder, pipeline, mimeType, width, height, options = {}) {
+function createSvgDataURI (svg) {
+  const { optimize } = require('svgo')
+  const { data } = optimize(svg, {
+    multipass: true,
+    floatPrecision: 0,
+    datauri: 'base64'
+  })
+
+  return data
+}
+
+async function createPlaceholder (placeholder, pipeline, mimeType, width, height, options = {}) {
   const resizeOptions = {}
 
   if (options.fit) resizeOptions.fit = sharp.fit[options.fit]
@@ -340,15 +349,19 @@ async function createDataUri (placeholder, pipeline, mimeType, width, height, op
 
   switch (placeholder.type) {
     case 'svg':
-      return createSVG(params)
+      return createSVGPlaceholder(params)
+    case 'trace':
+      return createTracePlaceholder(params)
     case 'blurhash':
-      return createBlurhash(params)
+      return createBlurhashPlaceholder(params)
+    case 'dominant':
+      return createDominantPlaceholder(params)
   }
 
   throw new Error(`Unknown placeholder type: ${placeholder.type}`)
 }
 
-async function createSVG ({
+async function createSVGPlaceholder ({
   width,
   height,
   mimeType,
@@ -380,32 +393,69 @@ async function createSVG ({
             '</defs>'
         }
 
-        const image = '' +
+        const svg =  '' +
+          `<svg fill="none" viewBox="0 0 ${width} ${height}" ` +
+          `xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">` +
+          defs +
           `<image x="0" y="0" ` +
           (defs ? `filter="url(#${id})" ` : ' ') +
           `width="${width}" height="${height}" ` +
-          `xlink:href="data:${mimeType};base64,${base64}" />`
+          `xlink:href="data:${mimeType};base64,${base64}" />` +
+          `</svg>`
 
-        resolve(
-          svgDataUri.toSrcset(
-            `<svg fill="none" viewBox="0 0 ${width} ${height}" ` +
-            `xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">` +
-            defs +
-            image +
-            `</svg>`
-          )
-        )
+        resolve(createSvgDataURI(svg))
       })
   })
 }
 
-async function createBlurhash ({
+async function createTracePlaceholder ({
+  width,
+  height,
+  pipeline,
+  options,
+  resizeOptions,
+  placeholder,
+  placeholderWidth,
+  placeholderHeight
+}) {
+  const potrace = require('potrace')
+
+  const resizeWidth = Math.min(placeholderWidth * 4, width)
+  const resizeHeight = Math.min(placeholderHeight * 4, height)
+
+  return new Promise((resolve, reject) => {
+    pipeline
+    .resize(resizeWidth, resizeHeight, resizeOptions)
+    .toBuffer(async (err, buffer) => {
+      if (err) return reject(err)
+
+      const potraceOptions = pickBy({
+        ...placeholder,
+        type: undefined,
+        background: options.background || placeholder.background
+      }, (value) => typeof value !== 'undefined')
+
+      if (potraceOptions.background === 'auto') {
+        const { dominant } = await pipeline.stats()
+        potraceOptions.background = `rgb(${dominant.r},${dominant.g},${dominant.b})`
+      }
+
+      potrace.trace(buffer, potraceOptions, (err, svg) => {
+        if (err) return reject(err)
+        resolve(createSvgDataURI(svg))
+      })
+    })
+  })
+}
+
+async function createBlurhashPlaceholder ({
   pipeline,
   resizeOptions,
   placeholder,
   placeholderWidth,
   placeholderHeight
 }) {
+  const blurhash = require('blurhash')
   const componentX = Math.max(1, Math.min(placeholder.components, 9))
   const componentY = Math.max(
     Math.max(Math.floor(componentX / 2), 1),
@@ -441,6 +491,19 @@ async function createBlurhash ({
         resolve(`data:image/jpeg;base64,${jpeg.toString('base64')}`)
       })
   })
+}
+
+async function createDominantPlaceholder({ width, height, pipeline }) {
+  const { dominant } = await pipeline.stats()
+  const rgbStr = `rgb(${dominant.r},${dominant.g},${dominant.b})`
+
+  const svg =  '' +
+    `<svg fill="${rgbStr}" viewBox="0 0 ${width} ${height}" ` +
+    `xmlns="http://www.w3.org/2000/svg">` +
+    `<rect width="${width}" height="${height}"></rect>` +
+    `</svg>`
+
+  return createSvgDataURI(svg)
 }
 
 module.exports = ImageProcessQueue

@@ -500,9 +500,18 @@ function normalizeImages (config = {}) {
             type: Joi.string().default('svg').valid('svg'),
             defaultBlur: Joi.number().min(0).default(defaultPlaceholder.defaultBlur)
           }),
+          Joi.object().label('Trace').keys({
+            type: Joi.string().required().valid('trace'),
+            background: Joi.string().default(undefined),
+            color: Joi.string().default(undefined),
+            threshold: Joi.number().min(0).max(255).default(120)
+          }),
           Joi.object().label('Blurhash').keys({
             type: Joi.string().required().valid('blurhash'),
             components: Joi.number().default(5).min(1).max(9)
+          }),
+          Joi.object().label('Dominant').keys({
+            type: Joi.string().required().valid('dominant')
           })
         ])
     })
