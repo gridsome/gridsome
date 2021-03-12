@@ -15,7 +15,7 @@ const baseconfig = {
   images: {
     minSizeDistance: 300,
     placeholder: {
-      type: 'svg',
+      type: 'blur',
       defaultBlur: 20
     }
   }

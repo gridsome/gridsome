@@ -348,8 +348,8 @@ async function createPlaceholder (placeholder, pipeline, mimeType, width, height
   }
 
   switch (placeholder.type) {
-    case 'svg':
-      return createSVGPlaceholder(params)
+    case 'blur':
+      return createBlurlaceholder(params)
     case 'trace':
       return createTracePlaceholder(params)
     case 'blurhash':
@@ -361,10 +361,7 @@ async function createPlaceholder (placeholder, pipeline, mimeType, width, height
   throw new Error(`Unknown placeholder type: ${placeholder.type}`)
 }
 
-async function createSVGPlaceholder ({
-  width,
-  height,
-  mimeType,
+async function createBlurlaceholder ({
   options,
   pipeline,
   resizeOptions,
@@ -375,35 +372,18 @@ async function createSVGPlaceholder ({
   const blur = options.blur !== undefined ? parseInt(options.blur, 10) : placeholder.defaultBlur
 
   return new Promise((resolve, reject) => {
+    pipeline.resize(placeholderWidth, placeholderHeight, resizeOptions)
+
+    if (blur >= 0.3) {
+      pipeline.blur(blur / 10)
+    }
+
     pipeline
-      .resize(placeholderWidth, placeholderHeight, resizeOptions)
+      .png({ quality: 25 })
       .toBuffer(async (err, buffer) => {
         if (err) return reject(err)
-
         const base64 = buffer.toString('base64')
-        const id = `__svg-blur-${genHash(base64)}`
-        let defs = ''
-
-        if (blur > 0) {
-          defs = '' +
-            '<defs>' +
-            `<filter id="${id}">` +
-            `<feGaussianBlur in="SourceGraphic" stdDeviation="${blur}"/>` +
-            `</filter>` +
-            '</defs>'
-        }
-
-        const svg =  '' +
-          `<svg fill="none" viewBox="0 0 ${width} ${height}" ` +
-          `xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">` +
-          defs +
-          `<image x="0" y="0" ` +
-          (defs ? `filter="url(#${id})" ` : ' ') +
-          `width="${width}" height="${height}" ` +
-          `xlink:href="data:${mimeType};base64,${base64}" />` +
-          `</svg>`
-
-        resolve(createSvgDataURI(svg))
+        resolve(`data:image/png;base64,${base64}`)
       })
   })
 }

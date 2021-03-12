@@ -192,7 +192,7 @@ async function process (
       process: true,
       defaultQuality: 75,
       placeholder: {
-        type: 'svg',
+        type: 'blur',
         defaultBlur: 20
       },
       ...images

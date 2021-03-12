@@ -238,7 +238,7 @@ test('normalize images config', () => {
     compress: true,
     defaultQuality: 75,
     backgroundColor: null,
-    placeholder: { type: 'svg', defaultBlur: 40 }
+    placeholder: { type: 'blur', defaultBlur: 40 }
   })
 })
 
@@ -253,7 +253,7 @@ test('normalize images placeholder config', () => {
     }
   })
   expect(config.images.placeholder).toMatchObject({
-    type: 'svg',
+    type: 'blur',
     defaultBlur: 90
   })
 })
