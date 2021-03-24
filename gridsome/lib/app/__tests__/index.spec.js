@@ -238,7 +238,7 @@ test('normalize images config', () => {
     compress: true,
     defaultQuality: 75,
     backgroundColor: null,
-    placeholder: { type: 'blur', defaultBlur: 40 }
+    placeholder: { type: 'blur', defaultBlur: 20 }
   })
 })
 
@@ -255,20 +255,6 @@ test('normalize images placeholder config', () => {
   expect(config.images.placeholder).toMatchObject({
     type: 'blur',
     defaultBlur: 90
-  })
-})
-
-test('normalize images placeholder config', () => {
-  const config = loadConfig(context, {
-    localConfig: {
-      images: {
-        placeholder: 'blurhash'
-      }
-    }
-  })
-  expect(config.images.placeholder).toMatchObject({
-    type: 'blurhash',
-    components: 5
   })
 })
 

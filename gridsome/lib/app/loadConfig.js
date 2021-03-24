@@ -469,7 +469,7 @@ function resolveTransformers (pkg, config) {
 function normalizeImages (config = {}) {
   const defaultPlaceholder = {
     type: 'blur',
-    defaultBlur: 40
+    defaultBlur: 20
   }
 
   if (typeof config.placeholder === 'string') {
@@ -508,10 +508,6 @@ function normalizeImages (config = {}) {
             background: Joi.string().default(undefined),
             color: Joi.string().default(undefined),
             threshold: Joi.number().min(0).max(255).default(120)
-          }),
-          Joi.object().label('Blurhash').keys({
-            type: Joi.string().required().valid('blurhash'),
-            components: Joi.number().default(5).min(1).max(9)
           }),
           Joi.object().label('Dominant').keys({
             type: Joi.string().required().valid('dominant')
