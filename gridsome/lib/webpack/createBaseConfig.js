@@ -265,7 +265,7 @@ module.exports = (app, { isProd, isServer }) => {
     })
 
     return {
-      cacheDirectory: app.resolve('node_modules/.cache/gridsome'),
+      cacheDirectory: app.resolve('node_modules/.cache/gridsome/webpack'),
       cacheIdentifier: hash(values)
     }
   }
