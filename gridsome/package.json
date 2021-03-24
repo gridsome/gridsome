@@ -41,7 +41,7 @@
     "columnify": "^1.5.4",
     "connect-history-api-fallback": "^1.6.0",
     "core-js": "^3.6.4",
-    "css-loader": "^2.1.0",
+    "css-loader": "^5.1.0",
     "devcert": "^1.1.0",
     "dotenv": "^6.2.0",
     "enhanced-resolve": "4.1.1",
