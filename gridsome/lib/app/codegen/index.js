@@ -13,6 +13,9 @@ class Codegen {
   constructor (app) {
     this.app = app
 
+    // Do not write files during unit tests.
+    if (process.env.GRIDSOME_TEST === 'unit') return
+
     this.files = {
       'icons.js': genIcons,
       'config.js': genConfig,

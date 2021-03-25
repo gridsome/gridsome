@@ -16,8 +16,8 @@ afterEach(() => {
   Object.assign(process.env, originalEnv)
 })
 
-test('setup basic config', () => {
-  const config = loadConfig(context)
+test('setup basic config', async () => {
+  const config = await loadConfig(context)
 
   expect(config.chainWebpack).toHaveLength(1)
   expect(config.pathPrefix).toEqual('')
@@ -33,34 +33,34 @@ test('setup basic config', () => {
   expect(config.icon.touchicon).toHaveProperty('src', './src/favicon.png')
 })
 
-test('setup basic config for path prefix', () => {
+test('setup basic config for path prefix', async () => {
   const context = path.join(__dirname, '../../__tests__/__fixtures__/project-path-prefix')
-  const config = loadConfig(context)
+  const config = await loadConfig(context)
 
   expect(config.pathPrefix).toEqual('/sub/-/dir')
   expect(config.publicPath).toEqual('/sub/-/dir/')
 })
 
-test('load env variables', () => {
+test('load env variables', async () => {
   process.env.NODE_ENV = 'development'
 
-  loadConfig(context)
+  await loadConfig(context)
 
   expect(process.env.GRIDSOME_TEST_VARIABLE).toEqual('TEST_1')
   expect(process.env.TEST_VARIABLE).toEqual('TEST_2')
 })
 
-test('load env variables by NODE_ENV', () => {
+test('load env variables by NODE_ENV', async () => {
   process.env.NODE_ENV = 'production'
 
-  loadConfig(context)
+  await loadConfig(context)
 
   expect(process.env.GRIDSOME_PROD_VARIABLE).toEqual('PROD_1')
   expect(process.env.PROD_VARIABLE).toEqual('PROD_2')
 })
 
-test('setup custom favicon and touchicon config', () => {
-  const config = loadConfig(context, {
+test('setup custom favicon and touchicon config', async () => {
+  const config = await loadConfig(context, {
     localConfig: {
       icon: './src/new-favicon.png'
     }
@@ -73,8 +73,8 @@ test('setup custom favicon and touchicon config', () => {
   expect(config.icon.touchicon).toHaveProperty('src', './src/new-favicon.png')
 })
 
-test('set custom favicon sizes', () => {
-  const config = loadConfig(context, {
+test('set custom favicon sizes', async () => {
+  const config = await loadConfig(context, {
     localConfig: {
       icon: {
         favicon: {
@@ -97,8 +97,8 @@ test('set custom favicon sizes', () => {
   })
 })
 
-test('set custom image processing options', () => {
-  const config = loadConfig(context, {
+test('set custom image processing options', async () => {
+  const config = await loadConfig(context, {
     localConfig: {
       images: {
         compress: false,
@@ -115,8 +115,8 @@ test('set custom image processing options', () => {
   expect(config.images.backgroundColor).toEqual('red')
 })
 
-test('setup templates config from string', () => {
-  const config = loadConfig(context, {
+test('setup templates config from string', async () => {
+  const config = await loadConfig(context, {
     localConfig: {
       templates: {
         Post: '/:year/:month/:day/:slug'
@@ -133,9 +133,9 @@ test('setup templates config from string', () => {
   })
 })
 
-test('setup templates config from array', () => {
+test('setup templates config from array', async () => {
   const genPath = node => `/test/${node.id}`
-  const config = loadConfig(context, {
+  const config = await loadConfig(context, {
     localConfig: {
       templates: {
         Post: [
@@ -187,7 +187,7 @@ test('setup templates config from array', () => {
 })
 
 test('fail if a template is an object', () => {
-  expect(() => loadConfig(context, {
+  expect(loadConfig(context, {
     localConfig: {
       templates: {
         Post: {
@@ -195,11 +195,11 @@ test('fail if a template is an object', () => {
         }
       }
     }
-  })).toThrow('cannot be an object')
+  })).rejects.toThrow('cannot be an object')
 })
 
-test('fail if a template has no name', () => {
-  expect(() => loadConfig(context, {
+test('fail if a template has no name', async () => {
+  expect(loadConfig(context, {
     localConfig: {
       templates: {
         Post: [
@@ -210,11 +210,11 @@ test('fail if a template has no name', () => {
         ]
       }
     }
-  })).toThrow('"name" is required')
+  })).rejects.toThrow('"name" is required')
 })
 
-test('fail if two templates have the same name', () => {
-  expect(() => loadConfig(context, {
+test('fail if two templates have the same name', async () => {
+  expect(loadConfig(context, {
     localConfig: {
       templates: {
         Post: [
@@ -229,11 +229,11 @@ test('fail if two templates have the same name', () => {
         ]
       }
     }
-  })).toThrow('already exist')
+  })).rejects.toThrow('already exist')
 })
 
-test('normalize images config', () => {
-  const config = loadConfig(context)
+test('normalize images config', async () => {
+  const config = await loadConfig(context)
   expect(config.images).toMatchObject({
     compress: true,
     defaultQuality: 75,
@@ -242,8 +242,8 @@ test('normalize images config', () => {
   })
 })
 
-test('normalize images placeholder config', () => {
-  const config = loadConfig(context, {
+test('normalize images placeholder config', async () => {
+  const config = await loadConfig(context, {
     localConfig: {
       images: {
         placeholder: {

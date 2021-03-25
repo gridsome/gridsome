@@ -17,7 +17,7 @@ const builtInPlugins = [
 ]
 
 // TODO: use joi to define and validate config schema
-module.exports = (context, options = {}) => {
+module.exports = async (context, options = {}) => {
   const env = resolveEnv(context)
 
   Object.assign(process.env, env)
