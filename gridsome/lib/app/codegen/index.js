@@ -23,6 +23,11 @@ class Codegen {
       'now.js': () => `export default ${app.store.lastUpdate}`
     }
 
+    const outputDir = app.config.appCacheDir
+
+    fs.ensureDirSync(outputDir)
+    fs.emptyDirSync(outputDir)
+
     app.hooks.bootstrap.tapPromise(
       {
         name: 'GridsomeCodegen',
@@ -34,7 +39,7 @@ class Codegen {
   }
 
   async generate (filename = null, ...args) {
-    const outputDir = this.app.config.tmpDir
+    const outputDir = this.app.config.appCacheDir
 
     const outputFile = async (filename, ...args) => {
       const filepath = path.join(outputDir, filename)

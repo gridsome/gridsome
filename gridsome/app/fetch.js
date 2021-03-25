@@ -1,6 +1,6 @@
 import prefetch from './utils/prefetch'
 import { unslashEnd } from './utils/helpers'
-import { NOT_FOUND_PATH, NOT_FOUND_NAME } from '~/.temp/constants'
+import { NOT_FOUND_PATH, NOT_FOUND_NAME } from '#gridsome/constants'
 
 const dataUrl = process.env.DATA_URL
 const isPrefetched = {}

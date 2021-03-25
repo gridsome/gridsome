@@ -35,6 +35,7 @@ module.exports = (app, { isProd, isServer }) => {
     .alias
     .set('~', resolve('src', app.context))
     .set('@', resolve('src', app.context))
+    .set('#gridsome', projectConfig.appCacheDir)
     .set('gridsome$', path.resolve(projectConfig.appPath, 'index.js'))
     .end()
     .extensions
@@ -111,7 +112,10 @@ module.exports = (app, { isProd, isServer }) => {
         return false
       }
 
-      if (filepath.startsWith(projectConfig.appPath)) {
+      if (
+        filepath.startsWith(projectConfig.appPath) ||
+        filepath.startsWith(projectConfig.appCacheDir)
+      ) {
         return false
       }
 
@@ -265,7 +269,7 @@ module.exports = (app, { isProd, isServer }) => {
     })
 
     return {
-      cacheDirectory: app.resolve('node_modules/.cache/gridsome/webpack'),
+      cacheDirectory: path.join(projectConfig.cacheDir, 'webpack'),
       cacheIdentifier: hash(values)
     }
   }

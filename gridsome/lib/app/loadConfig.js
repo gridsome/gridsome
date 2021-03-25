@@ -99,9 +99,12 @@ module.exports = (context, options = {}) => {
   config.filesDir = path.join(config.assetsDir, 'files')
   config.dataDir = path.join(config.assetsDir, 'data')
   config.appPath = path.resolve(__dirname, '../../app')
-  config.tmpDir = resolve('src/.temp')
-  config.cacheDir = resolve('.cache')
-  config.imageCacheDir = resolve('.cache', assetsDir, 'static')
+
+  // Cache
+  config.cacheDir = resolve('node_modules/.cache/gridsome')
+  config.appCacheDir = path.join(config.cacheDir, 'app')
+  config.imageCacheDir = path.join(config.cacheDir, 'assets')
+
   config.maxImageWidth = localConfig.maxImageWidth || 2560
   config.imageExtensions = SUPPORTED_IMAGE_TYPES
   config.pagesDir = resolve(localConfig._pagesDir || './src/pages')

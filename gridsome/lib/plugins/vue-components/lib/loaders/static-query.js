@@ -14,7 +14,7 @@ module.exports = async function (source, map) {
   // add dependency to now.js to re-run
   // this loader when store has changed
   if (process.env.NODE_ENV === 'development') {
-    this.dependency(path.join(config.tmpDir, 'now.js'))
+    this.dependency(path.join(config.appCacheDir, 'now.js'))
   }
 
   const callback = this.async()
