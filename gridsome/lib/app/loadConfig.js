@@ -1,6 +1,6 @@
 const path = require('path')
 const fs = require('fs-extra')
-const Joi = require('@hapi/joi')
+const Joi = require('joi')
 const crypto = require('crypto')
 const dotenv = require('dotenv')
 const isRelative = require('is-relative')
@@ -215,7 +215,7 @@ function normalizePathPrefix (pathPrefix = '') {
   return segments.length ? `/${segments.join('/')}` : ''
 }
 
-const template = Joi.object()
+const joiTemplate = Joi.object()
   .label('Template')
   .keys({
     typeName: Joi.string().required(),
@@ -234,12 +234,12 @@ function normalizeTemplates (context, config, localConfig) {
 
   const normalize = (typeName, options, i = 0) => {
     if (typeof options === 'string' || typeof options === 'function') {
-      const { error, value } = Joi.validate({
+      const { error, value } = joiTemplate.validate({
         typeName,
         path: options,
         component: path.join(templatesDir, `${typeName}.vue`),
         name: 'default'
-      }, template)
+      })
 
       if (error) {
         throw new Error(error.message)
@@ -261,7 +261,7 @@ function normalizeTemplates (context, config, localConfig) {
       )
     }
 
-    const { error, value } = Joi.validate({
+    const { error, value } = joiTemplate.validate({
       typeName,
       name: options.name,
       path: options.path,
@@ -270,7 +270,7 @@ function normalizeTemplates (context, config, localConfig) {
           ? path.join(context, options.component)
           : options.component
         : path.join(templatesDir, `${typeName}.vue`)
-    }, template)
+    })
 
     if (error) {
       throw new Error(error.message)
@@ -320,7 +320,7 @@ function normalizePlugins (context, plugins) {
   })
 }
 
-const redirect = Joi.object()
+const joiRedirect = Joi.object()
   .label('Redirect')
   .keys({
     from: Joi.string().required(),
@@ -333,7 +333,7 @@ function normalizeRedirects (config) {
 
   if (Array.isArray(config.redirects)) {
     return config.redirects.map(rule => {
-      const { error, value } = Joi.validate(rule, redirect)
+      const { error, value } = joiRedirect.validate(rule)
 
       if (error) {
         throw new Error(error.message)
@@ -346,23 +346,23 @@ function normalizeRedirects (config) {
   return redirects
 }
 
-const permalinksSchema = Joi.object()
+const joiPermalinksConfig = Joi.object()
   .label('Permalinks config')
   .keys({
     trailingSlash: Joi.boolean()
       .valid(true, false, 'always')
       .default(true),
     slugify: Joi.alternatives()
-      .try([
+      .try(
         Joi.object().keys({
-          use: Joi.alternatives().try([
+          use: Joi.alternatives().try(
             Joi.string(),
             Joi.func()
-          ]),
+          ),
           options: Joi.object()
         }),
         Joi.func()
-      ])
+      )
       .default({
         use: '@sindresorhus/slugify',
         options: {}
@@ -371,7 +371,7 @@ const permalinksSchema = Joi.object()
   })
 
 function normalizePermalinks (permalinks = {}) {
-  const { error, value } = Joi.validate(permalinks, permalinksSchema)
+  const { error, value } = joiPermalinksConfig.validate(permalinks)
 
   if (error) {
     throw new Error(error.message)
@@ -486,36 +486,34 @@ function normalizeImages (config = {}) {
     })
   }
 
-  const { error, value } = Joi.validate(
-    config,
-    Joi.object().label('Images').keys({
-      compress: Joi.boolean().default(true),
-      defaultQuality: Joi.number().default(75).min(0).max(100),
-      backgroundColor: Joi.string().allow(null).default(null),
-      defaultBlur: Joi.number().default(defaultPlaceholder.defaultBlur),
-      placeholder: Joi.alternatives()
-        .default(defaultPlaceholder)
-        .try([
-          Joi.object().label('Blur').keys({
-            type: Joi.string().default('blur').valid('blur'),
-            defaultBlur: Joi.number().min(0).default(defaultPlaceholder.defaultBlur)
-          }),
-          Joi.object().label('Trace').keys({
-            type: Joi.string().required().valid('trace'),
-            background: Joi.string().default(undefined),
-            color: Joi.string().default(undefined),
-            threshold: Joi.number().min(0).max(255).default(120)
-          }),
-          Joi.object().label('Blurhash').keys({
-            type: Joi.string().required().valid('blurhash'),
-            components: Joi.number().default(5).min(1).max(9)
-          }),
-          Joi.object().label('Dominant').keys({
-            type: Joi.string().required().valid('dominant')
-          })
-        ])
-    })
-  )
+  const joiImages = Joi.object().label('Images').keys({
+    compress: Joi.boolean().default(true),
+    defaultQuality: Joi.number().default(75).min(0).max(100),
+    backgroundColor: Joi.string().allow(null).default(null),
+    defaultBlur: Joi.number().default(defaultPlaceholder.defaultBlur),
+    placeholder: Joi.alternatives()
+      .default(defaultPlaceholder)
+      .try(
+        Joi.object().label('Blur').keys({
+          type: Joi.string().default('blur').valid('blur'),
+          defaultBlur: Joi.number().min(0).default(defaultPlaceholder.defaultBlur)
+        }),
+        Joi.object().label('Trace').keys({
+          type: Joi.string().required().valid('trace'),
+          background: Joi.string(),
+          color: Joi.string(),
+          threshold: Joi.number().min(0).max(255).default(120)
+        }),
+        Joi.object().label('Blurhash').keys({
+          type: Joi.string().required().valid('blurhash'),
+          components: Joi.number().default(5).min(1).max(9)
+        }),
+        Joi.object().label('Dominant').keys({
+          type: Joi.string().required().valid('dominant')
+        })
+      )
+  })
+  const { error, value } = joiImages.validate(config)
 
   if (error) {
     throw new Error(error.message)
