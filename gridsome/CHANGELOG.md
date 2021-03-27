@@ -3,6 +3,43 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.0]
+
+Updated to Webpack 5 and PostCSS 8
+
+*Breaking changes*
+
+Supports following node versions: ^10 || ^12 || >=14
+
+### Updated following packages:
+
+ - @vue/component-compiler-utils: 2.5.2 > 3.2.0
+ - autoprefixer: 9.4.7 > 10.2.5
+ - cache-loader: 2.0.1 > 4.1.0
+ - css-loader: 2.1.0 > 5.2.0
+ - express-graphql: 0.9.0 > 0.12.0
+ - file-loader: 3.0.1 > 6.2.0
+ - graphql: 14.4.2 > 15.5.0
+ - html-webpack-plugin: 3.2.0 > 5.3.1
+ - mini-css-extract-plugin: 0.5.0 > 1.4.0
+ - postcss-loader: 3.0.0 > 5.2.0
+ - url-loader: 1.1.2 > 4.1.1
+ - webpack: 4.29.3 > 5.28.0
+ - webpack-dev-middleware: 3.5.2 > 4.1.0
+ - webpack-merge: 4.2.1 > 5.7.3
+ - yaml-loader: 0.5.0 > 0.6.0
+
+ ### Removed & replaced following deprecated packages:
+
+ - @hapi/joi > joi
+ - optimize-css-assets-webpack-plugin > css-minimizer-webpack-plugin
+
+
+### Added following packages:
+
+ - postcss: ^8.2.8
+ - process: 0.11.10
+
 ## [0.7.23](https://github.com/gridsome/gridsome/compare/gridsome@0.7.22...gridsome@0.7.23) (2020-11-22)
 
 

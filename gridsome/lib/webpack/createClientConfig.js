@@ -10,10 +10,6 @@ module.exports = async app => {
 
   config.entry('app').add(resolve('../../app/entry.client.js'))
 
-  config.node.merge({
-    setImmediate: false
-  })
-
   if (isProd) {
     config.plugin('vue-server-renderer')
       .use(require('./plugins/VueSSRClientPlugin'), [{
@@ -21,14 +17,7 @@ module.exports = async app => {
       }])
 
     config.plugin('optimize-css')
-      .use(require('optimize-css-assets-webpack-plugin'), [{
-        canPrint: false,
-        cssProcessorOptions: {
-          safe: true,
-          autoprefixer: { disable: true },
-          mergeLonghand: false
-        }
-      }])
+      .use(require('css-minimizer-webpack-plugin'))
 
     if (css.split !== true) {
       const cacheGroups = {

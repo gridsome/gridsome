@@ -142,6 +142,10 @@ class Compiler {
       )
     }
 
+    config.plugins.push(new webpack.ProvidePlugin({
+      process: 'process/browser',
+    }))
+
     return config
   }
 

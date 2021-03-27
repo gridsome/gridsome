@@ -3,11 +3,12 @@ const { HttpLink } = require('apollo-link-http')
 const fetch = require('node-fetch')
 
 const {
+  wrapSchema,
   introspectSchema,
+  RenameTypes,
   makeRemoteExecutableSchema,
-  transformSchema,
-  RenameTypes
-} = require('graphql-tools')
+} = require(`@graphql-tools/wrap`)
+const { linkToExecutor } = require(`@graphql-tools/links`)
 
 const {
   NamespaceUnderFieldTransform,
@@ -46,8 +47,9 @@ class GraphQLSource {
 
     // Fetch schema, namespace it, and merge it into local schema
     api.createSchema(async ({ addSchema }) => {
-      const remoteSchema = await this.getRemoteExecutableSchema(url, headers)
-      const namespacedSchema = await this.namespaceSchema(
+      const executor = this.newExecutor(url, headers)
+      const remoteSchema = await this.getRemoteExecutableSchema(executor)
+      const namespacedSchema = this.namespaceSchema(
         remoteSchema,
         fieldName,
         typeName
@@ -57,23 +59,33 @@ class GraphQLSource {
     })
   }
 
-  async getRemoteExecutableSchema (uri, headers) {
-    const http = new HttpLink({ uri, fetch })
+  newExecutor (url, headers) {
+    const http = new HttpLink({ uri: url, fetch })
     const link = setContext(() => ({ headers })).concat(http)
-    const remoteSchema = await introspectSchema(link)
+    return linkToExecutor(link)
+  }
+
+  async getRemoteExecutableSchema(executor) {
+    const schema = await introspectSchema(executor)
 
     return makeRemoteExecutableSchema({
-      schema: remoteSchema,
-      link
+      schema,
+      executor
     })
   }
 
-  namespaceSchema (schema, fieldName, typeName) {
-    return transformSchema(schema, [
+  namespaceSchema(schema, fieldName, typeName, executor) {
+    const transforms = [
       new StripNonQueryTransform(),
       new RenameTypes(name => `${typeName}_${name}`),
       new NamespaceUnderFieldTransform(typeName, fieldName)
-    ])
+    ]
+
+    return wrapSchema({
+      schema,
+      transforms,
+      executor
+    })
   }
 }
 

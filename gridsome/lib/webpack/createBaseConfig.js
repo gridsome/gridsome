@@ -50,15 +50,15 @@ module.exports = (app, { isProd, isServer }) => {
       }])
       .end()
     // TODO: Remove plugin when using webpack 5
-    .plugin('pnp')
-      .use({...require(`pnp-webpack-plugin`)})
+    //.plugin('pnp')
+    //  .use({...require(`pnp-webpack-plugin`)})
 
-  config.resolveLoader
+  //config.resolveLoader
     // TODO: Remove plugin when using webpack 5
-    .plugin('pnp-loaders')
-      .use({ ...require('pnp-webpack-plugin').topLevelLoader })
-      .end()
-    .set('symlinks', true)
+    //.plugin('pnp-loaders')
+    //  .use({ ...require('pnp-webpack-plugin').topLevelLoader })
+    //  .end()
+    //.set('symlinks', true)
 
   config.module.noParse(/^(vue|vue-router|vue-meta)$/)
 
@@ -69,7 +69,7 @@ module.exports = (app, { isProd, isServer }) => {
   }
 
   if (!isProd) {
-    config.devtool('cheap-module-eval-source-map')
+    config.devtool('cheap-module-source-map')
   }
 
   // vue
@@ -241,7 +241,7 @@ module.exports = (app, { isProd, isServer }) => {
   }
 
   // Short hashes as ids for better long term caching.
-  config.optimization.merge({ moduleIds: 'hashed' })
+  config.optimization.merge({ moduleIds: 'deterministic' })
 
   if (process.env.GRIDSOME_TEST) {
     config.output.pathinfo(true)
@@ -276,7 +276,10 @@ module.exports = (app, { isProd, isServer }) => {
     const modulesRule = baseRule.oneOf('modules').resourceQuery(/module/)
     const normalRule = baseRule.oneOf('normal')
 
-    applyLoaders(modulesRule, true)
+    applyLoaders(modulesRule, {
+      exportOnlyLocals: isServer,
+      localIdentName: `[local]_[hash:base64:8]`,
+    })
     applyLoaders(normalRule, false)
 
     function applyLoaders (rule, modules) {
@@ -291,9 +294,8 @@ module.exports = (app, { isProd, isServer }) => {
       rule.use('css-loader')
         .loader(require.resolve('css-loader'))
         .options(Object.assign({
+          esModule: false,
           modules,
-          exportOnlyLocals: isServer,
-          localIdentName: `[local]_[hash:base64:8]`,
           importLoaders: 1,
           sourceMap: !isProd
         }, css))
@@ -301,9 +303,10 @@ module.exports = (app, { isProd, isServer }) => {
       rule.use('postcss-loader')
         .loader(require.resolve('postcss-loader'))
         .options(Object.assign({
-          sourceMap: !isProd
-        }, postcss, {
-          plugins: (postcss.plugins || []).concat(require('autoprefixer'))
+          sourceMap: !isProd,
+          postcssOptions: Object.assign({}, postcss, {
+            plugins: (postcss.plugins || []).concat(require('autoprefixer'))
+          })
         }))
 
       if (loader) {
