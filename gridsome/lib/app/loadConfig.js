@@ -41,21 +41,26 @@ module.exports = async (context, options = {}) => {
   const config = {}
   const plugins = []
 
-  config.context = context
-  config.mode = options.mode || 'production'
-  config.pkg = options.pkg || resolvePkg(context)
-
-  // Cache paths
-  config.cacheDir = resolve('node_modules/.cache/gridsome')
-  config.appCacheDir = path.join(config.cacheDir, 'app')
-  config.imageCacheDir = path.join(config.cacheDir, 'assets')
+  const css = {
+    split: false,
+    loaderOptions: {
+      sass: {
+        sassOptions: {
+          indentedSyntax: true
+        }
+      },
+      stylus: {
+        preferPathResolver: 'webpack'
+      }
+    }
+  }
 
   const configEntryPath = resolveTsSafe(context, './gridsome.config')
   const serverEntryPath = resolveTsSafe(context, './gridsome.server')
   const isTS = string => /\.ts$/.test(String(string))
 
   if ([configEntryPath, serverEntryPath].filter(isTS).length) {
-    registerTsExtension(config)
+    registerTsExtension()
   }
 
   const localConfig = options.config || options.localConfig || {}
@@ -87,6 +92,9 @@ module.exports = async (context, options = {}) => {
 
   const assetsDir = localConfig.assetsDir || 'assets'
 
+  config.context = context
+  config.mode = options.mode || 'production'
+  config.pkg = options.pkg || resolvePkg(context)
   config.host = args.host || localConfig.host || undefined
   config.port = parseInt(args.port || localConfig.port, 10) || undefined
   config.https = args.https
@@ -113,6 +121,11 @@ module.exports = async (context, options = {}) => {
   config.filesDir = path.join(config.assetsDir, 'files')
   config.dataDir = path.join(config.assetsDir, 'data')
   config.appPath = path.resolve(__dirname, '../../app')
+
+  // Cache paths
+  config.cacheDir = resolve('node_modules/.cache/gridsome')
+  config.appCacheDir = path.join(config.cacheDir, 'app')
+  config.imageCacheDir = path.join(config.cacheDir, 'assets')
 
   config.maxImageWidth = localConfig.maxImageWidth || 2560
   config.imageExtensions = SUPPORTED_IMAGE_TYPES
@@ -166,19 +179,7 @@ module.exports = async (context, options = {}) => {
   config.templatePath = fs.existsSync(localIndex) ? localIndex : fallbackIndex
   config.htmlTemplate = fs.readFileSync(config.templatePath, 'utf-8')
 
-  config.css = defaultsDeep(localConfig.css || {}, {
-    split: false,
-    loaderOptions: {
-      sass: {
-        sassOptions: {
-          indentedSyntax: true
-        }
-      },
-      stylus: {
-        preferPathResolver: 'webpack'
-      }
-    }
-  })
+  config.css = defaultsDeep(localConfig.css || {}, css)
 
   config.prefetch = localConfig.prefetch || {}
   config.preload = localConfig.preload || {}
@@ -446,7 +447,7 @@ function resolvePluginEntries (id, context) {
     deprecate(`The ~ alias for plugin paths is deprecated. Use a relative path instead.`, {
       customCaller: ['gridsome.config.js']
     })
-  } else if (id.startsWith('./')) {
+  } else if (id.startsWith('.')) {
     dirName = resolveTs(context, id)
   } else {
     // TODO: Replace with require.resolve(id, { paths: [context] }) when support for node is >= v8.9.0
