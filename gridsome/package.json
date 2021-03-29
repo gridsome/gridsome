@@ -44,7 +44,7 @@
     "devcert": "^1.1.0",
     "dotenv": "^6.2.0",
     "enhanced-resolve": "4.1.1",
-    "esbuild": "^0.9.3",
+    "esbuild": "^0.9.2",
     "esbuild-loader": "^2.10.0",
     "eventemitter3": "^3.1.0",
     "express": "^4.16.4",
