@@ -22,15 +22,20 @@ class VueComponents {
         const { customBlocks } = parse({ filename, source, compiler })
         const pageQuery = customBlocks.find(block => block.type === 'page-query')
 
-        let query = pageQuery ? pageQuery.content : null 
-
         if (pageQuery && pageQuery.attrs && pageQuery.attrs.src) {
-            const queryPath = path.join(path.dirname(resourcePath), pageQuery.attrs.src)
-            query = fs.readFileSync(queryPath, 'utf8') 
+          const queryPath = api._app.compiler._resolveSync(
+            path.dirname(resourcePath),
+            pageQuery.attrs.src
+          )
+
+          return {
+            pageQuery: fs.readFileSync(queryPath, 'utf8'),
+            watchFiles: [queryPath]
+          }
         }
-        
+
        return {
-          pageQuery: query
+          pageQuery: pageQuery ? pageQuery.content : null
         }
       })
   }
