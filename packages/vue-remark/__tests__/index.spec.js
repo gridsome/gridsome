@@ -1,5 +1,6 @@
+const path = require('path')
 const VueRemark = require('..')
-const App = require('../../../gridsome/lib/app/App')
+const App = require('gridsome/lib/app/App')
 
 test('parse simple title', async () => {
   const plugin = await createPlugin()
@@ -48,11 +49,23 @@ test('parse nested Vue components', async () => {
   expect(res).toMatchSnapshot()
 })
 
+test('don\'t wrap end tag in paragraph', async () => {
+  const plugin = await createPlugin()
+  const res = await plugin.parse(`
+<GridCol col="span-4">
+
+Some text...
+</GridCol>
+`, { onlyTemplate: true })
+
+  expect(res).toMatchSnapshot()
+})
+
 test('add v-pre to fenced code blocks', async () => {
   const plugin = await createPlugin()
   const res = await plugin.parse(`
 \`\`\`html
-<div>
+<div id="test">
 # title
 </div>
 \`\`\`
@@ -72,7 +85,7 @@ test('parse inline code with tag-like syntax', async () => {
   const plugin = await createPlugin()
   const res = await plugin.parse('`<test>.example.com`', { onlyTemplate: true })
 
-  expect(res).toMatch('<code v-pre>&#x3C;test>.example.com</code>')
+  expect(res).toMatch('<code v-pre>&lt;test>.example.com</code>')
 })
 
 test('parse markdown inside Vue component', async () => {
@@ -166,6 +179,13 @@ test('disable g-link for urls', async () => {
   expect(res).toMatch(
     '<p><a href="https://example.com"'
   )
+})
+
+test('use named entities when encoding attributes', async () => {
+  const plugin = await createPlugin()
+  const res = await plugin.parse('[External](https://example.com/?x&y)', { onlyTemplate: true })
+
+  expect(res).toMatch('href="https://example.com/?x&amp;y"')
 })
 
 test('keep italic text in links', async () => {
@@ -380,7 +400,7 @@ describe('process import statements', () => {
 })
 
 async function createPlugin (options = {}) {
-  const app = new App('/', {
+  const app = new App(path.resolve(__dirname, './__fixtures__'), {
     plugins: [{
       use: require.resolve('..'),
       options: { typeName: 'Test', baseDir: '.', ...options }

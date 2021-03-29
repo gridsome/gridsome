@@ -14,7 +14,8 @@
     "apollo-link-context": "^1.0.17",
     "apollo-link-http": "^1.5.14",
     "graphql-tools": "^4.0.4",
-    "node-fetch": "^2.6.0"
+    "node-fetch": "^2.6.0",
+    "graphql": "^15.5.0"
   },
   "peerDependencies": {
     "gridsome": "0.x"

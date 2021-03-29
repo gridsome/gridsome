@@ -1,6 +1,6 @@
 import prefetch from './utils/prefetch'
 import { unslashEnd } from './utils/helpers'
-import { NOT_FOUND_PATH } from '~/.temp/constants'
+import { NOT_FOUND_PATH, NOT_FOUND_NAME } from '#gridsome/constants'
 
 const dataUrl = process.env.DATA_URL
 const isPrefetched = {}
@@ -13,11 +13,21 @@ export default (route, options = {}) => {
     const { dynamic = false } = route.meta
     let path = dynamic ? route.matched[0].path : route.path
 
-    if (route.name === '*') {
+    if (route.name === NOT_FOUND_NAME) {
       path = NOT_FOUND_PATH
     }
 
     return new Promise((resolve, reject) => {
+      const onFail = err => {
+        isLoaded[route.path] = null
+        reject(err)
+      }
+
+      const onSuccess = res => {
+        isLoaded[route.path] = null
+        resolve(res)
+      }
+
       if (force || !isLoaded[route.path]) {
         isLoaded[route.path] = fetch(process.env.GRAPHQL_ENDPOINT, {
           method: 'POST',
@@ -25,22 +35,21 @@ export default (route, options = {}) => {
           body: JSON.stringify({ path, dynamic })
         })
           .then(res => res.json())
-          .catch(reject)
       }
 
       isLoaded[route.path]
         .then(res => {
-          if (res.errors) reject(res.errors[0])
-          else if (res.code) resolve({ code: res.code })
-          else resolve({
+          if (res.errors) onFail(res.errors[0])
+          else if (res.code) onSuccess({ code: res.code })
+          else onSuccess({
             data: res.data,
             context: res.extensions
               ? res.extensions.context
               : {}
           })
-
           isLoaded[route.path] = null
         })
+        .catch(onFail)
     })
   }
 
@@ -49,7 +58,7 @@ export default (route, options = {}) => {
     .getAttribute('content')
 
   return new Promise((resolve, reject) => {
-    const usePath = route.name === '*' ? NOT_FOUND_PATH : route.path
+    const usePath = route.name === NOT_FOUND_NAME ? NOT_FOUND_PATH : route.path
     const jsonPath = route.meta.dataPath || unslashEnd(usePath) + '/index.json'
     const absPath = unslashEnd(dataUrl) + jsonPath
 
@@ -69,10 +78,21 @@ export default (route, options = {}) => {
 
     return isLoaded[jsonPath]
       .then(res => {
-        if (res.hash !== hashMeta) reject(createError('Hash did not match.', 'INVALID_HASH'))
-        else resolve(res)
+        if (res.hash !== hashMeta) {
+          reject(
+            createError(
+              `Hash did not match: json=${res.hash}, document=${hashMeta}`,
+              'INVALID_HASH'
+            )
+          )
+        } else {
+          resolve(res)
+        }
       })
-      .catch(reject)
+      .catch(err => {
+        isLoaded[jsonPath] = null
+        reject(err)
+      })
   })
 }
 
@@ -115,6 +135,10 @@ function fetchJSON (jsonPath) {
         }
       }
 
+      reject(new Error(`Failed to fetch ${jsonPath}.`))
+    }
+
+    req.onerror = () => {
       reject(new Error(`Failed to fetch ${jsonPath}.`))
     }
 

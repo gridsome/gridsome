@@ -137,6 +137,38 @@ test('get node by id', async () => {
   expect(data.testPost2.id).toEqual('21')
 })
 
+test('get last node if no args are provided', async () => {
+  const collection = api.store.addCollection('TestPost')
+  collection.addNode({ id: '1', title: 'A' })
+  collection.addNode({ id: '2', title: 'B' })
+
+  const { errors, data } = await createSchemaAndExecute(`{
+    testPost { id title }
+  }`)
+
+  expect(errors).toBeUndefined()
+  expect(data.testPost.id).toEqual('2')
+  expect(data.testPost.title).toEqual('B')
+})
+
+test('get last node if no args are provided with custom sort', async () => {
+  const collection = api.store.addCollection({
+    typeName: 'TestPost',
+    dateField: 'title' // TODO: rename to `defaultSortBy`
+  })
+  collection.addNode({ id: '1', title: 'B' })
+  collection.addNode({ id: '2', title: 'C' })
+  collection.addNode({ id: '3', title: 'A' })
+
+  const { errors, data } = await createSchemaAndExecute(`{
+    testPost { id title }
+  }`)
+
+  expect(errors).toBeUndefined()
+  expect(data.testPost.id).toEqual('2')
+  expect(data.testPost.title).toEqual('C')
+})
+
 test('create connection', async () => {
   const posts = api.store.addCollection('TestPost')
 

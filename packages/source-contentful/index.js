@@ -11,7 +11,8 @@ class ContentfulSource {
       host: 'cdn.contentful.com',
       typeName: 'Contentful',
       richText: {},
-      routes: {}
+      routes: {},
+      parameters: {}
     }
   }
 
@@ -70,11 +71,12 @@ class ContentfulSource {
   }
 
   async getEntries (actions) {
-    const entries = await this.fetch('getEntries')
+    const parameters = this.options.parameters
+    const entries = await this.fetch('getEntries', 1000, 'sys.createdAt', parameters)
 
     for (const entry of entries) {
       const typeId = entry.sys.contentType.sys.id
-      const { typeName, displayField } = this.typesIndex[typeId]
+      const { typeName, displayField, fields } = this.typesIndex[typeId]
       const collection = actions.getCollection(typeName)
       const node = {}
 
@@ -84,7 +86,8 @@ class ContentfulSource {
       node.updatedAt = entry.sys.updatedAt
       node.locale = entry.sys.locale
 
-      for (const key in entry.fields) {
+      for (const idx in fields) {
+        const key = fields[idx].id
         const value = entry.fields[key]
 
         if (Array.isArray(value)) {
@@ -107,8 +110,8 @@ class ContentfulSource {
     }
   }
 
-  async fetch (method, limit = 1000, order = 'sys.createdAt') {
-    const fetch = skip => this.client[method]({ skip, limit, order })
+  async fetch (method, limit = 1000, order = 'sys.createdAt', parameters = {}) {
+    const fetch = skip => this.client[method]({ ...parameters, skip, limit, order })
     const { total, items } = await fetch(0)
     const pages = Math.ceil(total / limit)
 

@@ -1,31 +1,28 @@
 const path = require('path')
-const execa = require('execa')
-const cli = require.resolve('../bin/gridsome')
+
+const runCLI = require('./utils/helpers')
 
 test('show @gridsome/cli version', async () => {
-  const { stdout } = await execa(cli, ['-v'])
+  const { stdout } = await runCLI(['-v'])
 
   expect(stdout).toMatch(/@gridsome\/cli v(\d+\.?){3}/)
 })
 
 test('show local gridsome version', async () => {
-  const { stdout } = await execa(cli, ['-v'], {
-    cwd: path.join(__dirname, '__fixtures__', 'project')
-  })
+  const testPath = path.join(__dirname, '__fixtures__', 'project')
+  const { stdout } = await runCLI(['-v'], testPath)
 
   expect(stdout).toMatch(/gridsome v(\d+\.?){3}/)
 })
 
 test('warn about unknown command', async () => {
-  const { stdout } = await execa(cli, ['asdf'])
+  const { stdout } = await runCLI(['asdf'])
 
   expect(stdout).toMatch('Unknown command asdf')
 })
 
-test('warn about missing dependencies', async () => {
-  const { stdout } = await execa(cli, ['noop'], {
-    cwd: path.join(__dirname, '__fixtures__', 'project')
-  })
+test('suggest matching command', async () => {
+  const { stdout } = await runCLI(['creaet'])
 
-  expect(stdout).toMatch('install dependencies')
+  expect(stdout).toContain('Did you mean create?')
 })

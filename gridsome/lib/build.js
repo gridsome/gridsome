@@ -21,12 +21,14 @@ module.exports = async (context, args) => {
 
   await fs.emptyDir(config.outputDir)
 
+  const stats = await runWebpack(app)
+  const hashString = config.cacheBusting ? stats.hash : 'gridsome'
+
   const queue = createRenderQueue(app)
   const redirects = app.hooks.redirects.call([], queue)
-  const stats = await runWebpack(app)
 
-  await executeQueries(queue, app, stats.hash)
-  await renderHTML(queue, app, stats.hash)
+  await executeQueries(queue, app, hashString)
+  await renderHTML(queue, app, hashString)
   await processFiles(app.assets.files)
   await processImages(app.assets.images, app.config)
 
@@ -52,14 +54,13 @@ module.exports = async (context, args) => {
 
 async function runWebpack (app) {
   const compileTime = hirestime()
-  const compileAssets = require('./webpack/compileAssets')
   const { removeStylesJsChunk } = require('./webpack/utils')
 
   if (!process.stdout.isTTY) {
     info(`Compiling assets...`)
   }
 
-  const stats = await compileAssets(app)
+  const stats = await app.compiler.run()
 
   if (app.config.css.split !== true) {
     await removeStylesJsChunk(stats, app.config.outputDir)
@@ -74,7 +75,7 @@ async function renderHTML (renderQueue, app, hash) {
   const { createWorker } = require('./workers')
   const timer = hirestime()
   const worker = createWorker('html-writer')
-  const { htmlTemplate, clientManifestPath, serverBundlePath } = app.config
+  const { htmlTemplate, clientManifestPath, serverBundlePath, prefetch, preload } = app.config
 
   await Promise.all(chunk(renderQueue, 350).map(async pages => {
     try {
@@ -83,7 +84,9 @@ async function renderHTML (renderQueue, app, hash) {
         pages,
         htmlTemplate,
         clientManifestPath,
-        serverBundlePath
+        serverBundlePath,
+        prefetch,
+        preload
       })
     } catch (err) {
       worker.end()
@@ -126,7 +129,7 @@ async function processImages (images, config) {
         outputDir: config.outputDir,
         context: config.context,
         cacheDir: config.imageCacheDir,
-        backgroundColor: config.images.backgroundColor
+        imagesConfig: config.images
       })
 
       writeLine(`Processing images (${totalAssets} images) - ${Math.round((++progress) * 100 / totalJobs)}%`)

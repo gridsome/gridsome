@@ -41,10 +41,13 @@ class VueComponents {
     config.module.rule(type)
       .resourceQuery(re)
       .use('babel-loader')
-      .loader('babel-loader')
+      .loader(require.resolve('babel-loader'))
       .options({
         presets: [
           require.resolve('@vue/babel-preset-app')
+        ],
+        plugins: [
+          require.resolve('../../webpack/plugins/corejsBabelPlugin.js')
         ]
       })
       .end()

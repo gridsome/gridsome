@@ -81,11 +81,11 @@ class PluginAPI {
   //
 
   onInit (fn) {
-    this._app.hooks.beforeBootstrap.tapAsync(this._entry.name || 'OnInit', fn)
+    this._app.hooks.beforeBootstrap.tapPromise(this._entry.name || 'OnInit', fn)
   }
 
   onBootstrap (fn) {
-    this._app.hooks.bootstrap.tapAsync(this._entry.name || 'OnBootstrap', fn)
+    this._app.hooks.bootstrap.tapPromise(this._entry.name || 'OnBootstrap', fn)
   }
 
   onCreateNode (fn) {

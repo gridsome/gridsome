@@ -1,5 +1,5 @@
 const camelCase = require('camelcase')
-const { isObject, isPlainObject } = require('lodash')
+const { pickBy, isObject, isPlainObject } = require('lodash')
 
 const {
   ThunkComposer,
@@ -16,11 +16,36 @@ const CreatedGraphQLType = {
   Input: 'Input'
 }
 
+const ReservedTypeNames = ['Page', 'Node']
+const ReservedScalarNames = ['Boolean', 'Date', 'File', 'Float', 'ID', 'Image', 'Int', 'JSON', 'String']
+const ReservedRules = {
+  'FilterInput$': `Type name cannot end with 'FilterInput'.`,
+  'QueryOperatorInput$': `Type name cannot end with 'QueryOperatorInput'`,
+  '^Metadata[A-Z]': `Type name cannot start with 'Metadata'`,
+  '^Node[A-Z]': `Type name cannot start with 'Node'`
+}
+
+exports.validateTypeName = function (typeName) {
+  if (ReservedTypeNames.includes(typeName)) {
+    throw new Error(`'${typeName}' is a reserved type name.`)
+  }
+
+  if (ReservedScalarNames.includes(typeName)) {
+    throw new Error(`'${typeName}' is a reserved scalar type.`)
+  }
+
+  for (const rule in ReservedRules) {
+    if (new RegExp(rule).test(typeName)) {
+      throw new Error(ReservedRules[rule])
+    }
+  }
+}
+
 exports.createQueryVariables = function (path, variables, currentPage = undefined) {
-  return Object.assign({}, variables, {
-    page: currentPage,
-    __path: path
-  })
+  return pickBy(
+    { ...variables, page: currentPage, __path: path },
+    value => value !== undefined
+  )
 }
 
 exports.is32BitInt = function (x) {

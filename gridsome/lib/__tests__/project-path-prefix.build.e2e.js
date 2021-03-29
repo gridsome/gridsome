@@ -80,6 +80,11 @@ test('navigate to /', async () => {
   await page.waitForSelector('#app.home')
 })
 
+test('navigate to /missing', async () => {
+  await page.click('.g-link-missing')
+  await page.waitForSelector('#app.not-found')
+})
+
 test('open /about/ directly', async () => {
   await page.goto(`http://localhost:8080${publicPath}about/`, { waitUntil: 'networkidle2' })
   await page.waitForSelector('#app.is-mounted')

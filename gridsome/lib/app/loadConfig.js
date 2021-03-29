@@ -17,13 +17,12 @@ const builtInPlugins = [
 ]
 
 // TODO: use joi to define and validate config schema
-module.exports = (context, options = {}) => {
+module.exports = async (context, options = {}) => {
   const env = resolveEnv(context)
 
   Object.assign(process.env, env)
 
   const resolve = (...p) => path.join(context, ...p)
-  const isProd = process.env.NODE_ENV === 'production'
   const customConfig = options.config || options.localConfig
   const configPath = resolve('gridsome.config.js')
   const args = options.args || {}
@@ -34,7 +33,9 @@ module.exports = (context, options = {}) => {
     split: false,
     loaderOptions: {
       sass: {
-        indentedSyntax: true
+        sassOptions: {
+          indentedSyntax: true
+        }
       },
       stylus: {
         preferPathResolver: 'webpack'
@@ -70,44 +71,53 @@ module.exports = (context, options = {}) => {
   const assetsDir = localConfig.assetsDir || 'assets'
 
   config.context = context
+  config.mode = options.mode || 'production'
   config.pkg = options.pkg || resolvePkg(context)
-  config.host = args.host || localConfig.host || '0.0.0.0'
+  config.host = args.host || localConfig.host || undefined
   config.port = parseInt(args.port || localConfig.port, 10) || undefined
+  config.https = args.https
   config.plugins = normalizePlugins(context, plugins)
   config.redirects = normalizeRedirects(localConfig)
   config.transformers = resolveTransformers(config.pkg, localConfig)
-  config.pathPrefix = normalizePathPrefix(isProd ? localConfig.pathPrefix : '')
+  config.pathPrefix = normalizePathPrefix(config.mode === 'production' ? localConfig.pathPrefix : '')
   config._pathPrefix = normalizePathPrefix(localConfig.pathPrefix)
   config.publicPath = config.pathPrefix ? `${config.pathPrefix}/` : '/'
   config.staticDir = resolve('static')
-  
+
   // TODO: remove outDir before 1.0
   config.outputDir = resolve(localConfig.outputDir || localConfig.outDir || 'dist')
   config.outDir = config.outputDir
   deprecate.property(config, 'outDir', 'The outDir config is renamed to outputDir.')
-  if (localConfig.outDir) deprecate(`The outDir config is renamed to outputDir.`, { customCaller: ['gridsome.config.js'] })
-  
+  if (localConfig.outDir) {
+    deprecate(`The outDir config is renamed to outputDir.`, {
+      customCaller: ['gridsome.config.js']
+    })
+  }
+
   config.assetsDir = path.join(config.outputDir, assetsDir)
   config.imagesDir = path.join(config.assetsDir, 'static')
   config.filesDir = path.join(config.assetsDir, 'files')
   config.dataDir = path.join(config.assetsDir, 'data')
   config.appPath = path.resolve(__dirname, '../../app')
-  config.tmpDir = resolve('src/.temp')
-  config.cacheDir = resolve('.cache')
-  config.imageCacheDir = resolve('.cache', assetsDir, 'static')
+
+  // Cache
+  config.cacheDir = resolve('node_modules/.cache/gridsome')
+  config.appCacheDir = path.join(config.cacheDir, 'app')
+  config.imageCacheDir = path.join(config.cacheDir, 'assets')
+
   config.maxImageWidth = localConfig.maxImageWidth || 2560
   config.imageExtensions = SUPPORTED_IMAGE_TYPES
   config.pagesDir = resolve(localConfig._pagesDir || './src/pages')
   config.templatesDir = resolve(localConfig._templatesDir || './src/templates')
   config.templates = normalizeTemplates(context, config, localConfig)
   config.permalinks = normalizePermalinks(localConfig.permalinks)
+  config.images = normalizeImages(localConfig.images)
   config.componentParsers = []
 
   config.chainWebpack = localConfig.chainWebpack
   config.configureWebpack = localConfig.configureWebpack
   config.configureServer = localConfig.configureServer
 
-  config.images = { ...localConfig.images }
 
   if (!colorString.get(config.images.backgroundColor || '')) {
     config.images.backgroundColor = null
@@ -149,7 +159,14 @@ module.exports = (context, options = {}) => {
 
   config.css = defaultsDeep(localConfig.css || {}, css)
 
-  return Object.freeze(config)
+  config.prefetch = localConfig.prefetch || {}
+  config.preload = localConfig.preload || {}
+
+  config.cacheBusting = typeof localConfig.cacheBusting === 'boolean' ? localConfig.cacheBusting : true
+
+  config.catchLinks = typeof localConfig.catchLinks === 'boolean' ? localConfig.catchLinks : true
+
+  return config
 }
 
 function resolveEnv (context) {
@@ -172,7 +189,7 @@ function resolveEnv (context) {
 
 function resolvePkg (context) {
   const pkgPath = path.resolve(context, 'package.json')
-  let pkg = { dependencies: {}}
+  let pkg = { dependencies: {}, devDependencies: {}}
 
   try {
     const content = fs.readFileSync(pkgPath, 'utf-8')
@@ -181,8 +198,13 @@ function resolvePkg (context) {
     // continue regardless of error
   }
 
+  const dependencies = Object.keys({
+    ...pkg.dependencies,
+    ...pkg.devDependencies
+  })
+
   if (
-    !Object.keys(pkg.dependencies).includes('gridsome') &&
+    !dependencies.includes('gridsome') &&
     !process.env.GRIDSOME_TEST
   ) {
     throw new Error('This is not a Gridsome project.')
@@ -280,7 +302,7 @@ function normalizeTemplates (context, config, localConfig) {
 }
 
 function normalizePlugins (context, plugins) {
-  return plugins.map((plugin, index) => {
+  return plugins.filter(Boolean).map((plugin, index) => {
     if (typeof plugin !== 'object') {
       plugin = { use: plugin }
     }
@@ -380,7 +402,10 @@ function resolvePluginEntries (id, context) {
   } else if (id.startsWith('~/')) {
     dirName = path.join(context, id.replace(/^~\//, ''))
   } else {
-    dirName = path.dirname(require.resolve(id))
+    // TODO: Replace with require.resolve(id, { paths: [context] }) when support for node is >= v8.9.0
+    // https://nodejs.org/api/modules.html#modules_require_resolve_request_options
+    const resolvedPath = require('resolve-from')(context, id)
+    dirName = path.dirname(resolvedPath)
   }
 
   if (
@@ -441,6 +466,63 @@ function resolveTransformers (pkg, config) {
   return result
 }
 
+function normalizeImages (config = {}) {
+  const defaultPlaceholder = {
+    type: 'blur',
+    defaultBlur: 20
+  }
+
+  if (typeof config.placeholder === 'string') {
+    config.placeholder = {
+      type: config.placeholder
+    }
+  }
+
+  if (typeof config.defaultBlur !== 'undefined') {
+    config.placeholder = {
+      ...defaultPlaceholder,
+      defaultBlur: config.defaultBlur,
+      ...config.placeholder
+    }
+    deprecate(`The images.defaultBlur option has moved to images.placeholder.defaultBlur.`, {
+      customCaller: ['gridsome.config.js']
+    })
+  }
+
+  const { error, value } = Joi.validate(
+    config,
+    Joi.object().label('Images').keys({
+      compress: Joi.boolean().default(true),
+      defaultQuality: Joi.number().default(75).min(0).max(100),
+      backgroundColor: Joi.string().allow(null).default(null),
+      defaultBlur: Joi.number().default(defaultPlaceholder.defaultBlur),
+      placeholder: Joi.alternatives()
+        .default(defaultPlaceholder)
+        .try([
+          Joi.object().label('Blur').keys({
+            type: Joi.string().default('blur').valid('blur'),
+            defaultBlur: Joi.number().min(0).default(defaultPlaceholder.defaultBlur)
+          }),
+          Joi.object().label('Trace').keys({
+            type: Joi.string().required().valid('trace'),
+            background: Joi.string().default(undefined),
+            color: Joi.string().default(undefined),
+            threshold: Joi.number().min(0).max(255).default(120)
+          }),
+          Joi.object().label('Dominant').keys({
+            type: Joi.string().required().valid('dominant')
+          })
+        ])
+    })
+  )
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  return value
+}
+
 function normalizeIconsConfig (config = {}) {
   const res = {}
 
@@ -459,3 +541,5 @@ function normalizeIconsConfig (config = {}) {
 
   return res
 }
+
+module.exports.builtInPlugins = builtInPlugins

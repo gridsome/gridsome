@@ -7,6 +7,7 @@ const { scalarTypeResolvers } = require('./resolvers')
 const { addDirectives, applyFieldExtensions } = require('./extensions')
 const { isEmpty, isPlainObject, findLastIndex, get } = require('lodash')
 const { isRefField } = require('../store/utils')
+const { validateTypeName } = require('./utils')
 
 const {
   parse,
@@ -151,6 +152,8 @@ function addTypes (schemaComposer, typeOrSDL) {
 }
 
 function addTypeDefNode (schemaComposer, typeNode) {
+  validateTypeName(typeNode.name.value)
+
   const { value: typeName } = typeNode.name
   const existingTypeComposer = getTypeComposer(schemaComposer, typeName)
   const typeComposer = schemaComposer.typeMapper.makeSchemaDef(typeNode)
@@ -180,37 +183,8 @@ function addCreatedType (schemaComposer, { type, options }) {
 function addType (schemaComposer, typeComposer) {
   typeComposer.setExtension('isCustomType', true)
 
-  validateTypeName(typeComposer)
-
   schemaComposer.add(typeComposer)
   schemaComposer.addSchemaMustHaveType(typeComposer)
-}
-
-const ReservedTypeNames = ['Page', 'Node']
-const ReservedScalarNames = ['Boolean', 'Date', 'File', 'Float', 'ID', 'Image', 'Int', 'JSON', 'String']
-const ReservedRules = {
-  'FilterInput$': `Type name cannot end with 'FilterInput'.`,
-  'QueryOperatorInput$': `Type name cannot end with 'QueryOperatorInput'`,
-  '^Metadata[A-Z]': `Type name cannot start with 'Metadata'`,
-  '^Node[A-Z]': `Type name cannot start with 'Node'`
-}
-
-function validateTypeName (typeComposer) {
-  const typeName = typeComposer.getTypeName()
-
-  if (ReservedTypeNames.includes(typeName)) {
-    throw new Error(`'${typeName}' is a reserved type name.`)
-  }
-
-  if (ReservedScalarNames.includes(typeName)) {
-    throw new Error(`'${typeName}' is a reserved scalar type.`)
-  }
-
-  for (const rule in ReservedRules) {
-    if (new RegExp(rule).test(typeName)) {
-      throw new Error(ReservedRules[rule])
-    }
-  }
 }
 
 function convertExtensionsToDirectives (options) {
@@ -233,6 +207,8 @@ function convertExtensionsToDirectives (options) {
 }
 
 function createType (schemaComposer, type, options) {
+  validateTypeName(options.name)
+
   switch (type) {
     case CreatedGraphQLType.Object: {
       convertExtensionsToDirectives(options)
@@ -316,6 +292,14 @@ function processObjectTypeFields (schemaComposer, typeComposer, extensions) {
     ) {
       const isPlural = typeComposer.isFieldPlural(fieldName)
       const resolverName = isPlural ? 'referenceMany' : 'referenceOne'
+
+      if (!fieldTypeComposer.hasResolver(resolverName)) {
+        throw new Error(
+          `The ${typeComposer.getTypeName()}.${fieldName} field is ` +
+          `referencing a node type, but no "${typeName}" collection exists. `
+        )
+      }
+
       const resolver = fieldTypeComposer.getResolver(resolverName)
 
       typeComposer.setField(fieldName, resolver)
@@ -333,12 +317,18 @@ function addSchemas (schemaComposer, schemas) {
   schemas.forEach(schema => {
     const typeMap = schema.getTypeMap()
     const queryType = schema.getQueryType()
-    const tempTypeComposer = schemaComposer.createTempTC(queryType)
-    const queryFields = tempTypeComposer.getFields()
+    const mutationType = schema.getMutationType()
 
-    processSchemaFields(queryType, tempTypeComposer)
+    if (queryType) {
+      const tempTypeComposer = schemaComposer.createTempTC(queryType)
+      renameRootTypeName(tempTypeComposer, queryType, 'Query')
+      schemaComposer.Query.addFields(tempTypeComposer.getFields())
+    }
 
-    schemaComposer.Query.addFields(queryFields)
+    if (mutationType) {
+      const tempTypeComposer = schemaComposer.createTempTC(mutationType)
+      schemaComposer.Mutation.addFields(tempTypeComposer.getFields())
+    }
 
     for (const typeName in typeMap) {
       const typeDef = typeMap[typeName]
@@ -357,7 +347,7 @@ function addSchemas (schemaComposer, schemas) {
         typeComposer instanceof ObjectTypeComposer ||
         typeComposer instanceof InterfaceTypeComposer
       ) {
-        processSchemaFields(queryType, typeComposer)
+        renameRootTypeName(typeComposer, queryType, 'Query')
       }
 
       schemaComposer.addSchemaMustHaveType(typeComposer)
@@ -365,7 +355,7 @@ function addSchemas (schemaComposer, schemas) {
   })
 }
 
-function processSchemaFields (queryType, typeComposer) {
+function renameRootTypeName (typeComposer, rootTypeDef, rootTypeName) {
   if (
     typeComposer instanceof ObjectTypeComposer ||
     typeComposer instanceof InterfaceTypeComposer
@@ -373,9 +363,9 @@ function processSchemaFields (queryType, typeComposer) {
     typeComposer.getFieldNames().forEach(fieldName => {
       const fieldType = typeComposer.getFieldType(fieldName)
 
-      if (getNamedType(fieldType) === queryType) {
+      if (getNamedType(fieldType) === rootTypeDef) {
         typeComposer.extendField(fieldName, {
-          type: fieldType.toString().replace(queryType.name, 'Query')
+          type: fieldType.toString().replace(rootTypeDef.name, rootTypeName)
         })
       }
     })

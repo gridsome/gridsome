@@ -1,4 +1,4 @@
-const { SiteClient, Loader } = require('datocms-client')
+const { SiteClient, Loader, ItemsRepo, i18n } = require('datocms-client')
 const { camelize } = require('humps')
 
 const withNoEmptyValues = (object) => {
@@ -39,9 +39,11 @@ class DatoCmsSource {
   }
 
   createTypeName (name) {
+    const cleanName = name.replace(/[^a-zA-Z0-9 ]/g, '')
+
     return (
       this.options.typeName.charAt(0).toUpperCase() +
-      camelize(`${this.options.typeName} ${name}`).slice(1)
+      camelize(`${this.options.typeName} ${cleanName}`).slice(1)
     )
   }
 
@@ -61,7 +63,11 @@ class DatoCmsSource {
     const loader = new Loader(client, previewMode)
     await loader.load()
 
-    const { itemsRepo, entitiesRepo } = loader
+    const { entitiesRepo } = loader
+    const itemsRepo = new ItemsRepo(loader.entitiesRepo)
+    const { site } = loader.entitiesRepo
+    i18n.availableLocales = site.locales
+    i18n.locale = site.locales[0]
 
     const cache = {}
 
@@ -107,6 +113,7 @@ class DatoCmsSource {
         slug: slugField && item[camelize(slugField.apiKey)],
         created: new Date(item.createdAt),
         updated: new Date(item.updatedAt),
+        position: item.position,
         ...item.itemType.fields.reduce((fields, field) => {
           const val = item.readAttribute(field)
 

@@ -23,14 +23,14 @@ module.exports = (app, pages) => {
   pages._watcher.on('change', filePath => {
     if (!app.isBootstrapped) return
 
-    const component = path.normalize(filePath)
-    const routes = pages._routes.find({ component })
-    const length = routes.length
+    const routes = pages._routes.find({
+      'internal.dependencies': {
+        $contains: path.normalize(filePath)
+      }
+    })
 
-    pages.disableIndices()
-
-    for (let i = 0; i < length; i++) {
-      const { type, name, internal } = routes[i]
+    for (let i = 0; i < routes.length; i++) {
+      const { type, name, component, internal } = routes[i]
       const options = { type, name, path: internal.path, component }
 
       pages.updateRoute(options, {
@@ -38,7 +38,5 @@ module.exports = (app, pages) => {
         isManaged: internal.isManaged
       })
     }
-
-    pages.enableIndices()
   })
 }

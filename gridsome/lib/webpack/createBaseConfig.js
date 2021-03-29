@@ -17,7 +17,7 @@ module.exports = (app, { isProd, isServer }) => {
   const assetsDir = path.relative(projectConfig.outputDir, projectConfig.assetsDir)
   const config = new Config()
 
-  const useHash = isProd && !process.env.GRIDSOME_TEST
+  const useHash = isProd && !process.env.GRIDSOME_TEST && projectConfig.cacheBusting
   const filename = `[name]${useHash ? '.[contenthash:8]' : ''}.js`
   const assetname = `[name]${useHash ? '.[hash:8]' : ''}.[ext]`
   const inlineLimit = 10000
@@ -35,15 +35,12 @@ module.exports = (app, { isProd, isServer }) => {
     .alias
     .set('~', resolve('src', app.context))
     .set('@', resolve('src', app.context))
+    .set('#gridsome', projectConfig.appCacheDir)
     .set('gridsome$', path.resolve(projectConfig.appPath, 'index.js'))
     .end()
     .extensions
     .merge(['.js', '.vue'])
     .end()
-    .modules
-    .add(resolve('../../node_modules'))
-    .add(resolve('../../../packages'))
-    .add('node_modules')
 
   config.resolve
     .plugin('gridsome-fallback-resolver-plugin')
@@ -52,19 +49,24 @@ module.exports = (app, { isProd, isServer }) => {
         optionalDir: path.join(app.context, 'src'),
         resolve: ['main', 'App.vue']
       }])
+      .end()
+    // TODO: Remove plugin when using webpack 5
+    .plugin('pnp')
+      .use({...require(`pnp-webpack-plugin`)})
 
   config.resolveLoader
+    // TODO: Remove plugin when using webpack 5
+    .plugin('pnp-loaders')
+      .use({ ...require('pnp-webpack-plugin').topLevelLoader })
+      .end()
     .set('symlinks', true)
-    .modules
-    .add(resolve('./loaders'))
-    .add(resolve('../../node_modules'))
-    .add(resolve('../../../packages'))
-    .add('node_modules')
 
   config.module.noParse(/^(vue|vue-router|vue-meta)$/)
 
   if (app.config.runtimeCompiler) {
-    config.resolve.alias.set('vue$', 'vue/dist/vue.esm.js')
+    config.resolve.alias.set('vue$', require.resolve('vue/dist/vue.esm.js'))
+  } else {
+    config.resolve.alias.set('vue$', path.dirname(require.resolve('vue/package.json')))
   }
 
   if (!isProd) {
@@ -76,14 +78,14 @@ module.exports = (app, { isProd, isServer }) => {
   config.module.rule('vue')
     .test(/\.vue$/)
     .use('cache-loader')
-    .loader('cache-loader')
+    .loader(require.resolve('cache-loader'))
     .options({
       cacheDirectory,
       cacheIdentifier
     })
     .end()
     .use('vue-loader')
-    .loader('vue-loader')
+    .loader(require.resolve('vue-loader'))
     .options({
       compilerOptions: {
         preserveWhitespace: false,
@@ -110,7 +112,10 @@ module.exports = (app, { isProd, isServer }) => {
         return false
       }
 
-      if (filepath.startsWith(projectConfig.appPath)) {
+      if (
+        filepath.startsWith(projectConfig.appPath) ||
+        filepath.startsWith(projectConfig.appCacheDir)
+      ) {
         return false
       }
 
@@ -126,14 +131,14 @@ module.exports = (app, { isProd, isServer }) => {
     })
     .end()
     .use('cache-loader')
-    .loader('cache-loader')
+    .loader(require.resolve('cache-loader'))
     .options({
       cacheDirectory,
       cacheIdentifier
     })
     .end()
     .use('babel-loader')
-    .loader('babel-loader')
+    .loader(require.resolve('babel-loader'))
     .options({
       presets: [
         [require.resolve('@vue/babel-preset-app'), {
@@ -142,6 +147,9 @@ module.exports = (app, { isProd, isServer }) => {
             resolve('../../app/entry.client.js')
           ]
         }]
+      ],
+      plugins: [
+        require.resolve('./plugins/corejsBabelPlugin.js')
       ]
     })
 
@@ -159,7 +167,7 @@ module.exports = (app, { isProd, isServer }) => {
   config.module.rule('images')
     .test(/\.(png|jpe?g|gif|webp)(\?.*)?$/)
     .use('url-loader')
-    .loader('url-loader')
+    .loader(require.resolve('url-loader'))
     .options({
       limit: inlineLimit,
       name: `${assetsDir}/img/${assetname}`
@@ -168,7 +176,7 @@ module.exports = (app, { isProd, isServer }) => {
   config.module.rule('svg')
     .test(/\.(svg)(\?.*)?$/)
     .use('file-loader')
-    .loader('file-loader')
+    .loader(require.resolve('file-loader'))
     .options({
       name: `${assetsDir}/img/${assetname}`
     })
@@ -176,7 +184,7 @@ module.exports = (app, { isProd, isServer }) => {
   config.module.rule('media')
     .test(/\.(mp4|webm|ogg|mp3|wav|flac|aac)(\?.*)?$/)
     .use('url-loader')
-    .loader('url-loader')
+    .loader(require.resolve('url-loader'))
     .options({
       limit: inlineLimit,
       name: `${assetsDir}/media/${assetname}`
@@ -185,7 +193,7 @@ module.exports = (app, { isProd, isServer }) => {
   config.module.rule('fonts')
     .test(/\.(woff2?|eot|ttf|otf)(\?.*)?$/i)
     .use('url-loader')
-    .loader('url-loader')
+    .loader(require.resolve('url-loader'))
     .options({
       limit: inlineLimit,
       name: `${assetsDir}/fonts/${assetname}`
@@ -196,10 +204,10 @@ module.exports = (app, { isProd, isServer }) => {
   config.module.rule('yaml')
     .test(/\.ya?ml$/)
     .use('json-loader')
-    .loader('json-loader')
+    .loader(require.resolve('json-loader'))
     .end()
     .use('yaml-loader')
-    .loader('yaml-loader')
+    .loader(require.resolve('yaml-loader'))
 
   // plugins
 
@@ -236,9 +244,13 @@ module.exports = (app, { isProd, isServer }) => {
       }])
   }
 
+  // Short hashes as ids for better long term caching.
+  config.optimization.merge({ moduleIds: 'hashed' })
+
   if (process.env.GRIDSOME_TEST) {
     config.output.pathinfo(true)
     config.optimization.minimize(false)
+    config.optimization.merge({ moduleIds: 'named' })
   }
 
   // helpes
@@ -257,7 +269,7 @@ module.exports = (app, { isProd, isServer }) => {
     })
 
     return {
-      cacheDirectory: app.resolve('node_modules/.cache/gridsome'),
+      cacheDirectory: path.join(projectConfig.cacheDir, 'webpack'),
       cacheIdentifier: hash(values)
     }
   }
@@ -276,12 +288,12 @@ module.exports = (app, { isProd, isServer }) => {
         if (isProd) {
           rule.use('extract-css-loader').loader(CSSExtractPlugin.loader)
         } else {
-          rule.use('vue-style-loader').loader('vue-style-loader')
+          rule.use('vue-style-loader').loader(require.resolve('vue-style-loader'))
         }
       }
 
       rule.use('css-loader')
-        .loader('css-loader')
+        .loader(require.resolve('css-loader'))
         .options(Object.assign({
           modules,
           exportOnlyLocals: isServer,
@@ -291,7 +303,7 @@ module.exports = (app, { isProd, isServer }) => {
         }, css))
 
       rule.use('postcss-loader')
-        .loader('postcss-loader')
+        .loader(require.resolve('postcss-loader'))
         .options(Object.assign({
           sourceMap: !isProd
         }, postcss, {
@@ -299,7 +311,11 @@ module.exports = (app, { isProd, isServer }) => {
         }))
 
       if (loader) {
-        rule.use(loader).loader(loader).options(options)
+        try {
+          rule.use(loader).loader(require.resolve(loader)).options(options)
+        } catch {
+          rule.use(loader).loader(loader).options(options)
+        }
       }
     }
   }

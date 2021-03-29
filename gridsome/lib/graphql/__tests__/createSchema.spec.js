@@ -451,6 +451,19 @@ describe('add reference resolvers', () => {
     expect(data.track.unionRefs[0].name).toEqual('First Album')
     expect(data.track.unionRefs[1].name).toEqual('Second Single')
   })
+
+  test('throw if referencing missing collection', async () => {
+    expect(initApp(({ addSchemaTypes }) => {
+      addSchemaTypes(`
+        type Track implements Node {
+          album: MissingType
+        }
+        type MissingType implements Node {
+          id: ID!
+        }
+      `)
+    })).rejects.toThrow('Track.album')
+  })
 })
 
 test('add custom resolver for invalid field names', async () => {
@@ -828,6 +841,60 @@ test('add custom GraphQL schema', async () => {
   expect(data.nestedObject.subField.customRootValue).toEqual('subField foo')
 })
 
+test('add custom GraphQL schema with mutations', async () => {
+  const app = await createApp(api => {
+    api.createSchema(({ addSchema, ...actions }) => {
+      addSchema(new actions.GraphQLSchema({
+        mutation: new actions.GraphQLObjectType({
+          name: 'MyMutations',
+          fields: () => ({
+            doSomething: {
+              type: actions.GraphQLString,
+              args: {
+                input: {
+                  type: actions.GraphQLString,
+                  defaultValue: 'foo'
+                }
+              },
+              resolve: (obj, args) => {
+                return args.input
+              }
+            }
+          })
+        })
+      }))
+      addSchema(new actions.GraphQLSchema({
+        mutation: new actions.GraphQLObjectType({
+          name: 'OtherMutations',
+          fields: () => ({
+            doSomethingElse: {
+              type: actions.GraphQLString,
+              args: {
+                input: {
+                  type: actions.GraphQLString,
+                  defaultValue: 'bar'
+                }
+              },
+              resolve: (obj, args) => {
+                return args.input
+              }
+            }
+          })
+        })
+      }))
+    })
+  })
+
+  const { errors, data } = await app.graphql(`mutation {
+    doSomething(input:"one")
+    doSomethingElse(input:"two")
+  }`)
+
+  expect(errors).toBeUndefined()
+  expect(data.doSomething).toEqual('one')
+  expect(data.doSomethingElse).toEqual('two')
+})
+
 test('add custom Metadata schema', async () => {
   const app = await createApp(api => {
     api.createSchema(({ addMetadata, addSchemaTypes }) => {
@@ -1060,6 +1127,33 @@ test('use extension multiple times on field', async () => {
   expect(errors).toBeUndefined()
   expect(data.post.title).toEqual('test-one-two-three')
   expect(apply.mock.calls).toHaveLength(3)
+})
+
+test('fail if adding type with reserved type name', async () => {
+  const app = createApp(api => {
+    api.loadSource(({ addSchemaTypes, schema }) => {
+      addSchemaTypes([
+        schema.createObjectType({
+          name: 'File',
+          fields: {
+            name: 'String'
+          }
+        })
+      ])
+    })
+  })
+
+  expect(app).rejects.toThrow(`'File'`)
+})
+
+test('fail if adding type with reserved type name (SDL)', async () => {
+  const app = createApp(api => {
+    api.loadSource(({ addSchemaTypes }) => {
+      addSchemaTypes('type File { name: String }')
+    })
+  })
+
+  expect(app).rejects.toThrow(`'File'`)
 })
 
 test('prevent overriding built-in GraphQL directives', done => {

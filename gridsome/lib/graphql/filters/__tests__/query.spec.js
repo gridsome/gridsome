@@ -82,11 +82,13 @@ test('use custom loki operators for node references (single)', () => {
   const query2 = toFilterArgs({ author: { id: { ne: '1' } } }, itc)
   const query3 = toFilterArgs({ author: { id: { in: ['1'] } } }, itc)
   const query4 = toFilterArgs({ author: { id: { nin: ['1'] } } }, itc)
+  const query5 = toFilterArgs({ author: { id: { exists: false } } }, itc)
 
   expect(query1).toMatchObject({ author: { '$refEq': '1' } })
   expect(query2).toMatchObject({ author: { '$refNe': '1' } })
   expect(query3).toMatchObject({ author: { '$refIn': ['1'] } })
   expect(query4).toMatchObject({ author: { '$refNin': ['1'] } })
+  expect(query5).toMatchObject({ author: { '$refExists': false } })
 })
 
 test('use custom loki operators for node references (list)', () => {
@@ -105,11 +107,13 @@ test('use custom loki operators for node references (list)', () => {
   const query2 = toFilterArgs({ authors: { id: { ne: '1' } } }, itc)
   const query3 = toFilterArgs({ authors: { id: { in: ['1'] } } }, itc)
   const query4 = toFilterArgs({ authors: { id: { nin: ['1'] } } }, itc)
+  const query5 = toFilterArgs({ authors: { id: { exists: false } } }, itc)
 
   expect(query1).toMatchObject({ authors: { '$refListEq': '1' } })
   expect(query2).toMatchObject({ authors: { '$refListNe': '1' } })
   expect(query3).toMatchObject({ authors: { '$refListIn': ['1'] } })
   expect(query4).toMatchObject({ authors: { '$refListNin': ['1'] } })
+  expect(query5).toMatchObject({ authors: { '$refListExists': false } })
 })
 
 function createInputTypeComposer (config) {

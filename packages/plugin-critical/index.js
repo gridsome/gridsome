@@ -1,13 +1,14 @@
+const fs = require('fs-extra')
 const micromatch = require('micromatch')
 const Worker = require('jest-worker').default
 
 const normalize = p => p.replace(/\/+$/, '') || '/'
 
-module.exports = function (api, options) {
-  api.afterBuild(async ({ queue, config }) => {
-    const { outputDir: base, pathPrefix, publicPath } = config
-    const patterns = options.paths.map(p => normalize(p))
+module.exports = function (api, options = {}) {
+  const { paths, ...workerOptions } = options
+  const patterns = (paths || []).map(p => normalize(p))
 
+  api.afterBuild(async ({ queue, config }) => {
     const pages = queue.filter(page => {
       return micromatch(page.path, patterns).length
     })
@@ -18,15 +19,13 @@ module.exports = function (api, options) {
 
     await Promise.all(pages.map(async ({ htmlOutput }) => {
       try {
-        await worker.generate(htmlOutput, {
-          ignore: options.ignore,
-          width: options.width,
-          height: options.height,
-          // TODO: remove pathPrefix fallback
-          pathPrefix: publicPath || pathPrefix || '/',
-          polyfill: options.polyfill,
-          base
+        const resultHTML = await worker.processHtmlFile(htmlOutput, {
+          ...workerOptions,
+          publicPath: config.publicPath,
+          baseDir: config.outputDir
         })
+
+        await fs.outputFile(htmlOutput, resultHTML)
       } catch (err) {
         worker.end()
         throw err
