@@ -36,8 +36,8 @@ class Compiler {
     this._serverConfig = serverConfig
     this._clientConfig = clientConfig
 
-    this._resolve = enhancedResolve.create(serverConfig.resolve)
-    this._resolveSync = enhancedResolve.create.sync(serverConfig.resolve)
+    this._resolve = enhancedResolve.create(clientConfig.resolve)
+    this._resolveSync = enhancedResolve.create.sync(clientConfig.resolve)
   }
 
   getClientConfig() {
@@ -63,7 +63,7 @@ class Compiler {
     try {
       return this._resolve(context, path)
     } catch(err) {
-      return null
+      return undefined
     }
   }
 
@@ -71,7 +71,7 @@ class Compiler {
     try {
       return this._resolveSync(context, path)
     } catch(err) {
-      return null
+      return undefined
     }
   }
 
