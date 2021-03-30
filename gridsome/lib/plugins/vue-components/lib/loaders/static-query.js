@@ -76,7 +76,7 @@ module.exports = async function (source, map) {
       if (options.functional) {
         options.__render = options.render
         options.render = function(h, ctx) {
-          ctx.data.$static = options.__staticData.data
+          ctx.$static = options.__staticData.data
           return options.__render(h, ctx)
         }
       } else {
