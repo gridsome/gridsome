@@ -253,6 +253,22 @@ module.exports = (app, { isProd, isServer }) => {
     config.optimization.merge({ moduleIds: 'named' })
   }
 
+  // dev serveer
+
+  if (!isProd) {
+    config.devServer.port(projectConfig.port)
+    config.devServer.host(projectConfig.host)
+    config.devServer.https(projectConfig.https)
+    config.devServer.historyApiFallback(true)
+    config.devServer.hot(true)
+
+    config.devServer.merge({
+      client: {
+        overlay: true
+      }
+    })
+  }
+
   // helpes
 
   function createCacheOptions () {
@@ -333,6 +349,11 @@ module.exports = (app, { isProd, isServer }) => {
       'process.isServer': isServer,
       'process.isProduction': process.env.NODE_ENV === 'production',
       'process.isStatic': process.env.GRIDSOME_MODE === 'static'
+    }
+
+    if (!isProd) {
+      baseEnv['process.env.SOCKJS_ENDPOINT'] = JSON.stringify('/___echo')
+      baseEnv['process.env.GRAPHQL_ENDPOINT'] = JSON.stringify('/___graphql')
     }
 
     // merge variables start with GRIDSOME_ENV to config.env
