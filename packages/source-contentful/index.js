@@ -12,7 +12,8 @@ class ContentfulSource {
       typeName: 'Contentful',
       richText: {},
       routes: {},
-      parameters: {}
+      parameters: {},
+      locales: [undefined]
     }
   }
 
@@ -72,7 +73,12 @@ class ContentfulSource {
 
   async getEntries (actions) {
     const parameters = this.options.parameters
-    const entries = await this.fetch('getEntries', 1000, 'sys.createdAt', parameters)
+    const locales = this.options.locales
+    const entries = []
+
+    for (const locale of locales) {
+      entries.push(...await this.fetch('getEntries', 1000, 'sys.createdAt', locale ? { ...parameters, locale } : parameters))
+    }
 
     for (const entry of entries) {
       const typeId = entry.sys.contentType.sys.id
@@ -89,7 +95,6 @@ class ContentfulSource {
       for (const idx in fields) {
         const key = fields[idx].id
         const value = entry.fields[key]
-
         if (Array.isArray(value)) {
           node[key] = value.map(item => this.isReference(item)
             ? this.createReference(item, actions)
@@ -104,8 +109,7 @@ class ContentfulSource {
         }
       }
 
-      node.id = entry.sys.id
-
+      node.id = (locales.length === 1) ? entry.sys.id : `${entry.sys.id}_${entry.sys.locale}`
       collection.addNode(node)
     }
   }
@@ -124,6 +128,8 @@ class ContentfulSource {
   }
 
   createReference (item, store) {
+    const locales = this.options.locales
+
     switch (item.sys.type) {
       case 'Asset' :
         return store.createReference(
@@ -135,7 +141,10 @@ class ContentfulSource {
         const contentType = this.typesIndex[item.sys.contentType.sys.id]
         const typeName = this.createTypeName(contentType.name)
 
-        return store.createReference(typeName, item.sys.id)
+        return store.createReference(
+          typeName,
+          (locales.length === 1) ? item.sys.id : `${item.sys.id}_${item.sys.locale}`
+        )
     }
   }
 

@@ -174,3 +174,114 @@ query Json {
   }
 }
 ```
+
+## Multi-language support
+
+To enable multi-language support you have to define your locales in the plugin configuration. The locales have to be the same as they are set up in the Contentful dashboard.
+
+```js
+module.exports = {
+  plugins: [
+    {
+      use: '@gridsome/source-contentful',
+      options: {
+        space: 'YOUR_SPACE', // required
+        accessToken: 'YOUR_ACCESS_TOKEN', // required
+        host: 'cdn.contentful.com',
+        environment: 'master',
+        typeName: 'Contentful',
+        locales: ['en', 'de']
+      }
+    }
+  ]
+}
+```
+
+Make sure you also include the locale in the template path of the Gridsome configuration. For more information regarding the template configuration, please check the [Gridsome documentation](https://gridsome.org/docs/templates/#setup-templates).
+
+```js
+module.exports = {
+  templates: {
+    ContentfulNews: [
+      {
+        path: (node) =>  `/${node.locale}/${node.locale === 'de' ? 'nachrichten' : 'news'}/${node.slug}`
+      }
+    ]
+  }
+}
+```
+
+### Usage in templates
+
+You can access the node like you are used to. The current locale is available within GraphQL schema in the `locale` field.
+
+```vue
+<template>
+  <Layout>
+    <!-- locale: {{ locale }} -->
+    <h1>{{ $page.news.title }}</h1>
+  </Layout>
+</template>
+
+<page-query>
+    query News($path: String!) {
+      news: contentfulNews(path: $path) {
+        title,
+        locale
+      }
+    }
+</page-query>
+```
+
+### Usage in pages
+
+When querying nodes within a page, you have to filter for the requested locale. 
+
+```vue
+<template>
+  <Layout>
+    <div v-for="edge in $page.news.edges" :key="edge.node.id">
+      {{ edge.node.title }}
+    </div>
+  </Layout>
+</template>
+
+<page-query>
+    query News {
+      news: allContentfulNews(filter: { locale: { eq: "en" } }) {
+        edges {
+          node {
+            id
+            title
+          }
+        }
+      }
+    }
+</page-query>
+```
+It is recommended to use this in combination with [gridsome-plugin-i18n](https://github.com/daaru00/gridsome-plugin-i18n). Please refer to [their documentation](https://github.com/daaru00/gridsome-plugin-i18n#gridsome-i18n-plugin) for a complete setup guide.
+
+After the successful installation you can access `$locale` from the page context and use it as a query variable. E.g.:
+
+```vue
+<template>
+  <Layout>
+    <div v-for="edge in $page.news.edges" :key="edge.node.id">
+      {{ edge.node.title }}
+    </div>
+  </Layout>
+</template>
+
+<page-query>
+    query News($locale: String! = "en") {
+      news: allContentfulNews(filter: { locale: { eq: $locale } }) {
+        edges {
+          node {
+            id
+            title
+          }
+        }
+      }
+    }
+</page-query>
+```
