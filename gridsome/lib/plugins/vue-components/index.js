@@ -1,4 +1,5 @@
 const path = require('path')
+const fs = require('fs')
 const compiler = require('vue-template-compiler')
 const { parse } = require('@vue/component-compiler-utils')
 
@@ -18,13 +19,33 @@ class VueComponents {
     api._app.pages.hooks.parseComponent.for('vue')
       .tap('VueComponentsPlugin', (source, { resourcePath }) => {
         const filename = path.parse(resourcePath).name
+        const dir = path.parse(resourcePath).dir
         const { customBlocks } = parse({ filename, source, compiler })
-        const pageQuery = customBlocks.find(block => block.type === 'page-query')
 
         return {
-          pageQuery: pageQuery ? pageQuery.content : null
+          pageQuery: this.getPageQueryContent(dir, customBlocks)
         }
       })
+  }
+
+  getPageQueryContent (templateDirectory, customBlocks) {
+    const firstPageQueryBlock = customBlocks.find(
+      block => block.type === 'page-query'
+    )
+    if (firstPageQueryBlock) {
+      const hasAttributes = firstPageQueryBlock.attrs.hasOwnProperty('source')
+      let hasContent = firstPageQueryBlock.content
+      if (hasAttributes) {
+        return fs.readFileSync(
+          path.resolve(templateDirectory, '..', '..') +
+            path.normalize(firstPageQueryBlock.attrs['source']),
+          'utf8'
+        )
+      }
+      hasContent = hasContent.trim().length === 0 ? null : hasContent
+      return hasContent
+    }
+    return null
   }
 
   createGraphQLRule (config, type, loader) {
