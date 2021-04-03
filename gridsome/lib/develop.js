@@ -25,10 +25,13 @@ module.exports = async (context, args) => {
     if (name === 'webpack-dev-middleware') return false
     if (name === 'webpack-dev-server') {
       const message = messages.join(' ')
-      if (isDone && !message.includes(app.context)) {
-        console.log(
-          `  ${message.replace(/(https?:\/\/[^\s]+)/g, chalk.cyan('$1'))}`
-        )
+      if (isDone && !message.includes('index.html')) {
+        const processedMessage = messages
+          .join(' ')
+          .replace(/(https?:\/\/[^\s]+)/g, chalk.cyan('$1'))
+          .replace(app.context, '.')
+
+        console.log(`  ${processedMessage}`)
       }
       return false
     }
