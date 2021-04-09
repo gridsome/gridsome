@@ -105,6 +105,7 @@ class ContentfulSource {
       }
 
       node.id = entry.sys.id
+      node.metadata = entry.metadata;
 
       collection.addNode(node)
     }
