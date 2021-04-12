@@ -526,7 +526,7 @@ function normalizeImages (config = {}) {
 function normalizeIconsConfig (config = {}) {
   const res = {}
 
-  const faviconSizes = [16, 32, 96]
+  const faviconSizes = [16, 32, 96, 192, 196]
   const touchiconSizes = [76, 152, 120, 167, 180]
   const defaultIcon = './src/favicon.png'
   const icon = typeof config === 'string' ? { favicon: config } : (config || {})
