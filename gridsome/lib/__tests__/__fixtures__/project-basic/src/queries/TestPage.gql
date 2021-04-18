@@ -1,0 +1,12 @@
+query TestPage($id: ID!, $doc: ID) {
+  testPage(id: $id) {
+    title
+  }
+  allTestDoc(filter: { id: { eq: $doc }}) {
+    edges {
+      node {
+        title
+      }
+    }
+  }
+}
