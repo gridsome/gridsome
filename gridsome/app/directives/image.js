@@ -26,7 +26,7 @@ function intersectionHandler ({ intersectionRatio, target }) {
 }
 
 function observe (el) {
-  if (el.tagName !== 'IMG') {
+  if (!el.classList.contains('g-image')) {
     observeHtml(el)
   } else {
     if (!observer) loadImage(el)
@@ -35,7 +35,7 @@ function observe (el) {
 }
 
 function unobserve (el) {
-  if (el.tagName !== 'IMG') {
+  if (!el.classList.contains('g-image')) {
     unobserveHtml(el)
   } else if (observer) {
     observer.unobserve(el)
@@ -43,7 +43,7 @@ function unobserve (el) {
 }
 
 function observeHtml (context = document) {
-  const images = context.querySelectorAll('[data-src]')
+  const images = context.querySelectorAll('.g-image')
 
   if (observer) {
     images.forEach(el => !el.__vue__ && observer.observe(el))
@@ -54,28 +54,32 @@ function observeHtml (context = document) {
 
 function unobserveHtml (context = document) {
   if (observer) {
-    context.querySelectorAll('[data-src]').forEach(el => {
+    context.querySelectorAll('.g-image').forEach(el => {
       if (!el.__vue__) observer.unobserve(el)
     })
   }
 }
 
 function loadImage (el) {
-  const src = el.getAttribute('data-src')
-  const sizes = el.getAttribute('data-sizes')
-  const srcset = el.getAttribute('data-srcset')
-  const dataUri = el.src
+  const img = el.querySelector('[data-src]')
+  const sources = el.querySelectorAll('[data-srcset]')
 
-  if (!src || dataUri.endsWith(src)) {
+  sources.forEach((el) => {
+    el.srcset = el.getAttribute('data-srcset')
+  })
+
+  if (!img) {
     return // src is already switched
   }
 
-  el.onload = () => {
+  const dataUri = img.getAttribute('src')
+
+  img.onload = () => {
     removeClass(el, 'g-image--loading')
     addClass(el, 'g-image--loaded')
   }
 
-  el.onerror = () => {
+  img.onerror = () => {
     el.srcset = ''
     el.sizes = ''
     el.src = dataUri
@@ -83,7 +87,5 @@ function loadImage (el) {
     addClass(el, 'g-image--error')
   }
 
-  el.srcset = srcset
-  el.sizes = sizes
-  el.src = src
+  img.src = img.getAttribute('data-src')
 }

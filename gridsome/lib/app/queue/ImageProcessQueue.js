@@ -153,6 +153,7 @@ class ImageProcessQueue {
       height: originalSize.height,
       noscriptHTML: '',
       imageHTML: '',
+      blankUri: undefined,
       dataUri: undefined,
       cacheKey,
       name,
@@ -172,6 +173,10 @@ class ImageProcessQueue {
 
     if (isLazy && isSrcset) {
       classNames.push('g-image--lazy')
+
+      results.blankUri = createSvgDataURI(
+        `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 ${imageWidth} ${imageHeight}"></svg>`
+      )
 
       results.dataUri = await createPlaceholder(
         this.config.images.placeholder,

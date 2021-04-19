@@ -45,6 +45,8 @@ module.exports = async function (source, map) {
     res.sizes = asset.sizes
     res.srcset = asset.srcset
     res.dataUri = asset.dataUri
+    res.blankUri = asset.blankUri
+    res.sources = asset.sources
   }
 
   callback(null, `module.exports = ${JSON.stringify(res)}`)
