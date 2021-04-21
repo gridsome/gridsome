@@ -44,11 +44,13 @@ module.exports = async app => {
   } else {
     config.entry('app').add(resolve('../../app/entry.sockjs.js'))
 
-    config.plugin('hmr')
-      .use(require('webpack/lib/HotModuleReplacementPlugin'))
-
     config.plugin('no-emit-on-errors')
       .use(require('webpack/lib/NoEmitOnErrorsPlugin'))
+
+    config.plugin('friendly-errors')
+      .use(require('friendly-errors-webpack-plugin'))
+
+    config.stats('none') // `friendly-errors-webpack-plugin` shows the errors
   }
 
   return config

@@ -1,40 +1,10 @@
+const path = require('path')
 const fs = require('fs-extra')
 const chalk = require('chalk')
-const isUrl = require('is-url')
-const columnify = require('columnify')
-const { builtInPlugins } = require('./app/loadConfig')
-const { formatPrettyUrl, sockjsEndpoint, graphqlEndpoint } = require('./server/utils')
-
-const {
-  hasWarnings,
-  logAllWarnings
-} = require('./utils/deprecate')
-
-builtInPlugins.push(api => {
-  api.chainWebpack(async config => {
-    config
-      .plugin('friendly-errors')
-      .use(require('friendly-errors-webpack-plugin'))
-
-    config
-      .plugin('injections')
-      .tap(args => {
-        const definitions = args[0]
-        args[0] = {
-          ...definitions,
-          'process.env.SOCKJS_ENDPOINT': JSON.stringify(sockjsEndpoint),
-          'process.env.GRAPHQL_ENDPOINT': JSON.stringify(graphqlEndpoint)
-        }
-        return args
-      })
-
-    config.entryPoints.store.forEach((entry, name) => {
-      config.entry(name)
-        .prepend(`${require.resolve('webpack-hot-middleware/client')}?name=${name}&reload=true&noInfo=true`)
-        .prepend(require.resolve('webpack/hot/dev-server'))
-    })
-  })
-})
+const sockjs = require('sockjs')
+const WebpackDevServer = require('webpack-dev-server')
+const { hasWarnings, logAllWarnings } = require('./utils/deprecate')
+const { forwardSlash } = require('./utils')
 
 module.exports = async (context, args) => {
   process.env.NODE_ENV = 'development'
@@ -43,80 +13,137 @@ module.exports = async (context, args) => {
   const createApp = require('./app')
   const app = await createApp(context, { args, mode: 'development' })
 
-  if (app.config.https) {
-    await app.server.generateCertificate()
-  }
-
   await fs.emptyDir(app.config.imageCacheDir)
 
   const compiler = app.compiler.getCompiler()
-  const webpackConfig = app.compiler.getClientConfig()
+  const server = await createDevServer(app, compiler)
+  let isDone = false
 
-  app.server.hooks.setup.tap('develop', server => {
-    server.use(require('webpack-hot-middleware')(compiler, {
-      quiet: true,
-      log: false
-    }))
+  compiler.hooks.infrastructureLog.tap('gridsome', (name, type, messages) => {
+    if (type === 'error') return
+
+    if (name === 'webpack-dev-middleware') return false
+    if (name === 'webpack-dev-server') {
+      const message = messages.join(' ')
+      if (isDone && !message.includes(app.context)) {
+        console.log(
+          `  ${message.replace(/(https?:\/\/[^\s]+)/g, chalk.cyan('$1'))}`
+        )
+      }
+      return false
+    }
   })
 
-  app.server.hooks.afterSetup.tap('develop', server => {
-    const devMiddleware = require('webpack-dev-middleware')(compiler, {
-      pathPrefix: webpackConfig.output.pathPrefix,
-      watchOptions: webpackConfig.devServer ? webpackConfig.devServer.watchOptions : null,
-      logLevel: 'silent'
-    })
-
-    server.use(devMiddleware)
-  })
-
-  compiler.hooks.done.tap('develop', stats => {
+  compiler.hooks.done.tap('gridsome', stats => {
     if (stats.hasErrors()) {
       return
     }
 
-    const list = []
-    const addTerm = (name, description) => list.push({ name, description })
-    const addSeparator = () => list.push({ name: '' })
-    const args = { stats, hostname: app.config.host, port: app.config.port, formatPrettyUrl }
-
-    if (app.server.urls.lan.pretty) {
-      addTerm('Site running at:')
-      addTerm('- Local:', app.server.urls.local.pretty)
-      addTerm('- Network:', app.server.urls.lan.pretty)
-      addSeparator()
-    } else {
-      addTerm('Site running at:', app.server.urls.local.pretty)
-    }
-
-    addTerm('Explore GraphQL data at:', app.server.urls.explore.pretty)
-
-    app.compiler.hooks.done.call({ addTerm, addSeparator }, args)
-
-    const columns = list
-      .filter((term, i, terms) => (
-        // remove consecutive separators etc...
-        i && term.name ? terms[i - 1].name !== term.name : true
-      ))
-      .map(term => ({
-        name: term.name,
-        description: isUrl(term.description)
-          ? chalk.cyan(term.description)
-          : term.description
-      }))
-
-    const rendered = columnify(columns, { showHeaders: false })
-
-    console.log()
-    console.log(`  ${rendered.split('\n').join('\n  ')}`)
-    console.log()
+    isDone = true
 
     if (hasWarnings()) {
-      console.log()
       console.log(`${chalk.bgYellow.black(' WARNING ')} ${chalk.yellow('Deprecation notices')}`)
       console.log()
       logAllWarnings(app.context)
+      console.log()
     }
+
+    server.showStatus()
+    console.log()
   })
 
-  app.server.listen()
+  server.listen()
+}
+
+async function createDevServer(app, compiler) {
+  const webpackConfig = app.compiler.getClientConfig()
+  const devServer = webpackConfig.devServer || {}
+  const onListening = devServer.onListening
+  const onBeforeSetupMiddleware = devServer.onBeforeSetupMiddleware
+
+  devServer.static = [app.config.staticDir, ...(devServer.static || [])]
+
+  devServer.onListening = (server) => {
+    createSocketServer(app, server)
+    onListening && onListening(server)
+  }
+
+  devServer.onBeforeSetupMiddleware = (server) => {
+    setupGraphQLMiddleware(app, server)
+    setupAssetsMiddleware(app, server)
+    onBeforeSetupMiddleware && onBeforeSetupMiddleware()
+  }
+
+  const server = new WebpackDevServer(compiler, devServer)
+
+  await app.plugins.configureServer(server.app)
+
+  return server
+}
+
+function createSocketServer(app, server) {
+  const echo = sockjs.createServer({ log: () => null })
+  echo.on('connection', (connection) => {
+    if (connection) {
+      app.clients[connection.id] = connection
+      connection.on('close', () => {
+        delete app.clients[connection.id]
+      })
+    }
+  })
+  echo.installHandlers(server.server, {
+    prefix: '/___echo'
+  })
+}
+
+function setupGraphQLMiddleware(app, server) {
+  const express = require('express')
+  const { graphqlHTTP } = require('express-graphql')
+  const { default: playground } = require('graphql-playground-middleware-express')
+  const graphqlMiddleware = require('./server/middlewares/graphql')
+
+  server.use(
+    '/___graphql',
+    express.json(),
+    graphqlMiddleware(app),
+    graphqlHTTP({
+      schema: app.schema.getSchema(),
+      context: app.schema.createContext(),
+      customFormatErrorFn: err => ({
+        message: err.message,
+        stringified: err.toString()
+      }),
+      extensions: ({ variables }) => {
+        if (variables && variables.__path) {
+          const page = app.pages._pages.findOne({
+            path: variables.__path
+          })
+
+          const context = page
+            ? app.pages._createPageContext(page, variables)
+            : {}
+
+          return { context }
+        }
+      }
+    })
+  )
+
+  server.app.get(
+    '/___explore',
+    playground({
+      endpoint: '/___graphql',
+      title: 'Gridsome GraphQL Explorer',
+      faviconUrl: 'https://avatars0.githubusercontent.com/u/17981963?s=200&v=4'
+    })
+  )
+}
+
+function setupAssetsMiddleware(app, server) {
+  const assetsMiddleware = require('./server/middlewares/assets')
+  const assetsDir = path.relative(app.config.outputDir, app.config.assetsDir)
+  const assetsPath = forwardSlash(path.join(app.config.pathPrefix, assetsDir))
+  const assetsRE = new RegExp(`${assetsPath}/(files|static)/(.*)`)
+
+  server.app.get(assetsRE, assetsMiddleware(app))
 }

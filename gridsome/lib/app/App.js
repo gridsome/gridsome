@@ -5,12 +5,7 @@ const { info } = require('../utils/log')
 const isRelative = require('is-relative')
 const { version } = require('../../package.json')
 const { deprecate } = require('../utils/deprecate')
-
-const {
-  SyncHook,
-  AsyncSeriesHook,
-  SyncWaterfallHook
-} = require('tapable')
+const { AsyncSeriesHook, SyncWaterfallHook } = require('tapable')
 
 const { BOOTSTRAP_FULL } = require('../utils/constants')
 
@@ -28,8 +23,7 @@ class App {
       beforeBootstrap: new AsyncSeriesHook([]),
       bootstrap: new AsyncSeriesHook(['app']),
       renderQueue: new SyncWaterfallHook(['renderQueue']),
-      redirects: new SyncWaterfallHook(['redirects', 'renderQueue']),
-      server: new SyncHook(['server'])
+      redirects: new SyncWaterfallHook(['redirects', 'renderQueue'])
     }
 
     autoBind(this)
@@ -92,7 +86,6 @@ class App {
     const loadConfig = require('./loadConfig')
     const Plugins = require('./Plugins')
     const Store = require('../store/Store')
-    const Server = require('../server/Server')
     const Schema = require('./Schema')
     const AssetsQueue = require('./queue/AssetsQueue')
     const Codegen = require('./codegen')
@@ -102,7 +95,6 @@ class App {
     this.config = await loadConfig(this.context, this.options)
     this.plugins = new Plugins(this)
     this.store = new Store(this)
-    this.server = new Server(this)
     this.schema = new Schema(this)
     this.assets = new AssetsQueue(this)
     this.pages = new Pages(this)
@@ -137,10 +129,6 @@ class App {
     }
 
     await this.compiler.initialize()
-
-    if (this.config.mode === 'development') {
-      await this.server.initialize()
-    }
 
     this.isInitialized = true
 
