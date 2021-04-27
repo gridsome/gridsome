@@ -105,8 +105,16 @@ module.exports = async (name, starter = '') => {
   }
 
   if (starter) {
+    const officialTemplates = starters
+      // Official starter kit entries
+      .filter(({ author }) => author === 'gridsome')
+      // Extract the starter kit name
+      .map(({ repo }) => repo.split('-').pop())
+
     if (/^([a-z0-9_-]+)\//i.test(starter)) {
       starter = `https://github.com/${starter}.git`
+    } else if (officialTemplates.includes(starter)) {
+      starter = `https://github.com/gridsome/gridsome-starter-${starter}.git`
     }
   } else {
     starter = 'https://github.com/gridsome/gridsome-starter-default'
