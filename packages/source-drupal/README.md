@@ -46,7 +46,7 @@ Property |Default Value | Notes
 ---|---|---
 `apiBase` | `jsonapi` | This value is appended to the `baseUrl` to create the root url for your api. The JSON:API default value is `jsonapi` but can be changed using [JSON:API Extras](https://www.drupal.org/project/jsonapi_extras)
 `baseUrl` | *none*, **required** | This is the base url of your Drupal instance. (`https://somedrupalsite.pantheon.io`)
-| `exclude` | *see lib/constants.js* | An array of entity types you want excluded from the [GraphQL conversion](#api-schema-to-graphql-conversion). Any length array will fully override the defaults. [See Excludes](#exclude).
+| `exclude` | *see lib/constants.js* | An array of entity types you want excluded from the [GraphQL conversion](#api-schema-to-graphql-conversion). Any length array will fully override the defaults. [See Excludes](#excludes).
 `requestConfig` | `{}` | A config object that is passed directly to `axios` request. [See Auth](#auth).
 `typeName` | `Drupal` | A String value to name space your GraphQL Types during conversion - this prevents collisions with other plugins. [See GraphQL Conversion](#api-schema-to-graphql-conversion).
 
