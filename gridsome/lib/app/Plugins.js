@@ -86,10 +86,20 @@ class Plugins {
     })
   }
 
-  async createSchema() {
-    const results = await this.run('createSchema', api => {
-      return createSchemaActions(api, this._app)
-    })
+    /**
+     *
+     * @returns {Promise<[]|*[]>}
+     */
+    async afterSourcesLoaded() {
+        return this.run('afterSourcesLoaded', api => {
+            return createSchemaActions(api, this._app)
+        })
+    }
+
+    async createSchema() {
+        const results = await this.run('createSchema', api => {
+            return createSchemaActions(api, this._app)
+        })
 
     // add custom schemas returned from the hook handlers
     results.forEach(schema =>
