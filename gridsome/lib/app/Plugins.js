@@ -26,8 +26,13 @@ class Plugins {
     )
 
     app.hooks.bootstrap.tapPromise(
-      { name: 'createSchema', label: 'Create GraphQL schema', phase: BOOTSTRAP_GRAPHQL },
-      () => this.createSchema()
+        {name: 'afterSourcesLoaded', label: 'After sources loaded', phase: BOOTSTRAP_SOURCES},
+        () => this.afterSourcesLoaded()
+    )
+
+    app.hooks.bootstrap.tapPromise(
+        {name: 'createSchema', label: 'Create GraphQL schema', phase: BOOTSTRAP_GRAPHQL},
+        () => this.createSchema()
     )
 
     app.hooks.bootstrap.tapPromise(

@@ -49,6 +49,10 @@ class PluginAPI {
     this._on('loadSource', handler)
   }
 
+  afterSourcesLoaded(handler){
+    this._on('afterSourcesLoaded', handler)
+  }
+
   createSchema (handler) {
     this._on('createSchema', handler)
   }
