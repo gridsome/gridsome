@@ -312,10 +312,11 @@ test.each([
   ['fail', [{ a: '2018' }, { a: { typeName: 'Post', id: '1' } }]],
   ['proceed', [{ a: undefined }, { a: 'test' }]],
   ['proceed', [{ a: null }, { a: 'test' }]],
-  ['proceed', [{ a: 'test' }, { a: null }]]
+  ['proceed', [{ a: 'test' }, { a: null }]],
+  ['proceed', [{ a: 'test' }, { a: undefined }]]
 ])('it should %s if node isn\'t the same shape', (type, nodes) => {
   if (type === 'fail') expect(() => createFieldDefinitions(nodes)).toThrowError('mismatch')
-  else expect(() => createFieldDefinitions(nodes)).not.toThrowError('mismatch')
+  else expect(() => createFieldDefinitions(nodes)).not.toThrow()
 })
 
 const { BOOTSTRAP_PAGES } = require('../../utils/constants')
