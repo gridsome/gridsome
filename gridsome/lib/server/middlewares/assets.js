@@ -23,7 +23,7 @@ module.exports = ({ context, config, assets }) => {
       return decodeURIComponent(value)
     })
 
-    const asset = assets.get(key)
+    const asset = assets.get(key || req.url)
 
     if (!asset) return res.sendStatus(404)
 
@@ -36,19 +36,20 @@ module.exports = ({ context, config, assets }) => {
         res.header('Expires', '-1')
       }
 
+      res.header('Accept-Ranges', 'bytes')
       res.contentType(ext)
-      res.end(buffer, 'binary')
+      res.end(buffer)
     }
 
     try {
-      if (SUPPORTED_IMAGE_TYPES.includes(ext)) {
+      if (SUPPORTED_IMAGE_TYPES.includes(ext.toLowerCase())) {
         const imageOptions = assets.images.createImageOptions(options)
         const filename = assets.images.createFileName(filePath, imageOptions, asset.hash)
         const destPath = path.join(config.imageCacheDir, filename)
 
         if (!fs.existsSync(destPath)) {
           await worker.processImage({
-            backgroundColor: config.images.backgroundColor,
+            imagesConfig: config.images,
             width: asset.width,
             height: asset.height,
             filePath,

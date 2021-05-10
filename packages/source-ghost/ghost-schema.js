@@ -50,6 +50,7 @@ const GhostPost = ({ post, author, tag }) => `type ${post} implements Node {
   url: String
   page: Boolean
   excerpt: String
+  reading_time: Int
   og_image: String
   og_title: String
   og_description: String

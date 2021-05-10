@@ -1,37 +1,45 @@
 const fs = require('fs-extra')
+const oust = require('oust')
 const critical = require('critical')
+const { createPolyfillScript, inlineCriticalCSS } = require('./inline')
 
-const {
-  createPolyfillScript,
-  inlineCriticalCSS
-} = require('./inline')
+exports.processHtmlFile = async function (filename, options = {}) {
+  const { publicPath, baseDir, polyfill, ...criticalOptions } = options
+  const sourceHTML = await fs.readFile(filename, 'utf-8')
 
-exports.generate = async function (htmlOutput, options = {}) {
-  const sourceHTML = await fs.readFile(htmlOutput, 'utf-8')
+  // Extract stylesheet paths manually to prevent duplicate CSS.
+  let stylesheets = oust.raw(sourceHTML, 'stylesheets')
+    .filter((link) => link.$el.attr('media') !== 'print' && Boolean(link.value))
+    .map((link) => link.value)
+    .filter((href, i, arr) => arr.indexOf(href) === i)
 
-  let css = await critical.generate({
-    ignore: options.ignore,
-    width: options.width,
-    height: options.height,
-    pathPrefix: options.pathPrefix,
-    html: sourceHTML,
-    inline: false,
-    minify: true,
-    base: options.base
-  })
-
-  // remove path prefix from hashed urls
-  css = css.replace(/="url\([/\w]+%23(\w+)\)"/g, '="url(%23$1)"')
-
-  let polyfill = ''
-
-  if (options.polyfill) {
-    polyfill = createPolyfillScript()
+  if (publicPath !== '/') {
+    // Replace `publicPath` to help `critical` find the stylesheets.
+    const re = new RegExp(`^${publicPath}`)
+    stylesheets = stylesheets.map(stylesheet => {
+      return stylesheet.replace(re, '/')
+    })
   }
 
-  // we manually inline critical css because cheerio is messing
-  // up the markup from Vue server renderer
-  const resultHTML = await inlineCriticalCSS(htmlOutput, { css, polyfill })
+  const result = await critical.generate({
+    ...criticalOptions,
+    base: baseDir,
+    html: sourceHTML,
+    css: stylesheets,
+    inline: false,
+    minify: true,
+    ignore: {
+      atrule: ['@font-face'],
+      decl: (node, value) => /url\(/.test(value),
+      ...criticalOptions.ignore
+    }
+  })
 
-  await fs.outputFile(htmlOutput, resultHTML)
+  // Remove `publicPath` from hashed URLs.
+  const css = result.css.replace(/="url\([/\w]+%23(\w+)\)"/g, '="url(%23$1)"')
+  const polyfillSrc = polyfill ? createPolyfillScript() : ''
+
+  // Manually inline critical CSS to original HTML to keep the `publicPath`
+  // in href attributes and inject a polyfill for .
+  return inlineCriticalCSS(filename, { css, polyfill: polyfillSrc })
 }

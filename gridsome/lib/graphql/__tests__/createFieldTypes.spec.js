@@ -264,6 +264,7 @@ test('infer image fields', () => {
       string: 'image.png',
       image1: '/image.png',
       image2: './image.png',
+      image3: './image.JPG',
       url: 'https://www.example.com/images/image.png',
       path: 'dir/to/image.png'
     }
@@ -275,6 +276,7 @@ test('infer image fields', () => {
   expect(types.string.type).toEqual('String')
   expect(types.image1.type).toEqual('Image')
   expect(types.image2.type).toEqual('Image')
+  expect(types.image3.type).toEqual('Image')
   expect(types.url.type).toEqual('String')
   expect(types.path.type).toEqual('String')
 })

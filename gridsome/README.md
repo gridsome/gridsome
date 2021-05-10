@@ -1,7 +1,7 @@
 <p align="center">
   <br>
   <a href="https://www.gridsome.org">
-    <img src="https://raw.githubusercontent.com/gridsome/gridsome/master/assets/logo.png" width="90"/>
+    <img src="https://raw.githubusercontent.com/gridsome/gridsome/master/.github/assets/logo.png" width="90"/>
   </a>
 </p>
 
@@ -12,8 +12,8 @@
 </p>
 
 <p align="center">
-  <a title="Total downloads" href="https://www.npmjs.com/package/gridsome">
-    <img src="https://img.shields.io/npm/dt/gridsome.svg?style=flat-square">
+  <a title="Downloads" href="https://www.npmjs.com/package/gridsome">
+    <img src="https://img.shields.io/npm/dm/gridsome.svg?style=flat-square">
   </a>
   <a title="Current version" href="https://www.npmjs.com/package/gridsome">
     <img src="https://img.shields.io/npm/v/gridsome.svg?style=flat-square">

@@ -20,13 +20,12 @@ exports.render = async function ({
     shouldPreload: regexpPreload ? file => regexpPreload.test(file) : null
   })
 
-  let page, html, state, stateSize
   const length = pages.length
 
   for (let i = 0; i < length; i++) {
-    page = pages[i]
-    state = undefined
-    stateSize = undefined
+    const page = pages[i]
+    let state = undefined
+    let stateSize = undefined
 
     if (page.dataOutput) {
       const content = await fs.readFile(page.dataOutput, 'utf8')
@@ -35,7 +34,7 @@ exports.render = async function ({
       state = JSON.parse(content)
     }
 
-    html = await render(page, state, stateSize, hash)
+    const html = await render(page, state, stateSize, hash)
 
     await fs.outputFile(page.htmlOutput, html)
   }

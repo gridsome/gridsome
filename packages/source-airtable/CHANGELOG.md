@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.2.0](https://github.com/gridsome/gridsome/tree/master/packages/source-airtable/compare/@gridsome/source-airtable@0.1.4...@gridsome/source-airtable@0.2.0) (2020-05-26)
+
+
+### Features
+
+* **airtable:** option for linked tables ([#1054](https://github.com/gridsome/gridsome/tree/master/packages/source-airtable/issues/1054)) ([e0b6656](https://github.com/gridsome/gridsome/tree/master/packages/source-airtable/commit/e0b665635f19b22fe6617cddc2b0c3122fc44d49))
+
+
+
+
+
 ## [0.1.4](https://github.com/gridsome/gridsome/tree/master/packages/source-airtable/compare/@gridsome/source-airtable@0.1.3...@gridsome/source-airtable@0.1.4) (2019-12-13)
 
 

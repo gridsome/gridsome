@@ -99,19 +99,13 @@ class Plugins {
   }
 
   async createPages() {
-    const { isBootstrapped, pages } = this._app
+    const { pages } = this._app
     const now = Date.now() + process.hrtime()[1]
     const digest = hashString(now.toString())
-
-    if (isBootstrapped) {
-      pages.disableIndices()
-    }
 
     await this.run('createPages', api => {
       return createPagesActions(api, this._app, { digest })
     })
-
-    pages.enableIndices()
 
     await this.run('createManagedPages', api => {
       return createManagedPagesActions(api, this._app, { digest })

@@ -21,10 +21,11 @@ module.exports = async (context, args) => {
 
   await fs.emptyDir(config.outputDir)
 
-  const queue = createRenderQueue(app)
-  const redirects = app.hooks.redirects.call([], queue)
   const stats = await runWebpack(app)
   const hashString = config.cacheBusting ? stats.hash : 'gridsome'
+
+  const queue = createRenderQueue(app)
+  const redirects = app.hooks.redirects.call([], queue)
 
   await executeQueries(queue, app, hashString)
   await renderHTML(queue, app, hashString)
@@ -53,14 +54,13 @@ module.exports = async (context, args) => {
 
 async function runWebpack (app) {
   const compileTime = hirestime()
-  const compileAssets = require('./webpack/compileAssets')
   const { removeStylesJsChunk } = require('./webpack/utils')
 
   if (!process.stdout.isTTY) {
     info(`Compiling assets...`)
   }
 
-  const stats = await compileAssets(app)
+  const stats = await app.compiler.run()
 
   if (app.config.css.split !== true) {
     await removeStylesJsChunk(stats, app.config.outputDir)
@@ -85,7 +85,8 @@ async function renderHTML (renderQueue, app, hash) {
         htmlTemplate,
         clientManifestPath,
         serverBundlePath,
-        prefetch, preload
+        prefetch,
+        preload
       })
     } catch (err) {
       worker.end()
@@ -128,7 +129,7 @@ async function processImages (images, config) {
         outputDir: config.outputDir,
         context: config.context,
         cacheDir: config.imageCacheDir,
-        backgroundColor: config.images.backgroundColor
+        imagesConfig: config.images
       })
 
       writeLine(`Processing images (${totalAssets} images) - ${Math.round((++progress) * 100 / totalJobs)}%`)

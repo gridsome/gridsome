@@ -20,7 +20,8 @@ module.exports = function createRenderFn ({
     clientManifest,
     runInNewContext: false,
     shouldPrefetch,
-    shouldPreload
+    shouldPreload,
+    basedir: __dirname
   })
 
   return async function render(page, state, stateSize, hash) {

@@ -1,4 +1,5 @@
 const { hasNodeReference } = require('../utils')
+const { without } = require('lodash')
 
 const {
   EnumTypeComposer,
@@ -61,13 +62,17 @@ function createFilterInput (schemaComposer, typeComposer) {
   return removeEmptyTypes(filterTypeComposer)
 }
 
-function removeEmptyTypes (typeComposer) {
+function removeEmptyTypes (typeComposer, done = new Set()) {
+  if (done.has(typeComposer)) return typeComposer
+
+  done.add(typeComposer)
+
   typeComposer.getFieldNames().forEach(fieldName => {
     const fieldTypeComposer = typeComposer.getFieldTC(fieldName)
 
     if (fieldTypeComposer instanceof InputTypeComposer) {
       if (fieldTypeComposer.getFieldNames().length > 0) {
-        removeEmptyTypes(fieldTypeComposer)
+        removeEmptyTypes(fieldTypeComposer, done)
       } else {
         typeComposer.removeField(fieldName)
       }
@@ -90,6 +95,7 @@ function createReferenceInputTypeComposer({
   }
 
   const operatorTypeComposer = schemaComposer.createInputTC(inputTypeName)
+  const fieldExtensions = typeComposer.getFieldExtensions(fieldName)
   const isPlural = typeComposer.isFieldPlural(fieldName)
 
   // TODO: filter by all fields on referenced type
@@ -104,7 +110,10 @@ function createReferenceInputTypeComposer({
   operatorTypeComposer.setFieldExtension('id', 'isPlural', isPlural)
 
   // TODO: remove these before 1.0
-  const extensions = { isDeprecatedNodeReference: true }
+  // Mark field as deprecated if not created by `store.addReference()`.
+  const extensions = {
+    isInferredReference: !fieldExtensions.isDefinedReference
+  }
   const deprecationReason = 'Use the id field instead.'
   if (isPlural) {
     operatorTypeComposer.addFields(
@@ -112,7 +121,12 @@ function createReferenceInputTypeComposer({
     )
   } else {
     operatorTypeComposer.addFields(
-      toOperatorConfig(scalarOperators.ID, 'ID', extensions, deprecationReason)
+      toOperatorConfig(
+        without(scalarOperators.ID, 'exists'),
+        'ID',
+        extensions,
+        deprecationReason
+      )
     )
   }
 

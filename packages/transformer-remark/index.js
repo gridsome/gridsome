@@ -4,7 +4,7 @@ const parse = require('gray-matter')
 const remarkHtml = require('remark-html')
 const remarkParse = require('remark-parse')
 const sanitizeHTML = require('sanitize-html')
-const { words, defaultsDeep } = require('lodash')
+const { defaultsDeep } = require('lodash')
 
 const cache = new LRU({ max: 1000 })
 
@@ -14,6 +14,8 @@ const {
   findHeadings,
   createPlugins
 } = require('./lib/utils')
+
+const { estimateTimeToRead } = require('./lib/timeToRead')
 
 const {
   HeadingType,
@@ -109,12 +111,42 @@ class RemarkTransformer {
               allowedTags: []
             })
 
-            const count = words(text).length
-            cached = Math.round(count / speed) || 1
+            cached = estimateTimeToRead(text, speed)
             cache.set(key, cached)
           }
 
           return cached
+        }
+      },
+      excerpt: {
+        type: GraphQLString,
+        args: {
+          length: {
+            type: GraphQLInt,
+            description: 'Maximum length of generated excerpt (characters)',
+            defaultValue: 200
+          }
+        },
+        resolve: async (node, { length }) => {
+          const key = cacheKey(node, 'excerpt')
+          let excerpt = node.excerpt || cache.get(key)
+
+          if (!excerpt) {
+            const html = await this._nodeToHTML(node)
+            // Remove html tags, then newlines.
+            excerpt = sanitizeHTML(html, {
+              allowedAttributes: {},
+              allowedTags: []
+            }).replace(/\r?\n|\r/g, ' ')
+
+            if (length && excerpt.length > length) {
+              excerpt = excerpt.substr(0, excerpt.lastIndexOf(' ', length - 1))
+            }
+
+            cache.set(key, excerpt)
+          }
+
+          return excerpt
         }
       }
     }

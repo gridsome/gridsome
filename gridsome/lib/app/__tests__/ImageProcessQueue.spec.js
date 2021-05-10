@@ -14,7 +14,10 @@ const baseconfig = {
   maxImageWidth: 3000,
   images: {
     minSizeDistance: 300,
-    defaultBlur: 20
+    placeholder: {
+      type: 'blur',
+      defaultBlur: 20
+    }
   }
 }
 
@@ -170,6 +173,48 @@ test('set custom blur', async () => {
   expect(result.src).toEqual('/assets/static/1000x600.248ba3a.test.png')
 })
 
+test('placeholder with trace', async () => {
+  const filePath = path.resolve(context, 'assets/1000x600.png')
+  const queue = new AssetsQueue({
+    context,
+    config: {
+      ...baseconfig,
+      images: {
+        ...baseconfig.images,
+        placeholder: {
+          type: 'trace'
+        }
+      }
+    }
+  })
+
+  const result = await queue.add(filePath)
+
+  expect(queue.images.queue).toHaveLength(2)
+  expect(result.dataUri).toMatchSnapshot()
+})
+
+test('placeholder with dominant', async () => {
+  const filePath = path.resolve(context, 'assets/1000x600.png')
+  const queue = new AssetsQueue({
+    context,
+    config: {
+      ...baseconfig,
+      images: {
+        ...baseconfig.images,
+        placeholder: {
+          type: 'dominant'
+        }
+      }
+    }
+  })
+
+  const result = await queue.add(filePath)
+
+  expect(queue.images.queue).toHaveLength(2)
+  expect(result.dataUri).toMatchSnapshot()
+})
+
 test('add custom attributes to markup', async () => {
   const filePath = path.resolve(context, 'assets/1000x600.png')
   const queue = new AssetsQueue({ context, config: baseconfig })
@@ -189,6 +234,7 @@ test('add custom attributes to markup', async () => {
 
   expect(result.noscriptHTML).toMatch(/test-1/)
   expect(result.noscriptHTML).toMatch(/test-2/)
+  expect(result.noscriptHTML).toMatch(/height="100"/)
   expect(result.noscriptHTML).toMatch(/height="100"/)
   expect(result.noscriptHTML).toMatch(/alt="Alternative text"/)
 })
@@ -292,6 +338,11 @@ describe('calculate correct image size', () => {
       'assets/1000x600.png',
       { width: 400, height: 400, fit: 'contain' },
       { width: 400, height: 400 }
+    ],
+    [
+      'assets/rotated.jpg',
+      { width: 480 },
+      { width: 480, height: 640 }
     ]
   ])('%s %p', async (image, options, expected) => {
     const filePath = path.resolve(context, image)
@@ -302,7 +353,7 @@ describe('calculate correct image size', () => {
     expect(result.size).toMatchObject(expected)
   })
 
-  test('assets/1000x600.png fit=inside ', async () => {
+  test('assets/1000x600.png fit=inside', async () => {
     const filePath = path.resolve(context, 'assets/1000x600.png')
     const queue = new AssetsQueue({ context, config: baseconfig })
 
@@ -375,6 +426,17 @@ test('get queue values', async () => {
   expect(queue.images.queue).toHaveLength(2)
 })
 
+test('ignore extension casing', async () => {
+  const filePath = path.resolve(context, 'assets/600x400-2.JPG')
+  const queue = new AssetsQueue({ context, config: baseconfig })
+
+  const result = await queue.add(filePath)
+
+  expect(queue.images.queue).toHaveLength(1)
+  expect(result.mimeType).toEqual('image/jpeg')
+  expect(result.ext).toEqual('.JPG')
+})
+
 test('disable lazy loading', async () => {
   const filePath = path.resolve(context, 'assets/1000x600.png')
   const queue = new AssetsQueue({ context, config: baseconfig })
@@ -384,6 +446,7 @@ test('disable lazy loading', async () => {
   expect(queue.images.queue).toHaveLength(2)
   expect(result.imageHTML).toMatchSnapshot()
   expect(result.noscriptHTML).toEqual('')
+  expect(result.dataUri).toBeUndefined()
 })
 
 test('skip srcset and dataUri', async () => {

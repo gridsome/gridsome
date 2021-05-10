@@ -1,5 +1,5 @@
 {
-  "version": "0.2.1",
+  "version": "0.3.0",
   "name": "@gridsome/source-datocms",
   "description": "DatoCMS source for Gridsome",
   "homepage": "https://github.com/gridsome/gridsome/tree/master/packages/source-datocms#readme",
@@ -12,7 +12,7 @@
     "datocms"
   ],
   "dependencies": {
-    "datocms-client": "^0.7.5",
+    "datocms-client": "^3.1.3",
     "humps": "^2.0.1"
   },
   "publishConfig": {

@@ -1,4 +1,4 @@
-import config from '~/.temp/config.js'
+import config from '#gridsome/config.js'
 import { normalizePath, isMailtoLink, isTelLink } from '../utils/helpers'
 
 // @vue/component
@@ -69,6 +69,7 @@ export default {
       attrs,
       directives,
       domProps: {
+        ...data.domProps,
         __gLink__: true
       }
     }, children)

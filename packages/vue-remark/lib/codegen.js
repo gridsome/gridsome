@@ -42,6 +42,8 @@ exports.genImportBlock = function (statements, file) {
     `  Object.keys(imported).forEach(function (key) {\n` +
     `    if (typeof imported[key] === 'object' && typeof imported[key].render === 'function') {\n` +
     `      components[key] = imported[key]\n` +
+    `    } else if (typeof imported[key] === 'function' && typeof imported[key].options.render === 'function') {\n` +
+    `      components[key] = imported[key]\n` +
     `    } else {\n` +
     `      computed[key] = function () {\n` +
     `        return imported[key]\n` +

@@ -15,12 +15,12 @@ const {
 const { BOOTSTRAP_FULL } = require('../utils/constants')
 
 class App {
-  constructor (context, options) {
+  constructor (context, options = {}) {
     process.GRIDSOME = this
 
     this.clients = {}
     this.context = context
-    this.config = require('./loadConfig')(context, options)
+    this.options = options
     this.isInitialized = false
     this.isBootstrapped = false
 
@@ -30,12 +30,6 @@ class App {
       renderQueue: new SyncWaterfallHook(['renderQueue']),
       redirects: new SyncWaterfallHook(['redirects', 'renderQueue']),
       server: new SyncHook(['server'])
-    }
-
-    if (this.config.permalinks.slugify) {
-      this._slugify = this.config.permalinks.slugify.use
-    } else {
-      this._slugify = v => v
     }
 
     autoBind(this)
@@ -95,21 +89,27 @@ class App {
   //
 
   async init () {
+    const loadConfig = require('./loadConfig')
     const Plugins = require('./Plugins')
     const Store = require('../store/Store')
+    const Server = require('../server/Server')
     const Schema = require('./Schema')
     const AssetsQueue = require('./queue/AssetsQueue')
     const Codegen = require('./codegen')
     const Pages = require('../pages/pages')
     const Compiler = require('./Compiler')
 
+    this.config = await loadConfig(this.context, this.options)
     this.plugins = new Plugins(this)
     this.store = new Store(this)
+    this.server = new Server(this)
     this.schema = new Schema(this)
     this.assets = new AssetsQueue(this)
     this.pages = new Pages(this)
     this.codegen = new Codegen(this)
     this.compiler = new Compiler(this)
+
+    this.config = Object.freeze(this.config)
 
     // TODO: remove before 1.0
     this.queue = this.assets
@@ -136,6 +136,12 @@ class App {
       this.plugins.on('configureServer', { handler: this.config.configureServer })
     }
 
+    await this.compiler.initialize()
+
+    if (this.config.mode === 'development') {
+      await this.server.initialize()
+    }
+
     this.isInitialized = true
 
     return this
@@ -154,7 +160,13 @@ class App {
   }
 
   slugify (value = '') {
-    return this._slugify(value, this.config.permalinks.slugify.options)
+    if (this.config && this.config.permalinks) {
+      const { slugify } = this.config.permalinks
+      if (typeof slugify.use === 'function') {
+        return slugify.use(value, slugify.options)
+      }
+    }
+    return value
   }
 
   graphql (docOrQuery, variables = {}) {

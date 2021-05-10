@@ -22,6 +22,7 @@ class Collection {
     this._collection = new Loki.Collection(typeName, {
       indices: ['id', 'internal.typeName', ...(options._indices || [])],
       unique: ['id', ...(options._unique || [])],
+      adaptiveBinaryIndices: false,
       disableMeta: true
     })
 
@@ -166,6 +167,10 @@ class Collection {
       options = { typeName: options }
     }
 
+    options.extensions = {
+      isDefinedReference: true
+    }
+
     // TODO: find an easier way to define references before deprecating this
     // deprecate('The addReference() method is deprecated. Use addSchemaTypes() instead.', {
     //   url: 'https://gridsome.org/docs/schema-api/'
@@ -175,6 +180,7 @@ class Collection {
 
     if (validName !== fieldName) {
       options.extensions = {
+        ...options.extensions,
         directives: [
           { name: 'proxy', args: { from: fieldName } }
         ]

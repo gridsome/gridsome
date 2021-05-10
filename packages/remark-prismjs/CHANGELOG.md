@@ -3,6 +3,28 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.5.0](https://github.com/gridsome/gridsome/tree/master/packages/remark-prismjs/compare/@gridsome/remark-prismjs@0.4.0...@gridsome/remark-prismjs@0.5.0) (2020-11-04)
+
+
+### Features
+
+* **prismjs:** add custom class prefix ([#1348](https://github.com/gridsome/gridsome/tree/master/packages/remark-prismjs/issues/1348)) ([0415068](https://github.com/gridsome/gridsome/tree/master/packages/remark-prismjs/commit/0415068ab8e590a25c6306334782c199f388cdb4))
+
+
+
+
+
+# [0.4.0](https://github.com/gridsome/gridsome/tree/master/packages/remark-prismjs/compare/@gridsome/remark-prismjs@0.3.0...@gridsome/remark-prismjs@0.4.0) (2020-08-20)
+
+
+### Features
+
+* **prismjs:** show line numbers ([#1254](https://github.com/gridsome/gridsome/tree/master/packages/remark-prismjs/issues/1254)) ([cf02a8d](https://github.com/gridsome/gridsome/tree/master/packages/remark-prismjs/commit/cf02a8d91763b812fad990b6335c2d64b50f153a))
+
+
+
+
+
 # [0.3.0](https://github.com/gridsome/gridsome/tree/master/packages/remark-prismjs/compare/@gridsome/remark-prismjs@0.2.0...@gridsome/remark-prismjs@0.3.0) (2019-10-25)
 
 

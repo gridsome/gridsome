@@ -60,23 +60,38 @@ module.exports = {
 }
 ```
 
+## Options
+
+#### customClassPrefix
+
+- Type: `String`
+- Default: `''`
+
+If Prism's default classes are too generic and cause conflicts, you can add a prefix like `"prism--"` to all Prism
+classes by passing it in as the `customClassPrefix`.
+
+#### transformInlineCode
+
+- Type: `Boolean`
+- Default: `false`
+
 If you'd like to disable highlighting of inline code blocks, pass `transformInlineCode: false` in the plugin options
 
-```js
-module.exports = {
-  plugins: [
-    {
-      use: '@gridsome/source-filesystem',
-      options: {}
-    }
-  ],
+#### showLineNumbers
 
-  transformers: {
-    remark: {
-      plugins: [
-        ['@gridsome/remark-prismjs', { transformInlineCode: false }]
-      ]
-    }
-  }
+- Type: `Boolean`
+- Default: `false`
+
+If you'd like to add line numbers alongside the code. You can pass `showLineNumbers: true` in the plugin options and import a Prism CSS about line numbers to `main.js` file. like this:
+
+```js
+import 'prismjs/themes/prism.css'
+// Prism default CSS about line numbers
+import 'prismjs/plugins/line-numbers/prism-line-numbers.css'
+
+export default function (Vue) {
+  // ...
 }
 ```
+
+If you wish to only show line numbers on certain code blocks, you can leave `false` and use the `{ lineNumbers: true }` syntax below

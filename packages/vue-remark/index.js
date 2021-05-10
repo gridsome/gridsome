@@ -2,13 +2,19 @@ const path = require('path')
 const pathToRegexp = require('path-to-regexp')
 const Filesystem = require('@gridsome/source-filesystem')
 const RemarkTransformer = require('@gridsome/transformer-remark')
-const { trimEnd, kebabCase } = require('lodash')
+const { omit, trimEnd, kebabCase } = require('lodash')
+const { GraphQLList, GraphQLBoolean } = require('gridsome/graphql')
 
 const toSFC = require('./lib/toSfc')
 const sfcSyntax = require('./lib/sfcSyntax')
 const toVueRemarkAst = require('./lib/toVueRemarkAst')
 const remarkFilePlugin = require('./lib/plugins/file')
 const remarkImagePlugin = require('./lib/plugins/image')
+
+const {
+  HeadingType,
+  HeadingLevels
+} = require('./lib/types/HeadingType')
 
 const {
   createFile,
@@ -43,7 +49,7 @@ const createCustomBlockRule = (config, type) => {
   config.module.rule(type)
     .resourceQuery(re)
     .use('babel-loader')
-    .loader('babel-loader')
+    .loader(require.resolve('babel-loader'))
     .options({
       presets: [
         require.resolve('@babel/preset-env')
@@ -74,7 +80,8 @@ class VueRemark {
       includePaths: [],
       plugins: [],
       remark: {},
-      refs: {}
+      refs: {},
+      ignore: []
     }
   }
 
@@ -99,6 +106,8 @@ class VueRemark {
     this.options = options
     this.context = options.baseDir ? api.resolve(options.baseDir) : api.context
 
+    api.setClientOptions({})
+
     if (typeof options.template === 'string') {
       this.template = api.resolve(options.template)
     }
@@ -119,8 +128,13 @@ class VueRemark {
       this.route.routeKeys = normalizeRouteKeys(routeKeys)
     }
 
+    const paths = [
+      '**/*.md',
+      ...options.ignore.map((path) => `!${path}`)
+    ]
+
     this.filesystem = new Filesystem(api, {
-      path: '**/*.md',
+      path: paths,
       typeName: options.typeName,
       baseDir: options.baseDir,
       pathPrefix: options.pathPrefix,
@@ -204,7 +218,7 @@ class VueRemark {
 
         if (!parsed.excerpt) parsed.excerpt = null
 
-        Object.assign(options, parsed)
+        Object.assign(options, omit(parsed, ['layout']))
 
         options.internal.mimeType = null
         options.internal.content = null
@@ -225,7 +239,21 @@ class VueRemark {
       const { headings } = this.remark.extendNodeType()
 
       addSchemaResolvers({
-        [this.options.typeName]: { headings }
+        [this.options.typeName]: {
+          headings: {
+            ...headings,
+            type: new GraphQLList(HeadingType),
+            args: {
+              ...headings.args,
+              depth: {
+                type: HeadingLevels
+              },
+              stripTags: {
+                type: GraphQLBoolean, defaultValue: true
+              }
+            }
+          }
+        }
       })
     })
   }
@@ -249,7 +277,7 @@ class VueRemark {
       })
       .end()
       .use('vue-loader')
-      .loader('vue-loader')
+      .loader(require.resolve('vue-loader'))
       .options(vueLoader.toConfig().options)
       .end()
       .use('vue-remark-loader')

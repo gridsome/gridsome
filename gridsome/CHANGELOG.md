@@ -3,6 +3,149 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.7.23](https://github.com/gridsome/gridsome/compare/gridsome@0.7.22...gridsome@0.7.23) (2020-11-22)
+
+
+### Bug Fixes
+
+* **develop:** guard against sockjs `null` argument ([#1383](https://github.com/gridsome/gridsome/issues/1383)) ([ed99c62](https://github.com/gridsome/gridsome/commit/ed99c62fc81c7886484a55493c5502cb900832ea))
+* **g-image:** support uppercase file extensions ([#1381](https://github.com/gridsome/gridsome/issues/1381)) ([063c984](https://github.com/gridsome/gridsome/commit/063c98444d3e3c59c0536e5b3b784dedc5d9e109))
+
+
+
+
+
+## [0.7.22](https://github.com/gridsome/gridsome/compare/gridsome@0.7.21...gridsome@0.7.22) (2020-11-04)
+
+
+### Bug Fixes
+
+* **g-image:** proper immediate typing and behaviour ([#1372](https://github.com/gridsome/gridsome/issues/1372)) ([a4c9d1f](https://github.com/gridsome/gridsome/commit/a4c9d1f061427a50ae84b3dea3f2881e0562cbd3))
+* **g-link:** add support for v-html ([#1373](https://github.com/gridsome/gridsome/issues/1373)) ([3762ecd](https://github.com/gridsome/gridsome/commit/3762ecd1d5d16d91d2976ef2dbdcea86fb5f0dba))
+* **pages:** dynamic route params in directories on windows ([#1359](https://github.com/gridsome/gridsome/issues/1359)) ([3d36051](https://github.com/gridsome/gridsome/commit/3d360512ed51045df876df426c450beb891d29e9))
+
+
+
+
+
+## [0.7.21](https://github.com/gridsome/gridsome/compare/gridsome@0.7.20...gridsome@0.7.21) (2020-09-18)
+
+
+### Bug Fixes
+
+* **graphql:** convert to input type correctly ([#1338](https://github.com/gridsome/gridsome/issues/1338)) ([09478fc](https://github.com/gridsome/gridsome/commit/09478fc16b8701581e339aec8e09e6e5ab384d7f))
+* **graphql:** prevent infinite loop while creating input types ([7e5f863](https://github.com/gridsome/gridsome/commit/7e5f863199d86b9d0eeb288719cbe96765cbc7ac))
+
+
+
+
+
+## [0.7.20](https://github.com/gridsome/gridsome/compare/gridsome@0.7.19...gridsome@0.7.20) (2020-08-20)
+
+
+### Bug Fixes
+
+* **app:** clear cache if the request fails ([#1312](https://github.com/gridsome/gridsome/issues/1312)) ([f3f473e](https://github.com/gridsome/gridsome/commit/f3f473e9883bc7879f21b3c69522cf2c9a32a82f))
+* **app:** decode anchor hash value ([#1281](https://github.com/gridsome/gridsome/issues/1281)) ([#1293](https://github.com/gridsome/gridsome/issues/1293)) ([b93eb39](https://github.com/gridsome/gridsome/commit/b93eb39ec41384f9ec1869650e29d783d93a5d48))
+* **develop:** ensure dynamic page loads on first run ([6357f19](https://github.com/gridsome/gridsome/commit/6357f1934510e8fae2d950c6074818b35e70fcba))
+* **g-image:** exclude base64 data when not lazy loading ([#1318](https://github.com/gridsome/gridsome/issues/1318)) ([be15ba8](https://github.com/gridsome/gridsome/commit/be15ba89518d73178613ca50d19cbe091363e6d0))
+
+
+
+
+
+## [0.7.19](https://github.com/gridsome/gridsome/compare/gridsome@0.7.18...gridsome@0.7.19) (2020-07-08)
+
+
+### Bug Fixes
+
+* **g-image:** option for disabling compression ([#1256](https://github.com/gridsome/gridsome/issues/1256)) ([7e6691f](https://github.com/gridsome/gridsome/commit/7e6691febd5ba7de40b33a15de6940fead8316cd))
+* **g-image:** prevent increased image sizes ([#1256](https://github.com/gridsome/gridsome/issues/1256)) ([20776c9](https://github.com/gridsome/gridsome/commit/20776c90e8ad48bbb653ed5358e303d44093750e))
+
+
+
+
+
+## [0.7.18](https://github.com/gridsome/gridsome/compare/gridsome@0.7.17...gridsome@0.7.18) (2020-07-02)
+
+
+### Bug Fixes
+
+* **app:** redirect to fallback route if not found ([#1239](https://github.com/gridsome/gridsome/issues/1239)) ([41f2b0f](https://github.com/gridsome/gridsome/commit/41f2b0ff411b319cd2a018c5d1b8d256088d9e57))
+* **app:** set custom classes for <Pager> links ([#1234](https://github.com/gridsome/gridsome/issues/1234)) ([f2ba2a3](https://github.com/gridsome/gridsome/commit/f2ba2a385591cf09bd07b64652ee314febd431ee))
+* **build:** ensure routes always have the same order ([#1247](https://github.com/gridsome/gridsome/issues/1247)) ([da5674f](https://github.com/gridsome/gridsome/commit/da5674fd248fd518963328628d578c0c93451d95))
+* **build:** keep webpack hash between builds ([#1247](https://github.com/gridsome/gridsome/issues/1247)) ([e184813](https://github.com/gridsome/gridsome/commit/e1848132f0466cb4bf2dc0a4bfe621cc9599e1ad))
+* **develop:** audio/video playback issues in Chrome ([#1220](https://github.com/gridsome/gridsome/issues/1220)) ([3a3c235](https://github.com/gridsome/gridsome/commit/3a3c235331449011a05117667215b71f71b2416d))
+* **develop:** fallback to url when no key param is set ([809aaf8](https://github.com/gridsome/gridsome/commit/809aaf8a8b40d07ef89c34c32bfe783e33b61f43))
+* **graphql:** add missing ref exists functions ([#1252](https://github.com/gridsome/gridsome/issues/1252)) ([83b0f96](https://github.com/gridsome/gridsome/commit/83b0f966fcdd3ae6a1e0231985d45c3f2e74a308))
+* **graphql:** ensure inferred fields are added to filters ([#718](https://github.com/gridsome/gridsome/issues/718)) ([18d0091](https://github.com/gridsome/gridsome/commit/18d009168c01955a1f006a1cbf95073e33634afc))
+
+
+### Performance Improvements
+
+* **build:** improve page-query runner ([e3a88be](https://github.com/gridsome/gridsome/commit/e3a88be673b58fd563c4528038e6dca77d5ec7fa))
+
+
+
+
+
+## [0.7.17](https://github.com/gridsome/gridsome/compare/gridsome@0.7.16...gridsome@0.7.17) (2020-06-07)
+
+
+### Performance Improvements
+
+* **build:** improve page-query output performance ([#1190](https://github.com/gridsome/gridsome/issues/1190)) ([2d81133](https://github.com/gridsome/gridsome/commit/2d811337bb61627ebb51e90404fcb24425bffd1d))
+* **g-image:** get dimensions from sharp metadata ([4f8ed20](https://github.com/gridsome/gridsome/commit/4f8ed20c30608fe624f3e3dad87174f600b50e1d))
+* **graphql:** improve path argument performance ([#1190](https://github.com/gridsome/gridsome/issues/1190)) ([8f15b4c](https://github.com/gridsome/gridsome/commit/8f15b4c01e650476c174b3e1c8b0f00ee66dd739))
+* **store:** disable adaptive indices for node index ([#1190](https://github.com/gridsome/gridsome/issues/1190)) ([52f90e4](https://github.com/gridsome/gridsome/commit/52f90e4196971411b1559e601b38abf798c63198))
+* **templates:** cache date while generating paths ([#1190](https://github.com/gridsome/gridsome/issues/1190)) ([c4f17a0](https://github.com/gridsome/gridsome/commit/c4f17a020491d1d7238e416a9911f543aac4b3e1))
+
+
+
+
+
+## [0.7.16](https://github.com/gridsome/gridsome/compare/gridsome@0.7.15...gridsome@0.7.16) (2020-06-03)
+
+
+### Bug Fixes
+
+* **graphql:** calculate pagination in dev mode ([#1198](https://github.com/gridsome/gridsome/issues/1198)) ([39e9381](https://github.com/gridsome/gridsome/commit/39e9381e764a634dd6af7e17fc085e66f7f1a674))
+
+
+
+
+
+## [0.7.15](https://github.com/gridsome/gridsome/compare/gridsome@0.7.14...gridsome@0.7.15) (2020-05-26)
+
+
+### Bug Fixes
+
+* **app:** add extra debugging output on hash mismatch failure ([#1150](https://github.com/gridsome/gridsome/issues/1150)) ([dc1a3fe](https://github.com/gridsome/gridsome/commit/dc1a3fe528f61c97b1dab0b34fb93076a33cdf08))
+* **app:** reduce generated code in routes.js ([#724](https://github.com/gridsome/gridsome/issues/724)) ([5e1d49a](https://github.com/gridsome/gridsome/commit/5e1d49ad1f0069bc4e7e73b05e2e3be72a31fbbe))
+* **config:** skip undefined plugins ([3dc6b0f](https://github.com/gridsome/gridsome/commit/3dc6b0f74ddf20aacb774056d7c2e66e05a72209))
+* **g-image:** rotate based on exif orientation ([#1178](https://github.com/gridsome/gridsome/issues/1178)) ([9e6e118](https://github.com/gridsome/gridsome/commit/9e6e1186ea3f06913a8843062dc86b0969b34d85))
+* **graphql:** add exists filter query operator ([4777d0c](https://github.com/gridsome/gridsome/commit/4777d0ccd9b04201d63bc17bda520b622df4b304))
+* **graphql:** allow GET request with query param ([#1127](https://github.com/gridsome/gridsome/issues/1127)) ([5a28064](https://github.com/gridsome/gridsome/commit/5a280646a368dd8b29ffa648405b6953451aa81a))
+* **graphql:** exclude undefined variables in page-query ([f753a47](https://github.com/gridsome/gridsome/commit/f753a47f247828538dbb803a2b28bddc230e194c))
+* **graphql:** use correct type for store.addReference() ([5b71d04](https://github.com/gridsome/gridsome/commit/5b71d04ddd23eaf0a5ba40fc56a93db77999cf87))
+
+
+
+
+
+## [0.7.14](https://github.com/gridsome/gridsome/compare/gridsome@0.7.13...gridsome@0.7.14) (2020-04-18)
+
+
+### Bug Fixes
+
+* **app:** add trailing slash to paths in Pager component ([#1073](https://github.com/gridsome/gridsome/issues/1073)) ([a559bb8](https://github.com/gridsome/gridsome/commit/a559bb8138f5021c22d00777c7b6021c5a4f36dd))
+* **app:** include pathPrefix when hard reloading app ([#1044](https://github.com/gridsome/gridsome/issues/1044)) ([4d22712](https://github.com/gridsome/gridsome/commit/4d2271222cb44e94b9e6f7c0ca04740226c0a7ce))
+* **graphql:** pass operationName argument to graphql method ([#1047](https://github.com/gridsome/gridsome/issues/1047)) ([a5c2d3b](https://github.com/gridsome/gridsome/commit/a5c2d3b1b812f8f80f3f96b7fa30d30e1ed64035))
+
+
+
+
+
 ## [0.7.13](https://github.com/gridsome/gridsome/compare/gridsome@0.7.12...gridsome@0.7.13) (2020-02-18)
 
 

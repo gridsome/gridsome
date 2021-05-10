@@ -36,7 +36,7 @@ module.exports = {
 
 ## Add additional plugins
 
-By default this plugin comes with `remark-slug`, `remark-autolink-headings`, `remark-external-links`, `remark-squeeze-paragraphs` and `remark-fix-guillemets` included. Add any additional [Remark plugin](https://github.com/remarkjs/remark/blob/master/doc/plugins.md#list-of-plugins) with a `plugins` option. Included plugins can also be disabled if needed. See more info below.
+By default this plugin comes with `remark-slug`, `remark-autolink-headings`, `remark-external-links`, `remark-squeeze-paragraphs` and `remark-fix-guillemets` included. Add any additional [Remark plugin](https://github.com/remarkjs/remark/blob/main/doc/plugins.md#list-of-plugins) with a `plugins` option. Included plugins can also be disabled if needed. See more info below.
 
 The following example adds the `remark-attr` plugin globally if it is installed in your project.
 
@@ -57,7 +57,7 @@ The following example adds the `remark-attr` plugin globally if it is installed 
 - Type: `Array`
 - Default: `[]`
 
-Add additional [Remark plugins](https://github.com/remarkjs/remark/blob/master/doc/plugins.md#list-of-plugins).
+Add additional [Remark plugins](https://github.com/remarkjs/remark/blob/main/doc/plugins.md#list-of-plugins).
 
 ```js
 {
@@ -83,7 +83,7 @@ Set this option to `false` to disable all built-in plugins.
 
 #### grayMatter
 
-- Type: `object` 
+- Type: `object`
 - Default: `{}`
 
 Options to pass through to [gray-matter][] for parsing front matter.
@@ -138,7 +138,7 @@ Automatically add links to headings. Disabled if `slug` is `false`.
 - Type: `boolean`
 - Default: `true`
 
-Support ASCII guillements (`<<`, `>>`) and mapping them to HTML.
+Support ASCII guillemets (`<<`, `>>`) and mapping them to HTML.
 
 #### imageQuality
 
@@ -164,7 +164,7 @@ Support ASCII guillements (`<<`, `>>`) and mapping them to HTML.
 - Type: `Object`
 - Default: `{}`
 
-Add additional [Remark options](https://github.com/remarkjs/remark/blob/master/packages/remark-parse/readme.md#options).
+Add additional [Remark options](https://github.com/remarkjs/remark/blob/main/packages/remark-parse/readme.md#options).
 
 This allows you to enable/disable `gfm`, `commonmark`, `footnotes`,  `pedantic` and `blocks`.
 
@@ -175,18 +175,18 @@ This allows you to enable/disable `gfm`, `commonmark`, `footnotes`,  `pedantic` 
 * commonmark
   * Type: `boolean`
   * Default: `false`
-  
+
 * footnotes
   * Type: `boolean`
   * Default: `false`
-  
+
 * pedantic
   * Type: `boolean`
   * Default: `false`
-  
+
 * blocks
   * Type: `Array | string`
-  * Default: list of [block HTML elements](https://github.com/remarkjs/remark/blob/master/packages/remark-parse/lib/block-elements.js)
+  * Default: list of [block HTML elements](https://github.com/remarkjs/remark/blob/main/packages/remark-parse/lib/block-elements.js)
 
 ```js
 {

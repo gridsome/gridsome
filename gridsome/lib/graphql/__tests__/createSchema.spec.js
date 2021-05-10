@@ -451,6 +451,19 @@ describe('add reference resolvers', () => {
     expect(data.track.unionRefs[0].name).toEqual('First Album')
     expect(data.track.unionRefs[1].name).toEqual('Second Single')
   })
+
+  test('throw if referencing missing collection', async () => {
+    expect(initApp(({ addSchemaTypes }) => {
+      addSchemaTypes(`
+        type Track implements Node {
+          album: MissingType
+        }
+        type MissingType implements Node {
+          id: ID!
+        }
+      `)
+    })).rejects.toThrow('Track.album')
+  })
 })
 
 test('add custom resolver for invalid field names', async () => {
@@ -1114,6 +1127,33 @@ test('use extension multiple times on field', async () => {
   expect(errors).toBeUndefined()
   expect(data.post.title).toEqual('test-one-two-three')
   expect(apply.mock.calls).toHaveLength(3)
+})
+
+test('fail if adding type with reserved type name', async () => {
+  const app = createApp(api => {
+    api.loadSource(({ addSchemaTypes, schema }) => {
+      addSchemaTypes([
+        schema.createObjectType({
+          name: 'File',
+          fields: {
+            name: 'String'
+          }
+        })
+      ])
+    })
+  })
+
+  expect(app).rejects.toThrow(`'File'`)
+})
+
+test('fail if adding type with reserved type name (SDL)', async () => {
+  const app = createApp(api => {
+    api.loadSource(({ addSchemaTypes }) => {
+      addSchemaTypes('type File { name: String }')
+    })
+  })
+
+  expect(app).rejects.toThrow(`'File'`)
 })
 
 test('prevent overriding built-in GraphQL directives', done => {

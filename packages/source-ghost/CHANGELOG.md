@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0](https://github.com/gridsome/gridsome/tree/master/packages/source-ghost/compare/@gridsome/source-ghost@0.3.1...@gridsome/source-ghost@0.4.0) (2020-04-18)
+
+
+### Features
+
+* **ghost:** reading_time field for posts ([#1090](https://github.com/gridsome/gridsome/tree/master/packages/source-ghost/issues/1090)) ([10b05b6](https://github.com/gridsome/gridsome/tree/master/packages/source-ghost/commit/10b05b61a16201b47995152a32ccb7cb49653f82))
+* **ghost:** tags and author references for pages ([#963](https://github.com/gridsome/gridsome/tree/master/packages/source-ghost/issues/963)) ([dcd5250](https://github.com/gridsome/gridsome/tree/master/packages/source-ghost/commit/dcd5250ee8e4ed2f7ec5220f4a03c1180920f9f3))
+
+
+
+
+
 ## [0.3.1](https://github.com/gridsome/gridsome/tree/master/packages/source-ghost/compare/@gridsome/source-ghost@0.3.0...@gridsome/source-ghost@0.3.1) (2020-02-18)
 
 

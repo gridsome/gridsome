@@ -1,0 +1,104 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`generate a route with meta 1`] = `
+"const c1 = () => import(/* webpackChunkName: \\"page--fixtures--page-a-vue\\" */ \\"__fixtures__/PageA.vue\\")
+
+export default [
+  {
+    path: \\"/page/\\",
+    component: c1,
+    meta: {
+      string: \\"test\\",
+      boolean: true,
+      number: 2
+    }
+  }
+]
+"
+`;
+
+exports[`generate a route with raw code as meta 1`] = `
+"const c1 = () => import(/* webpackChunkName: \\"page--fixtures--page-a-vue\\" */ \\"__fixtures__/PageA.vue\\")
+
+export default [
+  {
+    path: \\"/page/\\",
+    component: c1,
+    meta: {
+      $log: () => console.log('hello!')
+    }
+  }
+]
+"
+`;
+
+exports[`generate a simple route 1`] = `
+"const c1 = () => import(/* webpackChunkName: \\"page--fixtures--page-a-vue\\" */ \\"__fixtures__/PageA.vue\\")
+
+export default [
+  {
+    path: \\"/page/\\",
+    component: c1
+  }
+]
+"
+`;
+
+exports[`generate component imports as variables 1`] = `
+"const c1 = () => import(/* webpackChunkName: \\"page--fixtures--page-a-vue\\" */ \\"__fixtures__/PageA.vue\\")
+const c2 = () => import(/* webpackChunkName: \\"page--fixtures--page-c-vue\\" */ \\"__fixtures__/PageC.vue\\")
+const c3 = () => import(/* webpackChunkName: \\"page--fixtures--page-b-vue\\" */ \\"__fixtures__/PageB.vue\\")
+
+export default [
+  {
+    path: \\"/page-a/1/\\",
+    component: c1
+  },
+  {
+    path: \\"/page-a/2/\\",
+    component: c1
+  },
+  {
+    path: \\"/page-a/3/\\",
+    component: c1
+  },
+  {
+    name: \\"__user_id\\",
+    path: \\"/user/:id\\",
+    component: c2,
+    meta: {
+      dataPath: \\"/user/_id.json\\",
+      dynamic: true
+    }
+  },
+  {
+    path: \\"/page-b/\\",
+    component: c3
+  },
+  {
+    name: \\"404\\",
+    path: \\"*\\",
+    component: c2,
+    meta: {
+      dataPath: \\"/404.json\\"
+    }
+  }
+]
+"
+`;
+
+exports[`generate redirect routes 1`] = `
+"const c1 = () => import(/* webpackChunkName: \\"page--fixtures--page-a-vue\\" */ \\"__fixtures__/PageA.vue\\")
+
+export default [
+  {
+    path: \\"/old\\",
+    redirect: \\"/page\\"
+  },
+  {
+    path: \\"/page/\\",
+    component: c1
+  }
+]
+"
+`;

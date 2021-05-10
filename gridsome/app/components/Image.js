@@ -13,14 +13,14 @@ export default {
     position: { type: String, default: '' },
     background: { type: String, default: '' },
     blur: { type: String, default: '' },
-    immediate: { type: true, default: undefined },
+    immediate: { type: Boolean, default: false },
     imageWidths: { type: String, default: undefined }
   },
 
   render: (h, { data, props }) => {
     const classNames = [data.class, 'g-image']
     const noscriptClassNames = [data.staticClass, classNames.slice()]
-    const isImmediate = props.immediate || props.immediate !== undefined
+    const isImmediate = props.immediate
     const directives = data.directives || []
     const attrs = data.attrs || {}
     const hook = data.hook || {}
@@ -40,9 +40,10 @@ export default {
 
         attrs.src = isLazy ? dataUri : src
         attrs.width = size.width
+        attrs.height = size.height
 
         if (isLazy) attrs['data-src'] = src
-        if (srcset.length) attrs[`${isLazy ? 'data-' : ''}srcset`] = srcset.join(', ')
+        if (srcset.length) attrs[`${isLazy ? 'data-' : ''}srcset`] = Array.isArray(srcset) ? srcset.join(', ') : srcset
         if (sizes) attrs[`${isLazy ? 'data-' : ''}sizes`] = sizes
 
         if (isLazy) {
@@ -85,6 +86,7 @@ export default {
           innerHTML: `` +
             `<img src="${props.src.src}" class="${stringifyClass(noscriptClassNames)}"` +
             (attrs.width ? ` width="${attrs.width}"`: '') +
+            (attrs.height ? ` height="${attrs.height}"`: '') +
             (attrs.alt ? ` alt="${attrs.alt}"` : '') +
             `>`
         }

@@ -16,7 +16,7 @@ class AssetsQueue {
   async add (filePath, options) {
     const { config, context } = this.app
     const { ext } = path.parse(filePath)
-    const isImage = config.imageExtensions.includes(ext)
+    const isImage = config.imageExtensions.includes(ext.toLowerCase())
 
     const data = {
       type: isImage ? 'image' : 'file',
@@ -39,8 +39,12 @@ class AssetsQueue {
 
     const entry = { ...data, ...asset }
 
-    if (isDev && asset.cacheKey) {
-      this.index.set(asset.cacheKey, entry)
+    if (isDev) {
+      if (asset.cacheKey) {
+        this.index.set(asset.cacheKey, entry)
+      } else {
+        this.index.set(asset.src, entry)
+      }
     }
 
     return entry

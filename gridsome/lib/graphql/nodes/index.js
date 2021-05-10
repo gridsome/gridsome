@@ -5,7 +5,7 @@ const { PER_PAGE } = require('../../utils/constants')
 const { createFilterInput } = require('../filters/input')
 const createFieldDefinitions = require('../createFieldDefinitions')
 const { createFieldTypes } = require('../createFieldTypes')
-const { isRefFieldDefinition, createTypeName } = require('../utils')
+const { isRefFieldDefinition, createTypeName, validateTypeName } = require('../utils')
 const { isRefField } = require('../../store/utils')
 
 const {
@@ -22,6 +22,14 @@ module.exports = function createNodesSchema (schemaComposer, store) {
   const typeNames = Object.keys(store.collections)
   const schema = {}
 
+  try {
+    typeNames.forEach(validateTypeName)
+  } catch (err) {
+    throw new Error(
+      `Failed to generate GraphQL types for collection. ${err.message}`
+    )
+  }
+
   schemaComposer.createEnumTC({
     name: 'TypeName',
     values: typeNames.reduce((acc, value) => (acc[value] = { value } && acc), {})
@@ -29,14 +37,13 @@ module.exports = function createNodesSchema (schemaComposer, store) {
 
   createTypeComposers(schemaComposer, store)
   createResolvers(schemaComposer, store)
+  createFields(schemaComposer, store)
 
   for (const typeName of typeNames) {
     const collection = store.getCollection(typeName)
     const typeComposer = schemaComposer.get(typeName)
 
-    createFields(schemaComposer, typeComposer, collection)
     createFilterInput(schemaComposer, typeComposer)
-    createReferenceFields(schemaComposer, typeComposer, collection)
     createThirdPartyFields(typeComposer, collection)
 
     const fieldName = camelCase(typeName)
@@ -112,12 +119,16 @@ function createTypeComposers (schemaComposer, store) {
   }
 }
 
-function createFields (schemaComposer, typeComposer, collection) {
-  const typeName = typeComposer.getTypeName()
-  const fieldDefs = inferFields(typeComposer, collection)
-  const fieldTypes = createFieldTypes(schemaComposer, fieldDefs, typeName)
+function createFields (schemaComposer, store) {
+  for (const typeName in store.collections) {
+    const collection = store.getCollection(typeName)
+    const typeComposer = schemaComposer.get(typeName)
+    const fieldDefs = inferFields(typeComposer, collection)
+    const fieldTypes = createFieldTypes(schemaComposer, fieldDefs, typeName)
 
-  addInferredFields(typeComposer, fieldDefs, fieldTypes)
+    createInferredFields(typeComposer, fieldDefs, fieldTypes)
+    createReferenceFields(schemaComposer, typeComposer, collection)
+  }
 }
 
 function inferFields (typeComposer, collection) {
@@ -133,7 +144,7 @@ function inferFields (typeComposer, collection) {
   })
 }
 
-function addInferredFields (typeComposer, fieldDefs, fieldTypes) {
+function createInferredFields (typeComposer, fieldDefs, fieldTypes) {
   for (const key in fieldDefs) {
     const options = fieldDefs[key]
     const fieldType = fieldTypes[options.fieldName]
@@ -221,13 +232,7 @@ function createTypeResolvers (typeComposer, collection) {
     type: typeName,
     args: {
       id: 'ID',
-      path: 'String',
-      nullable: {
-        type: 'Boolean',
-        defaultValue: false,
-        description: 'Will return an error if not nullable.',
-        deprecationReason: 'Will always return null if not found.'
-      }
+      path: 'String'
     },
     resolve: createFindOneResolver(typeComposer)
   })
@@ -341,7 +346,7 @@ function isListTC (anyTC) {
 }
 
 function createReferenceManyUnionResolver (typeNames) {
-    return (src, args , ctx, info) => {
+    return (src, args, ctx, info) => {
       const fieldValue = src[info.fieldName] || []
 
       if (fieldValue.length && isRefField(fieldValue[0])) {

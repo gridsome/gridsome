@@ -15,30 +15,7 @@
   </Layout>
 </template>
 
-<page-query>
-query TestDoc($id: ID!, $page: Int, $perPage: Int) {
-  testDoc(id: $id) {
-    id
-    path
-    title
-    belongsTo(page: $page, perPage: $perPage) @paginate {
-      pageInfo {
-        totalPages
-        currentPage
-      }
-      edges {
-        node {
-          ... on TestDoc {
-            id
-            path
-            title
-          }
-        }
-      }
-    }
-  }
-}
-</page-query>
+<page-query src="~/queries/TestDoc.gql" />
 
 <script>
 import { Pager } from 'gridsome'

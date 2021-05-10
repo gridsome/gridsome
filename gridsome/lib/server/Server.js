@@ -1,24 +1,52 @@
+const url = require('url')
 const path = require('path')
-const http = require('http')
+const chalk = require('chalk')
+const devcert = require('devcert')
 const express = require('express')
 const { SyncHook } = require('tapable')
-const graphqlHTTP = require('express-graphql')
+const { graphqlHTTP } = require('express-graphql')
 const graphqlMiddleware = require('./middlewares/graphql')
 const historyApiFallback = require('connect-history-api-fallback')
 const { default: playground } = require('graphql-playground-middleware-express')
 const { forwardSlash } = require('../utils')
+const { info } = require('../utils/log')
+const { prepareUrls } = require('./utils')
 
 class Server {
-  constructor(app, urls) {
+  constructor(app) {
     this._app = app
-    this._urls = urls
 
     this.hooks = {
       setup: new SyncHook(['app']),
       afterSetup: new SyncHook(['app'])
     }
+  }
 
-    app.hooks.server.call(this)
+  async initialize() {
+    const { host, port, https } = this._app.config
+    const { devServer = {} } = this._app.compiler.getClientConfig()
+
+    this.hostname = host || devServer.host || '0.0.0.0'
+    this.port = port || devServer.port
+    this.https = https || devServer.https
+    this.httpsOptions = null
+
+    if (devServer.https) {
+      this.httpsOptions = {
+        key: devServer.key,
+        cert: devServer.cert
+      }
+      if (devServer.ca) {
+        process.env.NODE_EXTRA_CA_CERTS = devServer.ca
+      }
+    }
+
+    if (!this.port) {
+      // Find an available port if none is specified.
+      this.port = await require('./resolvePort')()
+    }
+
+    this.urls = prepareUrls(this.hostname, this.port, this.https)
   }
 
   async createExpressApp() {
@@ -36,7 +64,7 @@ class Server {
     this.hooks.setup.call(app)
 
     app.use(
-      this._urls.graphql.endpoint,
+      this.urls.graphql.endpoint,
       express.json(),
       graphqlMiddleware(this._app),
       graphqlHTTP({
@@ -64,9 +92,9 @@ class Server {
 
     if (isDev) {
       app.get(
-        this._urls.explore.endpoint,
+        this.urls.explore.endpoint,
         playground({
-          endpoint: this._urls.graphql.endpoint,
+          endpoint: this.urls.graphql.endpoint,
           title: 'Gridsome GraphQL Explorer',
           faviconUrl: 'https://avatars0.githubusercontent.com/u/17981963?s=200&v=4'
         })
@@ -96,15 +124,43 @@ class Server {
     return app
   }
 
-  async listen(port, hostname, callback) {
+  async generateCertificate() {
+    if (this.httpsOptions) {
+      return
+    }
+
+    const { hostname } = url.parse(this.urls.local.pretty)
+
+    if (!devcert.hasCertificateFor(hostname)) {
+      info(`Creating SSL certificate for: ${chalk.bold(hostname)}`)
+    }
+
+    const { caPath, key, cert } = await devcert.certificateFor(hostname, {
+      getCaPath: true
+    })
+
+    if (caPath) {
+      process.env.NODE_EXTRA_CA_CERTS = caPath
+    }
+
+    this.httpsOptions = { key, cert }
+  }
+
+  async listen() {
+    this._app.hooks.server.call(this)
+
     const app = await this.createExpressApp()
-    const server = http.createServer(app)
+
+    const server = this.httpsOptions
+      ? require('https').createServer(this.httpsOptions, app)
+      : require('http').createServer(app)
 
     if (process.env.NODE_ENV === 'development') {
       const sockjs = require('sockjs')
       const echo = sockjs.createServer({ log: () => null })
 
       echo.on('connection', connection => {
+        if(!connection) return
         this._app.clients[connection.id] = connection
 
         connection.on('close', () => {
@@ -113,11 +169,15 @@ class Server {
       })
 
       echo.installHandlers(server, {
-        prefix: this._urls.sockjs.endpoint
+        prefix: this.urls.sockjs.endpoint
       })
     }
 
-    server.listen(port, hostname, callback)
+    server.listen(this.port, this.hostname, err => {
+      if (err) throw err
+    })
+
+    return server
   }
 }
 

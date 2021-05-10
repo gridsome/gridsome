@@ -2,7 +2,7 @@ const path = require('path')
 const moment = require('moment')
 const { isPlainObject, get } = require('lodash')
 
-const ISO_8601_FORMAT = [
+const SUPPORTED_DATE_FORMATS = [
   'YYYY',
   'YYYY-MM',
   'YYYY-MM-DD',
@@ -31,7 +31,13 @@ const ISO_8601_FORMAT = [
   'YYYY-[W]WW-E',
   'YYYY[W]WWE',
   'YYYY-DDDD',
-  'YYYYDDDD'
+  'YYYYDDDD',
+
+  'YYYY-MM-DD HH:mm:ss Z',
+  'YYYY-MM-DD HH:mm:ss',
+
+  'YYYY-MM-DD HH:mm:ss.SSSS Z',
+  'YYYY-MM-DD HH:mm:ss.SSSS'
 ]
 
 exports.createFile = function (options) {
@@ -51,7 +57,7 @@ exports.createCacheIdentifier = function (context, options, attachers = []) {
   const { dependencies: deps1 = {}, devDependencies: deps2 = {}} = pkg
 
   const remarkPlugins = Object.keys({ ...deps1, ...deps2 })
-    .filter(name => /remark-/.test(name))
+    .filter(name => /remark-(?!cli$)/.test(name))
     .map(name => ({
       fn: require(name),
       pkg: require(`${name}/package.json`)
@@ -88,7 +94,7 @@ exports.normalizeLayout = function (layout) {
 }
 
 exports.makePathParams = (object, { routeKeys, dateField = 'date' }, slugify) => {
-  const date = moment.utc(object[dateField], ISO_8601_FORMAT, true)
+  const date = moment.utc(object[dateField], SUPPORTED_DATE_FORMATS, true)
   const length = routeKeys.length
   const params = {}
 

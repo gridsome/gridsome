@@ -104,11 +104,17 @@ test('render g-link components', () => {
 
 test('render g-image components', () => {
   const $home = load('dist/index.html')
+  const $about = load('dist/about/index.html')
+  const aboutJS = content('dist/assets/js/page--src--pages--about-vue.js')
+
+  // #1318 - Exclude `dataUri` from bundle when not lazy loading the image.
+  expect(aboutJS).not.toMatch('"dataUri":"data:image/png')
+  expect($about('img.g-image').attr('src')).not.toMatch('data:image/png')
 
   expect(exists('dist/assets/static/test.82a2fbd.test.png')).toBeTruthy()
   expect(exists('dist/assets/static/test.97c148e.test.png')).toBeTruthy()
 
-  expect($home('img.g-image-1').attr('src')).toMatch('data:image/svg+xml')
+  expect($home('img.g-image-1').attr('src')).toMatch('data:image/png')
   expect($home('img.g-image-1').attr('alt')).toMatch('SVG logo')
   expect($home('img.g-image-2').attr('alt')).toMatch('Test image')
   expect($home('img.g-image-2').data('srcset')).toMatch('/assets/static/test.82a2fbd.test.png 480w')
@@ -196,7 +202,6 @@ test('compile scripts includes polyfills', () => {
   const appJS = content('dist/assets/js/app.js')
 
   expect(appJS).toMatch('core-js/modules/es.promise.js')
-  expect(appJS).toMatch('core-js/modules/es.symbol.js')
   expect(appJS).toMatch('core-js/modules/es.string.ends-with.js')
 })
 

@@ -13,7 +13,7 @@ test('create render queue for basic project', async () => {
 
   expect(renderPaths).toEqual(expect.arrayContaining([
     '/',
-    '/404/',
+    '/404.html',
     '/about/',
     '/about-us/',
     '/docs/1/',
@@ -44,7 +44,7 @@ test('create render queue for blog project', async () => {
   expect(renderPaths).toEqual(expect.arrayContaining([
     '/',
     '/2/',
-    '/404/',
+    '/404.html',
     '/about/',
     '/category/first/',
     '/category/first/2/',
@@ -179,7 +179,7 @@ test('create render queue for createPages hook', async () => {
     '/movie/three/',
     '/movie/two/',
     '/movie/one/',
-    '/404/',
+    '/404.html',
     '/blog/',
     '/blog/2/',
     '/article/1/',
@@ -192,8 +192,8 @@ test('create render queue for createPages hook', async () => {
   renderQueue.forEach(entry => {
     expect(entry.type).toBeDefined()
     expect(entry.path).toBeDefined()
+    expect(entry.dataOutput).toBeDefined()
     expect(entry.htmlOutput).toBeDefined()
-    expect(entry.queryVariables).toBeDefined()
     expect(entry.pageId).toBeDefined()
     expect(entry.routeId).toBeDefined()
   })
@@ -205,7 +205,9 @@ describe('dynamic pages', () => {
     const component = './__fixtures__/DefaultPage.vue'
 
     app.pages.createPage({ path: '/', component })
-    app.pages.createPage({ path: '/a', component })
+    app.pages.createPage({ path: '/ab', component })
+    app.pages.createPage({ path: '/ac', component })
+    app.pages.createPage({ path: '/aa', component })
     app.pages.createPage({ path: '/a/b', component })
     app.pages.createPage({ path: '/a/:b', component })
     app.pages.createPage({ path: '/a/:b(\\d+)', component })
@@ -227,8 +229,10 @@ describe('dynamic pages', () => {
       '/a/:b',
       '/a/:b*',
       '/a/:b+',
-      '/a/',
-      '/404/',
+      '/aa/',
+      '/ab/',
+      '/ac/',
+      '/404.html',
       '/'
     ])
   })
@@ -246,8 +250,10 @@ describe('dynamic pages', () => {
       'a/_b.html',
       'a/_b_star.html',
       'a/_b_plus.html',
-      'a/index.html',
-      '404/index.html',
+      'aa/index.html',
+      'ab/index.html',
+      'ac/index.html',
+      '404.html',
       'index.html'
     ])
   })
