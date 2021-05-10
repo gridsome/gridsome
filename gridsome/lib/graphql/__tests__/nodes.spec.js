@@ -339,45 +339,36 @@ test('should format dates from schema', async () => {
   posts.addNode({
     id: '1',
     date: '2018-10-10',
-    customDate: '2018-10-10',
-    dateObject: {
+    subField: {
       date: '2018-10-10'
     }
   })
 
   posts.addNode({
     id: '2',
-    date: new Date('2018-10-10'),
     dateType: new Date('2018-10-10')
   })
 
   const { errors, data } = await createSchemaAndExecute(`{
     post1: testPostDate (id: "1") {
       date
-      customDate
       date2: date(format: "YYYY-MM-DD")
-      date3: customDate(format: "DD/MM/YYYY")
-      dateObject {
+      subField {
         date(format: "DD/MM/YYYY")
       }
     }
     post2: testPostDate (id: "2") {
-      date
-      dateType(format: "DD/MM/YYYY")
-    }
-    post3: testPostDate (id: "2") {
-      date(format: "DD/MM/YYYY")
+      dateType
+      formatted: dateType(format: "DD/MM/YYYY")
     }
   }`)
 
   expect(errors).toBeUndefined()
   expect(data.post1.date).toEqual('2018-10-10')
-  expect(data.post1.customDate).toEqual('2018-10-10')
   expect(data.post1.date2).toEqual('2018-10-10')
-  expect(data.post1.date3).toEqual('10/10/2018')
-  expect(data.post2.date).toEqual('2018-10-10T00:00:00.000Z')
-  expect(data.post2.dateType).toEqual('10/10/2018')
-  expect(data.post3.date).toEqual('10/10/2018')
+  expect(data.post1.subField.date).toEqual('10/10/2018')
+  expect(data.post2.dateType).toEqual('2018-10-10T00:00:00.000Z')
+  expect(data.post2.formatted).toEqual('10/10/2018')
 })
 
 test('collection.addSchemaField', async () => {
@@ -469,7 +460,7 @@ test('process image types in schema', async () => {
     id: '1',
     internal: {
       mimeType: 'application/json',
-      origin: `${context}/assets/file.md`,
+      origin: `${context}/assets/file.json`,
       content: JSON.stringify({
         image: '/assets/350x250.png',
         image2: 'https://www.example.com/images/image.png',
@@ -496,7 +487,7 @@ test('process image types in schema', async () => {
         image5: '350x250.png',
         images: [
           './350x250.png',
-          'https://www.example.com/images/image.png'
+          './350x250.png'
         ]
       })
     }
@@ -546,7 +537,7 @@ test('process image types in schema', async () => {
   expect(data.testPost2.image5).toEqual('350x250.png')
   expect(data.testPost2.images).toHaveLength(2)
   expect(data.testPost2.images[0]).toEqual('./350x250.png')
-  expect(data.testPost2.images[1]).toEqual('https://www.example.com/images/image.png')
+  expect(data.testPost2.images[1]).toEqual('./350x250.png')
 })
 
 test('set background color for contain', async () => {

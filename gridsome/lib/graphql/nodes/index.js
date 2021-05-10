@@ -285,7 +285,7 @@ function createReferenceFields (schemaComposer, typeComposer, collection) {
       ? typeComposer.isFieldPlural(fieldName)
       : false
 
-    if (Array.isArray(typeName)) {
+      if (Array.isArray(typeName)) {
       const unionTypeComposer = schemaComposer.createUnionTC({
         name: createTypeName(typeComposer.getTypeName(), fieldName + 'InferRef'),
         description: `Reference to ${typeName.join(', ')} nodes`,
