@@ -1,3 +1,24 @@
+<script setup>
+import { computed, onMounted } from 'vue'
+import { Pager, usePageQuery, useStaticQuery, useFetch } from 'gridsome'
+import ClientOnlyComponent from '../components/ClientOnlyComponent.vue'
+
+const fetch = useFetch()
+
+onMounted(() => {
+  fetch('/blog/post-10').then(({ data }) => {
+    console.log(data)
+  })
+})
+
+const pageQuery = usePageQuery()
+const staticQuery = useStaticQuery()
+
+const posts = computed(() => {
+  return pageQuery.allPost.edges.map(({ node }) => node)
+})
+</script>
+
 <template>
   <g-image
     alt="Example image"
@@ -56,29 +77,6 @@ query ($page: Int) {
   }
 }
 </page-query>
-
-<script setup>
-import { computed, onMounted } from 'vue'
-import { usePageQuery, useStaticQuery, useFetch } from 'gridsome'
-
-const fetch = useFetch()
-
-onMounted(() => {
-  fetch('/blog/post-10').then(({ data }) => {
-    console.log(data)
-  })
-})
-
-export { Pager } from 'gridsome'
-export { default as ClientOnlyComponent } from '../components/ClientOnlyComponent.vue'
-
-export const pageQuery = usePageQuery()
-export const staticQuery = useStaticQuery()
-
-export const posts = computed(() => {
-  return pageQuery.allPost.edges.map(({ node }) => node)
-})
-</script>
 
 <style>
 .home-links a {
