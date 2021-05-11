@@ -38,7 +38,7 @@ function transformNodeAttr(node, attrName, context) {
     const query = createOptionsQuery(node.props)
     const path = `!!assets-loader?${query}!${value}`
 
-    context.imports.add({ exp, path })
+    context.imports.push({ exp, path })
 
     node.props[index] = {
       type: 7,
