@@ -26,8 +26,8 @@ class Plugins {
     )
 
     app.hooks.bootstrap.tapPromise(
-        {name: 'afterSourcesLoaded', label: 'After sources loaded', phase: BOOTSTRAP_SOURCES},
-        () => this.afterSourcesLoaded()
+        {name: 'afterLoadSources', label: 'After sources loaded', phase: BOOTSTRAP_SOURCES},
+        () => this.afterLoadSources()
     )
 
     app.hooks.bootstrap.tapPromise(
@@ -90,7 +90,7 @@ class Plugins {
      *
      * @returns {Promise<[]|*[]>}
      */
-    async afterSourcesLoaded() {
+    async afterLoadSources() {
         return this.run('afterSourcesLoaded', api => {
             return createSchemaActions(api, this._app)
         })
