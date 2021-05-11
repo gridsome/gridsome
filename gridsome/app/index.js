@@ -5,6 +5,8 @@ export { default as ClientOnly } from './components/ClientOnly'
 export { url } from './utils/helpers'
 
 export * from './useApi'
+export * from 'vue-router'
+export * from 'vue'
 
 export function fetch() {
   // TODO: Remove this before v1.
