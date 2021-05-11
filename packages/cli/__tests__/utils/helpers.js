@@ -2,10 +2,7 @@ const execa = require('execa')
 
 const CLI_PATH = require.resolve('../../bin/gridsome')
 
-const runCLI = (args, dir = process.cwd()) => {
-  const options = {
-    cwd: dir
-  }
+const runCLI = (args, options = {}) => {
   return execa(CLI_PATH, args, options)
 }
 

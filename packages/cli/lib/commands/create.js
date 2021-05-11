@@ -21,7 +21,8 @@ module.exports = async (name, starter = '') => {
   }
 
   if (fs.existsSync(dir) && fs.readdirSync(dir).length) {
-    return console.log(
+    process.exitCode = 1
+    return console.error(
       chalk.red(
         `Could not create project in ${chalk.bold(projectName)} because the directory is not empty.`
       )
