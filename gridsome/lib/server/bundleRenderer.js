@@ -1,4 +1,5 @@
 const { SourceMapConsumer } = require('source-map')
+const { renderHeadToString } = require('@vueuse/head')
 const { renderToString } = require('@vue/server-renderer')
 const { createBundleRunner } = require('./bundleRunner')
 const { createBundleContext } = require('./bundleContext')
@@ -48,25 +49,27 @@ exports.createBundleRenderer = (bundle, options) => {
   const runBundle = createBundleRunner(bundle)
 
   return async function render(ssrContext) {
-    let app, html
-
     // TODO: Check if this will be used in next version of `vue-loader`.
     ssrContext._registeredComponents = new Set()
 
     try {
-      app = await runBundle(ssrContext)
-      html = await renderToString(app, ssrContext)
+      const { app, head } = await runBundle(ssrContext)
+      const html = await renderToString(app, ssrContext)
+      const { headTags, htmlAttrs, bodyAttrs } = renderHeadToString(head)
+
+      return {
+        renderResourceHints: () => bundleContext.renderResourceHints(ssrContext),
+        renderStyles: () => bundleContext.renderStyles(ssrContext),
+        renderScripts: () => bundleContext.renderScripts(ssrContext),
+        renderState: () => bundleContext.renderState(ssrContext),
+        headTags,
+        htmlAttrs,
+        bodyAttrs,
+        html
+      }
     } catch(err) {
       rewriteErrorTrace(err, maps)
       throw err
-    }
-
-    return {
-      renderResourceHints: () => bundleContext.renderResourceHints(ssrContext),
-      renderStyles: () => bundleContext.renderStyles(ssrContext),
-      renderScripts: () => bundleContext.renderScripts(ssrContext),
-      renderState: () => bundleContext.renderState(ssrContext),
-      html
     }
   }
 }

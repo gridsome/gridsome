@@ -5,6 +5,7 @@ export { default as ClientOnly } from './components/ClientOnly'
 export { url } from './utils/helpers'
 
 export * from './useApi'
+export * from '@vueuse/head'
 export * from 'vue-router'
 export * from 'vue'
 

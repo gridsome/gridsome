@@ -3,7 +3,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { getResults } from './graphql/shared'
 import { createPathFetcher } from './fetchPath'
 
-export function usePageState() {
+function getPageState() {
   if (process.isServer) {
     const ssrContext = useSSRContext()
     return ssrContext.state || {}
@@ -15,11 +15,11 @@ export function usePageState() {
 }
 
 export function usePageContext() {
-  return usePageState().context
+  return getPageState().context
 }
 
 export function usePageQuery() {
-  return usePageState().data
+  return getPageState().data
 }
 
 export function useStaticQuery() {

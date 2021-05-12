@@ -30,12 +30,15 @@ query ($id: ID!) {
 
 <script>
 import { defineComponent, computed } from 'vue'
-import { usePageQuery } from 'gridsome'
+import { usePageQuery, useHead } from 'gridsome'
 
 export default defineComponent({
   setup() {
     const data = usePageQuery()
     const title = computed(() => data.post.title)
+
+    useHead({ title })
+
     return { title }
   }
 })

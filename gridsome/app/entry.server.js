@@ -4,7 +4,7 @@ import { unslashEnd } from './utils/helpers'
 import plugins from '~/.temp/plugins-server'
 
 export default async (ssrContext) => {
-  const { app, router } = createApp({
+  const { app, router, head } = createApp({
     plugins,
     routerHistory: createMemoryHistory(
       unslashEnd(process.env.PUBLIC_PATH)
@@ -18,5 +18,5 @@ export default async (ssrContext) => {
 
   await router.isReady()
 
-  return app
+  return { app, router, head }
 }
