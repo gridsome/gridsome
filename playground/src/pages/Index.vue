@@ -32,7 +32,7 @@ const posts = computed(() => {
 
   <h1>{{ staticQuery.metadata.siteName }}</h1>
 
-  <teleport to="#endofbody">
+  <teleport to="body > div:last-of-type">
     <div>Teleported #endofbody</div>
   </teleport>
 
