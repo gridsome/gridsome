@@ -1,23 +1,32 @@
-const { parse } = require('node-html-parser')
+const CSSselect = require('css-select')
+const { parseDocument } = require('htmlparser2')
+const serialize = require('dom-serializer').default
 const { template, isPlainObject, isEmpty } = require('lodash')
 const { CLIENT_APP_ID } = require('../utils/constants')
 
+function parseHTML (html) {
+  return parseDocument(html, {
+    lowerCaseAttributeNames: false,
+    lowerCaseTags: false
+  })
+}
+
 function createHTMLRenderer (htmlTemplate, insertions) {
   if (isPlainObject(insertions) && !isEmpty(insertions)) {
-    const root = parse(htmlTemplate)
+    const doc = parseHTML(htmlTemplate)
 
     for (const selector in insertions) {
-      const target = root.querySelector(selector)
-      const value = insertions[selector]
+      const target = CSSselect.selectOne(selector, doc)
 
       if (target && target.childNodes) {
-        target.childNodes.push(value)
+        const node = parseHTML(insertions[selector])
+        target.childNodes.push(...node.children)
       } else {
         throw new Error(`Failed to locate target with selector "${selector}".`)
       }
     }
 
-    htmlTemplate = root.toString()
+    htmlTemplate = serialize(doc.children)
   }
 
   const render = template(htmlTemplate)
