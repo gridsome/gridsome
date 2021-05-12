@@ -38,37 +38,37 @@ export default function createApp({ routerHistory, plugins }) {
 
   const head = createHead()
 
-  head.addHeadObjs({
-    value: {
-      htmlAttrs: {
-        lang: 'en'
-      },
-      meta: [
-        { charset: 'utf-8' },
-        { name: 'generator', content: `Gridsome v${config.version}` },
-        { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
+  const defaultHead = {
+    htmlAttrs: {
+      lang: 'en'
+    },
+    bodyAttrs: {},
+    meta: [
+      { charset: 'utf-8' },
+      { name: 'generator', content: `Gridsome v${config.version}` },
+      { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
 
-        // do not convert telephone numbers
-        // into hypertext links because it
-        // will cause hydration errors
-        { name: 'format-detection',  content: 'telephone=no' }
-      ],
-      link: [
-        ...icons.favicons.map(({ width, height = width, src: href }) => ({
-          rel: 'icon',
-          type: icons.faviconMimeType,
-          sizes: `${width}x${height}`,
-          href
-        })),
-        ...icons.touchicons.map(({ width, height = width, src: href }) => ({
-          rel: `apple-touch-icon${icons.precomposed ? '-precomposed' : ''}`,
-          type: icons.touchiconMimeType,
-          sizes: `${width}x${height}`,
-          href
-        }))
-      ]
-    }
-  })
+      // do not convert telephone numbers into hypertext
+      // links because it will cause hydration errors
+      { name: 'format-detection',  content: 'telephone=no' }
+    ],
+    link: [
+      ...icons.favicons.map(({ width, height = width, src: href }) => ({
+        rel: 'icon',
+        type: icons.faviconMimeType,
+        sizes: `${width}x${height}`,
+        href
+      })),
+      ...icons.touchicons.map(({ width, height = width, src: href }) => ({
+        rel: `apple-touch-icon${icons.precomposed ? '-precomposed' : ''}`,
+        type: icons.touchiconMimeType,
+        sizes: `${width}x${height}`,
+        href
+      }))
+    ],
+    style: [],
+    script: []
+  }
 
   router.beforeEach(graphqlGuard)
 
@@ -86,19 +86,30 @@ export default function createApp({ routerHistory, plugins }) {
   const args = {
     app,
     router,
+    head: defaultHead,
     isServer: process.isServer,
     isClient: process.isClient
   }
 
   for (const { run, options } of plugins) {
     if (typeof run === 'function') {
-      run({ ...args, options })
+      if (run.length > 1) {
+        throw new Error('The default export expects only one argument.')
+      } else {
+        run({ ...args, options })
+      }
     }
   }
 
   if (main && typeof main.default === 'function') {
-    main.default(args)
+    if (main.default.length > 1) {
+      throw new Error('The default export in main.js expects only one argument.')
+    } else {
+      main.default(args)
+    }
   }
+
+  head.addHeadObjs({ value: defaultHead })
 
   return {
     app,
