@@ -10,6 +10,8 @@ import { url } from './utils/helpers'
 import graphqlGuard from './graphql/guard'
 import graphqlMixin from './graphql/mixin'
 import routes from '~/.temp/routes.js'
+import config from '~/.temp/config.js'
+import icons from '~/.temp/icons.js'
 
 import Link from './components/Link'
 import Image from './components/Image'
@@ -35,6 +37,38 @@ export default function createApp({ routerHistory, plugins }) {
   })
 
   const head = createHead()
+
+  head.addHeadObjs({
+    value: {
+      htmlAttrs: {
+        lang: 'en'
+      },
+      meta: [
+        { charset: 'utf-8' },
+        { name: 'generator', content: `Gridsome v${config.version}` },
+        { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
+
+        // do not convert telephone numbers
+        // into hypertext links because it
+        // will cause hydration errors
+        { name: 'format-detection',  content: 'telephone=no' }
+      ],
+      link: [
+        ...icons.favicons.map(({ width, height = width, src: href }) => ({
+          rel: 'icon',
+          type: icons.faviconMimeType,
+          sizes: `${width}x${height}`,
+          href
+        })),
+        ...icons.touchicons.map(({ width, height = width, src: href }) => ({
+          rel: `apple-touch-icon${icons.precomposed ? '-precomposed' : ''}`,
+          type: icons.touchiconMimeType,
+          sizes: `${width}x${height}`,
+          href
+        }))
+      ]
+    }
+  })
 
   router.beforeEach(graphqlGuard)
 

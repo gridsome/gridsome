@@ -40,6 +40,7 @@ module.exports = function createRenderFn ({
     const renderHTML = createHTMLRenderer(htmlTemplate, ssrContext.teleports)
 
     const gridsomeHash = `<meta name="gridsome:hash" content="${hash}">`
+    const gImageNoscript = '<noscript><style>.g-image--loading{display:none;}</style></noscript>'
     const styles = result.renderStyles()
     const resourceHints = result.renderResourceHints()
 
@@ -48,7 +49,8 @@ module.exports = function createRenderFn ({
       result.headTags +
       gridsomeHash +
       resourceHints +
-      styles
+      styles +
+      gImageNoscript
 
     const renderedState =
       state && stateSize <= MAX_STATE_SIZE
