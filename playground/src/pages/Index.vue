@@ -1,9 +1,13 @@
 <script setup>
 import { computed, onMounted } from 'vue'
-import { Pager, usePageQuery, useStaticQuery, useFetch } from 'gridsome'
+import { Pager, usePageQuery, useStaticQuery, useFetch, useHead } from 'gridsome'
 import ClientOnlyComponent from '../components/ClientOnlyComponent.vue'
 
 const fetch = useFetch()
+
+useHead({
+  title: 'Hello, world!'
+})
 
 onMounted(() => {
   fetch('/blog/post-10').then(({ data }) => {

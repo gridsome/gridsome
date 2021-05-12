@@ -145,6 +145,13 @@ module.exports = (app, { isProd, isServer }) => {
       ]
     })
 
+  config.module.rule('mjs')
+    .test(/\.mjs$/)
+    .include
+      .add(/node_modules/)
+      .end()
+    .type('javascript/auto')
+
   // css
 
   createCSSRule(config, 'css', /\.css$/, null, projectConfig.css.loaderOptions.css)

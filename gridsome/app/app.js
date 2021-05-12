@@ -1,5 +1,6 @@
 import { createApp as createClientApp, createSSRApp } from 'vue'
 import { createRouter } from 'vue-router'
+import { createHead } from '@vueuse/head'
 
 import * as main from '~/main'
 import App from '~/App.vue'
@@ -33,12 +34,15 @@ export default function createApp({ routerHistory, plugins }) {
     }
   })
 
+  const head = createHead()
+
   router.beforeEach(graphqlGuard)
 
   app.config.globalProperties.$url = url
   app.config.globalProperties.$fetch = createPathFetcher(router)
 
   app.use(router)
+  app.use(head)
   app.mixin(graphqlMixin)
   app.component('GLink', Link)
   app.component('GImage', Image)
@@ -63,6 +67,7 @@ export default function createApp({ routerHistory, plugins }) {
 
   return {
     app,
-    router
+    router,
+    head
   }
 }

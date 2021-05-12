@@ -4,9 +4,13 @@
 </template>
 
 <script>
+import { useHead } from 'gridsome'
+
 export default {
-  metaInfo: {
-    title: 'About us'
+  setup() {
+    useHead({
+      title: 'About us'
+    })
   }
 }
 </script>

@@ -39,33 +39,16 @@ module.exports = function createRenderFn ({
 
     const renderHTML = createHTMLRenderer(htmlTemplate, ssrContext.teleports)
 
-    // const inject = ssrContext.meta.inject()
-    // const htmlAttrs = inject.htmlAttrs.text()
-    // const bodyAttrs = inject.bodyAttrs.text()
-
-    // const pageTitle = inject.title.text()
-    // const metaBase = inject.base.text()
     const gridsomeHash = `<meta name="gridsome:hash" content="${hash}">`
-    // const vueMetaTags = inject.meta.text()
-    // const vueMetaLinks = inject.link.text()
     const styles = result.renderStyles()
-    // const noscript = inject.noscript.text()
-    // const vueMetaStyles = inject.style.text()
-    // const vueMetaScripts = inject.script.text()
     const resourceHints = result.renderResourceHints()
 
     const head =
       '' +
-      // pageTitle +
-      // metaBase +
+      result.headTags +
       gridsomeHash +
-      // vueMetaTags +
-      // vueMetaLinks +
       resourceHints +
       styles
-      // vueMetaStyles +
-      // vueMetaScripts +
-      // noscript
 
     const renderedState =
       state && stateSize <= MAX_STATE_SIZE
@@ -75,22 +58,14 @@ module.exports = function createRenderFn ({
     const scripts = '' +
       renderedState +
       result.renderScripts()
-      // inject.script.text({ body: true })
 
     return renderHTML({
-      // htmlAttrs: `data-html-server-rendered="true" ${htmlAttrs}`,
-      // bodyAttrs,
+      htmlAttrs: result.htmlAttrs,
+      bodyAttrs: result.bodyAttrs,
       head,
-      // title: pageTitle,
-      // base: metaBase,
       hash: gridsomeHash,
-      // vueMetaTags,
-      // vueMetaLinks,
       resourceHints,
       styles,
-      // vueMetaStyles,
-      // vueMetaScripts,
-      // noscript,
       app: result.html,
       scripts
     })
