@@ -1,13 +1,9 @@
 <script setup>
 import { computed, onMounted } from 'vue'
-import { Pager, usePageQuery, useStaticQuery, useFetch, useHead } from 'gridsome'
+import { Pager, usePageQuery, useStaticQuery, useFetch, Head } from 'gridsome'
 import ClientOnlyComponent from '../components/ClientOnlyComponent.vue'
 
 const fetch = useFetch()
-
-useHead({
-  title: 'Hello, world!'
-})
 
 onMounted(() => {
   fetch('/blog/post-10').then(({ data }) => {
@@ -24,6 +20,10 @@ const posts = computed(() => {
 </script>
 
 <template>
+  <Head>
+    <title>Hello, world!</title>
+  </Head>
+
   <g-image
     alt="Example image"
     src="~/favicon.png"
