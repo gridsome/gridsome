@@ -29,13 +29,20 @@ query ($id: ID!) {
 </page-query>
 
 <script>
-import { defineComponent, computed } from 'vue'
-import { usePageQuery } from 'gridsome'
+import { defineComponent, computed, watch } from 'vue'
+import { usePageQuery, useMeta } from 'gridsome'
 
 export default defineComponent({
   setup() {
     const data = usePageQuery()
     const title = computed(() => data.post.title)
+
+    const { meta } = useMeta({ title: data.post.title })
+
+    watch(title, (title) => {
+      meta.title = title
+    })
+
     return { title }
   }
 })

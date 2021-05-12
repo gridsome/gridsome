@@ -24,7 +24,8 @@ module.exports = function createRenderFn ({
     const ssrContext = {
       path: page.path,
       location: page.location,
-      state: createState(state)
+      state: createState(state),
+      teleports: {}
     }
 
     let result
@@ -39,33 +40,16 @@ module.exports = function createRenderFn ({
 
     const renderHTML = createHTMLRenderer(htmlTemplate, ssrContext.teleports)
 
-    // const inject = ssrContext.meta.inject()
-    // const htmlAttrs = inject.htmlAttrs.text()
-    // const bodyAttrs = inject.bodyAttrs.text()
-
-    // const pageTitle = inject.title.text()
-    // const metaBase = inject.base.text()
     const gridsomeHash = `<meta name="gridsome:hash" content="${hash}">`
-    // const vueMetaTags = inject.meta.text()
-    // const vueMetaLinks = inject.link.text()
     const styles = result.renderStyles()
-    // const noscript = inject.noscript.text()
-    // const vueMetaStyles = inject.style.text()
-    // const vueMetaScripts = inject.script.text()
     const resourceHints = result.renderResourceHints()
 
     const head =
       '' +
-      // pageTitle +
-      // metaBase +
       gridsomeHash +
-      // vueMetaTags +
-      // vueMetaLinks +
       resourceHints +
-      styles
-      // vueMetaStyles +
-      // vueMetaScripts +
-      // noscript
+      styles +
+      (ssrContext.meta.head || '')
 
     const renderedState =
       state && stateSize <= MAX_STATE_SIZE
@@ -74,24 +58,18 @@ module.exports = function createRenderFn ({
 
     const scripts = '' +
       renderedState +
-      result.renderScripts()
-      // inject.script.text({ body: true })
+      result.renderScripts() +
+      (ssrContext.meta.body || '')
 
     return renderHTML({
-      // htmlAttrs: `data-html-server-rendered="true" ${htmlAttrs}`,
-      // bodyAttrs,
+      app: (ssrContext.meta['body-prepend'] || '') + result.html,
+      htmlAttrs: ssrContext.meta.htmlAttrs || '',
+      headAttrs: ssrContext.meta.headAttrs || '',
+      bodyAttrs: ssrContext.meta.bodyAttrs || '',
       head,
-      // title: pageTitle,
-      // base: metaBase,
       hash: gridsomeHash,
-      // vueMetaTags,
-      // vueMetaLinks,
       resourceHints,
       styles,
-      // vueMetaStyles,
-      // vueMetaScripts,
-      // noscript,
-      app: result.html,
       scripts
     })
   }

@@ -27,6 +27,7 @@ function createHTMLRenderer (htmlTemplate, insertions) {
 
     return render(Object.assign({
       htmlAttrs: '',
+      headAttrs: '',
       bodyAttrs: '',
       head: '',
       title: '',

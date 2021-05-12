@@ -1,5 +1,6 @@
 <template>
   <Layout>
-    <router-view />
+    <Metainfo />
+    <RouterView />
   </Layout>
 </template>

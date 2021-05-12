@@ -52,10 +52,24 @@ exports.createBundleRenderer = (bundle, options) => {
 
     // TODO: Check if this will be used in next version of `vue-loader`.
     ssrContext._registeredComponents = new Set()
+    ssrContext.meta = {}
 
     try {
       app = await runBundle(ssrContext)
       html = await renderToString(app, ssrContext)
+
+      const metaContext = { teleports: {} }
+      const components = app.config.globalProperties.$metaManager.render()
+      await Promise.all(components.map((component) => renderToString(component, metaContext)))
+
+      for (const key in metaContext.teleports) {
+        const value = metaContext.teleports[key]
+        ssrContext.meta[key] = key.endsWith('Attrs')
+          ? value.slice(value.indexOf(' ') + 1, value.indexOf('>'))
+          : value
+
+        delete ssrContext.teleports[key]
+      }
     } catch(err) {
       rewriteErrorTrace(err, maps)
       throw err

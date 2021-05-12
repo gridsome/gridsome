@@ -1,4 +1,5 @@
 import { createApp as createClientApp, createSSRApp } from 'vue'
+import { createMetaManager, defaultConfig, useMeta } from 'vue-meta'
 import { createRouter } from 'vue-router'
 
 import * as main from '~/main'
@@ -33,12 +34,19 @@ export default function createApp({ routerHistory, plugins }) {
     }
   })
 
+  const metaManager = createMetaManager(defaultConfig)
+
+  // Cleanup SSR meta tags now because the `DOMContentLoaded`
+  // event in `vue-meta` is registered too late.
+  metaManager.render()
+
   router.beforeEach(graphqlGuard)
 
   app.config.globalProperties.$url = url
   app.config.globalProperties.$fetch = createPathFetcher(router)
 
   app.use(router)
+  app.use(metaManager)
   app.mixin(graphqlMixin)
   app.component('GLink', Link)
   app.component('GImage', Image)

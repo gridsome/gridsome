@@ -6,6 +6,7 @@ export { url } from './utils/helpers'
 
 export * from './useApi'
 export * from 'vue-router'
+export * from 'vue-meta'
 export * from 'vue'
 
 export function fetch() {

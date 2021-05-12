@@ -4,9 +4,13 @@
 </template>
 
 <script>
+import { useMeta } from 'gridsome'
+
 export default {
-  metaInfo: {
-    title: 'About us'
+  setup() {
+    useMeta({
+      title: 'About us!'
+    })
   }
 }
 </script>
