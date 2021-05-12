@@ -4,6 +4,8 @@ const createBaseConfig = require('./createBaseConfig')
 const resolve = p => path.resolve(__dirname, p)
 
 module.exports = async app => {
+  const { ESBuildMinifyPlugin } = require('esbuild-loader')
+
   const isProd = process.env.NODE_ENV === 'production'
   const config = createBaseConfig(app, { isProd, isServer: false })
   const { outputDir, clientManifestPath, css } = app.config
@@ -29,6 +31,8 @@ module.exports = async app => {
           mergeLonghand: false
         }
       }])
+
+    config.optimization.minimizer('esbuild').use(ESBuildMinifyPlugin)
 
     if (css.split !== true) {
       const cacheGroups = {
