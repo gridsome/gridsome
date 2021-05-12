@@ -1,6 +1,6 @@
 import { createApp as createClientApp, createSSRApp } from 'vue'
 import { createRouter } from 'vue-router'
-import { createHead } from '@vueuse/head'
+import { createHead, Head } from '@vueuse/head'
 
 import * as main from '~/main'
 import App from '~/App.vue'
@@ -78,6 +78,7 @@ export default function createApp({ routerHistory, plugins }) {
   app.use(router)
   app.use(head)
   app.mixin(graphqlMixin)
+  app.component('GHead', Head)
   app.component('GLink', Link)
   app.component('GImage', Image)
   app.component('ClientOnly', ClientOnly)
