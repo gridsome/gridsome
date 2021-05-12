@@ -25,7 +25,7 @@ module.exports = async (context, args) => {
     if (name === 'webpack-dev-middleware') return false
     if (name === 'webpack-dev-server') {
       const message = messages.join(' ')
-      if (isDone && !message.includes('index.html')) {
+      if (isDone && !['served from', 'index.html'].some((s) => message.includes(s))) {
         const processedMessage = messages
           .join(' ')
           .replace(/(https?:\/\/[^\s]+)/g, chalk.cyan('$1'))
