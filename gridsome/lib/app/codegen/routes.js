@@ -1,4 +1,5 @@
 const slash = require('slash')
+const crypto = require('crypto')
 const { relative } = require('path')
 const { slugify } = require('../../utils')
 const { pathToFilePath } = require('../../pages/utils')
@@ -24,7 +25,8 @@ function genRoutes(app) {
     type: route.type,
     component: isUnitTest
       ? relative(app.context, route.component)
-      : route.component
+      : route.component,
+    querySource: route.internal.query.source
   })
 
   for (const redirect of redirects) {
@@ -91,6 +93,11 @@ function genRoute (item) {
     const dataPath = pathToFilePath(item.path, 'json')
     metas.push(`dataPath: ${JSON.stringify(slash(dataPath))}`)
     metas.push(`dynamic: true`)
+  } else if (item.type == 'static') {
+    const dataHash = item.querySource
+      ? crypto.createHash('md5').update(item.querySource).digest('hex').slice(0, 8)
+      : ''
+    metas.push(`dataHash: ${JSON.stringify(dataHash)}`)
   } else if (item.name === NOT_FOUND_NAME) {
     metas.push(`dataPath: ${JSON.stringify('/404.json')}`)
   }

@@ -1,4 +1,5 @@
 const path = require('path')
+const crypto = require('crypto')
 const { pathToFilePath } = require('../../pages/utils')
 const { trimEnd } = require('lodash')
 
@@ -72,7 +73,10 @@ function createRenderEntry (page, route, config, currentPage = 1) {
   }
 
   const htmlOutput = pathToFilePath(publicPath)
-  const dataOutput = pathToFilePath(publicPath, 'json')
+  const dataHash = route.internal.query.source
+    ? crypto.createHash('md5').update(route.internal.query.source).digest('hex').slice(0, 8)
+    : ''
+  const dataOutput = pathToFilePath(publicPath, 'json').replace('.json', `.${dataHash}.json`)
   const prettyPath = trimEnd(publicPath, '/') || '/'
 
   const location = route.type === 'dynamic'
