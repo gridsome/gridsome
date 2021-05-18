@@ -119,3 +119,11 @@ module.exports = {
 - Default: `['index']`
 
 Define which files to consider as index files. These files will not have their filename appear in its route path and will become the main `index.html` file of the directory. Make sure there is only one possible index file per directory if multiple index names are defined. This option is only used if there is no dynamic `route` defined.
+
+#### nodeExtraOptions
+
+- Type: `Object`
+- Default: `{}`
+
+Define extra options that will be added to every node in the collection.
+Can be useful, for example, to import files from different folders and add a type option value or a tag.

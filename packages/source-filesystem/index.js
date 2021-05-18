@@ -16,7 +16,8 @@ class FilesystemSource {
       pathPrefix: undefined,
       index: ['index'],
       typeName: 'FileNode',
-      refs: {}
+      refs: {},
+      nodeExtraOptions: {}
     }
   }
 
@@ -64,7 +65,7 @@ class FilesystemSource {
 
     await Promise.all(files.map(async file => {
       const options = await this.createNodeOptions(file, actions)
-      const node = this.collection.addNode(options)
+      const node = this.collection.addNode({ ...this.options.nodeExtraOptions, ...options })
 
       this.createNodeRefs(node, actions)
     }))
