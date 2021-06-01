@@ -65,9 +65,12 @@ const makePath = (object, { path, routeKeys, createPath }, dateField = 'date', s
         ) {
           return String(value.id)
         } else if (!isPlainObject(value)) {
-          return suffix === 'raw'
-            ? String(value)
-            : slugify(String(value))
+          const slugifyValue = slugify(String(value))
+          if (suffix === 'raw' || slugifyValue === '') {
+            return String(value)
+          } else {
+            return slugifyValue
+          }
         } else {
           return ''
         }
