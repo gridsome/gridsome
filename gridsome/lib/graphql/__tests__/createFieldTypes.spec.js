@@ -48,7 +48,7 @@ const nodes = [
     }
   },
   {
-    string: true,
+    string: 'true',
     falsyBoolean: false,
     booleanList: [false],
     numberList: [5, 30],
@@ -120,7 +120,7 @@ test('merge node fields', () => {
   expect(fields.refList.value.typeName).toHaveLength(3)
   expect(fields.refList.value.typeName).toEqual(expect.arrayContaining(['Post1', 'Post2', 'Post3']))
   expect(fields.refList.value.isList).toEqual(true)
-  expect(fields.ref.value).toMatchObject({ typeName: 'Post', isList: false })
+  expect(fields.ref.value).toMatchObject({ typeName: ['Post'], isList: false })
   expect(fields.unionRef.value.isList).toEqual(false)
   expect(fields.unionRef.value.typeName).toHaveLength(3)
   expect(fields.unionRef.value.typeName).toEqual(expect.arrayContaining(['Post1', 'Post2', 'Post3']))
@@ -213,7 +213,7 @@ test.each([
   ['float first', [{ number: 1.2 }, { number: 1 }, { number: 2 }]],
   ['missing number 1', [{ number: 1 }, {}, { number: 1.2 }]],
   ['missing number 2', [{ number: 1.2 }, {}, { number: 1 }]],
-  ['mixed type', [{ number: 1.2 }, { number: true }, { number: 'string' }]]
+  ['mixed type', [{ number: 1.2 }, { number: 0 }, { number: 1 }]]
 ])('prefer float when mixed number types - %s', (_, nodes) => {
   const schemaComposr = new SchemaComposer()
   const fields = createFieldDefinitions(nodes)
@@ -300,6 +300,28 @@ test('infer file fields', () => {
   expect(types.file2.type).toEqual('File')
   expect(types.file3.type).toEqual('String')
   expect(types.file4.type).toEqual('String')
+})
+
+test.each([
+  ['fail', [{ a: 'test1' }, { a: { b: 'abc' } }]],
+  ['fail', [{ a: { b: 'abc' } }, { a: 'test2' }]],
+  ['fail', [{ a: '2018'}, { a: new Date('2018') }]],
+  ['fail', [{ a: new Date('2018') }, { a: '2018' }]],
+  ['fail', [{ a: 2018 }, { a: '2018' }]],
+  ['fail', [{ a: { typeName: 'Post', id: '1' } }, { a: '2018' }]],
+  ['fail', [{ a: '2018' }, { a: { typeName: 'Post', id: '1' } }]],
+  ['fail', [{ a: { foo: 'bar' } }, { a: { typeName: 'Post', id: '1' } }]],
+  ['fail', [{ a: { typeName: 'Post', id: '1' } }, { a: { foo: 'bar' } }]],
+  ['fail', [{ a: 1 }, { a: { foo: 'bar' } }, { a: 2 }]],
+  ['fail', [{ a: { foo: 'bar' } }, { a: [1] }]],
+  ['fail', [{ a: ['foo'] }, { a: { foo: 'bar' } }]],
+  ['proceed', [{ a: undefined }, { a: 'test' }]],
+  ['proceed', [{ a: null }, { a: 'test' }]],
+  ['proceed', [{ a: 'test' }, { a: null }]],
+  ['proceed', [{ a: 'test' }, { a: undefined }]]
+])('it should %s if node isn\'t the same shape', (type, nodes) => {
+  if (type === 'fail') expect(() => createFieldDefinitions(nodes)).toThrowError('mismatch')
+  else expect(() => createFieldDefinitions(nodes)).not.toThrow()
 })
 
 const { BOOTSTRAP_PAGES } = require('../../utils/constants')

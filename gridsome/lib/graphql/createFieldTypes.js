@@ -91,14 +91,12 @@ const {
 } = require('./nodes/resolvers')
 
 function createRefType (schemaComposer, ref, fieldName, fieldTypeName) {
-  const typeNames = Array.isArray(ref.typeName) ? ref.typeName : [ref.typeName]
-
-  if (typeNames.length > 1) {
+  if (ref.typeName.length > 1) {
     const typeComposer = schemaComposer.createUnionTC({
       name: createTypeName(fieldTypeName, fieldName + 'Ref'),
-      description: `Reference to ${typeNames.join(', ')} nodes`,
+      description: `Reference to ${ref.typeName.join(', ')} nodes`,
       interfaces: ['Node'],
-      types: () => typeNames
+      types: () => ref.typeName
     })
 
     return {
@@ -111,7 +109,7 @@ function createRefType (schemaComposer, ref, fieldName, fieldTypeName) {
     }
   }
 
-  const typeComposer = schemaComposer.get(typeNames[0])
+  const typeComposer = schemaComposer.get(ref.typeName[0])
   const resolverName = ref.isList ? 'referenceManyAdvanced' : 'referenceOne'
 
   return typeComposer.getResolver(resolverName)
