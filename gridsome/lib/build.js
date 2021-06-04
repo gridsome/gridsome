@@ -9,7 +9,7 @@ const { logAllWarnings } = require('./utils/deprecate')
 const { log, info, writeLine } = require('./utils/log')
 
 module.exports = async (context, args) => {
-  process.env.NODE_ENV = 'production'
+  process.env.NODE_ENV = process.env.NODE_ENV || 'production'
   process.env.GRIDSOME_MODE = 'static'
 
   const buildTime = hirestime()
