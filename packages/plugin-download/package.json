@@ -1,0 +1,28 @@
+{
+  "name": "@gridsome/plugin-download",
+  "version": "0.1.0",
+  "description": "Download additional files before building your Gridsome site",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gridsome/gridsome/tree/master/packages/plugin-download"
+  },
+  "keywords": [
+    "gridsome",
+    "gridsome-plugin",
+    "file-download"
+  ],
+  "author": "Gerard Lamusse",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^0.19.2",
+    "fs-extra": "^7.0.0",
+    "progress": "^2.0.3"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=8.3"
+  }
+}
