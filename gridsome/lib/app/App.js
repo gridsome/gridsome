@@ -94,6 +94,7 @@ class App {
     const Store = require('../store/Store')
     const Server = require('../server/Server')
     const Schema = require('./Schema')
+    const PageQuery = require('./PageQuery')
     const AssetsQueue = require('./queue/AssetsQueue')
     const Codegen = require('./codegen')
     const Pages = require('../pages/pages')
@@ -108,6 +109,7 @@ class App {
     this.pages = new Pages(this)
     this.codegen = new Codegen(this)
     this.compiler = new Compiler(this)
+    this.pageQuery = new PageQuery(this)
 
     this.config = Object.freeze(this.config)
 

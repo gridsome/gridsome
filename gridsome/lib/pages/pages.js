@@ -6,7 +6,6 @@ const invariant = require('invariant')
 const initWatcher = require('./watch')
 const { Collection } = require('lokijs')
 const { FSWatcher } = require('chokidar')
-const { parseQuery } = require('../graphql')
 const pathToRegexp = require('path-to-regexp')
 const createPageQuery = require('./createPageQuery')
 const { HookMap, SyncWaterfallHook, SyncBailHook } = require('tapable')
@@ -144,13 +143,15 @@ class Pages {
 
     const route = new Route(newOptions, this)
 
-    if (options.internal.query.source !== oldOptions.internal.query.source) {
+    if (options.internal.query.source !== oldOptions.internal.query.source
+      || options.internal.query.hashFragments !== oldOptions.internal.query.hashFragments) {
       for (const page of route.pages()) {
         const vars = page.internal.queryVariables || page.context || {}
-        const { paginate, variables, filters } = this._createPageQuery(route.internal.query, vars)
+        const fragmentsDefinitions = this.app.pageQuery.getFragmentsDefinitions()
+        const { paginate, variables, filters, fragments } = this._createPageQuery(route.internal.query, vars, fragmentsDefinitions)
 
         const newOptions = { ...page }
-        newOptions.internal.query = { paginate, variables, filters }
+        newOptions.internal.query = { paginate, variables, filters, fragments }
 
         this._pages.update(newOptions)
       }
@@ -362,16 +363,15 @@ class Pages {
       return this._queryCache.get(component)
     }
 
-    const schema = this.app.schema.getSchema()
-    const res = parseQuery(schema, query, component)
+    const res = this.app.pageQuery.parseQuery(query, component)
 
     this._queryCache.set(component, res)
 
     return res
   }
 
-  _createPageQuery (parsedQuery, vars = {}) {
-    return createPageQuery(parsedQuery, vars)
+  _createPageQuery (parsedQuery, vars = {}, fragments = {}) {
+    return createPageQuery(parsedQuery, vars, fragments)
   }
 
   _createPageContext (page, queryVariables = {}) {
@@ -548,7 +548,8 @@ class Route {
     }
 
     const vars = queryVariables || context || {}
-    const { paginate, variables, filters } = this._factory._createPageQuery(query, vars)
+    const fragmentsDefinitions = this._factory.app.pageQuery.getFragmentsDefinitions()
+    const { paginate, variables, filters, fragments } = this._factory._createPageQuery(query, vars, fragmentsDefinitions)
 
     return this._createPage.call({
       id,
@@ -564,7 +565,8 @@ class Route {
         query: {
           paginate,
           variables,
-          filters
+          filters,
+          fragments
         }
       }
     })

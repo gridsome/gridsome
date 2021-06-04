@@ -17,7 +17,9 @@ module.exports = function parseQuery (schema, source, resourcePath) {
     source,
     document: null,
     variables: [],
-    directives: {}
+    directives: {},
+    fragments: [],
+    neededFragments: []
   }
 
   let ast = null
@@ -127,6 +129,12 @@ module.exports = function parseQuery (schema, source, resourcePath) {
       }
 
       res.directives.paginate = paginate
+    },
+    FragmentDefinition (node) {
+      res.fragments.push(node)
+    },
+    FragmentSpread (node) {
+      res.neededFragments.push(node)
     }
   }))
 

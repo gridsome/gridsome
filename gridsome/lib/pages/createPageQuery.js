@@ -3,16 +3,19 @@ const { PER_PAGE } = require('../utils/constants')
 const { isRefField } = require('../store/utils')
 const { get, isUndefined } = require('lodash')
 
-module.exports = function createPageQuery (parsed, context = {}) {
+module.exports = function createPageQuery (parsed, context = {}, fragments = {}) {
   const res = {
     source: parsed.source,
     document: parsed.document,
     paginate: null,
     variables: {},
-    filters: {}
+    filters: {},
+    fragments: {}
   }
 
   res.variables = variablesFromContext(context, parsed.variables)
+
+  res.fragments = fragmentsFromContext(fragments, parsed.usedFragments)
 
   if (parsed.directives.paginate) {
     const { paginate } = parsed.directives
@@ -58,6 +61,15 @@ function variablesFromContext (context, queryVariables = []) {
 
     acc[name] = value
 
+    return acc
+  }, {})
+}
+
+function fragmentsFromContext (context, usedFragments = []) {
+  return usedFragments.reduce((acc, name) => {
+    if (context[name]) {
+      acc[name] = context[name]
+    }
     return acc
   }, {})
 }
