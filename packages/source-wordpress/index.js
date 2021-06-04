@@ -10,6 +10,7 @@ class WordPressSource {
   static defaultOptions () {
     return {
       baseUrl: '',
+      replaceUrls: true,
       apiBase: 'wp-json',
       perPage: 100,
       concurrent: 10,
@@ -32,6 +33,7 @@ class WordPressSource {
     this.customEndpoints = this.sanitizeCustomEndpoints()
 
     const baseUrl = trimEnd(options.baseUrl, '/')
+    this.siteUrl = trimEnd(api._app.config['siteUrl'], '/')
 
     this.client = axios.create({
       baseURL: `${baseUrl}/${options.apiBase}`
@@ -152,6 +154,13 @@ class WordPressSource {
             fields[key] = Array.isArray(post[propName])
               ? post[propName].map(id => createReference(typeName, id))
               : createReference(typeName, post[propName])
+          }
+          // replace backend baseUrl with siteUrl
+          if (this.options.replaceUrls && fields.type === 'post') {
+            if (fields.content)
+              fields.content = fields.content.replace(this.options.baseUrl, this.siteUrl)
+            if (fields.excerpt)
+              fields.excerpt = fields.excerpt.replace(this.options.baseUrl, this.siteUrl)
           }
         }
 
