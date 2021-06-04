@@ -4,7 +4,7 @@ const createSchema = require('./createSchema')
 const { GraphQLJSON } = require('graphql-compose')
 const { toFilterArgs } = require('./filters/query')
 const { createBelongsToKey } = require('./nodes/belongsTo')
-const { createPagedNodeEdges } = require('./nodes/utils')
+const { createPagedNodeEdges, createPagedNodeEdgesArgs } = require('./nodes/utils')
 
 module.exports = {
   ...graphql,
@@ -13,5 +13,6 @@ module.exports = {
   parseQuery,
   toFilterArgs,
   createBelongsToKey,
-  createPagedNodeEdges
+  createPagedNodeEdges,
+  createPagedNodeEdgesArgs
 }

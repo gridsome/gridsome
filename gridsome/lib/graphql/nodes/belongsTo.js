@@ -1,12 +1,12 @@
 const { ObjectTypeComposer } = require('graphql-compose')
-const { PER_PAGE, SORT_ORDER } = require('../../utils/constants')
 const { createFilterInput } = require('../filters/input')
 const { toFilterArgs } = require('../filters/query')
 const { safeKey } = require('../../utils')
 
 const {
   createSortOptions,
-  createPagedNodeEdges
+  createPagedNodeEdges,
+  createPagedNodeEdgesArgs
 } = require('./utils')
 
 exports.createBelongsToKey = function (node) {
@@ -39,13 +39,7 @@ exports.createBelongsTo = function (schemaComposer, store) {
     const filterTypeComposer = createFilterComposer(schemaComposer)
 
     const belongsToArgs = {
-      sortBy: { type: 'String', defaultValue: 'date' },
-      order: { type: 'SortOrder', defaultValue: SORT_ORDER },
-      perPage: { type: 'Int', description: `Defaults to ${PER_PAGE} when page is provided.` },
-      skip: { type: 'Int', defaultValue: 0 },
-      limit: { type: 'Int' },
-      page: { type: 'Int' },
-      sort: '[SortArgument!]',
+      ...createPagedNodeEdgesArgs('date'),
       filter: filterTypeComposer
     }
 
