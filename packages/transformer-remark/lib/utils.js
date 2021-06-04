@@ -36,7 +36,8 @@ exports.createPlugins = function (options, localOptions) {
       blur: options.imageBlurRatio,
       quality: options.imageQuality,
       background: options.imageBackground,
-      immediate: options.lazyLoadImages === false ? true : undefined
+      immediate: options.lazyLoadImages === false ? true : undefined,
+      wrapper: options.wrapperImages
     }])
   }
 

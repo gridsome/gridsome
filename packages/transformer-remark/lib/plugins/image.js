@@ -9,7 +9,31 @@ module.exports = function attacher (options = {}) {
 
     const images = []
 
-    visit(tree, 'image', node => images.push(node))
+    if (typeof options.wrapper !== 'undefined') {
+      visit(tree, 'paragraph', (node, index, parent) => {
+        let hasImage = false
+        node.children.forEach(children => {
+          if (children.type === 'image') {
+            hasImage = true
+            images.push(children)
+          }
+        })
+        if (hasImage) {
+          if (options.wrapper === false) {
+            parent.children.splice(index, 1, ...node.children)
+          } else if (typeof options.wrapper === 'string') {
+            node.type = options.wrapper
+            node.data = {
+              hName: options.wrapper
+            }
+          } else if (typeof options.wrapper === 'function') {
+            return options.wrapper(node, index, parent)
+          }
+        }
+      })
+    } else {
+      visit(tree, 'image', node => images.push(node))
+    }
 
     for (const node of images) {
       const data = node.data || {}
