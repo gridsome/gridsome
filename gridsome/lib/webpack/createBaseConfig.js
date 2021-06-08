@@ -27,8 +27,8 @@ module.exports = (app, { isProd, isServer }) => {
   config.output
     .publicPath(publicPath)
     .path(projectConfig.outputDir)
-    .chunkFilename(`${assetsDir}/js/${filename}`)
-    .filename(`${assetsDir}/js/${filename}`)
+    .chunkFilename(filename)
+    .filename(filename)
 
   config.resolve
     .set('symlinks', true)
@@ -69,13 +69,13 @@ module.exports = (app, { isProd, isServer }) => {
 
   config.module.rule('vue')
     .test(/\.vue$/)
-    // .use('cache-loader')
-    // .loader(require.resolve('cache-loader'))
-    // .options({
-    //   cacheDirectory,
-    //   cacheIdentifier
-    // })
-    // .end()
+    .use('cache-loader')
+    .loader(require.resolve('cache-loader'))
+    .options({
+      cacheDirectory,
+      cacheIdentifier
+    })
+    .end()
     .use('vue-loader')
     .loader(require.resolve('vue-loader'))
     .options({
@@ -100,13 +100,13 @@ module.exports = (app, { isProd, isServer }) => {
         fullySpecified: false
       }
     })
-    // .use('cache-loader')
-    // .loader(require.resolve('cache-loader'))
-    // .options({
-    //   cacheDirectory,
-    //   cacheIdentifier
-    // })
-    // .end()
+    .use('cache-loader')
+    .loader(require.resolve('cache-loader'))
+    .options({
+      cacheDirectory,
+      cacheIdentifier
+    })
+    .end()
     .use('babel-loader')
     .loader(require.resolve('babel-loader'))
     .options({
@@ -318,12 +318,10 @@ module.exports = (app, { isProd, isServer }) => {
   }
 
   function createEnv () {
-    const assetsUrl = forwardSlash(path.join(publicPath, assetsDir, '/'))
-    const dataUrl = forwardSlash(path.join(assetsUrl, 'data', '/'))
+    const dataUrl = forwardSlash(path.join(publicPath, assetsDir, 'data', '/'))
 
     const baseEnv = {
       'process.env.PUBLIC_PATH': JSON.stringify(publicPath),
-      'process.env.ASSETS_URL': JSON.stringify(assetsUrl),
       'process.env.DATA_URL': JSON.stringify(dataUrl),
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || ''),
       'process.isClient': !isServer,

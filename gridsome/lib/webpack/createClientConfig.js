@@ -1,5 +1,7 @@
 const path = require('path')
+const webpack = require('webpack')
 const createBaseConfig = require('./createBaseConfig')
+const CssMinimizerPlugin = require('css-minimizer-webpack-plugin')
 
 const resolve = p => path.resolve(__dirname, p)
 
@@ -12,19 +14,12 @@ module.exports = async app => {
 
   if (isProd) {
     config.plugin('vue-server-renderer')
-      .use(require('./plugins/VueSSRClientPlugin'), [{
+      .use(require('vue-server-renderer/client-plugin'), [{
         filename: path.relative(outputDir, clientManifestPath)
       }])
 
-    config.plugin('optimize-css')
-      .use(require('optimize-css-assets-webpack-plugin'), [{
-        canPrint: false,
-        cssProcessorOptions: {
-          safe: true,
-          autoprefixer: { disable: true },
-          mergeLonghand: false
-        }
-      }])
+    config.optimization.minimizer('css-minimizer-webpack-plugin')
+      .use(CssMinimizerPlugin)
 
     if (css.split !== true) {
       const cacheGroups = {
@@ -40,11 +35,7 @@ module.exports = async app => {
   } else {
     config.entry('app').add(resolve('../../app/entry.sockjs.js'))
 
-    config.plugin('hmr')
-      .use(require('webpack/lib/HotModuleReplacementPlugin'))
-
-    config.plugin('no-emit-on-errors')
-      .use(require('webpack/lib/NoEmitOnErrorsPlugin'))
+    config.plugin('hmr').use(webpack.HotModuleReplacementPlugin)
   }
 
   return config

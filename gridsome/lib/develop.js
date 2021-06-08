@@ -30,8 +30,7 @@ builtInPlugins.push(api => {
 
     config.entryPoints.store.forEach((entry, name) => {
       config.entry(name)
-        .prepend(`${require.resolve('webpack-hot-middleware/client')}?name=${name}&reload=true&noInfo=true`)
-        .prepend(require.resolve('webpack/hot/dev-server'))
+        .prepend(`${require.resolve('webpack-hot-middleware/client')}?reload=true&noInfo=true`)
     })
   })
 })
@@ -50,20 +49,16 @@ module.exports = async (context, args) => {
   await fs.emptyDir(app.config.cacheDir)
 
   const compiler = app.compiler.getCompiler()
-  const webpackConfig = app.compiler.getClientConfig()
 
   app.server.hooks.setup.tap('develop', server => {
-    server.use(require('webpack-hot-middleware')(compiler, {
-      quiet: true,
-      log: false
-    }))
+    server.use(require('webpack-hot-middleware')(compiler, { log: false }))
   })
 
   app.server.hooks.afterSetup.tap('develop', server => {
+    const webpackConfig = app.compiler.getClientConfig()
     const devMiddleware = require('webpack-dev-middleware')(compiler, {
-      // publicPath: webpackConfig.output.pathPrefix,
-      // watchOptions: webpackConfig.devServer ? webpackConfig.devServer.watchOptions : null,
-      // logLevel: 'silent'
+      publicPath: webpackConfig.output.publicPath,
+      stats: 'none'
     })
 
     server.use(devMiddleware)
