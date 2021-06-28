@@ -41,7 +41,7 @@ module.exports = (app, { isProd, isServer }) => {
     .end()
 
   config.resolve.merge({
-    fallback: ['main.js', 'App.vue'].reduce((fallback, filename) => {
+    fallback: ['main', 'App.vue'].reduce((fallback, filename) => {
       fallback[path.join(app.context, 'src', filename)] = path.join(projectConfig.appPath, 'fallbacks', filename)
       return fallback
     }, {})
