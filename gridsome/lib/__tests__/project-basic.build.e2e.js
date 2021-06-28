@@ -27,8 +27,8 @@ beforeAll(async () => {
 afterAll(async () => {
   server && await server.close()
   browser && await browser.close()
-  await fs.remove(path.join(context, 'dist'))
-  await fs.remove(path.join(context, 'src', '.temp'))
+  // await fs.remove(path.join(context, 'dist'))
+  // await fs.remove(path.join(context, 'src', '.temp'))
   await fs.remove(path.join(context, 'node_modules', '.cache'))
   await fs.remove(path.join(context, '.cache'))
 })
@@ -105,7 +105,7 @@ test('render g-link components', () => {
 test('render g-image components', () => {
   const $home = load('dist/index.html')
   const $about = load('dist/about/index.html')
-  const aboutJS = content('dist/assets/js/page--src--pages--about-vue.js')
+  const aboutJS = content('dist/page--src--pages--about-vue.js')
 
   // #1318 - Exclude `dataUri` from bundle when not lazy loading the image.
   expect(aboutJS).not.toMatch('"dataUri":"data:image/png')
@@ -135,7 +135,7 @@ test('render g-image components', () => {
 })
 
 test('render custom route meta', () => {
-  const appJS = content('dist/assets/js/app.js')
+  const appJS = content('dist/app.js')
 
   expect(appJS).toMatch('aboutUsMeta1: true')
   expect(appJS).toMatch('$aboutUsMeta2: [1, 2, 3]')
@@ -177,8 +177,8 @@ test('generate /404.html', () => {
 })
 
 test('compile scripts correctly', () => {
-  const appJS = content('dist/assets/js/app.js')
-  const homeJS = content('dist/assets/js/page--src--pages--index-vue.js')
+  const appJS = content('dist/app.js')
+  const homeJS = content('dist/page--src--pages--index-vue.js')
 
   // never include the context path
   expect(appJS).not.toMatch(context)
@@ -195,11 +195,12 @@ test('compile scripts correctly', () => {
 
   // env variables
   expect(homeJS).toMatch('GRIDSOME_PROD_VARIABLE: "PROD_1"')
-  expect(homeJS).toMatch('PROD_VARIABLE: process.env.PROD_VARIABLE')
+  expect(homeJS).toMatch('process.env.SECRET_VALUE')
+  expect(homeJS).not.toMatch('secret_value')
 })
 
 test('compile scripts includes polyfills', () => {
-  const appJS = content('dist/assets/js/app.js')
+  const appJS = content('dist/app.js')
 
   expect(appJS).toMatch('core-js/modules/es.promise.js')
   expect(appJS).toMatch('core-js/modules/es.string.ends-with.js')
@@ -211,7 +212,7 @@ test('compile a single css file', () => {
 })
 
 test('remove the styles.js chunk', () => {
-  const files = fs.readdirSync(path.join(context, 'dist/assets/js'))
+  const files = fs.readdirSync(path.join(context, 'dist'))
   const chunk = files.find(file => file === 'styles.js')
   expect(chunk).toBeUndefined()
 })
