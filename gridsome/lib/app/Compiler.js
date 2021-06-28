@@ -116,7 +116,7 @@ class Compiler {
     const resolvedChain = chain || await this.resolveChainableWebpackConfig(isServer)
     const configureWebpack = (this._app.plugins._listeners.configureWebpack || []).slice()
     const configFilePath = this._app.resolve('webpack.config.js')
-    const merge = require('webpack-merge')
+    const { merge } = require('webpack-merge')
 
     if (fs.existsSync(configFilePath)) {
       configureWebpack.push(require(configFilePath))

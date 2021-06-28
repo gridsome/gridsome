@@ -287,8 +287,8 @@ test('setup webpack client config', async () => {
   const chain = await app.compiler.resolveChainableWebpackConfig()
   const postcss = chain.module.rule('postcss').oneOf('normal').use('postcss-loader').toConfig()
 
-  expect(postcss.options.plugins).toHaveLength(1)
-  expect(postcss.options.plugins[0]).toBeInstanceOf(Function)
+  expect(postcss.options.postcssOptions.plugins).toHaveLength(1)
+  expect(postcss.options.postcssOptions.plugins[0]).toBeInstanceOf(Function)
 })
 
 test('setup webpack server config', async () => {
@@ -339,10 +339,10 @@ test('setup style loader options', async () => {
     const stylus = chain.module.rule('stylus').oneOf(oneOf).use('stylus-loader').toConfig()
 
     expect(css.options.url).toEqual(false)
-    expect(postcss.options.ident).toEqual('postcss')
-    expect(postcss.options.plugins).toHaveLength(2)
-    expect(postcss.options.plugins[0]).toEqual('plugin')
-    expect(postcss.options.plugins[1]).toBeInstanceOf(Function)
+    expect(postcss.options.postcssOptions.ident).toEqual('postcss')
+    expect(postcss.options.postcssOptions.plugins).toHaveLength(2)
+    expect(postcss.options.postcssOptions.plugins[0]).toEqual('plugin')
+    expect(postcss.options.postcssOptions.plugins[1]).toBeInstanceOf(Function)
     expect(sass.options.indentedSyntax).toEqual(false)
     expect(scss.options.data).toEqual('@import "variables.scss";')
     expect(less.options.strictMath).toEqual(true)
