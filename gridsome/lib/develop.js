@@ -46,7 +46,7 @@ module.exports = async (context, args) => {
     await app.server.generateCertificate()
   }
 
-  await fs.emptyDir(app.config.cacheDir)
+  await fs.emptyDir(app.config.imageCacheDir)
 
   const compiler = app.compiler.getCompiler()
 

@@ -1,6 +1,6 @@
 import fetch from './fetch'
 import router from './router'
-import { NOT_FOUND_NAME } from '~/.temp/constants'
+import { NOT_FOUND_NAME } from '#gridsome/constants'
 
 import {
   getResults,
@@ -12,7 +12,7 @@ export default function fetchPath (path) {
   if (process.isServer) {
     throw new Error(
       `Cannot fetch ${path} while rendering HTML. ` +
-      `This method should ony be used in the mounted hook.`
+      `This method should only be used in the mounted hook.`
     )
   }
 

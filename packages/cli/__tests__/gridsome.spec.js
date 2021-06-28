@@ -10,7 +10,7 @@ test('show @gridsome/cli version', async () => {
 
 test('show local gridsome version', async () => {
   const testPath = path.join(__dirname, '__fixtures__', 'project')
-  const { stdout } = await runCLI(['-v'], testPath)
+  const { stdout } = await runCLI(['-v'], { cwd: testPath })
 
   expect(stdout).toMatch(/gridsome v(\d+\.?){3}/)
 })

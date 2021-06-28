@@ -247,9 +247,10 @@ test('update page', async () => {
   expect(pages.pages()).toHaveLength(2) // includes /404
 
   await waitForWatcher(watcher, 'add')
+  await waitForWatcher(watcher, 'add')
 
   expect(watcher.getWatched()).toMatchObject({
-    [path.join(__dirname, '__fixtures__')]: ['PagedPage.vue']
+    [path.join(__dirname, '__fixtures__')]: ['PagedPage.gql', 'PagedPage.vue']
   })
 
   await pages.closeWatcher()

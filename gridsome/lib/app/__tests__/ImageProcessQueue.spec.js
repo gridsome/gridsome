@@ -173,28 +173,6 @@ test('set custom blur', async () => {
   expect(result.src).toEqual('/assets/static/1000x600.248ba3a.test.png')
 })
 
-test('placeholder with blurhash', async () => {
-  const filePath = path.resolve(context, 'assets/1000x600.png')
-  const queue = new AssetsQueue({
-    context,
-    config: {
-      ...baseconfig,
-      images: {
-        ...baseconfig.images,
-        placeholder: {
-          type: 'blurhash',
-          components: 4
-        }
-      }
-    }
-  })
-
-  const result = await queue.add(filePath)
-
-  expect(queue.images.queue).toHaveLength(2)
-  expect(result.dataUri).toMatchSnapshot()
-})
-
 test('placeholder with trace', async () => {
   const filePath = path.resolve(context, 'assets/1000x600.png')
   const queue = new AssetsQueue({

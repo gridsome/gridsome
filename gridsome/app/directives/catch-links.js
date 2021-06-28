@@ -1,6 +1,6 @@
 import router from '../router'
-import config from '~/.temp/config'
-import { NOT_FOUND_NAME } from '~/.temp/constants'
+import config from '#gridsome/config'
+import { NOT_FOUND_NAME } from '#gridsome/constants'
 import { stripPathPrefix } from '../utils/helpers'
 
 function onCatchLink(event) {

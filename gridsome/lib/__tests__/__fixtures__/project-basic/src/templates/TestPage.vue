@@ -6,17 +6,4 @@
   </Layout>
 </template>
 
-<page-query>
-query TestPage($id: ID!, $doc: ID) {
-  testPage(id: $id) {
-    title
-  }
-  allTestDoc(filter: { id: { eq: $doc }}) {
-    edges {
-      node {
-        title
-      }
-    }
-  }
-}
-</page-query>
+<page-query src="../queries/TestPage.gql" />

@@ -8,7 +8,7 @@ const chokidar = require('chokidar')
 const pathToRegexp = require('path-to-regexp')
 const { deprecate } = require('../utils/deprecate')
 const { validateTypeName } = require('../graphql/utils')
-const { ISO_8601_FORMAT } = require('../utils/constants')
+const { SUPPORTED_DATE_FORMATS } = require('../utils/constants')
 const { isPlainObject, trimStart, trimEnd, get, memoize } = require('lodash')
 
 const isDev = process.env.NODE_ENV === 'development'
@@ -21,7 +21,7 @@ const makeId = (uid, name) => {
 }
 
 const makePath = (object, { path, routeKeys, createPath }, dateField = 'date', slugify) => {
-  const date = memoize(() => moment.utc(object[dateField], ISO_8601_FORMAT, true))
+  const date = memoize(() => moment.utc(object[dateField], SUPPORTED_DATE_FORMATS, true))
   const length = routeKeys.length
   const params = {}
 

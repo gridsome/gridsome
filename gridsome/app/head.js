@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import Meta from 'vue-meta'
-import icons from '~/.temp/icons.js'
-import config from '~/.temp/config.js'
+import icons from '#gridsome/icons.js'
+import config from '#gridsome/config.js'
 
 Vue.use(Meta, {
   attribute: 'data-vue-tag',
