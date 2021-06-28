@@ -154,12 +154,6 @@ module.exports = (app, { isProd, isServer }) => {
 
   // assets
 
-  // config.merge({
-  //   experiments: {
-  //     asset: true
-  //   }
-  // })
-
   config.module.rule('images')
     .test(/\.(png|jpe?g|gif|webp)(\?.*)?$/)
     .type('asset')
