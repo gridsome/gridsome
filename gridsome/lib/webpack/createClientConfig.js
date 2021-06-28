@@ -14,7 +14,7 @@ module.exports = async app => {
 
   if (isProd) {
     config.plugin('vue-server-renderer')
-      .use(require('vue-server-renderer/client-plugin'), [{
+      .use(require('./plugins/VueSSRClientPlugin'), [{
         filename: path.relative(outputDir, clientManifestPath)
       }])
 

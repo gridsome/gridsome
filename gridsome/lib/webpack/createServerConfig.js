@@ -23,7 +23,7 @@ module.exports = async app => {
     .maxAssetSize(Infinity)
 
   config.plugin('vue-server-renderer')
-    .use(require('vue-server-renderer/server-plugin'), [{
+    .use(require('./plugins/VueSSRServerPlugin'), [{
       filename: path.relative(outputDir, serverBundlePath)
     }])
 
