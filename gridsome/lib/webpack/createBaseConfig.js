@@ -91,12 +91,34 @@ module.exports = (app, { isProd, isServer }) => {
 
   config.module.rule('js')
     .test(/\.m?js$/)
-    .merge({
-      resolve: {
-        // https://github.com/webpack/webpack/issues/11467#issuecomment-727014123
-        fullySpecified: false
+    .exclude
+    .add(filepath => {
+      if (/\.vue\.js$/.test(filepath)) {
+        return false
       }
+
+      if (/gridsome\.client\.js$/.test(filepath)) {
+        return false
+      }
+
+      if (
+        filepath.startsWith(projectConfig.appPath) ||
+        filepath.startsWith(projectConfig.appCacheDir)
+      ) {
+        return false
+      }
+
+      if (app.config.transpileDependencies.some(dep => {
+        return typeof dep === 'string'
+          ? filepath.includes(path.normalize(dep))
+          : filepath.match(dep)
+      })) {
+        return false
+      }
+
+      return /node_modules/.test(filepath)
     })
+    .end()
     .use('cache-loader')
     .loader(require.resolve('cache-loader'))
     .options({
