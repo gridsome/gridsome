@@ -27,8 +27,8 @@ beforeAll(async () => {
 afterAll(async () => {
   server && await server.close()
   browser && await browser.close()
-  // await fs.remove(path.join(context, 'dist'))
-  // await fs.remove(path.join(context, 'src', '.temp'))
+  await fs.remove(path.join(context, 'dist'))
+  await fs.remove(path.join(context, 'src', '.temp'))
   await fs.remove(path.join(context, 'node_modules', '.cache'))
   await fs.remove(path.join(context, '.cache'))
 })
