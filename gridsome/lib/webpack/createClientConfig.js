@@ -18,23 +18,33 @@ module.exports = async app => {
         filename: path.relative(outputDir, clientManifestPath)
       }])
 
-    config.optimization.minimizer('css-minimizer-webpack-plugin')
-      .use(CssMinimizerPlugin)
+    const cacheGroups = {
+      vendor: {
+        test: /[\\/]node_modules[\\/]/,
+        name: 'vendors',
+        chunks: 'all'
+      }
+    }
 
     if (css.split !== true) {
-      const cacheGroups = {
-        styles: {
-          name: 'styles',
-          test: m => /css\/mini-extract/.test(m.type),
-          chunks: 'all',
-          enforce: true
-        }
+      cacheGroups.styles = {
+        name: 'styles',
+        test: m => /css\/mini-extract/.test(m.type),
+        chunks: 'all',
+        enforce: true
       }
-      config.optimization.splitChunks({ cacheGroups })
     }
+
+    config.optimization
+      .minimize(true)
+      .runtimeChunk('single')
+      .splitChunks({ cacheGroups })
+      .minimizer('css-minimizer-webpack-plugin')
+        .use(CssMinimizerPlugin)
+        .end()
+      .merge({ moduleIds: 'deterministic' })
   } else {
     config.entry('app').add(resolve('../../app/entry.sockjs.js'))
-
     config.plugin('hmr').use(webpack.HotModuleReplacementPlugin)
   }
 

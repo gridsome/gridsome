@@ -257,9 +257,6 @@ module.exports = (app, { isProd, isServer }) => {
       }])
   }
 
-  // Short hashes as ids for better long term caching.
-  config.optimization.merge({ moduleIds: 'deterministic' })
-
   if (process.env.GRIDSOME_TEST) {
     config.output.pathinfo(true)
     config.optimization.minimize(false)
