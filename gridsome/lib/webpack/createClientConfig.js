@@ -20,7 +20,12 @@ module.exports = async app => {
 
     const cacheGroups = {
       vendor: {
-        test: /[\\/]node_modules[\\/]/,
+        test(mod) {
+          if (mod.context.startsWith(app.config.appCacheDir)) {
+            return false
+          }
+          return mod.context.includes('node_modules')
+        },
         name: 'vendors',
         chunks: 'all'
       }
@@ -46,6 +51,12 @@ module.exports = async app => {
   } else {
     config.entry('app').add(resolve('../../app/entry.sockjs.js'))
     config.plugin('hmr').use(webpack.HotModuleReplacementPlugin)
+  }
+
+  if (process.env.GRIDSOME_TEST) {
+    config.output.pathinfo(true)
+    config.optimization.minimize(false)
+    config.optimization.merge({ moduleIds: 'named' })
   }
 
   return config

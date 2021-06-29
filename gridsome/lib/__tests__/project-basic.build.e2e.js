@@ -178,6 +178,7 @@ test('generate /404.html', () => {
 
 test('compile scripts correctly', () => {
   const appJS = content('dist/app.js')
+  const vendorsJS = content('dist/vendors.js')
   const homeJS = content('dist/page--src--pages--index-vue.js')
 
   // never include the context path
@@ -185,9 +186,9 @@ test('compile scripts correctly', () => {
   expect(homeJS).not.toMatch(context)
 
   // api.transpileDependencies
-  expect(appJS).not.toMatch('testToArray1 (...args)') // transpiled
-  expect(appJS).toMatch('testToArray2 (...args)') // not transpiled
-  expect(appJS).not.toMatch('classTestMethod ()') // transpiled
+  expect(vendorsJS).not.toMatch('testToArray1 (...args)') // transpiled
+  expect(vendorsJS).toMatch('testToArray2 (...args)') // not transpiled
+  expect(vendorsJS).not.toMatch('classTestMethod ()') // transpiled
 
   // transpile custom sfc blocks
   expect(appJS).not.toMatch('Component =>') // static-query
@@ -200,10 +201,10 @@ test('compile scripts correctly', () => {
 })
 
 test('compile scripts includes polyfills', () => {
-  const appJS = content('dist/app.js')
+  const vendorsJS = content('dist/vendors.js')
 
-  expect(appJS).toMatch('core-js/modules/es.promise.js')
-  expect(appJS).toMatch('core-js/modules/es.string.ends-with.js')
+  expect(vendorsJS).toMatch('core-js/modules/es.promise.js')
+  expect(vendorsJS).toMatch('core-js/modules/es.string.ends-with.js')
 })
 
 test('compile a single css file', () => {

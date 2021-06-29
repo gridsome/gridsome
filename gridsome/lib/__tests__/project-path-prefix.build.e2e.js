@@ -50,9 +50,10 @@ test('include pathPrefix in asset URLs', () => {
 
 test('include pathPrefix in scripts', () => {
   const appJS = content('dist/app.js')
+  const runtimeJS = content('dist/runtime.js')
 
   // __webpack_public_path__
-  expect(appJS).toMatch('__webpack_require__.p = "/sub/-/dir/"')
+  expect(runtimeJS).toMatch('__webpack_require__.p = "/sub/-/dir/"')
   // stripPathPrefix(path) helper
   expect(appJS).toMatch('"pathPrefix": "/sub/-/dir"')
   // router base

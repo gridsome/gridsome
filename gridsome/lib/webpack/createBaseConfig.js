@@ -259,12 +259,6 @@ module.exports = (app, { isProd, isServer }) => {
       }])
   }
 
-  if (process.env.GRIDSOME_TEST) {
-    config.output.pathinfo(true)
-    config.optimization.minimize(false)
-    config.optimization.merge({ moduleIds: 'named' })
-  }
-
   // helpes
 
   function createCacheOptions () {
