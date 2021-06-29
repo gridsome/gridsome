@@ -205,10 +205,14 @@ module.exports = (app, { isProd, isServer }) => {
       }
     })
 
-  // Disable asset modules for images loaded via `g-image`
+  // g-image
+
   config.module.rule('g-image')
     .resourceQuery(/g-image/)
     .type('javascript/auto')
+    .use('g-image-loader')
+      .loader(require.resolve('./loaders/assets-loader'))
+      .options({ assets: app.assets })
 
   // data
 

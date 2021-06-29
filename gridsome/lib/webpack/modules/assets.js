@@ -33,8 +33,7 @@ function transformAttrValue(node, attr) {
   let result = attr.value
 
   if (!isUrl(value) && !isMailtoLink(value) && !isTelLink(value) && isRelative(value)) {
-    const query = createOptionsQuery(node.attrs)
-    result = `require("!!${require.resolve('../loaders/assets-loader.js').replace(/\\/g, '/')}?${query}!${value}?g-image=true")`
+    result = `require("${value}?g-image&${createOptionsQuery(node.attrs)}")`
   }
 
   return result
