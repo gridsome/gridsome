@@ -5,7 +5,6 @@ const Config = require('webpack-chain')
 const { forwardSlash } = require('../utils')
 const { VueLoaderPlugin } = require('vue-loader')
 const createHTMLRenderer = require('../server/createHTMLRenderer')
-const GridsomeResolverPlugin = require('./plugins/GridsomeResolverPlugin')
 const CSSExtractPlugin = require('mini-css-extract-plugin')
 
 const resolve = (p, c) => path.resolve(c || __dirname, p)
@@ -27,8 +26,8 @@ module.exports = (app, { isProd, isServer }) => {
   config.output
     .publicPath(publicPath)
     .path(projectConfig.outputDir)
-    .chunkFilename(`${assetsDir}/js/${filename}`)
-    .filename(`${assetsDir}/js/${filename}`)
+    .chunkFilename(filename)
+    .filename(filename)
 
   config.resolve
     .set('symlinks', true)
@@ -39,26 +38,17 @@ module.exports = (app, { isProd, isServer }) => {
     .set('gridsome$', path.resolve(projectConfig.appPath, 'index.js'))
     .end()
     .extensions
-    .merge(['.js', '.vue'])
+    .merge(['.js', '.mjs', '.vue'])
     .end()
 
-  config.resolve
-    .plugin('gridsome-fallback-resolver-plugin')
-      .use(GridsomeResolverPlugin, [{
-        fallbackDir: path.join(projectConfig.appPath, 'fallbacks'),
-        optionalDir: path.join(app.context, 'src'),
-        resolve: ['main', 'App.vue']
-      }])
-      .end()
-    // TODO: Remove plugin when using webpack 5
-    .plugin('pnp')
-      .use({...require(`pnp-webpack-plugin`)})
+  config.resolve.merge({
+    fallback: ['main', 'App.vue'].reduce((fallback, filename) => {
+      fallback[path.join(app.context, 'src', filename)] = path.join(projectConfig.appPath, 'fallbacks', filename)
+      return fallback
+    }, {})
+  })
 
   config.resolveLoader
-    // TODO: Remove plugin when using webpack 5
-    .plugin('pnp-loaders')
-      .use({ ...require('pnp-webpack-plugin').topLevelLoader })
-      .end()
     .set('symlinks', true)
 
   config.module.noParse(/^(vue|vue-router|vue-meta)$/)
@@ -70,7 +60,7 @@ module.exports = (app, { isProd, isServer }) => {
   }
 
   if (!isProd) {
-    config.devtool('cheap-module-eval-source-map')
+    config.devtool('eval-cheap-module-source-map')
   }
 
   // vue
@@ -101,7 +91,7 @@ module.exports = (app, { isProd, isServer }) => {
   // js
 
   config.module.rule('js')
-    .test(/\.js$/)
+    .test(/\.m?js$/)
     .exclude
     .add(filepath => {
       if (/\.vue\.js$/.test(filepath)) {
@@ -166,46 +156,71 @@ module.exports = (app, { isProd, isServer }) => {
 
   config.module.rule('images')
     .test(/\.(png|jpe?g|gif|webp)(\?.*)?$/)
-    .use('url-loader')
-    .loader(require.resolve('url-loader'))
-    .options({
-      limit: inlineLimit,
-      name: `${assetsDir}/img/${assetname}`
+    .type('asset')
+    .parser({
+      dataUrlCondition: {
+        maxSize: inlineLimit
+      }
+    })
+    .merge({
+      generator: {
+        filename: `${assetsDir}/img/${assetname}`
+      }
     })
 
   config.module.rule('svg')
     .test(/\.(svg)(\?.*)?$/)
-    .use('file-loader')
-    .loader(require.resolve('file-loader'))
-    .options({
-      name: `${assetsDir}/img/${assetname}`
+    .type('asset/resource')
+    .merge({
+      generator: {
+        filename: `${assetsDir}/img/${assetname}`
+      }
     })
 
   config.module.rule('media')
     .test(/\.(mp4|webm|ogg|mp3|wav|flac|aac)(\?.*)?$/)
-    .use('url-loader')
-    .loader(require.resolve('url-loader'))
-    .options({
-      limit: inlineLimit,
-      name: `${assetsDir}/media/${assetname}`
+    .type('asset')
+    .parser({
+      dataUrlCondition: {
+        maxSize: inlineLimit
+      }
+    })
+    .merge({
+      generator: {
+        filename: `${assetsDir}/media/${assetname}`
+      }
     })
 
   config.module.rule('fonts')
     .test(/\.(woff2?|eot|ttf|otf)(\?.*)?$/i)
-    .use('url-loader')
-    .loader(require.resolve('url-loader'))
-    .options({
-      limit: inlineLimit,
-      name: `${assetsDir}/fonts/${assetname}`
+    .type('asset')
+    .parser({
+      dataUrlCondition: {
+        maxSize: inlineLimit
+      }
     })
+    .merge({
+      generator: {
+        filename: `${assetsDir}/fonts/${assetname}`
+      }
+    })
+
+  // g-image / g-link
+
+  for (const name of ['g-image', 'g-link']) {
+    config.module.rule(name)
+      .resourceQuery(new RegExp(name))
+      .type('javascript/auto')
+      .use(`${name}-loader`)
+        .loader(require.resolve('./loaders/assets-loader'))
+        .options({ assets: app.assets })
+  }
 
   // data
 
   config.module.rule('yaml')
     .test(/\.ya?ml$/)
-    .use('json-loader')
-    .loader(require.resolve('json-loader'))
-    .end()
+    .type('json')
     .use('yaml-loader')
     .loader(require.resolve('yaml-loader'))
 
@@ -244,15 +259,6 @@ module.exports = (app, { isProd, isServer }) => {
       }])
   }
 
-  // Short hashes as ids for better long term caching.
-  config.optimization.merge({ moduleIds: 'hashed' })
-
-  if (process.env.GRIDSOME_TEST) {
-    config.output.pathinfo(true)
-    config.optimization.minimize(false)
-    config.optimization.merge({ moduleIds: 'named' })
-  }
-
   // helpes
 
   function createCacheOptions () {
@@ -280,7 +286,10 @@ module.exports = (app, { isProd, isServer }) => {
     const modulesRule = baseRule.oneOf('modules').resourceQuery(/module/)
     const normalRule = baseRule.oneOf('normal')
 
-    applyLoaders(modulesRule, true)
+    applyLoaders(modulesRule, {
+      exportOnlyLocals: isServer,
+      localIdentName: `[local]_[hash:base64:8]`
+    })
     applyLoaders(normalRule, false)
 
     function applyLoaders (rule, modules) {
@@ -296,19 +305,18 @@ module.exports = (app, { isProd, isServer }) => {
         .loader(require.resolve('css-loader'))
         .options(Object.assign({
           modules,
-          exportOnlyLocals: isServer,
-          localIdentName: `[local]_[hash:base64:8]`,
           importLoaders: 1,
           sourceMap: !isProd
         }, css))
 
       rule.use('postcss-loader')
         .loader(require.resolve('postcss-loader'))
-        .options(Object.assign({
-          sourceMap: !isProd
-        }, postcss, {
-          plugins: (postcss.plugins || []).concat(require('autoprefixer'))
-        }))
+        .options({
+          sourceMap: !isProd,
+          postcssOptions: Object.assign({}, postcss, {
+            plugins: (postcss.plugins || []).concat(require('autoprefixer'))
+          })
+        })
 
       if (loader) {
         try {
@@ -321,12 +329,10 @@ module.exports = (app, { isProd, isServer }) => {
   }
 
   function createEnv () {
-    const assetsUrl = forwardSlash(path.join(publicPath, assetsDir, '/'))
-    const dataUrl = forwardSlash(path.join(assetsUrl, 'data', '/'))
+    const dataUrl = forwardSlash(path.join(publicPath, assetsDir, 'data', '/'))
 
     const baseEnv = {
       'process.env.PUBLIC_PATH': JSON.stringify(publicPath),
-      'process.env.ASSETS_URL': JSON.stringify(assetsUrl),
       'process.env.DATA_URL': JSON.stringify(dataUrl),
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || ''),
       'process.isClient': !isServer,

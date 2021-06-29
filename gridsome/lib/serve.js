@@ -8,7 +8,6 @@ const pathToRegexp = require('path-to-regexp')
 const { prepareUrls } = require('./server/utils')
 const resolvePort = require('./server/resolvePort')
 const compileAssets = require('./webpack/compileAssets')
-const { removeStylesJsChunk } = require('./webpack/utils')
 
 module.exports = async (context, args) => {
   process.env.NODE_ENV = 'production'
@@ -28,14 +27,10 @@ module.exports = async (context, args) => {
 
   const routes = createRoutes(app)
 
-  const stats = await compileAssets(app, {
+  await compileAssets(app, {
     'process.env.SOCKJS_ENDPOINT': JSON.stringify(urls.sockjs.url),
     'process.env.GRAPHQL_ENDPOINT': JSON.stringify(urls.graphql.url)
   })
-
-  if (config.css.split !== true) {
-    await removeStylesJsChunk(stats, config.outputDir)
-  }
 
   server.hooks.setup.tap('serve', server => {
     server.use(express.static(config.outputDir))

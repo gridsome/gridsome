@@ -79,7 +79,7 @@ export default {
       TEST_2,
       TEST_3,
       GRIDSOME_PROD_VARIABLE: process.env.GRIDSOME_PROD_VARIABLE,
-      PROD_VARIABLE: process.env.PROD_VARIABLE
+      PROD_VARIABLE: 'process' in global && process.env.SECRET_VALUE
     }
   },
 
