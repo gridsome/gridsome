@@ -205,14 +205,16 @@ module.exports = (app, { isProd, isServer }) => {
       }
     })
 
-  // g-image
+  // g-image / g-link
 
-  config.module.rule('g-image')
-    .resourceQuery(/g-image/)
-    .type('javascript/auto')
-    .use('g-image-loader')
-      .loader(require.resolve('./loaders/assets-loader'))
-      .options({ assets: app.assets })
+  for (const name of ['g-image', 'g-link']) {
+    config.module.rule(name)
+      .resourceQuery(new RegExp(name))
+      .type('javascript/auto')
+      .use(`${name}-loader`)
+        .loader(require.resolve('./loaders/assets-loader'))
+        .options({ assets: app.assets })
+  }
 
   // data
 
