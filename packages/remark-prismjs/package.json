@@ -15,7 +15,7 @@
     "escape-html": "^1.0.3",
     "hast-util-to-html": "^6.0.2",
     "hastscript": "^5.1.0",
-    "prismjs": "^1.15.0",
+    "prismjs": "1.23.0",
     "unist-builder": "^1.0.4",
     "unist-util-visit": "^1.4.0"
   },
