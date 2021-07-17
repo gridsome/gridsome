@@ -12,6 +12,17 @@ module.exports = async app => {
 
   config.entry('app').add(resolve('../../app/entry.client.js'))
 
+  config.resolve.merge({
+    fallback: {
+      process: require.resolve('process/browser')
+    }
+  })
+
+  config.plugin('provide')
+    .use(require('webpack/lib/ProvidePlugin'), [{
+      process: require.resolve('process/browser')
+    }])
+
   if (isProd) {
     config.plugin('vue-server-renderer')
       .use(require('./plugins/VueSSRClientPlugin'), [{
@@ -21,6 +32,9 @@ module.exports = async app => {
     const cacheGroups = {
       vendor: {
         test(mod) {
+          if (!mod.context) {
+            return true
+          }
           if (mod.context.startsWith(app.config.appCacheDir)) {
             return false
           }

@@ -80,6 +80,7 @@
     "postcss": "^8.3.5",
     "potrace": "^2.1.8",
     "probe-image-size": "^4.0.0",
+    "process": "^0.11.10",
     "resolve-from": "^5.0.0",
     "sharp": "^0.28.1",
     "slash": "^2.0.0",
