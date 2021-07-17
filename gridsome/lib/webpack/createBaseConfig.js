@@ -38,7 +38,7 @@ module.exports = (app, { isProd, isServer }) => {
     .set('gridsome$', path.resolve(projectConfig.appPath, 'index.js'))
     .end()
     .extensions
-    .merge(['.js', '.mjs', '.vue'])
+    .merge(['.js', '.vue'])
     .end()
 
   config.resolve.merge({
@@ -91,7 +91,7 @@ module.exports = (app, { isProd, isServer }) => {
   // js
 
   config.module.rule('js')
-    .test(/\.m?js$/)
+    .test(/\.js$/)
     .exclude
     .add(filepath => {
       if (/\.vue\.js$/.test(filepath)) {
