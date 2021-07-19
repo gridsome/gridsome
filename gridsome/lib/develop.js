@@ -51,7 +51,7 @@ module.exports = async (context, args) => {
       console.log()
     }
 
-    server.showStatus()
+    server.logStatus()
     console.log()
   })
 
@@ -74,7 +74,7 @@ async function createDevServer(app, compiler) {
   devServer.onBeforeSetupMiddleware = (server) => {
     setupGraphQLMiddleware(app, server)
     setupAssetsMiddleware(app, server)
-    onBeforeSetupMiddleware && onBeforeSetupMiddleware()
+    onBeforeSetupMiddleware && onBeforeSetupMiddleware(server)
   }
 
   const server = new WebpackDevServer(compiler, devServer)
