@@ -303,8 +303,9 @@ test('setup style loader options', async () => {
           less: { strictMath: true },
           stylus: { use: ['plugin'] },
           postcss: {
-            ident: 'postcss',
-            plugins: ['plugin']
+            postcssOptions: {
+              plugins: ['plugin']
+            }
           }
         }
       }
@@ -325,7 +326,6 @@ test('setup style loader options', async () => {
     const stylus = chain.module.rule('stylus').oneOf(oneOf).use('stylus-loader').toConfig()
 
     expect(css.options.url).toEqual(false)
-    expect(postcss.options.postcssOptions.ident).toEqual('postcss')
     expect(postcss.options.postcssOptions.plugins).toHaveLength(2)
     expect(postcss.options.postcssOptions.plugins[0]).toEqual('plugin')
     expect(postcss.options.postcssOptions.plugins[1]).toBeInstanceOf(Function)

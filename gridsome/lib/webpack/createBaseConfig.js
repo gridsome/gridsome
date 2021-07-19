@@ -1,4 +1,5 @@
 const path = require('path')
+const glob = require('globby')
 const hash = require('hash-sum')
 const { pick } = require('lodash')
 const Config = require('webpack-chain')
@@ -145,12 +146,64 @@ module.exports = (app, { isProd, isServer }) => {
 
   // css
 
-  createCSSRule(config, 'css', /\.css$/, null, projectConfig.css.loaderOptions.css)
-  createCSSRule(config, 'postcss', /\.p(ost)?css$/, null, projectConfig.css.loaderOptions.postcss)
-  createCSSRule(config, 'scss', /\.scss$/, 'sass-loader', projectConfig.css.loaderOptions.scss)
-  createCSSRule(config, 'sass', /\.sass$/, 'sass-loader', projectConfig.css.loaderOptions.sass)
-  createCSSRule(config, 'less', /\.less$/, 'less-loader', projectConfig.css.loaderOptions.less)
-  createCSSRule(config, 'stylus', /\.styl(us)?$/, 'stylus-loader', projectConfig.css.loaderOptions.stylus)
+  const hasPostCSSConfig = glob.sync(['.postcssrc?({.js,.yaml,.json})', 'postcss.config.js']).length > 0
+
+  ;[
+    ['css', /\.css$/],
+    ['postcss', /\.p(ost)?css$/],
+    ['scss', /\.scss$/, 'sass-loader'],
+    ['sass', /\.sass$/, 'sass-loader'],
+    ['less', /\.less$/, 'less-loader'],
+    ['stylus', /\.styl(us)?$/, 'stylus-loader']
+  ].forEach(([lang, test, loader = null]) => {
+    const { loaderOptions } = projectConfig.css
+    const { css, postcss = {} } = loaderOptions
+    const { postcssOptions = {} } = postcss
+    const baseRule = config.module.rule(lang).test(test)
+    const modulesRule = baseRule.oneOf('modules').resourceQuery(/module/)
+    const normalRule = baseRule.oneOf('normal')
+
+    for (const rule of [modulesRule, normalRule]) {
+      if (!isServer) {
+        if (isProd) {
+          rule.use('extract-css-loader').loader(CSSExtractPlugin.loader)
+        } else {
+          rule.use('vue-style-loader').loader(require.resolve('vue-style-loader'))
+        }
+      }
+
+      rule.use('css-loader')
+        .loader(require.resolve('css-loader'))
+        .options(Object.assign({
+          modules: rule === modulesRule
+            ? { exportOnlyLocals: isServer, localIdentName: `[local]_[hash:base64:8]` }
+            : false,
+          importLoaders: loader ? 2 : 1,
+          sourceMap: !isProd
+        }, css))
+
+      rule.use('postcss-loader')
+        .loader(require.resolve('postcss-loader'))
+        .options({
+          sourceMap: !isProd,
+          ...postcss,
+          postcssOptions: !hasPostCSSConfig
+            ? {
+              ...postcssOptions,
+              plugins: [...(postcssOptions.plugins || []), require('autoprefixer')]
+            }
+            : {}
+        })
+
+      if (loader) {
+        try {
+          rule.use(loader).loader(require.resolve(loader)).options(loaderOptions[lang])
+        } catch {
+          rule.use(loader).loader(loader).options(loaderOptions[lang])
+        }
+      }
+    }
+  })
 
   // assets
 
@@ -277,54 +330,6 @@ module.exports = (app, { isProd, isServer }) => {
     return {
       cacheDirectory: path.join(projectConfig.cacheDir, 'webpack'),
       cacheIdentifier: hash(values)
-    }
-  }
-
-  function createCSSRule (config, lang, test, loader = null, options = {}) {
-    const { css = {}, postcss = {}} = projectConfig.css.loaderOptions
-    const baseRule = config.module.rule(lang).test(test)
-    const modulesRule = baseRule.oneOf('modules').resourceQuery(/module/)
-    const normalRule = baseRule.oneOf('normal')
-
-    applyLoaders(modulesRule, {
-      exportOnlyLocals: isServer,
-      localIdentName: `[local]_[hash:base64:8]`
-    })
-    applyLoaders(normalRule, false)
-
-    function applyLoaders (rule, modules) {
-      if (!isServer) {
-        if (isProd) {
-          rule.use('extract-css-loader').loader(CSSExtractPlugin.loader)
-        } else {
-          rule.use('vue-style-loader').loader(require.resolve('vue-style-loader'))
-        }
-      }
-
-      rule.use('css-loader')
-        .loader(require.resolve('css-loader'))
-        .options(Object.assign({
-          modules,
-          importLoaders: 1,
-          sourceMap: !isProd
-        }, css))
-
-      rule.use('postcss-loader')
-        .loader(require.resolve('postcss-loader'))
-        .options({
-          sourceMap: !isProd,
-          postcssOptions: Object.assign({}, postcss, {
-            plugins: (postcss.plugins || []).concat(require('autoprefixer'))
-          })
-        })
-
-      if (loader) {
-        try {
-          rule.use(loader).loader(require.resolve(loader)).options(options)
-        } catch {
-          rule.use(loader).loader(loader).options(options)
-        }
-      }
     }
   }
 
