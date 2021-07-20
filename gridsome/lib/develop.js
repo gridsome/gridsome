@@ -24,16 +24,20 @@ module.exports = async (context, args) => {
 
     if (name === 'webpack-dev-middleware') return false
     if (name === 'webpack-dev-server') {
-      const message = messages.join(' ')
-      if (isDone && !['served from', 'index.html'].some((s) => message.includes(s))) {
-        const processedMessage = messages
+      if (isDone) {
+        const message = messages
+          .filter(m => !m.includes('Project is running at'))
+          .filter(m => !m.includes('fallback'))
           .join(' ')
+          .replace('Loopback:', 'Project is running at:')
           .replace(/(https?:\/\/[^\s]+)/g, chalk.cyan('$1'))
           .replace(app.context, '.')
 
-        console.log(`  ${processedMessage}`)
+        if (message) {
+          console.log(`  ${message}`)
+        }
       }
-      return false
+      return isDone
     }
   })
 
@@ -105,7 +109,7 @@ function setupGraphQLMiddleware(app, server) {
   const { default: playground } = require('graphql-playground-middleware-express')
   const graphqlMiddleware = require('./server/middlewares/graphql')
 
-  server.use(
+  server.app.use(
     '/___graphql',
     express.json(),
     graphqlMiddleware(app),
