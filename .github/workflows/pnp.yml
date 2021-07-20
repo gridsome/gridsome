@@ -22,7 +22,22 @@ jobs:
           yarn set version 2
           yarn config set pnpFallbackMode none
           yarn config set compressionLevel 0
-          yarn link -A ../
+      - name: Get cache directory
+        working-directory: ./pnp-e2e
+        id: yarn-cache-dir-path
+        run: echo "::set-output name=dir::$(yarn config get cacheFolder)"
+      - name: Cache dependencies
+        working-directory: ./pnp-e2e
+        id: yarn-cache
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+      - name: Link packages
+        working-directory: ./pnp-e2e
+        run: yarn link -A ../
       - name: Build
         working-directory: ./pnp-e2e
         run: yarn build
