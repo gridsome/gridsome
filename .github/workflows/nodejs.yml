@@ -28,8 +28,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        node-version: [12.x, 14.x, 16.x]
-        os: [windows-latest, macOS-latest, ubuntu-latest]
+        node-version: ['12', '14', '16']
+        os: [macOS-latest, ubuntu-latest]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
