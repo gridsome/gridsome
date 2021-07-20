@@ -1,0 +1,35 @@
+name: PnP
+
+on:
+  push:
+    branches:
+      - github-actions
+
+jobs:
+  pnp:
+    name: PnP
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+          cache: 'yarn'
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+      - name: Create project
+        run: |
+          git clone https://github.com/gridsome/gridsome-starter-default.git pnp-e2e
+          cd pnp-e2e
+      - name: Configure Yarn
+        run: |
+          touch yarn.lock
+          yarn set version 2
+          yarn config set pnpFallbackMode none
+          yarn config set compressionLevel 0
+          yarn link -A ../
+      - name: Build
+        run: yarn build
