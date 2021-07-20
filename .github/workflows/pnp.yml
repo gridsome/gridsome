@@ -21,11 +21,10 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
       - name: Create project
-        run: |
-          git clone https://github.com/gridsome/gridsome-starter-default.git pnp-e2e
-          cd pnp-e2e
+        run: git clone https://github.com/gridsome/gridsome-starter-default.git pnp-e2e
       - name: Configure Yarn
         run: |
+          cd pnp-e2e
           touch yarn.lock
           yarn set version 2
           yarn config set pnpFallbackMode none
