@@ -83,7 +83,7 @@ Set this option to `false` to disable all built-in plugins.
 
 #### grayMatter
 
-- Type: `object` 
+- Type: `object`
 - Default: `{}`
 
 Options to pass through to [gray-matter][] for parsing front matter.
@@ -138,7 +138,7 @@ Automatically add links to headings. Disabled if `slug` is `false`.
 - Type: `boolean`
 - Default: `true`
 
-Support ASCII guillements (`<<`, `>>`) and mapping them to HTML.
+Support ASCII guillemets (`<<`, `>>`) and mapping them to HTML.
 
 #### imageQuality
 
@@ -175,15 +175,15 @@ This allows you to enable/disable `gfm`, `commonmark`, `footnotes`,  `pedantic` 
 * commonmark
   * Type: `boolean`
   * Default: `false`
-  
+
 * footnotes
   * Type: `boolean`
   * Default: `false`
-  
+
 * pedantic
   * Type: `boolean`
   * Default: `false`
-  
+
 * blocks
   * Type: `Array | string`
   * Default: list of [block HTML elements](https://github.com/remarkjs/remark/blob/main/packages/remark-parse/lib/block-elements.js)

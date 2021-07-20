@@ -1,15 +1,18 @@
 const path = require('path')
 const glob = require('globby')
-const leven = require('leven')
+const fs = require('fs-extra')
+const { distance } = require('fastest-levenshtein')
 const crypto = require('crypto')
 const moment = require('moment')
 const chokidar = require('chokidar')
 const pathToRegexp = require('path-to-regexp')
 const { deprecate } = require('../utils/deprecate')
-const { ISO_8601_FORMAT } = require('../utils/constants')
+const { validateTypeName } = require('../graphql/utils')
+const { SUPPORTED_DATE_FORMATS } = require('../utils/constants')
 const { isPlainObject, trimStart, trimEnd, get, memoize } = require('lodash')
 
 const isDev = process.env.NODE_ENV === 'development'
+const isUnitTest = process.env.GRIDSOME_TEST === 'unit'
 const FROM_CONTENT_TYPE = 'content-type'
 const FROM_CONFIG = 'config'
 
@@ -18,7 +21,7 @@ const makeId = (uid, name) => {
 }
 
 const makePath = (object, { path, routeKeys, createPath }, dateField = 'date', slugify) => {
-  const date = memoize(() => moment.utc(object[dateField], ISO_8601_FORMAT, true))
+  const date = memoize(() => moment.utc(object[dateField], SUPPORTED_DATE_FORMATS, true))
   const length = routeKeys.length
   const params = {}
 
@@ -123,14 +126,20 @@ const createTemplateOptions = (options, trailingSlash) => {
   }
 }
 
-const setupTemplates = ({ templates, permalinks }) => {
+const setupTemplates = ({ context, templates, permalinks }) => {
   const res = {
     byComponent: new Map(),
     byTypeName: new Map()
   }
 
   for (const typeName in templates) {
+    validateTypeName(typeName)
     templates[typeName].forEach(options => {
+      if (!isDev && !isUnitTest && !fs.existsSync(options.component)) {
+        const relPath = path.relative(context, options.component)
+        throw new Error(`Could not find component for the ${typeName} template: ${relPath}`)
+      }
+
       const byTypeName = res.byTypeName.get(typeName) || []
       const byComponent = res.byComponent.get(options.component) || []
       const template = createTemplateOptions(options, permalinks.trailingSlash)
@@ -232,7 +241,7 @@ class TemplatesPlugin {
       for (const typeName of templates.byTypeName.keys()) {
         if (!typeNames.includes(typeName)) {
           const suggestion = typeNames.find(value => {
-            return leven(value, typeName) < 3
+            return distance(value, typeName) < 3
           })
 
           throw new Error(

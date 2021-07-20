@@ -49,7 +49,7 @@ const createCustomBlockRule = (config, type) => {
   config.module.rule(type)
     .resourceQuery(re)
     .use('babel-loader')
-    .loader('babel-loader')
+    .loader(require.resolve('babel-loader'))
     .options({
       presets: [
         require.resolve('@babel/preset-env')
@@ -277,7 +277,7 @@ class VueRemark {
       })
       .end()
       .use('vue-loader')
-      .loader('vue-loader')
+      .loader(require.resolve('vue-loader'))
       .options(vueLoader.toConfig().options)
       .end()
       .use('vue-remark-loader')

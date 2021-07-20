@@ -1,6 +1,4 @@
 const path = require('path')
-const fs = require('fs-extra')
-
 const { NOT_FOUND_NAME } = require('../../utils/constants')
 
 function corePlugin (api, config) {
@@ -25,15 +23,6 @@ function corePlugin (api, config) {
     })
   })
 
-  api.afterBuild(({ config }) => {
-    const notFoundPath = path.join(config.outputDir, '404', 'index.html')
-    const notFoundDest = path.join(config.outputDir, '404.html')
-
-    if (fs.existsSync(notFoundPath)) {
-      fs.copySync(notFoundPath, notFoundDest)
-    }
-  })
-
   // Flags the `/404` page to detect it in the router guard.
   api._app.pages.hooks.createPage.tap('Gridsome', (options) => {
     if (options.path === '/404') {
@@ -43,12 +32,28 @@ function corePlugin (api, config) {
     return options
   })
 
-  api._app.pages.hooks.createRoute.tap('Gridsome', options => {
+  api._app.pages.hooks.createRoute.tap('Gridsome', (options) => {
     if (/\/404\/?/.test(options.path)) {
       options.name = NOT_FOUND_NAME
     }
 
     return options
+  })
+
+  api._app.hooks.renderQueue.tap('Gridsome', (renderQueue) => {
+    const { outputDir, dataDir, pathPrefix } = config
+
+    for (const entry of renderQueue) {
+      if (entry.path === '/404') {
+        entry.path = '/404.html'
+        entry.publicPath = pathPrefix + entry.path,
+        entry.location = { name: NOT_FOUND_NAME }
+        entry.htmlOutput = path.join(outputDir, '/404.html')
+        entry.dataOutput = path.join(dataDir, '/404.json')
+
+        return
+      }
+    }
   })
 }
 

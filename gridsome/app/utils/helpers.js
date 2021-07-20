@@ -1,4 +1,4 @@
-import config from '~/.temp/config'
+import config from '#gridsome/config'
 
 const re = new RegExp(`^${config.pathPrefix}/?`)
 

@@ -109,7 +109,8 @@ class Entity {
 
   processFields (fields = {}) {
     const processedFields = reduce(fields, (newFields, field, key) => {
-      newFields[key] = (field !== 'null') ? field : ''
+      const modifiedKey = (key !== 'path') ? key : 'drupal_' + key
+      newFields[modifiedKey] = (field !== 'null') ? field : ''
 
       return newFields
     }, {})

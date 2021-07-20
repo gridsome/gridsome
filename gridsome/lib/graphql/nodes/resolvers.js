@@ -12,7 +12,12 @@ exports.createFindOneResolver = function (typeComposer) {
   const typeName = typeComposer.getTypeName()
 
   return function findOneResolver ({ args, context }) {
-    const { collection } = context.store.getCollection(typeName)
+    const {
+      collection,
+      _defaultSortBy,
+      _defaultSortOrder
+    } = context.store.getCollection(typeName)
+
     let node = null
 
     if (args.id) {
@@ -26,6 +31,14 @@ exports.createFindOneResolver = function (typeComposer) {
           { path: path2 }
         ]
       })
+    } else if (Object.keys(args).length < 1) {
+      collection.ensureIndex(_defaultSortBy)
+
+      // Returns the last node if no arguments are provided.
+      node = collection
+        .chain()
+        .simplesort(_defaultSortBy, _defaultSortOrder === 'DESC')
+        .data()[0]
     }
 
     return node || null

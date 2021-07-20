@@ -139,7 +139,7 @@ class RemarkTransformer {
               allowedTags: []
             }).replace(/\r?\n|\r/g, ' ')
 
-            if (excerpt.length > length && length) {
+            if (length && excerpt.length > length) {
               excerpt = excerpt.substr(0, excerpt.lastIndexOf(' ', length - 1))
             }
 

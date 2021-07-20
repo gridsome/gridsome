@@ -13,7 +13,7 @@ test('create render queue for basic project', async () => {
 
   expect(renderPaths).toEqual(expect.arrayContaining([
     '/',
-    '/404/',
+    '/404.html',
     '/about/',
     '/about-us/',
     '/docs/1/',
@@ -44,7 +44,7 @@ test('create render queue for blog project', async () => {
   expect(renderPaths).toEqual(expect.arrayContaining([
     '/',
     '/2/',
-    '/404/',
+    '/404.html',
     '/about/',
     '/category/first/',
     '/category/first/2/',
@@ -179,7 +179,7 @@ test('create render queue for createPages hook', async () => {
     '/movie/three/',
     '/movie/two/',
     '/movie/one/',
-    '/404/',
+    '/404.html',
     '/blog/',
     '/blog/2/',
     '/article/1/',
@@ -232,7 +232,7 @@ describe('dynamic pages', () => {
       '/aa/',
       '/ab/',
       '/ac/',
-      '/404/',
+      '/404.html',
       '/'
     ])
   })
@@ -253,7 +253,7 @@ describe('dynamic pages', () => {
       'aa/index.html',
       'ab/index.html',
       'ac/index.html',
-      '404/index.html',
+      '404.html',
       'index.html'
     ])
   })

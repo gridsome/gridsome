@@ -7,6 +7,10 @@ class RedirectsPlugin {
 
     hooks.redirects.tap('RedirectsPlugin', (res, renderQueue) => {
       for (const entry of renderQueue) {
+        if (path.extname(entry.path)) {
+          continue
+        }
+
         const relative = path.relative(outputDir, entry.htmlOutput)
         const dirname = slash(path.dirname(relative))
         const url = dirname === '.' ? '/' : `/${dirname}`

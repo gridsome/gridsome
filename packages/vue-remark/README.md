@@ -216,8 +216,8 @@ module.exports = {
     {
       use: '@gridsome/vue-remark',
       options: {
-        typeName: 'Documentation', 
-        baseDir: './docs', 
+        typeName: 'Documentation',
+        baseDir: './docs',
         refs: {
           // Example 1: Create a Author collection by reference `author` field
           author: 'Author',

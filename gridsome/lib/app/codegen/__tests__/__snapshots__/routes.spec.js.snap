@@ -77,13 +77,11 @@ export default [
   },
   {
     name: \\"404\\",
-    path: \\"/404/\\",
-    component: c2
-  },
-  {
-    name: \\"*\\",
     path: \\"*\\",
-    component: c2
+    component: c2,
+    meta: {
+      dataPath: \\"/404.json\\"
+    }
   }
 ]
 "

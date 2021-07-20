@@ -1,3 +1,4 @@
+const path = require('path')
 const VueRemark = require('..')
 const App = require('gridsome/lib/app/App')
 
@@ -399,7 +400,7 @@ describe('process import statements', () => {
 })
 
 async function createPlugin (options = {}) {
-  const app = new App('/', {
+  const app = new App(path.resolve(__dirname, './__fixtures__'), {
     plugins: [{
       use: require.resolve('..'),
       options: { typeName: 'Test', baseDir: '.', ...options }

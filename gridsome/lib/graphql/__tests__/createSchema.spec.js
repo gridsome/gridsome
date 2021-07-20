@@ -1129,6 +1129,33 @@ test('use extension multiple times on field', async () => {
   expect(apply.mock.calls).toHaveLength(3)
 })
 
+test('fail if adding type with reserved type name', async () => {
+  const app = createApp(api => {
+    api.loadSource(({ addSchemaTypes, schema }) => {
+      addSchemaTypes([
+        schema.createObjectType({
+          name: 'File',
+          fields: {
+            name: 'String'
+          }
+        })
+      ])
+    })
+  })
+
+  expect(app).rejects.toThrow(`'File'`)
+})
+
+test('fail if adding type with reserved type name (SDL)', async () => {
+  const app = createApp(api => {
+    api.loadSource(({ addSchemaTypes }) => {
+      addSchemaTypes('type File { name: String }')
+    })
+  })
+
+  expect(app).rejects.toThrow(`'File'`)
+})
+
 test('prevent overriding built-in GraphQL directives', done => {
   createApp(api => {
     api.loadSource(({ addSchemaFieldExtension }) => {

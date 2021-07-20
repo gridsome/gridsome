@@ -3,12 +3,11 @@
 const path = require('path')
 const chalk = require('chalk')
 const program = require('commander')
-const leven = require('leven')
+const { distance } = require('fastest-levenshtein')
 const resolveCwd = require('resolve-cwd')
 const updateNotifier = require('update-notifier')
 const resolveVersions = require('../lib/utils/version')
 const pkgPath = require('find-up').sync('package.json')
-const { hasYarn } = require('../lib/utils')
 
 const pkg = require('../package.json')
 const notifier = updateNotifier({ pkg })
@@ -28,14 +27,6 @@ program
     return wrapCommand(create)(...args)
   })
 
-program
-  .command('info')
-  .description('output information about the local environment')
-  .action(() => {
-    const info = require('../lib/commands/info')
-    return wrapCommand(info)()
-  })
-
 try {
   const commandsPath = resolveCwd.silent('gridsome/commands')
   const gridsomePath = resolveCwd.silent('gridsome')
@@ -49,12 +40,32 @@ try {
   console.log(err)
 }
 
+program
+  .command('config [value]')
+  .option('-g, --get <key>', 'get option value')
+  .option('-s, --set <key> <value>', 'set option value')
+  .option('-d, --delete <key>', 'delete an option')
+  .option('--json', 'output all options as JSON')
+  .description('inspect or set config')
+  .action((...args) => {
+    const config = require('../lib/commands/config')
+    return wrapCommand(config)(...args)
+  })
+
+program
+  .command('info')
+  .description('output information about the local environment')
+  .action(() => {
+    const info = require('../lib/commands/info')
+    return wrapCommand(info)()
+  })
+
 // show a warning if the command does not exist
 program.arguments('<command>').action(async command => {
   const { isGridsomeProject } = require('../lib/utils')
   const availableCommands = program.commands.map(cmd => cmd._name)
   const suggestion = availableCommands.find(cmd => {
-    const steps = leven(cmd, command)
+    const steps = distance(cmd, command)
     return steps < 3
   })
 
@@ -84,12 +95,8 @@ if (!process.argv.slice(2).length) {
 
 if (notifier.update) {
   (async () => {
-    const withYarn = await hasYarn()
-    const margin = chalk.bgGreen(' ')
-    const command = withYarn ? `yarn global add ${pkg.name}` : `npm i -g ${pkg.name}`
     console.log()
-    console.log(`${margin} Update available: ${chalk.bold(notifier.update.latest)}`)
-    console.log(`${margin} Run ${chalk.cyan(command)} to update`)
+    console.log(`${chalk.bgGreen(' ')} Update available: ${chalk.bold(notifier.update.latest)}`)
     console.log()
   })()
 }

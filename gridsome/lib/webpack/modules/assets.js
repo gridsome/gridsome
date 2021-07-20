@@ -34,7 +34,7 @@ function transformAttrValue(node, attr) {
 
   if (!isUrl(value) && !isMailtoLink(value) && !isTelLink(value) && isRelative(value)) {
     const query = createOptionsQuery(node.attrs)
-    result = `require("!!assets-loader?${query}!${value}")`
+    result = `require("!!${require.resolve('../loaders/assets-loader.js').replace(/\\/g, '/')}?${query}!${value}")`
   }
 
   return result

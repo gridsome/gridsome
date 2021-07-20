@@ -3,6 +3,13 @@ const App = require('../../app/App')
 const { pathToFilePath } = require('../utils')
 const { BOOTSTRAP_PAGES } = require('../../utils/constants')
 
+const waitForWatcher = (watcher, event = 'ready') => {
+  return new Promise((resolve, reject) => {
+    watcher.on('error', reject)
+    watcher.on(event, resolve)
+  })
+}
+
 describe('utilities', () => {
   test('pathToFilePath()', () => {
     expect(pathToFilePath('')).toEqual('/index.html')
@@ -57,7 +64,6 @@ test('create page', async () => {
 
   expect(pages._routes.count()).toEqual(2)
   expect(pages._pages.count()).toEqual(2)
-  expect(pages._watched.size).toEqual(2)
 })
 
 test('create page with plugin api', async () => {
@@ -205,6 +211,8 @@ test('update page', async () => {
     })
   })
 
+  const watcher = pages.createWatcher()
+
   const page1 = pages.createPage({
     id: '1',
     path: '/page',
@@ -216,7 +224,12 @@ test('update page', async () => {
   expect(page1.path).toEqual('/page')
   expect(page1.publicPath).toEqual('/page/')
   expect(route1.component).toEqual(path.join(__dirname, '__fixtures__', 'DefaultPage.vue'))
-  expect(pages._watched.size).toEqual(2)
+
+  await waitForWatcher(watcher, 'ready')
+
+  expect(watcher.getWatched()).toMatchObject({
+    [path.join(__dirname, '__fixtures__')]: ['DefaultPage.vue']
+  })
 
   const page2 = pages.updatePage({
     id: '1',
@@ -232,24 +245,40 @@ test('update page', async () => {
   expect(route2.component).toEqual(path.join(__dirname, '__fixtures__', 'PagedPage.vue'))
   expect(route2.path).toEqual('/page/:page(\\d+)?/')
   expect(pages.pages()).toHaveLength(2) // includes /404
-  expect(pages._watched.size).toEqual(2)
+
+  await waitForWatcher(watcher, 'add')
+  await waitForWatcher(watcher, 'add')
+
+  expect(watcher.getWatched()).toMatchObject({
+    [path.join(__dirname, '__fixtures__')]: ['PagedPage.gql', 'PagedPage.vue']
+  })
+
+  await pages.closeWatcher()
 })
 
 test('remove page', async () => {
   const { pages } = await createApp()
+
+  const watcher = pages.createWatcher()
 
   const page = pages.createPage({
     path: '/page',
     component: './__fixtures__/DefaultPage.vue'
   })
 
+  await waitForWatcher(watcher, 'ready')
+
   expect(pages._pages.data).toHaveLength(2)
-  expect(pages._watched.size).toEqual(2)
+  expect(watcher.getWatched()).toMatchObject({
+    [path.join(__dirname, '__fixtures__')]: ['DefaultPage.vue']
+  })
 
   pages.removePage(page.id)
 
   expect(pages._pages.data).toHaveLength(1)
-  expect(pages._watched.size).toEqual(1)
+  expect(watcher.getWatched()).toMatchObject({})
+
+  await pages.closeWatcher()
 })
 
 test('remove page by path', async () => {
@@ -270,17 +299,22 @@ test('remove page by path', async () => {
 test('remove pages by component', async () => {
   const { resolve, pages } = await createApp()
   const component = resolve('./__fixtures__/DefaultPage.vue')
+  const watcher = pages.createWatcher()
 
   pages.createPage({ path: '/page-1', component })
   pages.createPage({ path: '/page-2', component })
   pages.createPage({ path: '/page-3', component })
 
+  await waitForWatcher(watcher, 'add')
+
   expect(pages.pages()).toHaveLength(4)
 
   pages.removePagesByComponent(component)
 
-  expect(pages._watched[component]).toBeUndefined()
   expect(pages.pages()).toHaveLength(1)
+  expect(watcher.getWatched()).toMatchObject({})
+
+  await pages.closeWatcher()
 })
 
 test('find and remove pages by query', async () => {
@@ -371,6 +405,37 @@ test('api.createManagedPages() should only be called once', async () => {
   expect(createManagedPages.mock.calls).toHaveLength(1)
 })
 
+test('watch extra files', async () => {
+  let watchFiles = [path.join(__dirname, '__fixtures__', 'DefaultPage.vue')]
+
+  const { pages } = await createApp(({ _app: { pages } }) => {
+    pages.hooks.parseComponent.for('txt').tap('TxtParserPlugin', () => ({ watchFiles }))
+    pages.createWatcher()
+  })
+
+  const page1 = pages.createPage({ path: '/page-1', component: './__fixtures__/Component.txt' })
+  const route1 = pages.getRoute(page1.internal.route)
+
+  await waitForWatcher(pages._watcher, 'ready')
+
+  expect(route1.internal.dependencies).toHaveLength(2)
+  expect(pages._watcher.getWatched()).toMatchObject({
+    [path.join(__dirname, '__fixtures__')]: ['Component.txt', 'DefaultPage.vue']
+  })
+
+  watchFiles = []
+
+  const page2 = pages.updatePage({ path: '/page-1', component: './__fixtures__/Component.txt' })
+  const route2 = pages.getRoute(page2.internal.route)
+
+  expect(route2.internal.dependencies).toHaveLength(1)
+  expect(pages._watcher.getWatched()).toMatchObject({
+    [path.join(__dirname, '__fixtures__')]: ['Component.txt']
+  })
+
+  await pages.closeWatcher()
+})
+
 test('garbage collect unmanaged pages', async () => {
   let maxPages = 10
 
@@ -398,21 +463,18 @@ test('garbage collect unmanaged pages', async () => {
 
   expect(app.pages.routes()).toHaveLength(14)
   expect(app.pages.pages()).toHaveLength(15)
-  expect(app.pages._watched.size).toEqual(3)
 
   maxPages = 5
   await app.plugins.createPages()
 
   expect(app.pages.routes()).toHaveLength(9)
   expect(app.pages.pages()).toHaveLength(10)
-  expect(app.pages._watched.size).toEqual(3)
 
   maxPages = 1
   await app.plugins.createPages()
 
   expect(app.pages.routes()).toHaveLength(5)
   expect(app.pages.pages()).toHaveLength(6)
-  expect(app.pages._watched.size).toEqual(3)
 
   maxPages = 2
   await app.plugins.createPages()
@@ -509,7 +571,7 @@ test('get matched route by path', async () => {
 })
 
 describe('dynamic pages', () => {
-  test('create dynamic page', async () => {
+  test('create page', async () => {
     const { pages } = await createApp()
 
     const component = './__fixtures__/DefaultPage.vue'
@@ -529,6 +591,17 @@ describe('dynamic pages', () => {
     expect(route.options.name).toEqual('__user_id')
     expect(route.internal.regexp).toEqual(/^\/user\/([^\/]+?)(?:\/)?$/i) // eslint-disable-line no-useless-escape
     expect(route.internal.isDynamic).toEqual(true)
+  })
+
+  test('trim trailing slash', async () => {
+    const { pages } = await createApp()
+
+    const component = './__fixtures__/DefaultPage.vue'
+    const page = pages.createPage({ path: '/products/:slug/', component })
+    const route = pages.getRoute(page.internal.route)
+
+    expect(page.path).toEqual('/products/:slug')
+    expect(route.path).toEqual('/products/:slug')
   })
 })
 

@@ -1,5 +1,5 @@
 import Vue from 'vue'
-import plugins from '~/.temp/plugins-server'
+import plugins from '#gridsome/plugins-server'
 
 import * as main from '~/main'
 import App from '~/App.vue'

@@ -32,12 +32,15 @@ function genRoutes(app) {
   }
 
   for (const route of app.pages.routes()) {
+    if (route.name === NOT_FOUND_NAME) {
+      continue // Don't generate the /404 route.
+    }
     items.push(createRouteItem(route))
   }
 
   // use the /404 page as fallback route
   if (fallback) {
-    items.push(createRouteItem(fallback, '*', '*'))
+    items.push(createRouteItem(fallback, NOT_FOUND_NAME, '*'))
   }
 
   const routes = items.map(item => {
@@ -88,6 +91,8 @@ function genRoute (item) {
     const dataPath = pathToFilePath(item.path, 'json')
     metas.push(`dataPath: ${JSON.stringify(slash(dataPath))}`)
     metas.push(`dynamic: true`)
+  } else if (item.name === NOT_FOUND_NAME) {
+    metas.push(`dataPath: ${JSON.stringify('/404.json')}`)
   }
 
   if (item.meta) {

@@ -20,6 +20,7 @@ module.exports = {
   ],
   watchPathIgnorePatterns: [
     '/__fixtures__/',
+    '/node_modules/',
     '/projects/'
   ]
 }

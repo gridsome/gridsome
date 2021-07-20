@@ -21,36 +21,46 @@ class VuePages {
   }
 
   async createPages ({ slugify, createPage, removePagesByComponent }) {
-    const files = await glob('**/*.vue', { cwd: this.pagesDir })
+    const files = await glob('**/*.vue', {
+      cwd: this.pagesDir,
+      absolute: true
+    })
 
     for (const file of files) {
       createPage(this.createPageOptions(file, slugify))
     }
 
     if (process.env.NODE_ENV === 'development') {
-      const watcher = chokidar.watch('**/*.vue', {
-        ignoreInitial: true,
-        cwd: this.pagesDir
+      // Watch pages directory without globbing to make
+      // dynamic route params work in folder names.
+      const watcher = chokidar.watch(this.pagesDir, {
+        disableGlobbing: true,
+        ignoreInitial: true
       })
 
       watcher.on('add', file => {
-        createPage(this.createPageOptions(slash(file), slugify))
+        if (/\.vue$/.test(file)) {
+          createPage(this.createPageOptions(slash(file), slugify))
+        }
       })
 
       watcher.on('unlink', file => {
-        removePagesByComponent(path.join(this.pagesDir, slash(file)))
+        if (/\.vue$/.test(file)) {
+          removePagesByComponent(slash(file))
+        }
       })
     }
   }
 
-  createPageOptions (file, slugify) {
+  createPageOptions (absolutePath, slugify) {
     const { trailingSlash } = this.api.config.permalinks
-    const pagePath = createPagePath(file, slugify)
+    const relativePath = path.relative(this.pagesDir, absolutePath)
+    const pagePath = createPagePath(relativePath, slugify)
 
     return {
       path: trailingSlash ? trimEnd(pagePath, '/') + '/' : pagePath,
-      name: /^[iI]ndex\.vue$/.test(file) ? 'home' : undefined,
-      component: path.join(this.pagesDir, file)
+      name: /^[iI]ndex\.vue$/.test(relativePath) ? 'home' : undefined,
+      component: absolutePath
     }
   }
 }

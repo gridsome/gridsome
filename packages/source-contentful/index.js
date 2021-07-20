@@ -11,7 +11,8 @@ class ContentfulSource {
       host: 'cdn.contentful.com',
       typeName: 'Contentful',
       richText: {},
-      routes: {}
+      routes: {},
+      parameters: {}
     }
   }
 
@@ -70,7 +71,8 @@ class ContentfulSource {
   }
 
   async getEntries (actions) {
-    const entries = await this.fetch('getEntries')
+    const parameters = this.options.parameters
+    const entries = await this.fetch('getEntries', 1000, 'sys.createdAt', parameters)
 
     for (const entry of entries) {
       const typeId = entry.sys.contentType.sys.id
@@ -103,13 +105,14 @@ class ContentfulSource {
       }
 
       node.id = entry.sys.id
+      node.metadata = entry.metadata
 
       collection.addNode(node)
     }
   }
 
-  async fetch (method, limit = 1000, order = 'sys.createdAt') {
-    const fetch = skip => this.client[method]({ skip, limit, order })
+  async fetch (method, limit = 1000, order = 'sys.createdAt', parameters = {}) {
+    const fetch = skip => this.client[method]({ ...parameters, skip, limit, order })
     const { total, items } = await fetch(0)
     const pages = Math.ceil(total / limit)
 

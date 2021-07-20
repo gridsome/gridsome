@@ -7,8 +7,26 @@ const normalize = p => p.replace(/\/+$/, '') || '/'
 module.exports = function (api, options) {
   const include = options.include.map(normalize)
   const exclude = options.exclude.map(normalize)
+  const staticUrls = []
 
   exclude.push('/404') // allways exclude /404 page
+
+  if (process.env.NODE_ENV !== 'production') {
+    return
+  }
+
+  api.createPages(async ({ graphql }) => {
+    if (typeof options.staticUrls === 'function') {
+      const urls = await options.staticUrls({ graphql })
+      if (Array.isArray(urls)) {
+        staticUrls.push(...urls)
+      } else {
+        throw new Error('The staticUrls option must return an array.')
+      }
+    } else if (Array.isArray(options.staticUrls)) {
+      staticUrls.push(...options.staticUrls)
+    }
+  })
 
   api.afterBuild(async ({ queue, config }) => {
     if (!config.siteUrl) {
@@ -22,7 +40,6 @@ module.exports = function (api, options) {
 
     const filename = path.join(config.outputDir, options.output)
     const pathPrefix = config.pathPrefix !== '/' ? config.pathPrefix : ''
-    const staticUrls = options.staticUrls || []
 
     let pages = queue.filter(page => page.type ? page.type === 'static' : true)
 
