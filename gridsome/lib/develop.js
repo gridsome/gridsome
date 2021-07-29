@@ -14,7 +14,7 @@ builtInPlugins.push(api => {
   api.chainWebpack(async config => {
     config
       .plugin('friendly-errors')
-      .use(require('friendly-errors-webpack-plugin'))
+      .use(require('@soda/friendly-errors-webpack-plugin'))
 
     config
       .plugin('injections')
@@ -65,8 +65,7 @@ module.exports = async (context, args) => {
   })
 
   compiler.hooks.infrastructureLog.tap('develop', (name, type, messages) => {
-    // Don't log progress status for `develop` hooks.
-    if (name === 'webpack.Progress' && messages.slice().pop() === 'develop') {
+    if (name === 'webpack.Progress' && type === 'status' && messages[1] === 'done') {
       return false
     }
   })
