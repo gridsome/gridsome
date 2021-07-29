@@ -64,6 +64,13 @@ module.exports = async (context, args) => {
     server.use(devMiddleware)
   })
 
+  compiler.hooks.infrastructureLog.tap('develop', (name, type, messages) => {
+    // Don't log progress status for `develop` hooks.
+    if (name === 'webpack.Progress' && messages.slice().pop() === 'develop') {
+      return false
+    }
+  })
+
   compiler.hooks.done.tap('develop', stats => {
     if (stats.hasErrors()) {
       return
@@ -101,7 +108,6 @@ module.exports = async (context, args) => {
 
     const rendered = columnify(columns, { showHeaders: false })
 
-    console.log()
     console.log(`  ${rendered.split('\n').join('\n  ')}`)
     console.log()
 
