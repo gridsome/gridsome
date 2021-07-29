@@ -3,6 +3,8 @@ const utils = require('loader-utils')
 module.exports = async function (source, map) {
   const callback = this.async()
 
+  this.cacheable(false)
+
   const { assets } = utils.getOptions(this)
   const options = utils.parseQuery(this.resourceQuery || '?')
 

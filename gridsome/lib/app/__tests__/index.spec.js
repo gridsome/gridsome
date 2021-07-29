@@ -471,7 +471,17 @@ test('do not allow a custom publicPath', async () => {
 
 async function createPlugin (context = '/') {
   const app = await new App(context).init()
-  const api = new PluginAPI(app, { entry: { options: {}, clientOptions: undefined }})
+  const api = new PluginAPI(app, {
+    entry: {
+      server: true,
+      clientOptions: undefined,
+      name: undefined,
+      options: {},
+      entries: {},
+      index: 0,
+      uid: ''
+    }
+  })
 
   return { app, api }
 }

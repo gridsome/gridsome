@@ -15,6 +15,7 @@ class Compiler {
     this._resolve
     this._resolveSync
     this._compiler = null
+    this._buildDependencies = []
 
     this.hooks = {
       cacheIdentifier: new SyncWaterfallHook(['identifier']),
@@ -33,6 +34,12 @@ class Compiler {
         return config
       }
     })
+  }
+
+  addBuildDependency (path) {
+    if (!this._buildDependencies.includes(path)) {
+      this._buildDependencies.push(path)
+    }
   }
 
   async initialize () {

@@ -1,5 +1,6 @@
 const path = require('path')
 const glob = require('globby')
+const fs = require('fs-extra')
 const hash = require('hash-sum')
 const { pick } = require('lodash')
 const Config = require('webpack-chain')
@@ -9,11 +10,12 @@ const createHTMLRenderer = require('../server/createHTMLRenderer')
 const CSSExtractPlugin = require('mini-css-extract-plugin')
 
 const resolve = (p, c) => path.resolve(c || __dirname, p)
+const resolveExists = (path) => fs.existsSync(path) ? path : false
 
 module.exports = (app, { isProd, isServer }) => {
   const { config: projectConfig } = app
   const { publicPath } = projectConfig
-  const { cacheDirectory, cacheIdentifier } = createCacheOptions()
+  const { cacheIdentifier } = createCacheOptions()
   const assetsDir = path.relative(projectConfig.outputDir, projectConfig.assetsDir)
   const config = new Config()
 
@@ -22,6 +24,7 @@ module.exports = (app, { isProd, isServer }) => {
   const assetname = `[name]${useHash ? '.[hash:8]' : ''}.[ext]`
   const inlineLimit = 10000
 
+  config.name(isServer ? 'server' : 'client')
   config.mode(isProd ? 'production' : 'development')
 
   config.output
@@ -68,13 +71,6 @@ module.exports = (app, { isProd, isServer }) => {
 
   config.module.rule('vue')
     .test(/\.vue$/)
-    .use('cache-loader')
-    .loader(require.resolve('cache-loader'))
-    .options({
-      cacheDirectory,
-      cacheIdentifier
-    })
-    .end()
     .use('vue-loader')
     .loader(require.resolve('vue-loader'))
     .options({
@@ -84,9 +80,7 @@ module.exports = (app, { isProd, isServer }) => {
           require('./modules/html')(),
           require('./modules/assets')()
         ]
-      },
-      cacheDirectory,
-      cacheIdentifier
+      }
     })
 
   // js
@@ -119,13 +113,6 @@ module.exports = (app, { isProd, isServer }) => {
       }
 
       return /node_modules/.test(filepath)
-    })
-    .end()
-    .use('cache-loader')
-    .loader(require.resolve('cache-loader'))
-    .options({
-      cacheDirectory,
-      cacheIdentifier
     })
     .end()
     .use('babel-loader')
@@ -312,25 +299,40 @@ module.exports = (app, { isProd, isServer }) => {
       }])
   }
 
+  // cache
+
+  config.merge({
+    cache: {
+      type: 'filesystem',
+      version: cacheIdentifier,
+      buildDependencies: {
+        config: [
+          app.config.chainWebpack || app.config.configureWebpack
+            ? app.config.configPath
+            : undefined,
+          ...app.compiler._buildDependencies,
+          resolveExists(path.join(app.context, 'webpack.config.js'))
+        ].filter(Boolean)
+      }
+    }
+  })
+
   // helpes
 
   function createCacheOptions () {
     const values = app.compiler.hooks.cacheIdentifier.call({
       'gridsome': require('../../package.json').version,
-      'cache-loader': require('cache-loader/package.json').version,
       'vue-loader': require('vue-loader/package.json').version,
+      config: (projectConfig.chainWebpack || '').toString(),
       context: app.context,
-      isProd,
-      isServer,
-      config: (
-        (projectConfig.chainWebpack || '').toString()
-      )
+      env: getGridsomeEnv()
     })
 
-    return {
-      cacheDirectory: path.join(projectConfig.cacheDir, 'webpack'),
-      cacheIdentifier: hash(values)
-    }
+    return { cacheIdentifier: hash(values) }
+  }
+
+  function getGridsomeEnv() {
+    return pick(process.env, Object.keys(process.env).filter(key => key.startsWith('GRIDSOME_')))
   }
 
   function createEnv () {
@@ -347,8 +349,7 @@ module.exports = (app, { isProd, isServer }) => {
     }
 
     // merge variables start with GRIDSOME_ENV to config.env
-    const gridsomeEnv = pick(process.env, Object.keys(process.env).filter(key => key.startsWith('GRIDSOME_')))
-    const mergeEnv = Object.entries(gridsomeEnv)
+    const mergeEnv = Object.entries(getGridsomeEnv())
       .reduce((acc, [key, value]) => {
         acc[`process.env.${key}`] = ['boolean', 'number'].includes(typeof value) ? value : JSON.stringify(value)
         return acc

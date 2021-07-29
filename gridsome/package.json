@@ -32,7 +32,6 @@
     "auto-bind": "^2.0.0",
     "autoprefixer": "^9.4.7",
     "babel-loader": "^8.2.2",
-    "cache-loader": "^4.1.0",
     "camelcase": "^5.0.0",
     "case-sensitive-paths-webpack-plugin": "^2.4.0",
     "chalk": "^2.4.2",
