@@ -266,7 +266,7 @@ module.exports = (app, { isProd, isServer }) => {
 
   // plugins
 
-  if (process.stdout.isTTY && !process.env.GRIDSOME_TEST) {
+  if (process.stdout.isTTY) {
     config.plugin('progress')
       .use(require('webpack/lib/ProgressPlugin'))
   }
@@ -307,7 +307,7 @@ module.exports = (app, { isProd, isServer }) => {
       version: cacheIdentifier,
       buildDependencies: {
         config: [
-          app.config.chainWebpack || app.config.configureWebpack
+          (app.config.chainWebpack || app.config.configureWebpack)
             ? app.config.configPath
             : undefined,
           ...app.compiler._buildDependencies,
@@ -317,15 +317,21 @@ module.exports = (app, { isProd, isServer }) => {
     }
   })
 
-  // helpes
+  // test
+
+  if (process.env.GRIDSOME_TEST) {
+    config.plugins.delete('progress')
+    config.merge({ cache: true })
+  }
+
+  // helpers
 
   function createCacheOptions () {
     const values = app.compiler.hooks.cacheIdentifier.call({
       'gridsome': require('../../package.json').version,
       'vue-loader': require('vue-loader/package.json').version,
-      config: (projectConfig.chainWebpack || '').toString(),
-      context: app.context,
-      env: getGridsomeEnv()
+      'context': app.context,
+      'env': getGridsomeEnv()
     })
 
     return { cacheIdentifier: hash(values) }
