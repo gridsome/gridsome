@@ -11,11 +11,13 @@ const CSSExtractPlugin = require('mini-css-extract-plugin')
 
 const resolve = (p, c) => path.resolve(c || __dirname, p)
 const resolveExists = (path) => fs.existsSync(path) ? path : false
+const gridsomeEnv = () => {
+  return pick(process.env, Object.keys(process.env).filter(key => key.startsWith('GRIDSOME_')))
+}
 
 module.exports = (app, { isProd, isServer }) => {
   const { config: projectConfig } = app
   const { publicPath } = projectConfig
-  const { cacheIdentifier } = createCacheOptions()
   const assetsDir = path.relative(projectConfig.outputDir, projectConfig.assetsDir)
   const config = new Config()
 
@@ -290,7 +292,20 @@ module.exports = (app, { isProd, isServer }) => {
   }
 
   config.plugin('injections')
-    .use(require('webpack/lib/DefinePlugin'), [createEnv()])
+    .use(require('webpack/lib/DefinePlugin'), [{
+      'process.env.PUBLIC_PATH': JSON.stringify(publicPath),
+      'process.env.DATA_URL': JSON.stringify(forwardSlash(path.join(publicPath, assetsDir, 'data', '/'))),
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || ''),
+      'process.isClient': !isServer,
+      'process.isServer': isServer,
+      'process.isProduction': process.env.NODE_ENV === 'production',
+      'process.isStatic': process.env.GRIDSOME_MODE === 'static',
+      // add environment variables starting with GRIDSOME_ to process.env
+      ...Object.entries(gridsomeEnv()).reduce((acc, [key, value]) => {
+        acc[`process.env.${key}`] = ['boolean', 'number'].includes(typeof value) ? value : JSON.stringify(value)
+        return acc
+      }, {})
+    }])
 
   if (isProd && !isServer) {
     config.plugin('extract-css')
@@ -304,7 +319,14 @@ module.exports = (app, { isProd, isServer }) => {
   config.merge({
     cache: {
       type: 'filesystem',
-      version: cacheIdentifier,
+      version: hash(
+        app.compiler.hooks.cacheIdentifier.call({
+          'gridsome': require('../../package.json').version,
+          'vue-loader': require('vue-loader/package.json').version,
+          'context': app.context,
+          'env': gridsomeEnv()
+        })
+      ),
       buildDependencies: {
         config: [
           (app.config.chainWebpack || app.config.configureWebpack)
@@ -322,49 +344,6 @@ module.exports = (app, { isProd, isServer }) => {
   if (process.env.GRIDSOME_TEST) {
     config.plugins.delete('progress')
     config.merge({ cache: true })
-  }
-
-  // helpers
-
-  function createCacheOptions () {
-    const values = app.compiler.hooks.cacheIdentifier.call({
-      'gridsome': require('../../package.json').version,
-      'vue-loader': require('vue-loader/package.json').version,
-      'context': app.context,
-      'env': getGridsomeEnv()
-    })
-
-    return { cacheIdentifier: hash(values) }
-  }
-
-  function getGridsomeEnv() {
-    return pick(process.env, Object.keys(process.env).filter(key => key.startsWith('GRIDSOME_')))
-  }
-
-  function createEnv () {
-    const dataUrl = forwardSlash(path.join(publicPath, assetsDir, 'data', '/'))
-
-    const baseEnv = {
-      'process.env.PUBLIC_PATH': JSON.stringify(publicPath),
-      'process.env.DATA_URL': JSON.stringify(dataUrl),
-      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || ''),
-      'process.isClient': !isServer,
-      'process.isServer': isServer,
-      'process.isProduction': process.env.NODE_ENV === 'production',
-      'process.isStatic': process.env.GRIDSOME_MODE === 'static'
-    }
-
-    // merge variables start with GRIDSOME_ENV to config.env
-    const mergeEnv = Object.entries(getGridsomeEnv())
-      .reduce((acc, [key, value]) => {
-        acc[`process.env.${key}`] = ['boolean', 'number'].includes(typeof value) ? value : JSON.stringify(value)
-        return acc
-      }, {})
-
-    return {
-      ...baseEnv,
-      ...mergeEnv
-    }
   }
 
   return config
