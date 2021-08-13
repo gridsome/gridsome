@@ -7,8 +7,8 @@
   ],
   "scripts": {
     "bootstrap": "lerna bootstrap",
-    "test:unit": "node scripts/test.js",
-    "test:e2e": "node scripts/test.js --e2e",
+    "test:unit": "GRIDSOME_TEST=unit jest --runInBand",
+    "test:e2e": "GRIDSOME_TEST=e2e jest --runInBand",
     "changelog": "node scripts/changelog.js",
     "lint": "eslint \"@(gridsome|packages)/**/*.js\""
   },
