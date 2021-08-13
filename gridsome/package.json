@@ -26,7 +26,7 @@
     "@hapi/joi": "^15.1.1",
     "@sindresorhus/slugify": "^1.1.0",
     "@soda/friendly-errors-webpack-plugin": "^1.8.0",
-    "@vue/babel-preset-app": "^5.0.0-beta.2",
+    "@vue/babel-preset-app": "^5.0.0 || ^5.0.0-beta",
     "@vue/component-compiler-utils": "^2.5.2",
     "auto-bind": "^2.0.0",
     "autoprefixer": "^9.4.7",
