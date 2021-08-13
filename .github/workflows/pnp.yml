@@ -5,12 +5,14 @@ on:
     branches:
       - master
     paths:
+      - 'yarn.lock'
       - 'gridsome/**'
       - '.github/workflows/pnp.yml'
   pull_request:
     branches:
       - master
     paths:
+      - 'yarn.lock'
       - 'gridsome/**'
       - '.github/workflows/pnp.yml'
 

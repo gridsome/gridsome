@@ -5,6 +5,7 @@ on:
     branches:
       - master
     paths:
+      - 'yarn.lock'
       - 'jest.config.js'
       - 'gridsome/**/*.js'
       - 'packages/**/*.js'
@@ -13,6 +14,7 @@ on:
     branches:
       - master
     paths:
+      - 'yarn.lock'
       - 'jest.config.js'
       - 'gridsome/**/*.js'
       - 'packages/**/*.js'
