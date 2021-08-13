@@ -2,7 +2,6 @@ const path = require('path')
 const fs = require('fs-extra')
 const chalk = require('chalk')
 const sockjs = require('sockjs')
-const WebpackDevServer = require('webpack-dev-server')
 const { hasWarnings, logAllWarnings } = require('./utils/deprecate')
 const { forwardSlash } = require('./utils')
 
@@ -21,6 +20,10 @@ module.exports = async (context, args) => {
 
   compiler.hooks.infrastructureLog.tap('gridsome', (name, type, messages) => {
     if (type === 'error') return
+
+    if (name === 'webpack.Progress' && type === 'status' && messages[1] === 'done') {
+      return false
+    }
 
     if (name === 'webpack-dev-middleware') return false
     if (name === 'webpack-dev-server') {
@@ -63,6 +66,7 @@ module.exports = async (context, args) => {
 }
 
 async function createDevServer(app, compiler) {
+  const WebpackDevServer = require('webpack-dev-server')
   const webpackConfig = app.compiler.getClientConfig()
   const devServer = webpackConfig.devServer || {}
   const onListening = devServer.onListening

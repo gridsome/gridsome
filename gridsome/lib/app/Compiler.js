@@ -15,11 +15,30 @@ class Compiler {
     this._resolve
     this._resolveSync
     this._compiler = null
+    this._buildDependencies = []
 
     this.hooks = {
       cacheIdentifier: new SyncWaterfallHook(['identifier']),
       chainWebpack: new AsyncSeriesHook(['chain', 'env']),
       done: new SyncHook(['columns', 'env'])
+    }
+
+    // Include default minimizers if any custom minimizers are set
+    // TODO: Remove this once `webpack-chain` supports all webpack 5 configuration
+    app.plugins._listeners.configureWebpack.push({
+      handler(config) {
+        const { optimization: { minimizer = [] } = {} } = config
+        if (minimizer.length && !minimizer.includes('...')) {
+          minimizer.push('...')
+        }
+        return config
+      }
+    })
+  }
+
+  addBuildDependency (path) {
+    if (!this._buildDependencies.includes(path)) {
+      this._buildDependencies.push(path)
     }
   }
 
@@ -116,7 +135,7 @@ class Compiler {
     const resolvedChain = chain || await this.resolveChainableWebpackConfig(isServer)
     const configureWebpack = (this._app.plugins._listeners.configureWebpack || []).slice()
     const configFilePath = this._app.resolve('webpack.config.js')
-    const merge = require('webpack-merge')
+    const { merge } = require('webpack-merge')
 
     if (fs.existsSync(configFilePath)) {
       configureWebpack.push(require(configFilePath))

@@ -62,6 +62,7 @@ class PluginAPI {
   }
 
   chainWebpack (fn) {
+    this._addBuildDependency()
     this._app.compiler.hooks.chainWebpack.tapPromise(
       this._entry.name || 'ChainWebpack',
       (chain, context) => Promise.resolve(fn(chain, context))
@@ -69,6 +70,7 @@ class PluginAPI {
   }
 
   configureWebpack (fn) {
+    this._addBuildDependency()
     this._on('configureWebpack', fn)
   }
 
@@ -103,6 +105,16 @@ class PluginAPI {
 
   afterBuild (fn) {
     this._on('afterBuild', fn)
+  }
+
+  _addBuildDependency () {
+    const { configPath } = this._app.config
+    const { serverEntry } = this._entry.entries
+    if (typeof serverEntry === 'string') {
+      this._app.compiler.addBuildDependency(serverEntry)
+    } else {
+      this._app.compiler.addBuildDependency(configPath)
+    }
   }
 }
 

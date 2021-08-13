@@ -1,5 +1,6 @@
 const path = require('path')
 const createBaseConfig = require('./createBaseConfig')
+const CssMinimizerPlugin = require('css-minimizer-webpack-plugin')
 
 const resolve = p => path.resolve(__dirname, p)
 
@@ -10,9 +11,16 @@ module.exports = async app => {
 
   config.entry('app').add(resolve('../../app/entry.client.js'))
 
-  config.node.merge({
-    setImmediate: false
+  config.resolve.merge({
+    fallback: {
+      process: require.resolve('process/browser')
+    }
   })
+
+  config.plugin('provide')
+    .use(require('webpack/lib/ProvidePlugin'), [{
+      process: require.resolve('process/browser')
+    }])
 
   if (isProd) {
     config.plugin('vue-server-renderer')
@@ -20,27 +28,39 @@ module.exports = async app => {
         filename: path.relative(outputDir, clientManifestPath)
       }])
 
-    config.plugin('optimize-css')
-      .use(require('optimize-css-assets-webpack-plugin'), [{
-        canPrint: false,
-        cssProcessorOptions: {
-          safe: true,
-          autoprefixer: { disable: true },
-          mergeLonghand: false
-        }
-      }])
+    const cacheGroups = {
+      vendor: {
+        test(mod) {
+          if (!mod.context) {
+            return true
+          }
+          if (mod.context.startsWith(app.config.appCacheDir)) {
+            return false
+          }
+          return mod.context.includes('node_modules')
+        },
+        name: 'vendors',
+        chunks: 'all'
+      }
+    }
 
     if (css.split !== true) {
-      const cacheGroups = {
-        styles: {
-          name: 'styles',
-          test: m => /css\/mini-extract/.test(m.type),
-          chunks: 'all',
-          enforce: true
-        }
+      cacheGroups.styles = {
+        name: 'styles',
+        test: m => /css\/mini-extract/.test(m.type),
+        chunks: 'all',
+        enforce: true
       }
-      config.optimization.splitChunks({ cacheGroups })
     }
+
+    config.optimization
+      .minimize(true)
+      .runtimeChunk('single')
+      .splitChunks({ cacheGroups })
+      .minimizer('css-minimizer-webpack-plugin')
+        .use(CssMinimizerPlugin)
+        .end()
+      .merge({ moduleIds: 'deterministic' })
   } else {
     config.entry('app').add(resolve('../../app/entry.sockjs.js'))
 
@@ -48,9 +68,15 @@ module.exports = async app => {
       .use(require('webpack/lib/NoEmitOnErrorsPlugin'))
 
     config.plugin('friendly-errors')
-      .use(require('friendly-errors-webpack-plugin'))
+      .use(require('@soda/friendly-errors-webpack-plugin'))
 
-    config.stats('none') // `friendly-errors-webpack-plugin` shows the errors
+    config.stats('none') // `@soda/friendly-errors-webpack-plugin` shows the errors
+  }
+
+  if (process.env.GRIDSOME_TEST) {
+    config.output.pathinfo(true)
+    config.optimization.minimize(false)
+    config.optimization.merge({ moduleIds: 'named' })
   }
 
   return config

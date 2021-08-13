@@ -71,6 +71,7 @@ module.exports = async (context, options = {}) => {
   const assetsDir = localConfig.assetsDir || 'assets'
 
   config.context = context
+  config.configPath = configPath
   config.mode = options.mode || 'production'
   config.pkg = options.pkg || resolvePkg(context)
   config.host = args.host || localConfig.host || undefined
@@ -117,7 +118,6 @@ module.exports = async (context, options = {}) => {
   config.chainWebpack = localConfig.chainWebpack
   config.configureWebpack = localConfig.configureWebpack
   config.configureServer = localConfig.configureServer
-
 
   if (!colorString.get(config.images.backgroundColor || '')) {
     config.images.backgroundColor = null
@@ -526,7 +526,7 @@ function normalizeImages (config = {}) {
 function normalizeIconsConfig (config = {}) {
   const res = {}
 
-  const faviconSizes = [16, 32, 96]
+  const faviconSizes = [16, 32, 96, 192, 196]
   const touchiconSizes = [76, 152, 120, 167, 180]
   const defaultIcon = './src/favicon.png'
   const icon = typeof config === 'string' ? { favicon: config } : (config || {})

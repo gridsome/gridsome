@@ -1,9 +1,11 @@
+const path = require('path')
 const App = require('../../app/App')
 const PluginAPI = require('../../app/PluginAPI')
 const JSONTransformer = require('./__fixtures__/JSONTransformer')
 const { BOOTSTRAP_PAGES } = require('../../utils/constants')
 
-async function createPlugin (context = '/', localConfig) {
+async function createPlugin (cwd = '/', localConfig) {
+  const context = path.resolve(cwd)
   const app = await new App(context, { localConfig }).init()
   const api = new PluginAPI(app, {
     entry: {
@@ -103,7 +105,6 @@ test('update node', async () => {
     foo: 'bar'
   })
 
-  const oldTimestamp = oldNode.internal.timestamp
   const uid = oldNode.$uid
 
   const node = collection.updateNode({
@@ -125,7 +126,6 @@ test('update node', async () => {
   expect(node.excerpt).toEqual('Praesent commodo...')
   expect(node.foo).toEqual('foo')
   expect(node.internal.typeName).toEqual('TestPost')
-  expect(node.internal.timestamp).not.toEqual(oldTimestamp)
   expect(emit).toHaveBeenCalledTimes(2)
   expect(entry.id).toEqual('test')
   expect(entry.uid).toEqual(uid)
@@ -599,13 +599,13 @@ test('resolve file paths', async () => {
     text2: 'example.com',
     text3: 'md',
     internal: {
-      origin: '/absolute/dir/to/a/file.md'
+      origin: path.resolve('/absolute/dir/to/a/file.md')
     }
   })
 
   expect(node.file).toEqual('image.png')
-  expect(node.file2).toEqual('/absolute/dir/to/project/image.png')
-  expect(node.file3).toEqual('/absolute/dir/to/image.png')
+  expect(node.file2).toEqual(path.resolve('/absolute/dir/to/project/image.png'))
+  expect(node.file3).toEqual(path.resolve('/absolute/dir/to/image.png'))
   expect(node.filepath).toEqual('dir/to/image.png')
   expect(node.url).toEqual('https://example.com/image.jpg')
   expect(node.url2).toEqual('//example.com/image.jpg')
@@ -656,7 +656,9 @@ test('resolve absolute file paths with no origin', async () => {
   })
 
   expect(node.file).toEqual('image.png')
-  expect(node.file2).toEqual('/absolute/dir/to/project/image.png')
+  expect(node.file2).toEqual(
+    path.resolve('/absolute/dir/to/project/image.png')
+  )
 })
 
 test('resolve absolute file paths with a custom path', async () => {
@@ -664,13 +666,13 @@ test('resolve absolute file paths with a custom path', async () => {
 
   const collection = api.store.addCollection({
     typeName: 'C',
-    resolveAbsolutePaths: '/path/to/dir'
+    resolveAbsolutePaths: path.resolve('/path/to/dir')
   })
 
   const node1 = collection.addNode({
     file: '/image.png',
     internal: {
-      origin: '/absolute/dir/to/a/file.md'
+      origin: path.resolve('/absolute/dir/to/a/file.md')
     }
   })
 
@@ -678,8 +680,9 @@ test('resolve absolute file paths with a custom path', async () => {
     file: '/image.png'
   })
 
-  expect(node1.file).toEqual('/path/to/dir/image.png')
-  expect(node2.file).toEqual('/path/to/dir/image.png')
+  const expected = path.resolve('/path/to/dir/image.png')
+  expect(node1.file).toEqual(expected)
+  expect(node2.file).toEqual(expected)
 })
 
 test('don\'t touch absolute paths when resolveAbsolutePaths is not set', async () => {
@@ -692,13 +695,13 @@ test('don\'t touch absolute paths when resolveAbsolutePaths is not set', async (
     file2: '/image.png',
     file3: '../image.png',
     internal: {
-      origin: '/absolute/dir/to/a/file.md'
+      origin: path.resolve('/absolute/dir/to/a/file.md')
     }
   })
 
   expect(node.file).toEqual('image.png')
   expect(node.file2).toEqual('/image.png')
-  expect(node.file3).toEqual('/absolute/dir/to/image.png')
+  expect(node.file3).toEqual(path.resolve('/absolute/dir/to/image.png'))
 })
 
 test('always resolve relative paths from filesystem sources', async () => {
@@ -709,11 +712,13 @@ test('always resolve relative paths from filesystem sources', async () => {
   const node = collection.addNode({
     file: '../image.png',
     internal: {
-      origin: '/absolute/dir/to/a/file.md'
+      origin: path.resolve('/absolute/dir/to/a/file.md')
     }
   })
 
-  expect(node.file).toEqual('/absolute/dir/to/image.png')
+  expect(node.file).toEqual(
+    path.resolve('/absolute/dir/to/image.png')
+  )
 })
 
 test('dont resolve relative paths when no origin', async () => {
