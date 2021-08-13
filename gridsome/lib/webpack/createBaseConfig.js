@@ -1,19 +1,23 @@
 const path = require('path')
+const glob = require('globby')
+const fs = require('fs-extra')
 const hash = require('hash-sum')
 const { pick } = require('lodash')
 const Config = require('webpack-chain')
 const { forwardSlash } = require('../utils')
 const { VueLoaderPlugin } = require('vue-loader')
 const createHTMLRenderer = require('../server/createHTMLRenderer')
-const GridsomeResolverPlugin = require('./plugins/GridsomeResolverPlugin')
 const CSSExtractPlugin = require('mini-css-extract-plugin')
 
 const resolve = (p, c) => path.resolve(c || __dirname, p)
+const resolveExists = (path) => fs.existsSync(path) ? path : false
+const gridsomeEnv = () => {
+  return pick(process.env, Object.keys(process.env).filter(key => key.startsWith('GRIDSOME_')))
+}
 
 module.exports = (app, { isProd, isServer }) => {
   const { config: projectConfig } = app
   const { publicPath } = projectConfig
-  const { cacheDirectory, cacheIdentifier } = createCacheOptions()
   const assetsDir = path.relative(projectConfig.outputDir, projectConfig.assetsDir)
   const config = new Config()
 
@@ -22,13 +26,14 @@ module.exports = (app, { isProd, isServer }) => {
   const assetname = `[name]${useHash ? '.[hash:8]' : ''}.[ext]`
   const inlineLimit = 10000
 
+  config.name(isServer ? 'server' : 'client')
   config.mode(isProd ? 'production' : 'development')
 
   config.output
     .publicPath(publicPath)
     .path(projectConfig.outputDir)
-    .chunkFilename(`${assetsDir}/js/${filename}`)
-    .filename(`${assetsDir}/js/${filename}`)
+    .chunkFilename(filename)
+    .filename(filename)
 
   config.resolve
     .set('symlinks', true)
@@ -42,23 +47,14 @@ module.exports = (app, { isProd, isServer }) => {
     .merge(['.js', '.vue'])
     .end()
 
-  config.resolve
-    .plugin('gridsome-fallback-resolver-plugin')
-      .use(GridsomeResolverPlugin, [{
-        fallbackDir: path.join(projectConfig.appPath, 'fallbacks'),
-        optionalDir: path.join(app.context, 'src'),
-        resolve: ['main', 'App.vue']
-      }])
-      .end()
-    // TODO: Remove plugin when using webpack 5
-    .plugin('pnp')
-      .use({...require(`pnp-webpack-plugin`)})
+  config.resolve.merge({
+    fallback: ['main', 'App.vue'].reduce((fallback, filename) => {
+      fallback[path.join(app.context, 'src', filename)] = path.join(projectConfig.appPath, 'fallbacks', filename)
+      return fallback
+    }, {})
+  })
 
   config.resolveLoader
-    // TODO: Remove plugin when using webpack 5
-    .plugin('pnp-loaders')
-      .use({ ...require('pnp-webpack-plugin').topLevelLoader })
-      .end()
     .set('symlinks', true)
 
   config.module.noParse(/^(vue|vue-router|vue-meta)$/)
@@ -70,20 +66,13 @@ module.exports = (app, { isProd, isServer }) => {
   }
 
   if (!isProd) {
-    config.devtool('cheap-module-eval-source-map')
+    config.devtool('eval-cheap-module-source-map')
   }
 
   // vue
 
   config.module.rule('vue')
     .test(/\.vue$/)
-    .use('cache-loader')
-    .loader(require.resolve('cache-loader'))
-    .options({
-      cacheDirectory,
-      cacheIdentifier
-    })
-    .end()
     .use('vue-loader')
     .loader(require.resolve('vue-loader'))
     .options({
@@ -93,9 +82,7 @@ module.exports = (app, { isProd, isServer }) => {
           require('./modules/html')(),
           require('./modules/assets')()
         ]
-      },
-      cacheDirectory,
-      cacheIdentifier
+      }
     })
 
   // js
@@ -130,13 +117,6 @@ module.exports = (app, { isProd, isServer }) => {
       return /node_modules/.test(filepath)
     })
     .end()
-    .use('cache-loader')
-    .loader(require.resolve('cache-loader'))
-    .options({
-      cacheDirectory,
-      cacheIdentifier
-    })
-    .end()
     .use('babel-loader')
     .loader(require.resolve('babel-loader'))
     .options({
@@ -155,63 +135,140 @@ module.exports = (app, { isProd, isServer }) => {
 
   // css
 
-  createCSSRule(config, 'css', /\.css$/, null, projectConfig.css.loaderOptions.css)
-  createCSSRule(config, 'postcss', /\.p(ost)?css$/, null, projectConfig.css.loaderOptions.postcss)
-  createCSSRule(config, 'scss', /\.scss$/, 'sass-loader', projectConfig.css.loaderOptions.scss)
-  createCSSRule(config, 'sass', /\.sass$/, 'sass-loader', projectConfig.css.loaderOptions.sass)
-  createCSSRule(config, 'less', /\.less$/, 'less-loader', projectConfig.css.loaderOptions.less)
-  createCSSRule(config, 'stylus', /\.styl(us)?$/, 'stylus-loader', projectConfig.css.loaderOptions.stylus)
+  const hasPostCSSConfig = glob.sync(['.postcssrc?({.js,.yaml,.json})', 'postcss.config.js']).length > 0
+
+  ;[
+    ['css', /\.css$/],
+    ['postcss', /\.p(ost)?css$/],
+    ['scss', /\.scss$/, 'sass-loader'],
+    ['sass', /\.sass$/, 'sass-loader'],
+    ['less', /\.less$/, 'less-loader'],
+    ['stylus', /\.styl(us)?$/, 'stylus-loader']
+  ].forEach(([lang, test, loader = null]) => {
+    const { loaderOptions } = projectConfig.css
+    const { css, postcss = {} } = loaderOptions
+    const { postcssOptions = {} } = postcss
+    const baseRule = config.module.rule(lang).test(test)
+    const modulesRule = baseRule.oneOf('modules').resourceQuery(/module/)
+    const normalRule = baseRule.oneOf('normal')
+
+    for (const rule of [modulesRule, normalRule]) {
+      if (!isServer) {
+        if (isProd) {
+          rule.use('extract-css-loader').loader(CSSExtractPlugin.loader)
+        } else {
+          rule.use('vue-style-loader').loader(require.resolve('vue-style-loader'))
+        }
+      }
+
+      rule.use('css-loader')
+        .loader(require.resolve('css-loader'))
+        .options(Object.assign({
+          modules: rule === modulesRule
+            ? { exportOnlyLocals: isServer, localIdentName: `[local]_[hash:base64:8]` }
+            : false,
+          importLoaders: loader ? 2 : 1,
+          sourceMap: !isProd
+        }, css))
+
+      rule.use('postcss-loader')
+        .loader(require.resolve('postcss-loader'))
+        .options({
+          sourceMap: !isProd,
+          ...postcss,
+          postcssOptions: !hasPostCSSConfig
+            ? {
+              ...postcssOptions,
+              plugins: [...(postcssOptions.plugins || []), require('autoprefixer')]
+            }
+            : {}
+        })
+
+      if (loader) {
+        try {
+          rule.use(loader).loader(require.resolve(loader)).options(loaderOptions[lang])
+        } catch {
+          rule.use(loader).loader(loader).options(loaderOptions[lang])
+        }
+      }
+    }
+  })
 
   // assets
 
   config.module.rule('images')
     .test(/\.(png|jpe?g|gif|webp)(\?.*)?$/)
-    .use('url-loader')
-    .loader(require.resolve('url-loader'))
-    .options({
-      limit: inlineLimit,
-      name: `${assetsDir}/img/${assetname}`
+    .type('asset')
+    .parser({
+      dataUrlCondition: {
+        maxSize: inlineLimit
+      }
+    })
+    .merge({
+      generator: {
+        filename: `${assetsDir}/img/${assetname}`
+      }
     })
 
   config.module.rule('svg')
     .test(/\.(svg)(\?.*)?$/)
-    .use('file-loader')
-    .loader(require.resolve('file-loader'))
-    .options({
-      name: `${assetsDir}/img/${assetname}`
+    .type('asset/resource')
+    .merge({
+      generator: {
+        filename: `${assetsDir}/img/${assetname}`
+      }
     })
 
   config.module.rule('media')
     .test(/\.(mp4|webm|ogg|mp3|wav|flac|aac)(\?.*)?$/)
-    .use('url-loader')
-    .loader(require.resolve('url-loader'))
-    .options({
-      limit: inlineLimit,
-      name: `${assetsDir}/media/${assetname}`
+    .type('asset')
+    .parser({
+      dataUrlCondition: {
+        maxSize: inlineLimit
+      }
+    })
+    .merge({
+      generator: {
+        filename: `${assetsDir}/media/${assetname}`
+      }
     })
 
   config.module.rule('fonts')
     .test(/\.(woff2?|eot|ttf|otf)(\?.*)?$/i)
-    .use('url-loader')
-    .loader(require.resolve('url-loader'))
-    .options({
-      limit: inlineLimit,
-      name: `${assetsDir}/fonts/${assetname}`
+    .type('asset')
+    .parser({
+      dataUrlCondition: {
+        maxSize: inlineLimit
+      }
     })
+    .merge({
+      generator: {
+        filename: `${assetsDir}/fonts/${assetname}`
+      }
+    })
+
+  // g-image / g-link
+
+  for (const name of ['g-image', 'g-link']) {
+    config.module.rule(name)
+      .resourceQuery(new RegExp(name))
+      .type('javascript/auto')
+      .use(`${name}-loader`)
+        .loader(require.resolve('./loaders/assets-loader'))
+        .options({ assets: app.assets })
+  }
 
   // data
 
   config.module.rule('yaml')
     .test(/\.ya?ml$/)
-    .use('json-loader')
-    .loader(require.resolve('json-loader'))
-    .end()
+    .type('json')
     .use('yaml-loader')
     .loader(require.resolve('yaml-loader'))
 
   // plugins
 
-  if (process.stdout.isTTY && !process.env.GRIDSOME_TEST) {
+  if (process.stdout.isTTY) {
     config.plugin('progress')
       .use(require('webpack/lib/ProgressPlugin'))
   }
@@ -235,7 +292,20 @@ module.exports = (app, { isProd, isServer }) => {
   }
 
   config.plugin('injections')
-    .use(require('webpack/lib/DefinePlugin'), [createEnv()])
+    .use(require('webpack/lib/DefinePlugin'), [{
+      'process.env.PUBLIC_PATH': JSON.stringify(publicPath),
+      'process.env.DATA_URL': JSON.stringify(forwardSlash(path.join(publicPath, assetsDir, 'data', '/'))),
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || ''),
+      'process.isClient': !isServer,
+      'process.isServer': isServer,
+      'process.isProduction': process.env.NODE_ENV === 'production',
+      'process.isStatic': process.env.GRIDSOME_MODE === 'static',
+      // add environment variables starting with GRIDSOME_ to process.env
+      ...Object.entries(gridsomeEnv()).reduce((acc, [key, value]) => {
+        acc[`process.env.${key}`] = ['boolean', 'number'].includes(typeof value) ? value : JSON.stringify(value)
+        return acc
+      }, {})
+    }])
 
   if (isProd && !isServer) {
     config.plugin('extract-css')
@@ -244,109 +314,36 @@ module.exports = (app, { isProd, isServer }) => {
       }])
   }
 
-  // Short hashes as ids for better long term caching.
-  config.optimization.merge({ moduleIds: 'hashed' })
+  // cache
+
+  config.merge({
+    cache: {
+      type: 'filesystem',
+      version: hash(
+        app.compiler.hooks.cacheIdentifier.call({
+          'gridsome': require('../../package.json').version,
+          'vue-loader': require('vue-loader/package.json').version,
+          'context': app.context,
+          'env': gridsomeEnv()
+        })
+      ),
+      buildDependencies: {
+        config: [
+          (app.config.chainWebpack || app.config.configureWebpack)
+            ? app.config.configPath
+            : undefined,
+          ...app.compiler._buildDependencies,
+          resolveExists(path.join(app.context, 'webpack.config.js'))
+        ].filter(Boolean)
+      }
+    }
+  })
+
+  // test
 
   if (process.env.GRIDSOME_TEST) {
-    config.output.pathinfo(true)
-    config.optimization.minimize(false)
-    config.optimization.merge({ moduleIds: 'named' })
-  }
-
-  // helpes
-
-  function createCacheOptions () {
-    const values = app.compiler.hooks.cacheIdentifier.call({
-      'gridsome': require('../../package.json').version,
-      'cache-loader': require('cache-loader/package.json').version,
-      'vue-loader': require('vue-loader/package.json').version,
-      context: app.context,
-      isProd,
-      isServer,
-      config: (
-        (projectConfig.chainWebpack || '').toString()
-      )
-    })
-
-    return {
-      cacheDirectory: path.join(projectConfig.cacheDir, 'webpack'),
-      cacheIdentifier: hash(values)
-    }
-  }
-
-  function createCSSRule (config, lang, test, loader = null, options = {}) {
-    const { css = {}, postcss = {}} = projectConfig.css.loaderOptions
-    const baseRule = config.module.rule(lang).test(test)
-    const modulesRule = baseRule.oneOf('modules').resourceQuery(/module/)
-    const normalRule = baseRule.oneOf('normal')
-
-    applyLoaders(modulesRule, true)
-    applyLoaders(normalRule, false)
-
-    function applyLoaders (rule, modules) {
-      if (!isServer) {
-        if (isProd) {
-          rule.use('extract-css-loader').loader(CSSExtractPlugin.loader)
-        } else {
-          rule.use('vue-style-loader').loader(require.resolve('vue-style-loader'))
-        }
-      }
-
-      rule.use('css-loader')
-        .loader(require.resolve('css-loader'))
-        .options(Object.assign({
-          modules,
-          exportOnlyLocals: isServer,
-          localIdentName: `[local]_[hash:base64:8]`,
-          importLoaders: 1,
-          sourceMap: !isProd
-        }, css))
-
-      rule.use('postcss-loader')
-        .loader(require.resolve('postcss-loader'))
-        .options(Object.assign({
-          sourceMap: !isProd
-        }, postcss, {
-          plugins: (postcss.plugins || []).concat(require('autoprefixer'))
-        }))
-
-      if (loader) {
-        try {
-          rule.use(loader).loader(require.resolve(loader)).options(options)
-        } catch {
-          rule.use(loader).loader(loader).options(options)
-        }
-      }
-    }
-  }
-
-  function createEnv () {
-    const assetsUrl = forwardSlash(path.join(publicPath, assetsDir, '/'))
-    const dataUrl = forwardSlash(path.join(assetsUrl, 'data', '/'))
-
-    const baseEnv = {
-      'process.env.PUBLIC_PATH': JSON.stringify(publicPath),
-      'process.env.ASSETS_URL': JSON.stringify(assetsUrl),
-      'process.env.DATA_URL': JSON.stringify(dataUrl),
-      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || ''),
-      'process.isClient': !isServer,
-      'process.isServer': isServer,
-      'process.isProduction': process.env.NODE_ENV === 'production',
-      'process.isStatic': process.env.GRIDSOME_MODE === 'static'
-    }
-
-    // merge variables start with GRIDSOME_ENV to config.env
-    const gridsomeEnv = pick(process.env, Object.keys(process.env).filter(key => key.startsWith('GRIDSOME_')))
-    const mergeEnv = Object.entries(gridsomeEnv)
-      .reduce((acc, [key, value]) => {
-        acc[`process.env.${key}`] = ['boolean', 'number'].includes(typeof value) ? value : JSON.stringify(value)
-        return acc
-      }, {})
-
-    return {
-      ...baseEnv,
-      ...mergeEnv
-    }
+    config.plugins.delete('progress')
+    config.merge({ cache: true })
   }
 
   return config

@@ -14,7 +14,7 @@ builtInPlugins.push(api => {
   api.chainWebpack(async config => {
     config
       .plugin('friendly-errors')
-      .use(require('friendly-errors-webpack-plugin'))
+      .use(require('@soda/friendly-errors-webpack-plugin'))
 
     config
       .plugin('injections')
@@ -30,8 +30,7 @@ builtInPlugins.push(api => {
 
     config.entryPoints.store.forEach((entry, name) => {
       config.entry(name)
-        .prepend(`${require.resolve('webpack-hot-middleware/client')}?name=${name}&reload=true&noInfo=true`)
-        .prepend(require.resolve('webpack/hot/dev-server'))
+        .prepend(`${require.resolve('webpack-hot-middleware/client')}?reload=true&noInfo=true`)
     })
   })
 })
@@ -50,23 +49,25 @@ module.exports = async (context, args) => {
   await fs.emptyDir(app.config.imageCacheDir)
 
   const compiler = app.compiler.getCompiler()
-  const webpackConfig = app.compiler.getClientConfig()
 
   app.server.hooks.setup.tap('develop', server => {
-    server.use(require('webpack-hot-middleware')(compiler, {
-      quiet: true,
-      log: false
-    }))
+    server.use(require('webpack-hot-middleware')(compiler, { log: false }))
   })
 
   app.server.hooks.afterSetup.tap('develop', server => {
+    const webpackConfig = app.compiler.getClientConfig()
     const devMiddleware = require('webpack-dev-middleware')(compiler, {
-      pathPrefix: webpackConfig.output.pathPrefix,
-      watchOptions: webpackConfig.devServer ? webpackConfig.devServer.watchOptions : null,
-      logLevel: 'silent'
+      publicPath: webpackConfig.output.publicPath,
+      stats: 'none'
     })
 
     server.use(devMiddleware)
+  })
+
+  compiler.hooks.infrastructureLog.tap('develop', (name, type, messages) => {
+    if (name === 'webpack.Progress' && type === 'status' && messages[1] === 'done') {
+      return false
+    }
   })
 
   compiler.hooks.done.tap('develop', stats => {
@@ -106,7 +107,6 @@ module.exports = async (context, args) => {
 
     const rendered = columnify(columns, { showHeaders: false })
 
-    console.log()
     console.log(`  ${rendered.split('\n').join('\n  ')}`)
     console.log()
 
