@@ -5,8 +5,7 @@ on:
     branches:
       - github-actions
     paths:
-      - 'gridsome/**/*.js'
-      - 'packages/**/*.js'
+      - '**.js'
       - '.github/workflows/*.yml'
 
 jobs:
