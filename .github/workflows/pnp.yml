@@ -3,7 +3,13 @@ name: PnP
 on:
   push:
     branches:
-      - github-actions
+      - '**'
+    paths:
+      - 'gridsome/**'
+      - '.github/workflows/pnp.yml'
+  pull_request:
+    branches:
+      - master
     paths:
       - 'gridsome/**'
       - '.github/workflows/pnp.yml'

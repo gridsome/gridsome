@@ -3,10 +3,16 @@ name: Lint
 on:
   push:
     branches:
-      - github-actions
+      - '**'
     paths:
       - '**.js'
-      - '.github/workflows/*.yml'
+      - '.github/workflows/lint.yml'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - '**.js'
+      - '.github/workflows/lint.yml'
 
 jobs:
   eslint:

@@ -3,11 +3,20 @@ name: Test
 on:
   push:
     branches:
-      - github-actions
+      - '**'
     paths:
+      - 'jest.config.js'
       - 'gridsome/**/*.js'
       - 'packages/**/*.js'
-      - '.github/workflows/*.yml'
+      - '.github/workflows/test.yml'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - 'jest.config.js'
+      - 'gridsome/**/*.js'
+      - 'packages/**/*.js'
+      - '.github/workflows/test.yml'
 
 jobs:
   test:
