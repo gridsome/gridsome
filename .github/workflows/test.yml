@@ -3,7 +3,7 @@ name: Test
 on:
   push:
     branches:
-      - '**'
+      - master
     paths:
       - 'jest.config.js'
       - 'gridsome/**/*.js'
