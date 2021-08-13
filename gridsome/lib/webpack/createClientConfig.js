@@ -1,5 +1,4 @@
 const path = require('path')
-const webpack = require('webpack')
 const createBaseConfig = require('./createBaseConfig')
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin')
 
@@ -64,7 +63,14 @@ module.exports = async app => {
       .merge({ moduleIds: 'deterministic' })
   } else {
     config.entry('app').add(resolve('../../app/entry.sockjs.js'))
-    config.plugin('hmr').use(webpack.HotModuleReplacementPlugin)
+
+    config.plugin('no-emit-on-errors')
+      .use(require('webpack/lib/NoEmitOnErrorsPlugin'))
+
+    config.plugin('friendly-errors')
+      .use(require('@soda/friendly-errors-webpack-plugin'))
+
+    config.stats('none') // `@soda/friendly-errors-webpack-plugin` shows the errors
   }
 
   if (process.env.GRIDSOME_TEST) {
