@@ -1,30 +1,17 @@
-name: Node.js
+name: Test
 
 on:
   push:
     branches:
       - github-actions
+    paths:
+      - 'gridsome/**/*.js'
+      - 'packages/**/*.js'
+      - '.github/workflows/*.yml'
 
 jobs:
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Cache dependencies
-        uses: actions/cache@v2
-        with:
-          path: '**/node_modules'
-          key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
-      - name: Run linter
-        run: yarn lint
-
   test:
-    name: Test Node.js ${{ matrix.node-version }} on ${{ matrix.os }}
+    name: Node.js ${{ matrix.node-version }} (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -42,5 +29,5 @@ jobs:
           key: ${{ runner.os }}-${{ runner.node-version }}-modules-${{ hashFiles('**/yarn.lock') }}
       - name: Install dependencies
         run: yarn install --frozen-lockfile
-      - name: Run unit tests
+      - name: Run tests
         run: yarn test:unit

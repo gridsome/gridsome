@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - github-actions
+    paths:
+      - 'gridsome/**'
+      - '.github/workflows/pnp.yml'
 
 jobs:
   pnp:
@@ -20,6 +23,7 @@ jobs:
         run: |
           touch yarn.lock
           yarn set version berry
+          yarn set version canary
           yarn config set pnpFallbackMode none
           yarn config set compressionLevel 0
       - name: Get cache directory
