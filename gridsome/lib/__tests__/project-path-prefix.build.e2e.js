@@ -14,7 +14,7 @@ const app = express()
 let browser, page, server, publicPath
 
 beforeAll(async () => {
-  const { config } = await build(context)
+  const { config } = await build(context, { cache: false })
 
   publicPath = config.publicPath
 

@@ -351,28 +351,30 @@ module.exports = (app, { isProd, isServer }) => {
 
   // cache
 
-  config.merge({
-    cache: {
-      type: 'filesystem',
-      version: hash(
-        app.compiler.hooks.cacheIdentifier.call({
-          'gridsome': require('../../package.json').version,
-          'vue-loader': require('vue-loader/package.json').version,
-          'context': app.context,
-          'env': gridsomeEnv()
-        })
-      ),
-      buildDependencies: {
-        config: [
-          (app.config.chainWebpack || app.config.configureWebpack)
-            ? app.config.configPath
-            : undefined,
-          ...app.compiler._buildDependencies,
-          resolveExists(path.join(app.context, 'webpack.config.js'))
-        ].filter(Boolean)
+  if (projectConfig.cache) {
+    config.merge({
+      cache: {
+        type: 'filesystem',
+        version: hash(
+          app.compiler.hooks.cacheIdentifier.call({
+            'gridsome': require('../../package.json').version,
+            'vue-loader': require('vue-loader/package.json').version,
+            'context': app.context,
+            'env': gridsomeEnv()
+          })
+        ),
+        buildDependencies: {
+          config: [
+            (app.config.chainWebpack || app.config.configureWebpack)
+              ? app.config.configPath
+              : undefined,
+            ...app.compiler._buildDependencies,
+            resolveExists(path.join(app.context, 'webpack.config.js'))
+          ].filter(Boolean)
+        }
       }
-    }
-  })
+    })
+  }
 
   // test
 

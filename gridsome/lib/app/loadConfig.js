@@ -76,6 +76,7 @@ module.exports = async (context, options = {}) => {
   config.pkg = options.pkg || resolvePkg(context)
   config.host = args.host || localConfig.host || undefined
   config.port = parseInt(args.port || localConfig.port, 10) || undefined
+  config.cache = args.cache !== false
   config.https = args.https
   config.plugins = normalizePlugins(context, plugins)
   config.redirects = normalizeRedirects(localConfig)
