@@ -135,7 +135,10 @@ module.exports = (app, { isProd, isServer }) => {
 
   // css
 
-  const hasPostCSSConfig = glob.sync(['.postcssrc?({.js,.yaml,.json})', 'postcss.config.js']).length > 0
+  const postcssConfigFiles = glob.sync(
+    ['.postcssrc?({.js,.yaml,.json})', 'postcss.config.js'],
+    { cwd: projectConfig.context }
+  )
 
   ;[
     ['css', /\.css$/],
@@ -176,7 +179,7 @@ module.exports = (app, { isProd, isServer }) => {
         .options({
           sourceMap: !isProd,
           ...postcss,
-          postcssOptions: !hasPostCSSConfig
+          postcssOptions: !postcssConfigFiles.length
             ? {
               ...postcssOptions,
               plugins: [...(postcssOptions.plugins || []), require('autoprefixer')]
