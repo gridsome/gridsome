@@ -23,7 +23,7 @@ module.exports = (app, { isProd, isServer }) => {
 
   const useHash = isProd && !process.env.GRIDSOME_TEST && projectConfig.cacheBusting
   const filename = `[name]${useHash ? '.[contenthash:8]' : ''}.js`
-  const assetname = `[name]${useHash ? '.[hash:8]' : ''}.[ext]`
+  const assetname = `[name]${useHash ? '.[hash:8]' : ''}[ext]`
   const inlineLimit = 10000
 
   config.name(isServer ? 'server' : 'client')
