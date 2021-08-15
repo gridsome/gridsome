@@ -14,6 +14,12 @@ const resolveExists = (path) => fs.existsSync(path) ? path : false
 const gridsomeEnv = () => {
   return pick(process.env, Object.keys(process.env).filter(key => key.startsWith('GRIDSOME_')))
 }
+const hasCoreJS = (root) => {
+  const pkgPath = path.join(root, 'package.json')
+  const pkg = fs.existsSync(pkgPath) ? require(pkgPath) : {}
+  const { dependencies, devDependencies } = pkg
+  return Object.keys({ ...dependencies, ...devDependencies }).includes('core-js')
+}
 
 module.exports = (app, { isProd, isServer }) => {
   const { config: projectConfig } = app
@@ -46,6 +52,13 @@ module.exports = (app, { isProd, isServer }) => {
     .extensions
     .merge(['.js', '.vue'])
     .end()
+    .plugin('core-js-resolver')
+    .use(require('./plugins/CoreJSResolver'), [{
+      includePaths: [
+        projectConfig.appCacheDir,
+        !hasCoreJS(projectConfig.context) ? projectConfig.context : ''
+      ].filter(Boolean)
+    }])
 
   config.resolve.merge({
     fallback: ['main', 'App.vue'].reduce((fallback, filename) => {
@@ -127,9 +140,6 @@ module.exports = (app, { isProd, isServer }) => {
             resolve('../../app/entry.client.js')
           ]
         }]
-      ],
-      plugins: [
-        require.resolve('./plugins/corejsBabelPlugin.js')
       ]
     })
 
@@ -137,7 +147,11 @@ module.exports = (app, { isProd, isServer }) => {
 
   const postcssConfigFiles = glob.sync(
     ['.postcssrc?({.js,.yaml,.json})', 'postcss.config.js'],
-    { cwd: projectConfig.context }
+    {
+      cwd: fs.existsSync(projectConfig.context)
+        ? projectConfig.context
+        : process.cwd()
+    }
   )
 
   ;[

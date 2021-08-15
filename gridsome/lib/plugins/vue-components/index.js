@@ -50,9 +50,6 @@ class VueComponents {
       .options({
         presets: [
           require.resolve('@vue/babel-preset-app')
-        ],
-        plugins: [
-          require.resolve('../../webpack/plugins/corejsBabelPlugin.js')
         ]
       })
       .end()
