@@ -14,7 +14,7 @@ const app = express()
 let browser, page, server, publicPath
 
 beforeAll(async () => {
-  const { config } = await build(context)
+  const { config } = await build(context, { cache: false })
 
   publicPath = config.publicPath
 
@@ -45,14 +45,15 @@ test('include pathPrefix in asset URLs', () => {
   expect($home('.g-link-home').attr('href')).toEqual('/sub/-/dir/')
   expect($home('.g-image-test').data('src')).toEqual('/sub/-/dir/assets/static/test.97c148e.test.png')
   expect($home('.g-link-file').attr('href')).toEqual('/sub/-/dir/assets/files/dummy.test.pdf')
-  expect($home('script[src="/sub/-/dir/assets/js/app.js"]').get().length).toEqual(1)
+  expect($home('script[src="/sub/-/dir/app.js"]').get().length).toEqual(1)
 })
 
 test('include pathPrefix in scripts', () => {
-  const appJS = content('dist/assets/js/app.js')
+  const appJS = content('dist/app.js')
+  const runtimeJS = content('dist/runtime.js')
 
   // __webpack_public_path__
-  expect(appJS).toMatch('__webpack_require__.p = "/sub/-/dir/"')
+  expect(runtimeJS).toMatch('__webpack_require__.p = "/sub/-/dir/"')
   // stripPathPrefix(path) helper
   expect(appJS).toMatch('"pathPrefix": "/sub/-/dir"')
   // router base

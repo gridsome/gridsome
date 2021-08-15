@@ -6,7 +6,6 @@ const mime = require('mime-types')
 const colorString = require('color-string')
 const md5File = require('md5-file/promise')
 const { forwardSlash } = require('../../utils')
-const { warmupSharp } = require('../../utils/sharp')
 const { reject, pickBy } = require('lodash')
 
 class ImageProcessQueue {
@@ -66,14 +65,13 @@ class ImageProcessQueue {
 
     const hash = await md5File(filePath)
     const fileBuffer = await fs.readFile(filePath)
-    const warmSharp = await warmupSharp(sharp)
 
     let pipeline
     let metadata
 
     try {
       // Rotate based on EXIF Orientation tag
-      pipeline = warmSharp(fileBuffer).rotate()
+      pipeline = sharp(fileBuffer).rotate()
       metadata = await pipeline.metadata()
     } catch (err) {
       throw new Error(`Failed to process image ${relPath}. ${err.message}`)
@@ -338,7 +336,7 @@ async function createPlaceholder (placeholder, pipeline, mimeType, width, height
   if (options.position) resizeOptions.position = sharp.position[options.position]
   if (options.background) resizeOptions.background = options.background
 
-  const placeholderWidth = 64
+  const placeholderWidth = Math.min(24, Math.floor(width / 10))
   const placeholderHeight = Math.floor(height * (placeholderWidth / width))
   const params = {
     mimeType,
@@ -357,8 +355,6 @@ async function createPlaceholder (placeholder, pipeline, mimeType, width, height
       return createBlurlaceholder(params)
     case 'trace':
       return createTracePlaceholder(params)
-    case 'blurhash':
-      return createBlurhashPlaceholder(params)
     case 'dominant':
       return createDominantPlaceholder(params)
   }
@@ -379,8 +375,8 @@ async function createBlurlaceholder ({
   return new Promise((resolve, reject) => {
     pipeline.resize(placeholderWidth, placeholderHeight, resizeOptions)
 
-    if (blur >= 0.3) {
-      pipeline.blur(blur / 10)
+    if (blur > 0) {
+      pipeline.blur(0.3 + blur / 10)
     }
 
     pipeline
@@ -405,8 +401,8 @@ async function createTracePlaceholder ({
 }) {
   const potrace = require('potrace')
 
-  const resizeWidth = Math.min(placeholderWidth * 4, width)
-  const resizeHeight = Math.min(placeholderHeight * 4, height)
+  const resizeWidth = Math.min(placeholderWidth * 10, width)
+  const resizeHeight = Math.min(placeholderHeight * 10, height)
 
   return new Promise((resolve, reject) => {
     pipeline
@@ -430,51 +426,6 @@ async function createTracePlaceholder ({
         resolve(createSvgDataURI(svg))
       })
     })
-  })
-}
-
-async function createBlurhashPlaceholder ({
-  pipeline,
-  resizeOptions,
-  placeholder,
-  placeholderWidth,
-  placeholderHeight
-}) {
-  const blurhash = require('blurhash')
-  const componentX = Math.max(1, Math.min(placeholder.components, 9))
-  const componentY = Math.max(
-    Math.max(Math.floor(componentX / 2), 1),
-    Math.min(Math.floor(componentX * (placeholderHeight / placeholderWidth)),
-    9)
-  )
-  const warmSharp = await warmupSharp(sharp)
-
-  return new Promise((resolve, reject) => {
-    pipeline
-      .raw()
-      .ensureAlpha()
-      .resize(placeholderWidth, placeholderHeight, resizeOptions)
-      .toBuffer(async (err, buffer, { width, height, channels }) => {
-        if (err) return reject(err)
-
-        const hash = blurhash.encode(new Uint8ClampedArray(buffer), width, height, componentX, componentY)
-        const pixels = blurhash.decode(hash, width, height)
-
-        const jpeg = await warmSharp(Buffer.from(pixels), {
-            raw: {
-              width,
-              height,
-              channels
-            }
-          })
-          .jpeg({
-            progressive: true,
-            quality: 85
-          })
-          .toBuffer()
-
-        resolve(`data:image/jpeg;base64,${jpeg.toString('base64')}`)
-      })
   })
 }
 

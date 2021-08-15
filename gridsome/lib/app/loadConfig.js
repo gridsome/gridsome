@@ -17,7 +17,7 @@ const builtInPlugins = [
 ]
 
 // TODO: use joi to define and validate config schema
-module.exports = (context, options = {}) => {
+module.exports = async (context, options = {}) => {
   const env = resolveEnv(context)
 
   Object.assign(process.env, env)
@@ -71,10 +71,12 @@ module.exports = (context, options = {}) => {
   const assetsDir = localConfig.assetsDir || 'assets'
 
   config.context = context
+  config.configPath = configPath
   config.mode = options.mode || 'production'
   config.pkg = options.pkg || resolvePkg(context)
   config.host = args.host || localConfig.host || undefined
   config.port = parseInt(args.port || localConfig.port, 10) || undefined
+  config.cache = args.cache !== false
   config.https = args.https
   config.plugins = normalizePlugins(context, plugins)
   config.redirects = normalizeRedirects(localConfig)
@@ -99,9 +101,12 @@ module.exports = (context, options = {}) => {
   config.filesDir = path.join(config.assetsDir, 'files')
   config.dataDir = path.join(config.assetsDir, 'data')
   config.appPath = path.resolve(__dirname, '../../app')
-  config.tmpDir = resolve('src/.temp')
-  config.cacheDir = resolve('.cache')
-  config.imageCacheDir = resolve('.cache', assetsDir, 'static')
+
+  // Cache
+  config.cacheDir = resolve('node_modules/.cache/gridsome')
+  config.appCacheDir = path.join(config.cacheDir, 'app')
+  config.imageCacheDir = path.join(config.cacheDir, 'assets')
+
   config.maxImageWidth = localConfig.maxImageWidth || 2560
   config.imageExtensions = SUPPORTED_IMAGE_TYPES
   config.pagesDir = resolve(localConfig._pagesDir || './src/pages')
@@ -114,7 +119,6 @@ module.exports = (context, options = {}) => {
   config.chainWebpack = localConfig.chainWebpack
   config.configureWebpack = localConfig.configureWebpack
   config.configureServer = localConfig.configureServer
-
 
   if (!colorString.get(config.images.backgroundColor || '')) {
     config.images.backgroundColor = null
@@ -466,7 +470,7 @@ function resolveTransformers (pkg, config) {
 function normalizeImages (config = {}) {
   const defaultPlaceholder = {
     type: 'blur',
-    defaultBlur: 40
+    defaultBlur: 20
   }
 
   if (typeof config.placeholder === 'string') {
@@ -506,10 +510,6 @@ function normalizeImages (config = {}) {
             color: Joi.string().default(undefined),
             threshold: Joi.number().min(0).max(255).default(120)
           }),
-          Joi.object().label('Blurhash').keys({
-            type: Joi.string().required().valid('blurhash'),
-            components: Joi.number().default(5).min(1).max(9)
-          }),
           Joi.object().label('Dominant').keys({
             type: Joi.string().required().valid('dominant')
           })
@@ -527,7 +527,7 @@ function normalizeImages (config = {}) {
 function normalizeIconsConfig (config = {}) {
   const res = {}
 
-  const faviconSizes = [16, 32, 96]
+  const faviconSizes = [16, 32, 96, 192, 196]
   const touchiconSizes = [76, 152, 120, 167, 180]
   const defaultIcon = './src/favicon.png'
   const icon = typeof config === 'string' ? { favicon: config } : (config || {})

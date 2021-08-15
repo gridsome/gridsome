@@ -479,7 +479,7 @@ test('transformer should resolve absolute paths', async () => {
     id: '1',
     internal: {
       mimeType: 'application/json',
-      origin: `${context}/assets/file.md`,
+      origin: path.resolve(context, 'assets/file.md'),
       content: JSON.stringify({})
     }
   })
@@ -491,7 +491,9 @@ test('transformer should resolve absolute paths', async () => {
   }`)
 
   expect(errors).toBeUndefined()
-  expect(data.testPost.fileField).toEqual(`${context}/assets/image.png`)
+  expect(data.testPost.fileField).toEqual(
+    path.resolve(context, 'assets/image.png')
+  )
 })
 
 test('process image types in schema', async () => {
