@@ -9,6 +9,7 @@
     "bootstrap": "lerna bootstrap",
     "test:unit": "GRIDSOME_TEST=unit jest --runInBand",
     "test:e2e": "GRIDSOME_TEST=e2e jest --runInBand",
+    "test:pnp": "node scripts/pnp-test.js",
     "changelog": "node scripts/changelog.js",
     "lint": "eslint \"@(gridsome|packages)/**/*.js\""
   },
