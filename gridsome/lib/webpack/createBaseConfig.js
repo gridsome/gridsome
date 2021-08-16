@@ -101,14 +101,15 @@ module.exports = (app, { isProd, isServer }) => {
   // js
 
   ;['js', 'ts'].forEach((loader) => {
-    const testRE = new RegExp(`.${loader}$`)
+    const testRE = new RegExp(`.${loader}x?$`)
+    const vueRE = new RegExp(`.vue.${loader}x?$`)
     const clientRE = new RegExp(`gridsome.client.${loader}$`)
 
     const rule = config.module.rule(loader)
       .test(testRE)
       .exclude
         .add(filepath => {
-          if (/\.vue\.js$/.test(filepath)) {
+          if (vueRE.test(filepath)) {
             return false
           }
 
