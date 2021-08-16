@@ -347,7 +347,7 @@ async function createPlaceholder (placeholder, pipeline, mimeType, width, height
 
   switch (placeholder.type) {
     case 'blur':
-      return createBlurlaceholder(params)
+      return createBlurPlaceholder(params)
     case 'trace':
       return createTracePlaceholder(params)
     case 'dominant':
@@ -357,7 +357,7 @@ async function createPlaceholder (placeholder, pipeline, mimeType, width, height
   throw new Error(`Unknown placeholder type: ${placeholder.type}`)
 }
 
-async function createBlurlaceholder ({
+async function createBlurPlaceholder ({
   options,
   pipeline,
   resizeOptions,
