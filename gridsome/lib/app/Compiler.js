@@ -22,18 +22,6 @@ class Compiler {
       chainWebpack: new AsyncSeriesHook(['chain', 'env']),
       done: new SyncHook(['columns', 'env'])
     }
-
-    // Include default minimizers if any custom minimizers are set
-    // TODO: Remove this once `webpack-chain` supports all webpack 5 configuration
-    app.plugins._listeners.configureWebpack.push({
-      handler(config) {
-        const { optimization: { minimizer = [] } = {} } = config
-        if (minimizer.length && !minimizer.includes('...')) {
-          minimizer.push('...')
-        }
-        return config
-      }
-    })
   }
 
   addBuildDependency (path) {

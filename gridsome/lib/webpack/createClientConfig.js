@@ -46,8 +46,6 @@ module.exports = async app => {
       }
     }
 
-    config.optimization.minimizer('esbuild').use(ESBuildMinifyPlugin)
-
     if (css.split !== true) {
       cacheGroups.styles = {
         name: 'styles',
@@ -61,6 +59,9 @@ module.exports = async app => {
       .minimize(true)
       .runtimeChunk('single')
       .splitChunks({ cacheGroups })
+      .minimizer('esbuild')
+        .use(ESBuildMinifyPlugin)
+        .end()
       .minimizer('css-minimizer-webpack-plugin')
         .use(CssMinimizerPlugin)
         .end()
