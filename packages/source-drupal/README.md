@@ -46,7 +46,7 @@ Property |Default Value | Notes
 ---|---|---
 `apiBase` | `jsonapi` | This value is appended to the `baseUrl` to create the root url for your api. The JSON:API default value is `jsonapi` but can be changed using [JSON:API Extras](https://www.drupal.org/project/jsonapi_extras)
 `baseUrl` | *none*, **required** | This is the base url of your Drupal instance. (`https://somedrupalsite.pantheon.io`)
-| `exclude` | *see lib/constants.js* | An array of entity types you want excluded from the [GraphQL conversion](#api-schema-to-graphql-conversion). Any length array will fully override the defaults. [See Excludes](#exclude).
+| `exclude` | *see lib/constants.js* | An array of entity types you want excluded from the [GraphQL conversion](#api-schema-to-graphql-conversion). Any length array will fully override the defaults. [See Excludes](#excludes).
 `requestConfig` | `{}` | A config object that is passed directly to `axios` request. [See Auth](#auth).
 `typeName` | `Drupal` | A String value to name space your GraphQL Types during conversion - this prevents collisions with other plugins. [See GraphQL Conversion](#api-schema-to-graphql-conversion).
 
@@ -93,6 +93,7 @@ user--user -> DrupalUser
 
 > The `keys` above are the defaults, but can be changed using [JSON:API
 > Extras](https://www.drupal.org/project/jsonapi_extras) (i.e. `node--article` can become just `article`
+> Note: JSON:API can return an attribute `path` that contains an object. This `path` attribute conflicts with Gridsome's GraphQL `path` field. To avoid conflict the Drupal data contained in `path` has been renamed to `drupal_path`.
 
 The url `values` of the `links` object get looped over and requested via `axios` and each response becomes processed, converted into `nodes` on each respective GraphQL Type. Each entity response comes with a `relationship` object which is merged into each `node` - the Gridsome Core then intelligently creates all the GraphQL Connects. [See example page queries below](#example-page-queries).
 

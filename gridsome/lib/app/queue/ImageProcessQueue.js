@@ -6,7 +6,6 @@ const mime = require('mime-types')
 const colorString = require('color-string')
 const md5File = require('md5-file/promise')
 const { forwardSlash } = require('../../utils')
-const { warmupSharp } = require('../../utils/sharp')
 const { reject, pickBy } = require('lodash')
 
 class ImageProcessQueue {
@@ -66,14 +65,13 @@ class ImageProcessQueue {
 
     const hash = await md5File(filePath)
     const fileBuffer = await fs.readFile(filePath)
-    const warmSharp = await warmupSharp(sharp)
 
     let pipeline
     let metadata
 
     try {
       // Rotate based on EXIF Orientation tag
-      pipeline = warmSharp(fileBuffer).rotate()
+      pipeline = sharp(fileBuffer).rotate()
       metadata = await pipeline.metadata()
     } catch (err) {
       throw new Error(`Failed to process image ${relPath}. ${err.message}`)
@@ -349,7 +347,7 @@ async function createPlaceholder (placeholder, pipeline, mimeType, width, height
 
   switch (placeholder.type) {
     case 'blur':
-      return createBlurlaceholder(params)
+      return createBlurPlaceholder(params)
     case 'trace':
       return createTracePlaceholder(params)
     case 'dominant':
@@ -359,7 +357,7 @@ async function createPlaceholder (placeholder, pipeline, mimeType, width, height
   throw new Error(`Unknown placeholder type: ${placeholder.type}`)
 }
 
-async function createBlurlaceholder ({
+async function createBlurPlaceholder ({
   options,
   pipeline,
   resizeOptions,

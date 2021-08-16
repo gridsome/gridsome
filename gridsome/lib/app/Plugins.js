@@ -18,7 +18,9 @@ class Plugins {
   constructor(app) {
     this._app = app
     this._plugins = []
-    this._listeners = []
+    this._listeners = {
+      configureWebpack: []
+    }
 
     app.hooks.bootstrap.tapPromise(
       { name: 'loadSource', label: 'Load sources', phase: BOOTSTRAP_SOURCES },

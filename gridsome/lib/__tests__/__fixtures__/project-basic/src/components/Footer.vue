@@ -5,13 +5,4 @@
   </div>
 </template>
 
-<static-query>
-query Footer {
-  metadata {
-    myTest {
-      value
-    }
-    pluginValue
-  }
-}
-</static-query>
+<static-query src="~/queries/Footer.gql" />

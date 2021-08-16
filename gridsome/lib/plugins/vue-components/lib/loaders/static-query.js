@@ -11,6 +11,8 @@ module.exports = async function (source, map) {
   const { config, store, schema } = process.GRIDSOME
   const resourcePath = this.resourcePath
 
+  this.cacheable(false)
+
   // add dependency to now.js to re-run
   // this loader when store has changed
   if (process.env.NODE_ENV === 'development') {

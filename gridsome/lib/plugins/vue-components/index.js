@@ -1,4 +1,5 @@
 const path = require('path')
+const fs = require('fs-extra')
 const compiler = require('vue-template-compiler')
 const { parse } = require('@vue/component-compiler-utils')
 
@@ -21,7 +22,19 @@ class VueComponents {
         const { customBlocks } = parse({ filename, source, compiler })
         const pageQuery = customBlocks.find(block => block.type === 'page-query')
 
-        return {
+        if (pageQuery && pageQuery.attrs && pageQuery.attrs.src) {
+          const queryPath = api._app.compiler._resolveSync(
+            path.dirname(resourcePath),
+            pageQuery.attrs.src
+          )
+
+          return {
+            pageQuery: fs.readFileSync(queryPath, 'utf8'),
+            watchFiles: [queryPath]
+          }
+        }
+
+       return {
           pageQuery: pageQuery ? pageQuery.content : null
         }
       })
@@ -37,9 +50,6 @@ class VueComponents {
       .options({
         presets: [
           require.resolve('@vue/babel-preset-app')
-        ],
-        plugins: [
-          require.resolve('../../webpack/plugins/corejsBabelPlugin.js')
         ]
       })
       .end()

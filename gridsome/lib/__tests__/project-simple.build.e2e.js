@@ -14,7 +14,7 @@ const app = express()
 let browser, page, server
 
 beforeAll(async () => {
-  await build(context)
+  await build(context, { cache: false })
 
   app.use(express.static(path.join(context, 'dist')))
 

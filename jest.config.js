@@ -1,26 +1,22 @@
-const e2e = process.argv.some(v => v === '--e2e')
-
-const testPathIgnorePatterns = [
-  '/__fixtures__/',
-  '/projects/',
-  '/scripts/'
-]
+const { GRIDSOME_TEST = 'unit' } = process.env
 
 module.exports = {
   testEnvironment: 'node',
-  testPathIgnorePatterns,
   testMatch: [
-    `**/__tests__/**/*.${e2e ? 'e2e' : 'spec'}.js`
-  ],
-  setupFiles: [
-    '<rootDir>/scripts/testSetup.js'
+    `**/__tests__/**/*.${GRIDSOME_TEST === 'e2e' ? 'e2e' : 'spec'}.js`
   ],
   collectCoverageFrom: [
     'gridsome/lib/**/*.js'
   ],
+  testPathIgnorePatterns: [
+    '/__fixtures__/',
+    '/projects/',
+    '/scripts/'
+  ],
   watchPathIgnorePatterns: [
     '/__fixtures__/',
     '/node_modules/',
-    '/projects/'
+    '/projects/',
+    '/.git/'
   ]
 }

@@ -15,7 +15,7 @@ afterEach(() => {
 })
 
 test('warns if a directory with the same name exists in path', async () => {
-  const { stdout } = await runCLI(['create', 'my-project'], __dirname)
+  const { stderr } = await runCLI(['create', 'my-project'], { cwd: __dirname, reject: false })
 
-  expect(stdout).toMatch('because the directory is not empty')
+  expect(stderr).toMatch('because the directory is not empty')
 })

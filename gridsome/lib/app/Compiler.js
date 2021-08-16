@@ -15,11 +15,30 @@ class Compiler {
     this._resolve
     this._resolveSync
     this._compiler = null
+    this._buildDependencies = []
 
     this.hooks = {
       cacheIdentifier: new SyncWaterfallHook(['identifier']),
       chainWebpack: new AsyncSeriesHook(['chain', 'env']),
       done: new SyncHook(['columns', 'env'])
+    }
+
+    // Include default minimizers if any custom minimizers are set
+    // TODO: Remove this once `webpack-chain` supports all webpack 5 configuration
+    app.plugins._listeners.configureWebpack.push({
+      handler(config) {
+        const { optimization: { minimizer = [] } = {} } = config
+        if (minimizer.length && !minimizer.includes('...')) {
+          minimizer.push('...')
+        }
+        return config
+      }
+    })
+  }
+
+  addBuildDependency (path) {
+    if (!this._buildDependencies.includes(path)) {
+      this._buildDependencies.push(path)
     }
   }
 
@@ -36,8 +55,8 @@ class Compiler {
     this._serverConfig = serverConfig
     this._clientConfig = clientConfig
 
-    this._resolve = enhancedResolve.create(serverConfig.resolve)
-    this._resolveSync = enhancedResolve.create.sync(serverConfig.resolve)
+    this._resolve = enhancedResolve.create(clientConfig.resolve)
+    this._resolveSync = enhancedResolve.create.sync(clientConfig.resolve)
   }
 
   getClientConfig() {
@@ -54,7 +73,8 @@ class Compiler {
 
   getCompiler() {
     if (!this._compiler) {
-      this._compiler = webpack(this.getConfigs())
+      const configs = this.getConfigs()
+      this._compiler = webpack(configs.length === 1 ? configs[0] : configs)
     }
     return this._compiler
   }
@@ -63,7 +83,7 @@ class Compiler {
     try {
       return this._resolve(context, path)
     } catch(err) {
-      return null
+      return undefined
     }
   }
 
@@ -71,7 +91,7 @@ class Compiler {
     try {
       return this._resolveSync(context, path)
     } catch(err) {
-      return null
+      return undefined
     }
   }
 
@@ -115,7 +135,7 @@ class Compiler {
     const resolvedChain = chain || await this.resolveChainableWebpackConfig(isServer)
     const configureWebpack = (this._app.plugins._listeners.configureWebpack || []).slice()
     const configFilePath = this._app.resolve('webpack.config.js')
-    const merge = require('webpack-merge')
+    const { merge } = require('webpack-merge')
 
     if (fs.existsSync(configFilePath)) {
       configureWebpack.push(require(configFilePath))
