@@ -130,7 +130,13 @@ module.exports = async (context, options = {}) => {
   config.appPath = path.resolve(__dirname, '../../app')
 
   // Cache paths
-  config.cacheDir = resolve('node_modules/.cache/gridsome')
+  if (process.versions.pnp === '1') {
+    config.cacheDir = resolve('.pnp/.cache/gridsome')
+  } else if (process.versions.pnp === '3') {
+    config.cacheDir = resolve('.yarn/.cache/gridsome')
+  } else {
+    config.cacheDir = resolve('node_modules/.cache/gridsome')
+  }
   config.appCacheDir = path.join(config.cacheDir, 'app')
   config.imageCacheDir = path.join(config.cacheDir, 'assets')
 
