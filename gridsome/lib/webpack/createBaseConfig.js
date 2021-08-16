@@ -151,6 +151,7 @@ module.exports = (app, { isProd, isServer }) => {
         .loader(require.resolve('esbuild-loader'))
         .options({
           loader,
+          target: 'esnext',
           implementation: require('esbuild')
         })
   })
