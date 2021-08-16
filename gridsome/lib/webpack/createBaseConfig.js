@@ -149,7 +149,10 @@ module.exports = (app, { isProd, isServer }) => {
         .end()
       .use('esbuild-loader')
         .loader(require.resolve('esbuild-loader'))
-        .options({ loader })
+        .options({
+          loader,
+          implementation: require('esbuild')
+        })
   })
 
   // css

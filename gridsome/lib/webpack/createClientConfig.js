@@ -60,7 +60,10 @@ module.exports = async app => {
       .runtimeChunk('single')
       .splitChunks({ cacheGroups })
       .minimizer('esbuild')
-        .use(ESBuildMinifyPlugin)
+        .use(ESBuildMinifyPlugin, [{
+          // TODO: update when fixed in esbuild-loader
+          // implementation: require('esbuild').transform
+        }])
         .end()
       .minimizer('css-minimizer-webpack-plugin')
         .use(CssMinimizerPlugin)
