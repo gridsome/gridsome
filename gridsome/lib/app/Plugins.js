@@ -1,5 +1,5 @@
 const PluginAPI = require('./PluginAPI')
-const { hashString } = require('../utils')
+const { requireEsModule, hashString } = require('../utils')
 const { defaultsDeep } = require('lodash')
 
 const {
@@ -44,12 +44,16 @@ class Plugins {
     for (const entry of this._app.config.plugins) {
       const { serverEntry } = entry.entries
       const Plugin = typeof serverEntry === 'string'
-        ? require(entry.entries.serverEntry)
+        ? requireEsModule(entry.entries.serverEntry)
         : typeof serverEntry === 'function'
           ? serverEntry
           : null
 
-      if (typeof Plugin !== 'function') continue
+      if (typeof Plugin !== 'function') {
+        throw new Error(
+          `Plugin at ${entry.entries.serverEntry} did not export a function.`
+        )
+      }
 
       const defaults = typeof Plugin.defaultOptions === 'function'
         ? Plugin.defaultOptions()

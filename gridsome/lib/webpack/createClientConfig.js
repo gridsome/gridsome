@@ -5,6 +5,8 @@ const CssMinimizerPlugin = require('css-minimizer-webpack-plugin')
 const resolve = p => path.resolve(__dirname, p)
 
 module.exports = async app => {
+  const { ESBuildMinifyPlugin } = require('esbuild-loader')
+
   const isProd = process.env.NODE_ENV === 'production'
   const config = createBaseConfig(app, { isProd, isServer: false })
   const { outputDir, clientManifestPath, css } = app.config
@@ -57,6 +59,12 @@ module.exports = async app => {
       .minimize(true)
       .runtimeChunk('single')
       .splitChunks({ cacheGroups })
+      .minimizer('esbuild')
+        .use(ESBuildMinifyPlugin, [{
+          // TODO: update when fixed in esbuild-loader
+          // implementation: require('esbuild').transform
+        }])
+        .end()
       .minimizer('css-minimizer-webpack-plugin')
         .use(CssMinimizerPlugin)
         .end()

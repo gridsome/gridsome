@@ -1,3 +1,6 @@
+const path = require('path')
+const resolveFrom = require('resolve-from')
+
 class CoreJSResolver {
   constructor(options = {}) {
     this.options = options
@@ -7,17 +10,17 @@ class CoreJSResolver {
     const target = resolver.ensureHook('resolve')
     const { includePaths = [] } = this.options
 
-    /**
-     * Resolve relative core-js imports for modules in the given
-     * paths to the version that is shipped with Gridsome.
-     */
     function resolve(req, resolveContext, callback) {
       const request = req.request || req.path
 
       if (request.startsWith('core-js/')) {
         const issuer = req.context.issuer || ''
+        const context = path.dirname(issuer)
 
-        if (includePaths.some((path) => issuer.startsWith(path))) {
+        if (
+          includePaths.some((path) => issuer.startsWith(path)) ||
+          !resolveFrom.silent(context, request)
+        ) {
           return resolver.doResolve(
             target,
             { ...req, request: require.resolve(request) },

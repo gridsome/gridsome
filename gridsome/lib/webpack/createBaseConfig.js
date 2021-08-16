@@ -100,48 +100,65 @@ module.exports = (app, { isProd, isServer }) => {
 
   // js
 
-  config.module.rule('js')
-    .test(/\.js$/)
-    .exclude
-    .add(filepath => {
-      if (/\.vue\.js$/.test(filepath)) {
-        return false
-      }
+  ;['js', 'ts'].forEach((loader) => {
+    const testRE = new RegExp(`.${loader}x?$`)
+    const vueRE = new RegExp(`.vue.${loader}x?$`)
+    const clientRE = new RegExp(`gridsome.client.${loader}$`)
 
-      if (/gridsome\.client\.js$/.test(filepath)) {
-        return false
-      }
+    const rule = config.module.rule(loader)
+      .test(testRE)
+      .exclude
+        .add(filepath => {
+          if (vueRE.test(filepath)) {
+            return false
+          }
 
-      if (
-        filepath.startsWith(projectConfig.appPath) ||
-        filepath.startsWith(projectConfig.appCacheDir)
-      ) {
-        return false
-      }
+          if (clientRE.test(filepath)) {
+            return false
+          }
 
-      if (app.config.transpileDependencies.some(dep => {
-        return typeof dep === 'string'
-          ? filepath.includes(path.normalize(dep))
-          : filepath.match(dep)
-      })) {
-        return false
-      }
+          if (
+            filepath.startsWith(projectConfig.appPath) ||
+            filepath.startsWith(projectConfig.appCacheDir)
+          ) {
+            return false
+          }
 
-      return /node_modules/.test(filepath)
-    })
-    .end()
-    .use('babel-loader')
-    .loader(require.resolve('babel-loader'))
-    .options({
-      presets: [
-        [require.resolve('@vue/babel-preset-app'), {
-          entryFiles: [
-            resolve('../../app/entry.server.js'),
-            resolve('../../app/entry.client.js')
+          if (app.config.transpileDependencies.some(dep => {
+            return typeof dep === 'string'
+              ? filepath.includes(path.normalize(dep))
+              : filepath.match(dep)
+          })) {
+            return false
+          }
+
+          return /node_modules/.test(filepath)
+        })
+        .end()
+      .use('babel-loader')
+        .loader(require.resolve('babel-loader'))
+        .options({
+          presets: [
+            [require.resolve('@vue/babel-preset-app'), {
+              entryFiles: [
+                resolve('../../app/entry.server.js'),
+                resolve('../../app/entry.client.js')
+              ]
+            }]
           ]
-        }]
-      ]
-    })
+        })
+        .end()
+
+    if (loader === 'ts') {
+      rule.use('esbuild-loader')
+        .loader(require.resolve('esbuild-loader'))
+        .options({
+          loader,
+          target: 'esnext',
+          implementation: require('esbuild')
+        })
+    }
+  })
 
   // css
 

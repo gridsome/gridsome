@@ -3,6 +3,11 @@ const slash = require('slash')
 const crypto = require('crypto')
 const slugify = require('@sindresorhus/slugify')
 
+exports.requireEsModule = (filename) => {
+  const module = require(filename)
+  return module.__esModule ? module.default : module
+}
+
 exports.hashString = function (string) {
   return crypto.createHash('md5')
     .update(string)

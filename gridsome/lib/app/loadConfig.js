@@ -1,13 +1,28 @@
 const path = require('path')
+const chalk = require('chalk')
 const fs = require('fs-extra')
 const Joi = require('@hapi/joi')
 const crypto = require('crypto')
 const dotenv = require('dotenv')
 const isRelative = require('is-relative')
 const colorString = require('color-string')
+const enhancedResolve = require('enhanced-resolve')
 const { deprecate } = require('../utils/deprecate')
 const { defaultsDeep, camelCase, isString, isFunction } = require('lodash')
 const { internalRE, transformerRE, SUPPORTED_IMAGE_TYPES } = require('../utils/constants')
+const { requireEsModule } = require('../utils')
+
+const resolve = enhancedResolve.create.sync({
+  extensions: ['.js', '.ts']
+})
+
+const tryResolve = (ctx, p) => {
+  try {
+    return resolve(ctx, p)
+  } catch (err) {
+    return undefined
+  }
+}
 
 const builtInPlugins = [
   path.resolve(__dirname, '../plugins/vue-components'),
@@ -23,8 +38,6 @@ module.exports = async (context, options = {}) => {
   Object.assign(process.env, env)
 
   const resolve = (...p) => path.join(context, ...p)
-  const customConfig = options.config || options.localConfig
-  const configPath = resolve('gridsome.config.js')
   const args = options.args || {}
   const config = {}
   const plugins = []
@@ -43,11 +56,23 @@ module.exports = async (context, options = {}) => {
     }
   }
 
-  const localConfig = customConfig
-    ? customConfig
-    : fs.existsSync(configPath)
-      ? require(configPath)
-      : {}
+  const configEntryPath = tryResolve(context, './gridsome.config')
+  const serverEntryPath = tryResolve(context, './gridsome.server')
+  const isTS = string => /\.ts$/.test(String(string))
+
+  if ([configEntryPath, serverEntryPath].filter(isTS).length) {
+    console.log(
+      chalk.yellow('warn'),
+      '- TypeScript support for the config and server entries is experimental and may introduce breaking changes at any time.\n'
+    )
+    registerTsExtension()
+  }
+
+  const localConfig = options.config || options.localConfig || {}
+
+  if (!options.localConfig && configEntryPath) {
+    Object.assign(localConfig, requireEsModule(configEntryPath))
+  }
 
   // use provided plugins instead of local plugins
   if (Array.isArray(options.plugins)) {
@@ -66,12 +91,14 @@ module.exports = async (context, options = {}) => {
   }
 
   // add project root as plugin
-  plugins.push(context)
+  if (serverEntryPath) {
+    plugins.push(requireEsModule(serverEntryPath))
+  }
 
   const assetsDir = localConfig.assetsDir || 'assets'
 
   config.context = context
-  config.configPath = configPath
+  config.configPath = configEntryPath
   config.mode = options.mode || 'production'
   config.pkg = options.pkg || resolvePkg(context)
   config.host = args.host || localConfig.host || undefined
@@ -102,7 +129,7 @@ module.exports = async (context, options = {}) => {
   config.dataDir = path.join(config.assetsDir, 'data')
   config.appPath = path.resolve(__dirname, '../../app')
 
-  // Cache
+  // Cache paths
   config.cacheDir = resolve('node_modules/.cache/gridsome')
   config.appCacheDir = path.join(config.cacheDir, 'app')
   config.imageCacheDir = path.join(config.cacheDir, 'assets')
@@ -168,6 +195,27 @@ module.exports = async (context, options = {}) => {
   config.catchLinks = typeof localConfig.catchLinks === 'boolean' ? localConfig.catchLinks : true
 
   return config
+}
+
+function registerTsExtension() {
+  const { transformSync } = require('esbuild')
+  const { extensions } = require
+
+  const loader = extensions['.ts'] || extensions['.js']
+
+  extensions['.ts'] = (module, filename) => {
+    const _compile = module._compile
+
+    module._compile = function(rawSource, filename) {
+      const url = JSON.stringify(`file://${filename}`)
+      const source = rawSource.replace(/\bimport\.meta\.url\b/g, url)
+      const { code } = transformSync(source, { loader: 'ts', format: 'cjs' })
+
+      _compile.call(this, code, filename)
+    }
+
+    loader(module, filename)
+  }
 }
 
 function resolveEnv (context) {
@@ -402,6 +450,11 @@ function resolvePluginEntries (id, context) {
     dirName = id
   } else if (id.startsWith('~/')) {
     dirName = path.join(context, id.replace(/^~\//, ''))
+    deprecate(`The ~ alias for plugin paths is deprecated. Use a relative path instead.`, {
+      customCaller: ['gridsome.config.js']
+    })
+  } else if (id.startsWith('.')) {
+    dirName = resolve(context, id)
   } else {
     // TODO: Replace with require.resolve(id, { paths: [context] }) when support for node is >= v8.9.0
     // https://nodejs.org/api/modules.html#modules_require_resolve_request_options
