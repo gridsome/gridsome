@@ -1,4 +1,5 @@
 const path = require('path')
+const chalk = require('chalk')
 const fs = require('fs-extra')
 const Joi = require('@hapi/joi')
 const crypto = require('crypto')
@@ -11,13 +12,13 @@ const { defaultsDeep, camelCase, isString, isFunction } = require('lodash')
 const { internalRE, transformerRE, SUPPORTED_IMAGE_TYPES } = require('../utils/constants')
 const { requireEsModule } = require('../utils')
 
-const resolveTs = enhancedResolve.create.sync({
+const resolve = enhancedResolve.create.sync({
   extensions: ['.js', '.ts']
 })
 
-const resolveTsSafe = (ctx, p) => {
+const tryResolve = (ctx, p) => {
   try {
-    return resolveTs(ctx, p)
+    return resolve(ctx, p)
   } catch (err) {
     return undefined
   }
@@ -55,11 +56,15 @@ module.exports = async (context, options = {}) => {
     }
   }
 
-  const configEntryPath = resolveTsSafe(context, './gridsome.config')
-  const serverEntryPath = resolveTsSafe(context, './gridsome.server')
+  const configEntryPath = tryResolve(context, './gridsome.config')
+  const serverEntryPath = tryResolve(context, './gridsome.server')
   const isTS = string => /\.ts$/.test(String(string))
 
   if ([configEntryPath, serverEntryPath].filter(isTS).length) {
+    console.log(
+      chalk.yellow('warn'),
+      '- TypeScript support for the config and server entries is experimental and may introduce breaking changes at any time.\n'
+    )
     registerTsExtension()
   }
 
@@ -93,7 +98,7 @@ module.exports = async (context, options = {}) => {
   const assetsDir = localConfig.assetsDir || 'assets'
 
   config.context = context
-  config.configPath = configPath
+  config.configPath = configEntryPath
   config.mode = options.mode || 'production'
   config.pkg = options.pkg || resolvePkg(context)
   config.host = args.host || localConfig.host || undefined
@@ -449,7 +454,7 @@ function resolvePluginEntries (id, context) {
       customCaller: ['gridsome.config.js']
     })
   } else if (id.startsWith('.')) {
-    dirName = resolveTs(context, id)
+    dirName = resolve(context, id)
   } else {
     // TODO: Replace with require.resolve(id, { paths: [context] }) when support for node is >= v8.9.0
     // https://nodejs.org/api/modules.html#modules_require_resolve_request_options
