@@ -104,7 +104,7 @@ module.exports = (app, { isProd, isServer }) => {
     const testRE = new RegExp(`.${loader}$`)
     const clientRE = new RegExp(`gridsome.client.${loader}$`)
 
-    config.module.rule(loader)
+    const rule = config.module.rule(loader)
       .test(testRE)
       .exclude
         .add(filepath => {
@@ -147,13 +147,16 @@ module.exports = (app, { isProd, isServer }) => {
           ]
         })
         .end()
-      .use('esbuild-loader')
+
+    if (loader === 'ts') {
+      rule.use('esbuild-loader')
         .loader(require.resolve('esbuild-loader'))
         .options({
           loader,
           target: 'esnext',
           implementation: require('esbuild')
         })
+    }
   })
 
   // css
