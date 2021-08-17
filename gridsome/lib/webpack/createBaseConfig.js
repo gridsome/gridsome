@@ -90,7 +90,7 @@ module.exports = (app, { isProd, isServer }) => {
     .loader(require.resolve('vue-loader'))
     .options({
       compilerOptions: {
-        preserveWhitespace: false,
+        whitespace: 'condense',
         modules: [
           require('./modules/html')(),
           require('./modules/assets')()
