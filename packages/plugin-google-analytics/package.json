@@ -21,6 +21,6 @@
     "vue-analytics": "^5.16.1"
   },
   "engines": {
-    "node": ">=8"
+    "node": ">=12.13.0"
   }
 }

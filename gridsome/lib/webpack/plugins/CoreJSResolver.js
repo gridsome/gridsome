@@ -1,5 +1,4 @@
 const path = require('path')
-const resolveFrom = require('resolve-from')
 
 class CoreJSResolver {
   constructor(options = {}) {
@@ -10,7 +9,7 @@ class CoreJSResolver {
     const target = resolver.ensureHook('resolve')
     const { includePaths = [] } = this.options
 
-    function resolve(req, resolveContext, callback) {
+    const resolve = (req, resolveContext, callback) => {
       const request = req.request || req.path
 
       if (request.startsWith('core-js/')) {
@@ -19,7 +18,7 @@ class CoreJSResolver {
 
         if (
           includePaths.some((path) => issuer.startsWith(path)) ||
-          !resolveFrom.silent(context, request)
+          !this.doesResolve(context, request)
         ) {
           return resolver.doResolve(
             target,
@@ -36,6 +35,14 @@ class CoreJSResolver {
 
     resolver.getHook('describedResolve').tapAsync('CoreJSResolver', resolve)
     resolver.getHook('file').tapAsync('CoreJSResolver', resolve)
+  }
+
+  doesResolve(context, request) {
+    try {
+      return Boolean(require.resolve(request, { paths: [context] }))
+    } catch (err) {
+      return false
+    }
   }
 }
 

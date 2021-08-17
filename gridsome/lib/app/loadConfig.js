@@ -462,9 +462,7 @@ function resolvePluginEntries (id, context) {
   } else if (id.startsWith('.')) {
     dirName = resolve(context, id)
   } else {
-    // TODO: Replace with require.resolve(id, { paths: [context] }) when support for node is >= v8.9.0
-    // https://nodejs.org/api/modules.html#modules_require_resolve_request_options
-    const resolvedPath = require('resolve-from')(context, id)
+    const resolvedPath = require.resolve(id, { paths: [context] })
     dirName = path.dirname(resolvedPath)
   }
 

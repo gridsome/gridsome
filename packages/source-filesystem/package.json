@@ -22,6 +22,6 @@
     "access": "public"
   },
   "engines": {
-    "node": ">=8"
+    "node": ">=12.13.0"
   }
 }
