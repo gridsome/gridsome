@@ -15,6 +15,8 @@
   "dependencies": {
     "gray-matter": "^4.0.2",
     "hash-sum": "^1.0.2",
+    "hast-util-to-html": "^6.0.2",
+    "hastscript": "^5.1.0",
     "lodash": "^4.17.11",
     "lru-cache": "^5.1.1",
     "remark-autolink-headings": "^5.0.0",
@@ -26,7 +28,9 @@
     "remark-squeeze-paragraphs": "^3.0.2",
     "sanitize-html": "^2.3.2",
     "unified": "^7.0.0",
+    "unist-builder": "^1.0.3",
     "unist-util-visit": "^1.4.0",
+    "unist-util-visit-parents": "^3.1.1",
     "vfile": "^4.0.0"
   },
   "peerDependencies": {

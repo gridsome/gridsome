@@ -94,7 +94,8 @@ exports.imageType = {
       size: result.size,
       sizes: result.sizes,
       srcset: result.srcset,
-      dataUri: result.dataUri
+      dataUri: result.dataUri,
+      blankUri: result.blankUri
     }
   }
 }
