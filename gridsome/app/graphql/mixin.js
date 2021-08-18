@@ -4,8 +4,7 @@ export default {
   computed: {
     $context () {
       if (process.isServer) {
-        const { page = {} } = this.$ssrContext.state
-        return page.context || {}
+        return this.$ssrContext.state.context || {}
       }
 
       const { path } = this.$route
@@ -15,8 +14,7 @@ export default {
     },
     $page () {
       if (process.isServer) {
-        const { page = {} } = this.$ssrContext.state
-        return page.data || null
+        return this.$ssrContext.state.data || null
       }
 
       const { path } = this.$route

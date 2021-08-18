@@ -23,18 +23,16 @@ module.exports = function createRenderFn ({
     basedir: __dirname
   })
 
-  return async function render(page, webpackCompilationHash) {
+  return async function render(page, hash) {
+    const pageData = page.dataOutput
+      ? await fs.readFile(page.dataOutput, 'utf8')
+      : JSON.stringify({ hash })
+
     const context = {
       path: page.path,
       location: page.location,
-      state: { webpackCompilationHash }
+      state: JSON.parse(pageData)
     }
-
-    const pageData = page.dataOutput
-      ? await fs.readFile(page.dataOutput, 'utf8')
-      : '{}'
-
-    context.state.page = JSON.parse(pageData)
 
     let app = ''
 
@@ -44,10 +42,6 @@ module.exports = function createRenderFn ({
       const location = page.location.name || page.location.path
       error(chalk.red(`Could not generate HTML for "${location}":`))
       throw err
-    }
-
-    if (pageData.length > 25000) {
-      delete context.state.page
     }
 
     const inject = context.meta.inject()
@@ -75,6 +69,11 @@ module.exports = function createRenderFn ({
       vueMetaStyles +
       vueMetaScripts +
       noscript
+
+    if (pageData.length > 25000) {
+      delete context.state.data
+      delete context.state.context
+    }
 
     const renderedState = context.renderState()
 

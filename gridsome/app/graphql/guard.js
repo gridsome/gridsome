@@ -7,10 +7,12 @@ export default (to, from, next) => {
   if (process.isServer) return next()
 
   const { __INITIAL_STATE__ = {} } = global
+  const { data, context } = __INITIAL_STATE__
 
   // A custom route added by `router.addRoutes()`.
   if (to.meta && to.meta.__custom) {
-    delete __INITIAL_STATE__.page
+    delete __INITIAL_STATE__.data
+    delete __INITIAL_STATE__.context
     return next()
   }
 
@@ -24,14 +26,13 @@ export default (to, from, next) => {
   }
 
   // Data and context already exists in the markup for the initial page.
-  if (process.isProduction && __INITIAL_STATE__.page) {
-    const { page } = __INITIAL_STATE__
+  if (process.isProduction && data && context) {
+    setResults(to.path, { data, context })
 
-    setResults(to.path, page)
+    delete __INITIAL_STATE__.data
+    delete __INITIAL_STATE__.context
 
-    delete __INITIAL_STATE__.page
-
-    return page.context.__notFound && to.name !== NOT_FOUND_NAME
+    return context.__notFound && to.name !== NOT_FOUND_NAME
       ? next({ name: NOT_FOUND_NAME, params: { 0: to.path }})
       : next()
   }

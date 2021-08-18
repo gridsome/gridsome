@@ -54,7 +54,7 @@ export default (route, options = {}) => {
   }
 
   const { __INITIAL_STATE__ = {} } = global
-  const { webpackCompilationHash } = __INITIAL_STATE__
+  const { hash } = __INITIAL_STATE__
 
   return new Promise((resolve, reject) => {
     const usePath = route.name === NOT_FOUND_NAME ? NOT_FOUND_PATH : route.path
@@ -77,10 +77,10 @@ export default (route, options = {}) => {
 
     return isLoaded[jsonPath]
       .then(res => {
-        if (res.hash !== webpackCompilationHash) {
+        if (res.hash !== hash) {
           reject(
             createError(
-              `Hash did not match: json=${res.hash}, document=${webpackCompilationHash}`,
+              `Hash did not match: json=${res.hash}, document=${hash}`,
               'INVALID_HASH'
             )
           )
