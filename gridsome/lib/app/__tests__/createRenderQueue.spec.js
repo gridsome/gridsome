@@ -125,7 +125,7 @@ test('create render queue for createPages hook', async () => {
       })
     })
 
-    api.createPages(async ({ getCollection, createPage, graphql }) => {
+    api.createPages(async ({ getCollection, createRoute, createPage, graphql }) => {
       const posts = getCollection('Post')
 
       createPage({
@@ -139,13 +139,16 @@ test('create render queue for createPages hook', async () => {
         context: { perPage: 2 }
       })
 
+      const route = createRoute({
+        path: '/article/:id',
+        component: './__fixtures__/DefaultTemplate.vue'
+      })
+
       for (let i = 1; i <= 3; i++) {
         const node = posts.getNode(String(i))
 
-        createPage({
-          route: '/article/:id',
+        route.addPage({
           path: `/article/${node.id}`,
-          component: './__fixtures__/DefaultTemplate.vue',
           queryVariables: node
         })
       }

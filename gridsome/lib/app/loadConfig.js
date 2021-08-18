@@ -113,16 +113,7 @@ module.exports = async (context, options = {}) => {
   config.publicPath = config.pathPrefix ? `${config.pathPrefix}/` : '/'
   config.staticDir = resolve('static')
 
-  // TODO: remove outDir before 1.0
   config.outputDir = resolve(localConfig.outputDir || localConfig.outDir || 'dist')
-  config.outDir = config.outputDir
-  deprecate.property(config, 'outDir', 'The outDir config is renamed to outputDir.')
-  if (localConfig.outDir) {
-    deprecate(`The outDir config is renamed to outputDir.`, {
-      customCaller: ['gridsome.config.js']
-    })
-  }
-
   config.assetsDir = path.join(config.outputDir, assetsDir)
   config.imagesDir = path.join(config.assetsDir, 'static')
   config.filesDir = path.join(config.assetsDir, 'files')
@@ -171,14 +162,6 @@ module.exports = async (context, options = {}) => {
   config.titleTemplate = localConfig.titleTemplate || `%s - ${config.siteName}`
   config.siteDescription = localConfig.siteDescription || ''
   config.metadata = localConfig.metadata || {}
-
-  // TODO: remove before 1.0
-  if (localConfig.metaData) {
-    deprecate(`The metaData config is renamed to metadata.`, {
-      customCaller: ['gridsome.config.js']
-    })
-    config.metadata = localConfig.metaData
-  }
 
   config.manifestsDir = path.join(config.assetsDir, 'manifest')
   config.clientManifestPath = path.join(config.manifestsDir, 'client.json')

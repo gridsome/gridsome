@@ -4,7 +4,6 @@ const hirestime = require('hirestime')
 const { info } = require('../utils/log')
 const isRelative = require('is-relative')
 const { version } = require('../../package.json')
-const { deprecate } = require('../utils/deprecate')
 const { AsyncSeriesHook, SyncWaterfallHook } = require('tapable')
 
 const { BOOTSTRAP_FULL } = require('../utils/constants')
@@ -102,10 +101,6 @@ class App {
     this.compiler = new Compiler(this)
 
     this.config = Object.freeze(this.config)
-
-    // TODO: remove before 1.0
-    this.queue = this.assets
-    deprecate.property(this, 'queue', 'The property app.queue is deprecated. Use app.assets instead.')
 
     info(`Initializing plugins...`)
 

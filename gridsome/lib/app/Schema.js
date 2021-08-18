@@ -43,18 +43,12 @@ class Schema {
   }
 
   createContext () {
-    const context = {
+    return {
       store: createStoreActions(this._app.store),
       pages: createPagesAction(this._app.pages),
       config: this._app.config,
-      assets: this._app.assets,
-      // TODO: remove before 1.0
-      queue: this._app.assets
+      assets: this._app.assets
     }
-
-    deprecate.property(context, 'queue', 'The property context.queue is deprecated. Use context.assets instead.')
-
-    return context
   }
 
   runQuery (docOrQuery, variables = {}, operationName) {

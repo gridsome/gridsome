@@ -1,5 +1,9 @@
 module.exports = {
   siteName: 'Gridsome',
   siteDescription: 'My super blog',
-  plugins: []
+  plugins: [],
+  templates: {
+    Post: '/:title',
+    Tag: '/tag/:title'
+  }
 }

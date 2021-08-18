@@ -1232,21 +1232,6 @@ test('add custom scalar types with createScalarType()', async () => {
   expect(data.album.myField).toMatchObject({ test: true, foo: 'bar' })
 })
 
-// TODO: remove this before 1.0
-test('add deprecated collection field', async () => {
-  const app = await createApp(api => {
-    api.loadSource(store => store.addCollection('test_post'))
-  })
-
-  const queryType = app.schema.getSchema().getQueryType()
-  const queryFields = queryType.getFields()
-
-  expect(queryFields).toHaveProperty('testPost')
-  expect(queryFields).toHaveProperty('allTestPost')
-  expect(queryFields).toHaveProperty('alltest_post')
-  expect(queryFields.alltest_post.isDeprecated).toEqual(true)
-})
-
 function createApp (plugin, phase = BOOTSTRAP_PAGES) {
   const app = new App(__dirname, {
     localConfig: { plugins: plugin ? [plugin] : [] }

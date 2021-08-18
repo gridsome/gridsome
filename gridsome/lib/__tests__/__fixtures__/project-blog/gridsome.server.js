@@ -1,22 +1,9 @@
 module.exports = function (api) {
   api.loadSource(store => {
-    const posts = store.addCollection({
-      typeName: 'Post',
-      route: '/:slug'
-    })
-
-    const tags = store.addCollection({
-      typeName: 'Tag',
-      route: '/tag/:slug'
-    })
-
-    const categories = store.addCollection({
-      typeName: 'Category'
-    })
-
-    const other = store.addCollection({
-      typeName: 'Other'
-    })
+    const posts = store.addCollection('Post')
+    const tags = store.addCollection('Tag')
+    const categories = store.addCollection('Category')
+    const other = store.addCollection('Other')
 
     categories.addNode({
       id: '1',

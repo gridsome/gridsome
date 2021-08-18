@@ -1,5 +1,4 @@
-const { Source, findDeprecatedUsages, getLocation } = require('graphql')
-const { fixIncorrectVariableUsage } = require('./transforms')
+const { validate, NoDeprecatedCustomRule } = require('graphql')
 const { deprecate } = require('../utils/deprecate')
 
 const {
@@ -28,7 +27,7 @@ module.exports = function parseQuery (schema, source, resourcePath) {
     return res
   }
 
-  findDeprecatedUsages(schema, ast).forEach(err => {
+  validate(schema, ast, [NoDeprecatedCustomRule]).forEach(err => {
     let line = 0
     let column = 0
 
@@ -41,7 +40,6 @@ module.exports = function parseQuery (schema, source, resourcePath) {
     })
   })
 
-  const src = new Source(source)
   const typeInfo = new TypeInfo(schema)
   const variableDefs = []
   const typeNames = {}
@@ -49,17 +47,6 @@ module.exports = function parseQuery (schema, source, resourcePath) {
   res.document = visit(ast, visitWithTypeInfo(typeInfo, {
     VariableDefinition (variableDef) {
       if (variableDef.variable.name.value !== 'page') {
-        if (variableDef.variable.name.value === 'id') {
-          // TODO: remove this fix before 1.0
-          fixIncorrectVariableUsage(schema, ast, variableDef)
-            .forEach(({ name, oldType, newType }) => {
-              const { line, column } = getLocation(src, variableDef.loc.start)
-              deprecate(`The $${name} variable should be of type ${newType} instead of ${oldType}.`, {
-                customCaller: [resourcePath, line, column]
-              })
-            })
-        }
-
         variableDefs.push(variableDef)
       }
     },

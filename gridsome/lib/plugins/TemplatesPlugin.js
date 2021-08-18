@@ -6,7 +6,6 @@ const crypto = require('crypto')
 const moment = require('moment')
 const chokidar = require('chokidar')
 const pathToRegexp = require('path-to-regexp')
-const { deprecate } = require('../utils/deprecate')
 const { validateTypeName } = require('../graphql/utils')
 const { SUPPORTED_DATE_FORMATS } = require('../utils/constants')
 const { isPlainObject, trimStart, trimEnd, get, memoize } = require('lodash')
@@ -20,7 +19,7 @@ const makeId = (uid, name) => {
   return crypto.createHash('md5').update(uid + name).digest('hex')
 }
 
-const makePath = (object, { path, routeKeys, createPath }, dateField = 'date', slugify) => {
+const makePath = (object, { routeKeys, createPath }, dateField = 'date', slugify) => {
   const date = memoize(() => moment.utc(object[dateField], SUPPORTED_DATE_FORMATS, true))
   const length = routeKeys.length
   const params = {}
@@ -32,19 +31,6 @@ const makePath = (object, { path, routeKeys, createPath }, dateField = 'date', s
   for (let i = 0; i < length; i++) {
     const { name, fieldName, repeat, suffix } = routeKeys[i]
     let { path: fieldPath } = routeKeys[i]
-
-    // TODO: remove before 1.0
-    // let slug fallback to title
-    if (name === 'slug' && !object.slug) {
-      deprecate(
-        `You have a :slug parameter in your route (${path}) but no slug ` +
-        `field exist on the node. The title field will be used instead ` +
-        `but you should change to :title in the route or use another field. ` +
-        `This fallback will be removed in v0.8.`,
-        { stackIndex: 5 }
-      )
-      fieldPath = ['title']
-    }
 
     const field = get(object, fieldPath, fieldName)
 

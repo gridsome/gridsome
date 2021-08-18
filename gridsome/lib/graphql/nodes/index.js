@@ -53,19 +53,6 @@ module.exports = function createNodesSchema (schemaComposer, store) {
       [fieldName]: typeComposer.getResolver('findOne'),
       [allFieldName]: typeComposer.getResolver('findManyPaginated')
     })
-
-    // TODO: remove this field before 1.0
-    const oldAllFieldName = `all${typeName}`
-
-    if (
-      allFieldName !== oldAllFieldName &&
-      !schemaComposer.Query.hasField(oldAllFieldName)
-    ) {
-      schemaComposer.Query.setField(oldAllFieldName, {
-        ...typeComposer.getResolver('findManyPaginated'),
-        deprecationReason: `Use Query.${allFieldName} instead.`
-      })
-    }
   }
 
   createBelongsTo(schemaComposer, store)

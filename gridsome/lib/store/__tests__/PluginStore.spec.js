@@ -289,7 +289,7 @@ test('add type with custom fields in route', async () => {
   const api = await createPlugin()
   const collection = api.store.addCollection({
     typeName: 'TestPost',
-    route: '/:test/:test_raw/:id/:numeric/:author/:genre__name/:arr__1/:missing/:slug'
+    route: '/:test/:test_raw/:id/:numeric/:author/:genre__name/:arr__1/:missing/:title'
   })
 
   const node = collection.addNode({
