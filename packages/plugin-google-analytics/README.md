@@ -5,8 +5,10 @@
 See [VueAnalytics](https://github.com/MatteoGabriele/vue-analytics/blob/master/README.md) for possible options.
 
 ## Install
-- `yarn add @gridsome/plugin-google-analytics`
+
 - `npm install @gridsome/plugin-google-analytics`
+- `yarn add @gridsome/plugin-google-analytics`
+- `pnpm install @gridsome/plugin-google-analytics`
 
 ## Usage
 

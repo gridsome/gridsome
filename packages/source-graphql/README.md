@@ -4,8 +4,9 @@
 
 ## Install
 
-- `yarn add @gridsome/source-graphql`
 - `npm install @gridsome/source-graphql`
+- `yarn add @gridsome/source-graphql`
+- `pnpm install @gridsome/source-graphql`
 
 ## Usage
 
@@ -28,7 +29,7 @@ module.exports = {
 }
 ```
 
-## Options
+### Options
 
 #### url
 
@@ -44,7 +45,7 @@ The name that should be used to namespace your remote schema when it's merged in
 
 For instance, if you put "puppies" your remote schema's data will be available by querying like so:
 
-```
+```graphql
 query {
   puppies {
     helloWorld

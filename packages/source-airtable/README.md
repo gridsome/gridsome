@@ -3,8 +3,10 @@
 > Airtable source for Gridsome.
 
 ## Install
-- `yarn add @gridsome/source-airtable`
+
 - `npm install @gridsome/source-airtable`
+- `yarn add @gridsome/source-airtable`
+- `pnpm install @gridsome/source-airtable`
 
 ## Usage
 
@@ -44,14 +46,14 @@ module.exports = {
 }
 ```
 
-## Options
+### Options
 
 1. `apiKey`: This can be found when logged in to airtable.com, under "ACCOUNT > API"
-2. `base`: This can be found by going to https://airtable.com/api, clicking on your workspace, and will be visible in the url: https://airtable.com/{YOUR_BASE_ID}/api/docs#curl/introduction
+2. `base`: This can be found by going to <https://airtable.com/api>, clicking on your workspace, and will be visible in the url: <https://airtable.com/{YOUR_BASE_ID}/api/docs#curl/introduction>
 3. `tables`: This is where you configure one or more tables that should be loaded as a data source
     1. `name`:  This is the full name of your chosen workspace table, for example "Furniture" is the first and main table in the pre-defined workspace named "Product Catalog & Orders"
     2. `typeName`: Your chosen type name. The type name "Product" is an example of an fitting route for the pre-defined airtable workspace named "Product Catalog & Orders"
-    3. `select`: Your select options. These can be found by going to https://airtable.com/api, clicking on your workspace, and will be visible under the _List records_ of your table
+    3. `select`: Your select options. These can be found by going to <https://airtable.com/api>, clicking on your workspace, and will be visible under the _List records_ of your table
     4. `links`: When links to another record are set in airtable, they need to be also mapped so we can return them as a sub-object
         1. `fieldName`: This is the case sensitive full name of the field that has been set as a "Link to another record type"
         2. `typeName`: This is the type name of the linked table that has been added to the "tables" config

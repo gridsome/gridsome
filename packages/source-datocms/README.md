@@ -4,8 +4,10 @@
 API might change before v1 is released.
 
 ## Install
-- `yarn add @gridsome/source-datocms`
+
 - `npm install @gridsome/source-datocms`
+- `yarn add @gridsome/source-datocms`
+- `pnpm install @gridsome/source-datocms`
 
 ## Usage
 

@@ -4,8 +4,9 @@
 
 ## Install
 
-- `yarn add @gridsome/source-strapi`
 - `npm install @gridsome/source-strapi`
+- `yarn add @gridsome/source-strapi`
+- `pnpm install @gridsome/source-strapi`
 
 ## Usage
 

@@ -4,8 +4,9 @@
 
 ## Install
 
-- `yarn add @gridsome/transformer-remark`
 - `npm install @gridsome/transformer-remark`
+- `yarn add @gridsome/transformer-remark`
+- `pnpm install @gridsome/transformer-remark`
 
 ## Basic usage
 
@@ -50,7 +51,7 @@ The following example adds the `remark-attr` plugin globally if it is installed 
 }
 ```
 
-## Options
+### Options
 
 #### plugins
 
@@ -168,25 +169,25 @@ Add additional [Remark options](https://github.com/remarkjs/remark/blob/main/pac
 
 This allows you to enable/disable `gfm`, `commonmark`, `footnotes`,  `pedantic` and `blocks`.
 
-* gfm
-  * Type: `boolean`
-  * Default: `true`
+- gfm
+  - Type: `boolean`
+  - Default: `true`
 
-* commonmark
-  * Type: `boolean`
-  * Default: `false`
+- commonmark
+  - Type: `boolean`
+  - Default: `false`
 
-* footnotes
-  * Type: `boolean`
-  * Default: `false`
+- footnotes
+  - Type: `boolean`
+  - Default: `false`
 
-* pedantic
-  * Type: `boolean`
-  * Default: `false`
+- pedantic
+  - Type: `boolean`
+  - Default: `false`
 
-* blocks
-  * Type: `Array | string`
-  * Default: list of [block HTML elements](https://github.com/remarkjs/remark/blob/main/packages/remark-parse/lib/block-elements.js)
+- blocks
+  - Type: `Array | string`
+  - Default: list of [block HTML elements](https://github.com/remarkjs/remark/blob/main/packages/remark-parse/lib/block-elements.js)
 
 ```js
 {

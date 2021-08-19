@@ -3,5 +3,7 @@
 > YAML transformer for Gridsome
 
 ## Install
-- `yarn add @gridsome/transformer-yaml`
+
 - `npm install @gridsome/transformer-yaml`
+- `yarn add @gridsome/transformer-yaml`
+- `pnpm install @gridsome/transformer-yaml`

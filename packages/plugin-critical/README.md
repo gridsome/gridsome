@@ -3,8 +3,10 @@
 > Extracts & inlines critical-path (above-the-fold) CSS
 
 ## Install
-- `yarn add @gridsome/plugin-critical`
+
 - `npm install @gridsome/plugin-critical`
+- `yarn add @gridsome/plugin-critical`
+- `pnpm install @gridsome/plugin-critical`
 
 ## Usage
 

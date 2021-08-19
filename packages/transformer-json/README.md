@@ -4,5 +4,6 @@
 
 ## Install
 
-- `yarn add @gridsome/transformer-json`
 - `npm install @gridsome/transformer-json`
+- `yarn add @gridsome/transformer-json`
+- `pnpm install @gridsome/transformer-json`

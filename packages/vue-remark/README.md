@@ -4,11 +4,11 @@
 
 ## Install
 
-- `yarn add @gridsome/vue-remark`
 - `npm install @gridsome/vue-remark`
+- `yarn add @gridsome/vue-remark`
+- `pnpm install @gridsome/vue-remark`
 
 ## Usage
-
 
 **1.** Add configs to `gridsome.config.js`.
 
@@ -27,11 +27,11 @@ module.exports = {
   ]
 }
 ```
+
 In this example `/content/docs/index.md` will be `website.com/docs/`,
 and `/content/docs/install-guide.md` will be `website.com/docs/install-guide/`.
 
 By default it takes any **.md** files in `baseDir` folder and uses them for file-based routing like [Pages](/docs/pages/) works. You can override this by using a `route` config.
-
 
 **2.** Setup a template and include the `<VueRemarkContent />` component:
 
@@ -55,8 +55,7 @@ query Documentation ($id: ID!) {
 </page-query>
 ```
 
-
-## Example Markdown file.
+### Example Markdown file
 
 ```jsx
 ---
@@ -79,7 +78,7 @@ import data from '~/data/youtube.json'
 <AboutUs />
 ```
 
-## Options
+### Options
 
 #### typeName
 
@@ -173,6 +172,7 @@ module.exports = {
 ```
 
 #### ignore
+
 - Type: `Array`
 - Default: `[]`
 
@@ -202,7 +202,6 @@ Define which files to consider as index files. These files will not have their f
 #### plugins
 
 Add additional [Remark](https://remark.js.org/) plugins. [Read more](https://github.com/remarkjs/remark/blob/master/doc/plugins.md#list-of-plugins).
-
 
 #### refs
 

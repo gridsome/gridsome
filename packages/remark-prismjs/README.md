@@ -3,8 +3,10 @@
 > Syntax highlighter for markdown code blocks
 
 ## Install
-- `yarn add @gridsome/remark-prismjs`
+
 - `npm install @gridsome/remark-prismjs`
+- `yarn add @gridsome/remark-prismjs`
+- `pnpm install @gridsome/remark-prismjs`
 
 ## Usage
 
@@ -60,7 +62,7 @@ module.exports = {
 }
 ```
 
-## Options
+### Options
 
 #### customClassPrefix
 
