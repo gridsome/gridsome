@@ -120,7 +120,7 @@ exports.imageType = {
     width: { type: 'Int', description: 'Width' },
     height: { type: 'Int', description: 'Height' },
     fit: { type: 'ImageFit', description: 'Fit', defaultValue: 'cover' },
-    position: { type: 'ImagePosition', description: 'Position of the of the visible part for \'cover\' or \'contain\'', defaultValue: 'center' },
+    position: { type: 'ImagePosition', description: 'Position of the visible part for \'cover\' or \'contain\'', defaultValue: 'center' },
     quality: { type: 'Int', description: 'Quality (default: 75)' },
     blur: { type: 'Int', description: 'Blur level for base64 string' },
     background: { type: 'String', description: 'Background color for \'contain\''}
@@ -130,6 +130,10 @@ exports.imageType = {
     let result
 
     if (!value) return null
+
+    if (args.position === 'center') {
+      delete args.position
+    }
 
     try {
       result = await context.assets.add(value, args)
