@@ -82,14 +82,11 @@ async function createDevServer(app, compiler) {
   devServer.onBeforeSetupMiddleware = (server) => {
     setupGraphQLMiddleware(app, server)
     setupAssetsMiddleware(app, server)
+    app.plugins.configureServer(server.app)
     onBeforeSetupMiddleware && onBeforeSetupMiddleware(server)
   }
 
-  const server = new WebpackDevServer(compiler, devServer)
-
-  await app.plugins.configureServer(server.app)
-
-  return server
+  return new WebpackDevServer(devServer, compiler)
 }
 
 function createSocketServer(app, server) {

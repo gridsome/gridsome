@@ -100,8 +100,8 @@ class Plugins {
     this._app.schema.buildSchema()
   }
 
-  async configureServer(server) {
-    return this.run('configureServer', null, server)
+  configureServer(server) {
+    return this.runSync('configureServer', null, server)
   }
 
   async createPages() {
@@ -140,6 +140,26 @@ class Plugins {
       const result = typeof cb === 'function'
         ? await handler(cb(api))
         : await handler(...args, api)
+
+      results.push(result)
+      entry.done = true
+    }
+
+    return results
+  }
+
+  runSync(eventName, cb, ...args) {
+    if (!this._listeners[eventName]) return []
+
+    const results = []
+
+    for (const entry of this._listeners[eventName]) {
+      if (entry.options.once && entry.done) continue
+
+      const { api, handler } = entry
+      const result = typeof cb === 'function'
+        ? handler(cb(api))
+        : handler(...args, api)
 
       results.push(result)
       entry.done = true

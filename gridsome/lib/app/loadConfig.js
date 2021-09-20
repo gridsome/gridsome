@@ -90,7 +90,7 @@ module.exports = async (context, options = {}) => {
     })
   }
 
-  // add project root as plugin
+  // add server entry as plugin
   if (serverEntryPath) {
     plugins.push(requireEsModule(serverEntryPath))
   }
