@@ -358,6 +358,8 @@ async function createPlaceholder (placeholder, pipeline, mimeType, width, height
 }
 
 async function createBlurPlaceholder ({
+  width,
+  height,
   options,
   pipeline,
   resizeOptions,
@@ -379,7 +381,12 @@ async function createBlurPlaceholder ({
       .toBuffer(async (err, buffer) => {
         if (err) return reject(err)
         const base64 = buffer.toString('base64')
-        resolve(`data:image/png;base64,${base64}`)
+        const placeholder = [
+          `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">`,
+          `<image href="data:image/png;base64,${base64}" width="${width}" height="${height}" preserveAspectRatio="none" />`,
+          `</svg>`
+        ].join('')
+        resolve(`data:image/svg+xml,${encodeURIComponent(placeholder)}`)
       })
   })
 }
