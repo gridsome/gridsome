@@ -27,7 +27,6 @@ exports.processHtmlFile = async function (filename, options = {}) {
     html: sourceHTML,
     css: stylesheets,
     inline: false,
-    minify: true,
     ignore: {
       atrule: ['@font-face'],
       decl: (node, value) => /url\(/.test(value),
