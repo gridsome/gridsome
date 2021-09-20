@@ -43,6 +43,59 @@ exports.createImageFitEnum = schemaComposer => {
   })
 }
 
+exports.createImagePositionEnum = schemaComposer => {
+  return schemaComposer.createEnumTC({
+    name: 'ImagePosition',
+    values: {
+      top: {
+        value: 'top',
+        name: 'Top',
+        description: 'Display the part of the image from the top center'
+      },
+      rightTop: {
+        value: 'right top',
+        name: 'Right Top',
+        description: 'Display the part of the image from the top right'
+      },
+      right: {
+        value: 'right',
+        name: 'Right',
+        description: 'Display the part of the image from the right center'
+      },
+      rightBottom: {
+        value: 'right bottom',
+        name: 'Right Bottom',
+        description: 'Display the part of the image from the bottom right'
+      },
+      bottom: {
+        value: 'bottom',
+        name: 'Bottom',
+        description: 'Display the part of the image from the bottom center'
+      },
+      leftBottom: {
+        value: 'left bottom',
+        name: 'Left Bottom',
+        description: 'Display the part of the image from the bottom left'
+      },
+      left: {
+        value: 'left',
+        name: 'Left',
+        description: 'Display the part of the image from the left center'
+      },
+      leftTop: {
+        value: 'left top',
+        name: 'Left Top',
+        description: 'Display the part of the image from the top left'
+      },
+      center: {
+        value: 'center',
+        name: 'Center',
+        description: 'Display the part of the image from the center'
+      }
+    }
+  })
+}
+
 exports.isImage = value => {
   if (typeof value === 'string') {
     const ext = path.extname(value).toLowerCase()
@@ -67,6 +120,7 @@ exports.imageType = {
     width: { type: 'Int', description: 'Width' },
     height: { type: 'Int', description: 'Height' },
     fit: { type: 'ImageFit', description: 'Fit', defaultValue: 'cover' },
+    position: { type: 'ImagePosition', description: 'Position of the visible part for \'cover\' or \'contain\'', defaultValue: 'center' },
     quality: { type: 'Int', description: 'Quality (default: 75)' },
     blur: { type: 'Int', description: 'Blur level for base64 string' },
     background: { type: 'String', description: 'Background color for \'contain\''}
@@ -76,6 +130,10 @@ exports.imageType = {
     let result
 
     if (!value) return null
+
+    if (args.position === 'center') {
+      delete args.position
+    }
 
     try {
       result = await context.assets.add(value, args)
