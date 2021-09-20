@@ -370,20 +370,24 @@ async function createBlurPlaceholder ({
   const blur = options.blur !== undefined ? parseInt(options.blur, 10) : placeholder.defaultBlur
 
   return new Promise((resolve, reject) => {
-    pipeline.resize(placeholderWidth, placeholderHeight, resizeOptions)
-
-    if (blur > 0) {
-      pipeline.blur(0.3 + blur / 10)
-    }
-
     pipeline
+      .resize(placeholderWidth, placeholderHeight, resizeOptions)
       .png({ quality: 25 })
       .toBuffer(async (err, buffer) => {
         if (err) return reject(err)
         const base64 = buffer.toString('base64')
+        const id = `__svg-blur-${genHash(base64)}`
+        const filter = []
+        if (blur > 0) {
+          filter.push(`<filter id="${id}"><feGaussianBlur in="SourceGraphic" stdDeviation="${blur}" /></filter>`)
+        }
         const placeholder = [
           `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">`,
-          `<image href="data:image/png;base64,${base64}" width="${width}" height="${height}" preserveAspectRatio="none" />`,
+          ...filter,
+          `<image href="data:image/png;base64,${base64}" `,
+          `x="${-blur}" y="${-blur}" width="${width + (blur * 2)}" height="${height + (blur * 2)}" `,
+          filter.length ? `filter="url(#${id})" ` : '',
+          `preserveAspectRatio="none" />`,
           `</svg>`
         ].join('')
         resolve(`data:image/svg+xml,${encodeURIComponent(placeholder)}`)
