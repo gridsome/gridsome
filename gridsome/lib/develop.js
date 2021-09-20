@@ -62,7 +62,7 @@ module.exports = async (context, args) => {
     console.log()
   })
 
-  server.listen()
+  await server.start()
 }
 
 async function createDevServer(app, compiler) {
