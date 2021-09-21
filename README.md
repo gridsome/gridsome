@@ -81,7 +81,7 @@ Gridsome sites are usually not connected to any database and can be hosted entir
 
 ## How to Contribute
 
-Install [Node.js ^12.13.0 || >= 14.0.0](https://nodejs.org/en/download/) or higher and [Yarn classic](https://classic.yarnpkg.com/en/docs/install/).
+Install [Node.js ^12.13.0 || ^14.0.0 || >=16.0.0](https://nodejs.org/en/download/) or higher and [Yarn classic](https://classic.yarnpkg.com/en/docs/install/).
 
 1. Clone this repository.
 2. Create a new Gridsome project inside the `./projects` folder.
