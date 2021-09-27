@@ -31,28 +31,36 @@ Gridsome is a <a href="//vuejs.org">Vue-powered</a> static site generator for bu
 > This project is under active development. Any feedback or contributions would be appreciated.
 
 ### Enjoy a modern development stack
+
 Build websites with modern tools like Vue.js, webpack and Node.js. Get hot-reloading and access to any packages from npm and write CSS in your favorite preprocessor like Sass or Less with auto-prefixing.
 
 ### Connect to any CMS or data source
+
 Use any CMS or data source for content. Pull data from WordPress, Contentful, local Markdown, or any other headless CMS or APIs and access it with GraphQL in your pages and components.
 
 ### PWA Offline-first architecture
+
 Only critical HTML, CSS, and JavaScript get loaded first. The next pages are then prefetched so users can click around incredibly fast without page reloads, even when offline.
 
 ### Get perfect page speed scores
+
 Gridsome automatically optimizes your frontend to load and perform blazing fast. You get code-splitting, image optimization, lazy-loading, and almost perfect lighthouse scores out-of-the-box.
 
 ### Build future ready websites
+
 The future of the web is JavaScript, API's, and Markup - the [Jamstack](https://jamstack.org/). Gridsome uses the power of blazing-fast static site generator, JavaScript and APIs to create stunning dynamic web experiences.
 
 ### Ready for global domination
+
 Gridsome sites are usually not connected to any database and can be hosted entirely on a global CDN. It can handle thousands to millions of hits without breaking - and no expensive server costs.
 
 ## Quick start
 
 ### 1. Install Gridsome CLI tool
 
-`npm install --global @gridsome/cli`
+- `npm install --global @gridsome/cli`
+- `yarn global add @gridsome/cli`
+- `pnpm install --global @gridsome/cli`
 
 ### 2. Create a Gridsome project
 
@@ -66,14 +74,14 @@ Gridsome sites are usually not connected to any database and can be hosted entir
 1. Create `.vue` components in the `./src/pages` directory to create pages
 2. Use `gridsome build` to generate static files in a `./dist` folder
 
-### Learn more...
+### Learn more
 
 - [How it works](https://gridsome.org/docs/how-it-works/)
 - [How to deploy](https://gridsome.org/docs/deployment/)
 
 ## How to Contribute
 
-Install [Node.js 8.3](https://nodejs.org/en/download/) or higher and [Yarn](https://yarnpkg.com/lang/en/docs/install/).
+Install [Node.js ^12.13.0 || ^14.0.0 || >=16.0.0](https://nodejs.org/en/download/) or higher and [Yarn classic](https://classic.yarnpkg.com/en/docs/install/).
 
 1. Clone this repository.
 2. Create a new Gridsome project inside the `./projects` folder.

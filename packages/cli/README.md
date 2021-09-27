@@ -4,7 +4,11 @@
 
 ## Installation
 
-Install globally with `npm install --global @gridsome/cli` or `yarn global add @gridsome/cli`
+Install globally with
+
+- `npm install --global @gridsome/cli`
+- `yarn global add @gridsome/cli`
+- `pnpm install --global @gridsome/cli`
 
 ## Creating new projects
 

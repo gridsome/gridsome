@@ -4,8 +4,10 @@
 API might change before v1 is released.
 
 ## Install
-- `yarn add @gridsome/source-wordpress`
+
 - `npm install @gridsome/source-wordpress`
+- `yarn add @gridsome/source-wordpress`
+- `pnpm install @gridsome/source-wordpress`
 
 ## Usage
 
@@ -55,7 +57,6 @@ add_filter( 'acf/format_value', function ( $value ) {
 ## Use Custom REST Endpoints
 
 To use REST endpoints from plugins or defined in your theme add a `customEndpoints` array to source-wordpress options.
-
 
 ```js
   use: '@gridsome/source-wordpress',

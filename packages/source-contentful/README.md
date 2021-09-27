@@ -5,8 +5,9 @@ API might change before v1 is released.
 
 ## Install
 
-- `yarn add @gridsome/source-contentful`
 - `npm install @gridsome/source-contentful`
+- `yarn add @gridsome/source-contentful`
+- `pnpm install @gridsome/source-contentful`
 
 ## Usage
 
@@ -48,7 +49,7 @@ module.exports = {
 
 ### Rich text
 
-Contentful Rich text content types return a custom JSON response that can only be parsed to HTML with Contentful's package, https://www.npmjs.com/package/@contentful/rich-text-html-renderer
+Contentful Rich text content types return a custom JSON response that can only be parsed to HTML with Contentful's package, <https://www.npmjs.com/package/@contentful/rich-text-html-renderer>.
 
 #### Example
 
@@ -119,7 +120,7 @@ export default {
 }
 ```
 
-#### Return generated HTML from Rich Text field:
+#### Return generated HTML from Rich Text field
 
 Rich Text fields can take an `html` argument to return generated HTML instead of a Rich Text document. The generated HTML can simply be passed in to an element with `v-html`.
 

@@ -2,29 +2,21 @@
 
 > Drupal source for Gridsome.
 
-### Table of Contents
-* [Install](#install)
-* [Usage](#usage)
-* [API Schema to GraphQL Conversion](#api-schema-to-graphql-conversion)
-* [Contenta CMS](#contenta-cms)
-* [Routing](#routing)
-* [Excludes](#excludes)
-* [Auth](#auth)
-* [Example Page Queries](#example-page-queries)
-* [Starter project](https://github.com/matt-e-king/gridsome-starter-drupal)
-
-### Quick Overview
+## Quick Overview
 
 **BREAKING CHANGE FROM 0.2.1 to 0.3.0**
 The shape for accessing relationships on a node via GraphQL has changed. See [Example Page Queries](#example-page-queries).
 
 This is the source plugin for pulling in data from the Drupal content management system for Gridsome. The Drupal module [JSON:API](https://www.drupal.org/project/jsonapi) is required for this plugin to work correctly.
 
-### Install
-* `yarn add @gridsome/source-drupal`
-* `npm install @gridsome/source-drupal`
+## Install
 
-### Usage
+- `npm install @gridsome/source-drupal`
+- `yarn add @gridsome/source-drupal`
+- `pnpm install @gridsome/source-drupal`
+
+## Usage
+
 Depending on your Drupal and JSON:API configuration, you only need to specify `baseUrl` to get up and running:
 
 ```js
@@ -51,10 +43,13 @@ Property |Default Value | Notes
 `typeName` | `Drupal` | A String value to name space your GraphQL Types during conversion - this prevents collisions with other plugins. [See GraphQL Conversion](#api-schema-to-graphql-conversion).
 
 ### API Schema to GraphQL Conversion
+
 The first operation this plugin performs is a request to the api root:
-```
+
+```js
 axios.get(url, config) // url is baseUrl and apiBase combined
 ```
+
 The JSON:API returns a manifest of available endpoints for all the entities in Drupal. It typically looks something like this (this is a shortened version):
 
 ```json
@@ -100,6 +95,7 @@ The url `values` of the `links` object get looped over and requested via `axios`
 Within your Gridsome project, run `gridsome develop` and access `http://localhost:8080/___explore` to see all the relationships.
 
 ### Routing
+
 Use the `templates` option in `gridsome.config.js` to specify the url schema for each entity type individually:
 
 ```js
@@ -126,6 +122,7 @@ Path parameters can be any GraphQL field on that node:
 `DrupalNodeArticle: 'aritlces/:langcode/:title/' -> /aritcles/en/lorem-ipsum/`
 
 ### Contenta CMS
+
 [Contenta CMS](https://github.com/contentacms/contenta_jsonapi#--contenta-cms--) should work out-of-the-box with @gridsome/source-drupal. The main difference being, Contenta CMS is by default already using [JSON:API Extras](https://www.drupal.org/project/jsonapi_extras). This gives the user more flexibility and control over resources returned by the api.
 
 JSON:API has a clear finite list of features which are listed on its [Drupal project page](https://www.drupal.org/project/jsonapi_extras).
@@ -135,12 +132,14 @@ This has the biggest impact in regards to the [API Schema to GraphQL Conversion]
 Here is an [example `gridsome.config.js`](https://github.com/matt-e-king/gridsome-starter-drupal/blob/master/gridsome.config.js) in the Drupal Source Starter, see the commented out section at the bottom for Contenta CMS.
 
 **NOTE:** This will also affect your GraphQL queries:
+
 ```
 article -> DrupalArticle
 recipies -> DrupalRecipes
 ```
 
 ### Excludes
+
 A majority of the endpoints returned in the api schema are not necessary so `@gridsome/source-drupal` exclude some by default. See those defaults in `lib/constants.js`.
 
 > WARNING: A majority of JSON:API endpoints will throw 401/403s unless permissions are granted
@@ -164,6 +163,7 @@ module.exports = {
 ```
 
 ### Auth
+
 Currently `@gridsome/source-drupal` only supports Basic Auth:
 
 ```js
@@ -193,6 +193,7 @@ module.exports = {
 Cookie Auth and OAuth coming soon...
 
 ### Example Page Queries
+
 List all `DrupalNodeArticle` using `<page-query>` in a Gridsome page:
 
 ```
@@ -273,4 +274,5 @@ Taxonomy terms get a little trickier but you can use `Fragments` (and `Inline Fr
     }
   }
 ```
+
 And everything within the `DrupalNodeArticle` can be treated the same as for a regular node query.

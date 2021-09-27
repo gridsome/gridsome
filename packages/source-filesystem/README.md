@@ -4,8 +4,9 @@
 
 ## Install
 
-- `yarn add @gridsome/source-filesystem`
 - `npm install @gridsome/source-filesystem`
+- `yarn add @gridsome/source-filesystem`
+- `pnpm install @gridsome/source-filesystem`
 
 ## Usage
 
@@ -28,7 +29,7 @@ module.exports = {
 
 A filesystem source will also require a transformer in order to parse the files. The example above is looking for a set of [Markdown](https://en.wikipedia.org/wiki/Markdown) files, so in order to let [Gridsome](https://gridsome.org) understand the content of the files, you must install [@gridsome/transformer-remark](https://www.npmjs.com/package/@gridsome/transformer-remark) as a dev dependency in your project. Gridsome will automatically transform the files for you as long as a transformer that supports your files is found in your `package.json`.
 
-## Options
+### Options
 
 #### path
 

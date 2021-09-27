@@ -4,5 +4,6 @@
 
 ## Install
 
-- `yarn add @gridsome/transformer-csv`
 - `npm install @gridsome/transformer-csv`
+- `yarn add @gridsome/transformer-csv`
+- `pnpm install @gridsome/transformer-csv`

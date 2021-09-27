@@ -3,8 +3,10 @@
 > [Faker.js](https://github.com/marak/Faker.js/) source for Gridsome
 
 ## Install
-- `yarn add @gridsome/source-faker`
+
 - `npm install @gridsome/source-faker`
+- `yarn add @gridsome/source-faker`
+- `pnpm install @gridsome/source-faker`
 
 ## Usage
 

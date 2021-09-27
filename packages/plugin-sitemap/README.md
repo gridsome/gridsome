@@ -4,8 +4,9 @@
 
 ## Install
 
-- `yarn add @gridsome/plugin-sitemap`
 - `npm install @gridsome/plugin-sitemap`
+- `yarn add @gridsome/plugin-sitemap`
+- `pnpm install @gridsome/plugin-sitemap`
 
 ## Usage
 

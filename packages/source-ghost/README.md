@@ -4,8 +4,9 @@
 
 ## Install
 
-- `yarn add @gridsome/source-ghost`
 - `npm install @gridsome/source-ghost`
+- `yarn add @gridsome/source-ghost`
+- `pnpm install @gridsome/source-ghost`
 
 ## Usage
 
