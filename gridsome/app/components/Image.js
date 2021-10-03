@@ -43,7 +43,7 @@ export default {
         attrs.height = size.height
 
         if (isLazy) attrs['data-src'] = src
-        if (srcset.length) attrs[`${isLazy ? 'data-' : ''}srcset`] = Array.isArray(srcset) ? srcset.join(', ') : srcset
+        if (srcset && srcset.length) attrs[`${isLazy ? 'data-' : ''}srcset`] = Array.isArray(srcset) ? srcset.join(', ') : srcset
         if (sizes) attrs[`${isLazy ? 'data-' : ''}sizes`] = sizes
 
         if (isLazy) {
