@@ -121,9 +121,7 @@ async function processImages (images, config) {
     await pMap(chunks, async queue => {
       await worker.process({
         queue,
-        outputDir: config.outputDir,
         context: config.context,
-        cacheDir: config.imageCacheDir,
         imagesConfig: config.images
       })
 

@@ -10,13 +10,10 @@ exports.processImage = async function ({
   height,
   filePath,
   destPath,
-  cachePath,
   imagesConfig,
   options = {}
 }) {
-  if (cachePath && await fs.exists(cachePath)) {
-    return fs.copy(cachePath, destPath)
-  } else if (await fs.exists(destPath)) {
+  if (fs.existsSync(destPath)) {
     return
   }
 
@@ -97,22 +94,10 @@ exports.processImage = async function ({
   return fs.outputFile(destPath, buffer)
 }
 
-exports.process = async function ({
-  queue,
-  context,
-  cacheDir,
-  imagesConfig
-}) {
+exports.process = async function ({ queue, context, imagesConfig }) {
   await pMap(queue, async set => {
-    const cachePath = cacheDir ? path.join(cacheDir, set.filename) : null
-
     try {
-      await exports.processImage({
-        destPath: set.destPath,
-        imagesConfig,
-        cachePath,
-        ...set
-      })
+      await exports.processImage({ ...set, imagesConfig })
     } catch (err) {
       const relPath = path.relative(context, set.filePath)
       throw new Error(`Failed to process image ${relPath}. ${err.message}`)

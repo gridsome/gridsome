@@ -149,22 +149,22 @@ test('do not increase file size when compression is disabled', async () => {
   }
 })
 
-test('use cached process results', async () => {
-  await fs.copy(
-    path.join(context, 'assets', '1000x600.png'),
-    path.join(imageCacheDir, '1000x600.97c148e.test.png')
-  )
+test('reuse process results', async () => {
+  const source = path.join(context, 'assets', '1000x600.png')
+  const result = path.join(imagesDir, '1000x600.97c148e.test.png')
 
-  const files = await process(['1000x600.png'], { width: 1000 }, { withCache: true })
-  const cacheStats = await fs.stat(files[0].cachePath)
-  const destStats = await fs.stat(files[0].destPath)
+  await fs.copy(source, result)
 
-  const mDiff = cacheStats.mtimeMs - destStats.mtimeMs
-  const bDiff = cacheStats.birthtime - destStats.birthtime
+  const files = await process(['1000x600.png'], { width: 1000 })
+  const sourceStats = await fs.stat(source)
+  const resultStats = await fs.stat(files[0].destPath)
+
+  const mDiff = sourceStats.mtimeMs - resultStats.mtimeMs
+  const bDiff = sourceStats.birthtime - resultStats.birthtime
 
   expect(mDiff).toBeLessThan(32)
   expect(bDiff).toBeLessThan(32)
-  expect(destStats.size).toEqual(cacheStats.size)
+  expect(resultStats.size).toEqual(sourceStats.size)
 })
 
 test('ignore extension casing', async () => {
@@ -178,7 +178,6 @@ async function process (
   filenames,
   options = {},
   {
-    withCache = false,
     images = {}
   } = {}
 ) {
@@ -208,19 +207,14 @@ async function process (
 
   await processImages({
     queue: processQueue.images.queue,
-    cacheDir: withCache ? imageCacheDir : false,
     imagesConfig: config.images,
     context
   })
 
-  return Promise.all(assets.map(async ({ filePath, src, hash }) => {
-    const imageOptions = processQueue.images.createImageOptions(options)
-    const filename = processQueue.images.createFileName(filePath, imageOptions, hash)
-    const cachePath = path.join(imageCacheDir, filename)
+  return Promise.all(assets.map(async ({ filePath, src }) => {
     const destPath = path.join(context, src)
-
     const buffer = await fs.readFile(destPath)
 
-    return { filePath, destPath, cachePath, buffer }
+    return { filePath, destPath, buffer }
   }))
 }

@@ -45,7 +45,7 @@ module.exports = ({ context, config, assets }) => {
       if (SUPPORTED_IMAGE_TYPES.includes(ext.toLowerCase())) {
         const imageOptions = assets.images.createImageOptions(options)
         const filename = assets.images.createFileName(filePath, imageOptions, asset.hash)
-        const destPath = path.join(config.imageCacheDir, filename)
+        const destPath = path.join(config.imagesDir, filename)
 
         if (!fs.existsSync(destPath)) {
           await worker.processImage({

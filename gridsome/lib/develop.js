@@ -12,7 +12,7 @@ module.exports = async (context, args) => {
   const createApp = require('./app')
   const app = await createApp(context, { args, mode: 'development' })
 
-  await fs.emptyDir(app.config.imageCacheDir)
+  await fs.emptyDir(app.config.imagesDir)
 
   const compiler = app.compiler.getCompiler()
   const server = await createDevServer(app, compiler)

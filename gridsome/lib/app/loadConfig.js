@@ -133,7 +133,6 @@ module.exports = async (context, options = {}) => {
   }
 
   config.appCacheDir = path.join(config.cacheDir, 'app')
-  config.imageCacheDir = path.join(config.cacheDir, 'assets')
 
   config.maxImageWidth = localConfig.maxImageWidth || 2560
   config.imageExtensions = SUPPORTED_IMAGE_TYPES
