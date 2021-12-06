@@ -90,14 +90,22 @@ exports.defaultOperators = defaultOperators
 exports.scalarOperators = scalarOperators
 exports.listOperators = listOperators
 
-exports.toOperatorConfig = function (operators, typeName, extraExtensions, deprecationReason) {
+exports.toOperatorConfig = function ({
+  operators,
+  typeName,
+  extensions,
+  directives,
+  deprecationReason
+}) {
   return operators.reduce((fields, name) => {
-    const { type = typeName, description, extensions } = allOperators[name]
+    const op = allOperators[name]
+    const type = op.type || typeName
 
     fields[name] = {
       type: listFields.includes(name) ? [type] : type,
-      extensions: { ...extensions, ...extraExtensions },
-      description: deprecationReason || description,
+      extensions: { ...op.extensions, ...extensions },
+      description: deprecationReason || op.description,
+      directives,
       deprecationReason
     }
 

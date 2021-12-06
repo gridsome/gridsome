@@ -767,7 +767,6 @@ test('setup custom filter input type @reference by', async () => {
 
   expect(Object.keys(inputType.fields).sort()).toEqual(['id', 'item', 'items', 'related'])
   expect(type).toEqual(schema.getType('ProductQueryOperatorInput'))
-  expect(extensions.directives[0]).toMatchObject({ name: 'reference', args: { by: 'test' } })
   expect(extensions.isInferred).toBeUndefined()
 })
 
@@ -787,7 +786,6 @@ test('setup custom filter input type with @proxy', async () => {
 
   expect(Object.keys(inputType.fields).sort()).toEqual(['id', 'item', 'items', 'testRelated'])
   expect(type).toEqual(schema.getType('ProductQueryOperatorInput'))
-  expect(extensions.directives[0]).toMatchObject({ name: 'proxy', args: { from: 'related' } })
   expect(extensions.isInferred).toBeUndefined()
 })
 

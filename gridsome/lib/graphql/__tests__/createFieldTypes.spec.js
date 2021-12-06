@@ -155,7 +155,7 @@ test('camelcase fieldNames', () => {
 
   expect(field_name.key).toEqual('field_name')
   expect(field_name.fieldName).toEqual('fieldName')
-  expect(field_name.extensions.directives[0]).toMatchObject({ name: 'proxy', args: { from: 'field_name' } })
+  expect(field_name.directives[0]).toMatchObject({ name: 'proxy', args: { from: 'field_name' } })
   expect(an_object.fieldName).toEqual('anObject')
   expect(an_object.value.sub_field.fieldName).toEqual('subField')
 })

@@ -16,7 +16,9 @@ const {
 
 function createFilterInput (schemaComposer, typeComposer) {
   const inputTypeName = `${typeComposer.getTypeName()}FilterInput`
-  const inputTypeComposer = typeComposer.getInputTypeComposer()
+  const inputTypeComposer = typeComposer.getInputTypeComposer({
+    fallbackType: null // Skip fields with union types.
+  })
   const filterTypeComposer = schemaComposer.getOrCreateITC(inputTypeName)
 
   typeComposer.setInputTypeComposer(filterTypeComposer)
@@ -31,6 +33,7 @@ function createFilterInput (schemaComposer, typeComposer) {
   inputTypeComposer.getFieldNames().forEach(fieldName => {
     const fieldTypeComposer = typeComposer.getFieldTC(fieldName)
     const extensions = typeComposer.getFieldExtensions(fieldName)
+    const directives = typeComposer.getFieldDirectives(fieldName)
 
     let type
 
@@ -56,6 +59,7 @@ function createFilterInput (schemaComposer, typeComposer) {
     if (type) {
       filterTypeComposer.setField(fieldName, { type })
       filterTypeComposer.setFieldExtensions(fieldName, extensions)
+      filterTypeComposer.setFieldDirectives(fieldName, directives)
     }
   })
 
@@ -117,16 +121,21 @@ function createReferenceInputTypeComposer({
   const deprecationReason = 'Use the id field instead.'
   if (isPlural) {
     operatorTypeComposer.addFields(
-      toOperatorConfig(listOperators, 'ID', extensions, deprecationReason)
+      toOperatorConfig({
+        typeName: 'ID',
+        operators: listOperators,
+        extensions,
+        deprecationReason
+      })
     )
   } else {
     operatorTypeComposer.addFields(
-      toOperatorConfig(
-        without(scalarOperators.ID, 'exists'),
-        'ID',
+      toOperatorConfig({
+        typeName: 'ID',
+        operators: without(scalarOperators.ID, 'exists'),
         extensions,
         deprecationReason
-      )
+      })
     )
   }
 
@@ -200,14 +209,16 @@ function createInputTypeName (typeComposer, fieldName) {
 
 function createInputFields (typeComposer, fieldName, typeName, operators) {
   const fieldTypeComposer = typeComposer.getFieldTC(fieldName)
-  const fieldExtensions = typeComposer.getFieldExtensions(fieldName)
-  const extensions = {}
 
-  if (hasNodeReference(fieldTypeComposer)) {
-    extensions.isNodeReference = true
-  }
-
-  return toOperatorConfig(operators, typeName, { ...fieldExtensions, ...extensions })
+  return toOperatorConfig({
+    typeName,
+    operators,
+    directives: typeComposer.getFieldDirectives(fieldName),
+    extensions: {
+      ...typeComposer.getFieldExtensions(fieldName),
+      isNodeReference: hasNodeReference(fieldTypeComposer)
+    }
+  })
 }
 
 module.exports = {

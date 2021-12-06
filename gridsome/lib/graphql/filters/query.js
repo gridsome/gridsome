@@ -38,13 +38,10 @@ function toFilterArgs (filter, typeComposer, currentKey = '') {
     }
 
     if (field instanceof InputTypeComposer) {
-      const { directives } = extensions
-
-      if (Array.isArray(directives)) {
-        const index = findLastIndex(directives, ['name', 'proxy'])
-        if (directives[index] && directives[index].args) {
-          key = directives[index].args.from || key
-        }
+      const directives = typeComposer.getFieldDirectives(key)
+      const index = findLastIndex(directives, ['name', 'proxy'])
+      if (directives[index] && directives[index].args) {
+        key = directives[index].args.from || key
       }
 
       const suffix = extensions.isReference ? '' : `.${key}`
@@ -58,7 +55,7 @@ function toFilterArgs (filter, typeComposer, currentKey = '') {
 
       Object.assign(args, newArgs)
     } else {
-      args[currentKey] = convertFilterValues({ [key]: value }, extensions)
+      args[currentKey] = convertFilterValues({ [key]: value })
     }
   }
 

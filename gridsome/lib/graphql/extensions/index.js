@@ -73,10 +73,9 @@ function applyFieldExtensions (typeComposer, customExtensions = {}) {
   }
 
   typeComposer.getFieldNames().forEach(fieldName => {
-    const extensions = typeComposer.getFieldExtensions(fieldName)
-    const directives = (extensions.directives || []).filter(({ name }) =>
-      allFieldExtensions.hasOwnProperty(name)
-    )
+    const directives = typeComposer
+      .getFieldDirectives(fieldName)
+      .filter(({ name }) => allFieldExtensions.hasOwnProperty(name))
 
     directives.forEach(({ name, args }) => {
       const { apply } = allFieldExtensions[name] || {}

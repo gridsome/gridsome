@@ -179,12 +179,9 @@ class Collection {
     const validName = this.createFieldName(fieldName)
 
     if (validName !== fieldName) {
-      options.extensions = {
-        ...options.extensions,
-        directives: [
-          { name: 'proxy', args: { from: fieldName } }
-        ]
-      }
+      options.directives = [
+        { name: 'proxy', args: { from: fieldName } }
+      ]
     }
 
     this._refs[validName] = options

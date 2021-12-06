@@ -111,7 +111,7 @@ function getNodeReferenceFields (typeComposer, currentPath = []) {
 
     for (const fieldName in fields) {
       const fieldTypeComposer = typeComposer.getFieldTC(fieldName)
-      const { directives = [] } = typeComposer.getFieldExtensions(fieldName)
+      const directives = typeComposer.getFieldDirectives(fieldName)
 
       if (fieldTypeComposer instanceof ObjectTypeComposer) {
         if (fieldTypeComposer.hasInterface('Node')) {
@@ -197,10 +197,9 @@ function convertExtensionsToDirectives (options) {
           fieldExtensions.push({ name, args: fieldConfig.extensions[name] })
           delete fieldConfig.extensions[name]
         }
-        fieldConfig.extensions.directives = fieldExtensions
-      } else if (Array.isArray(fieldConfig.extensions)) {
-        const directives = fieldConfig.extensions
-        fieldConfig.extensions = { directives }
+        fieldConfig.directives = fieldExtensions
+      } else {
+        fieldConfig.directives = fieldConfig.extensions
       }
     }
   }
@@ -264,6 +263,7 @@ function processObjectTypeFields (schemaComposer, typeComposer, extensions) {
     const fieldConfig = typeComposer.getFieldConfig(fieldName)
     const fieldTypeComposer = typeComposer.getFieldTC(fieldName)
     const extensions = typeComposer.getFieldExtensions(fieldName)
+    const directives = typeComposer.getFieldDirectives(fieldName)
     const typeName = fieldTypeComposer.getTypeName()
 
     if (
@@ -308,6 +308,7 @@ function processObjectTypeFields (schemaComposer, typeComposer, extensions) {
     }
 
     typeComposer.setFieldExtensions(fieldName, extensions)
+    typeComposer.setFieldDirectives(fieldName, directives)
   }
 
   applyFieldExtensions(typeComposer, extensions)
