@@ -16,7 +16,6 @@ const tasks = [
   function configure () {
     openSync(path.join(projectDir, 'yarn.lock'), 'w')
     spawnSync('yarn', ['set', 'version', 'berry'], projectOpts)
-    spawnSync('yarn', ['set', 'version', 'canary'], projectOpts)
     spawnSync('yarn', ['config', 'set', 'pnpFallbackMode', 'none'], projectOpts)
     spawnSync('yarn', ['config', 'set', 'compressionLevel', 0], projectOpts)
   },
