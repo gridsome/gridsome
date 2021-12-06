@@ -19,7 +19,9 @@ module.exports = async (context, args) => {
 
   await app.plugins.run('beforeBuild', { context, config })
 
-  await fs.emptyDir(config.outputDir)
+  if (config.emptyOutputDir) {
+    await fs.emptyDir(config.outputDir)
+  }
 
   const stats = await runWebpack(app)
   const hashString = config.cacheBusting ? stats.hash : 'gridsome'

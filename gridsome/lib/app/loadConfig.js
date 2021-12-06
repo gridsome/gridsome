@@ -113,7 +113,8 @@ module.exports = async (context, options = {}) => {
   config.publicPath = config.pathPrefix ? `${config.pathPrefix}/` : '/'
   config.staticDir = resolve('static')
 
-  config.outputDir = resolve(localConfig.outputDir || localConfig.outDir || 'dist')
+  config.outputDir = resolve(localConfig.outputDir || 'dist')
+  config.emptyOutputDir = localConfig.emptyOutputDir !== false
   config.assetsDir = path.join(config.outputDir, assetsDir)
   config.imagesDir = path.join(config.assetsDir, 'static')
   config.filesDir = path.join(config.assetsDir, 'files')
