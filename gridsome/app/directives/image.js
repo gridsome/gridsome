@@ -83,7 +83,7 @@ function loadImage (el) {
     addClass(el, 'g-image--error')
   }
 
-  el.srcset = srcset
-  el.sizes = sizes
+  if (srcset) el.srcset = srcset
+  if (sizes) el.sizes = sizes
   el.src = src
 }
