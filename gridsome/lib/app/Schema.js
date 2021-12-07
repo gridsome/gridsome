@@ -53,13 +53,28 @@ class Schema {
 
   runQuery (docOrQuery, variables = {}, operationName) {
     const context = this.createContext()
-    const func = typeof docOrQuery === 'string' ? graphql : execute
 
     if (!this._schema) {
       throw new Error(`GraphQL schema is not generated yet...`)
     }
 
-    return func(this._schema, docOrQuery, undefined, context, variables, operationName)
+    if (typeof docOrQuery === 'string') {
+      return graphql({
+        schema: this._schema,
+        source: docOrQuery,
+        contextValue: context,
+        variableValues: variables,
+        operationName
+      })
+    }
+
+    return execute({
+      schema: this._schema,
+      document: docOrQuery,
+      contextValue: context,
+      variableValues: variables,
+      operationName
+    })
   }
 }
 
