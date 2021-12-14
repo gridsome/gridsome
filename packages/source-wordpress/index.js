@@ -264,7 +264,7 @@ class WordPressSource {
 
     for (const key in fields) {
       if (key.startsWith('_')) continue // skip links and embeds etc
-      res[camelCase(key)] = this.normalizeFieldValue(fields[key])
+      res[camelCase(key).replace(/[@]+/g, '_'] = this.normalizeFieldValue(fields[key])
     }
 
     return res
