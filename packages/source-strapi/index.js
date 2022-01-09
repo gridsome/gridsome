@@ -37,10 +37,11 @@ module.exports = function (api, options) {
         const collection = addCollection({ typeName, dateField: 'created_at' })
         const isSingleType = false
         return query({ apiURL, resourceName, jwtToken, queryLimit, isSingleType })
-          .then(docs => docs.forEach(doc => {
-            collection.addNode(doc)
+          .then(docs => {
+            for (const docKey in docs) {
+              collection.addNode(docs[docKey])
+            }
           })
-          )
       })),
       Promise.all(singleTypes.map(resourceName => {
         const typeName = upperFirst(camelCase(`${options.typeName} ${resourceName}`))
