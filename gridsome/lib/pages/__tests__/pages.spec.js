@@ -195,7 +195,7 @@ test('cache parsed components', async () => {
     })
   })
 
-  const parseComponent = jest.spyOn(pages.hooks.parseComponent.for('vue'), 'call')
+  const parseComponent = jest.spyOn(pages.hooks.parseComponent.for('vue')._x, 0)
 
   pages.createPage({ path: '/page/1', component: './__fixtures__/PagedPage.vue' })
   pages.createPage({ path: '/page/2', component: './__fixtures__/PagedPage.vue' })
