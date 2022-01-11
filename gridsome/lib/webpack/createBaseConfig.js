@@ -355,11 +355,11 @@ module.exports = (app, { isProd, isServer }) => {
   if (!isProd) {
     config.devServer.port(projectConfig.port)
     config.devServer.host(projectConfig.host)
-    config.devServer.https(projectConfig.https)
     config.devServer.historyApiFallback(true)
     config.devServer.hot(true)
 
     config.devServer.merge({
+      server: projectConfig.https ? 'https' : 'http',
       client: {
         overlay: true
       }

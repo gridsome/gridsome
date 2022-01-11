@@ -19,28 +19,33 @@ module.exports = async (context, args) => {
   let isDone = false
 
   compiler.hooks.infrastructureLog.tap('gridsome', (name, type, messages) => {
-    if (type === 'error') return
+    if (name !== 'webpack.Progress' && !isDone) {
+      return false // Prevents logging until webpack is ready.
+    }
 
     if (name === 'webpack.Progress' && type === 'status' && messages[1] === 'done') {
       return false
     }
 
-    if (name === 'webpack-dev-middleware') return false
     if (name === 'webpack-dev-server') {
-      if (isDone) {
-        const message = messages
-          .filter(m => !m.includes('Project is running at'))
-          .filter(m => !m.includes('fallback'))
-          .join(' ')
-          .replace('Loopback:', 'Project is running at:')
-          .replace(/(https?:\/\/[^\s]+)/g, chalk.cyan('$1'))
-          .replace(app.context, '.')
+      if (!isDone) return false
 
-        if (message) {
-          console.log(`  ${message}`)
-        }
+      const message = messages
+        .join(' ')
+        .replace(/(https?:\/\/[^\s]+)/g, chalk.cyan('$1'))
+        .replace(app.context, '.')
+
+      if (message.startsWith('Loopback:')) {
+        const url = message.match(/https?:\/\/.*/) || []
+        console.log(`  Loopback: ${chalk.cyan(url)}`)
+        console.log(`  Explore GraphQL data at: ${chalk.cyan(`${url}___explore`)}`)
+      } else if (message.startsWith('[connect-history-api-fallback]')) {
+        return false
+      } else  {
+        console.log(`  ${message}`)
       }
-      return isDone
+
+      return false
     }
   })
 
@@ -59,7 +64,6 @@ module.exports = async (context, args) => {
     }
 
     server.logStatus()
-    console.log()
   })
 
   await server.start()
@@ -70,7 +74,7 @@ async function createDevServer(app, compiler) {
   const webpackConfig = app.compiler.getClientConfig()
   const devServer = webpackConfig.devServer || {}
   const onListening = devServer.onListening
-  const onBeforeSetupMiddleware = devServer.onBeforeSetupMiddleware
+  const setupMiddlewares = devServer.setupMiddlewares
 
   devServer.static = [app.config.staticDir, ...(devServer.static || [])]
 
@@ -79,11 +83,15 @@ async function createDevServer(app, compiler) {
     onListening && onListening(server)
   }
 
-  devServer.onBeforeSetupMiddleware = (server) => {
-    setupGraphQLMiddleware(app, server)
-    setupAssetsMiddleware(app, server)
+  devServer.setupMiddlewares = (middlewares, server) => {
+    setupAssetsMiddleware(middlewares, app)
+    setupGraphQLMiddleware(middlewares, app)
+
     app.plugins.configureServer(server.app)
-    onBeforeSetupMiddleware && onBeforeSetupMiddleware(server)
+
+    return setupMiddlewares
+      ? setupMiddlewares(middlewares, server)
+      : middlewares
   }
 
   return new WebpackDevServer(devServer, compiler)
@@ -104,54 +112,63 @@ function createSocketServer(app, server) {
   })
 }
 
-function setupGraphQLMiddleware(app, server) {
+function setupGraphQLMiddleware(middlewares, app) {
   const express = require('express')
   const { graphqlHTTP } = require('express-graphql')
   const { default: playground } = require('graphql-playground-middleware-express')
   const graphqlMiddleware = require('./server/middlewares/graphql')
+  const index = middlewares.findIndex((m) => m.name === 'connect-history-api-fallback')
 
-  server.app.use(
-    '/___graphql',
-    express.json(),
-    graphqlMiddleware(app),
-    graphqlHTTP({
-      schema: app.schema.getSchema(),
-      context: app.schema.createContext(),
-      customFormatErrorFn: err => ({
-        message: err.message,
-        stringified: err.toString()
-      }),
-      extensions: ({ variables }) => {
-        if (variables && variables.__path) {
-          const page = app.pages._pages.findOne({
-            path: variables.__path
-          })
-
-          const context = page
-            ? app.pages._createPageContext(page, variables)
-            : {}
-
-          return { context }
-        }
-      }
-    })
-  )
-
-  server.app.get(
-    '/___explore',
-    playground({
+  middlewares.splice(index, 0, {
+    name: 'gridsome-explore',
+    path: '/___explore',
+    middleware: playground({
       endpoint: '/___graphql',
       title: 'Gridsome GraphQL Explorer',
       faviconUrl: 'https://avatars0.githubusercontent.com/u/17981963?s=200&v=4'
     })
-  )
+  })
+
+  middlewares.splice(index, 0, {
+    name: 'gridsome-graphql',
+    path: '/___graphql',
+    middleware: [
+      express.json(),
+      graphqlMiddleware(app),
+      graphqlHTTP({
+        schema: app.schema.getSchema(),
+        context: app.schema.createContext(),
+        customFormatErrorFn: err => ({
+          message: err.message,
+          stringified: err.toString()
+        }),
+        extensions: ({ variables }) => {
+          if (variables && variables.__path) {
+            const page = app.pages._pages.findOne({
+              path: variables.__path
+            })
+
+            const context = page
+              ? app.pages._createPageContext(page, variables)
+              : {}
+
+            return { context }
+          }
+        }
+      })
+    ]
+  })
 }
 
-function setupAssetsMiddleware(app, server) {
+function setupAssetsMiddleware(middlewares, app) {
   const assetsMiddleware = require('./server/middlewares/assets')
   const assetsDir = path.relative(app.config.outputDir, app.config.assetsDir)
   const assetsPath = forwardSlash(path.join(app.config.pathPrefix, assetsDir))
-  const assetsRE = new RegExp(`${assetsPath}/(files|static)/(.*)`)
+  const assetsRE = new RegExp(`^/${assetsPath}/(files|static)/(.*)`)
 
-  server.app.get(assetsRE, assetsMiddleware(app))
+  middlewares.push({
+    name: 'gridsome-assets',
+    path: assetsRE,
+    middleware: assetsMiddleware(app)
+  })
 }

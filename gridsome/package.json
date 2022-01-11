@@ -95,7 +95,7 @@
     "vue-template-compiler": "^2.6.13",
     "webpack": "^5.41.0",
     "webpack-chain": "^6.5.1",
-    "webpack-dev-server": "^4.2.1",
+    "webpack-dev-server": "^4.7.2",
     "webpack-merge": "^5.8.0",
     "yaml-loader": "^0.5.0"
   },
