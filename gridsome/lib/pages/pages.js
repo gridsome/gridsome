@@ -42,7 +42,7 @@ class Pages {
     })
 
     this._pages = new Collection('pages', {
-      indices: ['id'],
+      indices: ['id', 'internal.route'],
       unique: ['id', 'path'],
       disableMeta: true,
       adaptiveBinaryIndices: false
@@ -467,8 +467,8 @@ class Route {
   pages () {
     return this._pages
       .chain()
-      .simplesort('path', false)
       .find({ 'internal.route': this.id })
+      .simplesort('path', false)
       .data()
   }
 
