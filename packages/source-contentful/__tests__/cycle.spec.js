@@ -15,10 +15,6 @@ test('Decycle generates same string as JSON.stringify()', () => {
     }
   }
   expect(JSON.stringify(testObj)).toBe(JSON.stringify(cycleJs.decycle(testObj)))
-
-  const foo = { beta: 'beta' }
-  foo.check = foo
-  console.log(JSON.stringify(cycleJs.decycle(foo)))
 })
 
 test('Cyclic reference key', () => {
