@@ -1,6 +1,7 @@
 const camelCase = require('camelcase')
 const contentful = require('contentful')
 const createRichTextType = require('./lib/types/rich-text')
+const cycleJs = require('./lib/cycle')
 
 class ContentfulSource {
   static defaultOptions () {
@@ -98,7 +99,18 @@ class ContentfulSource {
         } else if (this.isReference(value)) {
           node[key] = this.createReference(value, actions)
         } else if (this.isRichText(value)) {
-          node[key] = JSON.stringify(value) // Rich Text
+          try {
+            node[key] = JSON.stringify(value)
+          } catch (err) {
+            // As Node.js is built on Chrome's JS engine, we target the Chrome specific TypeError message
+            if (err instanceof TypeError && err.message.includes('Converting circular structure to JSON')) {
+              // Use cycleJs.decycle to return an object to stringify
+              node[key] = JSON.stringify(cycleJs.decycle(value))
+            } else {
+              // Other type errors such as "BigInt value can't be serialized in JSON" are rethrown
+              throw err
+            }
+          }
         } else {
           node[key] = value
         }
@@ -126,13 +138,13 @@ class ContentfulSource {
 
   createReference (item, store) {
     switch (item.sys.type) {
-      case 'Asset' :
+      case 'Asset':
         return store.createReference(
           this.createTypeName('asset'),
           item.sys.id
         )
 
-      case 'Entry' :
+      case 'Entry':
         const contentType = this.typesIndex[item.sys.contentType.sys.id]
         const typeName = this.createTypeName(contentType.name)
 
