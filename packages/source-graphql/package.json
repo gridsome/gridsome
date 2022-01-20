@@ -14,10 +14,8 @@
     "@graphql-tools/utils": "^8.5.3",
     "@graphql-tools/wrap": "^8.3.2",
     "node-fetch": "^2.6.1",
-    "graphql": "^16.0.1"
-  },
-  "peerDependencies": {
-    "gridsome": "0.x"
+    "graphql": "^16.0.1",
+    "gridsome": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

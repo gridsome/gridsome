@@ -12,10 +12,8 @@
     "airtable"
   ],
   "dependencies": {
-    "airtable": "^0.7.2"
-  },
-  "peerDependencies": {
-    "gridsome": "0.x"
+    "airtable": "^0.7.2",
+    "gridsome": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

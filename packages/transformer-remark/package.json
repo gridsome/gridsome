@@ -27,10 +27,8 @@
     "sanitize-html": "^2.3.2",
     "unified": "^7.0.0",
     "unist-util-visit": "^1.4.0",
-    "vfile": "^4.0.0"
-  },
-  "peerDependencies": {
-    "gridsome": "0.x"
+    "vfile": "^4.0.0",
+    "gridsome": "workspace:*"
   },
   "publishConfig": {
     "access": "public"
