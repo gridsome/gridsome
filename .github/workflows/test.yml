@@ -43,4 +43,4 @@ jobs:
       - name: Install dependencies
         run: pnpm install
       - name: Run tests
-        run: pnpm test:unit --ci
+        run: pnpm test:unit -- --ci
