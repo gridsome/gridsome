@@ -9,7 +9,7 @@ module.exports = function attacher () {
 
     const links = []
 
-    visit(tree, 'link', node => links.push(node))
+    visit(tree, 'link', node => { links.push(node) })
 
     for (const node of links) {
       const path = file.data.node
