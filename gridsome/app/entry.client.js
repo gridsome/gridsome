@@ -6,7 +6,7 @@ import config from '#gridsome/config'
 import plugins from '#gridsome/plugins-client'
 import linkDirective from './directives/link'
 import imageDirective from './directives/image'
-import catchLinksDirective from './directives/catch-links'
+import catchLinksDirective, { onCatchLink } from './directives/catch-links'
 import { isFunc, isNil } from './utils/lang'
 
 Vue.directive('g-link', linkDirective)
@@ -36,6 +36,10 @@ if (process.env.NODE_ENV === 'production') {
         }
       })
   })
+}
+
+if (config.catchLinks !== false) {
+  addEventListener('click', onCatchLink, false)
 }
 
 router.onError((err) => {
