@@ -9,7 +9,7 @@ module.exports = function attacher (options = {}) {
 
     const images = []
 
-    visit(tree, 'image', node => images.push(node))
+    visit(tree, 'image', node => { images.push(node) })
 
     for (const node of images) {
       const data = node.data || {}
