@@ -58,12 +58,12 @@ async function runWebpack (app) {
   const compileTime = hirestime()
 
   if (!process.stdout.isTTY) {
-    info(`Compiling assets...`)
+    log(`Compiling assets...`)
   }
 
   const stats = await app.compiler.run()
 
-  info(`Compile assets - ${compileTime(hirestime.S)}s`)
+  log(`Compile assets - ${compileTime(hirestime.S)}s`)
 
   return stats
 }
@@ -93,7 +93,7 @@ async function renderHTML (renderQueue, app, hash) {
 
   worker.end()
 
-  info(`Render HTML (${renderQueue.length} files) - ${timer(hirestime.S)}s`)
+  log(`Render HTML (${renderQueue.length} files) - ${timer(hirestime.S)}s`)
 }
 
 async function processFiles (files) {
@@ -104,7 +104,7 @@ async function processFiles (files) {
     await fs.copy(file.filePath, file.destPath)
   }
 
-  info(`Process files (${totalFiles} files) - ${timer(hirestime.S)}s`)
+  log(`Process files (${totalFiles} files) - ${timer(hirestime.S)}s`)
 }
 
 async function processImages (images, config) {

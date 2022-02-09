@@ -6,7 +6,7 @@ exports.log = function (message, tag) {
 }
 
 exports.info = function (message, tag) {
-  log('warn', null, message, tag)
+  log('info', 'dim', message, tag)
 }
 
 exports.warn = function (message, tag) {

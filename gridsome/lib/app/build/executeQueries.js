@@ -6,7 +6,7 @@ const hirestime = require('hirestime')
 const { validate, specifiedRules } = require('graphql')
 const { createQueryVariables } = require('../../graphql/utils')
 const sysinfo = require('../../utils/sysinfo')
-const { error, info } = require('../../utils/log')
+const { error, log } = require('../../utils/log')
 
 async function executeQueries (renderQueue, { context, pages, schema, graphql }, hash) {
   const validated = new Set()
@@ -67,7 +67,7 @@ async function executeQueries (renderQueue, { context, pages, schema, graphql },
     await fs.outputFile(entry.dataOutput, content)
   }, { concurrency: sysinfo.cpus.physical })
 
-  info(`Execute GraphQL (${renderQueue.length} queries) - ${timer(hirestime.S)}s`)
+  log(`Execute GraphQL (${renderQueue.length} queries) - ${timer(hirestime.S)}s`)
 }
 
 module.exports = executeQueries

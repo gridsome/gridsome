@@ -1,7 +1,7 @@
 const path = require('path')
 const autoBind = require('auto-bind')
 const hirestime = require('hirestime')
-const { info } = require('../utils/log')
+const { info, log } = require('../utils/log')
 const isRelative = require('is-relative')
 const { version } = require('../../package.json')
 const { AsyncSeriesHook, SyncWaterfallHook } = require('tapable')
@@ -50,7 +50,7 @@ class App {
           const timer = hirestime()
 
           const done = () => {
-            info(`${hook.label || hook.name} - ${timer(hirestime.S)}s`)
+            log(`${hook.label || hook.name} - ${timer(hirestime.S)}s`)
             if (callback) callback()
           }
 
@@ -70,7 +70,7 @@ class App {
 
     await this.hooks.bootstrap.promise()
 
-    info(`Bootstrap finish - ${timer(hirestime.S)}s`)
+    log(`Bootstrap finish - ${timer(hirestime.S)}s`)
 
     this.isBootstrapped = true
 
@@ -102,7 +102,7 @@ class App {
 
     this.config = Object.freeze(this.config)
 
-    info(`Initializing plugins...`)
+    log(`Initializing plugins...`)
 
     this.plugins.initialize()
 
