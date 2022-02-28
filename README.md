@@ -81,18 +81,18 @@ Gridsome sites are usually not connected to any database and can be hosted entir
 
 ## How to Contribute
 
-Install [Node.js ^12.13.0 || ^14.0.0 || >=16.0.0](https://nodejs.org/en/download/) or higher and [Yarn classic](https://classic.yarnpkg.com/en/docs/install/).
+Install [Node.js ^12.13.0 || ^14.0.0 || >=16.0.0](https://nodejs.org/en/download/) or higher and [pnpm](https://pnpm.io).
 
 1. Clone this repository.
 2. Create a new Gridsome project inside the `./projects` folder.
-3. Enter the new project folder and run `yarn install`.
+3. Enter the new project folder and run `pnpm install`.
 4. The project will now use the local packages when you run `gridsome develop`.
 
 Make sure your test project has a version number in its `package.json` if you use an existing project.
 
-To use the local version of `@gridsome/cli` as the global command, enter the `./packages/cli` folder and run `npm link`.
+To use the local version of `@gridsome/cli` as the global command, enter the `./packages/cli` folder and run `pnpm link`.
 
-Yarn will add dependencies from your test projects to the root `yarn.lock` file. So you should not commit changes in that file unless you have added dependencies to any of the core packages. If you need to commit it, remove your projects from the `./projects` folder temporary and run `yarn install` in the root folder. Yarn will then clean up the lock file with only necessary dependencies. Commit the file and move your projects back and run `yarn install` again to start developing.
+Yarn will add dependencies from your test projects to the root `pnpm-lock.yaml` file. So you should not commit changes in that file unless you have added dependencies to any of the core packages. If you need to commit it, remove your projects from the `./projects` folder temporary and run `pnpm install` in the root folder. Yarn will then clean up the lock file with only necessary dependencies. Commit the file and move your projects back and run `pnpm install` again to start developing.
 
 ### Code of Conduct
 

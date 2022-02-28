@@ -1,0 +1,5 @@
+packages:
+  - 'gridsome'
+  - 'packages/*'
+  - 'projects/*'
+  - 'packages/cli/__tests__/__fixtures__/project'

@@ -1,6 +1,6 @@
 {
   "name": "test",
   "dependencies": {
-    "gridsome": "*"
+    "gridsome": "workspace:*"
   }
 }

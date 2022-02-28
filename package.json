@@ -1,17 +1,13 @@
 {
   "private": true,
-  "workspaces": [
-    "gridsome",
-    "packages/*",
-    "projects/*"
-  ],
   "scripts": {
     "bootstrap": "lerna bootstrap",
     "test:unit": "GRIDSOME_TEST=unit jest --runInBand",
     "test:e2e": "GRIDSOME_TEST=e2e jest --runInBand",
     "test:pnp": "node scripts/pnp-test.js",
     "changelog": "node scripts/changelog.js",
-    "lint": "eslint \"@(gridsome|packages)/**/*.js\""
+    "lint": "eslint \"@(gridsome|packages)/**/*.js\"",
+    "preinstall": "npx only-allow pnpm"
   },
   "devDependencies": {
     "@lerna/conventional-commits": "^3.22.0",
@@ -32,6 +28,6 @@
   },
   "engines": {
     "node": "^12.13.0 || ^14.0.0 || >=16.0.0",
-    "yarn": "^1.5.1"
+    "pnpm": "^6.5.1"
   }
 }
