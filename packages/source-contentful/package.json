@@ -17,12 +17,15 @@
     "contentful": "^6.1.1"
   },
   "peerDependencies": {
-    "gridsome": ">= 0.6.0"
+    "gridsome": "workspace:^0.7.23"
   },
   "publishConfig": {
     "access": "public"
   },
   "engines": {
     "node": "^12.13.0 || ^14.0.0 || >=16.0.0"
+  },
+  "devDependencies": {
+    "gridsome": "workspace:^0.7.23"
   }
 }
