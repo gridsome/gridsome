@@ -35,8 +35,11 @@
     "unist-util-visit": "^1.4.0",
     "vue-loader": "^15.7.1"
   },
+  "devDependencies": {
+    "gridsome": "workspace:^0.7.23"
+  },
   "peerDependencies": {
-    "gridsome": "0.x"
+    "gridsome": "workspace:^0.7.23"
   },
   "publishConfig": {
     "access": "public"

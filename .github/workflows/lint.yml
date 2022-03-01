@@ -22,12 +22,19 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Cache dependencies
-        uses: actions/cache@v2
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2.2.1
         with:
-          path: '**/node_modules'
-          key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+          version: 6.31.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          cache: 'pnpm'
+
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: pnpm install
+
       - name: Run linter
-        run: yarn lint
+        run: pnpm run lint
