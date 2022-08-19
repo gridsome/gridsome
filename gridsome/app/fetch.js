@@ -58,7 +58,7 @@ export default (route, options = {}) => {
 
   return new Promise((resolve, reject) => {
     const usePath = route.name === NOT_FOUND_NAME ? NOT_FOUND_PATH : route.path
-    const jsonPath = route.meta.dataPath || unslashEnd(usePath) + '/index.json'
+    const jsonPath = route.meta.dataPath || unslashEnd(usePath) + '/index.json?h=' + hash
     const absPath = unslashEnd(dataUrl) + jsonPath
 
     if (shouldPrefetch && !isLoaded[jsonPath]) {
