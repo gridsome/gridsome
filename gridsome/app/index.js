@@ -21,3 +21,13 @@ export function useMeta(meta) {
   instance.proxy.$options.metaInfo = meta
   instance.proxy._vueMeta = true
 }
+
+export function useRouter() {
+  const instance = getCurrentInstance()
+  return instance.proxy.$router
+}
+
+export function useRoute() {
+  const instance = getCurrentInstance()
+  return instance.proxy.$route
+}
