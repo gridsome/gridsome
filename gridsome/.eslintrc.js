@@ -22,5 +22,15 @@ module.exports = {
     'no-console': 'off',
     // Allow unresolved imports
     'import/no-unresolved': 'off',
-  }
+  },
+  overrides: [
+    {
+      files: [
+        '**/__tests__/**/*.js'
+      ],
+      rules: {
+        'vue/multi-word-component-names': 'off'
+      }
+    }
+  ]
 }

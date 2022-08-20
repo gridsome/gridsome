@@ -1,11 +1,11 @@
-import Vue from 'vue'
+import Vue, { set } from 'vue'
 import { unslash } from '../utils/helpers'
 
 const cache = Vue.observable({})
 const normalize = path => unslash(path) || '/'
 
 export function setResults (path, res) {
-  return Vue.set(cache, normalize(path), res)
+  return set(cache, normalize(path), res)
 }
 
 export function getResults (path) {
