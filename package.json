@@ -2,6 +2,7 @@
   "private": true,
   "workspaces": [
     "gridsome",
+    "playground",
     "packages/*",
     "projects/*"
   ],
