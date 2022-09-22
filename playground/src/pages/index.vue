@@ -1,8 +1,10 @@
-<script setup>
-import { useMeta } from 'gridsome'
+<script lang="ts" setup>
+import { useMetaInfo, usePageQuery } from 'gridsome'
 
-useMeta({
-  title: 'Hello, world!',
+const data = usePageQuery()
+
+useMetaInfo({
+  title: `Hello, ${data?.metadata.siteName}!`,
   bodyAttrs: {
     class: ['dark-mode', 'mobile']
   }
@@ -16,15 +18,27 @@ useMeta({
     <p>
       Lorem ipsum dolor sit amet, consectetur adipisicing elit. Pariatur excepturi labore tempore expedita, et iste tenetur suscipit explicabo! Dolores, aperiam non officia eos quod asperiores
     </p>
-    <p class="home-links">
-      <a href="https://gridsome.org/docs/" target="_blank" rel="noopener">Gridsome Docs</a>
-      <a href="https://github.com/gridsome/gridsome" target="_blank" rel="noopener">GitHub</a>
-    </p>
+    <ul>
+      <li v-for="{ node } of data?.allPost.edges" :key="node.id">
+        <g-link :to="node.path">{{ node.title }}</g-link>
+      </li>
+    </ul>
   </Layout>
 </template>
 
-<style>
-.home-links a {
-  margin-right: 1rem;
+<page-query>
+query {
+  metadata {
+    siteName
+  }
+  allPost {
+    edges {
+      node {
+        id
+        title
+        path
+      }
+    }
+  }
 }
-</style>
+</page-query>

@@ -1,7 +1,7 @@
-import Vue, { set } from 'vue'
+import Vue, { set, shallowReactive } from 'vue'
 import { unslash } from '../utils/helpers'
 
-const cache = Vue.observable({})
+const cache = shallowReactive({})
 const normalize = path => unslash(path) || '/'
 
 export function setResults (path, res) {

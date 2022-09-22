@@ -54,3 +54,11 @@ export function normalizePath (path = '/') {
 export const isMailtoLink = string => String(string).startsWith('mailto:')
 
 export const isTelLink = string => String(string).startsWith('tel:')
+
+export function throwNoCurrentInstance (method) {
+  if (process.env.NODE_ENV === 'development') {
+    throw new Error(
+      `${method}() must be called inside <script setup> or setup().`
+    )
+  }
+}

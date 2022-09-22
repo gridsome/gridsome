@@ -1,4 +1,7 @@
 module.exports = {
   siteName: 'Gridsome',
-  plugins: []
+  plugins: [],
+  templates: {
+    Post: '/posts/:slug'
+  }
 }
