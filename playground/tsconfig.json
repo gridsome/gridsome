@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "allowJs": true,
+    "jsx": "preserve",
+    "isolatedModules": true,
+    "moduleResolution": "node"
+  },
+  "vueCompilerOptions": {
+    "target": 2.7
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.vue"
+  ]
+}
