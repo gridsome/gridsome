@@ -36,8 +36,8 @@ test('generate srcset for image', async () => {
   expect(result.filePath).toEqual(filePath)
   expect(result.src).toEqual('/assets/static/1000x600.97c148e.test.png')
   expect(result.sizes).toEqual('(max-width: 1000px) 100vw, 1000px')
-  expect(result.dataUri).toMatchSnapshot()
-  expect(result.imageHTML).toMatchSnapshot()
+  expect(result.dataUri).toMatch(/data:image\/svg\+xml/)
+  expect(withoutDataUri(result.imageHTML)).toMatchSnapshot()
   expect(result.noscriptHTML).toMatchSnapshot()
   expect(result.sets).toHaveLength(2)
   expect(result.srcset).toHaveLength(2)
@@ -109,7 +109,7 @@ test('resize image by width attribute', async () => {
   expect(queue.images.queue).toHaveLength(1)
   expect(result.src).toEqual('/assets/static/1000x600.6b65613.test.png')
   expect(result.sizes).toEqual('(max-width: 300px) 100vw, 300px')
-  expect(result.dataUri).toMatchSnapshot()
+  expect(result.dataUri).toMatch(/data:image\/svg\+xml/)
   expect(result.sets).toHaveLength(1)
   expect(result.srcset).toHaveLength(1)
   expect(result.sets[0].src).toEqual('/assets/static/1000x600.6b65613.test.png')
@@ -150,7 +150,7 @@ test('disable blur filter', async () => {
   const result = await queue.add(filePath, { blur: '0' })
 
   expect(queue.images.queue).toHaveLength(2)
-  expect(result.dataUri).toMatchSnapshot()
+  expect(result.dataUri).toMatch(/data:image\/svg\+xml/)
 })
 
 test('set custom quality', async () => {
@@ -191,7 +191,7 @@ test('placeholder with trace', async () => {
   const result = await queue.add(filePath)
 
   expect(queue.images.queue).toHaveLength(2)
-  expect(result.dataUri).toMatchSnapshot()
+  expect(result.dataUri).toMatch(/data:image\/svg\+xml/)
 })
 
 test('placeholder with dominant', async () => {
@@ -212,7 +212,7 @@ test('placeholder with dominant', async () => {
   const result = await queue.add(filePath)
 
   expect(queue.images.queue).toHaveLength(2)
-  expect(result.dataUri).toMatchSnapshot()
+  expect(result.dataUri).toMatch(/data:image\/svg\+xml/)
 })
 
 test('add custom attributes to markup', async () => {
@@ -444,7 +444,7 @@ test('disable lazy loading', async () => {
   const result = await queue.add(filePath, { immediate: true })
 
   expect(queue.images.queue).toHaveLength(2)
-  expect(result.imageHTML).toMatchSnapshot()
+  expect(withoutDataUri(result.imageHTML)).toMatchSnapshot()
   expect(result.noscriptHTML).toEqual('')
   expect(result.dataUri).toBeUndefined()
 })
@@ -459,7 +459,7 @@ test('skip srcset and dataUri', async () => {
   expect(result.srcset).toBeUndefined()
   expect(result.dataUri).toBeUndefined()
   expect(result.sizes).toBeUndefined()
-  expect(result.imageHTML).toMatchSnapshot()
+  expect(withoutDataUri(result.imageHTML)).toMatchSnapshot()
 })
 
 test('handle external image urls', async () => {
@@ -501,3 +501,7 @@ test('give useful error for null byte images', async () => {
 
   await expect(queue.add(filePath)).rejects.toThrow('Failed to process image')
 })
+
+function withoutDataUri(html) {
+  return html.replace(/src="data:image\/svg\+xml.*?"/g, 'src="..."')
+}
