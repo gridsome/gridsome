@@ -1,4 +1,4 @@
-import { getCurrentInstance, onMounted, onUnmounted, shallowReactive, ref, watch, computed, unref } from 'vue'
+import { getCurrentInstance, onUnmounted, shallowReactive, ref, watch, computed } from 'vue'
 import { getResults } from './graphql/shared'
 import { throwNoCurrentInstance } from './utils/helpers'
 
@@ -32,7 +32,7 @@ export function useMetaInfo(metaInfo) {
     ? computed(metaInfo)
     : ref(metaInfo)
 
-  $options.metaInfo = metaInfoRef
+  $options.metaInfo = metaInfo
 
   watch(metaInfoRef, (nextValue) => {
     instance.proxy.$metaInfo = nextValue
@@ -97,6 +97,18 @@ export function usePageQuery() {
   onUnmounted(unregister)
 
   return data
+}
+
+export function useStaticQuery() {
+  const instance = getCurrentInstance()
+
+  if (!instance) {
+    throwNoCurrentInstance('useStaticQuery')
+  }
+
+  const { $options } = instance.proxy
+
+  return $options.computed?.$static?.() ?? null
 }
 
 function isSameRoute(a, b) {
