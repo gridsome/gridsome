@@ -552,7 +552,7 @@ function normalizeImages (config = {}) {
       defaultQuality: Joi.number().default(75).min(0).max(100),
       backgroundColor: Joi.string().allow(null).default(null),
       defaultBlur: Joi.number().default(defaultPlaceholder.defaultBlur),
-      removeUnused: Joi.boolean().default(true),
+      purge: Joi.boolean().default(true),
       placeholder: Joi.alternatives()
         .default(defaultPlaceholder)
         .try([
