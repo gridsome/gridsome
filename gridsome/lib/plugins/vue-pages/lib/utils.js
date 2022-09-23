@@ -9,8 +9,11 @@ exports.dynamicPathRE = dynamicValuesRE
 
 exports.createPagePath = function (filePath, slugify = false) {
   const { dir, name } = path.parse(filePath)
-  const segments = dir.split('/')
-
+  let segments = dir.split('/')
+  let isWin = process.platform === "win32";
+  if (isWin) {
+    segments = dir.split("\\")
+  }
   if (!indexRE.test(name)) {
     segments.push(name)
   }
