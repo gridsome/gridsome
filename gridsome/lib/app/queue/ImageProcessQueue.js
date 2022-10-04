@@ -244,7 +244,11 @@ class ImageProcessQueue {
     const optionsHash = genHash(string).substr(0, 7)
     const contentHash = !process.env.GRIDSOME_TEST ? hash : 'test'
 
-    return `${name}.${optionsHash}.${contentHash}${ext}`
+    if (typeof this.config.images.contentHash === 'boolean' && !this.config.images.contentHash) {
+      return `${name}.${optionsHash}${ext}`
+    } else {
+      return `${name}.${optionsHash}.${contentHash}${ext}`
+    }
   }
 }
 
