@@ -146,7 +146,7 @@ async function processImages (images, config) {
   writeLine(`Process images (${totalAssets} images) - ${timer(hirestime.S)}s\n`)
 
   // Remove images that existed before this build started but isn't in use.
-  if (config.images.removeUnused && existingImages.length) {
+  if (config.images.purge && existingImages.length) {
     const newImages = images.queue.map((c) => path.basename(c.destPath))
     const extraImages = existingImages.filter((value) => !newImages.includes(value))
 
@@ -154,7 +154,7 @@ async function processImages (images, config) {
       for (const filename of extraImages) {
         await fs.remove(path.join(config.imagesDir, filename))
       }
-      info(`- Removed ${extraImages.length} images that where no longer in use`)
+      info(`- Deleted ${extraImages.length} images that where no longer in use`)
     }
   }
 }

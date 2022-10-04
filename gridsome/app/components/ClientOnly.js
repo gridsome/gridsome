@@ -5,10 +5,10 @@ export default {
   render (h, { parent, children }) {
     if (parent._isMounted) {
       return children
-    } else {
-      parent.$once('hook:mounted', () => {
-        parent.$forceUpdate()
-      })
     }
+    parent.$once('hook:mounted', () => {
+      parent.$forceUpdate()
+    })
+    return null
   }
 }

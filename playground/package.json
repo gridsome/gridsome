@@ -1,0 +1,13 @@
+{
+  "name": "playground",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "gridsome develop",
+    "build": "gridsome build",
+    "explore": "gridsome explore"
+  },
+  "dependencies": {
+    "gridsome": "^0.7.0"
+  }
+}

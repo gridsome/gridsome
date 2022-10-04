@@ -1,4 +1,14 @@
 const path = require('path')
+
+// Override the compiler resolver in `vue-loader` to make pnpm work.
+// Because `vue/compiler-sfc` and `vue-template-compiler` etc. are
+// dependencies of `gridsome` instead of the project.
+const compiler = require('vue-loader/lib/compiler')
+const orgResolveCompiler = compiler.resolveCompiler
+compiler.resolveCompiler = (ctx, loaderContext) => {
+  return orgResolveCompiler(path.resolve(__dirname, '../..'), loaderContext)
+}
+
 const glob = require('globby')
 const fs = require('fs-extra')
 const hash = require('hash-sum')
