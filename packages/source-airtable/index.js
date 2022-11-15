@@ -26,7 +26,7 @@ class AirtableSource {
     })
   }
 
-  loadRecordsToCollections = async function (options) {
+  async loadRecordsToCollections (options) {
     for (const table of options.tables) {
       const collection = this.addCollection({
         camelCasedFieldNames: true,
@@ -44,7 +44,7 @@ class AirtableSource {
     }
   }
 
-  addRecordToNode = function (item, table, collection) {
+  addRecordToNode (item, table, collection) {
     if (table.links && table.links.length) {
       item = this.addLinkedRecords(item, table)
     }
@@ -55,7 +55,7 @@ class AirtableSource {
     })
   }
 
-  addLinkedRecords = function (item, table) {
+  addLinkedRecords (item, table) {
     table.links.forEach(link => {
       if (!item.fields[link.fieldName]) {
         return item
