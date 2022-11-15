@@ -28,8 +28,13 @@ class Plugins {
     )
 
     app.hooks.bootstrap.tapPromise(
-      { name: 'createSchema', label: 'Create GraphQL schema', phase: BOOTSTRAP_GRAPHQL },
-      () => this.createSchema()
+        {name: 'afterLoadSources', label: 'After sources loaded', phase: BOOTSTRAP_SOURCES},
+        () => this.afterLoadSources()
+    )
+
+    app.hooks.bootstrap.tapPromise(
+        {name: 'createSchema', label: 'Create GraphQL schema', phase: BOOTSTRAP_GRAPHQL},
+        () => this.createSchema()
     )
 
     app.hooks.bootstrap.tapPromise(
@@ -87,10 +92,20 @@ class Plugins {
     })
   }
 
-  async createSchema() {
-    const results = await this.run('createSchema', api => {
-      return createSchemaActions(api, this._app)
-    })
+    /**
+     *
+     * @returns {Promise<[]|*[]>}
+     */
+    async afterLoadSources() {
+        return this.run('afterSourcesLoaded', api => {
+            return createSchemaActions(api, this._app)
+        })
+    }
+
+    async createSchema() {
+        const results = await this.run('createSchema', api => {
+            return createSchemaActions(api, this._app)
+        })
 
     // add custom schemas returned from the hook handlers
     results.forEach(schema =>
