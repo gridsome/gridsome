@@ -75,9 +75,17 @@ module.exports = async function (source, map) {
 
       options.__staticData = Vue.observable({ data })
 
-      options.computed = computed({
-        $static: () => options.__staticData.data
-      }, options.computed)
+      if (options.functional) {
+        options.__render = options.render
+        options.render = function(h, ctx) {
+          ctx.$static = options.__staticData.data
+          return options.__render(h, ctx)
+        }
+      } else {
+        options.computed = computed({
+          $static: () => options.__staticData.data
+        }, options.computed)
+      }
     }
   `
 
