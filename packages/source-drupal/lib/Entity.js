@@ -146,6 +146,7 @@ class Entity {
   }
 
   createReference (data) {
+    if (!data) return;
     const { createReference } = this.actions
     const typeName = this.createTypeName(data.type)
 
