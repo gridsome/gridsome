@@ -28,6 +28,7 @@ export default {
 
     switch (typeof props.src) {
       case 'string':
+        attrs.isLazy = !isImmediate
         attrs.src = props.src
 
         break
@@ -85,6 +86,7 @@ export default {
         domProps: {
           innerHTML: `` +
             `<img src="${props.src.src}" class="${stringifyClass(noscriptClassNames)}"` +
+            (attrs.isLazy ? ` loading="lazy"` : '') +
             (attrs.width ? ` width="${attrs.width}"`: '') +
             (attrs.height ? ` height="${attrs.height}"`: '') +
             (attrs.alt ? ` alt="${attrs.alt}"` : '') +
