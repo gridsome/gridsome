@@ -3,6 +3,7 @@ const fs = require('fs-extra')
 const slash = require('slash')
 const crypto = require('crypto')
 const mime = require('mime-types')
+const minimatch = require('minimatch')
 const { mapValues, trim, trimEnd } = require('lodash')
 
 const isDev = process.env.NODE_ENV === 'development'
@@ -23,6 +24,11 @@ class FilesystemSource {
   constructor (api, options) {
     this.api = api
     this.options = options
+    
+    this.options.index = typeof this.options.index === 'string'
+      ? [this.options.index]
+      : this.options.index;
+    
     this.context = options.baseDir
       ? api.resolve(options.baseDir)
       : api.context
@@ -131,7 +137,7 @@ class FilesystemSource {
 
     return {
       id: this.createUid(relPath),
-      path: this.createPath({ dir, name }, actions),
+      path: this.createPath({ dir, name, ext }, actions),
       fileInfo: {
         extension: ext,
         directory: dir,
@@ -157,7 +163,7 @@ class FilesystemSource {
     }
   }
 
-  createPath ({ dir, name }, actions) {
+  createPath ({ dir, name, ext }, actions) {
     const { permalinks = {}} = this.api.config
     const pathPrefix = trim(this.options.pathPrefix, '/')
     const pathSuffix = permalinks.trailingSlash ? '/' : ''
@@ -166,7 +172,7 @@ class FilesystemSource {
       return actions.slugify(segment)
     })
 
-    if (!this.options.index.includes(name)) {
+    if (!this.options.index.some(i => minimatch(`${name}${ext}`, i))) {
       segments.push(actions.slugify(name))
     }
 
