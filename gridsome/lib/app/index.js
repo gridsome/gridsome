@@ -1,4 +1,3 @@
-const App = require('./App')
 const { BOOTSTRAP_FULL } = require('../utils/constants')
 
 module.exports = async (
@@ -6,9 +5,11 @@ module.exports = async (
   options = {},
   phase = BOOTSTRAP_FULL
 ) => {
-  const app = new App(context, options)
+  const App = require('./App')
 
-  await app.bootstrap(phase)
+  const instance = new App(context, options)
 
-  return app
+  await instance.bootstrap(phase)
+
+  return instance
 }

@@ -1,199 +1,93 @@
-const path = require('path')
-const pMap = require('p-map')
 const fs = require('fs-extra')
+const pMap = require('p-map')
 const hirestime = require('hirestime')
-const { trim, chunk } = require('lodash')
+const { chunk } = require('lodash')
 const sysinfo = require('./utils/sysinfo')
-const { log, info } = require('./utils/log')
-
-const createApp = require('./app')
-const { createWorker } = require('./workers')
-const compileAssets = require('./webpack/compileAssets')
+const executeQueries = require('./app/build/executeQueries')
+const createRenderQueue = require('./app/build/createRenderQueue')
+const { logAllWarnings } = require('./utils/deprecate')
+const { log, info, writeLine } = require('./utils/log')
 
 module.exports = async (context, args) => {
   process.env.NODE_ENV = 'production'
   process.env.GRIDSOME_MODE = 'static'
 
   const buildTime = hirestime()
+  const createApp = require('./app')
   const app = await createApp(context, { args })
-  const { config, graphql } = app
+  const { config } = app
 
-  await app.dispatch('beforeBuild', { context, config })
-  await fs.ensureDir(config.cacheDir)
-  await fs.remove(config.outDir)
+  await app.plugins.run('beforeBuild', { context, config })
 
-  const queue = await createRenderQueue(app)
+  await fs.emptyDir(config.outputDir)
 
-  // 1. run all GraphQL queries and save results into json files
-  await app.dispatch('beforeRenderQueries', () => ({ context, config, queue }))
-  await renderPageQueries(queue, graphql)
+  const stats = await runWebpack(app)
+  const hashString = config.cacheBusting ? stats.hash : 'gridsome'
 
-  // 2. compile assets with webpack
-  await compileAssets(app)
+  const queue = createRenderQueue(app)
+  const redirects = app.hooks.redirects.call([], queue)
 
-  // 3. render a static index.html file for each possible route
-  await app.dispatch('beforeRenderHTML', () => ({ context, config, queue }))
-  await renderHTML(queue, config)
+  await executeQueries(queue, app, hashString)
+  await renderHTML(queue, app, hashString)
+  await processFiles(app.assets.files)
+  await processImages(app.assets.images, app.config)
 
-  // 4. process queued images
-  await app.dispatch('beforeProcessAssets', () => ({ context, config, queue: app.queue }))
-  await processFiles(app.queue.files, config)
-  await processImages(app.queue.images, config)
-
-  // 5. copy static files
+  // copy static files
   if (fs.existsSync(config.staticDir)) {
-    await fs.copy(config.staticDir, config.outDir)
+    await fs.copy(config.staticDir, config.outputDir, {
+      dereference: true
+    })
   }
 
-  // 6. clean up
-  await app.dispatch('afterBuild', () => ({ context, config, queue }))
-  await fs.remove(path.resolve(config.cacheDir, 'data'))
+  await app.plugins.run('afterBuild', () => ({ context, config, queue, redirects }))
+
+  // clean up
   await fs.remove(config.manifestsDir)
 
   log()
+  logAllWarnings(app.context)
   log(`  Done in ${buildTime(hirestime.S)}s`)
   log()
 
   return app
 }
 
-const {
-  PAGED_ROUTE,
-  STATIC_ROUTE,
-  STATIC_TEMPLATE_ROUTE,
-  DYNAMIC_TEMPLATE_ROUTE
-} = require('./utils/constants')
+async function runWebpack (app) {
+  const compileTime = hirestime()
+  const compileAssets = require('./webpack/compileAssets')
+  const { removeStylesJsChunk } = require('./webpack/utils')
 
-async function createRenderQueue ({ router, config, graphql }) {
-  const createPage = (page, currentPage = 1) => {
-    const isPager = currentPage > 1
-    const pagePath = page.path.replace(/\/+$/, '')
-    const fullPath = isPager ? `${pagePath}/${currentPage}` : page.path
-    const { route } = router.resolve(fullPath)
-    const { query } = page.pageQuery
-    const routePath = trim(route.path, '/')
-    const filePath = routePath.split('/').map(decodeURIComponent).join('/')
-    const dataPath = !routePath ? 'index.json' : `${filePath}.json`
-    const htmlOutput = path.resolve(config.outDir, filePath, 'index.html')
-    const dataOutput = path.resolve(config.cacheDir, 'data', dataPath)
-
-    // TODO: remove this before v1.0
-    const output = path.dirname(htmlOutput)
-
-    return {
-      path: fullPath.replace(/\/+/g, '/'),
-      dataOutput: query ? dataOutput : null,
-      htmlOutput,
-      output,
-      query,
-      route
-    }
+  if (!process.stdout.isTTY) {
+    info(`Compiling assets...`)
   }
 
-  const createTemplate = (node, page) => {
-    const { route } = router.resolve(node.path)
-    const { query } = page.pageQuery
-    const routePath = trim(route.path, '/')
-    const filePath = routePath.split('/').map(decodeURIComponent).join('/')
-    const htmlOutput = path.resolve(config.outDir, filePath, 'index.html')
-    const dataOutput = path.resolve(config.cacheDir, 'data', `${filePath}.json`)
+  const stats = await compileAssets(app)
 
-    // TODO: remove this before v1.0
-    const output = path.dirname(htmlOutput)
-
-    return {
-      path: node.path,
-      dataOutput: query ? dataOutput : null,
-      htmlOutput,
-      output,
-      query,
-      route
-    }
+  if (app.config.css.split !== true) {
+    await removeStylesJsChunk(stats, app.config.outputDir)
   }
 
-  const queue = []
+  info(`Compile assets - ${compileTime(hirestime.S)}s`)
 
-  for (const route of router.options.routes) {
-    const page = route.component()
-
-    switch (page.type) {
-      case STATIC_ROUTE:
-      case STATIC_TEMPLATE_ROUTE:
-        queue.push(createPage(page))
-
-        break
-
-      case DYNAMIC_TEMPLATE_ROUTE:
-        page.collection.find().forEach(node => {
-          queue.push(createTemplate(node, page))
-        })
-
-        break
-
-      case PAGED_ROUTE:
-        const { collection, perPage } = page.pageQuery.paginate
-        const { data, errors } = await graphql(`
-          query PageInfo ($perPage: Int) {
-            ${collection} (perPage: $perPage) {
-              pageInfo {
-                totalPages
-              }
-            }
-          }
-        `, { perPage })
-
-        if (errors && errors.length) {
-          throw new Error(errors)
-        }
-
-        const { totalPages } = data[collection].pageInfo
-
-        for (let i = 1; i <= totalPages; i++) {
-          queue.push(createPage(page, i))
-        }
-
-        break
-    }
-  }
-
-  return queue
+  return stats
 }
 
-async function renderPageQueries (queue, graphql) {
+async function renderHTML (renderQueue, app, hash) {
+  const { createWorker } = require('./workers')
   const timer = hirestime()
-  const pages = queue.filter(page => !!page.dataOutput)
-
-  await pMap(pages, async page => {
-    const variables = { ...page.route.params, path: page.path }
-    const results = await graphql(page.query, variables)
-
-    await fs.outputFile(page.dataOutput, JSON.stringify(results))
-  }, { concurrency: sysinfo.cpus.logical })
-
-  info(`Run GraphQL (${pages.length} queries) - ${timer(hirestime.S)}s`)
-}
-
-async function renderHTML (queue, config) {
-  const timer = hirestime()
-  const totalPages = queue.length
-  const chunks = chunk(queue, 50)
   const worker = createWorker('html-writer')
+  const { htmlTemplate, clientManifestPath, serverBundlePath, prefetch, preload } = app.config
 
-  const { htmlTemplate, clientManifestPath, serverBundlePath } = config
-
-  await Promise.all(chunks.map(async queue => {
-    const pages = queue.map(page => ({
-      path: page.path,
-      htmlOutput: page.htmlOutput,
-      dataOutput: page.dataOutput
-    }))
-
+  await Promise.all(chunk(renderQueue, 350).map(async pages => {
     try {
       await worker.render({
+        hash,
         pages,
         htmlTemplate,
         clientManifestPath,
-        serverBundlePath
+        serverBundlePath,
+        prefetch,
+        preload
       })
     } catch (err) {
       worker.end()
@@ -203,42 +97,52 @@ async function renderHTML (queue, config) {
 
   worker.end()
 
-  info(`Render HTML (${totalPages} pages) - ${timer(hirestime.S)}s`)
+  info(`Render HTML (${renderQueue.length} files) - ${timer(hirestime.S)}s`)
 }
 
-async function processFiles (queue, { outDir }) {
+async function processFiles (files) {
   const timer = hirestime()
-  const totalFiles = queue.queue.length
+  const totalFiles = files.queue.length
 
-  for (const file of queue.queue) {
-    await fs.copy(file.filePath, path.join(outDir, file.destination))
+  for (const file of files.queue) {
+    await fs.copy(file.filePath, file.destPath)
   }
 
   info(`Process files (${totalFiles} files) - ${timer(hirestime.S)}s`)
 }
 
-async function processImages (queue, config) {
+async function processImages (images, config) {
+  const { createWorker } = require('./workers')
   const timer = hirestime()
-  const chunks = chunk(queue.queue, 100)
+  const chunks = chunk(images.queue, 25)
   const worker = createWorker('image-processor')
-  const totalAssets = queue.queue.length
+  const totalAssets = images.queue.length
+  const totalJobs = chunks.length
 
-  await Promise.all(chunks.map(async queue => {
-    try {
+  let progress = 0
+
+  writeLine(`Processing images (${totalAssets} images) - 0%`)
+
+  try {
+    await pMap(chunks, async queue => {
       await worker.process({
         queue,
-        outDir: config.outDir,
+        outputDir: config.outputDir,
+        context: config.context,
         cacheDir: config.imageCacheDir,
-        minWidth: config.minProcessImageWidth,
-        backgroundColor: config.images.backgroundColor
+        imagesConfig: config.images
       })
-    } catch (err) {
-      worker.end()
-      throw err
-    }
-  }))
+
+      writeLine(`Processing images (${totalAssets} images) - ${Math.round((++progress) * 100 / totalJobs)}%`)
+    }, {
+      concurrency: sysinfo.cpus.logical
+    })
+  } catch (err) {
+    worker.end()
+    throw err
+  }
 
   worker.end()
 
-  info(`Process images (${totalAssets} images) - ${timer(hirestime.S)}s`)
+  writeLine(`Process images (${totalAssets} images) - ${timer(hirestime.S)}s\n`)
 }

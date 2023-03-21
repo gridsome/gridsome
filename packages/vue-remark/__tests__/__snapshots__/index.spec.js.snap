@@ -1,0 +1,142 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`add v-pre to fenced code blocks 1`] = `
+"<template>
+<VueRemarkRoot>
+<pre><code class=\\"language-html\\" v-pre>&lt;div id=\\"test\\">
+# title
+&lt;/div>
+</code></pre>
+</VueRemarkRoot>
+</template>"
+`;
+
+exports[`don't touch normal HTML tags multiple sections 1`] = `
+"<template>
+<VueRemarkRoot>
+<h1 id=\\"heading\\"><a href=\\"#heading\\" aria-hidden=\\"true\\"><span class=\\"icon icon-link\\"></span></a>Heading</h1>
+<MyComponent>
+<h2 id=\\"sub-heading\\"><a href=\\"#sub-heading\\" aria-hidden=\\"true\\"><span class=\\"icon icon-link\\"></span></a>Sub heading</h2>
+<p><sup>1</sup> Lorem ipsum</p>
+</MyComponent>
+<p><img src=\\"...\\"/> Lorem ipsum
+<sup>1</sup> Lorem ipsum</p>
+<p>Lorem <sup>1</sup> ipsum</p>
+</VueRemarkRoot>
+</template>"
+`;
+
+exports[`don't wrap end tag in paragraph 1`] = `
+"<template>
+<VueRemarkRoot>
+<GridCol col=\\"span-4\\">
+Some text...
+
+</GridCol>
+</VueRemarkRoot>
+</template>"
+`;
+
+exports[`image inside external link 1`] = `
+"<template>
+<VueRemarkRoot>
+<p><a href=\\"http://imagelink.com\\" target=\\"_blank\\" rel=\\"nofollow noopener noreferrer\\"><img src=\\"https://placehold.it/300x250\\" alt=\\"Image Alt\\"></a></p>
+</VueRemarkRoot>
+</template>"
+`;
+
+exports[`parse markdown inside Vue component 1`] = `
+"<template>
+<VueRemarkRoot>
+<MyComponent :is=\\"test\\">
+<h2 id=\\"test-2\\"><a href=\\"#test-2\\" aria-hidden=\\"true\\"><span class=\\"icon icon-link\\"></span></a>Test 2</h2>
+<blockquote>
+<p>Quote</p>
+</blockquote>
+</MyComponent>
+</VueRemarkRoot>
+</template>"
+`;
+
+exports[`parse nested Vue components 1`] = `
+"<template>
+<VueRemarkRoot>
+<MyComponent v-on:click=\\"test\\" @event=\\"test\\">
+  <AnotherComponent>
+    Some text...
+  </AnotherComponent>
+</MyComponent>
+</VueRemarkRoot>
+</template>"
+`;
+
+exports[`parse simple Vue component 1`] = `
+"<template>
+<VueRemarkRoot>
+<MyComponent />
+</VueRemarkRoot>
+</template>"
+`;
+
+exports[`parse simple Vue component after heading 1`] = `
+"<template>
+<VueRemarkRoot>
+<h1 id=\\"heading\\"><a href=\\"#heading\\" aria-hidden=\\"true\\"><span class=\\"icon icon-link\\"></span></a>Heading</h1>
+<MyComponent />
+</VueRemarkRoot>
+</template>"
+`;
+
+exports[`parse simple title 1`] = `
+"<template>
+<VueRemarkRoot>
+<h1 id=\\"test\\"><a href=\\"#test\\" aria-hidden=\\"true\\"><span class=\\"icon icon-link\\"></span></a>Test</h1>
+</VueRemarkRoot>
+</template>"
+`;
+
+exports[`process SFC blocks extract <page-query> tag 1`] = `
+"<page-query>
+query {
+  metadata {
+    siteName
+  }
+}
+</page-query>"
+`;
+
+exports[`process SFC blocks extract <script> tag 1`] = `
+"<script>
+export default {
+  mounted() {}
+}
+</script>"
+`;
+
+exports[`process SFC blocks extract <static-query> tag 1`] = `
+"<static-query>
+query {
+  metadata {
+    siteName
+  }
+}
+</static-query>"
+`;
+
+exports[`process SFC blocks extract <style> tag 1`] = `
+"<style lang=\\"scss\\">
+body {}
+</style>"
+`;
+
+exports[`process SFC blocks extract <style> tag after component 1`] = `
+"<template>
+<VueRemarkRoot>
+<MyComponent></MyComponent>
+</VueRemarkRoot>
+</template>
+
+<style scoped>
+body {}
+</style>"
+`;

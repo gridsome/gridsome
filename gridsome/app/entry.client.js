@@ -1,45 +1,84 @@
+import './polyfills'
+
 import Vue from 'vue'
-import createApp from './app'
+import createApp, { runPlugins, runMain } from './app'
+import config from '~/.temp/config'
 import plugins from '~/.temp/plugins-client'
-import observeHtml from './directives/observe-html'
+import linkDirective from './directives/link'
+import imageDirective from './directives/image'
 import { stripPathPrefix } from './utils/helpers'
+import { isFunc, isNil } from './utils/lang'
 
-Vue.directive('observe-html', observeHtml)
+Vue.directive('g-link', linkDirective)
+Vue.directive('g-image', imageDirective)
 
-const { app, router } = createApp(context => {
-  for (const { run, options } of plugins) {
-    if (typeof run === 'function') {
-      run(Vue, options, context)
-    }
-  }
-})
+runPlugins(plugins)
+runMain()
 
+const { app, router } = createApp()
+
+if (process.env.NODE_ENV === 'production') {
+  router.beforeEach((to, from, next) => {
+    const components = router.getMatchedComponents(to).map(
+      c => isFunc(c) && isNil(c.cid) ? c() : c
+    )
+
+    Promise.all(components)
+      .then(() => next())
+      .catch(err => {
+        // reload page if a component failed to load
+        if (err.request && to.path !== window.location.pathname) {
+          const fullPathWithPrefix = (config.pathPrefix ?? '') + to.fullPath
+          window.location.assign(fullPathWithPrefix)
+        } else {
+          next(err)
+        }
+      })
+  })
+}
+
+// TODO: remove this behavior
 // let Vue router handle internal URLs for anchors in innerHTML
 document.addEventListener('click', event => {
   const $el = event.target.closest('a')
-  const { hostname } = document.location
+  const { hostname, port } = document.location
 
   if (
-    event.defaultPrevented ||     // disables this behavior
-    $el === null ||               // no link clicked
-    $el.__gLink__ ||              // g-link anchor
-    $el.hostname !== hostname ||  // external link
-    /\.[^.]+$/.test($el.pathname) // link to a file
+    !config.catchLinks || // disables this behavior by config settings
+    event.defaultPrevented || // disables this behavior
+    event.which !== 1 || // not a left click
+    event.metaKey ||
+    event.altKey ||
+    event.ctrlKey ||
+    event.shiftKey ||
+    $el === null || // no link clicked
+    $el.__gLink__ || // g-link component
+    $el.hostname !== hostname || // external link
+    $el.port !== port || // external link
+    /\.[^.]+$/.test($el.pathname) || // link to a file
+    /\b_blank\b/i.test($el.target) // opens in new tab
   ) return
 
-  const path = stripPathPrefix($el.pathname)
-  const { route, location } = router.resolve({ path, hash: $el.hash })
+  if (
+    config.pathPrefix &&
+    !$el.pathname.startsWith(config.pathPrefix)
+  ) {
+    return // must include pathPrefix in path
+  }
 
-  if (route.name === '404') {
+  const path = stripPathPrefix($el.pathname)
+  const { route, location } = router.resolve({
+    path: path + ($el.search || '') + ($el.hash || '')
+  })
+
+  if (route.name === '*') {
     return
   }
 
-  router.push(location)
+  router.push(location, () => {})
   event.preventDefault()
 }, false)
 
 router.onReady(() => {
   app.$mount('#app')
-
-  // TODO: register service worker
 })

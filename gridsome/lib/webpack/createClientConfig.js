@@ -6,7 +6,7 @@ const resolve = p => path.resolve(__dirname, p)
 module.exports = async app => {
   const isProd = process.env.NODE_ENV === 'production'
   const config = createBaseConfig(app, { isProd, isServer: false })
-  const { outDir, clientManifestPath } = app.config
+  const { outputDir, clientManifestPath, css } = app.config
 
   config.entry('app').add(resolve('../../app/entry.client.js'))
 
@@ -14,18 +14,10 @@ module.exports = async app => {
     setImmediate: false
   })
 
-  if (!isProd) {
-    config.plugin('hmr')
-      .use(require('webpack/lib/HotModuleReplacementPlugin'))
-
-    config.plugin('no-emit-on-errors')
-      .use(require('webpack/lib/NoEmitOnErrorsPlugin'))
-  }
-
   if (isProd) {
-    config.plugin('ssr-client')
+    config.plugin('vue-server-renderer')
       .use(require('./plugins/VueSSRClientPlugin'), [{
-        filename: path.relative(outDir, clientManifestPath)
+        filename: path.relative(outputDir, clientManifestPath)
       }])
 
     config.plugin('optimize-css')
@@ -37,13 +29,27 @@ module.exports = async app => {
           mergeLonghand: false
         }
       }])
-  }
 
-  await app.dispatch('chainWebpack', null, config, {
-    context: app.context,
-    isServer: false,
-    isProd
-  })
+    if (css.split !== true) {
+      const cacheGroups = {
+        styles: {
+          name: 'styles',
+          test: m => /css\/mini-extract/.test(m.type),
+          chunks: 'all',
+          enforce: true
+        }
+      }
+      config.optimization.splitChunks({ cacheGroups })
+    }
+  } else {
+    config.entry('app').add(resolve('../../app/entry.sockjs.js'))
+
+    config.plugin('hmr')
+      .use(require('webpack/lib/HotModuleReplacementPlugin'))
+
+    config.plugin('no-emit-on-errors')
+      .use(require('webpack/lib/NoEmitOnErrorsPlugin'))
+  }
 
   return config
 }

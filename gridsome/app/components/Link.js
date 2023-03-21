@@ -1,65 +1,73 @@
-/* global GRIDSOME_MODE */
+import config from '~/.temp/config.js'
+import { normalizePath, isMailtoLink, isTelLink } from '../utils/helpers'
 
-import router from '../router'
-import caniuse from '../utils/caniuse'
-import { stripPathPrefix } from '../utils/helpers'
-import { createObserver } from '../utils/intersectionObserver'
-
-const observer = caniuse.IntersectionObserver
-  ? createObserver(intersectionHandler)
-  : null
-
-let uid = 0
-
+// @vue/component
 export default {
   functional: true,
 
   props: {
-    to: { type: [Object, String] },
-    page: { type: Number },
-    activeClass: { type: String, default: 'active' },
-    exactActiveClass: { type: String, default: 'active--exact' }
+    to: { type: [Object, String], default: null },
+    page: { type: Number, default: 0 },
+    activeClass: { type: String, default: undefined },
+    exactActiveClass: { type: String, default: undefined },
+    normalize: { type: Boolean, default: true }
   },
 
-  render: (h, { data, props, parent, children, ...res }) => {
+  render: (h, { data, props, children, parent }) => {
+    const directives = data.directives || []
+    const attrs = data.attrs || {}
+
     if (props.to && props.to.type === 'file') {
-      data.attrs.href = props.to.src
+      attrs.href = props.to.src
+
       return h('a', data, children)
     }
 
-    const ref = data.ref || `__link_${uid++}`
+    if (isExternalLink(props.to) || isMailtoLink(props.to) || isTelLink(props.to)) {
+      // TODO: warn if props.to is an external url, email or phone
+      attrs.href = props.to
+    }
+
+    if (isExternalLink(attrs.href)) {
+      attrs.target = attrs.target || '_blank'
+      attrs.rel = attrs.rel || 'noopener'
+
+      return h('a', data, children)
+    }
+
+    if (isMailtoLink(attrs.href) || isTelLink(attrs.href)) {
+      return h('a', data, children)
+    }
+
     const to = typeof props.to === 'string'
       ? { path: props.to, params: {}}
       : { params: {}, ...props.to }
 
     if (props.page) {
       to.params.page = props.page > 1 ? props.page : null
-      data.attrs.exact = true
+      attrs.exact = true
     }
 
-    if (GRIDSOME_MODE === 'static' && process.isClient) {
-      const onMount = vm => {
-        if (vm && observer) observer.observe(vm.$el)
-      }
-
-      const onDestroy = vm => {
-        if (vm && observer) observer.unobserve(vm.$el)
-      }
-
-      parent.$once('hook:mounted', () => onMount(parent.$refs[ref]))
-      parent.$once('hook:updated', () => onMount(parent.$refs[ref]))
-      parent.$once('hook:beforeDestroy', () => onDestroy(parent.$refs[ref]))
+    if (to.path && props.normalize !== false) {
+      to.path = normalizePath(to.path)
     }
+
+    if (process.isStatic && process.isClient) {
+      directives.push({ name: 'g-link' })
+    }
+
+    const { linkActiveClass, linkExactActiveClass } = parent.$router.options
+    const activeClass = props.activeClass || linkActiveClass || 'active'
+    const exactActiveClass = props.exactActiveClass || linkExactActiveClass || 'active--exact'
+
+    attrs.to = to
+    attrs.activeClass = activeClass
+    attrs.exactActiveClass = exactActiveClass
 
     return h('router-link', {
       ...data,
-      ref,
-      attrs: {
-        to,
-        activeClass: props.activeClass,
-        exactActiveClass: props.exactActiveClass,
-        ...data.attrs
-      },
+      attrs,
+      directives,
       domProps: {
         __gLink__: true
       }
@@ -67,38 +75,15 @@ export default {
   }
 }
 
-const isPreloaded = {}
+const externalRE = new RegExp('^(https?:|//)')
 
-function intersectionHandler ({ intersectionRatio, target }) {
-  if (process.isClient) {
-    if (intersectionRatio > 0) {
-      observer.unobserve(target)
-
-      if (document.location.hostname === target.hostname) {
-        if (isPreloaded[target.pathname]) return
-        else isPreloaded[target.pathname] = true
-
-        const path = stripPathPrefix(target.pathname)
-        const { route } = router.resolve({ path })
-
-        const fetchComponentData = options => {
-          setTimeout(() => {
-            import(/* webpackChunkName: "page-query" */ '../page-query/fetch').then(m => {
-              m.default(route, options.__pageQuery)
-            })
-          }, 250)
-        }
-
-        if (route.meta.data && route.matched.length) {
-          const options = route.matched[0].components.default
-
-          if (typeof options === 'function') {
-            options().then(m => fetchComponentData(m.default))
-          } else {
-            fetchComponentData(options)
-          }
-        }
-      }
-    }
+function isExternalLink (string) {
+  if (
+    config.siteUrl &&
+    String(string).startsWith(config.siteUrl)
+  ) {
+    return false
   }
+
+  return externalRE.test(string)
 }

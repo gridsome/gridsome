@@ -12,8 +12,8 @@
 </p>
 
 <p align="center">
-  <a title="Total downloads" href="https://www.npmjs.com/package/gridsome">
-    <img src="https://img.shields.io/npm/dt/gridsome.svg?style=flat-square">
+  <a title="Downloads" href="https://www.npmjs.com/package/gridsome">
+    <img src="https://img.shields.io/npm/dm/gridsome.svg?style=flat-square">
   </a>
   <a title="Current version" href="https://www.npmjs.com/package/gridsome">
     <img src="https://img.shields.io/npm/v/gridsome.svg?style=flat-square">
@@ -47,8 +47,8 @@ Build websites using latest web tech tools that developers love - Vue.js, GraphQ
 
 ### 3. Next steps
 
-1. Create `.vue` components in the `~/src/pages` directory to create pages
-2. Use `gridsome build` to generate static files in a `~/dist` folder
+1. Create `.vue` components in the `./src/pages` directory to create pages
+2. Use `gridsome build` to generate static files in a `./dist` folder
 
 ### Learn more...
 

@@ -19,3 +19,7 @@ What should happen?
 ### Actual result
 
 What happened.
+
+### Environment
+
+Paste the information here as shown by `gridsome info`

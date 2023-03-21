@@ -1,24 +1,25 @@
 const chalk = require('chalk')
 const createApp = require('./app')
-const { BOOTSTRAP_GRAPHQL } = require('./utils/constants')
-const createExpressServer = require('./server/createExpressServer')
-const { default: playground } = require('graphql-playground-middleware-express')
+const Server = require('./server/Server')
+const resolvePort = require('./server/resolvePort')
+const { BOOTSTRAP_PAGES } = require('./utils/constants')
+const { prepareUrls } = require('./server/utils')
 
 module.exports = async (context, args) => {
-  process.env.NODE_ENV = 'production'
-  process.env.GRIDSOME_MODE === 'serve'
+  process.env.NODE_ENV = 'development'
+  process.env.GRIDSOME_MODE = 'serve'
 
-  const app = await createApp(context, { args }, BOOTSTRAP_GRAPHQL)
-  const server = await createExpressServer(app)
+  const app = await createApp(context, { args }, BOOTSTRAP_PAGES)
+  const port = await resolvePort(app.config.port)
+  const hostname = app.config.host
+  const urls = prepareUrls(hostname, port)
+  const server = new Server(app, urls)
 
-  server.app.get(
-    server.endpoint.explore,
-    playground({ endpoint: server.endpoint.graphql })
-  )
+  server.listen(port, hostname, err => {
+    if (err) throw err
 
-  server.app.listen(server.port, server.host, () => {
     console.log()
-    console.log(`  Explore GraphQL data at: ${chalk.cyan(server.url.explore)}`)
+    console.log(`  Explore GraphQL data at: ${chalk.cyan(urls.explore.pretty)}`)
     console.log()
   })
 }

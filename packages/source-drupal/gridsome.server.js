@@ -28,11 +28,10 @@ class DrupalSource {
     api.loadSource(store => this.initialize(store))
   }
 
-  async initialize (store) {
-    this.store = store
+  async initialize (actions) {
     this.apiSchema = await this.fetchJsonApiSchema()
 
-    await this.processEntities()
+    await this.processEntities(actions)
   }
 
   /**
@@ -75,9 +74,9 @@ class DrupalSource {
 
   /**
    * This method loops over the apiShema created in fetchJsonApiSchema
-   * if property key (in the apiScheme object) is not in the exlucdes list, it creates a new instance
+   * if property key (in the apiScheme object) is not in the excludes list, it creates a new instance
    */
-  async processEntities () {
+  async processEntities (actions) {
     const { exclude: userExclude = [] } = this.options
     const capturedEntities = []
     // create unique array of user passed exclude and defaultExcludes
@@ -88,7 +87,7 @@ class DrupalSource {
     forEach(this.apiSchema, (url, entityType) => {
       if (!exclude.includes(entityType)) {
         // creating an instance of the entity class, see ./entities/*
-        this.entities[entityType] = new Entity(this, { entityType, url })
+        this.entities[entityType] = new Entity(this, actions, { entityType, url })
 
         capturedEntities.push(this.entities[entityType])
       }

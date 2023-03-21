@@ -1,46 +1,39 @@
-const hirestime = require('hirestime')
-const createClientConfig = require('./createClientConfig')
-const createServerConfig = require('./createServerConfig')
-const { info, error } = require('../utils/log')
-
 module.exports = async (app, defines = {}) => {
-  const compileTime = hirestime()
-
-  const clientConfig = await createClientConfig(app)
-  const serverConfig = await createServerConfig(app)
-
-  clientConfig
-    .plugin('gridsome-endpoints')
-    .use(require('webpack/lib/DefinePlugin'), [defines])
-
-  await app.dispatch('beforeCompileAssets', {
-    context: app.context,
-    config: app.config,
-    clientConfig,
-    serverConfig
-  })
-
-  await compile([
-    clientConfig.toConfig(),
-    serverConfig.toConfig()
-  ])
-
-  info(`Compile assets - ${compileTime(hirestime.S)}s`)
-}
-
-function compile (config) {
   const webpack = require('webpack')
 
+  const clientChain = await app.compiler.resolveChainableWebpackConfig()
+
+  clientChain
+    .plugin('injections')
+    .tap(args => {
+      const definitions = args[0]
+      args[0] = {
+        ...definitions,
+        ...defines
+      }
+      return args
+    })
+
+  const [serverConfig, clientConfig] = await Promise.all([
+    app.compiler.resolveWebpackConfig(true),
+    app.compiler.resolveWebpackConfig(false, clientChain)
+  ])
+
   return new Promise((resolve, reject) => {
-    webpack(config).run((err, stats) => {
+    webpack([clientConfig, serverConfig]).run((err, stats) => {
       if (err) return reject(err)
 
       if (stats.hasErrors()) {
-        stats.toJson().errors.forEach(err => error(err))
-        return reject(new Error('Failed to compile.'))
+        const errors = stats.stats
+          // .flatMap(stats => stats.compilation.errors) only exists in Node v11+
+          .map(stats => stats.compilation.errors)
+          .reduce((acc, errors) => acc.concat(errors), [])
+          .map(err => err.error || err)
+
+        return reject(errors[0])
       }
 
-      resolve()
+      resolve(stats.toJson({ modules: false }))
     })
   })
 }

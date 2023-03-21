@@ -4,26 +4,28 @@ const { mapValues } = require('lodash')
 const { createWorker } = require('../../workers')
 const { SUPPORTED_IMAGE_TYPES } = require('../../utils/constants')
 
-module.exports = ({ context, config, queue }) => {
+module.exports = ({ context, config, assets }) => {
   const worker = createWorker('image-processor')
 
   return async (req, res, next) => {
     const relPath = req.params[1].replace(/(%2e|\.){2}/g, '')
     const filePath = path.join(context, relPath)
-    const asset = queue.get(filePath)
 
     if (
       !filePath.startsWith(context) ||
-      !fs.existsSync(filePath) ||
-      !asset
+      !fs.existsSync(filePath)
     ) {
       return res.sendStatus(404)
     }
 
     const { ext } = path.parse(filePath)
-    const options = mapValues(req.query, value => {
+    const { key, ...options } = mapValues(req.query, value => {
       return decodeURIComponent(value)
     })
+
+    const asset = assets.get(key || req.url)
+
+    if (!asset) return res.sendStatus(404)
 
     const serveFile = async file => {
       const buffer = await fs.readFile(file)
@@ -34,21 +36,22 @@ module.exports = ({ context, config, queue }) => {
         res.header('Expires', '-1')
       }
 
+      res.header('Accept-Ranges', 'bytes')
       res.contentType(ext)
-      res.end(buffer, 'binary')
+      res.end(buffer)
     }
 
     try {
       if (SUPPORTED_IMAGE_TYPES.includes(ext)) {
-        const imageOptions = queue.images.createImageOptions(options)
-        const filename = queue.images.createFileName(filePath, imageOptions, asset.hash)
+        const imageOptions = assets.images.createImageOptions(options)
+        const filename = assets.images.createFileName(filePath, imageOptions, asset.hash)
         const destPath = path.join(config.imageCacheDir, filename)
 
         if (!fs.existsSync(destPath)) {
           await worker.processImage({
-            backgroundColor: config.images.backgroundColor,
-            minWidth: config.minProcessImageWidth,
-            size: asset.size,
+            imagesConfig: config.images,
+            width: asset.width,
+            height: asset.height,
             filePath,
             destPath,
             options

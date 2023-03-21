@@ -19,14 +19,13 @@ module.exports = {
         apiBase: 'wp-json',
         typeName: 'WordPress',
         perPage: 100,
-        concurrent: 10,
-        routes: {
-          post: '/:year/:month/:day/:slug',
-          post_tag: '/tag/:slug'
-        }
+        concurrent: 10
       }
     }
-  ]
+  ],
+  templates: {
+    WordPressPost: '/:year/:month/:day/:slug'
+  }
 }
 ```
 
@@ -51,4 +50,53 @@ add_filter( 'acf/format_value', function ( $value ) {
 
   return $value;
 }, 100 );
+```
+
+## Use Custom REST Endpoints
+
+To use REST endpoints from plugins or defined in your theme add a `customEndpoints` array to source-wordpress options.
+
+
+```js
+  use: '@gridsome/source-wordpress',
+  options: {
+    ... // other source-wordpress options
+    customEndpoints: [
+      {
+        typeName: "WPMenu",
+        route: 'myApi/v1/menus',
+      }
+    ]
+  }
+```
+
+If you are trying to query posts, you will need to add the `normalize: true` option to make sure the data is properly added:
+
+```js
+    customEndpoints: [
+        {
+            typeName: "Posts",
+            route: "/wp/v2/posts",
+            normalize: true,
+        },
+    ]
+```
+
+## Create Collections based on REST Endpoints
+
+`customEndpoints` allow you to neatly create separate [Collections](https://gridsome.org/docs/collections/#collections) by querying different REST endpoints.
+
+```js
+    customEndpoints: [
+        {
+            typeName: "Collection1",
+            route: "/wp/v2/posts?categories=<category_id>",
+            normalize: true,
+        },
+        {
+            typeName: "Collection2",
+            route: "/wp/v2/posts?tags=<tag_id>",
+            normalize: true,
+        },
+    ]
 ```

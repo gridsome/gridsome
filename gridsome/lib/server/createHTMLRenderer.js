@@ -7,9 +7,19 @@ function createHTMLRenderer (htmlTemplate) {
     return render(Object.assign({
       htmlAttrs: '',
       bodyAttrs: '',
-      scripts: '',
       head: '',
-      app: ''
+      title: '',
+      base: '',
+      hash: '',
+      vueMetaTags: '',
+      vueMetaLinks: '',
+      resourceHints: '',
+      styles: '',
+      vueMetaStyles: '',
+      vueMetaScripts: '',
+      noscript: '',
+      app: '',
+      scripts: ''
     }, variables))
   }
 }

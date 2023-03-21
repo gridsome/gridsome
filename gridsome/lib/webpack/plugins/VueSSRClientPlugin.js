@@ -13,7 +13,8 @@ var onEmit = function (compiler, name, hook) {
 }
 
 var hash = require('hash-sum')
-var uniq = require('lodash.uniq')
+var { uniq } = require('lodash')
+
 var VueSSRClientPlugin = function VueSSRClientPlugin (options) {
   if (options === void 0) options = {}
 
@@ -31,14 +32,14 @@ VueSSRClientPlugin.prototype.apply = function apply (compiler) {
     var allFiles = uniq(stats.assets
       .map(function (a) { return a.name }))
       // Avoid preloading / injecting the style chunk
-      .filter(file => !/styles\.\w{8}\.js$/.test(file))
+      .filter(file => !/styles(\.\w{8})?\.js$/.test(file))
 
     var initialFiles = uniq(Object.keys(stats.entrypoints)
       .map(function (name) { return stats.entrypoints[name].assets })
       .reduce(function (assets, all) { return all.concat(assets) }, [])
       .filter(function (file) { return isJS(file) || isCSS(file) }))
       // Avoid preloading / injecting the style chunk
-      .filter(file => !/styles\.\w{8}\.js$/.test(file))
+      .filter(file => !/styles(\.\w{8})?\.js$/.test(file))
 
     var asyncFiles = allFiles
       .filter(function (file) { return isJS(file) || isCSS(file) })

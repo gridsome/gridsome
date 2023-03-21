@@ -1,13 +1,21 @@
+const LRU = require('lru-cache')
 const unified = require('unified')
 const parse = require('gray-matter')
-const words = require('lodash.words')
-const remarkParse = require('remark-parse')
 const remarkHtml = require('remark-html')
-const visit = require('unist-util-visit')
-const htmlToText = require('html-to-text')
-const { normalizePlugins } = require('./lib/utils')
+const remarkParse = require('remark-parse')
+const sanitizeHTML = require('sanitize-html')
+const { defaultsDeep } = require('lodash')
 
-const imagePlugin = require('./lib/plugins/image')
+const cache = new LRU({ max: 1000 })
+
+const {
+  cacheKey,
+  createFile,
+  findHeadings,
+  createPlugins
+} = require('./lib/utils')
+
+const { estimateTimeToRead } = require('./lib/timeToRead')
 
 const {
   HeadingType,
@@ -26,46 +34,17 @@ class RemarkTransformer {
     return ['text/markdown', 'text/x-markdown']
   }
 
-  constructor (options, { localOptions, context, nodeCache, queue }) {
-    this.options = options
-    this.localOptions = localOptions
-    this.context = context
-    this.nodeCache = nodeCache
-    this.queue = queue
+  constructor (options, context) {
+    const { localOptions, resolveNodeFilePath } = context
 
-    this.remarkPlugins = normalizePlugins([
-      // built-in plugins
-      'remark-slug',
-      'remark-fix-guillemets',
-      'remark-squeeze-paragraphs',
-      ['remark-external-links', {
-        target: options.externalLinksTarget,
-        rel: options.externalLinksRel
-      }],
-      ['remark-autolink-headings', {
-        content: {
-          type: 'element',
-          tagName: 'span',
-          properties: {
-            className: options.autolinkClassName || 'icon icon-link'
-          }
-        },
-        linkProperties: {
-          'aria-hidden': 'true'
-        },
-        ...options.autolinkHeadings,
-        ...localOptions.autolinkHeadings
-      }],
-      // built-in plugins
-      imagePlugin,
-      // user plugins
-      ...options.plugins || [],
-      ...localOptions.plugins || []
-    ])
+    this.options = defaultsDeep(localOptions, options)
+    this.processor = this.createProcessor(localOptions)
+    this.resolveNodeFilePath = resolveNodeFilePath
+    this.assets = context.assets || context.queue
   }
 
   parse (source) {
-    const { data, content, excerpt } = parse(source)
+    const { data, content, excerpt } = parse(source, this.options.grayMatter || {})
 
     // if no title was found by gray-matter,
     // try to find the first one in the content
@@ -74,23 +53,14 @@ class RemarkTransformer {
       if (title) data.title = title[1]
     }
 
-    data.__remarkContent = content
-    data.__remarkExcerpt = excerpt
-
-    return {
-      title: data.title,
-      slug: data.slug,
-      path: data.path,
-      date: data.date,
-      fields: data
-    }
+    return { content, excerpt, ...data }
   }
 
   extendNodeType () {
     return {
       content: {
         type: GraphQLString,
-        resolve: node => this.stringifyNode(node)
+        resolve: node => this._nodeToHTML(node)
       },
       headings: {
         type: new GraphQLList(HeadingType),
@@ -99,7 +69,14 @@ class RemarkTransformer {
           stripTags: { type: GraphQLBoolean, defaultValue: true }
         },
         resolve: async (node, { depth, stripTags }) => {
-          const headings = await this.findHeadings(node)
+          const key = cacheKey(node, 'headings')
+          let headings = cache.get(key)
+
+          if (!headings) {
+            const ast = await this._nodeToAST(node)
+            headings = findHeadings(ast)
+            cache.set(key, headings)
+          }
 
           return headings
             .filter(heading =>
@@ -124,69 +101,99 @@ class RemarkTransformer {
           }
         },
         resolve: async (node, { speed }) => {
-          const html = await this.stringifyNode(node)
-          const text = htmlToText.fromString(html)
-          const count = words(text).length
+          const key = cacheKey(node, 'timeToRead')
+          let cached = cache.get(key)
 
-          return Math.round(count / speed) || 1
+          if (!cached) {
+            const html = await this._nodeToHTML(node)
+            const text = sanitizeHTML(html, {
+              allowedAttributes: {},
+              allowedTags: []
+            })
+
+            cached = estimateTimeToRead(text, speed)
+            cache.set(key, cached)
+          }
+
+          return cached
+        }
+      },
+      excerpt: {
+        type: GraphQLString,
+        args: {
+          length: {
+            type: GraphQLInt,
+            description: 'Maximum length of generated excerpt (characters)',
+            defaultValue: 200
+          }
+        },
+        resolve: async (node, { length }) => {
+          const key = cacheKey(node, 'excerpt')
+          let excerpt = node.excerpt || cache.get(key)
+
+          if (!excerpt) {
+            const html = await this._nodeToHTML(node)
+            // Remove html tags, then newlines.
+            excerpt = sanitizeHTML(html, {
+              allowedAttributes: {},
+              allowedTags: []
+            }).replace(/\r?\n|\r/g, ' ')
+
+            if (excerpt.length > length && length) {
+              excerpt = excerpt.substr(0, excerpt.lastIndexOf(' ', length - 1))
+            }
+
+            cache.set(key, excerpt)
+          }
+
+          return excerpt
         }
       }
     }
   }
 
-  parseNode (node) {
-    const content = node.fields.__remarkContent
+  createProcessor (options = {}) {
+    const processor = unified().data('transformer', this)
+    const plugins = createPlugins(this.options, options)
+    const config = this.options.config || {}
 
-    return this.nodeCache(node, 'tree', () => {
-      return unified().use(remarkParse).parse(content)
-    })
+    return processor
+      .use(remarkParse, config)
+      .use(plugins)
+      .use(options.stringifier || remarkHtml)
   }
 
-  transformNode (node) {
-    return this.nodeCache(node, 'ast', async () => {
-      const tree = await this.parseNode(node)
+  _nodeToAST (node) {
+    const key = cacheKey(node, 'ast')
+    let cached = cache.get(key)
 
-      return unified()
-        .data('node', node)
-        .data('queue', this.queue)
-        .data('context', this.context)
-        .use(this.remarkPlugins)
-        .run(tree)
-    })
+    if (!cached) {
+      const file = createFile(node)
+      const ast = this.processor.parse(file)
+
+      cached = this.processor.run(ast, file)
+      cache.set(key, cached)
+    }
+
+    return Promise.resolve(cached)
   }
 
-  stringifyNode (node) {
-    return this.nodeCache(node, 'html', async () => {
-      const ast = await this.transformNode(node)
+  _nodeToHTML (node) {
+    const key = cacheKey(node, 'html')
+    let cached = cache.get(key)
 
-      return unified().use(remarkHtml).stringify(ast)
-    })
-  }
+    if (!cached) {
+      cached = (async () => {
+        const file = createFile(node)
+        const ast = await this._nodeToAST(node)
 
-  findHeadings (node) {
-    return this.nodeCache(node, 'headings', async () => {
-      const ast = await this.transformNode(node)
-      const headings = []
+        return this.processor.stringify(ast, file)
+      })()
 
-      visit(ast, 'heading', node => {
-        const heading = { depth: node.depth, value: '', anchor: '' }
-        const children = node.children || []
+      cache.set(key, cached)
+    }
 
-        for (let i = 0, l = children.length; i < l; i++) {
-          const el = children[i]
-
-          if (el.type === 'link') {
-            heading.anchor = el.url
-          } else if (el.value) {
-            heading.value += el.value
-          }
-        }
-
-        headings.push(heading)
-      })
-
-      return headings
-    })
+    return Promise.resolve(cached)
   }
 }
 

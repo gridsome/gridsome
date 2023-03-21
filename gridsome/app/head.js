@@ -4,14 +4,12 @@ import icons from '~/.temp/icons.js'
 import config from '~/.temp/config.js'
 
 Vue.use(Meta, {
-  // keyName: 'head', TODO: change this to 'head'
   attribute: 'data-vue-tag',
   ssrAttribute: 'data-html-server-rendered',
   tagIDKeyName: 'key'
 })
 
 const head = {
-  title: config.siteName,
   titleTemplate: config.titleTemplate,
   __dangerouslyDisableSanitizers: ['style', 'script', 'noscript'],
   __dangerouslyDisableSanitizersByTagID: {},
@@ -21,11 +19,11 @@ const head = {
   meta: [
     { charset: 'utf-8' },
     { name: 'generator', content: `Gridsome v${config.version}` },
-    { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
-    
+    { key: 'viewport', name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
+
     // do not convert telephone numbers
     // into hypertext links because it
-    // will cause hydration failure
+    // will cause hydration errors
     {
       key: 'format-detection',
       name: 'format-detection',
@@ -39,7 +37,12 @@ const head = {
   link: []
 }
 
-icons.favicons.forEach(({ width, height, src: href }) => {
+if (icons.favicons.length) {
+  // prevent unnecessary request for /favicon.ico
+  head.link.push({ rel: 'icon', href: 'data:,' })
+}
+
+icons.favicons.forEach(({ width, height = width, src: href }) => {
   head.link.push({
     rel: 'icon',
     type: icons.faviconMimeType,
@@ -48,7 +51,7 @@ icons.favicons.forEach(({ width, height, src: href }) => {
   })
 })
 
-icons.touchicons.forEach(({ width, height, src: href }) => {
+icons.touchicons.forEach(({ width, height = width, src: href }) => {
   head.link.push({
     rel: `apple-touch-icon${icons.precomposed ? '-precomposed' : ''}`,
     type: icons.touchiconMimeType,

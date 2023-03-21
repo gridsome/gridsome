@@ -1,5 +1,9 @@
+const portfinder = require('portfinder')
+
 module.exports = port => {
-  const portfinder = require('portfinder')
-  portfinder.basePort = parseInt(port, 10) || 8080
+  if (port) return Promise.resolve(port)
+
+  portfinder.basePort = 8080
+
   return portfinder.getPortPromise()
 }
