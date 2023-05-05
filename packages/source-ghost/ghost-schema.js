@@ -98,6 +98,7 @@ const GhostPage = ({ page, author, tag }) => `type ${page} implements Node {
   authors: [${author}]
   tags: [${tag}]
   ghostId: String
+  visibility: String
 }`
 
 module.exports = {
